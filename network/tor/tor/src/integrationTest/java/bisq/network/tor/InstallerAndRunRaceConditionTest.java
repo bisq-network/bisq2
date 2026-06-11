@@ -24,7 +24,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,8 +40,7 @@ public class InstallerAndRunRaceConditionTest {
                 "--version"
         );
 
-        Map<String, String> environment = processBuilder.environment();
-        environment.put("LD_PRELOAD", LdPreload.computeLdPreloadVariable(tempDirPath));
+        LdPreload.applyToEnvironment(processBuilder.environment(), tempDirPath);
 
         Process process = processBuilder.start();
         boolean isSuccess = process.waitFor(30, TimeUnit.SECONDS);

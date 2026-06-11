@@ -16,8 +16,8 @@ application {
 }
 
 javafx {
-    version = "21.0.6"
-    modules = listOf("javafx.controls", "javafx.media")
+    version = "21.0.11"
+    modules = listOf("javafx.controls")
 }
 
 sourceSets {
@@ -30,10 +30,19 @@ sourceSets {
 
 dependencies {
     implementation("bisq:i18n")
-    implementation(libs.zxing)
-    implementation(libs.sarxos)
+    implementation(libs.zxing.core)
     implementation(libs.javacv) {
-        exclude(module = "ibfreenect2-platform")
+        exclude(module = "ffmpeg")
+        exclude(module = "flycapture")
+        exclude(module = "libdc1394")
+        exclude(module = "libfreenect")
+        exclude(module = "libfreenect2")
+        exclude(module = "librealsense")
+        exclude(module = "librealsense2")
+        exclude(module = "videoinput")
+        exclude(module = "artoolkitplus")
+        exclude(module = "leptonica")
+        exclude(module = "tesseract")
         exclude(module = "ffmpeg-platform")
         exclude(module = "flycapture-platform")
         exclude(module = "spinnaker-platform")

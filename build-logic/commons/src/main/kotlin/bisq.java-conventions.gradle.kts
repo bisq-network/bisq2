@@ -9,9 +9,14 @@ repositories {
     }
 }
 
+val pinnedJavaLanguageVersion = providers.gradleProperty("releaseBuild.javaVersion")
+    .map { it.substringBefore('.').toInt() }
+    .orElse(21)
+
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(pinnedJavaLanguageVersion.map { JavaLanguageVersion.of(it) })
+        vendor.set(JvmVendorSpec.AZUL)
     }
 }
 
@@ -30,6 +35,11 @@ val versionCatalog = extensions.getByType<VersionCatalogsExtension>().named("lib
 dependencies {
     versionCatalog.findLibrary("google-guava").ifPresent {
         implementation(it)
+    }
+
+    versionCatalog.findLibrary("findbugs-jsr305").ifPresent {
+        compileOnly(it)
+        testCompileOnly(it)
     }
 
     versionCatalog.findLibrary("lombok").ifPresent {
@@ -52,6 +62,9 @@ dependencies {
 
     versionCatalog.findLibrary("junit-jupiter").ifPresent {
         testImplementation(it)
+    }
+    versionCatalog.findLibrary("junit-platform-launcher").ifPresent {
+        testRuntimeOnly(it)
     }
 
     versionCatalog.findLibrary("assertj-core").ifPresent {

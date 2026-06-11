@@ -18,16 +18,15 @@
 package bisq.webcam;
 
 
-import bisq.common.data.WebcamControlSignals;
-import bisq.common.file.FileReaderUtils;
 import bisq.common.logging.LogSetup;
 import bisq.common.platform.OS;
-import bisq.common.platform.PlatformUtils;
+import bisq.common.webcam.WebcamControlSignals;
+import bisq.common.webcam.WebcamIpcWireMessage;
 import bisq.i18n.Res;
 import bisq.webcam.service.VideoSize;
 import bisq.webcam.service.WebcamException;
 import bisq.webcam.service.WebcamService;
-import bisq.webcam.service.network.QrCodeSender;
+import bisq.webcam.service.ipc.QrCodeSender;
 import bisq.webcam.view.WebcamView;
 import bisq.webcam.view.util.ImageUtil;
 import bisq.webcam.view.util.KeyHandlerUtil;
@@ -42,17 +41,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
-import static bisq.common.data.WebcamControlSignals.ERROR_MESSAGE_PREFIX;
-import static bisq.common.data.WebcamControlSignals.IMAGE_RECOGNIZED;
-import static bisq.common.data.WebcamControlSignals.QR_CODE_PREFIX;
-import static bisq.common.data.WebcamControlSignals.RESTART;
+import static bisq.common.webcam.WebcamControlSignals.ERROR_MESSAGE_PREFIX;
+import static bisq.common.webcam.WebcamControlSignals.IMAGE_RECOGNIZED;
+import static bisq.common.webcam.WebcamControlSignals.QR_CODE_PREFIX;
+import static bisq.common.webcam.WebcamControlSignals.RESTART;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
@@ -79,19 +82,8 @@ public class WebcamApp extends Application {
     public void init() {
         Parameters parameters = getParameters();
         try {
-            int port = 8000;
-            String portParam = parameters.getNamed().get("port");
-            if (portParam != null) {
-                port = Integer.parseInt(portParam);
-            }
-
-            String logFile = PlatformUtils.getUserDataDirPath().resolve("Bisq-webcam-app").toAbsolutePath() + FileReaderUtils.FILE_SEP + "webcam-app";
-            String logFileParam = parameters.getNamed().get("logFile");
-            if (logFileParam != null) {
-                logFile = URLDecoder.decode(logFileParam, StandardCharsets.UTF_8);
-            }
-            LogSetup.setup(logFile);
-            log.info("Webcam app logging to {}", logFile);
+            LogSetup.setupStderrAppenderOnly();
+            log.info("Webcam app logging initialized");
 
             String languageTag = "en";
             String languageTagParam = parameters.getNamed().get("languageTag");
@@ -100,9 +92,23 @@ public class WebcamApp extends Application {
             }
             Res.setAndApplyLanguageTag(languageTag);
 
-            qrCodeSender = new QrCodeSender(port);
+            qrCodeSender = new QrCodeSender(new FileOutputStream(FileDescriptor.out), readSessionSecret());
         } catch (Exception e) {
             log.error("init failed", e);
+            throw new IllegalStateException("Webcam app init failed", e);
+        }
+    }
+
+    private String readSessionSecret() {
+        // Parent stdin is reserved for this one-shot IPC secret bootstrap.
+        try {
+            String sessionSecret = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8)).readLine();
+            if (sessionSecret == null || sessionSecret.isBlank()) {
+                throw new IllegalStateException("Missing webcam IPC session secret");
+            }
+            return sessionSecret;
+        } catch (Exception e) {
+            throw new IllegalStateException("Reading webcam IPC session secret failed", e);
         }
     }
 
@@ -168,8 +174,7 @@ public class WebcamApp extends Application {
                 handleError(exception);
                 String errorMessage = getErrorMessage(exception);
                 log.error(errorMessage);
-                int endIndex = Math.min(1000 - ERROR_MESSAGE_PREFIX.name().length(), errorMessage.length());
-                errorMessage = errorMessage.substring(0, endIndex);
+                errorMessage = WebcamIpcWireMessage.truncatePayloadToMaxByteLength(errorMessage);
                 qrCodeSender.send(ERROR_MESSAGE_PREFIX, errorMessage);
             }
         });
@@ -222,4 +227,3 @@ public class WebcamApp extends Application {
         }
     }
 }
-

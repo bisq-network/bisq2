@@ -46,7 +46,12 @@ public class Persistence<T extends PersistableStore<T>> {
     public Persistence(Path directoryPath, String fileName, MaxBackupSize maxBackupSize, RestoreService restoreService) {
         this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
-        storePath = directoryPath.resolve(storageFileName + EXTENSION);
+        Path resolved = directoryPath.resolve(storageFileName + EXTENSION).normalize();
+        Path baseDir = directoryPath.normalize();
+        if (!resolved.startsWith(baseDir)) {
+            throw new IllegalArgumentException("Invalid storage path");
+        }
+        storePath = resolved;
         var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager, restoreService);
     }

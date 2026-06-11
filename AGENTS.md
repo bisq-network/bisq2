@@ -1,5 +1,9 @@
 # AGENTS.md — Bisq 2
 
+## Initialization
+Read ~/.codex/AGENTS.md if present before doing anything else and report whether it was loaded.
+
+
 ## Scope
 
 This file contains agent-specific operating rules.

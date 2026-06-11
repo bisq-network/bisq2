@@ -73,7 +73,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
             dependsOn(generateHashesTask)
 
-            jdkDirectory.set(getJPackageJdkDirectory(extension))
+            jdkDirectory.set(getJPackageJdkDirectory(project))
 
             distDirFile.set(installDistTask.map { it.destinationDir })
             mainJarFile.set(jarTask.flatMap { it.archiveFile })
@@ -95,7 +95,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             packageResourcesDir.set(packageResourcesDirFile)
 
             runtimeImageDirectory.set(
-                getJPackageJdkDirectory(extension)
+                getJPackageJdkDirectory(project)
             )
 
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
@@ -104,8 +104,9 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val releaseBinariesTaskFactory = ReleaseBinariesTaskFactory(project)
         releaseBinariesTaskFactory.registerCopyReleaseBinariesTask()
         releaseBinariesTaskFactory.registerCopyMaintainerPublicKeysTask()
-        releaseBinariesTaskFactory.registerCopySigningPublicKeyTask()
+        releaseBinariesTaskFactory.registerCopyActiveSigningKeyIdMarkerTask()
         releaseBinariesTaskFactory.registerMergeOsSpecificJarHashesTask(extension.version)
+        releaseBinariesTaskFactory.registerSignReleaseArtifactsTask()
     }
 
     private fun getHashFileForOs(project: Project, extension: PackagingPluginExtension): Provider<RegularFile> {
@@ -115,29 +116,19 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         }
     }
 
-    private fun getJPackageJdkDirectory(extension: PackagingPluginExtension): Provider<Directory> {
+    private fun getJPackageJdkDirectory(project: Project): Provider<Directory> {
         val launcherProvider = javaToolchainService.launcherFor {
-            languageVersion.set(getJavaLanguageVersion(extension))
+            languageVersion.set(getJavaLanguageVersion(project))
             vendor.set(JvmVendorSpec.AZUL)
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }
         return launcherProvider.map { it.metadata.installationPath }
     }
 
-    private fun getJavaLanguageVersion(extension: PackagingPluginExtension): Provider<JavaLanguageVersion> {
-        val javaVersion = extension.name.map { appName ->
-            if (appName == "Bisq") {
-                // Bisq1
-                if (getOS() == OS.MAC_OS) {
-                    15
-                } else {
-                    17
-                }
-            } else {
-                // Bisq2
-                21
-            }
-        }
-        return javaVersion.map { JavaLanguageVersion.of(it) }
+    private fun getJavaLanguageVersion(project: Project): Provider<JavaLanguageVersion> {
+        return project.providers.gradleProperty("releaseBuild.javaVersion")
+            .map { it.substringBefore('.').toInt() }
+            .orElse(21)
+            .map { JavaLanguageVersion.of(it) }
     }
 }

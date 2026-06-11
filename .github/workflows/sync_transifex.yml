@@ -10,16 +10,20 @@ on:
     workflows: [ Build Bisq 2 ]
     types: [ completed ]
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: Verify Transifex configuration
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
       - name: Verify that .tx/config is in sync with the i18n folder
         run: |
@@ -50,16 +54,17 @@ jobs:
     name: Calculate pushes and push source files
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     needs: verify
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       t_matrix: ${{ steps.calculate-pushes.outputs.t_matrix || '{"include":[]}' }}
       has_translation_changes: ${{ steps.calculate-pushes.outputs.has_translation_changes }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Check if the commit is in the main branch
         id: check_commit
@@ -255,7 +260,7 @@ jobs:
     name: Push translations (${{ matrix.name }})
     if: needs.calculate_and_push_sources.outputs.t_matrix != '{"include":[]}'
     needs: calculate_and_push_sources
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # PHASE 1: Dynamic batching with controlled parallelism
     # Batches are generated dynamically based on changed locales only
     # Uses scripts/generate_transifex_batches.py for optimal batch configuration
@@ -265,9 +270,10 @@ jobs:
       fail-fast: false  # Don't cancel all jobs if one fails
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
       - name: Install Transifex CLI
         shell: bash
@@ -498,7 +504,7 @@ jobs:
     name: Upload Summary Report
     needs: [calculate_and_push_sources, push_translations]
     if: always() && needs.calculate_and_push_sources.outputs.has_translation_changes == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Generate summary
         run: |

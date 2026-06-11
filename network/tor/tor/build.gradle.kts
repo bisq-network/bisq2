@@ -42,6 +42,6 @@ dependencies {
     implementation(libs.tukaani)
     implementation(libs.typesafe.config)
 
-    implementation(libs.jsocks)
-    implementation(libs.jtorctl)
+    api(project(":jsocks"))
+    implementation(project(":jtorctl"))
 }

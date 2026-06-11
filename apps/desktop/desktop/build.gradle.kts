@@ -4,15 +4,12 @@ plugins {
 }
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
 
 javafx {
-    version = "21.0.6"
+    version = "21.0.11"
     modules = listOf("javafx.controls", "javafx.media")
 }
 
@@ -62,6 +59,5 @@ dependencies {
     }
 
     testImplementation(libs.testfx.junit5)
-    testImplementation(libs.openjfx.monocle)
+    testImplementation(libs.hamcrest)
 }
-

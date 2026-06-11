@@ -96,7 +96,7 @@ jobs:
     # just merges. Skip everything when the PR was closed without merging —
     # there's nothing to sync. (Per @wodoro.)
     if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     # No job-level permissions — inherits the read-only top-level scope.
 
@@ -160,7 +160,7 @@ jobs:
   verify-skip-label:
     name: Verify skip-sync-to-main label authority
     if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     # Read-only — same as detect-active-branch.
 
@@ -245,13 +245,30 @@ jobs:
       github.event.pull_request.merged == true
       && needs.detect-active-branch.outputs.should_sync == 'true'
       && needs.verify-skip-label.outputs.skip_by_maintainer != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Least-privilege: this job only POSTS / UPDATES A COMMENT on the source
     # PR. It does NOT push any branch or open a PR (that's the author's job,
     # with their own GPG-signed commit). PR conversation comments go through
     # the Issues API (PRs are issues for that endpoint), so we need
     # `issues: write`.
+    #
+    # Caveat — declaring `issues: write` here is necessary but NOT sufficient.
+    # GitHub enforces a permissions ceiling at both repo and org level. If
+    # either is set to "Read repository contents and packages permissions"
+    # (the default for newer repos / orgs), this declaration is silently
+    # capped at read-only and the comment-posting step fails at runtime with:
+    #
+    #   HttpError: Resource not accessible by integration
+    #   POST /repos/<owner>/<repo>/issues/<n>/comments  -> 403
+    #   x-accepted-github-permissions: 'issues=write; pull_requests=write'
+    #
+    # Fix: a repo admin sets Settings > Actions > General > Workflow
+    # permissions to "Read and write permissions". The org setting (if more
+    # restrictive) overrides the repo setting, so the org may need flipping
+    # too. There is no workflow-side workaround that does not require an
+    # admin action (a PAT secret or a GitHub App installation token would
+    # bypass the ceiling but both need a maintainer to provision them).
     permissions:
       contents: read
       pull-requests: read
@@ -259,12 +276,13 @@ jobs:
 
     steps:
       - name: Checkout main
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           # Need full history so the cherry-pick dry-run can resolve the
           # source PR's merge commit against `main`.
           fetch-depth: 0
           ref: main
+          persist-credentials: false
 
       - name: Dry-run the cherry-pick to detect conflicts
         id: cherry_pick

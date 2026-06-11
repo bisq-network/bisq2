@@ -21,14 +21,18 @@ import bisq.application.ApplicationService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.NetworkUtils;
+import bisq.common.webcam.WebcamIpcAuthenticator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -43,7 +47,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 // scenarios with failed permissions.
 @Slf4j
 public class WebcamAppService implements Service {
-    private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
     private static final long STARTUP_TIME_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
     private static final long CHECK_HEART_BEAT_INTERVAL = TimeUnit.SECONDS.toMillis(10);
     private static final long HEART_BEAT_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
@@ -62,15 +65,16 @@ public class WebcamAppService implements Service {
 
     @Getter
     private final WebcamAppModel model;
-    private final QrCodeListeningServer qrCodeListeningServer;
+    private final InputHandler inputHandler;
     private final WebcamProcessLauncher webcamProcessLauncher;
     private Optional<Scheduler> checkHeartBeatUpdateScheduler = Optional.empty();
     private Optional<Scheduler> maxStartupTimeScheduler = Optional.empty();
+    private Optional<InputStream> webcamIpcInputStream = Optional.empty();
+    private Optional<ExecutorService> webcamIpcReaderExecutor = Optional.empty();
 
     public WebcamAppService(ApplicationService.Config config) {
         model = new WebcamAppModel(config);
-        InputHandler inputHandler = new InputHandler(model);
-        qrCodeListeningServer = new QrCodeListeningServer(SOCKET_TIMEOUT, inputHandler, this::handleException);
+        inputHandler = new InputHandler(model);
         webcamProcessLauncher = new WebcamProcessLauncher(model.getAppDataDirPath());
 
         state.set(NEW);
@@ -82,7 +86,8 @@ public class WebcamAppService implements Service {
         state.set(STOPPING);
         stopSchedulers();
         unbind();
-        qrCodeListeningServer.stopServer();
+        inputHandler.clearSessionSecret();
+        stopWebcamIpcReader();
         model.reset();
         return webcamProcessLauncher.shutdown()
                 .thenApply(terminatedGraceFully -> {
@@ -100,24 +105,25 @@ public class WebcamAppService implements Service {
 
         setupTimeoutSchedulers();
 
-        int port = NetworkUtils.selectRandomPort();
-        model.setPort(port);
-
-        // Start local tcp server listening for input from qr code scan
-        qrCodeListeningServer.start(port);
+        String sessionSecret = WebcamIpcAuthenticator.generateSessionSecret();
+        inputHandler.setSessionSecret(sessionSecret);
 
         state.set(STARTING);
-        log.error("STARTING");
-        webcamProcessLauncher.start(port)
+        log.info("Webcam app starting");
+        webcamProcessLauncher.start(sessionSecret)
                 .whenComplete((process, throwable) -> {
                     if (throwable != null) {
                         handleException(throwable);
+                    } else if (isStoppingOrTerminated()) {
+                        log.info("Webcam app process launched after shutdown request. Stopping it.");
+                        webcamProcessLauncher.shutdown();
                     } else {
-                        log.error("RUNNING");
+                        startWebcamIpcReader(process.getInputStream());
+                        log.info("Webcam app running");
                         state.set(RUNNING);
                     }
                 });
-        log.info("We start the webcam application as new Java process and listen for a QR code result. TCP listening port={}", port);
+        log.info("We start the webcam application as new Java process and listen for a QR code result.");
 
         qrCodePin = model.getQrCode().addObserver(qrCode -> {
             if (qrCode != null) {
@@ -166,6 +172,71 @@ public class WebcamAppService implements Service {
         maxStartupTimeScheduler = Optional.empty();
         checkHeartBeatUpdateScheduler.ifPresent(Scheduler::stop);
         checkHeartBeatUpdateScheduler = Optional.empty();
+    }
+
+    private synchronized void startWebcamIpcReader(InputStream inputStream) {
+        stopWebcamIpcReader();
+        ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("WebcamIpcReader");
+        webcamIpcInputStream = Optional.of(inputStream);
+        webcamIpcReaderExecutor = Optional.of(executorService);
+        CompletableFuture.runAsync(() -> readWebcamIpc(inputStream, executorService), executorService);
+    }
+
+    private void readWebcamIpc(InputStream inputStream, ExecutorService executorService) {
+        try (inputStream) {
+            log.info("Start reading webcam IPC");
+            while (!isStoppingOrTerminated() && !Thread.currentThread().isInterrupted()) {
+                try {
+                    inputHandler.onInputStream(inputStream);
+                } catch (IllegalArgumentException e) {
+                    if (!isStoppingOrTerminated()) {
+                        log.error("Webcam IPC stream failed", e);
+                        handleException(e);
+                    }
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            if (!isStoppingOrTerminated()) {
+                log.error("Webcam IPC stream closed unexpectedly", e);
+                handleException(e);
+            }
+        } finally {
+            clearWebcamIpcReader(inputStream, executorService);
+            executorService.shutdown();
+            log.info("Stopped reading webcam IPC");
+        }
+    }
+
+    private synchronized void stopWebcamIpcReader() {
+        webcamIpcInputStream.ifPresent(this::closeWebcamIpcInputStream);
+        webcamIpcInputStream = Optional.empty();
+        webcamIpcReaderExecutor.ifPresent(ExecutorService::shutdownNow);
+        webcamIpcReaderExecutor = Optional.empty();
+    }
+
+    private void closeWebcamIpcInputStream(InputStream inputStream) {
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            log.warn("Closing webcam IPC stream failed", e);
+        }
+    }
+
+    private synchronized void clearWebcamIpcReader(InputStream inputStream, ExecutorService executorService) {
+        Optional<InputStream> currentInputStream = webcamIpcInputStream;
+        if (currentInputStream.isPresent() && currentInputStream.get() == inputStream) {
+            webcamIpcInputStream = Optional.empty();
+        }
+        Optional<ExecutorService> currentExecutor = webcamIpcReaderExecutor;
+        if (currentExecutor.isPresent() && currentExecutor.get() == executorService) {
+            webcamIpcReaderExecutor = Optional.empty();
+        }
+    }
+
+    private boolean isStoppingOrTerminated() {
+        State currentState = state.get();
+        return currentState == STOPPING || currentState == TERMINATED;
     }
 
     private void handleException(Throwable throwable) {

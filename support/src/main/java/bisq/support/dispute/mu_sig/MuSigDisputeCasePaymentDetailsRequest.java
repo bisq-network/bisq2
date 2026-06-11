@@ -20,11 +20,11 @@ package bisq.support.dispute.mu_sig;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,11 +43,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
     private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final String tradeId;
-    private final UserProfile senderUserProfile;
+    private final NetworkId senderNetworkId;
 
-    public MuSigDisputeCasePaymentDetailsRequest(String tradeId, UserProfile senderUserProfile) {
+    public MuSigDisputeCasePaymentDetailsRequest(String tradeId, NetworkId senderNetworkId) {
         this.tradeId = tradeId;
-        this.senderUserProfile = senderUserProfile;
+        this.senderNetworkId = senderNetworkId;
 
         verify();
     }
@@ -61,13 +61,13 @@ public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessa
     public bisq.support.protobuf.MuSigDisputeCasePaymentDetailsRequest.Builder getValueBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.MuSigDisputeCasePaymentDetailsRequest.newBuilder()
                 .setTradeId(tradeId)
-                .setSenderUserProfile(senderUserProfile.toProto(serializeForHash));
+                .setSenderNetworkId(senderNetworkId.toProto(serializeForHash));
     }
 
     public static MuSigDisputeCasePaymentDetailsRequest fromProto(bisq.support.protobuf.MuSigDisputeCasePaymentDetailsRequest proto) {
         return new MuSigDisputeCasePaymentDetailsRequest(
                 proto.getTradeId(),
-                UserProfile.fromProto(proto.getSenderUserProfile())
+                NetworkId.fromProto(proto.getSenderNetworkId())
         );
     }
 
@@ -89,6 +89,6 @@ public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessa
 
     @Override
     public PublicKey getSenderPublicKey() {
-        return senderUserProfile.getPublicKey();
+        return senderNetworkId.getPubKey().getPublicKey();
     }
 }

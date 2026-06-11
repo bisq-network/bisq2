@@ -40,10 +40,12 @@ import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
+import java.security.PublicKey;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -97,7 +99,14 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
 
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()),
                 "Senders networkId must be same as takers networkId from takers contract");
+        ContractService contractService = serviceProvider.getContractService();
+        PublicKey takerPublicKey = takersContract.getTaker().getNetworkId().getPubKey().getPublicKey();
+        checkArgument(contractService.arePublicKeysMatching(message.getSenderPublicKey(), takerPublicKey),
+                "Takers message sender public key must match takers network id public key");
 
+        validateOfferAmount(takersOffer,
+                takersContract.getBaseSideAmount(),
+                takersContract.getQuoteSideAmount());
         validateAmount(takersOffer, takersContract);
 
         checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()),
@@ -119,8 +128,11 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
 
         ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
+        checkArgument(contractService.arePublicKeysMatching(takersContractSignatureData,
+                        takerPublicKey),
+                "Takers contract signature public key must match takers network id public key");
         try {
-            checkArgument(serviceProvider.getContractService().verifyContractSignature(takersContract, takersContractSignatureData),
+            checkArgument(contractService.verifyContractSignature(takersContract, takersContractSignatureData),
                     "Verifying takers contract signature failed");
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);

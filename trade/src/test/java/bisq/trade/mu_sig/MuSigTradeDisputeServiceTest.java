@@ -242,7 +242,7 @@ class MuSigTradeDisputeServiceTest {
         MuSigMediationStateChangeMessage message = new MuSigMediationStateChangeMessage(
                 "msg-8",
                 fixture.tradeId(),
-                fixture.mediator().orElseThrow(),
+                fixture.mediator().orElseThrow().getNetworkId(),
                 MediationCaseState.OPEN,
                 Optional.empty(),
                 Optional.empty()
@@ -270,7 +270,7 @@ class MuSigTradeDisputeServiceTest {
                 .thenReturn(Optional.of(createOpenTradeChannel(fixture)));
 
         MuSigDisputeCasePaymentDetailsRequest message =
-                new MuSigDisputeCasePaymentDetailsRequest(fixture.tradeId(), fixture.mediator().orElseThrow());
+                new MuSigDisputeCasePaymentDetailsRequest(fixture.tradeId(), fixture.mediator().orElseThrow().getNetworkId());
 
         service.onDisputeMessage(message);
         assertThat(persistCalls.get()).isZero();
@@ -280,7 +280,7 @@ class MuSigTradeDisputeServiceTest {
         verify(muSigTraderMediationService).sendDisputeCasePaymentDetailsResponse(
                 fixture.tradeId(),
                 fixture.identity(),
-                fixture.mediator().orElseThrow(),
+                fixture.mediator().orElseThrow().getNetworkId(),
                 fixture.taker().getAccountPayload().orElseThrow(),
                 fixture.maker().getAccountPayload().orElseThrow());
     }
@@ -292,7 +292,7 @@ class MuSigTradeDisputeServiceTest {
         when(muSigOpenTradeChannelService.findChannelByTradeId(fixture.tradeId())).thenReturn(Optional.of(createOpenTradeChannel(fixture)));
 
         MuSigMediationResultAcceptanceMessage message =
-                new MuSigMediationResultAcceptanceMessage(fixture.tradeId(), fixture.takerProfile(), true);
+                new MuSigMediationResultAcceptanceMessage(fixture.tradeId(), fixture.takerProfile().getNetworkId(), true);
 
         service.onDisputeMessage(message);
         assertThat(fixture.peer().getMediationResultAccepted()).isEmpty();
@@ -314,7 +314,7 @@ class MuSigTradeDisputeServiceTest {
         MuSigArbitrationStateChangeMessage message = new MuSigArbitrationStateChangeMessage(
                 "msg-11",
                 fixture.tradeId(),
-                fixture.arbitrator().orElseThrow(),
+                fixture.arbitrator().orElseThrow().getNetworkId(),
                 ArbitrationCaseState.OPEN,
                 Optional.empty(),
                 Optional.empty()

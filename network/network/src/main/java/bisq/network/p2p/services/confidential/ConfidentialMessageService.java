@@ -23,6 +23,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
@@ -514,8 +515,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             byte[] encodedSenderPublicKey = confidentialData.getSenderPublicKey();
 
             if (decryptedEnvelopePayloadMessage instanceof SenderPublicKeyProvidingPayload pubKeyProvidingMessage) {
-                checkArgument(Arrays.equals(pubKeyProvidingMessage.getSenderPublicKey().getEncoded(), encodedSenderPublicKey),
-                        "Public key of decrypted pubKeyProvidingMessage and senderPublicKey do not match.");
+                verifySenderPublicKeyBinding(pubKeyProvidingMessage, encodedSenderPublicKey);
+            }
+            if (decryptedEnvelopePayloadMessage instanceof ReceiverPublicKeyProvidingPayload pubKeyProvidingMessage) {
+                verifyReceiverPublicKeyBinding(pubKeyProvidingMessage, receiversKeyPair.getPublic());
             }
 
             PublicKey senderPublicKey = KeyGeneration.generatePublic(encodedSenderPublicKey);
@@ -533,5 +536,23 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);
             throw new RuntimeException(e);
         }
+    }
+
+    static void verifySenderPublicKeyBinding(SenderPublicKeyProvidingPayload pubKeyProvidingMessage,
+                                             byte[] encodedSenderPublicKey) {
+        Optional<PublicKey> senderPublicKey = pubKeyProvidingMessage.findSenderPublicKey();
+        if (senderPublicKey.isPresent()) {
+            checkArgument(Arrays.equals(senderPublicKey.get().getEncoded(), encodedSenderPublicKey),
+                    "Public key of decrypted pubKeyProvidingMessage and senderPublicKey do not match.");
+        } else {
+            checkArgument(!pubKeyProvidingMessage.isSenderPublicKeyRequired(),
+                    "Public key of decrypted pubKeyProvidingMessage is required but not present.");
+        }
+    }
+
+    static void verifyReceiverPublicKeyBinding(ReceiverPublicKeyProvidingPayload pubKeyProvidingMessage,
+                                               PublicKey receiverPublicKey) {
+        checkArgument(Arrays.equals(pubKeyProvidingMessage.getReceiverPublicKey().getEncoded(), receiverPublicKey.getEncoded()),
+                "Public key of decrypted pubKeyProvidingMessage and receiverPublicKey do not match.");
     }
 }

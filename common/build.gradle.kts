@@ -43,6 +43,7 @@ val generateVersionClass by tasks.registering {
 
     outputs.dir(outputDir)
     inputs.property("version", project.version)
+    inputs.property("torVersion", torVersion)
 }
 
 

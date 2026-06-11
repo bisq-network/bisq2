@@ -16,11 +16,13 @@ message MediationRequest {
   user.UserProfile requester = 3;
   user.UserProfile peer = 4;
   repeated chat.ChatMessage chatMessages = 5;
-  optional network.identity.NetworkId mediatorNetworkId = 6;
+  network.identity.NetworkId mediatorNetworkId = 6;
 }
 
 message MediatorsResponse {
   string tradeId = 1;
+  optional network.identity.NetworkId senderNetworkId = 2;
+  sint32 version = 3;
 }
 
 message MediationCase {
@@ -88,12 +90,12 @@ message MuSigMediationResult {
 
 message MuSigDisputeCasePaymentDetailsRequest {
   string tradeId = 1;
-  user.UserProfile senderUserProfile = 2;
+  network.identity.NetworkId senderNetworkId = 2;
 }
 
 message MuSigDisputeCasePaymentDetailsResponse {
   string tradeId = 1;
-  user.UserProfile senderUserProfile = 2;
+  network.identity.NetworkId senderNetworkId = 2;
   account.AccountPayload takerAccountPayload = 3;
   account.AccountPayload makerAccountPayload = 4;
 }
@@ -101,7 +103,7 @@ message MuSigDisputeCasePaymentDetailsResponse {
 message MuSigMediationStateChangeMessage {
   string id = 1;
   string tradeId = 2;
-  user.UserProfile senderUserProfile = 3;
+  network.identity.NetworkId senderNetworkId = 3;
   MediationCaseState mediationCaseState = 4;
   optional MuSigMediationResult muSigMediationResult = 5;
   optional bytes mediationResultSignature = 6;
@@ -109,14 +111,14 @@ message MuSigMediationStateChangeMessage {
 
 message MuSigDisputeCaseDataMessage {
   string tradeId = 1;
-  user.UserProfile senderUserProfile = 2;
+  network.identity.NetworkId senderNetworkId = 2;
   bytes contractHash = 3;
   repeated chat.ChatMessage chatMessages = 4;
 }
 
 message MuSigMediationResultAcceptanceMessage {
   string tradeId = 1;
-  user.UserProfile senderUserProfile = 2;
+  network.identity.NetworkId senderNetworkId = 2;
   bool mediationResultAccepted = 3;
 }
 
@@ -201,7 +203,7 @@ message MuSigArbitrationResult {
 message MuSigArbitrationStateChangeMessage {
   string id = 1;
   string tradeId = 2;
-  user.UserProfile senderUserProfile = 3;
+  network.identity.NetworkId senderNetworkId = 3;
   ArbitrationCaseState arbitrationCaseState = 4;
   optional MuSigArbitrationResult muSigArbitrationResult = 5;
   optional bytes arbitrationResultSignature = 6;

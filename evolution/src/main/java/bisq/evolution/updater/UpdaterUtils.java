@@ -40,10 +40,6 @@ public class UpdaterUtils {
         return FileReaderUtils.readUTF8String(dirPath.resolve(SIGNING_KEY_FILE));
     }
 
-    public static String getSigningKey(Path dirPath, String signingKeyId) throws IOException {
-        return FileReaderUtils.readUTF8String(dirPath.resolve(signingKeyId + ASC_EXTENSION));
-    }
-
     public static String getDownloadFileName(String version, boolean isLauncherUpdate) {
         return isLauncherUpdate ? getInstallerFileName(version) : getJarFileName(version);
     }

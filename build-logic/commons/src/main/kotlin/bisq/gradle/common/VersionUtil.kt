@@ -5,5 +5,5 @@ import java.io.File
 
 object VersionUtil {
     fun getVersionFromFile(project: Project): String =
-            File(project.layout.projectDirectory.toString() + "/version.txt").readText()
+            File(project.layout.projectDirectory.toString() + "/version.txt").readText().trim()
 }
