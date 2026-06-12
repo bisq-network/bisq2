@@ -84,7 +84,7 @@ public class BuyerState2a extends BaseState {
             super.onActivate();
 
             BisqEasyTrade trade = model.getTrade();
-            String sellersAccountData = trade.getPaymentAccountData().get();
+            String sellersAccountData = trade.getPaymentAccountData().orElse(null);
 
             if (bisqEasyService.isAccountDataBanned(sellersAccountData)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
@@ -174,7 +174,7 @@ public class BuyerState2a extends BaseState {
             headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.headline", model.getFormattedQuoteAmount()));
             quoteAmount.setText(model.getFormattedQuoteAmount());
             quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
-            account.setText(model.getTrade().getPaymentAccountData().get());
+            account.setText(model.getTrade().getPaymentAccountData().orElse(null));
             account.validate();
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());
