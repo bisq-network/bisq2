@@ -71,6 +71,7 @@ import bisq.user.banned.UserProfileBannedException;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileIgnoredException;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -267,12 +268,15 @@ public class MuSigService extends LifecycleService {
                                               Account<?, ?> takersAccount)
             throws UserProfileBannedException, NoMuSigMediatorAvailableException,
             NoMuSigArbitratorAvailableException,
-            NoMarketPriceAvailableException, RateLimitExceededException {
+            NoMarketPriceAvailableException, RateLimitExceededException, UserProfileIgnoredException {
 
         checkArgument(isActivated());
         String makersUserProfileId = muSigOffer.getMakersUserProfileId();
         validateUserProfile(makersUserProfileId);
         validateUserProfile(takerIdentity.getId());
+        if (userProfileService.isChatUserIgnored(makersUserProfileId)) {
+            throw new UserProfileIgnoredException(makersUserProfileId);
+        }
 
         Optional<UserProfile> mediator = muSigTraderMediationService.selectMediator(makersUserProfileId,
                 takerIdentity.getId(),

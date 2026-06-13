@@ -223,6 +223,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
     private void showTakeOfferStatusFeedback(MuSigTakeOfferReviewModel.TakeOfferStatus status) {
         if (status == MuSigTakeOfferReviewModel.TakeOfferStatus.SENT) {
+            minWaitingTimePassed = false;
             sendTakeOfferMessageOverlay.setVisible(true);
 
             Transitions.blurStrong(gridPane, 0);
@@ -243,6 +244,8 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
             takeOfferSendMessageWaitingAnimation.stop();
         } else if (status == MuSigTakeOfferReviewModel.TakeOfferStatus.NOT_STARTED) {
             sendTakeOfferMessageOverlay.setVisible(false);
+            takeOfferSuccessOverlay.setVisible(false);
+            takeOfferSendMessageWaitingAnimation.stop();
             Transitions.removeEffect(gridPane);
         }
     }
