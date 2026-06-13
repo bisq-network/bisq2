@@ -329,6 +329,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             takeOfferSendMessageWaitingAnimation.stop();
         } else if (status == TradeWizardReviewModel.TakeOfferStatus.NOT_STARTED) {
             sendTakeOfferMessageOverlay.setVisible(false);
+            takeOfferSuccessOverlay.setVisible(false);
+            takeOfferSendMessageWaitingAnimation.stop();
             Transitions.removeEffect(gridPane);
         }
     }
