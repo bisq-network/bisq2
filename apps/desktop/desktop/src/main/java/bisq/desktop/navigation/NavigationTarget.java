@@ -39,6 +39,8 @@ public enum NavigationTarget {
 
     UNLOCK(OVERLAY, false),
     TAC(OVERLAY, false),
+    TAC_RISK_ACK(TAC, false),
+    TAC_LEGAL_TERMS(TAC, false),
     UPDATER(OVERLAY, false),
 
     RESTORE_FROM_BACKUP(OVERLAY, false),

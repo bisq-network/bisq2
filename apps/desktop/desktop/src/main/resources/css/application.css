@@ -59,6 +59,78 @@
     -fx-font-family: "IBM Plex Sans Light" !important;
 }
 
+.tac-risk-overview {
+    -fx-background-color: transparent;
+}
+
+.tac-risk-row {
+    -fx-padding: 2 12 2 12;
+}
+
+.tac-risk-icon {
+    -fx-opacity: 0.95;
+}
+
+.tac-risk-title {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-size: 1.05em !important;
+    -fx-font-family: "IBM Plex Sans" !important;
+}
+
+.tac-risk-text {
+    -fx-fill: -fx-mid-text-color !important;
+    -fx-text-fill: -fx-mid-text-color !important;
+    -fx-font-size: 0.95em !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.tac-risk-checkbox {
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-size: 0.95em !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.tac-legal-scroll-pane {
+    -fx-background-color: -bisq-dark-grey-20;
+    -fx-background-radius: 8;
+}
+
+.tac-legal-scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.tac-legal-content {
+    -fx-padding: 14 24 14 16;
+}
+
+.tac-legal-section-number {
+    -fx-fill: -fx-mid-text-color !important;
+    -fx-text-fill: -fx-mid-text-color !important;
+    -fx-font-size: 0.95em !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.tac-legal-section-title {
+    -fx-fill: -fx-light-text-color !important;
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-size: 0.98em !important;
+    -fx-font-family: "IBM Plex Sans" !important;
+}
+
+.tac-legal-section-body {
+    -fx-fill: -fx-mid-text-color !important;
+    -fx-text-fill: -fx-mid-text-color !important;
+    -fx-font-size: 0.95em !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
+.tac-legal-checkbox {
+    -fx-text-fill: -fx-light-text-color !important;
+    -fx-font-size: 0.95em !important;
+    -fx-font-family: "IBM Plex Sans Light" !important;
+}
+
 /*******************************************************************************
  * Bisq 2 welcome                                                              *
  ******************************************************************************/

@@ -99,7 +99,10 @@ public class SettingsRestApi extends RestApiBase {
     public Response updateSetting(@Valid SettingsChangeRequest request) {
         try {
             if (request.isTacAccepted() != null) {
-                settingsService.setIsTacAccepted(request.isTacAccepted());
+                if (!request.isTacAccepted()) {
+                    return buildErrorResponse(Response.Status.BAD_REQUEST, "TAC acceptance cannot be revoked");
+                }
+                settingsService.acceptCurrentTac();
             } else if (request.bisqEasyTradeRulesConfirmed() != null) {
                 settingsService.setBisqEasyTradeRulesConfirmed(request.bisqEasyTradeRulesConfirmed());
             } else if (request.muSigTradeRulesConfirmed() != null) {

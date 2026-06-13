@@ -15,16 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay.tac;
+package bisq.settings;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.navigation.NavigationTarget;
-import lombok.Getter;
+public final class TacVersion {
+    public static final String CURRENT = "v2";
 
-@Getter
-public class TacModel extends NavigationModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TAC_RISK_ACK;
+    private TacVersion() {
     }
 }

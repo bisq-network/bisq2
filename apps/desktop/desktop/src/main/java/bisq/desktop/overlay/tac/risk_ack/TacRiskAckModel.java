@@ -15,16 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay.tac;
+package bisq.desktop.overlay.tac.risk_ack;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.navigation.NavigationTarget;
+import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 
 @Getter
-public class TacModel extends NavigationModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TAC_RISK_ACK;
+public class TacRiskAckModel implements Model {
+    private final BooleanProperty lossAcknowledged = new SimpleBooleanProperty();
+    private final BooleanProperty noRecoveryAcknowledged = new SimpleBooleanProperty();
+    private final BooleanProperty readOnly = new SimpleBooleanProperty();
+
+    boolean isConfirmed() {
+        return lossAcknowledged.get() && noRecoveryAcknowledged.get();
+    }
+
+    boolean canContinue() {
+        return readOnly.get() || isConfirmed();
     }
 }

@@ -37,9 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import static bisq.settings.SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
@@ -67,7 +69,10 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> muSigTradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>();
     final ObservableSet<String> consumedAlertIds = new ObservableSet<>();
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated(since = "2.1.12")
     final Observable<Boolean> isTacAccepted = new Observable<>();
+    final List<TacAcceptance> tacAcceptances = new CopyOnWriteArrayList<>();
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>();
     final Observable<Boolean> preventStandbyMode = new Observable<>();
     final Observable<String> languageTag = new Observable<>();
@@ -106,6 +111,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 ChatNotificationType.ALL,
                 false,
+                new ArrayList<>(),
                 new HashSet<>(),
                 true,
                 LanguageRepository.getDefaultLanguageTag(),
@@ -143,6 +149,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                   boolean muSigTradeRulesConfirmed,
                   ChatNotificationType chatNotificationType,
                   boolean isTacAccepted,
+                  List<TacAcceptance> tacAcceptances,
                   Set<String> consumedAlertIds,
                   boolean closeMyOfferWhenTaken,
                   String languageTag,
@@ -178,6 +185,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.muSigTradeRulesConfirmed.set(muSigTradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
         this.isTacAccepted.set(isTacAccepted);
+        this.tacAcceptances.addAll(tacAcceptances);
         this.consumedAlertIds.setAll(consumedAlertIds);
         this.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
         this.languageTag.set(languageTag);
@@ -219,6 +227,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setMuSigTradeRulesConfirmed(muSigTradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProtoEnum())
                 .setIsTacAccepted(isTacAccepted.get())
+                .addAllTacAcceptances(tacAcceptances.stream()
+                        .map(tacAcceptance -> tacAcceptance.toProto(serializeForHash))
+                        .collect(Collectors.toList()))
                 .addAllConsumedAlertIds(new ArrayList<>(consumedAlertIds))
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
                 .setLanguageTag(languageTag.get())
@@ -297,6 +308,9 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getMuSigTradeRulesConfirmed(),
                 ChatNotificationType.fromProto(proto.getChatNotificationType()),
                 proto.getIsTacAccepted(),
+                proto.getTacAcceptancesList().stream()
+                        .map(TacAcceptance::fromProto)
+                        .collect(Collectors.toList()),
                 new HashSet<>(proto.getConsumedAlertIdsList()),
                 proto.getCloseMyOfferWhenTaken(),
                 proto.getLanguageTag(),
@@ -348,6 +362,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 muSigTradeRulesConfirmed.get(),
                 chatNotificationType.get(),
                 isTacAccepted.get(),
+                List.copyOf(tacAcceptances),
                 Set.copyOf(consumedAlertIds),
                 closeMyOfferWhenTaken.get(),
                 languageTag.get(),
@@ -388,6 +403,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             muSigTradeRulesConfirmed.set(persisted.muSigTradeRulesConfirmed.get());
             chatNotificationType.set(persisted.chatNotificationType.get());
             isTacAccepted.set(persisted.isTacAccepted.get());
+            tacAcceptances.clear();
+            tacAcceptances.addAll(persisted.tacAcceptances);
             consumedAlertIds.setAll(persisted.consumedAlertIds);
             closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
             languageTag.set(persisted.languageTag.get());
