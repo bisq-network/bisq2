@@ -31,8 +31,12 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import jakarta.ws.rs.core.UriBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.grizzly.http.server.HttpHandlerRegistration;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.Request;
+import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.websockets.WebSocketAddOn;
@@ -237,6 +241,17 @@ public class HttpServerBootstrapService implements Service {
         httpServer.ifPresentOrElse(httpServer ->
                         httpServer.getServerConfiguration().addHttpHandler(new StaticFileHandler(context), path),
                 () -> log.error("addStaticFileHandler called before httpServer is set."));
+    }
+
+    public void addRedirectHandler(String path, String location) {
+        httpServer.ifPresentOrElse(httpServer ->
+                        httpServer.getServerConfiguration().addHttpHandler(new HttpHandler() {
+                            @Override
+                            public void service(Request request, Response response) throws IOException {
+                                response.sendRedirect(location);
+                            }
+                        }, HttpHandlerRegistration.fromString(path)),
+                () -> log.error("addRedirectHandler called before httpServer is set."));
     }
 
     public ReadOnlyObservable<State> getState() {
