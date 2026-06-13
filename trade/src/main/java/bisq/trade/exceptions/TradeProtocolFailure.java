@@ -25,7 +25,8 @@ public enum TradeProtocolFailure implements ProtoEnum {
     UNKNOWN(true),
     PRICE_DEVIATION(false),
     NO_MATCHING_OFFER_FOUND(false),
-    MEDIATORS_NOT_MATCHING(false);
+    MEDIATORS_NOT_MATCHING(false),
+    PEER_IGNORED(false);
 
     @Getter
     private final boolean isUnexpected;
