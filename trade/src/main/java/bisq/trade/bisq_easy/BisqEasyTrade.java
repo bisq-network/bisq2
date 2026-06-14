@@ -39,17 +39,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, BisqEasyTradeParty> {
-    @Getter
-    private final Observable<String> paymentAccountData = new Observable<>();
-    @Getter
-    private final Observable<String> bitcoinPaymentData = new Observable<>(); // btc address in case of mainChain, or LN invoice if LN is used
-    // paymentProof can be null in Observable
-    @Getter
-    private final Observable<String> paymentProof = new Observable<>(); // txId in case of mainChain, or preimage if LN is used
+    private final Observable<Optional<String>> paymentAccountData = new Observable<>(Optional.empty());
+    private final Observable<Optional<String>> bitcoinPaymentData = new Observable<>(Optional.empty()); // btc address in case of mainChain, or LN invoice if LN is used
+    private final Observable<Optional<String>> paymentProof = new Observable<>(Optional.empty()); // txId in case of mainChain, or preimage if LN is used
 
     // The role who cancelled or rejected the trade
     @Getter
@@ -110,9 +108,9 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
     private bisq.trade.protobuf.BisqEasyTrade.Builder getBisqEasyTradeBuilder(boolean serializeForHash) {
         var builder = bisq.trade.protobuf.BisqEasyTrade.newBuilder();
-        Optional.ofNullable(paymentAccountData.get()).ifPresent(builder::setPaymentAccountData);
-        Optional.ofNullable(bitcoinPaymentData.get()).ifPresent(builder::setBitcoinPaymentData);
-        Optional.ofNullable(paymentProof.get()).ifPresent(builder::setPaymentProof);
+        getPaymentAccountData().ifPresent(builder::setPaymentAccountData);
+        getBitcoinPaymentData().ifPresent(builder::setBitcoinPaymentData);
+        getPaymentProof().ifPresent(builder::setPaymentProof);
         Optional.ofNullable(interruptTradeInitiator.get()).ifPresent(e -> builder.setInterruptTradeInitiator(e.toProtoEnum()));
         getTradeCompletedDate().ifPresent(builder::setTradeCompletedDate);
         return builder;
@@ -149,13 +147,13 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
         bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();
         if (bisqEasyTradeProto.hasPaymentAccountData()) {
-            trade.getPaymentAccountData().set(bisqEasyTradeProto.getPaymentAccountData());
+            trade.setPaymentAccountData(Optional.of(bisqEasyTradeProto.getPaymentAccountData()));
         }
         if (bisqEasyTradeProto.hasBitcoinPaymentData()) {
-            trade.getBitcoinPaymentData().set(bisqEasyTradeProto.getBitcoinPaymentData());
+            trade.setBitcoinPaymentData(Optional.of(bisqEasyTradeProto.getBitcoinPaymentData()));
         }
         if (bisqEasyTradeProto.hasPaymentProof()) {
-            trade.getPaymentProof().set(bisqEasyTradeProto.getPaymentProof());
+            trade.setPaymentProof(Optional.of(bisqEasyTradeProto.getPaymentProof()));
         }
         if (bisqEasyTradeProto.hasInterruptTradeInitiator()) {
             trade.getInterruptTradeInitiator().set(Role.fromProto(bisqEasyTradeProto.getInterruptTradeInitiator()));
@@ -173,6 +171,42 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
     public ReadOnlyObservable<BisqEasyTradeState> tradeStateObservable() {
         return tradeState;
+    }
+
+    public Optional<String> getPaymentAccountData() {
+        return paymentAccountData.get();
+    }
+
+    public void setPaymentAccountData(Optional<String> value) {
+        paymentAccountData.set(checkNotNull(value));
+    }
+
+    public ReadOnlyObservable<Optional<String>> paymentAccountDataObservable() {
+        return paymentAccountData;
+    }
+
+    public Optional<String> getBitcoinPaymentData() {
+        return bitcoinPaymentData.get();
+    }
+
+    public void setBitcoinPaymentData(Optional<String> value) {
+        bitcoinPaymentData.set(checkNotNull(value));
+    }
+
+    public ReadOnlyObservable<Optional<String>> bitcoinPaymentDataObservable() {
+        return bitcoinPaymentData;
+    }
+
+    public Optional<String> getPaymentProof() {
+        return paymentProof.get();
+    }
+
+    public void setPaymentProof(Optional<String> value) {
+        paymentProof.set(checkNotNull(value));
+    }
+
+    public ReadOnlyObservable<Optional<String>> paymentProofObservable() {
+        return paymentProof;
     }
 
     public Optional<Long> getTradeCompletedDate() {

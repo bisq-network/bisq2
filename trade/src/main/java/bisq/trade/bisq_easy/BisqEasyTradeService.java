@@ -487,15 +487,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         String redactedMarker = Res.get("data.redacted");
         long numChanges = getAllTrades().stream()
                 .filter(trade -> {
-                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get()) ||
-                            trade.getPaymentAccountData().get().equals(redactedMarker)) {
+                    if (trade.getPaymentAccountData().map(data -> StringUtils.isEmpty(data) || data.equals(redactedMarker)).orElse(true)) {
                         return false;
                     }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
                     if (doRedaction) {
 
-                        trade.getPaymentAccountData().set(redactedMarker);
+                        trade.setPaymentAccountData(Optional.of(redactedMarker));
                     }
                     return doRedaction;
                 })

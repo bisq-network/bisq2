@@ -71,7 +71,7 @@ public class BuyerStateLightning3b extends BaseState {
         public void onActivate() {
             super.onActivate();
 
-            model.setPaymentProof(Optional.ofNullable(model.getTrade().getPaymentProof().get()));
+            model.setPaymentProof(model.getTrade().getPaymentProof());
         }
 
         @Override

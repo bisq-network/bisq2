@@ -97,8 +97,8 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         public void onActivate() {
             super.onActivate();
 
-            model.setPaymentProof(model.getTrade().getPaymentProof().get());
-            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
+            model.setPaymentProof(model.getTrade().getPaymentProof().orElse(null));
+            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().orElse(null));
 
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);

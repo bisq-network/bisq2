@@ -129,7 +129,7 @@ public class SellerState3a extends BaseState {
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.description." + name));
             model.setPaymentProofPrompt(Res.get("bisqEasy.tradeState.info.seller.phase3a.paymentProof.prompt." + name));
 
-            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
+            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().orElse(null));
             double factor = 2.5;
             if (paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN)) {
                 // Typical bitcoin address require size of 29 or a multiple of it
