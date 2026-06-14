@@ -17,6 +17,9 @@
 
 package bisq.common.validation;
 
+import bisq.common.encoding.BitcoinURIScheme;
+
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -40,5 +43,13 @@ public class BitcoinAddressValidation {
     public static boolean isValid(String address) {
         return BASE58_PATTERN.matcher(address).matches() ||
                 BECH32_PATTERN.matcher(address).matches();
+    }
+
+    public static String canonicalize(String address) {
+        String extracted = BitcoinURIScheme.extractBitcoinAddress(address);
+        // bech32 is case-insensitive and stored lowercase on-chain; base58 is case-sensitive
+        return BECH32_PATTERN.matcher(extracted).matches()
+                ? extracted.toLowerCase(Locale.ROOT)
+                : extracted;
     }
 }
