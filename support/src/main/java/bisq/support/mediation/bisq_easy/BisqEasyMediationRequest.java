@@ -94,7 +94,7 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     @Override
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
-        if (getValueBuilder(false).build().getSerializedSize() > MAX_SERIALIZED_SIZE) {
+        if (getSerializedSize() > MAX_SERIALIZED_SIZE) {
             throw new SerializedSizeExceededException(
                     "Serialized mediation request size must not exceed " + MAX_SERIALIZED_SIZE + " bytes");
         }
