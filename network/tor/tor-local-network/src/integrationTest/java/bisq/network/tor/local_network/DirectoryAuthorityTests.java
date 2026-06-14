@@ -28,6 +28,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -89,7 +90,7 @@ public class DirectoryAuthorityTests {
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
             TorrcConfigGenerator torDaTorrcGenerator = TestNetworkTorrcGeneratorFactory.directoryTorrcGenerator(da);
-            Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
+            Map<String, List<String>> torrcConfigs = torDaTorrcGenerator.generate();
 
             Path torrcPath = da.getTorrcPath();
             Set<DirectoryAuthority> directoryAuthorities = allDAs.stream()
