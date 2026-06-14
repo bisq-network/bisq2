@@ -61,23 +61,26 @@ public class Navigation {
 
     public static void navigateTo(NavigationTarget navigationTarget) {
         history.add(navigationTarget);
-        navigationControllers.forEach((key, value) -> {
-            if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
-            }
-        });
+        dispatch(navigationTarget, Optional.empty());
         currentNavigationTarget.set(navigationTarget);
     }
 
-    // If data is passed we don't add it to the history as we would need to store the data as well, and it could be 
-    // stale anyway at a later moment.  
+    // If data is passed we don't add it to the history as we would need to store the data as well, and it could be
+    // stale anyway at a later moment.
     public static void navigateTo(NavigationTarget navigationTarget, Object data) {
-        navigationControllers.forEach((key, value) -> {
-            if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.of(data)));
-            }
-        });
+        dispatch(navigationTarget, Optional.of(data));
         currentNavigationTarget.set(navigationTarget);
+    }
+
+    // Dispatches the target to each registered host along its navigation path, from the root down to
+    // the target. Iterating the path in order (rather than the unordered controllers map) processes
+    // parents before children, so a host that lazily creates a child host on its path registers that
+    // child before the dispatch reaches it. See #4114.
+    private static void dispatch(NavigationTarget navigationTarget, Optional<Object> data) {
+        navigationTarget.getPath().forEach(host ->
+                Optional.ofNullable(navigationControllers.get(host))
+                        .ifPresent(controllers -> controllers.forEach(controller ->
+                                controller.processNavigationTarget(navigationTarget, data))));
     }
 
     static void persistNavigationTarget(NavigationTarget navigationTarget) {
@@ -92,11 +95,7 @@ public class Navigation {
         }
         NavigationTarget navigationTarget = history.pollLast();
         alt.add(navigationTarget);
-        navigationControllers.forEach((key, value) -> {
-            if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
-            }
-        });
+        dispatch(navigationTarget, Optional.empty());
     }
 
     public static void forth() {
@@ -105,10 +104,6 @@ public class Navigation {
         }
         NavigationTarget navigationTarget = alt.pollLast();
         history.add(navigationTarget);
-        navigationControllers.forEach((key, value) -> {
-            if (navigationTarget.getPath().contains(key)) {
-                value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.empty()));
-            }
-        });
+        dispatch(navigationTarget, Optional.empty());
     }
 }
