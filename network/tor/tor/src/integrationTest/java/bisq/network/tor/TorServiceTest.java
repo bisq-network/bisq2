@@ -23,9 +23,11 @@ import org.junit.jupiter.api.io.TempDir;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.UnixDomainSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -92,14 +94,12 @@ class TorServiceTest {
         invokeReadExternalTorConfigMap(torService);
 
         Map<String, String> externalTorConfigMap = getExternalTorConfigMap(torService);
-        Method getControlEndpoint = TorService.class.getDeclaredMethod("getControlEndpoint", Map.class);
-        getControlEndpoint.setAccessible(true);
-        Object controlEndpoint = getControlEndpoint.invoke(torService, externalTorConfigMap);
-        assertThat(controlEndpoint.getClass().getSimpleName()).isEqualTo("UnixSocketControlEndpoint");
-        Method controlSocketPathAccessor = controlEndpoint.getClass().getDeclaredMethod("controlSocketPath");
-        controlSocketPathAccessor.setAccessible(true);
+        Method getControlSocketAddress = TorService.class.getDeclaredMethod("getControlSocketAddress", Map.class);
+        getControlSocketAddress.setAccessible(true);
+        Object socketAddress = getControlSocketAddress.invoke(torService, externalTorConfigMap);
 
-        assertThat(controlSocketPathAccessor.invoke(controlEndpoint)).isEqualTo(controlSocketPath);
+        assertThat(socketAddress).isInstanceOf(UnixDomainSocketAddress.class);
+        assertThat(((UnixDomainSocketAddress) socketAddress).getPath()).isEqualTo(controlSocketPath);
         assertThat(externalTorConfigMap.get("CookieAuthFile"))
                 .isEqualTo("'" + tempDir.resolve("control.authcookie") + "'");
     }
@@ -122,7 +122,7 @@ class TorServiceTest {
                 false,
                 Set.of(),
                 Map.of(),
-                "",
+                Optional.empty(),
                 200,
                 200,
                 false
@@ -181,6 +181,9 @@ class TorServiceTest {
     }
 
     private static TorTransportConfig createConfig(Path dataDirPath, String torrcOverrideFilePath) {
+        Optional<Path> overridePath = torrcOverrideFilePath.isBlank()
+                ? Optional.empty()
+                : Optional.of(dataDirPath.resolve(torrcOverrideFilePath));
         return new TorTransportConfig(
                 dataDirPath,
                 -1,
@@ -190,7 +193,7 @@ class TorServiceTest {
                 false,
                 Set.of(),
                 Map.of(),
-                torrcOverrideFilePath,
+                overridePath,
                 200,
                 200,
                 false
@@ -205,7 +208,7 @@ class TorServiceTest {
 
     private static Object invokeGetControlEndpoint(TorService torService,
                                                    Map<String, String> externalTorConfigMap) throws Throwable {
-        Method getControlEndpoint = TorService.class.getDeclaredMethod("getControlEndpoint", Map.class);
+        Method getControlEndpoint = TorService.class.getDeclaredMethod("getControlSocketAddress", Map.class);
         getControlEndpoint.setAccessible(true);
         try {
             return getControlEndpoint.invoke(torService, externalTorConfigMap);

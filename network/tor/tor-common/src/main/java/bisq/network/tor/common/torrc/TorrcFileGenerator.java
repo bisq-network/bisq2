@@ -21,42 +21,35 @@ import bisq.common.file.FileMutatorUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class TorrcFileGenerator {
     private final Path torrcPath;
-    private final List<String> torrcConfigLines;
+    private final Map<String, List<String>> torrcConfigMap;
     private final Set<DirectoryAuthority> customDirectoryAuthorities;
 
     public TorrcFileGenerator(Path torrcPath,
-                              List<String> torrcConfigLines,
+                              Map<String, List<String>> torrcConfigMap,
                               Set<DirectoryAuthority> customDirectoryAuthorities) {
         this.torrcPath = torrcPath;
-        this.torrcConfigLines = torrcConfigLines;
+        this.torrcConfigMap = torrcConfigMap;
         this.customDirectoryAuthorities = customDirectoryAuthorities;
-    }
-
-    // Constructor to keep the change to List<String> smaller in scope
-    public TorrcFileGenerator(Path torrcPath,
-                              Map<String, String> torrcConfigMap,
-                              Set<DirectoryAuthority> customDirectoryAuthorities) {
-        this(torrcPath, mapToLines(torrcConfigMap), customDirectoryAuthorities);
-    }
-
-    private static List<String> mapToLines(Map<String, String> map) {
-        List<String> lines = new ArrayList<>();
-        map.forEach((key, value) -> lines.add(key + " " + value));
-        return lines;
     }
 
     public void generate() {
         StringBuilder torrcStringBuilder = new StringBuilder();
-        torrcConfigLines.forEach(line ->
-                torrcStringBuilder.append(line).append("\n")
-        );
+
+        for (Map.Entry<String, List<String>> entry : torrcConfigMap.entrySet()) {
+            String key = entry.getKey();
+            for (String value : entry.getValue()) {
+                torrcStringBuilder.append(key)
+                        .append(" ")
+                        .append(value)
+                        .append("\n");
+            }
+        }
 
         customDirectoryAuthorities.forEach(dirAuthority ->
                 torrcStringBuilder.append("DirAuthority ").append(dirAuthority.getNickname())
