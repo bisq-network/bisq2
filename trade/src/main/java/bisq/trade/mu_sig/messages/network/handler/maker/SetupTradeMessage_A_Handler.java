@@ -23,6 +23,8 @@ import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.trade.ServiceProvider;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
@@ -61,6 +63,12 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
 
     @Override
     protected void verify(SetupTradeMessage_A message) {
+        if (serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(message.getSender().getId())) {
+            String errorMessage = "The maker has rejected the take offer request because they have ignored your user profile.";
+            log.warn("{} tradeId={}", errorMessage, trade.getId());
+            throw new TradeProtocolException(errorMessage, TradeProtocolFailure.PEER_IGNORED);
+        }
+
         MuSigContract peersContract = message.getContract();
         peersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
