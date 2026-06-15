@@ -40,6 +40,7 @@ import bisq.common.platform.Version;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.contract.mu_sig.MuSigContract;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -60,6 +61,7 @@ import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.trade.ServiceProvider;
+import bisq.trade.exceptions.TradingNotAllowedException;
 import bisq.trade.mu_sig.arbitration.MuSigTraderArbitrationService;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
@@ -345,8 +347,13 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigTradeMessage muSigTradeMessage) {
-            verifyTradingNotOnHalt();
-            verifyMinVersionForTrading();
+            try {
+                verifyTradingNotOnHalt();
+                verifyMinVersionForTrading();
+            } catch (TradingNotAllowedException e) {
+                log.warn("Ignoring inbound trade message as trading is currently not allowed: {}", e.getMessage());
+                return;
+            }
 
             if (bannedUserService.isUserProfileBanned(muSigTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
@@ -693,15 +700,15 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     }
 
     private void verifyTradingNotOnHalt() {
-        checkArgument(!haltTrading, "Trading is on halt for security reasons. " +
-                "The Bisq security manager has published an emergency alert with haltTrading set to true");
+        if (haltTrading) {
+            throw new TradingNotAllowedException(Res.get("trade.error.tradingHalted"));
+        }
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent() &&
+                !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get()))) {
+            throw new TradingNotAllowedException(Res.get("trade.error.minVersionRequired", minRequiredVersionForTrading.get()));
         }
     }
 

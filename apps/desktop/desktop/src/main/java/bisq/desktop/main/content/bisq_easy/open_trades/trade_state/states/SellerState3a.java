@@ -30,6 +30,7 @@ import bisq.desktop.common.qr.QrCodeDisplay;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.KeyHandlerUtil;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.components.controls.MaterialBitcoinAmountDisplay;
@@ -189,13 +190,14 @@ public class SellerState3a extends BaseState {
         }
 
         private void confirmedBtcSent(Optional<String> paymentProof, String userName, String proofType) {
-            if (paymentProof.isEmpty()) {
-                sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.noProofProvided", userName));
-            } else {
-                sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
-                        userName, proofType, paymentProof.get()));
+            if (TradeExceptionHandler.run(() -> bisqEasyTradeService.sellerConfirmBtcSent(model.getTrade(), paymentProof))) {
+                if (paymentProof.isEmpty()) {
+                    sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage.noProofProvided", userName));
+                } else {
+                    sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase3a.tradeLogMessage",
+                            userName, proofType, paymentProof.get()));
+                }
             }
-            bisqEasyTradeService.sellerConfirmBtcSent(model.getTrade(), paymentProof);
         }
 
         void onShowQrCodeDisplay() {

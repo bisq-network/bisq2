@@ -58,6 +58,7 @@ import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.exceptions.TradingNotAllowedException;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -193,15 +194,21 @@ public class TakeOfferReviewController implements Controller {
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
         PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
         long marketPrice = model.getMarketPrice();
-        BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.takerCreatesProtocol(takerIdentity.getIdentity(),
-                bisqEasyOffer,
-                takersBaseSideAmount,
-                takersQuoteSideAmount,
-                bitcoinPaymentMethodSpec,
-                fiatPaymentMethodSpec,
-                mediator,
-                priceSpec,
-                marketPrice);
+        BisqEasyProtocol bisqEasyProtocol;
+        try {
+            bisqEasyProtocol = bisqEasyTradeService.takerCreatesProtocol(takerIdentity.getIdentity(),
+                    bisqEasyOffer,
+                    takersBaseSideAmount,
+                    takersQuoteSideAmount,
+                    bitcoinPaymentMethodSpec,
+                    fiatPaymentMethodSpec,
+                    mediator,
+                    priceSpec,
+                    marketPrice);
+        } catch (TradingNotAllowedException e) {
+            new Popup().warning(e.getMessage()).show();
+            return;
+        }
         BisqEasyTrade trade = bisqEasyProtocol.getModel();
         log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
         model.setBisqEasyTrade(trade);
@@ -247,7 +254,21 @@ public class TakeOfferReviewController implements Controller {
                 }
         );
 
-        bisqEasyTradeService.takeOffer(trade);
+        try {
+            bisqEasyTradeService.takeOffer(trade);
+        } catch (TradingNotAllowedException e) {
+            // The error observers were already bound above; unbind them so a retry doesn't stack them.
+            if (errorMessagePin != null) {
+                errorMessagePin.unbind();
+                errorMessagePin = null;
+            }
+            if (peersErrorMessagePin != null) {
+                peersErrorMessagePin.unbind();
+                peersErrorMessagePin = null;
+            }
+            new Popup().warning(e.getMessage()).show();
+            return;
+        }
         model.getTakeOfferStatus().set(TakeOfferReviewModel.TakeOfferStatus.SENT);
 
         BisqEasyContract contract = trade.getContract();

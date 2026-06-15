@@ -23,6 +23,7 @@ import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
@@ -97,9 +98,10 @@ public class MuSigState3aSellerConfirmPaymentReceipt extends MuSigBaseState {
         }
 
         private void onPaymentReceiptConfirmed() {
-            sendTradeLogMessage(Res.encode("muSig.trade.state.phase3a.logMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedNonBtcAmount()));
-            muSigTradeService.paymentReceiptConfirmed(model.getTrade());
+            if (TradeExceptionHandler.run(() -> muSigTradeService.paymentReceiptConfirmed(model.getTrade()))) {
+                sendTradeLogMessage(Res.encode("muSig.trade.state.phase3a.logMessage",
+                        model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedNonBtcAmount()));
+            }
         }
     }
 

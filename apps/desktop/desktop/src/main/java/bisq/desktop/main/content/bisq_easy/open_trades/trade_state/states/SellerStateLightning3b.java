@@ -28,6 +28,7 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.main.content.bisq_easy.components.trade.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.trade.WaitingState;
@@ -146,7 +147,7 @@ public class SellerStateLightning3b extends BaseState {
         private void onButtonClicked() {
             // todo should we send a system message? if so we should change the text
             //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
-            bisqEasyTradeService.btcConfirmed(model.getTrade());
+            TradeExceptionHandler.run(() -> bisqEasyTradeService.btcConfirmed(model.getTrade()));
         }
 
         private String getEncodedWithNickName(BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {

@@ -33,6 +33,7 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
 import bisq.desktop.components.controls.validator.ExplorerResultValidator;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.trade.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.trade.WaitingState;
@@ -168,7 +169,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         private void doCompleteTrade() {
             // todo should we send a system message? if so we should change the text
             //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
-            bisqEasyTradeService.btcConfirmed(model.getTrade());
+            TradeExceptionHandler.run(() -> bisqEasyTradeService.btcConfirmed(model.getTrade()));
         }
 
         private void requestTx() {

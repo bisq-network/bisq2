@@ -32,6 +32,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1a;
@@ -277,13 +278,15 @@ public class TradeStateController implements Controller {
         switch (model.getTradeCloseType()) {
             case REJECT:
                 encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
-                channelService.sendTradeLogMessage(encoded, channel);
-                bisqEasyTradeService.rejectTrade(trade);
+                if (TradeExceptionHandler.run(() -> bisqEasyTradeService.rejectTrade(trade))) {
+                    channelService.sendTradeLogMessage(encoded, channel);
+                }
                 break;
             case CANCEL:
                 encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", userName);
-                channelService.sendTradeLogMessage(encoded, channel);
-                bisqEasyTradeService.cancelTrade(trade);
+                if (TradeExceptionHandler.run(() -> bisqEasyTradeService.cancelTrade(trade))) {
+                    channelService.sendTradeLogMessage(encoded, channel);
+                }
                 break;
             case COMPLETED:
             default:
