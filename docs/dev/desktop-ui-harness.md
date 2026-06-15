@@ -89,6 +89,12 @@ Run a full UI scenario:
 make desktop-ui-scenario file=scripts/scenarios/desktop-ui-smoke.scenario
 ```
 
+The default smoke scenario is a first-run check. It expects a fresh/reset harness data directory, accepts the user
+agreement, creates the deterministic local profile `SmokeUser`, waits for the main dashboard navigation, and captures
+`smoke-main`. The wrapper resets data on start by default (`HARNESS_RESET_ON_START=1`), so the default start + scenario
+loop is deterministic. If you deliberately start with `HARNESS_RESET_ON_START=0` or point at a persistent `DATA_DIR`,
+the default smoke scenario may fail because TAC/onboarding has already been completed.
+
 ## Runtime Design
 
 The harness app launches the normal `DesktopApp` and registers a harness-owned `DesktopAutomationViewObserver` through the desktop module's production-neutral `ViewLifecycleObservers` registry before startup. When views attach to JavaFX scenes, the observer dispatches the view to harness-owned binder classes. Those binders attach automation scopes and ids to package-private semantic nodes exposed by the views.
@@ -348,10 +354,24 @@ Example:
 health
 validate
 wait-node splash/logo 30000 true
-screenshot smoke-logo
+wait-node tac/confirm 30000 true
+click tac/confirm
+click tac/accept
+wait-node onboarding-welcome/next 30000 true
+click onboarding-welcome/next
+wait-node create-profile/nickname 30000 true
+sleep 1000
+type create-profile/nickname SmokeUser
+click create-profile/create
+wait-node left-nav/dashboard 60000 true
+sleep 2000
+screenshot smoke-main
 ```
 
 Selectors such as `chat-message-container/input` are only valid after the app has reached a screen where that view is attached. Scenario files should explicitly navigate or wait for the required screen state before interacting with screen-specific controls.
+For flows that close overlays or switch scenes, wait for the destination selector and add a short settle delay before
+capturing the final screenshot; screenshots capture the first showing scene, so an overlay can otherwise be captured
+during the transition.
 
 Keep scenarios:
 
@@ -416,7 +436,18 @@ Example (`scripts/scenarios/desktop-ui-smoke.scenario`):
 health
 validate
 wait-node splash/logo 30000 true
-screenshot smoke-logo
+wait-node tac/confirm 30000 true
+click tac/confirm
+click tac/accept
+wait-node onboarding-welcome/next 30000 true
+click onboarding-welcome/next
+wait-node create-profile/nickname 30000 true
+sleep 1000
+type create-profile/nickname SmokeUser
+click create-profile/create
+wait-node left-nav/dashboard 60000 true
+sleep 2000
+screenshot smoke-main
 ```
 
 ## Known Limits
@@ -425,4 +456,5 @@ screenshot smoke-logo
 - `type` supports `TextInputControl`.
 - `press-key` dispatches `KEY_PRESSED`/`KEY_RELEASED` for one `KeyCode`; the HTTP API supports modifier query params, but the wrapper exposes only the key and optional selector.
 - `screenshot` captures the first showing JavaFX scene returned by the server's window ordering, with overlays before the primary stage.
+- `wait-node <selector> ... false` waits for an existing selector to become non-visible; it does not treat a removed selector as success.
 - For complex gestures (drag/drop, keyboard chords, context menus), extend the automation server APIs.

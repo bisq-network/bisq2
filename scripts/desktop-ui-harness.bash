@@ -152,16 +152,16 @@ run_api_request() {
   local response_var_name="$1"
   shift
 
-  local response
-  if ! response="$(api_request "$@")"; then
-    printf -v "${response_var_name}" '%s' "${response:-}"
-    if [[ -n "${response:-}" ]]; then
-      echo "${response}"
+  local response_body
+  if ! response_body="$(api_request "$@")"; then
+    printf -v "${response_var_name}" '%s' "${response_body:-}"
+    if [[ -n "${response_body:-}" ]]; then
+      echo "${response_body}"
     fi
     return 1
   fi
 
-  printf -v "${response_var_name}" '%s' "${response}"
+  printf -v "${response_var_name}" '%s' "${response_body}"
 }
 
 split_scenario_line() {
