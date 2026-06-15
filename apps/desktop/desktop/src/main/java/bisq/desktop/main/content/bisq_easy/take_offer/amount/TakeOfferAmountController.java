@@ -128,7 +128,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     void onSetReputationBasedAmount() {
-        amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
+        amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue());
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
@@ -175,8 +175,9 @@ public class TakeOfferAmountController implements Controller {
         }
         long sellersReputationScore = model.getSellersReputationScore();
         Monetary reputationBasedQuoteSideAmount = model.getSellersReputationBasedQuoteSideAmount().round(0);
-        Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow().round(0);
-        Monetary minRangeValue = OptionalQuoteSideMinAmount.get().round(0);
+        // Don't round the offer's exact min/max bounds, else a fractional bound is rejected by the validator.
+        Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
+        Monetary minRangeValue = OptionalQuoteSideMinAmount.get();
         Monetary maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
                 ? reputationBasedQuoteSideAmount
                 : offersQuoteSideMaxOrFixedAmount;
@@ -225,7 +226,7 @@ public class TakeOfferAmountController implements Controller {
     }
 
     private void applyReputationBasedQuoteSideAmount() {
-        amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue().round(0));
+        amountSelectionController.setMaxOrFixedQuoteSideAmount(amountSelectionController.getRightMarkerQuoteSideValue());
     }
 
     private void maxOrFixedQuoteSideAmountChanged(Monetary value) {
