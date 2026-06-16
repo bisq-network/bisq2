@@ -100,6 +100,26 @@ public class TacLegalTermsView extends View<VBox, TacLegalTermsModel, TacLegalTe
                 buttons);
     }
 
+    CheckBox confirmationToggle() {
+        return confirmCheckBox;
+    }
+
+    Button acceptAction() {
+        return acceptButton;
+    }
+
+    Button rejectAction() {
+        return rejectButton;
+    }
+
+    Button closeAction() {
+        return closeButton;
+    }
+
+    Button backAction() {
+        return backButton;
+    }
+
     private HBox createLegalSection(String number, String title, String body) {
         Label numberLabel = new Label(number);
         numberLabel.getStyleClass().add("tac-legal-section-number");

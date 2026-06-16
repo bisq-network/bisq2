@@ -15,22 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay.tac;
+package bisq.desktop.overlay.tac.legal_terms;
 
-import bisq.desktop_ui_harness_app.DesktopAutomationBinderTestSupport;
-import org.junit.jupiter.api.Test;
+import bisq.desktop_ui_harness_app.AbstractDesktopAutomationViewBinder;
 
-import static org.mockito.Mockito.mock;
+public final class TacLegalTermsAutomationBinder extends AbstractDesktopAutomationViewBinder<TacLegalTermsView> {
+    @Override
+    public Class<TacLegalTermsView> viewType() {
+        return TacLegalTermsView.class;
+    }
 
-class TacAutomationBinderTest extends DesktopAutomationBinderTestSupport {
-    @Test
-    void bindsTacSelectorsOutsideProductionView() {
-        TacView view = new TacView(new TacModel(), mock(TacController.class));
-
-        assertNoScope(view.getRoot());
-
-        new TacAutomationBinder().bind(view);
-
-        assertScope(view.getRoot(), "tac");
+    @Override
+    public void bind(TacLegalTermsView view) {
+        scope(view.getRoot(), "tac-legal-terms");
+        id(view.confirmationToggle(), "confirm");
+        id(view.acceptAction(), "accept");
+        id(view.rejectAction(), "reject");
+        id(view.backAction(), "back");
+        id(view.closeAction(), "close");
     }
 }

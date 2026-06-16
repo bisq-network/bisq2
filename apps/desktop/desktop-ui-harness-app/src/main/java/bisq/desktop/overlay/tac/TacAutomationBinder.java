@@ -28,8 +28,5 @@ public final class TacAutomationBinder extends AbstractDesktopAutomationViewBind
     @Override
     public void bind(TacView view) {
         scope(view.getRoot(), "tac");
-        id(view.confirmationToggle(), "confirm");
-        id(view.acceptAction(), "accept");
-        id(view.rejectAction(), "reject");
     }
 }

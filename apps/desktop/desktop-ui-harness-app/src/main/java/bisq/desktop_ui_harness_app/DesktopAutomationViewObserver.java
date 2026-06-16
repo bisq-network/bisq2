@@ -24,6 +24,8 @@ import bisq.desktop.main.left.LeftNavAutomationBinder;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileAutomationBinder;
 import bisq.desktop.overlay.onboarding.welcome.WelcomeAutomationBinder;
 import bisq.desktop.overlay.tac.TacAutomationBinder;
+import bisq.desktop.overlay.tac.legal_terms.TacLegalTermsAutomationBinder;
+import bisq.desktop.overlay.tac.risk_ack.TacRiskAckAutomationBinder;
 import bisq.desktop.splash.SplashAutomationBinder;
 
 import java.util.List;
@@ -37,6 +39,8 @@ final class DesktopAutomationViewObserver implements ViewLifecycleObserver {
                 new LeftNavAutomationBinder(),
                 new SplashAutomationBinder(),
                 new TacAutomationBinder(),
+                new TacRiskAckAutomationBinder(),
+                new TacLegalTermsAutomationBinder(),
                 new WelcomeAutomationBinder(),
                 new CreateProfileAutomationBinder()
         ));
