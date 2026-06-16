@@ -29,6 +29,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.desktop.overlay.tac.TacController;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.persistence.PersistenceService;
@@ -164,7 +165,7 @@ public class ResourcesController implements Controller {
     }
 
     void onTac() {
-        Navigation.navigateTo(NavigationTarget.TAC);
+        Navigation.navigateTo(NavigationTarget.TAC, new TacController.InitData(TacController.Mode.READ_ONLY));
     }
 
     void onOpenLicense() {

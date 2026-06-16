@@ -1201,6 +1201,18 @@
     -fx-image: url("/images/icons/save-icon-green.png");
 }
 
+#tac-decentr {
+    -fx-image: url("/images/tac/tac_decentr.png");
+}
+
+#tac-refund {
+    -fx-image: url("/images/tac/tac_refund.png");
+}
+
+#tac-warning-green {
+    -fx-image: url("/images/tac/warning-green.png");
+}
+
 #warning-grey {
     -fx-image: url("/images/icons/warning-grey.png");
 }

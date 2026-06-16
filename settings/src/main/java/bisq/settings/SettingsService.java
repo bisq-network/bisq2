@@ -100,7 +100,6 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         }
 
         // If used with FxBindings.bindBiDir we need to trigger persist call
-        pins.add(getIsTacAccepted().addObserver(value -> persist()));
         pins.add(getChatNotificationType().addObserver(value -> persist()));
         pins.add(getUseAnimations().addObserver(value -> persist()));
         pins.add(getPreventStandbyMode().addObserver(value -> persist()));
@@ -228,8 +227,8 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         return persistableStore.chatNotificationType;
     }
 
-    public ReadOnlyObservable<Boolean> getIsTacAccepted() {
-        return persistableStore.isTacAccepted;
+    public boolean isCurrentTacAccepted() {
+        return persistableStore.tacAcceptances.stream().anyMatch(TacAcceptance::isCurrent);
     }
 
     public ObservableSet<String> getConsumedAlertIds() {
@@ -362,8 +361,13 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         persistableStore.chatNotificationType.set(chatNotificationType);
     }
 
-    public void setIsTacAccepted(boolean isTacAccepted) {
-        persistableStore.isTacAccepted.set(isTacAccepted);
+    public synchronized void acceptCurrentTac() {
+        if (isCurrentTacAccepted()) {
+            return;
+        }
+
+        persistableStore.tacAcceptances.add(TacAcceptance.current());
+        persist();
     }
 
     public void setCloseMyOfferWhenTaken(boolean closeMyOfferWhenTaken) {

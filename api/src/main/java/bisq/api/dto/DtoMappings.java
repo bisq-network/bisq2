@@ -1107,7 +1107,7 @@ public class DtoMappings {
         // toBisq2Model method not implemented as we do not have a settings value object in the domain
 
         public static SettingsDto fromBisq2Model(SettingsService settingsService) {
-            return new SettingsDto(settingsService.getIsTacAccepted().get(),
+            return new SettingsDto(settingsService.isCurrentTacAccepted(),
                     settingsService.getBisqEasyTradeRulesConfirmed().get(),
                     settingsService.getMuSigTradeRulesConfirmed().get(),
                     settingsService.getCloseMyOfferWhenTaken().get(),

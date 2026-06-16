@@ -15,16 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay.tac;
+package bisq.desktop.overlay.tac.legal_terms;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.navigation.NavigationTarget;
+import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 
 @Getter
-public class TacModel extends NavigationModel {
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TAC_RISK_ACK;
-    }
+public class TacLegalTermsModel implements Model {
+    private final BooleanProperty confirmed = new SimpleBooleanProperty();
+    private final BooleanProperty readOnly = new SimpleBooleanProperty();
 }

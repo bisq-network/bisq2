@@ -45,6 +45,11 @@ enum ChatMessageType {
   CHATMESSAGETYPE_TEXT = 3;
 }
 
+message TacAcceptance {
+  string version = 1;
+  sint64 acceptedAtEpochMillis = 2;
+}
+
 message SettingsStore {
   Cookie cookie = 1;
   map<string, bool> dontShowAgainMap = 2;
@@ -54,7 +59,7 @@ message SettingsStore {
   bool offersOnly = 6 [deprecated = true]; // Not used anymore since 2.1.2
   bool bisqEasyTradeRulesConfirmed = 7;
   ChatNotificationType chatNotificationType = 8;
-  bool isTacAccepted = 9;
+  bool isTacAccepted = 9 [deprecated = true]; // Not used anymore since 2.1.12
   repeated string consumedAlertIds = 10;
   bool closeMyOfferWhenTaken = 11;
   string languageTag = 12;
@@ -82,4 +87,5 @@ message SettingsStore {
   string currencyCode = 34;
   //TODO what is selectedWalletMarket for?
   common.Market selectedWalletMarket = 35;
+  repeated TacAcceptance tacAcceptances = 36;
 }
