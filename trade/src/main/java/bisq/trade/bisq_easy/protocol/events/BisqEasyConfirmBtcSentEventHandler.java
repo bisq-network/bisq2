@@ -39,7 +39,7 @@ public class BisqEasyConfirmBtcSentEventHandler extends BisqEasyTradeEventHandle
 
     @Override
     protected void commit() {
-        paymentProof.ifPresent(e -> trade.getPaymentProof().set(e));
+        trade.setPaymentProof(paymentProof);
     }
 
     @Override

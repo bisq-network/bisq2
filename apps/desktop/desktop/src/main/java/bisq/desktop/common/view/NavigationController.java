@@ -19,6 +19,7 @@ package bisq.desktop.common.view;
 
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.threading.UIThread;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -32,6 +33,19 @@ public abstract class NavigationController implements Controller {
 
     public NavigationController(NavigationTarget host) {
         this.host = host;
+    }
+
+    // Returns the segment of `target`'s path that sits directly under `host`,
+    // or empty if `host` is not a proper ancestor of `target`.
+    @VisibleForTesting
+    static Optional<NavigationTarget> resolveChildTarget(NavigationTarget target, NavigationTarget host) {
+        Optional<NavigationTarget> parent = target.getParent();
+        NavigationTarget child = target;
+        while (parent.isPresent() && parent.get() != host) {
+            child = parent.get();
+            parent = child.getParent();
+        }
+        return parent.isPresent() ? Optional.of(child) : Optional.empty();
     }
 
     void processNavigationTarget(NavigationTarget navigationTarget, Optional<Object> data) {
@@ -97,27 +111,27 @@ public abstract class NavigationController implements Controller {
     public void onActivateInternal() {
         Navigation.addNavigationController(host, this);
 
-        // Apply child target for our host from the persisted NavigationTarget
+        // Pick our child target: keep a retained one, else resolve it from the persisted target, else
+        // fall back to the default child.
         NavigationModel model = getModel();
         if (model.getNavigationTarget() == null) {
-            Navigation.getPersistedNavigationTarget().ifPresent(persisted -> {
-                Optional<NavigationTarget> hostCandidate = persisted.getParent();
-                NavigationTarget childCandidate = persisted;
-                while (hostCandidate.isPresent() && hostCandidate.get() != host) {
-                    childCandidate = hostCandidate.get();
-                    hostCandidate = childCandidate.getParent();
-                }
-                NavigationTarget finalChildCandidate = childCandidate;
-                hostCandidate.ifPresent(e -> model.setNavigationTarget(finalChildCandidate));
-            });
-        }
-        // If we did not have a persisted target we apply the default
-        if (model.getNavigationTarget() == null) {
-            model.setNavigationTarget(model.getDefaultNavigationTarget());
+            NavigationTarget childTarget = Navigation.getPersistedNavigationTarget()
+                    .flatMap(persisted -> resolveChildTarget(persisted, host))
+                    .orElseGet(model::getDefaultNavigationTarget);
+            model.setNavigationTarget(childTarget);
         }
 
         if (model.getNavigationTarget() != NavigationTarget.NONE) {
-            UIThread.runOnNextRenderFrame(() -> processNavigationTarget(model.getNavigationTarget(), Optional.empty()));
+            NavigationTarget childTarget = model.getNavigationTarget();
+            // A navigateTo dispatch processes hosts in navigation-path order, so a dispatch targeting a
+            // deeper target (e.g. CHAT_PRIVATE) resolves it on this host directly. Only fall back to our
+            // own child here if that dispatch did not already resolve a target, so we don't override a
+            // deep target with our default/persisted child. See #4114.
+            UIThread.runOnNextRenderFrame(() -> {
+                if (getModel().getResolvedTarget().isEmpty()) {
+                    processNavigationTarget(childTarget, Optional.empty());
+                }
+            });
         }
 
         onActivate();

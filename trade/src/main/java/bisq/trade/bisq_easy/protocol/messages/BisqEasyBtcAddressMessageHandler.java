@@ -26,6 +26,8 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -63,6 +65,6 @@ public class BisqEasyBtcAddressMessageHandler extends BisqEasyTradeMessageHandle
 
     @Override
     protected void commit() {
-        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
+        trade.setBitcoinPaymentData(Optional.of(bitcoinPaymentData));
     }
 }

@@ -1,0 +1,26 @@
+# Desktop UI harness smoke scenario
+# Commands:
+#   health
+#   validate
+#   wait-node <selector> [timeout_ms] [visible]
+#   click <selector>
+#   type <selector> <text...>
+#   press-key <key> [selector]
+#   screenshot <name>
+#   sleep <ms>
+
+health
+validate
+wait-node splash/logo 30000 true
+wait-node tac/confirm 30000 true
+click tac/confirm
+click tac/accept
+wait-node onboarding-welcome/next 30000 true
+click onboarding-welcome/next
+wait-node create-profile/nickname 30000 true
+sleep 1000
+type create-profile/nickname SmokeUser
+click create-profile/create
+wait-node left-nav/dashboard 60000 true
+sleep 2000
+screenshot smoke-main

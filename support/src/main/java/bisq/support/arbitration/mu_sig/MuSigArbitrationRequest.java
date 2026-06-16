@@ -99,7 +99,7 @@ public final class MuSigArbitrationRequest implements
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
         NetworkDataValidation.validateECSignature(mediationResultSignature);
-        if (getValueBuilder(false).build().getSerializedSize() > MAX_SERIALIZED_SIZE) {
+        if (getSerializedSize() > MAX_SERIALIZED_SIZE) {
             throw new SerializedSizeExceededException(
                     "Serialized arbitration request size must not exceed " + MAX_SERIALIZED_SIZE + " bytes");
         }

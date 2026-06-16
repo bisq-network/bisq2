@@ -1,4 +1,4 @@
-_Note: This document is outdated_
+_Note: These are manual I2P test scenarios. The referenced Make targets still exist in the repo Makefile._
 
 # Test Scenarios (I2P)
 
@@ -7,7 +7,7 @@ This document describes a few manual test scenarios with focus on the I2P networ
 The requirements to run them are:
 
 - access to a virtualization environment (create / delete VMs)
-- each VM can run a seed or a desktop client (JDK 16 or higher)
+- each VM can run a seed or a desktop client (JDK 21)
 - each VM can run the makefile tests (see Requirements in `Makefile` header)
 - each VM can optionally start a local I2P router, for some scenarios
 - have a way to copy files between VMs (a good solution is `wormhole`, see [docs](https://github.com/magic-wormhole/magic-wormhole/blob/master/docs/welcome.md))

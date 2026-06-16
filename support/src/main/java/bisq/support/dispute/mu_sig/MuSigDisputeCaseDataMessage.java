@@ -72,7 +72,7 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
         NetworkDataValidation.validateHash(contractHash);
-        if (getValueBuilder(false).build().getSerializedSize() > MAX_SERIALIZED_SIZE) {
+        if (getSerializedSize() > MAX_SERIALIZED_SIZE) {
             throw new SerializedSizeExceededException(
                     "Serialized dispute case data size must not exceed " + MAX_SERIALIZED_SIZE + " bytes");
         }

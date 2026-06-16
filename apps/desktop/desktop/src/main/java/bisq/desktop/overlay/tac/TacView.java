@@ -21,6 +21,12 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.overlay.OverlayModel;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +57,18 @@ public class TacView extends NavigationView<VBox, TacModel, TacController> {
                 root.getChildren().clear();
             }
         });
+    }
+
+    Node confirmationToggle() {
+        return confirmCheckBox;
+    }
+
+    Node acceptAction() {
+        return acceptButton;
+    }
+
+    Node rejectAction() {
+        return rejectButton;
     }
 
     @Override

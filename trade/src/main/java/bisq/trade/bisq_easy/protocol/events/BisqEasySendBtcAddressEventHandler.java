@@ -23,6 +23,8 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 
+import java.util.Optional;
+
 public class BisqEasySendBtcAddressEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasySendBtcAddressEvent> {
     private String bitcoinPaymentData;
 
@@ -37,7 +39,7 @@ public class BisqEasySendBtcAddressEventHandler extends BisqEasyTradeEventHandle
 
     @Override
     protected void commit() {
-        trade.getBitcoinPaymentData().set(bitcoinPaymentData);
+        trade.setBitcoinPaymentData(Optional.of(bitcoinPaymentData));
     }
 
     @Override

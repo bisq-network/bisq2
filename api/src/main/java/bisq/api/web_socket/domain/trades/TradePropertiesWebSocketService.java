@@ -119,30 +119,30 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     }
 
     private Pin observePaymentAccountData(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        return bisqEasyTrade.getPaymentAccountData().addObserver(value -> {
-            if (value != null) {
+        return bisqEasyTrade.paymentAccountDataObservable().addObserver(value -> {
+            if (value.isPresent()) {
                 var data = new TradePropertiesDto();
-                data.paymentAccountData = Optional.of(value);
+                data.paymentAccountData = value;
                 send(Map.of(tradeId, data));
             }
         });
     }
 
     private Pin observeBitcoinPaymentData(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        return bisqEasyTrade.getBitcoinPaymentData().addObserver(value -> {
-            if (value != null) {
+        return bisqEasyTrade.bitcoinPaymentDataObservable().addObserver(value -> {
+            if (value.isPresent()) {
                 var data = new TradePropertiesDto();
-                data.bitcoinPaymentData = Optional.of(value);
+                data.bitcoinPaymentData = value;
                 send(Map.of(tradeId, data));
             }
         });
     }
 
     private Pin observePaymentProof(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        return bisqEasyTrade.getPaymentProof().addObserver(value -> {
-            if (value != null) {
+        return bisqEasyTrade.paymentProofObservable().addObserver(value -> {
+            if (value.isPresent()) {
                 var data = new TradePropertiesDto();
-                data.paymentProof = Optional.of(value);
+                data.paymentProof = value;
                 send(Map.of(tradeId, data));
             }
         });
@@ -236,9 +236,9 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                     var data = new TradePropertiesDto();
                     data.tradeState = Optional.ofNullable(DtoMappings.BisqEasyTradeStateMapping.fromBisq2Model(bisqEasyTrade.getTradeState()));
                     data.interruptTradeInitiator = Optional.ofNullable(DtoMappings.RoleMapping.fromBisq2Model(bisqEasyTrade.getInterruptTradeInitiator().get()));
-                    data.paymentAccountData = Optional.ofNullable(bisqEasyTrade.getPaymentAccountData().get());
-                    data.bitcoinPaymentData = Optional.ofNullable(bisqEasyTrade.getBitcoinPaymentData().get());
-                    data.paymentProof = Optional.ofNullable(bisqEasyTrade.getPaymentProof().get());
+                    data.paymentAccountData = bisqEasyTrade.getPaymentAccountData();
+                    data.bitcoinPaymentData = bisqEasyTrade.getBitcoinPaymentData();
+                    data.paymentProof = bisqEasyTrade.getPaymentProof();
                     data.errorMessage = Optional.ofNullable(bisqEasyTrade.getErrorMessage());
                     data.errorStackTrace = Optional.ofNullable(bisqEasyTrade.getErrorStackTrace());
                     data.tradeProtocolFailure = Optional.ofNullable(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(bisqEasyTrade.getTradeProtocolFailure()));

@@ -59,3 +59,11 @@
   Bisq does not currently guarantee a bug bounty. Security work that qualifies as
   a critical bug fix may be eligible for Bisq DAO compensation according to the
   project's contributor and critical-bug processes.
+
+## CI Supply-Chain Pinning
+
+Security-sensitive GitHub Actions workflows should pin third-party actions to
+full commit SHAs instead of mutable tags. Keep a trailing version comment, such
+as `# v1.2.3`, next to the SHA for readability. When bumping an action, verify
+that the new upstream tag resolves to the committed SHA and update both the SHA
+and the version comment together.
