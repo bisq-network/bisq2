@@ -101,6 +101,26 @@ public class TacRiskAckView extends View<VBox, TacRiskAckModel, TacRiskAckContro
                 buttons);
     }
 
+    CheckBox lossAcknowledgementToggle() {
+        return lossAcknowledged;
+    }
+
+    CheckBox noRecoveryAcknowledgementToggle() {
+        return noRecoveryAcknowledged;
+    }
+
+    Button nextAction() {
+        return nextButton;
+    }
+
+    Button rejectAction() {
+        return rejectButton;
+    }
+
+    Button closeAction() {
+        return closeButton;
+    }
+
     @Override
     protected void onViewAttached() {
         lossAcknowledged.disableProperty().bind(model.getReadOnly());

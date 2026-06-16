@@ -89,8 +89,9 @@ Run a full UI scenario:
 make desktop-ui-scenario file=scripts/scenarios/desktop-ui-smoke.scenario
 ```
 
-The default smoke scenario is a first-run check. It expects a fresh/reset harness data directory, accepts the user
-agreement, creates the deterministic local profile `SmokeUser`, waits for the main dashboard navigation, and captures
+The default smoke scenario is a first-run check. It expects a fresh/reset harness data directory, accepts the risk
+acknowledgements and legal terms, creates the deterministic local profile `SmokeUser`, waits for the main dashboard
+navigation, and captures
 `smoke-main`. The wrapper resets data on start by default (`HARNESS_RESET_ON_START=1`), so the default start + scenario
 loop is deterministic. If you deliberately start with `HARNESS_RESET_ON_START=0` or point at a persistent `DATA_DIR`,
 the default smoke scenario may fail because TAC/onboarding has already been completed.
@@ -354,9 +355,13 @@ Example:
 health
 validate
 wait-node splash/logo 30000 true
-wait-node tac/confirm 30000 true
-click tac/confirm
-click tac/accept
+wait-node tac-risk-ack/loss 30000 true
+click tac-risk-ack/loss
+click tac-risk-ack/no-recovery
+click tac-risk-ack/next
+wait-node tac-legal-terms/confirm 30000 true
+click tac-legal-terms/confirm
+click tac-legal-terms/accept
 wait-node onboarding-welcome/next 30000 true
 click onboarding-welcome/next
 wait-node create-profile/nickname 30000 true
@@ -436,9 +441,13 @@ Example (`scripts/scenarios/desktop-ui-smoke.scenario`):
 health
 validate
 wait-node splash/logo 30000 true
-wait-node tac/confirm 30000 true
-click tac/confirm
-click tac/accept
+wait-node tac-risk-ack/loss 30000 true
+click tac-risk-ack/loss
+click tac-risk-ack/no-recovery
+click tac-risk-ack/next
+wait-node tac-legal-terms/confirm 30000 true
+click tac-legal-terms/confirm
+click tac-legal-terms/accept
 wait-node onboarding-welcome/next 30000 true
 click onboarding-welcome/next
 wait-node create-profile/nickname 30000 true

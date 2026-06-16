@@ -12,9 +12,13 @@
 health
 validate
 wait-node splash/logo 30000 true
-wait-node tac/confirm 30000 true
-click tac/confirm
-click tac/accept
+wait-node tac-risk-ack/loss 30000 true
+click tac-risk-ack/loss
+click tac-risk-ack/no-recovery
+click tac-risk-ack/next
+wait-node tac-legal-terms/confirm 30000 true
+click tac-legal-terms/confirm
+click tac-legal-terms/accept
 wait-node onboarding-welcome/next 30000 true
 click onboarding-welcome/next
 wait-node create-profile/nickname 30000 true

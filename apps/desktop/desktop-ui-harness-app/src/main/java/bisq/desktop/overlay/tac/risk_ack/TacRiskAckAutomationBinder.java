@@ -15,22 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay.tac;
+package bisq.desktop.overlay.tac.risk_ack;
 
-import bisq.desktop_ui_harness_app.DesktopAutomationBinderTestSupport;
-import org.junit.jupiter.api.Test;
+import bisq.desktop_ui_harness_app.AbstractDesktopAutomationViewBinder;
 
-import static org.mockito.Mockito.mock;
+public final class TacRiskAckAutomationBinder extends AbstractDesktopAutomationViewBinder<TacRiskAckView> {
+    @Override
+    public Class<TacRiskAckView> viewType() {
+        return TacRiskAckView.class;
+    }
 
-class TacAutomationBinderTest extends DesktopAutomationBinderTestSupport {
-    @Test
-    void bindsTacSelectorsOutsideProductionView() {
-        TacView view = new TacView(new TacModel(), mock(TacController.class));
-
-        assertNoScope(view.getRoot());
-
-        new TacAutomationBinder().bind(view);
-
-        assertScope(view.getRoot(), "tac");
+    @Override
+    public void bind(TacRiskAckView view) {
+        scope(view.getRoot(), "tac-risk-ack");
+        id(view.lossAcknowledgementToggle(), "loss");
+        id(view.noRecoveryAcknowledgementToggle(), "no-recovery");
+        id(view.nextAction(), "next");
+        id(view.rejectAction(), "reject");
+        id(view.closeAction(), "close");
     }
 }
