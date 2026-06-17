@@ -1,0 +1,8 @@
+interface:
+  display_name: "UI Design Principles"
+  short_description: "Apply pragmatic UI quality checks across platforms"
+  brand_color: "#2E8B57"
+  default_prompt: "Use $ui-design-principles to review or improve this Bisq user interface."
+
+policy:
+  allow_implicit_invocation: true
