@@ -39,4 +39,4 @@ If a module or task name differs, inspect `settings.gradle`, `build.gradle`, or 
 
 ## Related Resources
 
-For review-heavy work, use `$bisq-pr-reviewer`. For UI-specific polish, use `$ui-design-principles`. For commit messages, use `$git-commit-writer`.
+Use `$bisq-pr-reviewer` for review-heavy work, `$ui-design-principles` for UI-specific polish, and `$git-commit-writer` for commit message guidance.

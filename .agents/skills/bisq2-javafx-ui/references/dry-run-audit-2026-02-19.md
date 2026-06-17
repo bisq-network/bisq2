@@ -107,10 +107,10 @@ Overall: PARTIAL PASS
 
 ## Remaining Gaps
 
-- Candidate scaffold did not demonstrate Enter/Escape handlers.
-- Prompt did not force localization-key existence validation.
-- Prompt did not include `NavigationTarget` enum edits explicitly.
-- Prompt did not show concrete `addTab(...)` calls in the scaffold.
+- Enter/Escape handlers were not demonstrated in the candidate scaffold.
+- Localization-key existence validation was not enforced by the prompt.
+- `NavigationTarget` enum edits were missing from the prompt.
+- Concrete `addTab(...)` calls and parent wiring were not shown in the scaffold.
 
 Recommendation:
 - When generating production patches, include key existence and enum wiring tasks explicitly in the prompt.
