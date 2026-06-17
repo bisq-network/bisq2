@@ -181,8 +181,12 @@ public class TradeProtocolManager {
 
 // ViewModel uses service
 public class TradeViewModel {
+    private final TradeProtocolManager tradeProtocolManager;
+
     @Inject
-    private TradeProtocolManager tradeProtocolManager;
+    public TradeViewModel(TradeProtocolManager tradeProtocolManager) {
+        this.tradeProtocolManager = tradeProtocolManager;
+    }
 
     public void onStartTrade() {
         tradeProtocolManager.initiateTrade(trade);
@@ -235,8 +239,7 @@ DAO-related code requires extra care for voting and governance logic.
 **Critical Checks**:
 ```java
 // Vote weight calculation
-long voteWeight = stake * votingPower; // Check for overflow
-if (voteWeight < stake) throw new ArithmeticException("Overflow");
+long voteWeight = Math.multiplyExact(stake, votingPower);
 
 // Proposal parameter bounds
 if (proposalAmount > MAX_PROPOSAL_AMOUNT) {
@@ -246,9 +249,11 @@ if (proposalAmount > MAX_PROPOSAL_AMOUNT) {
 // Bond management
 public void lockBond(long amount) {
     if (availableBalance < amount) throw new InsufficientFundsException();
-    lockedBalance += amount;
-    availableBalance -= amount;
-    assert lockedBalance + availableBalance == totalBalance; // Invariant check
+    lockedBalance = Math.addExact(lockedBalance, amount);
+    availableBalance = Math.subtractExact(availableBalance, amount);
+    if (Math.addExact(lockedBalance, availableBalance) != totalBalance) {
+        throw new IllegalStateException("Balance invariant violated");
+    }
 }
 ```
 

@@ -89,15 +89,15 @@ public class NetworkHealthView extends View<VBox, NetworkHealthModel, NetworkHea
 
 ## Rubric And Result
 
-1. MVC architecture compliance: PASS
+1. MVC architecture compliance: PARTIAL (triad shape shown; full navigation wiring not demonstrated)
 2. Lifecycle cleanup completeness: PASS (bindings + pin cleanup present)
 3. Threading safety: PASS (`UIThread.run`)
-4. Async staleness guard: PASS (`refreshSeq`)
-5. Navigation/tab API correctness: PASS (`addTab(...)` requirement satisfied)
+4. Async staleness guard: PARTIAL (`refreshSeq` shown; failure and cancellation paths not fully exercised)
+5. Navigation/tab API correctness: PARTIAL (`addTab(...)` requirement noted; `NavigationTarget` enum wiring not shown)
 6. Styling/control reuse: PASS (`BusyAnimation`, `BisqTableView`, `Res.get`)
 7. Likely regressions/leaks: LOW risk
 
-Overall: PASS
+Overall: PARTIAL PASS
 
 ## Concrete Checks Against Repository APIs
 
@@ -107,8 +107,10 @@ Overall: PASS
 
 ## Remaining Gaps
 
+- Candidate scaffold did not demonstrate Enter/Escape handlers.
 - Prompt did not force localization-key existence validation.
 - Prompt did not include `NavigationTarget` enum edits explicitly.
+- Prompt did not show concrete `addTab(...)` calls in the scaffold.
 
 Recommendation:
 - When generating production patches, include key existence and enum wiring tasks explicitly in the prompt.

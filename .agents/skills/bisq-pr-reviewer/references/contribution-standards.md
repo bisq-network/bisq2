@@ -52,7 +52,7 @@ Each commit should represent a single logical change:
 **Validation**:
 ```bash
 # Check if commit touches multiple unrelated concerns
-gh api repos/{owner}/{repo}/pulls/{pr}/commits --jq '.[].files | length'
+gh api repos/{owner}/{repo}/pulls/{pr}/files --paginate --slurp --jq 'map(length) | add'
 
 # If single commit changes >10 files in different modules, investigate atomicity
 ```
@@ -145,7 +145,7 @@ Bisq follows Chris Beams' "7 Rules of a Great Git Commit Message".
 
 The `git-commit-writer` skill provides detailed guidance on these rules. Reference it when commit messages need improvement:
 
-```markdown
+````markdown
 ❌ **Poor Commit Message**:
 ```
 fixed stuff
@@ -164,7 +164,7 @@ adds a unit test to verify memory is released.
 
 Fixes #1234
 ```
-```
+````
 
 ### Validation Checklist
 
@@ -200,7 +200,7 @@ For each commit message, validate:
 
 ### Commit Message Quality Report
 
-```markdown
+````markdown
 ## Commit Message Standards Review
 
 **Total Commits**: {count}
@@ -228,7 +228,7 @@ with descriptive message for debugging.
 
 Fixes #1234
 ```
-```
+````
 
 ### Edge Cases
 

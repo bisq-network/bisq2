@@ -27,7 +27,7 @@ Apply these rules to every commit message:
 
 Place one blank line between the subject line and the body text. Git tools rely on this separation.
 
-```
+```text
 Fix authentication bug in user login
 
 The bcrypt comparison was using the wrong salt parameter.
@@ -155,7 +155,7 @@ Structure the body to answer:
    - Link to documentation or discussions
 
 **Example template:**
-```
+```text
 [Subject line]
 
 [What was the problem - 1-2 sentences]
@@ -185,7 +185,7 @@ Before committing, verify:
 **User request:** "I fixed a login bug, what should my commit say?"
 
 **Response pattern:**
-```
+```text
 Subject: Fix authentication bug in user login
 
 Body (optional):
@@ -201,7 +201,7 @@ Fixes #789
 **User request:** "I just added dark mode support"
 
 **Response pattern:**
-```
+```text
 Subject: Add dark mode support to user interface
 
 Body:
@@ -220,7 +220,7 @@ Closes #567
 **User request:** "I cleaned up the authentication code"
 
 **Response pattern:**
-```
+```text
 Subject: Extract authentication logic into separate service
 
 Body:
@@ -243,7 +243,7 @@ No functional changes to authentication behavior.
 
 **Response pattern:**
 Suggest improvement:
-```
+```text
 The commit message "Fixed stuff" is too vague. Consider a more
 descriptive subject like:
 
@@ -263,7 +263,7 @@ If multiple related changes are in one commit:
 - List them in the body with bullet points
 - Ensure they're logically related (otherwise split commits)
 
-```
+```text
 Update authentication system for security
 
 - Add rate limiting to login endpoint
@@ -278,7 +278,7 @@ after the security audit recommendations.
 
 Git creates these automatically, typically don't need custom messages. If customizing:
 
-```
+```text
 Merge branch 'feature/dark-mode' into main
 
 Brings dark mode support with accessibility compliance.
@@ -289,7 +289,7 @@ All tests passing and code reviewed.
 
 Use `git revert` which auto-generates messages, but enhance with context:
 
-```
+```text
 Revert "Add experimental caching layer"
 
 This reverts commit abc123def456.

@@ -15,7 +15,7 @@ Comprehensive security validation patterns for Bitcoin/cryptocurrency code in Bi
 
 **File Patterns to Check**:
 ```bash
-grep -E "(bitcoin|crypto|wallet|key|seed|mnemonic)" --output_mode files_with_matches
+grep -R -l -E "(bitcoin|crypto|wallet|key|seed|mnemonic)" .
 ```
 
 **Common Vulnerabilities**:

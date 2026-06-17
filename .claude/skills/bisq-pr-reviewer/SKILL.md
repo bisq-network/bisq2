@@ -124,14 +124,14 @@ Validate:
 
 **Trade Protocol Safety** (if trade-related changes):
 ```bash
-Grep "TradeProtocol|TradingPeer|TradeManager" --output_mode files_with_matches
+grep -R -l -E "TradeProtocol|TradingPeer|TradeManager" .
 ```
 
 Validate state transitions, peer communication safety, and financial correctness.
 
 **DAO Governance Impact** (if DAO changes):
 ```bash
-Grep "DAO|Governance|Proposal|Vote|Bonding" --output_mode files_with_matches
+grep -R -l -E "DAO|Governance|Proposal|Vote|Bonding" .
 ```
 
 Validate voting logic, proposal validation, and bond management.

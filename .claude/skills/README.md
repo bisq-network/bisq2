@@ -44,5 +44,6 @@ Run from the repository root after editing skills:
 
 ```bash
 find .agents/skills .claude/skills -maxdepth 2 -name SKILL.md | sort
+diff -qr .agents/skills .claude/skills
 git diff --check -- .agents/skills .claude/skills
 ```

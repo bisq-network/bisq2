@@ -22,7 +22,7 @@ Apply proven design principles from industry leaders (Apple, Vercel, shadcn/ui) 
 - Streamline workflows - Cut steps that don't add value
 
 **Cross-Platform Examples**:
-```
+```text
 ❌ Bad: Click "Edit" → Confirm "Are you sure?" → Click "Yes" → Edit mode
 ✅ Good: Click "Edit" → Edit mode (action is reversible)
 
@@ -67,7 +67,7 @@ Apply proven design principles from industry leaders (Apple, Vercel, shadcn/ui) 
 - Persistent navigation - Keep nav/search in same location
 
 **Cross-Platform Examples**:
-```
+```text
 ❌ Bad: Primary button sometimes top-right, sometimes bottom-left
 ✅ Good: Primary action always in same location (platform-appropriate)
 
@@ -79,7 +79,7 @@ Apply proven design principles from industry leaders (Apple, Vercel, shadcn/ui) 
 ```
 
 **Recommended Spacing Scale** (adapt to platform density):
-```
+```text
 Base unit: 4px (or 4dp/4pt depending on platform)
 
 Micro:    4px  (tight spacing within components)
@@ -141,7 +141,7 @@ VStack(spacing: 16) {
 - Smart defaults - Pre-select common choices to reduce decisions
 
 **Cross-Platform Examples**:
-```
+```text
 ❌ Bad: FAQ page with all answers expanded (overwhelming)
 ✅ Good: FAQ with collapsed answers, expand individual items on demand
 
@@ -236,7 +236,7 @@ $ git commit --interactive
 - Clear state transitions - Visually distinguish loading/success/error states
 
 **Cross-Platform Examples**:
-```
+```text
 ❌ Bad: Button shows no change when clicked, waits for response
 ✅ Good: Button changes to "Saving..." immediately, then "Saved ✓"
 
@@ -265,6 +265,8 @@ $ git commit --interactive
 ```typescript
 // Optimistic UI pattern
 async function deleteItem(id: string) {
+  const previousItems = items;
+
   // 1. Update UI immediately (optimistic)
   setItems(items.filter(item => item.id !== id));
 
@@ -274,7 +276,7 @@ async function deleteItem(id: string) {
     showToast('Item deleted', 'success');
   } catch (error) {
     // 3. Rollback on error
-    setItems(originalItems);
+    setItems(previousItems);
     showToast('Failed to delete', 'error');
   }
 }
@@ -283,6 +285,7 @@ async function deleteItem(id: string) {
 **Desktop (JavaFX)**:
 ```java
 // JavaFX button state feedback
+// Requires javafx.animation.PauseTransition and javafx.util.Duration.
 button.setOnAction(event -> {
     // 1. Immediate visual feedback
     button.setText("Saving...");
@@ -300,11 +303,12 @@ button.setOnAction(event -> {
     // 3. Update UI on completion
     task.setOnSucceeded(e -> {
         button.setText("Saved ✓");
-        Platform.runLater(() -> {
-            Thread.sleep(2000);
+        PauseTransition delay = new PauseTransition(Duration.seconds(2));
+        delay.setOnFinished(finishedEvent -> {
             button.setText("Save");
             button.setDisable(false);
         });
+        delay.play();
     });
 
     task.setOnFailed(e -> {

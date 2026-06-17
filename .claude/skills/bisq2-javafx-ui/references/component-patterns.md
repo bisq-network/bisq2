@@ -38,15 +38,24 @@ Preferred patterns:
 
 1) `FxBindings` mapping pipelines
 ```java
+// Controller onActivate(): translate model state into service input.
+// The view stays out of the service call; it only observes model properties.
 Pin p = FxBindings.bind(model.getItems())
-        .filter(...)
-        .map(...)
+        .filter(Item::isEnabled)
+        .map(Item::getDomainValue)
         .to(service.getObservableSet());
 ```
 
 2) Direct observers when no pipeline needed
 ```java
-Pin p = service.getFlag().addObserver(v -> UIThread.run(() -> model.getFlag().set(v)));
+Pin p = service.getFlag().addObserver(v -> UIThread.run(() -> {
+    try {
+        model.getFlag().set(v);
+        model.getErrorMessage().set(null);
+    } catch (RuntimeException e) {
+        model.getErrorMessage().set(e.getMessage());
+    }
+}));
 ```
 
 3) JavaFX direct bindings in view
@@ -80,7 +89,12 @@ void refresh() {
     long s = seq.incrementAndGet();
     service.load().whenComplete((result, err) -> UIThread.run(() -> {
         if (s != seq.get()) return;
-        if (err == null) model.getItems().setAll(result);
+        if (err == null) {
+            model.getItems().setAll(result);
+            model.getErrorMessage().set(null);
+        } else {
+            model.getErrorMessage().set(err.getMessage());
+        }
     }));
 }
 ```

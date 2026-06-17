@@ -15,7 +15,7 @@ Git uses the blank line between the subject and body as a delimiter. This allows
 - GitHub's UI displays subjects and bodies separately
 
 **Example:**
-```
+```text
 Fix authentication bug in user login
 
 Users were unable to log in due to a validation error in the
@@ -45,14 +45,14 @@ Without the blank line, Git tools can't distinguish where the subject ends and t
 **Examples:**
 
 ✅ Good (50 characters or less):
-```
+```text
 Add user authentication with JWT tokens
 Fix memory leak in background sync process
 Update dependencies to latest versions
 ```
 
 ❌ Too long:
-```
+```text
 Add comprehensive user authentication system with JWT tokens and refresh token rotation
 ```
 
@@ -63,12 +63,12 @@ Simple consistency rule that improves readability.
 **Examples:**
 
 ✅ Good:
-```
+```text
 Accelerate to 88 miles per hour
 ```
 
 ❌ Bad:
-```
+```text
 accelerate to 88 miles per hour
 ```
 
@@ -79,12 +79,12 @@ Trailing punctuation wastes precious character space in the 50-character limit.
 **Examples:**
 
 ✅ Good:
-```
+```text
 Open the pod bay doors
 ```
 
 ❌ Bad:
-```
+```text
 Open the pod bay doors.
 ```
 
@@ -109,7 +109,7 @@ Your subject line should complete this sentence:
 **Examples:**
 
 ✅ Good (imperative mood):
-```
+```text
 If applied, this commit will refactor authentication module
 If applied, this commit will remove deprecated methods
 If applied, this commit will fix bug in user login
@@ -117,7 +117,7 @@ If applied, this commit will update dependencies
 ```
 
 ❌ Bad (not imperative):
-```
+```text
 If applied, this commit will fixed bug in user login          (past tense)
 If applied, this commit will fixes bug in user login          (present tense)
 If applied, this commit will fixing bug in user login         (present participle)
@@ -149,7 +149,7 @@ Git does not wrap text automatically. When you wrap text manually at 72 characte
 - Use manual line breaks at logical points in your sentences
 
 **Example:**
-```
+```text
 Fix authentication bug in user login
 
 Users were unable to log in due to a validation error in the
@@ -178,12 +178,12 @@ The code shows **how** a change was made. The commit message should explain:
 **Example comparing before/after:**
 
 ❌ Uninformative:
-```
+```text
 Fix bug
 ```
 
 ✅ Informative:
-```
+```text
 Fix authentication timeout in Safari
 
 Safari has a stricter cookie security policy that was causing
@@ -233,7 +233,7 @@ While IDE integrations are convenient, they often limit access to Git's full pow
 
 When commits relate to issues or pull requests, reference them in the body:
 
-```
+```text
 Fix memory leak in background sync
 
 The background sync process was accumulating WebSocket connections
@@ -263,7 +263,7 @@ Reading [Pro Git](https://git-scm.com/book/en/v2) (available free online) provid
 ## Common Anti-Patterns to Avoid
 
 ❌ **Vague subjects:**
-```
+```text
 Fix stuff
 Update code
 Changes
@@ -272,12 +272,12 @@ asdfasdf
 ```
 
 ❌ **Describing implementation instead of purpose:**
-```
+```text
 Change UserController.login() to use bcrypt.compare() with correct parameters
 ```
 
 Better:
-```
+```text
 Fix authentication bug in user login
 
 Corrected bcrypt salt parameter to fix validation errors preventing
@@ -285,12 +285,12 @@ users from logging in.
 ```
 
 ❌ **Including irrelevant information:**
-```
+```text
 Fix login bug (worked on this all day, finally figured it out!)
 ```
 
 ❌ **Not using imperative mood:**
-```
+```text
 Fixed login bug
 Fixing login bug
 This fixes the login bug
@@ -300,7 +300,7 @@ I fixed the login bug
 ## Examples of Great Commit Messages
 
 ### Example 1: Bug Fix
-```
+```text
 Fix race condition in cache invalidation
 
 The previous implementation used separate read and write operations
@@ -316,7 +316,7 @@ Fixes #1234
 ```
 
 ### Example 2: Feature Addition
-```
+```text
 Add dark mode support to user interface
 
 Implements a dark color theme that can be toggled in user
@@ -331,7 +331,7 @@ Closes #567
 ```
 
 ### Example 3: Refactoring
-```
+```text
 Extract authentication logic into separate service
 
 The authentication code was scattered across multiple controllers,
@@ -348,7 +348,7 @@ No functional changes to authentication behavior.
 ```
 
 ### Example 4: Documentation
-```
+```text
 Document database migration process
 
 Added comprehensive guide for running database migrations in
