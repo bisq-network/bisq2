@@ -603,19 +603,14 @@ public class DtoMappings {
     // identity
 
     public static class IdentityMapping {
-        public static Identity toBisq2Model(IdentityDto value) {
-            return new Identity(
-                    value.tag(),
-                    NetworkIdMapping.toBisq2Model(value.networkId()),
-                    KeyBundleMapping.toBisq2Model(value.keyBundle())
-            );
-        }
+        // Note: toBisq2Model was removed alongside the keyBundle field of IdentityDto
+        // (bisq-network/bisq-mobile#1432). Reconstructing a full bisq2 Identity from the
+        // wire shape is no longer possible (and was already only called from dead code).
 
         public static IdentityDto fromBisq2Model(Identity value) {
             return new IdentityDto(
                     value.getTag(),
-                    NetworkIdMapping.fromBisq2Model(value.getNetworkId()),
-                    KeyBundleMapping.fromBisq2Model(value.getKeyBundle())
+                    NetworkIdMapping.fromBisq2Model(value.getNetworkId())
             );
         }
     }
@@ -1193,17 +1188,8 @@ public class DtoMappings {
     }
 
     public static class BisqEasyTradeMapping {
-        //todo we dont have the mutable data in the dto
-       /* public static BisqEasyTrade toBisq2Model(BisqEasyTradeDto value) {
-            return new BisqEasyTrade(
-                    BisqEasyTradeState.INIT,
-                    value.id(),
-                    TradeRoleMapping.toBisq2Model(value.tradeRole()),
-                    IdentityMapping.toBisq2Model(value.myIdentity()),
-                    BisqEasyTradePartyMapping.toBisq2Model(value.taker()),
-                    BisqEasyTradePartyMapping.toBisq2Model(value.maker())
-            );
-        }*/
+        // Only fromBisq2Model is provided: this DTO is wire output (server → client) and the
+        // mutable trade state is delivered via WebSocket updates, not reconstructed from the DTO.
 
         public static BisqEasyTradeDto fromBisq2Model(BisqEasyTrade value) {
             return new BisqEasyTradeDto(
@@ -1382,12 +1368,9 @@ public class DtoMappings {
     // user.identity
 
     public static class UserIdentityMapping {
-        public static UserIdentity toBisq2Model(UserIdentityDto value) {
-            return new UserIdentity(
-                    IdentityMapping.toBisq2Model(value.identity()),
-                    UserProfileMapping.toBisq2Model(value.userProfile())
-            );
-        }
+        // Note: toBisq2Model was removed alongside IdentityMapping.toBisq2Model
+        // (bisq-network/bisq-mobile#1432). UserIdentity cannot be reconstructed from
+        // the wire shape now that private key material is no longer transmitted.
 
         public static UserIdentityDto fromBisq2Model(UserIdentity value) {
             return new UserIdentityDto(
