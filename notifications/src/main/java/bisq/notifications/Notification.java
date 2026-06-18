@@ -3,6 +3,8 @@ package bisq.notifications;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Optional;
+
 public interface Notification {
     String getId();
 
@@ -16,6 +18,20 @@ public interface Notification {
      * banner rather than mis-tagging. */
     default Category getCategory() {
         return Category.GENERAL;
+    }
+
+    /**
+     * Trade-scoped identifier surfaced to the mobile relay so the client can
+     * deep-link a notification tap straight to the relevant trade screen
+     * ({@code bisq://OpenTrade/<tradeId>}) instead of the generic trade list.
+     * <p>
+     * Default {@link Optional#empty()} keeps non-trade notifications (alerts,
+     * generic announcements) on the category-based fallback route — mobile
+     * clients use the category to choose the destination when no tradeId is
+     * present (see {@code BisqFirebaseMessagingService.deepLinkRouteFor}).
+     */
+    default Optional<String> getTradeId() {
+        return Optional.empty();
     }
 
     /**
