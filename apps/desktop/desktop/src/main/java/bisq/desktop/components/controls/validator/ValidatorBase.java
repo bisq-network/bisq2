@@ -83,11 +83,11 @@ public class ValidatorBase {
      */
     protected void eval() {
         TextInputControl textField = (TextInputControl) srcControl.get();
-        String address = textField.getText();
-        if (StringUtils.isNotEmpty(address)) {
-            hasErrors.set(!validation.isValid(address));
+        String value = textField.getText();
+        if (StringUtils.isEmpty(value)) {
+            hasErrors.set(true);
         } else {
-            hasErrors.set(false);
+            hasErrors.set(!validation.isValid(value));
         }
     }
 
