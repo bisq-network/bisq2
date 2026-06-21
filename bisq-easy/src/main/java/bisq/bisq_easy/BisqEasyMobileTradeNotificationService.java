@@ -338,7 +338,8 @@ public class BisqEasyMobileTradeNotificationService implements Service {
         String title = Res.get(titleKey, shortTradeId);
         String message = Res.get(messageKey, peerName);
         String notificationId = notificationIdFor(trade);
-        notificationService.dispatchMobileOnlyNotification(new MobileTradeNotification(notificationId, title, message));
+        notificationService.dispatchMobileOnlyNotification(
+                new MobileTradeNotification(notificationId, title, message, trade.getId()));
     }
 
     private void dispatchTerminal(BisqEasyTrade trade, String terminalI18nKey) {
@@ -348,7 +349,7 @@ public class BisqEasyMobileTradeNotificationService implements Service {
         String title = Res.get("bisqEasy.mobileNotifications.tradeCompleted.title", shortTradeId);
         String message = Res.get("bisqEasy.mobileNotifications.tradeCompleted.message", peerName, terminalLabel);
         notificationService.dispatchMobileOnlyNotification(
-                new MobileTradeNotification(notificationIdFor(trade), title, message));
+                new MobileTradeNotification(notificationIdFor(trade), title, message, trade.getId()));
     }
 
     @Nullable

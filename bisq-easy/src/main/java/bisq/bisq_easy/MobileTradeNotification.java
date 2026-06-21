@@ -22,6 +22,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Optional;
+
 /**
  * Lightweight {@link Notification} carrying a per-trade mobile push payload built by
  * {@link BisqEasyMobileTradeNotificationService}. Not persisted — only used as a
@@ -34,15 +36,28 @@ public final class MobileTradeNotification implements Notification {
     private final String id;
     private final String title;
     private final String message;
+    /**
+     * Raw bisq2 trade id — surfaced to the mobile relay so taps on the push
+     * deep-link straight to the trade screen. {@link #id} is a derived
+     * notification id ({@code "bisq-easy-mobile-trade-<short>"}) which is NOT
+     * the routable trade id, so we carry the raw value alongside.
+     */
+    private final String tradeId;
 
-    public MobileTradeNotification(String id, String title, String message) {
+    public MobileTradeNotification(String id, String title, String message, String tradeId) {
         this.id = id;
         this.title = title;
         this.message = message;
+        this.tradeId = tradeId;
     }
 
     @Override
     public Category getCategory() {
         return Category.TRADE_UPDATE;
+    }
+
+    @Override
+    public Optional<String> getTradeId() {
+        return Optional.ofNullable(tradeId);
     }
 }

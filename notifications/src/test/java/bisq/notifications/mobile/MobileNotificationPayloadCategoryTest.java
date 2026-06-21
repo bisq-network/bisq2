@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -51,7 +52,8 @@ class MobileNotificationPayloadCategoryTest {
                 "channel.msg-123",
                 "Alice (Bisq Easy → Open Trades → Bob)",
                 "hey, account info incoming",
-                Notification.Category.CHAT_MESSAGE);
+                Notification.Category.CHAT_MESSAGE,
+                null);
 
         String json = mapper.writeValueAsString(original);
         assertTrue(json.contains("\"category\":\"chat_message\""),
@@ -68,7 +70,8 @@ class MobileNotificationPayloadCategoryTest {
                 "trade-id.abcd",
                 "Trade abcd1234",
                 "Peer confirmed fiat receipt",
-                Notification.Category.TRADE_UPDATE);
+                Notification.Category.TRADE_UPDATE,
+                null);
 
         String json = mapper.writeValueAsString(original);
         assertTrue(json.contains("\"category\":\"trade_update\""), json);
@@ -107,7 +110,7 @@ class MobileNotificationPayloadCategoryTest {
         // Constructor normalises null → GENERAL, so the payload field is never null
         // at serialization time. The mobile client can therefore assume the JSON
         // always carries a `category` key — no `null` and no missing key.
-        MobileNotificationPayload general = new MobileNotificationPayload("i", "t", "m", null);
+        MobileNotificationPayload general = new MobileNotificationPayload("i", "t", "m", null, null);
 
         String json = mapper.writeValueAsString(general);
         assertTrue(json.contains("\"category\":\"general\""),
@@ -127,5 +130,55 @@ class MobileNotificationPayloadCategoryTest {
         assertEquals("trade_update", Notification.Category.TRADE_UPDATE.getId());
         assertEquals("offer_update", Notification.Category.OFFER_UPDATE.getId());
         assertEquals("general", Notification.Category.GENERAL.getId());
+    }
+
+    // ---------- tradeId (bisq-network/bisq-mobile#1395) ----------
+
+    @Test
+    void tradeIdRoundTripsThroughJsonWhenPresent() throws Exception {
+        MobileNotificationPayload original = new MobileNotificationPayload(
+                "bisq-easy-mobile-trade-abcd",
+                "Trade abcd1234",
+                "Peer confirmed fiat receipt",
+                Notification.Category.TRADE_UPDATE,
+                "trade-id-abcd-1234");
+
+        String json = mapper.writeValueAsString(original);
+        assertTrue(json.contains("\"tradeId\":\"trade-id-abcd-1234\""),
+                "tradeId must be serialized when present so the mobile client can deep-link: " + json);
+
+        MobileNotificationPayload decoded = mapper.readValue(json, MobileNotificationPayload.class);
+        assertEquals("trade-id-abcd-1234", decoded.getTradeId());
+        assertEquals(original, decoded);
+    }
+
+    @Test
+    void tradeIdIsOmittedFromWireWhenNullForBackwardCompatibility() throws Exception {
+        // Older mobile clients (pre-#1395) don't parse `tradeId`. Emitting the key
+        // as `null` would be tolerated, but omitting it entirely keeps the wire
+        // payload identical to what those clients have always seen. This is what
+        // the @JsonInclude(NON_NULL) annotation guarantees.
+        MobileNotificationPayload payload = new MobileNotificationPayload(
+                "id", "title", "message", Notification.Category.GENERAL, null);
+
+        String json = mapper.writeValueAsString(payload);
+        assertFalse(json.contains("tradeId"),
+                "tradeId must NOT appear on the wire when null — older clients " +
+                        "must see exactly the pre-#1395 payload shape: " + json);
+    }
+
+    @Test
+    void absentTradeIdInJsonDeserializesAsNull() throws Exception {
+        // Mirror of the older-bisq2 scenario: a payload produced before #1395
+        // arrives at a new mobile client. The deserializer must treat the
+        // missing field as null (not throw) so the mobile client falls back to
+        // category-based routing.
+        String legacyJson =
+                "{\"id\":\"x\",\"title\":\"t\",\"message\":\"m\",\"category\":\"trade_update\"}";
+
+        MobileNotificationPayload decoded = mapper.readValue(legacyJson, MobileNotificationPayload.class);
+
+        assertNull(decoded.getTradeId());
+        assertEquals(Notification.Category.TRADE_UPDATE, decoded.getCategory());
     }
 }

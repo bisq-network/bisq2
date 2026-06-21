@@ -46,6 +46,16 @@ public class ChatNotification implements Notification, PersistableProto {
         return Category.CHAT_MESSAGE;
     }
 
+    /**
+     * Exposes the per-channel tradeId (already tracked as a domain field) to the
+     * mobile relay so taps on a chat-message push deep-link straight to the
+     * relevant trade chat instead of the generic open-trade list.
+     */
+    @Override
+    public Optional<String> getTradeId() {
+        return tradeId;
+    }
+
     private final String id;
     private final String title;
     private final String message;

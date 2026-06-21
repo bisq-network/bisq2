@@ -19,6 +19,7 @@ package bisq.notifications.mobile;
 
 import bisq.notifications.Notification;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,17 +43,30 @@ public class MobileNotificationPayload {
      * that don't emit the field, and newer producers that introduce new ids).
      */
     private final Notification.Category category;
+    /**
+     * Optional bisq2 trade id. When present, the mobile client routes a tap on
+     * the push notification straight to the trade screen
+     * ({@code bisq://OpenTrade/<tradeId>}) instead of the generic open-trade
+     * list. Omitted from the wire payload when {@code null} so older mobile
+     * clients (that don't parse this field) are unaffected.
+     * <p>
+     * See bisq-network/bisq-mobile#1395.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private final String tradeId;
 
     @JsonCreator
     public MobileNotificationPayload(
             @JsonProperty("id") String id,
             @JsonProperty("title") String title,
             @JsonProperty("message") String message,
-            @JsonProperty("category") Notification.Category category
+            @JsonProperty("category") Notification.Category category,
+            @JsonProperty("tradeId") String tradeId
     ) {
         this.id = id;
         this.title = title;
         this.message = message;
         this.category = category == null ? Notification.Category.GENERAL : category;
+        this.tradeId = tradeId;
     }
 }
