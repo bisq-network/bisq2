@@ -9,6 +9,18 @@ Read ~/.codex/AGENTS.md if present before doing anything else and report whether
 This file contains agent-specific operating rules.
 Project coding conventions and architecture rules are defined in the developer docs.
 
+## Repo-Local AI Skills
+
+This repository includes shared AI skills for Bisq contributor work. Codex loads `.agents/skills` automatically from the Git root, and Claude Code loads `.claude/skills`. Prefer explicit skill invocation for specialized work:
+
+- `$bisq-contributor-workflow` for implementation tasks and contribution flow
+- `$bisq2-javafx-ui` for JavaFX desktop UI changes
+- `$bisq-pr-reviewer` for Bisq pull request review
+- `$git-commit-writer` for commit message drafting
+- `$ui-design-principles` for UI quality review
+
+Keep `.agents/skills` and `.claude/skills` in sync when updating shared skills.
+
 ## Source of Truth (Developer Docs)
 
 Start with:
