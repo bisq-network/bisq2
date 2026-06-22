@@ -249,29 +249,24 @@ jobs:
     timeout-minutes: 10
     # Least-privilege: this job only POSTS / UPDATES A COMMENT on the source
     # PR. It does NOT push any branch or open a PR (that's the author's job,
-    # with their own GPG-signed commit). PR conversation comments go through
-    # the Issues API (PRs are issues for that endpoint), so we need
-    # `issues: write`.
+    # with their own GPG-signed commit).
     #
-    # Caveat — declaring `issues: write` here is necessary but NOT sufficient.
-    # GitHub enforces a permissions ceiling at both repo and org level. If
-    # either is set to "Read repository contents and packages permissions"
-    # (the default for newer repos / orgs), this declaration is silently
-    # capped at read-only and the comment-posting step fails at runtime with:
+    # A PR conversation comment goes through the Issues comments endpoint
+    # (POST /repos/<owner>/<repo>/issues/<n>/comments), but because the target
+    # resource is a pull request, GitHub requires BOTH `issues: write` and
+    # `pull-requests: write`. Granting only `issues: write` fails at runtime
+    # with:
     #
     #   HttpError: Resource not accessible by integration
     #   POST /repos/<owner>/<repo>/issues/<n>/comments  -> 403
     #   x-accepted-github-permissions: 'issues=write; pull_requests=write'
     #
-    # Fix: a repo admin sets Settings > Actions > General > Workflow
-    # permissions to "Read and write permissions". The org setting (if more
-    # restrictive) overrides the repo setting, so the org may need flipping
-    # too. There is no workflow-side workaround that does not require an
-    # admin action (a PAT secret or a GitHub App installation token would
-    # bypass the ceiling but both need a maintainer to provision them).
+    # This is a workflow-side permission declaration, not an org/repo ceiling
+    # issue: `issues: write` already elevates past the ceiling at runtime, so
+    # `pull-requests: write` does too — no admin setting change is needed.
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: write
 
     steps:
