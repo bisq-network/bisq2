@@ -10,7 +10,11 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.presentation.formatters.DateFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
@@ -26,34 +30,57 @@ public class OpenTradesUtils {
 
     public static void exportTrade(BisqEasyTrade trade, Scene scene) {
         try {
-            String tradeId = trade.getId();
-            String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
             BisqEasyContract contract = trade.getContract();
+            String tradeId = trade.getId();
+            String role = trade.isMaker() ?
+                    Res.get("bisqEasy.openTrades.table.makerTakerRole.maker") :
+                    Res.get("bisqEasy.openTrades.table.makerTakerRole.taker");
+            String offerType = trade.getOffer().getDirection().isBuy() ?
+                    Res.get("bisqEasy.openTrades.csv.offerType.buy") :
+                    Res.get("bisqEasy.openTrades.csv.offerType.sell");
+            String quoteCurrencyCode = trade.getOffer().getMarket().getQuoteCurrencyCode();
             long baseSideAmount = contract.getBaseSideAmount();
             long quoteSideAmount = contract.getQuoteSideAmount();
             String formattedBaseAmount = AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(baseSideAmount));
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmountWithCode(Fiat.from(quoteSideAmount, quoteCurrencyCode));
+            String priceCodes = trade.getOffer().getMarket().getMarketCodes();
+            String priceSpec = trade.getOffer().getPriceSpec() instanceof FixPriceSpec ?
+                    "" :
+                    String.format("(%s)",
+                    PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true));
+            String price = PriceFormatter.format(contract.getPriceQuote());
+            price = String.format("%s %s %s", price, priceCodes, priceSpec);
             String paymentProof = trade.getPaymentProof().orElseGet(() -> Res.get("data.na"));
             String bitcoinPaymentData = trade.getBitcoinPaymentData().orElseGet(() -> Res.get("data.na"));
             String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();
             String fiatMethod = contract.getQuoteSidePaymentMethodSpec().getDisplayString();
             String paymentMethod = bitcoinMethod + " / " + fiatMethod;
+            Long date = trade.getTradeCompletedDate().orElse(contract.getTakeOfferDate());
+            String formattedDate = DateFormatter.formatDateTime(date);
             List<String> headers = List.of(
                     Res.get("bisqEasy.openTrades.table.tradeId"),
+                    Res.get("bisqEasy.openTrades.table.makerTakerRole"),
+                    Res.get("bisqEasy.openTrades.csv.offerType"),
                     Res.get("bisqEasy.openTrades.table.baseAmount"),
                     Res.get("bisqEasy.openTrades.csv.quoteAmount", quoteCurrencyCode),
+                    Res.get("bisqEasy.openTrades.csv.price"),
                     Res.get("bisqEasy.openTrades.csv.txIdOrPreimage"),
                     Res.get("bisqEasy.openTrades.csv.receiverAddressOrInvoice"),
-                    Res.get("bisqEasy.openTrades.csv.paymentMethod")
+                    Res.get("bisqEasy.openTrades.csv.paymentMethod"),
+                    Res.get("bisqEasy.openTrades.csv.date")
             );
             List<List<String>> tradeData = List.of(
                     List.of(
                             tradeId,
+                            role,
+                            offerType,
                             formattedBaseAmount,
                             formattedQuoteAmount,
+                            price,
                             paymentProof,
                             bitcoinPaymentData,
-                            paymentMethod
+                            paymentMethod,
+                            formattedDate
                     )
             );
             String csv = Csv.toCsv(headers, tradeData);
