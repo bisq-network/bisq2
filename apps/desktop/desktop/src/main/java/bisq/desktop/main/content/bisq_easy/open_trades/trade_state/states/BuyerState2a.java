@@ -22,6 +22,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
@@ -98,7 +99,7 @@ public class BuyerState2a extends BaseState {
                 moderationRequestService.reportUserProfile(peer, message);
 
                 // We reject the trade to avoid the banned user can continue
-                bisqEasyTradeService.cancelTrade(trade);
+                TradeExceptionHandler.run(() -> bisqEasyTradeService.cancelTrade(trade));
 
                 new Popup().warning(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBanned.popup.warning")).show();
             } else {
@@ -113,9 +114,10 @@ public class BuyerState2a extends BaseState {
         }
 
         private void onConfirmFiatSent() {
-            sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.buyer.phase2a.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getQuoteCode()));
-            bisqEasyTradeService.buyerConfirmFiatSent(model.getTrade());
+            if (TradeExceptionHandler.run(() -> bisqEasyTradeService.buyerConfirmFiatSent(model.getTrade()))) {
+                sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.buyer.phase2a.tradeLogMessage",
+                        model.getChannel().getMyUserIdentity().getUserName(), model.getQuoteCode()));
+            }
         }
     }
 

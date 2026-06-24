@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -66,9 +67,10 @@ public class SellerState2b extends BaseState {
         }
 
         private void onConfirmFiatReceipt() {
-            sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
-            bisqEasyTradeService.sellerConfirmFiatReceipt(model.getTrade());
+            if (TradeExceptionHandler.run(() -> bisqEasyTradeService.sellerConfirmFiatReceipt(model.getTrade()))) {
+                sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.seller.phase2b.tradeLogMessage",
+                        model.getChannel().getMyUserIdentity().getUserName(), model.getFormattedQuoteAmount()));
+            }
         }
     }
 

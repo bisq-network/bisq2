@@ -65,6 +65,7 @@ import bisq.trade.bisq_easy.protocol.events.BisqEasyTakeOfferEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyTradeEvent;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.exceptions.TradingNotAllowedException;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
@@ -214,8 +215,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
-            verifyTradingNotOnHalt();
-            verifyMinVersionForTrading();
+            try {
+                verifyTradingNotOnHalt();
+                verifyMinVersionForTrading();
+            } catch (TradingNotAllowedException e) {
+                log.warn("Ignoring inbound trade message as trading is currently not allowed: {}", e.getMessage());
+                return;
+            }
 
             if (bannedUserService.isUserProfileBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
@@ -460,15 +466,15 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     }
 
     private void verifyTradingNotOnHalt() {
-        checkArgument(!haltTrading, "Trading is on halt for security reasons. " +
-                "The Bisq security manager has published an emergency alert with haltTrading set to true");
+        if (haltTrading) {
+            throw new TradingNotAllowedException(Res.get("trade.error.tradingHalted"));
+        }
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent() &&
+                !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get()))) {
+            throw new TradingNotAllowedException(Res.get("trade.error.minVersionRequired", minRequiredVersionForTrading.get()));
         }
     }
 

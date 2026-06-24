@@ -52,6 +52,7 @@ import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.arbitration.mu_sig.NoMuSigArbitratorAvailableException;
 import bisq.support.mediation.mu_sig.NoMuSigMediatorAvailableException;
+import bisq.trade.exceptions.TradingNotAllowedException;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.user.banned.BannedUserService;
@@ -241,6 +242,11 @@ public class MuSigTakeOfferReviewController implements Controller {
             model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SENT);
             // todo simulate a small delay until we have a solution for the above issue
             UIScheduler.run(() -> model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS)).after(200);
+        } catch (TradingNotAllowedException e) {
+            UIThread.run(() -> {
+                new Popup().warning(e.getMessage()).show();
+                onCancelHandler.run();
+            });
         } catch (UserProfileBannedException e) {
             UIThread.run(() -> {
                 if (muSigOffer.getMakersUserProfileId().equals(e.getUserProfileId())) {
