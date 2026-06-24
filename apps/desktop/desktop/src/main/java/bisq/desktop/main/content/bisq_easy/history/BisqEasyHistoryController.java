@@ -35,8 +35,10 @@ import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class BisqEasyHistoryController implements Controller {
@@ -49,6 +51,7 @@ public class BisqEasyHistoryController implements Controller {
     private final DontShowAgainService dontShowAgainService;
     private Pin closedTradesPin;
     private String searchText = "";
+    private final Set<String> knownTradeIds = new HashSet<>();
 
     public BisqEasyHistoryController(ServiceProvider serviceProvider) {
         model = new BisqEasyHistoryModel();
@@ -64,7 +67,7 @@ public class BisqEasyHistoryController implements Controller {
         closedTradesPin = bisqEasyTradeService.getClosedTrades().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(BisqEasyClosedTrade closedTrade) {
-                if (findListItem(closedTrade.trade().getId()).isEmpty()) {
+                if (knownTradeIds.add(closedTrade.trade().getId())) {
                     model.getBisqEasyTradeHistoryListItems().add(
                             new BisqEasyTradeHistoryListItem(closedTrade, reputationService, marketPriceService));
                     updatePlaceholderText();
@@ -74,9 +77,8 @@ public class BisqEasyHistoryController implements Controller {
             @Override
             public void onRemoved(Object element) {
                 if (element instanceof BisqEasyClosedTrade closedTrade) {
-                    model.getBisqEasyTradeHistoryListItems().stream()
-                            .filter(item -> item.getTrade().equals(closedTrade.trade()))
-                            .findFirst()
+                    knownTradeIds.remove(closedTrade.trade().getId());
+                    findListItem(closedTrade.trade().getId())
                             .ifPresent(item -> model.getBisqEasyTradeHistoryListItems().remove(item));
                     updatePlaceholderText();
                 }
@@ -85,6 +87,7 @@ public class BisqEasyHistoryController implements Controller {
             @Override
             public void onCleared() {
                 model.getBisqEasyTradeHistoryListItems().clear();
+                knownTradeIds.clear();
                 updatePlaceholderText();
             }
         });
