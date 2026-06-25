@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
+  <title>Bisq Easy Node — Pair mobile app</title>
+  <style>
+    /* IBM Plex Sans — Bisq's brand font, vendored locally (OFL-1.1) so the page
+       never calls out to a font CDN (privacy + offline). Weights: 400/500/600/700. */
+    @font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("./fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
+    @font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url("./fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); }
+    @font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("./fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); }
+    @font-face { font-family: "IBM Plex Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("./fonts/ibm-plex-sans-latin-700-normal.woff2") format("woff2"); }
+
+    /*
+     * Bisq Design Tokens (from BisqColor.kt)
+     * Zero external dependencies — no CDN, no Google Fonts.
+     * Font stack: system-ui covers San Francisco on macOS/iOS, Segoe UI on Windows,
+     * Roboto on Android/Chrome OS — all visually clean and available offline.
+     *
+     * Color mapping (hex originals from BisqColor.kt, unadjusted for CSS rendering):
+     *   --bisq-bg:           #1c1c1c  (dark_grey20 / backgroundColor)
+     *   --bisq-surface:      #242424  (dark_grey30)
+     *   --bisq-surface-2:    #2b2b2b  (dark_grey40)
+     *   --bisq-border:       #383838  (dark_grey50)
+     *   --bisq-white:        #fafafa
+     *   --bisq-mid-grey:     #808080  (mid_grey20)
+     *   --bisq-light-grey:   #b2b2b2  (mid_grey30)
+     *   --bisq-green:        #56ae48  (primary)
+     *   --bisq-green-hover:  #56c262  (primaryHover)
+     *   --bisq-green-dim:    #0a2f0f  (primary2)
+     *   --bisq-red:          #d23246  (danger)
+     *   --bisq-warning:      #ff9823  (warning)
+     *   --bisq-yellow:       #d0831f  (yellow)
+     */
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bisq-bg:            #1c1c1c;
+      --bisq-surface:       #242424;
+      --bisq-surface-2:     #2b2b2b;
+      --bisq-border:        #383838;
+      --bisq-white:         #fafafa;
+      --bisq-mid-grey:      #808080;
+      --bisq-light-grey:    #b2b2b2;
+      --bisq-green:         #56ae48;
+      --bisq-green-hover:   #56c262;
+      --bisq-green-dim:     #0a2f0f;
+      --bisq-red:           #d23246;
+      --bisq-warning:       #ff9823;
+      --bisq-yellow:        #d0831f;
+      --bisq-yellow-50:     #68410f;
+      --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", "Courier New", monospace;
+      --radius:    8px;
+      --radius-lg: 14px;
+      --max-w:     1100px;
+    }
+
+    html {
+      font-size: 16px;
+      background-color: var(--bisq-bg);
+      color: var(--bisq-white);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.75rem 1.5rem 4rem;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      width: 100%;
+      max-width: var(--max-w);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      /* Keep brand + status + settings visible while scrolling (below the panel overlay). */
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bisq-bg);
+      padding: 0.75rem 0 0.875rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 8px 24px -12px rgba(0,0,0,0.6);
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .topbar-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--bisq-white);
+      line-height: 1.3;
+    }
+
+    .topbar-subtitle {
+      font-size: 0.8125rem;
+      font-weight: 400;
+      color: var(--bisq-mid-grey);
+      line-height: 1.35;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* ── Status pill ── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.875rem;
+      border-radius: 999px;
+      border: 1px solid var(--bisq-border);
+      background: var(--bisq-surface);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* State colours from BisqConnectView.java */
+    [data-state="ready"]   .status-dot, .status-dot[data-state="ready"]   { background: var(--bisq-green); box-shadow: 0 0 6px rgba(86,174,72,0.6); }
+    [data-state="starting"] .status-dot, .status-dot[data-state="starting"] { background: var(--bisq-warning); }
+    [data-state="tor"]     .status-dot, .status-dot[data-state="tor"]     { background: var(--bisq-yellow); }
+    [data-state="stopped"] .status-dot, .status-dot[data-state="stopped"] { background: var(--bisq-red); }
+
+    [data-state="ready"]   .status-label { color: var(--bisq-green); }
+    [data-state="starting"] .status-label { color: var(--bisq-warning); }
+    [data-state="tor"]     .status-label { color: var(--bisq-yellow); }
+    [data-state="stopped"] .status-label { color: var(--bisq-red); }
+
+    /* ── Gear / settings button ── */
+    .gear-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius);
+      background: var(--bisq-surface);
+      border: 1px solid var(--bisq-border);
+      color: var(--bisq-mid-grey);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .gear-btn:hover {
+      background: var(--bisq-surface-2);
+      color: var(--bisq-white);
+      border-color: var(--bisq-mid-grey);
+    }
+    .gear-btn:focus-visible {
+      outline: 2px solid var(--bisq-green);
+      outline-offset: 2px;
+    }
+    .gear-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Demo bar ── */
+    .demo-bar {
+      width: 100%;
+      max-width: var(--max-w);
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .demo-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--bisq-mid-grey);
+      white-space: nowrap;
+    }
+    .demo-btns {
+      display: flex;
+      gap: 0.375rem;
+      flex-wrap: wrap;
+    }
+    .demo-btn {
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid var(--bisq-border);
+      background: transparent;
+      color: var(--bisq-light-grey);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 0.12s ease;
+    }
+    .demo-btn.active, .demo-btn:hover {
+      background: var(--bisq-green-dim);
+      border-color: var(--bisq-green);
+      color: var(--bisq-green);
+    }
+
+    /* ── State banner ── */
+    .state-banner {
+      width: 100%;
+      max-width: var(--max-w);
+      border-radius: var(--radius);
+      border: 1px solid;
+      padding: 0.875rem 1.25rem;
+      margin-bottom: 1.25rem;
+      display: none;
+      align-items: flex-start;
+      gap: 0.875rem;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+    .state-banner.visible { display: flex; }
+    .state-banner.warning {
+      background: rgba(255,152,35,0.07);
+      border-color: rgba(255,152,35,0.28);
+      color: var(--bisq-warning);
+    }
+    .state-banner.error {
+      background: rgba(210,50,70,0.07);
+      border-color: rgba(210,50,70,0.28);
+      color: var(--bisq-red);
+    }
+    .state-banner.info {
+      background: rgba(208,131,31,0.07);
+      border-color: rgba(208,131,31,0.28);
+      color: var(--bisq-yellow);
+    }
+    .state-banner svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      width: 18px;
+      height: 18px;
+    }
+    .banner-body { display: flex; flex-direction: column; gap: 0.2rem; }
+    .banner-title { font-weight: 600; }
+    .banner-desc { font-size: 0.875rem; font-weight: 400; opacity: 0.9; color: var(--bisq-light-grey); }
+
+    /* ── Main layout: sidebar + content ── */
+    .page-layout {
+      width: 100%;
+      max-width: var(--max-w);
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 800px) {
+      .page-layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── QR card (left column) ── */
+    .qr-card {
+      background: var(--bisq-surface);
+      border: 1px solid var(--bisq-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .qr-card-header {
+      padding: 1.25rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--bisq-border);
+    }
+    .qr-card-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--bisq-white);
+      margin-bottom: 0.3rem;
+    }
+    .qr-card-header p {
+      font-size: 0.8125rem;
+      font-weight: 400;
+      color: var(--bisq-mid-grey);
+      line-height: 1.5;
+    }
+
+    .qr-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.75rem 1.5rem 1.25rem;
+      gap: 1rem;
+    }
+
+    .qr-frame {
+      position: relative;
+      width: 256px;
+      height: 256px;
+      border-radius: 10px;
+      background: #fff;
+      padding: 12px;
+      flex-shrink: 0;
+    }
+
+    .qr-frame canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      /* Canvas is rendered high-res with a baked quiet zone; let the browser
+         smooth-downscale it (pixelated downscaling would drop/merge modules). */
+      image-rendering: auto;
+    }
+
+    /* Overlay for non-ready states */
+    .qr-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      gap: 8px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      background: rgba(28,28,28,0.72);
+    }
+    .qr-overlay.visible { display: flex; }
+    .qr-overlay-icon {
+      width: 40px;
+      height: 40px;
+      color: var(--bisq-warning);
+    }
+    .qr-overlay-text {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--bisq-white);
+      text-align: center;
+      padding: 0 12px;
+      line-height: 1.35;
+    }
+    .qr-overlay.state-stopped .qr-overlay-icon { color: var(--bisq-red); }
+
+    .qr-caption {
+      font-size: 0.8125rem;
+      color: var(--bisq-mid-grey);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .qr-caption strong { color: var(--bisq-light-grey); font-weight: 600; }
+
+    /* ── Right column ── */
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ── Pairing code card ── */
+    .info-card {
+      background: var(--bisq-surface);
+      border: 1px solid var(--bisq-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .info-card-header {
+      padding: 1rem 1.5rem 0.875rem;
+      border-bottom: 1px solid var(--bisq-border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .info-card-header h3 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--bisq-white);
+    }
+    .info-card-body {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ── Section within card ── */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .field-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--bisq-mid-grey);
+    }
+
+    /* ── Copyable field ── */
+    .copy-field {
+      display: flex;
+      align-items: stretch;
+      background: var(--bisq-surface-2);
+      border: 1px solid var(--bisq-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .copy-field-text {
+      flex: 1;
+      padding: 0.625rem 0.875rem;
+      font-size: 0.8125rem;
+      font-family: var(--mono);
+      font-weight: 400;
+      color: var(--bisq-white);
+      line-height: 1.5;
+      word-break: break-all;
+      /* Clamp to ~3 lines on desktop, let it expand on need */
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .copy-field-text.full {
+      -webkit-line-clamp: unset;
+      display: block;
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 0.875rem;
+      background: transparent;
+      border: none;
+      border-left: 1px solid var(--bisq-border);
+      cursor: pointer;
+      color: var(--bisq-mid-grey);
+      transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+      align-self: stretch;
+    }
+    .copy-btn:hover { background: rgba(86,174,72,0.08); color: var(--bisq-green); }
+    .copy-btn:focus-visible { outline: 2px solid var(--bisq-green); outline-offset: -2px; }
+    .copy-btn svg { width: 15px; height: 15px; }
+
+    .field-hint {
+      font-size: 0.8125rem;
+      color: var(--bisq-mid-grey);
+      line-height: 1.5;
+    }
+    .field-hint em { font-style: normal; color: var(--bisq-light-grey); }
+
+    /* Security note inline */
+    .security-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--bisq-mid-grey);
+      line-height: 1.5;
+      padding: 0.75rem 1rem;
+      background: var(--bisq-surface-2);
+      border: 1px solid var(--bisq-border);
+      border-radius: var(--radius);
+    }
+    .security-note svg { flex-shrink: 0; margin-top: 1px; color: var(--bisq-mid-grey); width: 14px; height: 14px; }
+
+
+    /* ── Secondary info: onion address ── */
+    .secondary-card {
+      background: var(--bisq-surface);
+      border: 1px solid var(--bisq-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .secondary-card-header {
+      padding: 0.875rem 1.5rem;
+      border-bottom: 1px solid var(--bisq-border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .secondary-card-header h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--bisq-light-grey);
+    }
+    .secondary-card-body {
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* ── Page footer ── */
+    .page-footer {
+      width: 100%;
+      max-width: var(--max-w);
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+      font-size: 0.8125rem;
+      color: var(--bisq-mid-grey);
+      line-height: 1.5;
+      padding: 0.875rem 1.25rem;
+      background: var(--bisq-surface);
+      border: 1px solid var(--bisq-border);
+      border-radius: var(--radius);
+      /* Keep the footer (security note + version) visible without scrolling. */
+      position: sticky;
+      bottom: 0.75rem;
+      z-index: 5;
+      box-shadow: 0 -8px 24px -12px rgba(0,0,0,0.6);
+    }
+    .page-footer svg { flex-shrink: 0; margin-top: 1px; width: 14px; height: 14px; }
+    .footer-text { display: flex; flex-direction: column; gap: 0.25rem; }
+    .footer-version { color: var(--bisq-mid-grey); opacity: 0.8; }
+    .footer-version b { color: var(--bisq-light-grey); font-weight: 500; }
+
+    /* ── Node info panel (slide-in overlay) ── */
+    .panel-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 100;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .panel-backdrop.open {
+      display: block;
+      opacity: 1;
+    }
+
+    .node-info-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 380px;
+      max-width: 100vw;
+      background: var(--bisq-surface);
+      border-left: 1px solid var(--bisq-border);
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+      overflow-y: auto;
+    }
+    .node-info-panel.open {
+      transform: translateX(0);
+    }
+
+    .panel-header {
+      padding: 1.25rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--bisq-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .panel-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .panel-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--bisq-white);
+    }
+    .panel-header p {
+      font-size: 0.75rem;
+      color: var(--bisq-mid-grey);
+    }
+
+    .panel-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid var(--bisq-border);
+      color: var(--bisq-mid-grey);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .panel-close:hover { background: var(--bisq-surface-2); color: var(--bisq-white); }
+    .panel-close:focus-visible { outline: 2px solid var(--bisq-green); outline-offset: 2px; }
+    .panel-close svg { width: 16px; height: 16px; }
+
+    .panel-body {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      flex: 1;
+    }
+
+    .panel-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .panel-row-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--bisq-mid-grey);
+    }
+    .panel-row-value {
+      font-size: 0.875rem;
+      color: var(--bisq-light-grey);
+      font-family: var(--mono);
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .panel-row-value.plain {
+      font-family: var(--font);
+    }
+    .panel-divider {
+      border: none;
+      border-top: 1px solid var(--bisq-border);
+    }
+    .panel-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--bisq-green-dim);
+      border: 1px solid rgba(86,174,72,0.3);
+      color: var(--bisq-green);
+    }
+    .panel-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--bisq-green);
+    }
+
+    .panel-footer-note {
+      font-size: 0.75rem;
+      color: var(--bisq-mid-grey);
+      line-height: 1.5;
+      padding: 0.875rem 1rem;
+      background: var(--bisq-surface-2);
+      border-radius: var(--radius);
+      border: 1px solid var(--bisq-border);
+    }
+
+    /* ── Utility ── */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--bisq-border);
+    }
+
+    /* ── Tor icon badge on secondary info ── */
+    .tor-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--bisq-mid-grey);
+      vertical-align: middle;
+    }
+    .tor-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--bisq-green);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Topbar ── -->
+  <header class="topbar" role="banner">
+    <div class="topbar-brand">
+      <img class="topbar-logo"
+           src="data:image/png;base64,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"
+           alt="Bisq logo"
+           width="36" height="36">
+      <div>
+        <div class="topbar-title">Bisq Easy Node</div>
+        <div class="topbar-subtitle">Umbrel &mdash; Trusted Node</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <!-- Status pill: data-state on the pill drives color via CSS selectors -->
+      <div class="status-pill" id="statusPill" data-state="ready" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-label" id="statusLabel">Node running</span>
+      </div>
+      <!-- Settings gear -->
+      <button class="gear-btn" id="gearBtn"
+              onclick="openPanel()"
+              aria-label="Node info and settings"
+              title="Node info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Demo state switcher ── -->
+  <div class="demo-bar" aria-hidden="true">
+    <span class="demo-label">Preview state:</span>
+    <div class="demo-btns">
+      <button class="demo-btn active" onclick="setState('ready')">Ready</button>
+      <button class="demo-btn" onclick="setState('tor')">Tor bootstrapping</button>
+      <button class="demo-btn" onclick="setState('starting')">Starting</button>
+      <button class="demo-btn" onclick="setState('stopped')">Stopped</button>
+    </div>
+  </div>
+
+  <!-- ── State banner ── -->
+  <div class="state-banner" id="stateBanner" role="alert">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="bannerIcon">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <div class="banner-body">
+      <span class="banner-title" id="bannerTitle"></span>
+      <span class="banner-desc" id="bannerDesc"></span>
+    </div>
+  </div>
+
+  <!-- ── Page layout: QR left + details right ── -->
+  <div class="page-layout">
+
+    <!-- LEFT: QR card -->
+    <div class="qr-card">
+      <div class="qr-card-header">
+        <h2>Scan to pair</h2>
+        <p>Open <strong>Bisq Connect</strong> on your phone and scan this code to connect to your node.</p>
+      </div>
+      <div class="qr-area">
+        <div class="qr-frame" role="img" aria-label="Pairing QR code — scan with Bisq Connect">
+          <canvas id="qrCanvas" width="196" height="196"></canvas>
+          <div class="qr-overlay" id="qrOverlay">
+            <svg class="qr-overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="qrOverlayIcon">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span class="qr-overlay-text" id="qrOverlayText">Node not ready</span>
+          </div>
+        </div>
+        <p class="qr-caption">
+          Can&rsquo;t scan? Copy the <strong>pairing code</strong> below<br>
+          and paste it in Bisq Connect &rarr; <em>Connect to node</em>.
+        </p>
+      </div>
+    </div>
+
+    <!-- RIGHT: detail cards -->
+    <div class="right-column">
+
+      <!-- Pairing code card (primary actionable value) -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--bisq-green)"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+          <h3>Pairing Code</h3>
+        </div>
+        <div class="info-card-body">
+
+          <!-- The base64 pairing code — this is what the QR encodes and what the user copies -->
+          <div class="field-group">
+            <div class="field-label">Base64 pairing code</div>
+            <div class="field-hint">
+              This is the value encoded in the QR above. Copy it into
+              <em>Bisq Connect &rarr; Settings &rarr; Connect to node</em> if you cannot scan.
+            </div>
+            <div class="copy-field">
+              <span class="copy-field-text" id="pairingCode"
+                    data-value="QmlzcUNvbm5lY3Q6Ly9leUpoYkd4dllXUWlPaUp3YzI4dmNHVnlhVzl3TG1ScGNuTXVjMlZ5ZG1sallTNXZibWx2TG1SbExtOXZhV2N1YjI1cGJqcTRNREd5ZVRVNEppd2lkbTlzZFcwaU9pSXpORFJqWVdJek9EbGhObVEwTkdRek1tVXpOV1UyTkdGbE9EWXlZMlZpTVRVd1l6UTBObVl6TmpGaVlqTTROR05qWkdZd09EWmlPV1ppTVdZM1lqVm1PR1ZtSWl3aWRHOXJaVzRpT2lJMU5WaGhOMnRtY1hWc1RFcFRNbFpDYTNsS1RWZEJQVDBpZlE9PQ==">QmlzcUNvbm5lY3Q6Ly9leUpoYkd4dllXUWlPaUp3YzI4dmNHVnlhVzl3TG1S&hellip;</span>
+              <button class="copy-btn" onclick="copyValue('pairingCode', this)"
+                      aria-label="Copy pairing code">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <span class="sr-only">Copy</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Expiry -->
+          <div class="field-group" id="expirySection">
+            <div class="field-label">Pairing code</div>
+            <p class="field-hint">
+              This code refreshes automatically — the QR above always shows the current
+              one. If pairing fails, just rescan.
+            </p>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Security warning -->
+          <div class="security-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Treat this code like a password. Anyone who scans it or enters it gains access to your node.</span>
+          </div>
+
+          <!-- Manual "Generate new pairing code" intentionally omitted for v1: there is no
+               node API endpoint for it (and it would be auth-gated), and the code already
+               auto-rotates, so manual regeneration is low value. Add back if/when a node
+               endpoint exists. -->
+
+        </div><!-- /info-card-body -->
+      </div><!-- /info-card -->
+
+      <!-- Secondary: Tor / network info -->
+      <div class="secondary-card">
+        <div class="secondary-card-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--bisq-mid-grey)"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+          </svg>
+          <h3>Network (secondary info)</h3>
+        </div>
+        <div class="secondary-card-body">
+          <div class="field-group">
+            <div class="field-label">Tor Onion Address</div>
+            <div class="field-hint">
+              The QR and pairing code already include this address. Shown here for reference only.
+            </div>
+            <div class="copy-field">
+              <span class="copy-field-text full" id="onionUrl" data-value="">&mdash;</span>
+              <button class="copy-btn" onclick="copyValue('onionUrl', this)"
+                      aria-label="Copy Tor onion address">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                <span class="sr-only">Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /right-column -->
+  </div><!-- /page-layout -->
+
+  <!-- ── Footer ── -->
+  <footer class="page-footer" role="contentinfo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    <div class="footer-text">
+      <span>
+        This page is served only on your local Umbrel network behind authentication.
+        Connection to your node uses Tor — your traffic is end-to-end private.
+        No data leaves your home network.
+      </span>
+      <span class="footer-version">Trusted node <b id="footerVersion">—</b></span>
+    </div>
+  </footer>
+
+
+  <!-- ── Node info panel (slide-in, read-only) ── -->
+  <div class="panel-backdrop" id="panelBackdrop" onclick="closePanel()" aria-hidden="true"></div>
+
+  <aside class="node-info-panel" id="nodeInfoPanel" role="complementary" aria-label="Node info">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <h2>Node Info</h2>
+        <p>Read-only &mdash; managed by umbrelOS</p>
+      </div>
+      <button class="panel-close" onclick="closePanel()" aria-label="Close node info panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="panel-body">
+
+      <div class="panel-row">
+        <div class="panel-row-label">Version</div>
+        <div class="panel-row-value plain" id="niVersion">&mdash;</div>
+      </div>
+
+      <hr class="panel-divider">
+
+      <div class="panel-row">
+        <div class="panel-row-label">Transport</div>
+        <div class="panel-row-value plain">
+          <span class="panel-badge">
+            <span class="panel-badge-dot"></span>
+            Tor (onion service)
+          </span>
+        </div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel-row-label">Onion Address</div>
+        <div class="panel-row-value" id="niOnion">&mdash;</div>
+      </div>
+
+      <hr class="panel-divider">
+
+      <div class="panel-row">
+        <div class="panel-row-label">WebSocket API</div>
+        <div class="panel-row-value">Port 8090 (loopback + onion)</div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel-row-label">Data Directory</div>
+        <div class="panel-row-value">/data</div>
+      </div>
+
+      <hr class="panel-divider">
+
+      <div class="panel-row">
+        <div class="panel-row-label">Pairing Code TTL</div>
+        <div class="panel-row-value plain">24 hours (auto-rotates)</div>
+      </div>
+
+      <hr class="panel-divider">
+
+      <div class="panel-footer-note">
+        Configuration is managed by umbrelOS. Editing node settings directly is planned for a future release.
+      </div>
+
+    </div><!-- /panel-body -->
+  </aside>
+
+
+  <!-- ══════════════════════════════════════════════
+       FALLBACK QR encoder — pure JS, zero deps (MIT, Kazuhiko Arase, inlined).
+       The PRIMARY QR path renders bisq2's own ASCII-art grid verbatim
+       (see renderQRFromAscii) so it always matches the node/Desktop exactly.
+       This encoder is used ONLY for the ?demo preview and as a last resort
+       if the node's ASCII block is ever absent. No network requests, no CDN.
+       ══════════════════════════════════════════════ -->
+  <script>
+  // ── Fallback QR encoder (see note above) ────────────────────────────────────
+  // Byte mode only, ECC levels L/M/Q/H, versions 1-40. Adapted from qrcodejs (MIT).
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  var QRErrorCorrectLevel = { L: 1, M: 0, Q: 3, H: 2 };
+
+  function QRCode(el, text, typeNumber, errorCorrectLevel) {
+    this.typeNumber = typeNumber || 0;
+    this.errorCorrectLevel = (errorCorrectLevel !== undefined) ? errorCorrectLevel : QRErrorCorrectLevel.M;
+    this._el = el;
+    this._htOption = { text: text };
+    this._oQRCode = null;
+    this._make();
+  }
+
+  QRCode.prototype._make = function () {
+    var oQRCode = _getTypeNumber(this._htOption.text, this.errorCorrectLevel);
+    this._oQRCode = oQRCode;
+    var count = oQRCode.getModuleCount();
+    // Pixel-perfect render: a FIXED INTEGER number of pixels per module, drawn at integer
+    // positions, plus a 4-module quiet zone (QR spec). Fractional module sizes (e.g.
+    // 196px / 70 modules = 2.8px) misalign the grid and make the QR unscannable even
+    // though the encoded data is correct. We render high-res and let CSS smooth-downscale.
+    var CELL = 8;       // device px per module
+    var MARGIN = 4;     // quiet zone, in modules
+    var size = (count + MARGIN * 2) * CELL;
+    this._el.width = size;
+    this._el.height = size;
+    var ctx = this._el.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000000';
+    for (var row = 0; row < count; row++) {
+      for (var col = 0; col < count; col++) {
+        if (oQRCode.isDark(row, col)) {
+          ctx.fillRect((col + MARGIN) * CELL, (row + MARGIN) * CELL, CELL, CELL);
+        }
+      }
+    }
+  };
+
+  /* ── QR core math below (Arase algorithm) ── */
+  function _getTypeNumber(data, errorCorrectLevel) {
+    var qr;
+    for (var typeNumber = 1; typeNumber < 41; typeNumber++) {
+      qr = _createQR(typeNumber, errorCorrectLevel);
+      try {
+        qr.addData(data, 'Byte');
+        qr.make();
+        return qr;
+      } catch (e) {
+        if (typeNumber === 40) throw e;
+      }
+    }
+  }
+
+  function _createQR(typeNumber, errorCorrectLevel) {
+    var PAD0 = 0xEC, PAD1 = 0x11;
+    var _typeNumber = typeNumber;
+    var _errorCorrectLevel = errorCorrectLevel;
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {
+      addData: function(data, mode) {
+        _dataList.push(_createData(data, mode));
+        _dataCache = null;
+      },
+      isDark: function(row, col) {
+        if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) throw new Error(row + ',' + col);
+        return _modules[row][col];
+      },
+      getModuleCount: function() { return _moduleCount; },
+      make: function() {
+        if (_typeNumber < 1) {
+          for (var typeNumber = 1; typeNumber < 40; typeNumber++) {
+            var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectLevel);
+            var buffer = new QRBitBuffer();
+            var totalDataCount = 0;
+            for (var i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+            for (var i2 = 0; i2 < _dataList.length; i2++) {
+              var d = _dataList[i2];
+              buffer.put(d.mode, 4);
+              buffer.put(d.getLength(), _getLengthInBits(d.mode, typeNumber));
+              d.write(buffer);
+            }
+            if (buffer.getLengthInBits() <= totalDataCount * 8) {
+              _typeNumber = typeNumber;
+              break;
+            }
+          }
+        }
+        _makeImpl(false, _getBestMaskPattern());
+      }
+    };
+
+    function _makeImpl(test, maskPattern) {
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = [];
+      for (var i = 0; i < _moduleCount; i++) {
+        _modules[i] = [];
+        for (var j = 0; j < _moduleCount; j++) _modules[i][j] = null;
+      }
+      _setupPositionProbePattern(0, 0);
+      _setupPositionProbePattern(_moduleCount - 7, 0);
+      _setupPositionProbePattern(0, _moduleCount - 7);
+      _setupPositionAdjustPattern();
+      _setupTimingPattern();
+      _setupTypeInfo(test, maskPattern);
+      if (_typeNumber >= 7) _setupTypeNumber(test);
+      if (_dataCache == null) _dataCache = _createData2(_typeNumber, _errorCorrectLevel, _dataList);
+      _mapData(_dataCache, maskPattern);
+    }
+
+    function _setupPositionProbePattern(row, col) {
+      for (var r = -1; r <= 7; r++) {
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+        for (var c = -1; c <= 7; c++) {
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+          if ((0 <= r && r <= 6 && (c == 0 || c == 6)) ||
+              (0 <= c && c <= 6 && (r == 0 || r == 6)) ||
+              (2 <= r && r <= 4 && 2 <= c && c <= 4)) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    }
+
+    function _getBestMaskPattern() {
+      var minLostPoint = 0, pattern = 0;
+      for (var i = 0; i < 8; i++) {
+        _makeImpl(true, i);
+        var lostPoint = _getLostPoint();
+        if (i == 0 || minLostPoint > lostPoint) { minLostPoint = lostPoint; pattern = i; }
+      }
+      return pattern;
+    }
+
+    function _setupTimingPattern() {
+      for (var r = 8; r < _moduleCount - 8; r++) {
+        if (_modules[r][6] != null) continue;
+        _modules[r][6] = (r % 2 == 0);
+      }
+      for (var c = 8; c < _moduleCount - 8; c++) {
+        if (_modules[6][c] != null) continue;
+        _modules[6][c] = (c % 2 == 0);
+      }
+    }
+
+    function _setupPositionAdjustPattern() {
+      var pos = QRPatternLocator.getPatternPosition(_typeNumber);
+      for (var i = 0; i < pos.length; i++) {
+        for (var j = 0; j < pos.length; j++) {
+          var row = pos[i], col = pos[j];
+          if (_modules[row][col] != null) continue;
+          for (var r = -2; r <= 2; r++) {
+            for (var c = -2; c <= 2; c++) {
+              _modules[row + r][col + c] = (r == -2 || r == 2 || c == -2 || c == 2 || (r == 0 && c == 0));
+            }
+          }
+        }
+      }
+    }
+
+    function _setupTypeNumber(test) {
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+      for (var i = 0; i < 18; i++) {
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = !test && ((bits >> i) & 1) == 1;
+      }
+      for (var i2 = 0; i2 < 18; i2++) {
+        _modules[i2 % 3 + _moduleCount - 8 - 3][Math.floor(i2 / 3)] = !test && ((bits >> i2) & 1) == 1;
+      }
+    }
+
+    function _setupTypeInfo(test, maskPattern) {
+      var data = (_errorCorrectLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+      for (var i = 0; i < 15; i++) {
+        var mod = !test && ((bits >> i) & 1) == 1;
+        if (i < 6) _modules[i][8] = mod;
+        else if (i < 8) _modules[i + 1][8] = mod;
+        else _modules[_moduleCount - 15 + i][8] = mod;
+      }
+      for (var i2 = 0; i2 < 15; i2++) {
+        var mod2 = !test && ((bits >> i2) & 1) == 1;
+        if (i2 < 8) _modules[8][_moduleCount - i2 - 1] = mod2;
+        else if (i2 < 9) _modules[8][15 - i2 - 1 + 1] = mod2;
+        else _modules[8][15 - i2 - 1] = mod2;
+      }
+      _modules[_moduleCount - 8][8] = !test;
+    }
+
+    function _mapData(data, maskPattern) {
+      var inc = -1, row = _moduleCount - 1, bitIndex = 7, byteIndex = 0;
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+        if (col == 6) col--;
+        while (true) {
+          for (var c = 0; c < 2; c++) {
+            if (_modules[row][col - c] == null) {
+              var dark = false;
+              if (byteIndex < data.length) dark = ((data[byteIndex] >>> bitIndex) & 1) == 1;
+              var mask = QRUtil.getMask(maskPattern, row, col - c);
+              if (mask) dark = !dark;
+              _modules[row][col - c] = dark;
+              bitIndex--;
+              if (bitIndex == -1) { byteIndex++; bitIndex = 7; }
+            }
+          }
+          row += inc;
+          if (row < 0 || _moduleCount <= row) { row -= inc; inc = -inc; break; }
+        }
+      }
+    }
+
+    function _getLostPoint() {
+      var moduleCount = _moduleCount, lostPoint = 0;
+      for (var row = 0; row < moduleCount; row++) {
+        for (var col = 0; col < moduleCount; col++) {
+          var sameCount = 0, dark = _modules[row][col];
+          for (var r = -1; r <= 1; r++) {
+            if (row + r < 0 || moduleCount <= row + r) continue;
+            for (var c = -1; c <= 1; c++) {
+              if (col + c < 0 || moduleCount <= col + c || (r == 0 && c == 0)) continue;
+              if (dark === _modules[row + r][col + c]) sameCount++;
+            }
+          }
+          if (sameCount > 5) lostPoint += (3 + sameCount - 5);
+        }
+      }
+      for (var row2 = 0; row2 < moduleCount - 1; row2++) {
+        for (var col2 = 0; col2 < moduleCount - 1; col2++) {
+          var count = 0;
+          if (_modules[row2][col2]) count++;
+          if (_modules[row2 + 1][col2]) count++;
+          if (_modules[row2][col2 + 1]) count++;
+          if (_modules[row2 + 1][col2 + 1]) count++;
+          if (count == 0 || count == 4) lostPoint += 3;
+        }
+      }
+      for (var row3 = 0; row3 < moduleCount; row3++) {
+        for (var col3 = 0; col3 < moduleCount - 6; col3++) {
+          if (_modules[row3][col3] && !_modules[row3][col3+1] && _modules[row3][col3+2] &&
+              _modules[row3][col3+3] && _modules[row3][col3+4] && !_modules[row3][col3+5] &&
+              _modules[row3][col3+6]) lostPoint += 40;
+        }
+      }
+      for (var col4 = 0; col4 < moduleCount; col4++) {
+        for (var row4 = 0; row4 < moduleCount - 6; row4++) {
+          if (_modules[row4][col4] && !_modules[row4+1][col4] && _modules[row4+2][col4] &&
+              _modules[row4+3][col4] && _modules[row4+4][col4] && !_modules[row4+5][col4] &&
+              _modules[row4+6][col4]) lostPoint += 40;
+        }
+      }
+      var darkCount = 0;
+      for (var col5 = 0; col5 < moduleCount; col5++) {
+        for (var row5 = 0; row5 < moduleCount; row5++) {
+          if (_modules[row5][col5]) darkCount++;
+        }
+      }
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+      return lostPoint;
+    }
+
+    function _createData2(typeNumber, errorCorrectLevel, dataList) {
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+      var buffer = new QRBitBuffer();
+      for (var i = 0; i < dataList.length; i++) {
+        var d = dataList[i];
+        buffer.put(d.mode, 4);
+        buffer.put(d.getLength(), _getLengthInBits(d.mode, typeNumber));
+        d.write(buffer);
+      }
+      var totalDataCount = 0;
+      for (var i2 = 0; i2 < rsBlocks.length; i2++) totalDataCount += rsBlocks[i2].dataCount;
+      if (buffer.getLengthInBits() > totalDataCount * 8) throw new Error('code length overflow');
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) buffer.put(0, 4);
+      while (buffer.getLengthInBits() % 8 != 0) buffer.putBit(false);
+      while (true) {
+        if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+        buffer.put(PAD0, 8);
+        if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+        buffer.put(PAD1, 8);
+      }
+      return _createBytes(buffer, rsBlocks);
+    }
+
+    function _createBytes(buffer, rsBlocks) {
+      var offset = 0, maxDcCount = 0, maxEcCount = 0;
+      var dcdata = [], ecdata = [];
+      for (var r = 0; r < rsBlocks.length; r++) {
+        var dcCount = rsBlocks[r].dataCount, ecCount = rsBlocks[r].totalCount - dcCount;
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+        dcdata[r] = [];
+        for (var i = 0; i < dcCount; i++) dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+        offset += dcCount;
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = [];
+        for (var i2 = 0; i2 < rsPoly.getLength() - 1; i2++) {
+          var modIndex = i2 + modPoly.getLength() - (rsPoly.getLength() - 1);
+          ecdata[r][i2] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
+        }
+      }
+      var totalCodeCount = 0;
+      for (var i3 = 0; i3 < rsBlocks.length; i3++) totalCodeCount += rsBlocks[i3].totalCount;
+      var data = [], index = 0;
+      for (var i4 = 0; i4 < maxDcCount; i4++) {
+        for (var r2 = 0; r2 < rsBlocks.length; r2++) {
+          if (i4 < dcdata[r2].length) data[index++] = dcdata[r2][i4];
+        }
+      }
+      for (var i5 = 0; i5 < maxEcCount; i5++) {
+        for (var r3 = 0; r3 < rsBlocks.length; r3++) {
+          if (i5 < ecdata[r3].length) data[index++] = ecdata[r3][i5];
+        }
+      }
+      return data;
+    }
+
+    return _this;
+  }
+
+  function _getLengthInBits(mode, type) {
+    if (1 <= type && type < 10) {
+      if (mode == 1) return 10;
+      if (mode == 2) return 9;
+      if (mode == 4) return 8;
+      if (mode == 8) return 8;
+    } else if (type < 27) {
+      if (mode == 1) return 12;
+      if (mode == 2) return 11;
+      if (mode == 4) return 10;
+      if (mode == 8) return 8;
+    } else {
+      if (mode == 1) return 14;
+      if (mode == 2) return 13;
+      if (mode == 4) return 12;
+      if (mode == 8) return 8;
+    }
+  }
+
+  function _createData(data, mode) {
+    var _mode = 4; // byte mode
+    var _data = data;
+    return {
+      mode: _mode,
+      getLength: function() { return _data.length; },
+      write: function(buffer) {
+        for (var i = 0; i < _data.length; i++) buffer.put(_data.charCodeAt(i), 8);
+      }
+    };
+  }
+
+  // ── Support objects ──
+
+  var QRPatternLocator = {
+    getPatternPosition: function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    }
+  };
+
+  var PATTERN_POSITION_TABLE = [
+    [], [6,18], [6,22], [6,26], [6,30], [6,34],
+    [6,22,38], [6,24,42], [6,26,46], [6,28,50], [6,30,54],
+    [6,32,58], [6,34,62], [6,26,46,66], [6,26,48,70],
+    [6,26,50,74], [6,30,54,78], [6,30,56,82], [6,30,58,86],
+    [6,34,62,90], [6,28,50,72,94], [6,26,50,74,98],
+    [6,30,54,78,102], [6,28,54,80,106], [6,32,58,84,110],
+    [6,30,58,86,114], [6,34,62,90,118], [6,26,50,74,98,122],
+    [6,30,54,78,102,126], [6,26,52,78,104,130],
+    [6,30,56,82,108,134], [6,34,60,86,112,138],
+    [6,30,58,86,114,142], [6,34,62,90,118,146],
+    [6,30,54,78,102,126,150], [6,24,50,76,102,128,154],
+    [6,28,54,80,106,132,158], [6,32,58,84,110,136,162],
+    [6,26,54,82,110,138,166], [6,30,58,86,114,142,170]
+  ];
+
+  var QRUtil = {
+    PATTERN_POSITION_TABLE: PATTERN_POSITION_TABLE,
+    G15: (1<<10)|(1<<8)|(1<<5)|(1<<4)|(1<<2)|(1<<1)|(1<<0),
+    G18: (1<<12)|(1<<11)|(1<<10)|(1<<9)|(1<<8)|(1<<5)|(1<<2)|(1<<0),
+    G15_MASK: (1<<14)|(1<<12)|(1<<10)|(1<<4)|(1<<1),
+    getBCHTypeInfo: function(data) {
+      var d = data << 10;
+      while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) {
+        d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15)));
+      }
+      return ((data << 10) | d) ^ QRUtil.G15_MASK;
+    },
+    getBCHTypeNumber: function(data) {
+      var d = data << 12;
+      while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) {
+        d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18)));
+      }
+      return (data << 12) | d;
+    },
+    getBCHDigit: function(data) {
+      var digit = 0;
+      while (data != 0) { digit++; data >>>= 1; }
+      return digit;
+    },
+    getPatternPosition: function(typeNumber) { return PATTERN_POSITION_TABLE[typeNumber - 1]; },
+    getMask: function(maskPattern, i, j) {
+      switch (maskPattern) {
+        case 0: return (i + j) % 2 == 0;
+        case 1: return i % 2 == 0;
+        case 2: return j % 3 == 0;
+        case 3: return (i + j) % 3 == 0;
+        case 4: return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 == 0;
+        case 5: return (i * j) % 2 + (i * j) % 3 == 0;
+        case 6: return ((i * j) % 2 + (i * j) % 3) % 2 == 0;
+        case 7: return ((i * j) % 3 + (i + j) % 2) % 2 == 0;
+      }
+    },
+    getErrorCorrectPolynomial: function(errorCorrectLength) {
+      var a = new QRPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i++) {
+        a = a.multiply(new QRPolynomial([1, QRMath.gexp(i)], 0));
+      }
+      return a;
+    }
+  };
+
+  var QRMath = {
+    glog: function(n) {
+      if (n < 1) throw new Error('glog(' + n + ')');
+      return LOG_TABLE[n];
+    },
+    gexp: function(n) {
+      while (n < 0) n += 255;
+      while (n >= 256) n -= 255;
+      return EXP_TABLE[n];
+    }
+  };
+
+  var EXP_TABLE = (function() {
+    var t = [];
+    for (var i = 0; i < 8; i++) t[i] = 1 << i;
+    for (var i2 = 8; i2 < 256; i2++) t[i2] = t[i2-4]^t[i2-5]^t[i2-6]^t[i2-8];
+    return t;
+  })();
+
+  var LOG_TABLE = (function() {
+    var t = [];
+    for (var i = 0; i < 256; i++) t[i] = 0;
+    for (var i2 = 0; i2 < 255; i2++) t[EXP_TABLE[i2]] = i2;
+    return t;
+  })();
+
+  function QRPolynomial(num, shift) {
+    if (num.length == undefined) throw new Error(num.length + '/' + shift);
+    var offset = 0;
+    while (offset < num.length && num[offset] == 0) offset++;
+    this.num = [];
+    for (var i = 0; i < num.length - offset + shift; i++) {
+      this.num[i] = (i < num.length - offset) ? num[i + offset] : 0;
+    }
+  }
+  QRPolynomial.prototype = {
+    get: function(index) { return this.num[index]; },
+    getLength: function() { return this.num.length; },
+    multiply: function(e) {
+      var num = [];
+      for (var i = 0; i < this.getLength() + e.getLength() - 1; i++) num[i] = 0;
+      for (var i2 = 0; i2 < this.getLength(); i2++) {
+        for (var j = 0; j < e.getLength(); j++) {
+          num[i2 + j] ^= QRMath.gexp(QRMath.glog(this.get(i2)) + QRMath.glog(e.get(j)));
+        }
+      }
+      return new QRPolynomial(num, 0);
+    },
+    mod: function(e) {
+      if (this.getLength() - e.getLength() < 0) return this;
+      var ratio = QRMath.glog(this.get(0)) - QRMath.glog(e.get(0));
+      var num = [];
+      for (var i = 0; i < this.getLength(); i++) num[i] = this.get(i);
+      for (var i2 = 0; i2 < e.getLength(); i2++) num[i2] ^= QRMath.gexp(QRMath.glog(e.get(i2)) + ratio);
+      return new QRPolynomial(num, 0).mod(e);
+    }
+  };
+
+  function QRRSBlock(totalCount, dataCount) {
+    this.totalCount = totalCount;
+    this.dataCount = dataCount;
+  }
+
+  QRRSBlock.RS_BLOCK_TABLE = [
+    [1,26,19],[1,26,16],[1,26,13],[1,26,9],
+    [1,44,34],[1,44,28],[1,44,22],[1,44,16],
+    [1,70,55],[1,70,44],[2,35,17],[2,35,13],
+    [1,100,80],[2,50,32],[2,50,24],[4,25,9],
+    [1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],
+    [2,86,68],[4,43,27],[4,43,19],[4,43,15],
+    [2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],
+    [2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],
+    [2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],
+    [2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],
+    [4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],
+    [2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],
+    [4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],
+    [3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],
+    [5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],
+    [5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],
+    [1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],
+    [5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],
+    [3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],
+    [3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],
+    [4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],
+    [2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],
+    [4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],
+    [6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],
+    [8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],
+    [10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],
+    [8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],
+    [3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],
+    [7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16]
+  ];
+
+  QRRSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
+    var rsBlock = QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + errorCorrectLevel];
+    var list = [];
+    for (var i = 0; i < rsBlock.length; i += 3) {
+      for (var j = 0; j < rsBlock[i]; j++) {
+        list.push(new QRRSBlock(rsBlock[i + 1], rsBlock[i + 2]));
+      }
+    }
+    return list;
+  };
+
+  function QRBitBuffer() {
+    this.buffer = [];
+    this.length = 0;
+  }
+  QRBitBuffer.prototype = {
+    get: function(index) {
+      return ((this.buffer[Math.floor(index / 8)] >>> (7 - index % 8)) & 1) == 1;
+    },
+    put: function(num, length) {
+      for (var i = 0; i < length; i++) {
+        this.putBit(((num >>> (length - i - 1)) & 1) == 1);
+      }
+    },
+    getLengthInBits: function() { return this.length; },
+    putBit: function(bit) {
+      var bufIndex = Math.floor(this.length / 8);
+      if (this.buffer.length <= bufIndex) this.buffer.push(0);
+      if (bit) this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+      this.length++;
+    }
+  };
+
+  // ── End QR library ──────────────────────────────────────────────────────────
+
+
+  // Sample code, used only by the ?demo preview and the fallback encoder below.
+  var PAIRING_CODE = "QmlzcUNvbm5lY3Q6Ly9leUpoYkd4dllXUWlPaUp3YzI4dmNHVnlhVzl3TG1ScGNuTXVjMlZ5ZG1sallTNXZibWx2TG1SbExtOXZhV2N1YjI1cGJqcTRNREd5ZVRVNEppd2lkbTlzZFcwaU9pSXpORFJqWVdJek9EbGhObVEwTkdRek1tVXpOV1UyTkdGbE9EWXlZMlZpTVRVd1l6UTBObVl6TmpGaVlqTTROR05qWkdZd09EWmlPV1ppTVdZM1lqVm1PR1ZtSWl3aWRHOXJaVzRpT2lJMU5WaGhOMnRtY1hWc1RFcFRNbFpDYTNsS1RWZEJQVDBpZlE9PQ==";
+
+  // Fallback QR render — used by the ?demo preview and only if the node's ASCII QR
+  // block is ever missing. The PRIMARY path is renderQRFromAscii() (bisq2's own grid).
+  function renderQR() {
+    try {
+      var canvas = document.getElementById('qrCanvas');
+      new QRCode(canvas, PAIRING_CODE, 0, QRErrorCorrectLevel.M);
+    } catch(e) {
+      console.error('QR render failed:', e);
+    }
+  }
+
+  // ── State machine ────────────────────────────────────────────────────────────
+  var STATES = {
+    ready: {
+      pillState:   'ready',
+      pillLabel:   'Node running',
+      banner:      null,
+      qrBlocked:   false,
+      expiryAlive: true,
+    },
+    tor: {
+      pillState:   'tor',
+      pillLabel:   'Tor bootstrapping…',
+      banner: {
+        cls:   'warning info',
+        title: 'Tor network bootstrapping…',
+        desc:  'The node is establishing its Tor onion service. The pairing QR code will appear once the service is published — usually under a minute.',
+        iconType: 'clock',
+      },
+      qrBlocked:  true,
+      qrText:     'Awaiting Tor',
+      qrStateClass: '',
+      expiryAlive: false,
+    },
+    starting: {
+      pillState:   'starting',
+      pillLabel:   'Node starting…',
+      banner: {
+        cls:   'warning',
+        title: 'Node is starting up…',
+        desc:  'The WebSocket API server is initialising. This usually takes a few seconds.',
+        iconType: 'spinner',
+      },
+      qrBlocked:  true,
+      qrText:     'Starting',
+      qrStateClass: '',
+      expiryAlive: false,
+    },
+    stopped: {
+      pillState:   'stopped',
+      pillLabel:   'Node stopped',
+      banner: {
+        cls:   'error',
+        title: 'Node is not running',
+        desc:  'The Bisq node process has stopped or was not yet started. Check the Umbrel app status panel or restart the container.',
+        iconType: 'stop',
+      },
+      qrBlocked:  true,
+      qrText:     'Not running',
+      qrStateClass: 'state-stopped',
+      expiryAlive: false,
+    },
+  };
+
+  var BANNER_ICONS = {
+    clock: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    spinner: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    stop: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+  };
+
+  function setState(key) {
+    var s = STATES[key];
+    if (!s) return;
+
+    // Status pill
+    var pill = document.getElementById('statusPill');
+    pill.dataset.state = s.pillState;
+    document.getElementById('statusLabel').textContent = s.pillLabel;
+
+    // Banner
+    var banner = document.getElementById('stateBanner');
+    if (s.banner) {
+      banner.className = 'state-banner visible ' + s.banner.cls;
+      document.getElementById('bannerIcon').innerHTML = BANNER_ICONS[s.banner.iconType] ||
+        BANNER_ICONS.clock;
+      document.getElementById('bannerTitle').textContent = s.banner.title;
+      document.getElementById('bannerDesc').textContent  = s.banner.desc;
+    } else {
+      banner.className = 'state-banner';
+    }
+
+    // QR overlay
+    var overlay = document.getElementById('qrOverlay');
+    if (s.qrBlocked) {
+      overlay.className = 'qr-overlay visible ' + (s.qrStateClass || '');
+      document.getElementById('qrOverlayText').textContent = s.qrText;
+    } else {
+      overlay.className = 'qr-overlay';
+    }
+
+    // Expiry dimming
+    document.getElementById('expirySection').style.opacity = s.expiryAlive ? '1' : '0.3';
+
+    // Demo button highlighting
+    document.querySelectorAll('.demo-btn').forEach(function(btn) {
+      var matches = btn.getAttribute('onclick') && btn.getAttribute('onclick').indexOf("'" + key + "'") !== -1;
+      btn.classList.toggle('active', matches);
+    });
+  }
+
+  // ── Copy to clipboard ────────────────────────────────────────────────────────
+  function copyValue(elementId, btn) {
+    var el = document.getElementById(elementId);
+    var text = (el && (el.dataset.value || el.textContent.trim())) || '';
+    if (!text) return;
+    var checkSVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--bisq-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg><span class="sr-only">Copied</span>';
+    var original = btn.innerHTML;
+    function flash() {
+      btn.innerHTML = checkSVG;
+      setTimeout(function() { btn.innerHTML = original; }, 2000);
+    }
+    function legacyCopy() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) flash();
+      } catch (e) { /* nothing else we can do */ }
+    }
+    // navigator.clipboard exists ONLY in a secure context (https / localhost). Over plain
+    // http on a LAN IP (the Umbrel case) it is undefined — calling it throws synchronously,
+    // which is why the button did nothing. Guard, and fall back to execCommand.
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(flash).catch(legacyCopy);
+    } else {
+      legacyCopy();
+    }
+  }
+
+  // ── Node info panel ──────────────────────────────────────────────────────────
+  function openPanel() {
+    document.getElementById('panelBackdrop').classList.add('open');
+    document.getElementById('nodeInfoPanel').classList.add('open');
+    document.getElementById('nodeInfoPanel').removeAttribute('aria-hidden');
+  }
+  function closePanel() {
+    document.getElementById('panelBackdrop').classList.remove('open');
+    document.getElementById('nodeInfoPanel').classList.remove('open');
+    document.getElementById('nodeInfoPanel').setAttribute('aria-hidden', 'true');
+  }
+  // Escape key closes panel
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePanel();
+  });
+
+  // ── Live data (talks to the local node via the nginx sidecar) ────────────────
+  // /pairing-code            -> nginx serves /data/pairing_qr_code.txt
+  //                             (base64 pairing code, then "\n\n\n", then an ASCII-art QR we ignore)
+  // /api/v1/settings/version -> nginx reverse-proxies to the node REST API on 127.0.0.1:8090
+  var POLL_MS = 5000;
+  var everUp = false;        // have we ever reached the node? (distinguishes Starting vs Stopped)
+  var lastCode = null;       // avoid re-rendering the QR when the code is unchanged
+  // How long we stay in "Starting" while the node has NEVER responded before
+  // concluding it isn't running. Generous so a genuinely slow boot (Tor) isn't
+  // misreported as Stopped. TODO: tune once we observe real boot timing on a node.
+  var STARTING_GRACE_MS = 90000;
+  var firstAttemptAt = Date.now();
+
+  function setText(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  // Returns { code, ascii } from pairing_qr_code.txt — the base64 code (first chunk) and
+  // the ASCII-art QR bisq2 renders after it. Or null if the file isn't written yet.
+  function fetchPairingFile() {
+    return fetch('pairing-code', { cache: 'no-store' })
+      .then(function(r) { return r.ok ? r.text() : null; })
+      .then(function(txt) {
+        if (!txt) return null;
+        var parts = txt.split('\n\n\n');
+        var code = (parts[0] || '').trim();
+        var ascii = parts.length > 1 ? parts.slice(1).join('\n\n\n') : '';
+        return code ? { code: code, ascii: ascii } : null;
+      })
+      .catch(function() { return null; });
+  }
+
+  // Probe the node API for liveness. The API is auth-gated, so an unauthenticated probe
+  // returns 403 — but that still proves the server answered, i.e. the node is UP. So ANY
+  // HTTP response means up; only a network error (fetch reject) means down. We read the
+  // version string only on the rare 200.
+  function fetchVersion() {
+    return fetch('api/v1/settings/version', { cache: 'no-store' })
+      .then(function(r) {
+        if (!r.ok) return { up: true, version: null };
+        return r.text().then(function(body) {
+          var v = null;
+          try { var j = JSON.parse(body); v = j.version || j.value || body; }
+          catch (e) { v = (body || '').replace(/["\s]/g, '') || null; }
+          return { up: true, version: v };
+        });
+      })
+      .catch(function() { return { up: false, version: null }; });
+  }
+
+  function applyPairingFile(file) {
+    if (!file || file.code === lastCode) return;
+    lastCode = file.code;
+    PAIRING_CODE = file.code;
+    // Render the QR from bisq2's own ASCII grid (guaranteed-valid ZXing output) when
+    // present; fall back to client-side encoding only if the ASCII block is missing.
+    if (file.ascii && renderQRFromAscii(file.ascii)) {
+      /* rendered from ascii */
+    } else {
+      renderQR();
+    }
+    var span = document.getElementById('pairingCode');
+    if (span) {
+      span.dataset.value = file.code;
+      span.textContent = file.code.length > 56 ? file.code.slice(0, 56) + '…' : file.code;
+    }
+    updateOnionFromCode(file.code);
+  }
+
+  // Reconstruct the module grid from bisq2's ASCII QR and draw it pixel-perfect.
+  // Each text row encodes TWO module rows via half-block chars:
+  //   █ (U+2588) top+bottom dark · ▀ (U+2580) top dark · ▄ (U+2584) bottom dark · space light
+  // Returns true on success. This avoids re-encoding the payload ourselves.
+  function renderQRFromAscii(ascii) {
+    try {
+      var lines = ascii.replace(/^\n+|\n+$/g, '').split('\n');
+      if (!lines.length) return false;
+      var count = 0;
+      var i;
+      for (i = 0; i < lines.length; i++) count = Math.max(count, lines[i].length);
+      if (count < 21) return false; // smallest QR is 21 modules; sanity guard
+      var modules = [];
+      for (var r = 0; r < lines.length; r++) {
+        var line = lines[r];
+        for (var x = 0; x < count; x++) {
+          var ch = x < line.length ? line.charCodeAt(x) : 0x20;
+          var top = (ch === 0x2588 || ch === 0x2580);
+          var bot = (ch === 0x2588 || ch === 0x2584);
+          (modules[2 * r] || (modules[2 * r] = []))[x] = top;
+          (modules[2 * r + 1] || (modules[2 * r + 1] = []))[x] = bot;
+        }
+      }
+      var CELL = 8;       // px per module
+      var MARGIN = 3;     // added quiet zone (the ASCII already carries 1 module)
+      var size = (count + MARGIN * 2) * CELL;
+      var canvas = document.getElementById('qrCanvas');
+      canvas.width = size;
+      canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = '#000000';
+      for (var my = 0; my < count; my++) {
+        var rowArr = modules[my] || [];
+        for (var mx = 0; mx < count; mx++) {
+          if (rowArr[mx]) ctx.fillRect((mx + MARGIN) * CELL, (my + MARGIN) * CELL, CELL, CELL);
+        }
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // The onion address is embedded in the pairing code, so we derive it from the same
+  // base64 — that keeps the "Network" card accurate and in sync with the QR, with no
+  // extra (auth-gated) node call. Best-effort: if the address isn't a plain string in the
+  // decoded bytes, we blank the field rather than show anything fake.
+  function updateOnionFromCode(code) {
+    var onionEl = document.getElementById('onionUrl');
+    if (!onionEl) return;
+    var onion = '';
+    try {
+      var bin = atob(code.replace(/-/g, '+').replace(/_/g, '/'));
+      var m = bin.match(/[a-z2-7]{56}\.onion/);
+      if (m) onion = m[0];
+    } catch (e) { /* fall through to blank */ }
+    onionEl.dataset.value = onion;
+    onionEl.textContent = onion || '—';
+    var niOnion = document.getElementById('niOnion');
+    if (niOnion) niOnion.textContent = onion || '—';
+  }
+
+  // Image version is baked into /version.json at build time (the live node version
+  // endpoint is auth-gated, so we can't read it). Populates the footer + the info panel.
+  function loadVersion() {
+    fetch('version.json', { cache: 'no-store' })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        var v = (d && d.version) ? d.version : null;
+        if (v) { setText('footerVersion', v); setText('niVersion', v); }
+      })
+      .catch(function() { /* leave as “—” */ });
+  }
+
+  function refresh() {
+    Promise.all([fetchVersion(), fetchPairingFile()]).then(function(res) {
+      var up = res[0].up;
+      var version = res[0].version;
+      var file = res[1];
+      var code = file && file.code;
+      if (up) everUp = true;
+
+      if (up && code) {
+        applyPairingFile(file);
+        setState('ready');
+      } else if (up && !code) {
+        setState('tor');        // node up, onion/pairing not published yet
+      } else {
+        // Node not reachable. If it was up before, or it has never come up within
+        // the grace window, treat it as stopped/not-running; otherwise it's still booting.
+        var graceExpired = (Date.now() - firstAttemptAt) > STARTING_GRACE_MS;
+        setState(everUp || graceExpired ? 'stopped' : 'starting');
+      }
+
+      if (version) setText('niVersion', version);
+    });
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    loadVersion();
+    // The "Preview state" bar is a dev affordance — only show it with ?demo in the URL.
+    if (location.search.indexOf('demo') !== -1) {
+      renderQR();
+      setState('ready');
+      return;
+    }
+    var bar = document.querySelector('.demo-bar');
+    if (bar) bar.style.display = 'none';
+
+    setState('starting');       // optimistic initial paint before the first poll
+    refresh();
+    setInterval(refresh, POLL_MS);
+  });
+  </script>
+</body>
+</html>
