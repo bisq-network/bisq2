@@ -33,8 +33,37 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * unordered controllers map, so the lazily-created CHAT host could register after the dispatch had
  * already passed it and never received the target. Dispatch now follows the navigation path
  * (parents before children) so a host created by its parent mid-dispatch is reached afterwards.
+ * Also covers the history-recording behaviour behind #4821 (automatic tab selection must not push a
+ * history entry).
  */
 class NavigationControllerTest {
+
+    // --- history: automatic tab selection dispatches but must not record a history entry (#4821) ---
+
+    @Test
+    void navigateToWithoutAddingToHistoryDoesNotAffectBackNavigation() {
+        List<NavigationTarget> processOrder = new ArrayList<>();
+        RecordingController chat = new RecordingController(NavigationTarget.CHAT, processOrder);
+        Navigation.addNavigationController(NavigationTarget.CHAT, chat);
+        try {
+            // A user-initiated navigation records a history entry...
+            Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE);
+            // ...while an automatic tab selection dispatches the target but must not record one.
+            Navigation.navigateToWithoutAddingToHistory(NavigationTarget.CHAT_DISCUSSION);
+
+            // Both were dispatched to the host.
+            assertEquals(List.of(NavigationTarget.CHAT_PRIVATE, NavigationTarget.CHAT_DISCUSSION),
+                    chat.received);
+
+            // Back returns to the recorded target (CHAT_PRIVATE), proving the automatic selection
+            // (CHAT_DISCUSSION) never entered the history.
+            Navigation.back();
+            assertEquals(List.of(NavigationTarget.CHAT_PRIVATE, NavigationTarget.CHAT_DISCUSSION,
+                    NavigationTarget.CHAT_PRIVATE), chat.received);
+        } finally {
+            Navigation.removeNavigationController(NavigationTarget.CHAT, chat);
+        }
+    }
 
     // --- dispatch ordering: a host registered by its parent mid-dispatch must still be reached ---
 

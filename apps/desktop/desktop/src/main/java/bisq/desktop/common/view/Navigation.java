@@ -72,6 +72,11 @@ public class Navigation {
         currentNavigationTarget.set(navigationTarget);
     }
 
+    public static void navigateToWithoutAddingToHistory(NavigationTarget navigationTarget) {
+        dispatch(navigationTarget, Optional.empty());
+        currentNavigationTarget.set(navigationTarget);
+    }
+
     // Dispatches the target to each registered host along its navigation path, from the root down to
     // the target. Iterating the path in order (rather than the unordered controllers map) processes
     // parents before children, so a host that lazily creates a child host on its path registers that
