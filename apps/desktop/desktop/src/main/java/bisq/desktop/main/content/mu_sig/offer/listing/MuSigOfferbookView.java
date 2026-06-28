@@ -636,6 +636,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         }
                         setGraphic(myOfferMainBox);
                         showOfferDetails.setOnAction(e -> controller.onShowOfferDetails(item.getOffer()));
+                        copyOfferMenuItem.setOnAction(e -> controller.onCopyOffer(item.getOffer()));
                         removeOfferMenuItem.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
                     } else {
                         takeOfferButton.setText(item.getTakeOfferButtonText());
@@ -661,6 +662,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     takeOfferButton.setOnAction(null);
                     takeOfferButton.setOnContextMenuRequested(null);
                     showOfferDetails.setOnAction(null);
+                    copyOfferMenuItem.setOnAction(null);
                     removeOfferMenuItem.setOnAction(null);
                     setGraphic(null);
                 }
