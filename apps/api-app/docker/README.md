@@ -7,8 +7,10 @@ The shipped `api_app.conf` is already configured for headless operation: Tor
 transport, WebSocket-only API on `127.0.0.1:8090`, and it writes the pairing QR code
 to `pairing_qr_code.txt` in the data dir.
 
-> Currently **linux/amd64** only.
-> TODO(multi-arch): add `linux/arm64` once the release pipeline does multi-arch builds.
+> Multi-arch: **linux/amd64** and **linux/arm64** — base images are pinned to multi-arch
+> index digests, and CI builds both via the "Release Umbrel images" workflow in bisq-mobile.
+> A local `docker build` produces a single-arch image for the host; use `docker buildx
+> --platform` for multi-arch.
 
 ## Build
 
