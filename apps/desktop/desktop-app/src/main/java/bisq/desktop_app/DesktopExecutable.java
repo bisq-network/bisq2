@@ -19,16 +19,21 @@ package bisq.desktop_app;
 
 import bisq.application.Executable;
 import bisq.desktop.DesktopController;
+import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.Optional;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
 
@@ -61,11 +66,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                         try {
                             log.info("Java FX Application launched");
                             setupStartupAndShutdownErrorHandlers();
-                            desktopController = new DesktopController(applicationService.getState(),
-                                    applicationService.getServiceProvider(),
-                                    applicationData,
-                                    this::onApplicationLaunched);
-                            desktopController.init();
+                            startDesktopControllerAfterTailsCheck(applicationData);
                         } catch (Throwable t) {
                             shutdownAfterStartupFailure("Desktop startup failed", t);
                         }
@@ -73,6 +74,51 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                         shutdownAfterStartupFailure("Could not launch JavaFX application.", throwable);
                     }
                 });
+    }
+
+    /**
+     * On Tails, if the data directory is not on the Persistent Storage volume the user would lose
+     * their identity keys and open offers on shutdown. Warn with a quit/continue popup before any
+     * domain initialization starts (domain init is only triggered from desktopController via the
+     * onApplicationLaunched callback, so deferring its creation defers initialization too).
+     */
+    private void startDesktopControllerAfterTailsCheck(JavaFxApplicationData applicationData) {
+        if (!applicationService.isTailsDataDirNonPersistent()) {
+            startDesktopController(applicationData);
+            return;
+        }
+
+        // The app UI does not exist yet, so the Bisq Popup (which needs an owner scene) cannot be used.
+        // Defer a standalone JavaFX Alert via runLater so it shows after the startup pulse, then gate
+        // domain initialization on the user's choice (continue) or shut down.
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle(Res.get("action.shutDown"));
+            alert.setHeaderText(null);
+            alert.setContentText(Res.get("popup.tails.noPersistentStorage.warning"));
+            alert.getDialogPane().setMinWidth(560);
+
+            ButtonType continueButton = new ButtonType(
+                    Res.get("popup.tails.noPersistentStorage.continue"), ButtonBar.ButtonData.OK_DONE);
+            ButtonType shutDownButton = new ButtonType(
+                    Res.get("action.shutDown"), ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(continueButton, shutDownButton);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == continueButton) {
+                startDesktopController(applicationData);
+            } else {
+                exitJavaFXPlatform();
+            }
+        });
+    }
+
+    private void startDesktopController(JavaFxApplicationData applicationData) {
+        desktopController = new DesktopController(applicationService.getState(),
+                applicationService.getServiceProvider(),
+                applicationData,
+                this::onApplicationLaunched);
+        desktopController.init();
     }
 
     @Override

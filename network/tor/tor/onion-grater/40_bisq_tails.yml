@@ -2,17 +2,23 @@
 ## See the file COPYING for copying conditions
 
 #### meta start
-#### project Whonix
+#### project Tails
 #### category tor-control
 #### description
 ## Shipped but not enabled by default onion-grater profile.
 #### meta end
 
 ---
-- exe-paths:
-    - '*'
+# Match the client by the apparmor-profiles selector with Bisq's executable path. Bisq runs
+# unconfined on Tails (/proc/<pid>/attr/current is "unconfined"), and onion-grater matches an
+# unconfined client through this selector by falling back to its executable path — so the value is
+# the launcher path. The newer exe-paths selector is NOT honored by Tails' onion-grater version
+# (verified: with exe-paths the SOCKS GETINFO returned "510 Command filtered" because no profile
+# matched), so apparmor-profiles is the correct selector here.
+- apparmor-profiles:
+    - '/opt/bisq2/bin/Bisq2'
   users:
-    - '*'
+    - 'amnesia'
   hosts:
     - '*'
   commands:

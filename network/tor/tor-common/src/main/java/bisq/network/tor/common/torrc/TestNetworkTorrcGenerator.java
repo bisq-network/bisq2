@@ -19,6 +19,7 @@ package bisq.network.tor.common.torrc;
 
 import lombok.Builder;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,33 +41,33 @@ public class TestNetworkTorrcGenerator implements TorrcConfigGenerator {
     private final Optional<Integer> dirPort = Optional.empty();
 
     @Override
-    public Map<String, String> generate() {
-        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
+    public Map<String, List<String>> generate() {
+        Map<String, List<String>> torConfigMap = baseTorrcConfigGenerator.generate();
 
-        torConfigMap.put("TestingTorNetwork", "1");
-        torConfigMap.put("TestingDirAuthVoteExit", "*");
-        torConfigMap.put("TestingDirAuthVoteHSDir", "*");
+        torConfigMap.put("TestingTorNetwork", List.of("1"));
+        torConfigMap.put("TestingDirAuthVoteExit", List.of("*"));
+        torConfigMap.put("TestingDirAuthVoteHSDir", List.of("*"));
 
-        torConfigMap.put("V3AuthNIntervalsValid", "2");
-        torConfigMap.put("TestingDirAuthVoteGuard", "*");
-        torConfigMap.put("TestingMinExitFlagThreshold", "0");
+        torConfigMap.put("V3AuthNIntervalsValid", List.of("2"));
+        torConfigMap.put("TestingDirAuthVoteGuard", List.of("*"));
+        torConfigMap.put("TestingMinExitFlagThreshold", List.of("0"));
 
 
-        nickname.ifPresent(nickname -> torConfigMap.put("Nickname", nickname));
-        torConfigMap.put("ShutdownWaitLength", "2");
-        torConfigMap.put("DisableDebuggerAttachment", "0");
+        nickname.ifPresent(nickname -> torConfigMap.put("Nickname", List.of(nickname)));
+        torConfigMap.put("ShutdownWaitLength", List.of("2"));
+        torConfigMap.put("DisableDebuggerAttachment", List.of("0"));
 
-        torConfigMap.put("ProtocolWarnings", "1");
-        torConfigMap.put("SafeLogging", "0");
-        torConfigMap.put("LogTimeGranularity", "1");
+        torConfigMap.put("ProtocolWarnings", List.of("1"));
+        torConfigMap.put("SafeLogging", List.of("0"));
+        torConfigMap.put("LogTimeGranularity", List.of("1"));
 
-        orPort.ifPresent(orPort -> torConfigMap.put("OrPort", String.valueOf(orPort)));
-        torConfigMap.put("Address", "127.0.0.1");
-        torConfigMap.put("ServerDNSDetectHijacking", "0");
+        orPort.ifPresent(orPort -> torConfigMap.put("OrPort", List.of(String.valueOf(orPort))));
+        torConfigMap.put("Address", List.of("127.0.0.1"));
+        torConfigMap.put("ServerDNSDetectHijacking", List.of("0"));
 
-        torConfigMap.put("ServerDNSTestAddresses", "");
+        torConfigMap.put("ServerDNSTestAddresses", List.of(""));
 
-        dirPort.ifPresent(dirPort -> torConfigMap.put("DirPort", String.valueOf(dirPort)));
+        dirPort.ifPresent(dirPort -> torConfigMap.put("DirPort", List.of(String.valueOf(dirPort))));
 
         return torConfigMap;
     }
