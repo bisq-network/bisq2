@@ -5,8 +5,9 @@
 # Build context MUST be the bisq2 repository root, e.g. from the repo root:
 #   docker build -f apps/api-app/docker/Dockerfile -t bisq2-api .
 #
-# Currently linux/amd64 only.
-# TODO(multi-arch): add linux/arm64 once the release pipeline does multi-arch builds.
+# Multi-arch: linux/amd64 + linux/arm64. The base images are pinned to multi-arch index
+# digests and the build is arch-agnostic, so `docker buildx --platform` produces both.
+# Built by the "Release Umbrel images" workflow in bisq-mobile.
 
 # ── Build stage: compile the api-app distribution from source ──────────────────
 # Self-contained: the image build runs the Gradle build itself, so no host build
@@ -20,9 +21,9 @@
 # release pipeline produces the distribution, this can switch to copying a
 # pre-built `installDist` artifact instead of rebuilding from source each time.
 #
-# Pinned by digest so the build is reproducible from the repo alone (the floating
-# :21 tag moves). Bump the digest when intentionally updating the build JDK.
-FROM azul/zulu-openjdk:21@sha256:fcf711e8fbcb7aa1371e1f831e5114c677e6e9134d9fdd2ee866c7d1027846e2 AS build
+# Pinned by MULTI-ARCH INDEX digest so the build is reproducible AND buildx can resolve both
+# amd64 and arm64 from it (the floating :21 tag moves). Bump when intentionally updating the JDK.
+FROM azul/zulu-openjdk:21@sha256:fa2396e3484ca23385063ad05d5bccdf6408a0736f196e3891b9917c8f37eeb2 AS build
 WORKDIR /src
 COPY . .
 # installDist builds the api-app launcher plus every sibling module it depends on.
@@ -38,9 +39,9 @@ RUN --mount=type=cache,target=/root/.gradle \
     :apps:api-app:installDist
 
 # ── Runtime stage: minimal JRE + system Tor + the built distribution ───────────
-# Azul Zulu JRE to match the build JDK vendor (and bisq1's runtime), pinned by digest
-# for reproducibility. Bump the digest when intentionally updating the runtime JRE.
-FROM azul/zulu-openjdk:21-jre@sha256:97defd96b4ff0e00e3bce1ce66a3bc5a3d69dc05df04fc55030dc6f3b6376771
+# Azul Zulu JRE to match the build JDK vendor (and bisq1's runtime), pinned by MULTI-ARCH
+# INDEX digest for reproducibility + arm64. Bump when intentionally updating the runtime JRE.
+FROM azul/zulu-openjdk:21-jre@sha256:1c037894a0959926d02d7715f20bd31d7f6a492fc5c2055539800d1e03771761
 
 LABEL org.opencontainers.image.title="Bisq2 trusted node (api-app)" \
       org.opencontainers.image.description="Headless Bisq2 node exposing the api-app REST/WebSocket API, e.g. for mobile clients" \
@@ -55,7 +56,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Non-root runtime user. All persistent state lives under the /data mount.
-RUN useradd --system --create-home --home-dir /home/bisq --shell /usr/sbin/nologin bisq \
+# uid pinned to 999 so it stays in sync with the web-UI sidecar, which runs as uid 999
+# to read the node's owner-only (0600) pairing_qr_code.txt on the shared /data volume.
+RUN useradd --system --uid 999 --create-home --home-dir /home/bisq --shell /usr/sbin/nologin bisq \
     && mkdir -p /data \
     && chown -R bisq:bisq /data
 
@@ -67,7 +70,10 @@ RUN test -x /opt/bisq2-api/bin/api-app
 COPY apps/api-app/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-USER bisq
+# NOTE: we intentionally start as root (no `USER bisq` here) so the entrypoint can take
+# ownership of a freshly-created, possibly root-owned /data bind mount, then drop to the
+# bisq user via setpriv. A named-volume run inherits the image's bisq-owned /data and the
+# entrypoint's chown is a no-op. See entrypoint.sh.
 WORKDIR /opt/bisq2-api
 
 # Single mount for all persistent state (identity, db, tor, pairing) so a host-level
