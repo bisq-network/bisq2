@@ -204,6 +204,7 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
 
     private void showTakeOfferStatusFeedback(TakeOfferReviewModel.TakeOfferStatus status) {
         if (status == TakeOfferReviewModel.TakeOfferStatus.SENT) {
+            minWaitingTimePassed = false;
             sendTakeOfferMessageOverlay.setVisible(true);
 
             Transitions.blurStrong(content, 0);
@@ -224,6 +225,8 @@ class TakeOfferReviewView extends View<StackPane, TakeOfferReviewModel, TakeOffe
             takeOfferSendMessageWaitingAnimation.stop();
         } else if (status == TakeOfferReviewModel.TakeOfferStatus.NOT_STARTED) {
             sendTakeOfferMessageOverlay.setVisible(false);
+            takeOfferSuccessOverlay.setVisible(false);
+            takeOfferSendMessageWaitingAnimation.stop();
             Transitions.removeEffect(content);
         }
     }

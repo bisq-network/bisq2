@@ -63,6 +63,7 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,6 +86,7 @@ public class TakeOfferReviewController implements Controller {
     private final UserIdentityService userIdentityService;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BannedUserService bannedUserService;
+    private final UserProfileService userProfileService;
     private final ReviewDataDisplay reviewDataDisplay;
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
@@ -103,6 +105,7 @@ public class TakeOfferReviewController implements Controller {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        userProfileService = serviceProvider.getUserService().getUserProfileService();
         bisqEasyMediationRequestService = serviceProvider.getSupportService().getBisqEasyMediationRequestService();
 
         priceInput = new PriceInput(serviceProvider.getBondedRolesService().getMarketPriceService());
@@ -159,17 +162,19 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
-    public void takeOffer(Runnable onCancelHandler) {
+    public void takeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         if (bannedUserService.isUserProfileBanned(bisqEasyOffer.getMakerNetworkId())) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.makerBanned.warning")).show();
-            onCancelHandler.run();
+            return;
+        }
+        if (userProfileService.isChatUserIgnored(bisqEasyOffer.getMakersUserProfileId())) {
+            new Popup().warning(Res.get("bisqEasy.takeOffer.makerIgnored.warning")).show();
             return;
         }
         UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
         if (bannedUserService.isUserProfileBanned(takerIdentity.getUserProfile())) {
             // If taker is banned we don't need to show them a popup
-            onCancelHandler.run();
             return;
         }
         Optional<UserProfile> mediator = bisqEasyMediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
@@ -178,7 +183,6 @@ public class TakeOfferReviewController implements Controller {
         if (!DevMode.isDevMode() && mediator.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
-                    .onClose(onCancelHandler)
                     .actionButtonText(Res.get("confirmation.ok"))
                     .onAction(() -> doTakeOffer(bisqEasyOffer, takerIdentity, mediator))
                     .show();
@@ -216,6 +220,7 @@ public class TakeOfferReviewController implements Controller {
         errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                     if (errorMessage != null) {
                         UIThread.run(() -> {
+                            resetTakeOfferStatusOnFailure();
                             if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
                                 String errorStackTrace = trade.getErrorStackTrace() != null ? StringUtils.truncate(trade.getErrorStackTrace(), 2000) : "";
                                 new Popup().error(Res.get("bisqEasy.openTrades.failed.errorPopup.message",
@@ -236,7 +241,8 @@ public class TakeOfferReviewController implements Controller {
         peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                     if (peersErrorMessage != null) {
                         UIThread.run(() -> {
-                            if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
+                            resetTakeOfferStatusOnFailure();
+                            if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
                                 String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
                                 new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.errorPopup.message",
                                                 peersErrorMessage,
@@ -278,14 +284,22 @@ public class TakeOfferReviewController implements Controller {
         if (timeoutScheduler != null) {
             timeoutScheduler.stop();
         }
-        timeoutScheduler = UIScheduler.run(() -> {
+        UIScheduler attemptTimeoutScheduler = UIScheduler.run(() -> {
                     closeAndNavigateToHandler.accept(NavigationTarget.BISQ_EASY);
                     throw new RuntimeException("Take offer message sending did not succeed after 2 minutes.");
                 })
                 .after(150, TimeUnit.SECONDS); // We have 120 seconds socket timeout, so we should never get triggered here, as the message will be sent as mailbox message
+        timeoutScheduler = attemptTimeoutScheduler;
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
-                    timeoutScheduler.stop();
+                    attemptTimeoutScheduler.stop();
+                    if (timeoutScheduler == attemptTimeoutScheduler) {
+                        timeoutScheduler = null;
+                    }
+                    if (trade.getErrorMessage() != null || trade.getPeersErrorMessage() != null) {
+                        // The maker rejected the take offer; the error observer already informed the user.
+                        return;
+                    }
 
                     // In case the user has switched to another market we want to select that market in the offer book
                     ChatChannelSelectionService chatChannelSelectionService =
@@ -301,6 +315,14 @@ public class TakeOfferReviewController implements Controller {
                                 chatService.getBisqEasyOpenTradeChannelService().sendTradeLogMessage(encoded, channel);
                             });
                 }));
+    }
+
+    private void resetTakeOfferStatusOnFailure() {
+        if (timeoutScheduler != null) {
+            timeoutScheduler.stop();
+        }
+        mainButtonsVisibleHandler.accept(true);
+        model.getTakeOfferStatus().set(TakeOfferReviewModel.TakeOfferStatus.NOT_STARTED);
     }
 
     @Override

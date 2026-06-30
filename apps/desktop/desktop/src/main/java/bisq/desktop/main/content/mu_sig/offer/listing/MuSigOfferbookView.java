@@ -641,6 +641,9 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         takeOfferButton.setText(item.getTakeOfferButtonText());
                         boolean canTakeOffer = item.isCanTakeOffer();
                         takeOfferButton.setOpacity(canTakeOffer ? 1 : 0.2);
+                        takeOfferButton.setTooltip(canTakeOffer
+                                ? null
+                                : new BisqTooltip(item.getCannotTakeOfferReason().orElse("")));
                         if (takersDisplayDirection.isBuy()) {
                             takeOfferButton.getStyleClass().add("buy-button");
                         } else {
@@ -648,6 +651,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                         }
                         if (canTakeOffer) {
                             takeOfferButton.setOnAction(e -> controller.onTakeOffer(item.getOffer()));
+                        } else if (item.isMakerIgnored()) {
+                            takeOfferButton.setOnAction(e -> controller.onMakerIgnored(item.getOffer()));
                         } else {
                             takeOfferButton.setOnAction(e -> controller.onHandleCannotTakeOfferCase(item.getCannotTakeOfferReason().get()));
                         }
@@ -660,6 +665,7 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
                     resetVisibilities();
                     takeOfferButton.setOnAction(null);
                     takeOfferButton.setOnContextMenuRequested(null);
+                    takeOfferButton.setTooltip(null);
                     showOfferDetails.setOnAction(null);
                     removeOfferMenuItem.setOnAction(null);
                     setGraphic(null);
