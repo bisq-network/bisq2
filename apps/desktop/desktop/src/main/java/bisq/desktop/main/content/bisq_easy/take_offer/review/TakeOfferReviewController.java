@@ -163,22 +163,19 @@ public class TakeOfferReviewController implements Controller {
         }
     }
 
-    public void takeOffer(Runnable onCancelHandler) {
+    public void takeOffer() {
         BisqEasyOffer bisqEasyOffer = model.getBisqEasyOffer();
         if (bannedUserService.isUserProfileBanned(bisqEasyOffer.getMakerNetworkId())) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.makerBanned.warning")).show();
-            onCancelHandler.run();
             return;
         }
         if (userProfileService.isChatUserIgnored(bisqEasyOffer.getMakersUserProfileId())) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.makerIgnored.warning")).show();
-            onCancelHandler.run();
             return;
         }
         UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
         if (bannedUserService.isUserProfileBanned(takerIdentity.getUserProfile())) {
             // If taker is banned we don't need to show them a popup
-            onCancelHandler.run();
             return;
         }
         Optional<UserProfile> mediator = bisqEasyMediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
@@ -187,7 +184,6 @@ public class TakeOfferReviewController implements Controller {
         if (!DevMode.isDevMode() && mediator.isEmpty()) {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
-                    .onClose(onCancelHandler)
                     .actionButtonText(Res.get("bisqEasy.takeOffer.noMediatorAvailable.proceed"))
                     .onAction(() -> doTakeOffer(bisqEasyOffer, takerIdentity, mediator))
                     .show();
@@ -292,14 +288,18 @@ public class TakeOfferReviewController implements Controller {
         if (timeoutScheduler != null) {
             timeoutScheduler.stop();
         }
-        timeoutScheduler = UIScheduler.run(() -> {
+        UIScheduler attemptTimeoutScheduler = UIScheduler.run(() -> {
                     closeAndNavigateToHandler.accept(NavigationTarget.BISQ_EASY);
                     throw new RuntimeException("Take offer message sending did not succeed after 2 minutes.");
                 })
                 .after(150, TimeUnit.SECONDS); // We have 120 seconds socket timeout, so we should never get triggered here, as the message will be sent as mailbox message
+        timeoutScheduler = attemptTimeoutScheduler;
         bisqEasyOpenTradeChannelService.sendTakeOfferMessage(tradeId, bisqEasyOffer, contract.getMediator())
                 .thenAccept(result -> UIThread.run(() -> {
-                    timeoutScheduler.stop();
+                    attemptTimeoutScheduler.stop();
+                    if (timeoutScheduler == attemptTimeoutScheduler) {
+                        timeoutScheduler = null;
+                    }
                     if (trade.getErrorMessage() != null || trade.getPeersErrorMessage() != null) {
                         // The maker rejected the take offer; the error observer already informed the user.
                         return;

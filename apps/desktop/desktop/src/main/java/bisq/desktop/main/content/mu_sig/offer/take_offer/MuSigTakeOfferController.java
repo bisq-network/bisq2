@@ -259,12 +259,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
     }
 
     void onTakeOffer() {
-        muSigTakeOfferReviewController.takeOffer(() -> {
-            model.getBackButtonVisible().set(true);
-            model.getTakeOfferButtonVisible().set(true);
-        });
-        model.getBackButtonVisible().set(false);
-        model.getTakeOfferButtonVisible().set(false);
+        muSigTakeOfferReviewController.takeOffer();
     }
 
     void onKeyPressed(KeyEvent keyEvent) {
@@ -293,8 +288,10 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
     private void setMainButtonsVisibleState(boolean value) {
         NavigationTarget navigationTarget = model.getNavigationTarget();
+        boolean isTakeOfferReview = model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW;
         model.getBackButtonVisible().set(value && model.getChildTargets().indexOf(navigationTarget) > 0);
-        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
+        model.getNextButtonVisible().set(value && !isTakeOfferReview);
+        model.getTakeOfferButtonVisible().set(value && isTakeOfferReview);
         model.getCloseButtonVisible().set(value);
     }
 }
