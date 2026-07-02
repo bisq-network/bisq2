@@ -13,6 +13,16 @@ set -euo pipefail
 DATA_DIR="${BISQ_DATA_DIR:-/data}"
 mkdir -p "${DATA_DIR}"
 
+# A host bind mount (e.g. Umbrel's ${APP_DATA_DIR}/data) is created owned by root, but
+# the node runs as the non-root `bisq` user and applies 0700 perms to its data dir at
+# startup — which fails with "Operation not permitted" unless it owns the dir. So if we
+# start as root, take ownership of /data and re-exec this script as bisq. A named-volume
+# `docker run` already starts as bisq (image /data is bisq-owned) and skips this branch.
+if [ "$(id -u)" = "0" ]; then
+    chown -R bisq:bisq "${DATA_DIR}"
+    exec setpriv --reuid=bisq --regid=bisq --init-groups "$0" "$@"
+fi
+
 # Config overrides are passed as `-Dapplication.*` JVM system properties (same
 # mechanism the repo's run_api.sh uses).
 JAVA_OPTS="${JAVA_OPTS:-} -Dapplication.baseDir=${DATA_DIR}"
