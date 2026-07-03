@@ -170,7 +170,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .setCellFactory(getActionButtonsCellFactory())
                 .left()
-                .fixWidth(120)
+                .fixWidth(150)
                 .includeForCsv(false)
                 .build());
     }
@@ -331,12 +331,13 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
     private Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>,
             TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getActionButtonsCellFactory() {
         return column -> new TableCell<>() {
-            private static final double PREF_WIDTH = 100;
+            private static final double PREF_WIDTH = 120;
             private static final double PREF_HEIGHT = 26;
 
             private final HBox tradeMainBox = new HBox();
             private final HBox tradeActionsMenuBox = new HBox(5);
             private final BisqMenuItem showTradeDetailsMenuItem = new BisqMenuItem("icon-info-grey", "icon-info-white");
+            private final BisqMenuItem contactPeerMenuItem = new BisqMenuItem("private-chat-grey", "private-chat-white");
             private final BisqMenuItem exportTradeDataMenuItem = new BisqMenuItem("download-grey", "download-white");
             private final BisqMenuItem deleteTradeMenuItem = new BisqMenuItem("delete-t-grey", "delete-t-red");
             private final ChangeListener<Boolean> selectedListener = (observable, oldValue, newValue) -> {
@@ -360,11 +361,15 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 tradeActionsMenuBox.setMinHeight(PREF_HEIGHT);
                 tradeActionsMenuBox.setPrefHeight(PREF_HEIGHT);
                 tradeActionsMenuBox.setMaxHeight(PREF_HEIGHT);
-                tradeActionsMenuBox.getChildren().addAll(showTradeDetailsMenuItem, exportTradeDataMenuItem, deleteTradeMenuItem);
+                tradeActionsMenuBox.getChildren().addAll(contactPeerMenuItem, exportTradeDataMenuItem,
+                        showTradeDetailsMenuItem, deleteTradeMenuItem);
                 tradeActionsMenuBox.setAlignment(Pos.CENTER);
 
                 showTradeDetailsMenuItem.useIconOnly();
                 showTradeDetailsMenuItem.setTooltip(Res.get("bisqEasy.history.table.actionButtons.showTradeDetails.tooltip"));
+
+                contactPeerMenuItem.useIconOnly();
+                contactPeerMenuItem.setTooltip(Res.get("bisqEasy.history.table.actionButtons.contactPeer.tooltip"));
 
                 exportTradeDataMenuItem.useIconOnly();
                 exportTradeDataMenuItem.setTooltip(Res.get("bisqEasy.history.table.actionButtons.exportTradeData.tooltip"));
@@ -384,12 +389,14 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                     setUpRowEventHandlersAndListeners();
                     setGraphic(tradeMainBox);
                     showTradeDetailsMenuItem.setOnAction(e -> controller.onShowTradeDetails(item));
+                    contactPeerMenuItem.setOnAction(e -> controller.onContactPeer(item.getPeersUserProfile()));
                     exportTradeDataMenuItem.setOnAction(e -> controller.onExportTradeData(item.getTrade()));
                     deleteTradeMenuItem.setOnAction(e -> controller.onDeleteTrade(item.getTrade()));
                 } else {
                     resetRowEventHandlersAndListeners();
                     resetVisibilities();
                     showTradeDetailsMenuItem.setOnAction(null);
+                    contactPeerMenuItem.setOnAction(null);
                     exportTradeDataMenuItem.setOnAction(null);
                     deleteTradeMenuItem.setOnAction(null);
                     setGraphic(null);

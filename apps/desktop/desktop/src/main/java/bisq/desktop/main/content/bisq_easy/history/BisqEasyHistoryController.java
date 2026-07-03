@@ -18,6 +18,8 @@
 package bisq.desktop.main.content.bisq_easy.history;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -32,6 +34,7 @@ import bisq.settings.DontShowAgainService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
@@ -49,6 +52,7 @@ public class BisqEasyHistoryController implements Controller {
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
     private final DontShowAgainService dontShowAgainService;
+    private final ChatService chatService;
     private Pin closedTradesPin;
     private String searchText = "";
     private final Set<String> knownTradeIds = new HashSet<>();
@@ -60,6 +64,7 @@ public class BisqEasyHistoryController implements Controller {
         reputationService = serviceProvider.getUserService().getReputationService();
         marketPriceService = serviceProvider.getBisqEasyService().getMarketPriceService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
+        chatService = serviceProvider.getChatService();
     }
 
     @Override
@@ -110,6 +115,11 @@ public class BisqEasyHistoryController implements Controller {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
                 new TradeDetailsController.InitData(item.getTrade(), item.getMyUserProfile(), item.getPeersUserProfile(),
                         item.getTrade().getContract().getMediator()));
+    }
+
+    void onContactPeer(UserProfile peer) {
+        chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, peer)
+                .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
     }
 
     void onExportTradeData(BisqEasyTrade trade) {
