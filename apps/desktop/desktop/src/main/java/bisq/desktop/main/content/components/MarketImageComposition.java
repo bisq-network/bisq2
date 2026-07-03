@@ -80,13 +80,7 @@ public class MarketImageComposition {
         String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase(Locale.ROOT);
         String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase(Locale.ROOT);
         String key = baseCurrencyCode + "." + quoteCurrencyCode;
-        if (cache.containsKey(key)) {
-            return cache.get(key);
-        }
-
-        StackPane pane = getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode, useMenuLogo);
-        cache.put(key, pane);
-        return pane;
+        return cache.computeIfAbsent(key, k -> getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode, useMenuLogo));
     }
 
     public static StackPane getMarketPairIcons(String baseCurrencyCode, String quoteCurrencyCode) {
