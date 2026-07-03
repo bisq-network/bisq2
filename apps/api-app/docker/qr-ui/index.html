@@ -380,6 +380,53 @@
       line-height: 1.5;
     }
     .qr-caption strong { color: var(--bisq-light-grey); font-weight: 600; }
+    /* ── Download pills (under QR caption) ── */
+    .dl-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.875rem;
+    }
+    .dl-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .dl-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      height: 32px;
+      padding: 0 0.875rem;
+      border-radius: 6px;
+      background: var(--bisq-surface-2);
+      border: 1px solid var(--bisq-border);
+      color: var(--bisq-light-grey);
+      font-size: 0.75rem;
+      font-weight: 500;
+      font-family: var(--font);
+      text-decoration: none;
+      white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .dl-pill:hover { border-color: var(--bisq-light-grey); color: var(--bisq-white); }
+    .dl-pill:focus-visible { outline: 2px solid var(--bisq-green); outline-offset: 2px; }
+    .dl-pill svg { flex-shrink: 0; color: var(--bisq-green); width: 13px; height: 13px; }
+    .dl-github {
+      font-size: 0.6875rem;
+      color: var(--bisq-mid-grey);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: color 0.15s;
+    }
+    .dl-github:hover { color: var(--bisq-light-grey); }
+    .dl-github:focus-visible { outline: 2px solid var(--bisq-green); outline-offset: 2px; border-radius: 3px; }
+    .dl-github svg { width: 11px; height: 11px; color: var(--bisq-mid-grey); flex-shrink: 0; }
 
     /* ── Right column ── */
     .right-column {
@@ -478,6 +525,8 @@
     .copy-btn:hover { background: rgba(86,174,72,0.08); color: var(--bisq-green); }
     .copy-btn:focus-visible { outline: 2px solid var(--bisq-green); outline-offset: -2px; }
     .copy-btn svg { width: 15px; height: 15px; }
+    .copy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .copy-btn:disabled:hover { background: transparent; color: var(--bisq-mid-grey); }
 
     .field-hint {
       font-size: 0.8125rem;
@@ -492,14 +541,16 @@
       align-items: flex-start;
       gap: 0.5rem;
       font-size: 0.8125rem;
-      color: var(--bisq-mid-grey);
+      font-weight: 500;
+      color: var(--bisq-white);
       line-height: 1.5;
       padding: 0.75rem 1rem;
-      background: var(--bisq-surface-2);
-      border: 1px solid var(--bisq-border);
+      background: var(--bisq-yellow-50);
+      border: 1px solid var(--bisq-warning);
       border-radius: var(--radius);
     }
-    .security-note svg { flex-shrink: 0; margin-top: 1px; color: var(--bisq-mid-grey); width: 14px; height: 14px; }
+    .security-note strong { color: var(--bisq-warning); font-weight: 600; }
+    .security-note svg { flex-shrink: 0; margin-top: 1px; color: var(--bisq-warning); width: 16px; height: 16px; }
 
 
     /* ── Secondary info: onion address ── */
@@ -551,8 +602,10 @@
       box-shadow: 0 -8px 24px -12px rgba(0,0,0,0.6);
     }
     .page-footer svg { flex-shrink: 0; margin-top: 1px; width: 14px; height: 14px; }
-    .footer-text { display: flex; flex-direction: column; gap: 0.25rem; }
-    .footer-version { color: var(--bisq-mid-grey); opacity: 0.8; }
+    .footer-text { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+    .footer-version { color: var(--bisq-mid-grey); opacity: 0.8; text-align: center; }
+    /* Mirrors the left shield-icon column so .footer-text (flex:1) is truly page-centered. */
+    .footer-spacer { width: 14px; flex-shrink: 0; }
     .footer-version b { color: var(--bisq-light-grey); font-weight: 500; }
 
     /* ── Node info panel (slide-in overlay) ── */
@@ -684,15 +737,6 @@
       background: var(--bisq-green);
     }
 
-    .panel-footer-note {
-      font-size: 0.75rem;
-      color: var(--bisq-mid-grey);
-      line-height: 1.5;
-      padding: 0.875rem 1rem;
-      background: var(--bisq-surface-2);
-      border-radius: var(--radius);
-      border: 1px solid var(--bisq-border);
-    }
 
     /* ── Utility ── */
     .sr-only {
@@ -790,7 +834,7 @@
     <div class="qr-card">
       <div class="qr-card-header">
         <h2>Scan to pair</h2>
-        <p>Open <strong>Bisq Connect</strong> on your phone and scan this code to connect to your node.</p>
+        <p>Open <strong>Bisq Connect</strong> on your device and scan this code to connect to your node.</p>
       </div>
       <div class="qr-area">
         <div class="qr-frame" role="img" aria-label="Pairing QR code — scan with Bisq Connect">
@@ -806,9 +850,44 @@
           </div>
         </div>
         <p class="qr-caption">
-          Can&rsquo;t scan? Copy the <strong>pairing code</strong> below<br>
-          and paste it in Bisq Connect &rarr; <em>Connect to node</em>.
+          Can&rsquo;t scan? Copy the <strong>pairing code</strong> below and paste it in<br>
+          Bisq Connect &rarr; <em>More &rarr; Trusted node setup &rarr; Pair with a new trusted node</em>.
         </p>
+        <div class="dl-section">
+          <div class="dl-row">
+            <a href="https://play.google.com/store/apps/details?id=network.bisq.mobile.client"
+               class="dl-pill"
+               target="_blank" rel="noopener noreferrer"
+               aria-label="Download Bisq Connect for Android on Google Play (opens in new tab)">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              Google Play
+            </a>
+            <a href="https://testflight.apple.com/join/abBmehCw"
+               class="dl-pill"
+               target="_blank" rel="noopener noreferrer"
+               aria-label="Download Bisq Connect for iOS on TestFlight (opens in new tab)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              TestFlight
+            </a>
+          </div>
+          <a href="https://github.com/bisq-network/bisq-mobile/releases"
+             class="dl-github"
+             target="_blank" rel="noopener noreferrer"
+             aria-label="All releases and changelogs on GitHub (opens in new tab)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            All releases &middot; GitHub
+          </a>
+        </div>
       </div>
     </div>
 
@@ -829,10 +908,10 @@
 
           <!-- The base64 pairing code — this is what the QR encodes and what the user copies -->
           <div class="field-group">
-            <div class="field-label">Base64 pairing code</div>
+            <div class="field-label">Pairing code</div>
             <div class="field-hint">
               This is the value encoded in the QR above. Copy it into
-              <em>Bisq Connect &rarr; Settings &rarr; Connect to node</em> if you cannot scan.
+              <em>Bisq Connect &rarr; More &rarr; Trusted node setup &rarr; Pair with a new trusted node</em> if you can&rsquo;t scan the QR.
             </div>
             <div class="copy-field">
               <span class="copy-field-text" id="pairingCode"
@@ -853,10 +932,10 @@
 
           <!-- Expiry -->
           <div class="field-group" id="expirySection">
-            <div class="field-label">Pairing code</div>
+            <div class="field-label">Validity</div>
             <p class="field-hint">
               This code refreshes automatically — the QR above always shows the current
-              one. If pairing fails, just rescan.
+              one. If pairing fails, wait a moment and try again.
             </p>
           </div>
 
@@ -868,7 +947,7 @@
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
-            <span>Treat this code like a password. Anyone who scans it or enters it gains access to your node.</span>
+            <span>Treat this code <strong>like a password</strong>. Anyone who scans it or enters it <strong>gains full access to your node</strong>.</span>
           </div>
 
           <!-- Manual "Generate new pairing code" intentionally omitted for v1: there is no
@@ -888,7 +967,7 @@
             <line x1="2" y1="12" x2="22" y2="12"/>
             <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
           </svg>
-          <h3>Network (secondary info)</h3>
+          <h3>Tor Network</h3>
         </div>
         <div class="secondary-card-body">
           <div class="field-group">
@@ -899,7 +978,7 @@
             <div class="copy-field">
               <span class="copy-field-text full" id="onionUrl" data-value="">&mdash;</span>
               <button class="copy-btn" onclick="copyValue('onionUrl', this)"
-                      aria-label="Copy Tor onion address">
+                      aria-label="Copy Tor onion address" disabled>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -924,11 +1003,11 @@
     <div class="footer-text">
       <span>
         This page is served only on your local Umbrel network behind authentication.
-        Connection to your node uses Tor — your traffic is end-to-end private.
-        No data leaves your home network.
+        Bisq Connect connects to your node over Tor — mobile traffic is end-to-end private.
       </span>
       <span class="footer-version">Bisq 2 node <b id="footerVersion">—</b></span>
     </div>
+    <div class="footer-spacer" aria-hidden="true"></div>
   </footer>
 
 
@@ -990,12 +1069,6 @@
       <div class="panel-row">
         <div class="panel-row-label">Pairing Code TTL</div>
         <div class="panel-row-value plain">24 hours (auto-rotates)</div>
-      </div>
-
-      <hr class="panel-divider">
-
-      <div class="panel-footer-note">
-        Configuration is managed by umbrelOS. Editing node settings directly is planned for a future release.
       </div>
 
     </div><!-- /panel-body -->
@@ -1640,7 +1713,7 @@
 
   var BANNER_ICONS = {
     clock: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-    spinner: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    spinner: '<line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>',
     stop: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
   };
 
@@ -1688,7 +1761,7 @@
   function copyValue(elementId, btn) {
     var el = document.getElementById(elementId);
     var text = (el && (el.dataset.value || el.textContent.trim())) || '';
-    if (!text) return;
+    if (!text || text === '—') return; // em-dash = placeholder for a not-yet-derived value
     var checkSVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--bisq-green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg><span class="sr-only">Copied</span>';
     var original = btn.innerHTML;
     function flash() {
@@ -1869,6 +1942,8 @@
     } catch (e) { /* fall through to blank */ }
     onionEl.dataset.value = onion;
     onionEl.textContent = onion || '—';
+    var onionBtn = onionEl.parentNode.querySelector('.copy-btn');
+    if (onionBtn) onionBtn.disabled = !onion;
     var niOnion = document.getElementById('niOnion');
     if (niOnion) niOnion.textContent = onion || '—';
   }
