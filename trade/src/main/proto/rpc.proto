@@ -41,6 +41,10 @@ service Musig {
   rpc SignSwapTx (SwapTxSignatureRequest) returns (SwapTxSignatureResponse);
 
   rpc CloseTrade (CloseTradeRequest) returns (CloseTradeResponse);
+
+  rpc SignCustomPayoutTx (CustomPayoutPsbtRequest) returns (CustomPayoutPsbt);
+
+  rpc CustomCloseTrade (CustomCloseTradeRequest) returns (CustomCloseTradeResponse);
 }
 
 //TODO same as TradeRole
@@ -166,4 +170,26 @@ message CloseTradeRequest {
 
 message CloseTradeResponse {
   bytes peerOutputPrvKeyShare = 1;
+}
+
+message CustomPayoutPsbtRequest {
+  string tradeId = 1;
+  uint64 sellersPayoutAmountExcludingFee = 2; // sats
+  uint64 feeRate = 3; // sats per kwu
+}
+
+message CustomPayoutPsbt {
+  bytes psbt = 1;
+  string txId = 2;
+  uint64 buyersPayoutAmountIncludingFee = 3;  // sats
+  uint64 sellersPayoutAmountIncludingFee = 4; // sats
+}
+
+message CustomCloseTradeRequest {
+  string tradeId = 1;
+  bytes peersCustomPayoutPsbt = 2;
+}
+
+message CustomCloseTradeResponse {
+  bytes customPayoutTx = 1;
 }
