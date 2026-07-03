@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SetupTradeMessage_D> {
     protected PartialSignatures peersPartialSignatures;
+    protected DepositPsbt peersDepositPsbt;
     protected DepositPsbt myDepositPsbt;
 
     public BaseSetupTradeMessage_D_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
@@ -49,6 +50,7 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
     @Override
     protected void process(SetupTradeMessage_D message) {
         peersPartialSignatures = message.getPartialSignatures();
+        peersDepositPsbt = new DepositPsbt(message.getDepositPsbt());
 
         PartialSignaturesMessage peersPartialSignaturesMessage = PartialSignaturesMessage.from(peersPartialSignatures);
         DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
@@ -59,7 +61,7 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
 
         PublishDepositTxRequest publishDepositTxRequest = PublishDepositTxRequest.newBuilder()
                 .setTradeId(trade.getId())
-                .setPeersDepositPsbt(myDepositPsbt.toProto(true))
+                .setPeersDepositPsbt(peersDepositPsbt.toProto(true))
                 .build();
         blockingStub.publishDepositTx(publishDepositTxRequest);
     }
@@ -71,6 +73,7 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
 
         mySelf.setMyDepositPsbt(myDepositPsbt);
         peer.setPeersPartialSignatures(peersPartialSignatures);
+        peer.setMyDepositPsbt(peersDepositPsbt);
     }
 
     @Override
@@ -93,7 +96,7 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
 
     @Override
     protected void sendLogMessage() {
-        sendLogMessage("Taker received peers partialSignatures.\n" +
+        sendLogMessage("Taker received peers partialSignatures and depositPsbt.\n" +
                 "Taker created depositPsbt.\n" +
                 "Taker published deposit tx.\n" +
                 "Taker sends deposit tx and account payload to maker");
