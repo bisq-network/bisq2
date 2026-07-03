@@ -195,18 +195,15 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
 
     private Callback<TableColumn<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>, TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getMyUserCellFactory() {
         return column -> new TableCell<>() {
-
             private final UserProfileIcon userProfileIcon = new UserProfileIcon();
-            private final StackPane stackPane = new StackPane(userProfileIcon);
 
             @Override
             protected void updateItem(BisqEasyTradeHistoryListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    userProfileIcon.setUserProfile(item.getMyUserProfile(), false);
-                    // Tooltip is not working if we add directly to the cell therefor we wrap into a StackPane
-                    setGraphic(stackPane);
+                    userProfileIcon.setUserProfile(item.getMyUserProfile(), true, false);
+                    setGraphic(userProfileIcon);
                 } else {
                     userProfileIcon.dispose();
                     setGraphic(null);
@@ -227,8 +224,9 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                     if (userProfileDisplay != null) {
                         userProfileDisplay.dispose();
                     }
-                    userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), false);
+                    userProfileDisplay = new UserProfileDisplay(item.getPeersUserProfile(), true);
                     userProfileDisplay.setReputationScore(item.getPeersReputationScore());
+                    userProfileDisplay.hideIconTooltip();
 
                     setGraphic(userProfileDisplay);
                 } else {

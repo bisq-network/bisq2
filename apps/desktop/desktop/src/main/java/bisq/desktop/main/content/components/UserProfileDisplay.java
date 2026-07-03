@@ -164,4 +164,8 @@ public class UserProfileDisplay extends HBox {
     public void setReputationScoreDisplayScale(double scale) {
         reputationScoreDisplay.setScale(scale);
     }
+
+    public void hideIconTooltip() {
+        userProfileIcon.hideTooltip();
+    }
 }
