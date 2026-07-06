@@ -24,7 +24,6 @@ import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.components.table.DateTableItem;
-import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -103,10 +102,6 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
         settlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
         paymentMethodAsString = String.format("%s / %s", paymentMethod, settlementMethod);
 
-        String direction = trade.getDisplayOfferDirection().isBuy()
-                ? Res.get("bisqEasy.history.table.myRole.buyer")
-                : Res.get("bisqEasy.history.table.myRole.seller");
-        String role = BisqEasyTradeFormatter.getMakerTakerRole(trade);
-        myRole = String.format("%s / %s", direction, role);
+        myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
     }
 }
