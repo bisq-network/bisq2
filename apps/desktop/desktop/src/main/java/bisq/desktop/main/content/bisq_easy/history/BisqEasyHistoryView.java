@@ -245,7 +245,6 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .minWidth(85)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getMyRole))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getMyRole)
-                .tooltipSupplier(BisqEasyTradeHistoryListItem::getMyRole)
                 .includeForCsv(false)
                 .build());
 
@@ -261,6 +260,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
             TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getMarketCellFactory() {
         return column -> new TableCell<>() {
             private final Label marketPairIcons = new Label();
+            private final Tooltip tooltip = new BisqTooltip();
 
             @Override
             protected void updateItem(BisqEasyTradeHistoryListItem item, boolean empty) {
@@ -269,8 +269,11 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 if (item != null && !empty) {
                     marketPairIcons.setGraphic(MarketImageComposition.getMarketMenuPairIcons(item.getMarket().getBaseCurrencyCode(),
                             item.getMarket().getQuoteCurrencyCode()));
+                    tooltip.setText(item.getMarket().getMarketCodes());
+                    Tooltip.install(marketPairIcons, tooltip);
                     setGraphic(marketPairIcons);
                 } else {
+                    Tooltip.uninstall(marketPairIcons, tooltip);
                     setGraphic(null);
                 }
             }
