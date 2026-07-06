@@ -24,6 +24,7 @@ import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.components.table.DateTableItem;
+import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -46,8 +47,9 @@ import lombok.ToString;
 public class BisqEasyTradeHistoryListItem implements DateTableItem {
     @EqualsAndHashCode.Include
     private final BisqEasyTrade trade;
-    private final String myUserName, directionalTitle, peersUserName, tradeId, shortTradeId, dateString, timeString, tradeCompletedDateString, baseAmountString,
-            quoteAmountString, priceString, priceTooltip, myRole, paymentMethodAsString;
+    private final String myUserName, directionalTitle, peersUserName, tradeId, shortTradeId, dateString, timeString, dateTimeString,
+            tradeCompletedDateString, baseAmountString, quoteAmountString, quoteAmountWithCodeString, priceString, priceWithCodeString,
+            priceTooltip, pricePercentage, priceModality, myRole, paymentMethodAsString, offerType, receiverAddressOrInvoice, txIdOrPreimage;
     private final long date, price, baseAmount, quoteAmount;
     private final boolean hasFixPrice;
     private final Market market;
@@ -70,6 +72,7 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
         date = trade.getTradeCompletedDate().orElse(contract.getTakeOfferDate());
         dateString = DateFormatter.formatDate(date);
         timeString = DateFormatter.formatTime(date);
+        dateTimeString = String.format("%s %s", dateString, timeString);
 
         // btc confirmed
         tradeCompletedDateString = trade.getTradeCompletedDate().map(DateFormatter::formatDate).orElse("N/A");
@@ -78,6 +81,12 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
         myUserName = myUserProfile.getUserName();
 
         directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(trade);
+        offerType = trade.getOffer().getDirection().isBuy()
+                ? Res.get("bisqEasy.openTrades.csv.offerType.buy")
+                : Res.get("bisqEasy.openTrades.csv.offerType.sell");
+
+        receiverAddressOrInvoice = trade.getBitcoinPaymentData().orElseGet(() -> Res.get("data.na"));
+        txIdOrPreimage = trade.getPaymentProof().orElseGet(() -> Res.get("data.na"));
 
         peersUserProfile = closedTrade.peerUserProfile();
         peersUserName = peersUserProfile.getUserName();
@@ -87,7 +96,8 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
         baseAmountString = BisqEasyTradeFormatter.formatBaseSideAmount(trade);
 
         quoteAmount = contract.getQuoteSideAmount();
-        quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
+        quoteAmountString = BisqEasyTradeFormatter.formatQuoteSideAmount(trade);
+        quoteAmountWithCodeString = BisqEasyTradeFormatter.formatQuoteSideAmountWithCode(trade);
 
         price = trade.getPriceQuote().getValue();
         BisqEasyOffer offer = contract.getOffer();
@@ -95,12 +105,15 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
         hasFixPrice = priceSpec instanceof FixPriceSpec;
         pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
 
-        priceString = PriceFormatter.formatWithCode(trade.getPriceQuote());
-        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, priceString);
+        priceString = PriceFormatter.format(trade.getPriceQuote());
+        priceWithCodeString = PriceFormatter.formatWithCode(trade.getPriceQuote());
+        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, priceWithCodeString);
+        pricePercentage = pricePair.getSecond();
+        priceModality = priceSpec.getDisplayName();
 
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();
         settlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethod();
-        paymentMethodAsString = String.format("%s / %s", paymentMethod, settlementMethod);
+        paymentMethodAsString = String.format("%s / %s", paymentMethod.getDisplayString(), settlementMethod.getDisplayString());
 
         myRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
     }

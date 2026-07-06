@@ -34,6 +34,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.bisq_easy.TradesUtils;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1a;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states.BuyerState1b;
@@ -323,11 +324,11 @@ public class TradeStateController implements Controller {
     }
 
     void onExportTrade() {
-        OpenTradesUtils.exportTrade(model.getBisqEasyTrade().get(), getView().getRoot().getScene());
+        TradesUtils.exportTrade(model.getBisqEasyTrade().get(), getView().getRoot().getScene());
     }
 
     void onRequestMediation() {
-        OpenTradesUtils.requestMediation(model.getChannel().get(),
+        TradesUtils.requestMediation(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
                 bisqEasyMediationRequestService, channelService);
     }
