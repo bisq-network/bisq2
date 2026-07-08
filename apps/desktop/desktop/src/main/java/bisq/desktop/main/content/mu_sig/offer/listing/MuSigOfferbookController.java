@@ -67,8 +67,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class MuSigOfferbookController implements Controller {
     @Getter
@@ -271,9 +269,7 @@ public class MuSigOfferbookController implements Controller {
 
         selectedMarketFromModelPin = EasyBind.subscribe(model.getSelectedMarket(), market -> {
             if (market != null) {
-                UIThread.run(() -> {
-                    findMarketItem(market).ifPresent(item -> model.getSelectedMarketItem().set(item));
-                });
+                UIThread.run(() -> findMarketItem(market).ifPresent(item -> model.getSelectedMarketItem().set(item)));
             }
         });
 
@@ -321,7 +317,19 @@ public class MuSigOfferbookController implements Controller {
 
     void onCreateOffer() {
         MuSigMarketItem marketItem = model.getSelectedMarketItem().get();
-        checkArgument(marketItem != null, "No selected market item");
+
+        if (marketItem == null ) {
+            new Popup().information(Res.get("muSig.offer.listing.createOffer.noSelectedMarketItem"))
+                    .closeButtonText(Res.get("confirmation.ok"))
+                    .show();
+            return;
+        } else if (!marketItem.hasMarketPrice()) {
+            new Popup().information(Res.get("muSig.offer.listing.createOffer.noPricedMarketItem"))
+                    .closeButtonText(Res.get("confirmation.ok"))
+                    .show();
+            return;
+        }
+
         Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER, new MuSigCreateOfferController.InitData(marketItem.getMarket()));
     }
 
@@ -451,9 +459,7 @@ public class MuSigOfferbookController implements Controller {
                 // We do not inform banned users about being banned
             });
         } catch (RateLimitExceededException e) {
-            UIThread.run(() -> {
-                new Popup().warning(Res.get("muSig.offer.listing.rateLimitsExceeded.removeOffer.warning")).show();
-            });
+            UIThread.run(() -> new Popup().warning(Res.get("muSig.offer.listing.rateLimitsExceeded.removeOffer.warning")).show());
         }
     }
 
@@ -465,7 +471,7 @@ public class MuSigOfferbookController implements Controller {
     }
 
     private MuSigMarketItem getFirstMarketItem() {
-        return !model.getSortedMarketItems().isEmpty() ? model.getSortedMarketItems().get(0) : null;
+        return !model.getSortedMarketItems().isEmpty() ? model.getSortedMarketItems().getFirst() : null;
     }
 
     private void updateFilteredMuSigOfferListItems() {

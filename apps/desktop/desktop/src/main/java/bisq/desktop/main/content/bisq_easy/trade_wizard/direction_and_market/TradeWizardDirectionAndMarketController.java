@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -101,15 +103,6 @@ public class TradeWizardDirectionAndMarketController implements Controller {
         applyShowReputationInfo();
 
         model.getSearchText().set("");
-        if (model.getSelectedMarket().get() == null) {
-            // Use selected public channel or if private channel is selected we use any of the public channels for
-            // setting the default market
-            Optional.ofNullable(bisqEasyOfferbookSelectionService.getSelectedChannel().get())
-                    .filter(channel -> channel instanceof BisqEasyOfferbookChannel)
-                    .map(channel -> (BisqEasyOfferbookChannel) channel)
-                    .map(BisqEasyOfferbookChannel::getMarket)
-                    .ifPresent(market -> model.getSelectedMarket().set(market));
-        }
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .filter(market -> marketPriceService.getMarketPriceByCurrencyMap().containsKey(market))
@@ -126,11 +119,7 @@ public class TradeWizardDirectionAndMarketController implements Controller {
                             .map(ChatMessage::getAuthorUserProfileId)
                             .distinct()
                             .count();
-                    TradeWizardDirectionAndMarketView.ListItem item = new TradeWizardDirectionAndMarketView.ListItem(market, numOffersInChannel, numUsersInChannel);
-                    if (market.equals(model.getSelectedMarket().get())) {
-                        model.getSelectedMarketListItem().set(item);
-                    }
-                    return item;
+                    return new TradeWizardDirectionAndMarketView.ListItem(market, numOffersInChannel, numUsersInChannel);
                 })
                 .collect(Collectors.toList()));
 
@@ -146,6 +135,19 @@ public class TradeWizardDirectionAndMarketController implements Controller {
                 );
             }
         });
+
+        // Use the market from the selected public channel, or fall back to the service's default channel,
+        // or the first available market list item
+        Optional<TradeWizardDirectionAndMarketView.ListItem> item =
+                findMarketListItem(bisqEasyOfferbookSelectionService.getSelectedChannel().get())
+                        .or(() -> findMarketListItem(bisqEasyOfferbookChannelService.getDefaultChannel().orElse(null)))
+                        .or(this::findFirstMarketListItem);
+        if (item.isPresent()) {
+            onMarketListItemClicked(item.get());
+        } else {
+            // here listItems is empty !!!
+            log.error("No market list item found to select.");
+        }
     }
 
     @Override
@@ -226,5 +228,22 @@ public class TradeWizardDirectionAndMarketController implements Controller {
     private void showReputationInfoOverlay() {
         navigationButtonsVisibleHandler.accept(false);
         model.getShowReputationInfo().set(true);
+    }
+
+    private Optional<TradeWizardDirectionAndMarketView.ListItem> findMarketListItem(@Nullable ChatChannel<?> channel) {
+        if (channel instanceof BisqEasyOfferbookChannel) {
+            return findMarketListItem(((BisqEasyOfferbookChannel) channel).getMarket());
+        }
+        return Optional.empty();
+    }
+
+    private Optional<TradeWizardDirectionAndMarketView.ListItem> findMarketListItem(Market market) {
+        return model.getListItems().stream()
+                .filter(item -> item.getMarket().equals(market))
+                .findFirst();
+    }
+
+    private Optional<TradeWizardDirectionAndMarketView.ListItem> findFirstMarketListItem() {
+        return model.getListItems().stream().findFirst();
     }
 }
