@@ -27,7 +27,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
+import bisq.desktop.main.content.bisq_easy.TradesUtils;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
@@ -123,7 +123,7 @@ public class BisqEasyHistoryController implements Controller {
     }
 
     void onExportTradeData(BisqEasyTrade trade) {
-        OpenTradesUtils.exportTrade(trade, getView().getRoot().getScene());
+        TradesUtils.exportTrade(trade, getView().getRoot().getScene());
     }
 
     void onDeleteTrade(BisqEasyTrade trade) {
@@ -159,8 +159,8 @@ public class BisqEasyHistoryController implements Controller {
                 || item.getMarket().getBaseCurrencyCode().toLowerCase().contains(searchText)
                 || item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(searchText)
                 || item.getBaseAmountString().toLowerCase().contains(searchText)
-                || item.getQuoteAmountString().toLowerCase().contains(searchText)
-                || item.getPriceString().toLowerCase().contains(searchText)
+                || item.getQuoteAmountWithCodeString().toLowerCase().contains(searchText)
+                || item.getPriceWithCodeString().toLowerCase().contains(searchText)
                 || item.getPaymentMethodAsString().toLowerCase().contains(searchText)
                 || item.getMyRole().toLowerCase().contains(searchText);
     }

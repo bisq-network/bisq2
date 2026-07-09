@@ -45,6 +45,9 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEasyHistoryController> {
     private static final double SIDE_PADDING = 40;
@@ -61,8 +64,6 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 Res.get("bisqEasy.history.numTrades"),
                 controller::applySearchPredicate);
         tableView.getStyleClass().add("bisq-easy-history-table");
-        tableView.getExportButton().setVisible(false);
-        tableView.getExportButton().setManaged(false);
         tableView.getTableView().setPlaceholder(placeholderLabel);
         configTableView();
 
@@ -74,6 +75,76 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
     protected void onViewAttached() {
         placeholderLabel.textProperty().bind(model.getPlaceholderText());
         tableView.initialize();
+
+        List<String> csvHeaders = tableView.buildCsvHeaders();
+        csvHeaders.add(Res.get("bisqEasy.history.table.tradeId").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.date").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.myRole").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.offerType").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.quoteAmount").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.quoteAmountCurrencyCode").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.baseAmount").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.tradePrice").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.market").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.pricePercentage").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.priceModality").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.payment").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.receiverAddressOrInvoice").toUpperCase());
+        csvHeaders.add(Res.get("bisqEasy.history.table.csv.txIdOrPreimage").toUpperCase());
+        tableView.setCsvHeaders(Optional.of(csvHeaders));
+
+        List<List<String>> csvData = tableView.getItems().stream()
+                .map(item -> {
+                    List<String> cellDataInRow = tableView.getBisqTableColumnsForCsv()
+                            .map(bisqTableColumn -> bisqTableColumn.resolveValueForCsv(item))
+                            .collect(Collectors.toList());
+
+                    // Add trade id
+                    cellDataInRow.add(item.getTradeId());
+
+                    // Add date
+                    cellDataInRow.add(item.getDateTimeString());
+
+                    // Add my role
+                    cellDataInRow.add(item.getMyRole());
+
+                    // Add offer type
+                    cellDataInRow.add(item.getOfferType());
+
+                    // Add quote amount
+                    cellDataInRow.add(item.getQuoteAmountString());
+
+                    // Add quote currency code
+                    cellDataInRow.add(item.getMarket().getQuoteCurrencyCode());
+
+                    // Add base amount
+                    cellDataInRow.add(item.getBaseAmountString());
+
+                    // Add price
+                    cellDataInRow.add(item.getPriceString());
+
+                    // Add market
+                    cellDataInRow.add(item.getMarket().getMarketCodes());
+
+                    // Add price percentage
+                    cellDataInRow.add(item.getPricePercentage());
+
+                    // Add price modality
+                    cellDataInRow.add(item.getPriceModality());
+
+                    // Add payment methods
+                    cellDataInRow.add(item.getPaymentMethodAsString());
+
+                    // Add receiver address or invoice
+                    cellDataInRow.add(item.getReceiverAddressOrInvoice());
+
+                    // Add transaction ID or preimage
+                    cellDataInRow.add(item.getTxIdOrPreimage());
+
+                    return cellDataInRow;
+                })
+                .collect(Collectors.toList());
+        tableView.setCsvData(Optional.of(csvData));
     }
 
     @Override
@@ -99,12 +170,14 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .left()
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getMyUserName))
                 .setCellFactory(getMyUserCellFactory())
+                .includeForCsv(false)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .minWidth(95)
                 .left()
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getDirectionalTitle))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getDirectionalTitle)
+                .includeForCsv(false)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradePeer"))
@@ -112,9 +185,19 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .left()
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPeersUserName))
                 .setCellFactory(getTradePeerCellFactory())
+                .includeForCsv(false)
                 .build());
 
-        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
+        BisqTableColumn<BisqEasyTradeHistoryListItem> dateColumn = new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
+                .title(Res.get("bisqEasy.history.table.date"))
+                .fixWidth(85)
+                .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getDate))
+                .sortType(TableColumn.SortType.DESCENDING)
+                .setCellFactory(DateColumnUtil.getCellFactory())
+                .includeForCsv(false)
+                .build();
+        tableView.getColumns().add(dateColumn);
+        tableView.getSortOrder().add(dateColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.tradeId"))
@@ -122,13 +205,15 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getTradeId))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getShortTradeId)
                 .tooltipSupplier(BisqEasyTradeHistoryListItem::getTradeId)
+                .includeForCsv(false)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
                 .title(Res.get("bisqEasy.history.table.quoteAmount"))
                 .fixWidth(120)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getQuoteAmount))
-                .valueSupplier(BisqEasyTradeHistoryListItem::getQuoteAmountString)
+                .valueSupplier(BisqEasyTradeHistoryListItem::getQuoteAmountWithCodeString)
+                .includeForCsv(false)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
@@ -136,6 +221,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .fixWidth(120)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getBaseAmount))
                 .setCellFactory(getBaseAmountCellFactory())
+                .includeForCsv(false)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
@@ -143,6 +229,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .minWidth(260)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPrice))
                 .setCellFactory(getPriceCellFactory())
+                .includeForCsv(false)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
@@ -150,6 +237,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .minWidth(100)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getPaymentMethodAsString))
                 .setCellFactory(getPaymentCellFactory())
+                .includeForCsv(false)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
@@ -157,7 +245,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 .minWidth(85)
                 .comparator(Comparator.comparing(BisqEasyTradeHistoryListItem::getMyRole))
                 .valueSupplier(BisqEasyTradeHistoryListItem::getMyRole)
-                .tooltipSupplier(BisqEasyTradeHistoryListItem::getMyRole)
+                .includeForCsv(false)
                 .build());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyTradeHistoryListItem>()
@@ -172,6 +260,7 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
             TableCell<BisqEasyTradeHistoryListItem, BisqEasyTradeHistoryListItem>> getMarketCellFactory() {
         return column -> new TableCell<>() {
             private final Label marketPairIcons = new Label();
+            private final Tooltip tooltip = new BisqTooltip();
 
             @Override
             protected void updateItem(BisqEasyTradeHistoryListItem item, boolean empty) {
@@ -180,8 +269,11 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 if (item != null && !empty) {
                     marketPairIcons.setGraphic(MarketImageComposition.getMarketMenuPairIcons(item.getMarket().getBaseCurrencyCode(),
                             item.getMarket().getQuoteCurrencyCode()));
+                    tooltip.setText(item.getMarket().getMarketCodes());
+                    Tooltip.install(marketPairIcons, tooltip);
                     setGraphic(marketPairIcons);
                 } else {
+                    Tooltip.uninstall(marketPairIcons, tooltip);
                     setGraphic(null);
                 }
             }
