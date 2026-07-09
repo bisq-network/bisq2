@@ -46,6 +46,7 @@ import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.input.KeyEvent;
@@ -54,6 +55,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javax.annotation.Nullable;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -371,12 +374,35 @@ public class MuSigCreateOfferAmountController implements Controller {
 
     private void applyRangeOrFixedAmountSpec(Long minAmount, long maxOrFixAmount) {
         if (minAmount != null) {
-            if (minAmount.equals(maxOrFixAmount)) {
+            Market market = model.getMarket();
+            boolean isBtcFiatMarket = market != null && market.isBtcFiatMarket();
+            Monetary minQuote = amountSelectionController.getMinQuoteSideAmount().get();
+            Monetary maxQuote = amountSelectionController.getMaxOrFixedQuoteSideAmount().get();
+            if (isFixedAmount(isBtcFiatMarket, minQuote, maxQuote, minAmount, maxOrFixAmount)) {
                 applyFixedAmountSpec(maxOrFixAmount);
             } else {
                 applyRangeAmountSpec(minAmount, maxOrFixAmount);
             }
         }
+    }
+
+    // On a fiat market the base side (sats) of two quote side amounts that are equal
+    // once rounded to the fiat display precision can still differ by a few units due
+    // to price conversion rounding, which would create a spurious range offer.
+    // Decide on the rounded quote side value so a range only remains when the fiat
+    // amounts actually differ. Non-fiat markets, or missing quote amounts, keep the
+    // exact base side comparison. Package-private static so
+    // MuSigCreateOfferAmountControllerTest can exercise the decision directly.
+    @VisibleForTesting
+    static boolean isFixedAmount(boolean isBtcFiatMarket,
+                                 @Nullable Monetary minQuoteSideAmount,
+                                 @Nullable Monetary maxOrFixedQuoteSideAmount,
+                                 long minBaseAmount,
+                                 long maxOrFixedBaseAmount) {
+        if (isBtcFiatMarket && minQuoteSideAmount != null && maxOrFixedQuoteSideAmount != null) {
+            return minQuoteSideAmount.isEqual(maxOrFixedQuoteSideAmount, minQuoteSideAmount.getLowPrecision());
+        }
+        return minBaseAmount == maxOrFixedBaseAmount;
     }
 
     private void applyFixedAmountSpec(long maxOrFixAmount) {
