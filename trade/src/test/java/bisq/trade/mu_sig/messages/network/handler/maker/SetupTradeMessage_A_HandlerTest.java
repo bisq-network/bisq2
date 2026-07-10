@@ -25,6 +25,7 @@ import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -46,6 +47,8 @@ class SetupTradeMessage_A_HandlerTest {
 
         TradeProtocolException exception =
                 assertThrows(TradeProtocolException.class, () -> handler.verify(message));
-        assertEquals(TradeProtocolFailure.PEER_IGNORED, exception.getTradeProtocolFailure());
+        // The rejection reason sent to the taker must not disclose that they have been ignored
+        assertEquals(TradeProtocolFailure.OFFER_NOT_AVAILABLE, exception.getTradeProtocolFailure());
+        assertFalse(exception.getMessage().toLowerCase().contains("ignor"));
     }
 }

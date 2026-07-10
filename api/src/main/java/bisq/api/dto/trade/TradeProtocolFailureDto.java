@@ -22,5 +22,5 @@ public enum TradeProtocolFailureDto {
     PRICE_DEVIATION,
     NO_MATCHING_OFFER_FOUND,
     MEDIATORS_NOT_MATCHING,
-    PEER_IGNORED;
+    OFFER_NOT_AVAILABLE;
 }

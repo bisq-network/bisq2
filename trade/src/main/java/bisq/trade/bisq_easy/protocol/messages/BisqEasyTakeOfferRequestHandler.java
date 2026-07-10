@@ -64,9 +64,10 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer(), "Offer from takers contract must not be null");
 
         if (serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(message.getSender().getId())) {
-            String errorMessage = "The maker has rejected the take offer request because they have ignored your user profile.";
-            log.warn("{} takersOffer={}", errorMessage, takersOffer);
-            throw new TradeProtocolException(errorMessage, TradeProtocolFailure.PEER_IGNORED);
+            log.warn("We reject the take offer request because we have ignored the taker's user profile. " +
+                    "We do not disclose that to the taker but send a generic rejection reason. takersOffer={}", takersOffer);
+            throw new TradeProtocolException("The maker has rejected the take offer request because the offer is not available anymore.",
+                    TradeProtocolFailure.OFFER_NOT_AVAILABLE);
         }
 
         List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()

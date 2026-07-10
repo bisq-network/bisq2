@@ -64,9 +64,10 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
     @Override
     protected void verify(SetupTradeMessage_A message) {
         if (serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(message.getSender().getId())) {
-            String errorMessage = "The maker has rejected the take offer request because they have ignored your user profile.";
-            log.warn("{} tradeId={}", errorMessage, trade.getId());
-            throw new TradeProtocolException(errorMessage, TradeProtocolFailure.PEER_IGNORED);
+            log.warn("We reject the take offer request because we have ignored the taker's user profile. " +
+                    "We do not disclose that to the taker but send a generic rejection reason. tradeId={}", trade.getId());
+            throw new TradeProtocolException("The maker has rejected the take offer request because the offer is not available anymore.",
+                    TradeProtocolFailure.OFFER_NOT_AVAILABLE);
         }
 
         MuSigContract peersContract = message.getContract();
