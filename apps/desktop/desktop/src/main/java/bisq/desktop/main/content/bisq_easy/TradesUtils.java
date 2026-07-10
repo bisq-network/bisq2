@@ -27,12 +27,10 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.common.utils.FileChooserUtil;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
@@ -66,13 +64,8 @@ public class TradesUtils {
             PriceSpec priceSpec = trade.getOffer().getPriceSpec();
             String priceSpecString = priceSpec.getDisplayName();
             String price = PriceFormatter.format(contract.getPriceQuote());
-            String pricePercentage = priceSpec instanceof FixPriceSpec
-                    ? ""
-                    : PercentageFormatter.formatToPercentWithSignAndSymbol(
-                            priceSpec instanceof FloatPriceSpec floatPriceSpec
-                                    ? floatPriceSpec.getPercentage()
-                                    : 0
-                    );
+            String pricePercentage = PriceSpecFormatter.getFormattedPriceAsPercentage(trade.getPriceQuote(),
+                    priceSpec, contract.getMarketPrice(), trade.getOffer().getMarket());
             String paymentProof = trade.getPaymentProof().orElseGet(() -> Res.get("data.na"));
             String bitcoinPaymentData = trade.getBitcoinPaymentData().orElseGet(() -> Res.get("data.na"));
             String bitcoinMethod = contract.getBaseSidePaymentMethodSpec().getDisplayString();

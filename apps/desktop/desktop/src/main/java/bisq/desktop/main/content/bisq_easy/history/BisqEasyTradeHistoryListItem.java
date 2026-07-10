@@ -19,8 +19,6 @@ package bisq.desktop.main.content.bisq_easy.history;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.desktop.components.table.DateTableItem;
@@ -55,13 +53,11 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
     private final Market market;
     private final UserProfile myUserProfile, peersUserProfile;
     private final ReputationScore peersReputationScore;
-    private final Pair<String, String> pricePair;
     private final FiatPaymentMethod paymentMethod;
     private final BitcoinPaymentMethod settlementMethod;
 
     public BisqEasyTradeHistoryListItem(BisqEasyClosedTrade closedTrade,
-                                        ReputationService reputationService,
-                                        MarketPriceService marketPriceService) {
+                                        ReputationService reputationService) {
         this.trade = closedTrade.trade();
         this.tradeId = trade.getId();
         shortTradeId = trade.getShortId();
@@ -103,12 +99,10 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
         BisqEasyOffer offer = contract.getOffer();
         PriceSpec priceSpec = offer.getPriceSpec();
         hasFixPrice = priceSpec instanceof FixPriceSpec;
-        pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
-
         priceString = PriceFormatter.format(trade.getPriceQuote());
         priceWithCodeString = PriceFormatter.formatWithCode(trade.getPriceQuote());
         priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, priceWithCodeString);
-        pricePercentage = pricePair.getSecond();
+        pricePercentage = PriceSpecFormatter.getFormattedPriceAsPercentage(trade.getPriceQuote(), priceSpec, contract.getMarketPrice(), market);
         priceModality = priceSpec.getDisplayName();
 
         paymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethod();

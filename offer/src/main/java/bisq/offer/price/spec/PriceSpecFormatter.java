@@ -21,6 +21,7 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.data.Pair;
 import bisq.common.market.Market;
+import bisq.common.monetary.PriceQuote;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import bisq.offer.price.OfferPriceFormatter;
@@ -131,6 +132,46 @@ public class PriceSpecFormatter {
 
         // Market price
         return new Pair<>(PriceFormatter.formatWithCode(marketPrice.get().getPriceQuote(), true), PercentageFormatter.formatToPercentWithSignAndSymbol(0));
+    }
+
+    /**
+     * Calculates the price as a percentage relative to the market price at the time of the contract creation.
+     *
+     * @param priceQuote       The price quote that was agreed upon (from BisqEasyContract.getPriceQuote())
+     * @param priceSpec        The price specification to determine the markup type
+     * @param marketPriceValue The market price value at the time (from BisqEasyContract.getMarketPrice())
+     * @param market           The market
+     * @return A String with the formatted percentage relative to historical market price
+     */
+    public static String getFormattedPriceAsPercentage(PriceQuote priceQuote,
+                                                       PriceSpec priceSpec,
+                                                       long marketPriceValue,
+                                                       Market market) {
+        if (priceSpec instanceof FixPriceSpec) {
+            if (market == null) {
+                log.warn("No market selected");
+                return "";
+            }
+            if (priceQuote == null) {
+                log.warn("Price quote is null");
+                return "";
+            }
+            if (marketPriceValue <= 0) {
+                log.warn("Invalid market price value: {}", marketPriceValue);
+                return "";
+            }
+            // For fixed price, calculate the percentage relative to historical market price
+            PriceQuote historicalMarketPrice = PriceQuote.fromPrice(marketPriceValue, market);
+            double percentage = PriceUtil.getPercentageToMarketPrice(historicalMarketPrice, priceQuote);
+            return PercentageFormatter.formatToPercentWithSignAndSymbol(percentage);
+        }
+
+        if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
+            return PercentageFormatter.formatToPercentWithSignAndSymbol(floatPriceSpec.getPercentage());
+        }
+
+        // market price
+        return PercentageFormatter.formatToPercentWithSignAndSymbol(0);
     }
 
     public static String getFormattedPriceSpecWithOfferPrice(PriceSpec priceSpec,
