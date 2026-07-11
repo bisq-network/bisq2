@@ -135,6 +135,22 @@ public class PriceSpecFormatter {
         return PercentageFormatter.formatToPercentWithSignAndSymbol(0);
     }
 
+    public static String getFormattedPriceSpecWithoutPrice(PriceSpec priceSpec) {
+        if (priceSpec instanceof FixPriceSpec) {
+            return Res.get("priceSpecFormatter.fixPrice");
+        }
+
+        if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
+            String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
+            return Res.get(floatPriceSpec.getPercentage() >= 0
+                            ? "priceSpecFormatter.floatPrice.above"
+                            : "priceSpecFormatter.floatPrice.below",
+                    percent);
+        }
+        // market price
+        return Res.get("priceSpecFormatter.marketPrice");
+    }
+
     public static String getFormattedPriceSpecWithOfferPrice(PriceSpec priceSpec,
                                                              MarketPriceService marketPriceService,
                                                              Offer<?, ?> offer) {
@@ -145,18 +161,18 @@ public class PriceSpecFormatter {
     public static String getFormattedPriceSpecWithPrice(PriceSpec priceSpec, String formattedPrice) {
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
             String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-            return Res.get("priceSpecFormatter.fixPrice", price);
+            return String.format("%s\n%s", Res.get("priceSpecFormatter.fixPrice"), price);
         }
 
         if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
-            return Res.get(floatPriceSpec.getPercentage() >= 0
-                            ? "priceSpecFormatter.floatPrice.above"
-                            : "priceSpecFormatter.floatPrice.below",
-                    percent,
+            return String.format("%s\n%s", Res.get(floatPriceSpec.getPercentage() >= 0
+                                    ? "priceSpecFormatter.floatPrice.above"
+                                    : "priceSpecFormatter.floatPrice.below",
+                            percent),
                     formattedPrice);
         }
         // market price
-        return Res.get("priceSpecFormatter.marketPrice", formattedPrice);
+        return String.format("%s\n%s", Res.get("priceSpecFormatter.marketPrice"), formattedPrice);
     }
 }

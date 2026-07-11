@@ -101,7 +101,7 @@ public class BisqEasyTradeHistoryListItem implements DateTableItem {
         hasFixPrice = priceSpec instanceof FixPriceSpec;
         priceString = PriceFormatter.format(trade.getPriceQuote());
         priceWithCodeString = PriceFormatter.formatWithCode(trade.getPriceQuote());
-        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithPrice(priceSpec, priceWithCodeString);
+        priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithoutPrice(priceSpec);
         pricePercentage = PriceSpecFormatter.getFormattedPriceAsPercentage(trade.getPriceQuote(), priceSpec, contract.getMarketPrice(), market);
         priceModality = priceSpec.getDisplayName();
 

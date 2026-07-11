@@ -197,11 +197,11 @@ public class MuSigOfferListItem {
                     this.priceSpecAsPercent = priceSpecAsPercent;
                     formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
                     PriceSpec priceSpec = offer.getPriceSpec();
-                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, marketPriceService, offer);
                     offerPriceWithSpec = priceTooltip.replace("\n", ": ");
                     Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket());
                     priceWithCodeString = priceQuote.map(PriceFormatter::formatWithCode).orElse("");
                     priceAsLong = priceQuote.map(PriceQuote::getValue).orElse(0L);
+                    priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithoutPrice(priceSpec);
                 });
     }
 
