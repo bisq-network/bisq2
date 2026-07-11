@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.mu_sig.offer;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
@@ -120,10 +119,11 @@ public class MuSigOfferUtil {
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
 
-                    Pair<String, String> pricePair = item.getPricePair();
-                    Label price = new Label(pricePair.getFirst());
+                    Label price = new Label(item.getPriceWithCodeString());
+                    price.setMinWidth(Label.USE_PREF_SIZE);
                     setupPriceIconLabel(item.isHasFixPrice());
-                    Label pricePercentage = new Label(pricePair.getSecond());
+                    Label pricePercentage = new Label(item.getFormattedPercentagePrice());
+                    pricePercentage.setMinWidth(Label.USE_PREF_SIZE);
                     hbox.getChildren().addAll(price, priceIconLabel, pricePercentage);
 
                     tooltip.setText(item.getPriceTooltip());

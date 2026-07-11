@@ -40,6 +40,7 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
+import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -85,10 +86,9 @@ public class MuSigOfferListItem {
     private Optional<String> cannotTakeOfferReason = Optional.empty();
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na"),
-            price = Res.get("data.na"),
+            priceWithCodeString = Res.get("data.na"),
             priceTooltip = Res.get("data.na"),
             offerPriceWithSpec = Res.get("data.na");
-    private Pair<String, String> pricePair;
     private long priceAsLong = 0;
 
     public MuSigOfferListItem(MuSigOffer offer,
@@ -199,9 +199,9 @@ public class MuSigOfferListItem {
                     PriceSpec priceSpec = offer.getPriceSpec();
                     priceTooltip = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(priceSpec, marketPriceService, offer);
                     offerPriceWithSpec = priceTooltip.replace("\n", ": ");
-                    price = PriceSpecFormatter.getFormattedPrice(priceSpec, marketPriceService, offer.getMarket());
-                    pricePair = PriceSpecFormatter.getFormattedPricePair(priceSpec, marketPriceService, offer.getMarket());
-                    priceAsLong = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket()).map(PriceQuote::getValue).orElse(0L);
+                    Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, offer.getMarket());
+                    priceWithCodeString = priceQuote.map(PriceFormatter::formatWithCode).orElse("");
+                    priceAsLong = priceQuote.map(PriceQuote::getValue).orElse(0L);
                 });
     }
 

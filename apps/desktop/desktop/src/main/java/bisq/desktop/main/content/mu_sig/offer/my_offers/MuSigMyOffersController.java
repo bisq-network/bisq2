@@ -176,7 +176,7 @@ public class MuSigMyOffersController implements Controller {
                         || item.getOfferDateString().toLowerCase().contains(string)
                         || item.getBaseAmountAsString().contains(string)
                         || item.getQuoteAmountAsString().contains(string)
-                        || item.getPrice().contains(string)
+                        || item.getPriceWithCodeString().contains(string)
                         || item.getPaymentMethodsAsString().toLowerCase().contains(string));
         applyPredicates();
     }

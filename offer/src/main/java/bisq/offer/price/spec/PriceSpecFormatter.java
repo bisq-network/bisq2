@@ -19,7 +19,6 @@ package bisq.offer.price.spec;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.data.Pair;
 import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.i18n.Res;
@@ -94,44 +93,6 @@ public class PriceSpecFormatter {
         }
         return PriceFormatter.format(marketPrice.get().getPriceQuote(), true);
 
-    }
-
-    public static Pair<String, String> getFormattedPricePair(PriceSpec priceSpec,
-                                                             MarketPriceService marketPriceService,
-                                                             Market market) {
-        String missingPriceInfo = Res.get("data.na");
-        if (market == null) {
-            log.warn("No market price selected");
-            return new Pair<>(missingPriceInfo, "");
-        }
-
-        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
-        if (marketPrice.isEmpty()) {
-            log.warn("No market price available for selected market {}", market);
-            return new Pair<>(missingPriceInfo, "");
-        }
-
-        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
-            String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-            String percentage = marketPrice.map(MarketPrice::getPriceQuote)
-                    .map(priceQuote -> PriceUtil.getPercentageToMarketPrice(priceQuote, fixPriceSpec.getPriceQuote()))
-                    .map(PercentageFormatter::formatToPercentWithSignAndSymbol)
-                    .orElse(missingPriceInfo);
-            return new Pair<>(price, percentage);
-        }
-
-        if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
-            double percentage = floatPriceSpec.getPercentage();
-            String currentPrice = marketPrice.map(MarketPrice::getPriceQuote)
-                    .map(priceQuote -> PriceUtil.fromMarketPriceMarkup(priceQuote, percentage))
-                    .map(priceQuote -> PriceFormatter.formatWithCode(priceQuote, true))
-                    .orElse(missingPriceInfo);
-            String percentageAsString = PercentageFormatter.formatToPercentWithSignAndSymbol(percentage);
-            return new Pair<>(currentPrice, percentageAsString);
-        }
-
-        // Market price
-        return new Pair<>(PriceFormatter.formatWithCode(marketPrice.get().getPriceQuote(), true), PercentageFormatter.formatToPercentWithSignAndSymbol(0));
     }
 
     /**
