@@ -191,7 +191,7 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                 .title(Res.get("muSig.offer.mine.table.header.price"))
                 .left()
                 .minWidth(220)
-                .comparator(Comparator.comparing(MuSigOfferListItem::getPriceWithCodeString))
+                .comparator(Comparator.comparingLong(MuSigOfferListItem::getPriceAsLong))
                 .setCellFactory(MuSigOfferUtil.getPriceCellFactory())
                 .includeForCsv(false)
                 .build());
