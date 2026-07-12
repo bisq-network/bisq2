@@ -85,6 +85,7 @@ public class MuSigTakeOfferReviewController implements Controller {
     private final MuSigService muSigService;
     private Pin errorMessagePin, peersErrorMessagePin;
     private UIScheduler timeoutScheduler;
+    private UIScheduler delayedSuccessScheduler;
 
     public MuSigTakeOfferReviewController(ServiceProvider serviceProvider,
                                           Consumer<Boolean> mainButtonsVisibleHandler,
@@ -193,6 +194,13 @@ public class MuSigTakeOfferReviewController implements Controller {
             // We have 120 seconds socket timeout, so we should never
             // get triggered here, as the message will be sent as mailbox message
 
+            // A previous attempt's observers must not survive into this attempt (retry case).
+            if (errorMessagePin != null) {
+                errorMessagePin.unbind();
+            }
+            if (peersErrorMessagePin != null) {
+                peersErrorMessagePin.unbind();
+            }
             errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                         if (errorMessage != null) {
                             UIThread.run(() -> {
@@ -247,7 +255,10 @@ public class MuSigTakeOfferReviewController implements Controller {
             //  to get notified about the delivery state.
             model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SENT);
             // todo simulate a small delay until we have a solution for the above issue
-            UIScheduler.run(() -> {
+            if (delayedSuccessScheduler != null) {
+                delayedSuccessScheduler.stop();
+            }
+            delayedSuccessScheduler = UIScheduler.run(() -> {
                 if (trade.getErrorMessage() != null || trade.getPeersErrorMessage() != null) {
                     // The maker rejected the take offer; the error observer already informed the user.
                     return;
@@ -255,6 +266,19 @@ public class MuSigTakeOfferReviewController implements Controller {
                 model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS);
             }).after(200);
         } catch (TradingNotAllowedException e) {
+            // The timeout scheduler and error observers were already set up above; release them so
+            // the aborted attempt cannot fire the timeout navigation later or stack observers on retry.
+            if (timeoutScheduler != null) {
+                timeoutScheduler.stop();
+            }
+            if (errorMessagePin != null) {
+                errorMessagePin.unbind();
+                errorMessagePin = null;
+            }
+            if (peersErrorMessagePin != null) {
+                peersErrorMessagePin.unbind();
+                peersErrorMessagePin = null;
+            }
             UIThread.run(() -> new Popup().warning(e.getMessage()).show());
         } catch (UserProfileBannedException e) {
             UIThread.run(() -> {
@@ -308,6 +332,9 @@ public class MuSigTakeOfferReviewController implements Controller {
     private void resetTakeOfferStatusOnFailure() {
         if (timeoutScheduler != null) {
             timeoutScheduler.stop();
+        }
+        if (delayedSuccessScheduler != null) {
+            delayedSuccessScheduler.stop();
         }
         mainButtonsVisibleHandler.accept(true);
         model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.NOT_STARTED);
@@ -370,6 +397,9 @@ public class MuSigTakeOfferReviewController implements Controller {
         }
         if (timeoutScheduler != null) {
             timeoutScheduler.stop();
+        }
+        if (delayedSuccessScheduler != null) {
+            delayedSuccessScheduler.stop();
         }
     }
 

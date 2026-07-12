@@ -17,17 +17,58 @@
 
 package bisq.user.profile;
 
+import bisq.network.NetworkService;
+import bisq.persistence.DbSubDirectory;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceService;
+import bisq.security.SecurityService;
+import bisq.user.contact_list.ContactListService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 public class UserProfileServiceTest {
+    @Test
+    void isChatUserIgnoredDoesNotRequireProfileToBePresent() {
+        UserProfileService service = createService();
+
+        UserProfile ignoredUser = mock(UserProfile.class);
+        when(ignoredUser.getId()).thenReturn("ignoredProfileId");
+        service.ignoreUserProfile(ignoredUser);
+
+        // The ignored user's profile is not in the local profile map, only its id is on the ignore list
+        assertTrue(service.findUserProfile("ignoredProfileId").isEmpty());
+        assertTrue(service.isChatUserIgnored("ignoredProfileId"));
+        assertFalse(service.isChatUserIgnored("otherProfileId"));
+
+        service.undoIgnoreUserProfile(ignoredUser);
+        assertFalse(service.isChatUserIgnored("ignoredProfileId"));
+    }
+
+    private static UserProfileService createService() {
+        PersistenceService persistenceService = mock(PersistenceService.class);
+        @SuppressWarnings("unchecked")
+        Persistence<UserProfileStore> persistence = mock(Persistence.class);
+        when(persistence.persistAsync(any(UserProfileStore.class))).thenReturn(CompletableFuture.completedFuture(null));
+        when(persistenceService.getOrCreatePersistence(any(), eq(DbSubDirectory.SETTINGS), any(UserProfileStore.class)))
+                .thenReturn(persistence);
+        return new UserProfileService(persistenceService,
+                mock(SecurityService.class),
+                mock(NetworkService.class),
+                mock(ContactListService.class));
+    }
+
     @Test
     void testShouldAddNymToNickName() {
         String nickName;

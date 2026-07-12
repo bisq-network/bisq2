@@ -63,6 +63,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
     private ComboBox<FiatPaymentMethod> fiatPaymentMethodsComboBox;
     private Subscription showCreateOfferSuccessPin, takeOfferStatusPin;
     private boolean minWaitingTimePassed = false;
+    private UIScheduler minWaitingTimeScheduler;
 
     TradeWizardReviewView(TradeWizardReviewModel model,
                           TradeWizardReviewController controller,
@@ -298,6 +299,7 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
         takeOfferStatusPin.unsubscribe();
 
         takeOfferSendMessageWaitingAnimation.stop();
+        stopMinWaitingTimeScheduler();
 
         if (bitcoinPaymentMethodsComboBox != null) {
             bitcoinPaymentMethodsComboBox.setOnAction(null);
@@ -316,7 +318,8 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             Transitions.slideInTop(sendTakeOfferMessageOverlay, 450);
             takeOfferSendMessageWaitingAnimation.playIndefinitely();
 
-            UIScheduler.run(() -> {
+            stopMinWaitingTimeScheduler();
+            minWaitingTimeScheduler = UIScheduler.run(() -> {
                 minWaitingTimePassed = true;
                 if (model.getTakeOfferStatus().get() == TradeWizardReviewModel.TakeOfferStatus.SUCCESS) {
                     sendTakeOfferMessageOverlay.setVisible(false);
@@ -332,7 +335,15 @@ class TradeWizardReviewView extends View<StackPane, TradeWizardReviewModel, Trad
             sendTakeOfferMessageOverlay.setVisible(false);
             takeOfferSuccessOverlay.setVisible(false);
             takeOfferSendMessageWaitingAnimation.stop();
+            stopMinWaitingTimeScheduler();
             Transitions.removeEffect(gridPane);
+        }
+    }
+
+    private void stopMinWaitingTimeScheduler() {
+        if (minWaitingTimeScheduler != null) {
+            minWaitingTimeScheduler.stop();
+            minWaitingTimeScheduler = null;
         }
     }
 

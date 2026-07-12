@@ -496,6 +496,13 @@ public class TradeWizardReviewController implements Controller {
         log.info("Selected mediator for trade {}: {}", trade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
         model.setBisqEasyTrade(trade);
 
+        // A previous attempt's observers must not survive into this attempt (retry case).
+        if (errorMessagePin != null) {
+            errorMessagePin.unbind();
+        }
+        if (peersErrorMessagePin != null) {
+            peersErrorMessagePin.unbind();
+        }
         errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                     if (errorMessage != null) {
                         UIThread.run(() -> {

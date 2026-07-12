@@ -147,9 +147,9 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
     }
 
     public boolean isChatUserIgnored(String profileId) {
-        return findUserProfile(profileId)
-                .map(this::isChatUserIgnored)
-                .orElse(false);
+        // Must not depend on the profile being present locally, otherwise an ignored user
+        // would not be detected while their profile is not (yet) received from the network.
+        return getIgnoredUserProfileIds().contains(profileId);
     }
 
     public boolean isChatUserIgnored(UserProfile userProfile) {
