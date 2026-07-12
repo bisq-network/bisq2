@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.history;
 
-import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqMenuItem;
@@ -346,10 +345,9 @@ public class BisqEasyHistoryView extends View<VBox, BisqEasyHistoryModel, BisqEa
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
 
-                    Pair<String, String> pricePair = item.getPricePair();
-                    Label price = new Label(pricePair.getFirst());
+                    Label price = new Label(item.getPriceWithCodeString());
                     setupPriceIconLabel(item.isHasFixPrice());
-                    Label pricePercentage = new Label(pricePair.getSecond());
+                    Label pricePercentage = new Label(item.getPricePercentage());
                     hbox.getChildren().addAll(price, priceIconLabel, pricePercentage);
 
                     tooltip.setText(item.getPriceTooltip());

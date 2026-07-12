@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.history;
 
-import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
 import bisq.common.observable.Pin;
@@ -50,7 +49,6 @@ public class BisqEasyHistoryController implements Controller {
     private final BisqEasyHistoryModel model;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final ReputationService reputationService;
-    private final MarketPriceService marketPriceService;
     private final DontShowAgainService dontShowAgainService;
     private final ChatService chatService;
     private Pin closedTradesPin;
@@ -62,7 +60,6 @@ public class BisqEasyHistoryController implements Controller {
         view = new BisqEasyHistoryView(model, this);
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        marketPriceService = serviceProvider.getBisqEasyService().getMarketPriceService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
         chatService = serviceProvider.getChatService();
     }
@@ -74,7 +71,7 @@ public class BisqEasyHistoryController implements Controller {
             public void onAdded(BisqEasyClosedTrade closedTrade) {
                 if (knownTradeIds.add(closedTrade.trade().getId())) {
                     model.getBisqEasyTradeHistoryListItems().add(
-                            new BisqEasyTradeHistoryListItem(closedTrade, reputationService, marketPriceService));
+                            new BisqEasyTradeHistoryListItem(closedTrade, reputationService));
                     updatePlaceholderText();
                 }
             }
