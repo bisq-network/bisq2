@@ -62,6 +62,7 @@ import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import lombok.Getter;
@@ -190,9 +191,12 @@ public class TradeStateController implements Controller {
                                                 .dontShowAgainId(key)
                                                 .show();
                                     } else {
+                                        String displayMessage = trade.getPeersTradeProtocolFailure() == TradeProtocolFailure.MEDIATORS_NOT_MATCHING
+                                                ? Res.get("bisqEasy.openTrades.failedAtPeer.mediatorsNotMatching")
+                                                : peersErrorMessage;
                                         new Popup().headline(Res.get("bisqEasy.openTrades.atPeer.failure.popup.headline"))
                                                 .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
-                                                        peersErrorMessage,
+                                                        displayMessage,
                                                         Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
                                                 .dontShowAgainId(key)
                                                 .show();
