@@ -25,8 +25,6 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.wallet.coin_management.WalletCoinManagementController;
 import bisq.desktop.main.content.wallet.dashboard.WalletDashboardController;
-import bisq.desktop.main.content.wallet.receive.WalletReceiveController;
-import bisq.desktop.main.content.wallet.send.WalletSendController;
 import bisq.desktop.main.content.wallet.settings.WalletSettingsController;
 import bisq.desktop.main.content.wallet.txs.WalletTxsController;
 import bisq.desktop.navigation.NavigationTarget;
@@ -55,8 +53,6 @@ public class WalletController extends ContentTabController<WalletModel> {
         return switch (navigationTarget) {
             case WALLET_DASHBOARD -> Optional.of(new WalletDashboardController(serviceProvider));
             case WALLET_COIN_MANAGEMENT -> Optional.of(new WalletCoinManagementController(serviceProvider));
-            case WALLET_SEND -> Optional.of(new WalletSendController(serviceProvider));
-            case WALLET_RECEIVE -> Optional.of(new WalletReceiveController(serviceProvider));
             case WALLET_TXS -> Optional.of(new WalletTxsController(serviceProvider));
             case WALLET_SETTINGS -> Optional.of(new WalletSettingsController(serviceProvider));
             default -> Optional.empty();
