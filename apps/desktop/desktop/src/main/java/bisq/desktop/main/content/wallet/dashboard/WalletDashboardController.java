@@ -31,6 +31,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.wallet.WalletService;
+import bisq.wallet.vo.AddressBalance;
 import bisq.wallet.vo.Transaction;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
@@ -55,7 +56,8 @@ public class WalletDashboardController implements Controller {
     private final WalletService walletService;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
-    private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin, selectedMarketPin;
+    private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin, selectedMarketPin,
+            addressBalancesPin;
     private Subscription balanceAsCoinPin, selectedMarketItemPin;
 
     public WalletDashboardController(ServiceProvider serviceProvider) {
@@ -77,6 +79,10 @@ public class WalletDashboardController implements Controller {
         transactionsPin = FxBindings.<Transaction, WalletTxListItem>bind(model.getWalletTxListItems())
                 .map(WalletTxListItem::new)
                 .to(walletService.getTransactions());
+
+        addressBalancesPin = FxBindings.<AddressBalance, WalletAddressBalanceListItem>bind(model.getWalletAddressBalanceListItems())
+                .map(WalletAddressBalanceListItem::new)
+                .to(walletService.getAddressBalances());
 
         balanceAsCoinPin = EasyBind.subscribe(model.getBalanceAsCoinProperty(), balance ->
                 UIThread.run(() -> {
@@ -113,6 +119,7 @@ public class WalletDashboardController implements Controller {
                     }
                 });
         walletService.requestTransactions();
+        walletService.requestAddressBalances();
 
         setSelectedMarket();
     }
@@ -121,6 +128,7 @@ public class WalletDashboardController implements Controller {
     public void onDeactivate() {
         balancePin.unbind();
         transactionsPin.unbind();
+        addressBalancesPin.unbind();
         balanceAsCoinPin.unsubscribe();
         selectedMarketItemPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();

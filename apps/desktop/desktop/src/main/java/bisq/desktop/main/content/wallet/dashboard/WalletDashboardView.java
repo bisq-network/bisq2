@@ -69,7 +69,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final DropdownMenu overviewMenu;
     private final OverviewMenuItem latestTxsMenuItem, fundsMenuItem;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
-    private final BisqTableView<WalletFundsListItem> fundsTableView;
+    private final BisqTableView<WalletAddressBalanceListItem> fundsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
     private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsPin, isOverviewMenuShowingPin;
@@ -162,6 +162,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         overviewMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         overviewMenu.setContent(latestTxsHeadlineLabel);
         overviewMenu.setMaxWidth(Region.USE_PREF_SIZE);
+        overviewMenu.setOpenToTheRight(true);
         Label latestTxsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
         // TODO: Add smaller icons
         ImageView latestTxsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
@@ -179,10 +180,9 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         latestTxsTableView.hideVerticalScrollbar();
         configLatestTxsTable();
 
-        fundsTableView = new BisqTableView<>(model.getWalletFundsListItems(), false);
+        fundsTableView = new BisqTableView<>(model.getSortedWalletAddressBalanceListItems(), false);
         fundsTableView.getStyleClass().add("overview-table");
         fundsTableView.setFixedCellSize(TABLE_CELL_HEIGHT);
-        fundsTableView.hideVerticalScrollbar();
         configFundsTable();
 
         VBox overviewVBox = new VBox(20, overviewMenu, latestTxsTableView, fundsTableView);
@@ -241,6 +241,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewDetached() {
         currencyConverterDropdownListMenu.dispose();
+        latestTxsMenuItem.dispose();
+        fundsMenuItem.dispose();
 
         btcBalanceLabel.textProperty().unbind();
         currencyConverterAmountLabel.textProperty().unbind();
@@ -366,31 +368,31 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     }
 
     private void configFundsTable() {
-        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletFundsListItem>()
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletAddressBalanceListItem>()
                 .title(Res.get("wallet.funds.address"))
                 .minWidth(180)
                 .left()
-                .valueSupplier(WalletFundsListItem::getAddress)
+                .valueSupplier(WalletAddressBalanceListItem::getAddress)
                 .build());
 
-        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletFundsListItem>()
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletAddressBalanceListItem>()
                 .title(Res.get("wallet.funds.usage"))
                 .minWidth(100)
                 .left()
-                .valueSupplier(WalletFundsListItem::getUsageAsString)
+                .valueSupplier(WalletAddressBalanceListItem::getUsageAsString)
                 .build());
 
-        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletFundsListItem>()
-                .title(Res.get("wallet.funds.amount"))
-                .minWidth(70)
-                .valueSupplier(WalletFundsListItem::getAmountAsString)
-                .build());
-
-        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletFundsListItem>()
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletAddressBalanceListItem>()
                 .title(Res.get("wallet.funds.confirmations"))
                 .minWidth(70)
-                .valueSupplier(WalletFundsListItem::getNumConfirmationsAsString)
+                .valueSupplier(WalletAddressBalanceListItem::getNumConfirmationsAsString)
                 .right()
+                .build());
+
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletAddressBalanceListItem>()
+                .title(Res.get("wallet.funds.amount"))
+                .minWidth(70)
+                .valueSupplier(WalletAddressBalanceListItem::getAmountAsString)
                 .build());
     }
 

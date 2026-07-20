@@ -20,6 +20,7 @@ package bisq.desktop.main.content.wallet.dashboard;
 import bisq.common.monetary.Coin;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.wallet.vo.AddressBalance;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,19 +28,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class WalletFundsListItem {
+public class WalletAddressBalanceListItem {
     @EqualsAndHashCode.Include
-    private final String address;
+    private final AddressBalance addressBalance;
 
-    private final String usageAsString, amountAsString, numConfirmationsAsString;
+    private final String address, usageAsString, amountAsString, numConfirmationsAsString;
     private final Coin amount;
     private final int numUsage, numConfirmations;
 
-    public WalletFundsListItem(String address, long amount, int numUsage, int numConfirmations) {
-        this.address = address;
-        this.numUsage = numUsage;
-        this.numConfirmations = numConfirmations;
-        this.amount = Coin.asBtcFromValue(amount);
+    public WalletAddressBalanceListItem(AddressBalance addressBalance) {
+        this.addressBalance = addressBalance;
+
+        address = addressBalance.getAddress();
+        numUsage = addressBalance.getNumUsage();
+        numConfirmations = addressBalance.getNumConfirmations();
+        amount = Coin.asBtcFromValue(addressBalance.getAmount());
         usageAsString = Res.get("wallet.funds.usage.description." + (numUsage == 1 ? "single" : "plural"), numUsage);
         amountAsString = AmountFormatter.formatBaseAmount(this.amount);
         numConfirmationsAsString = String.valueOf(numConfirmations);
