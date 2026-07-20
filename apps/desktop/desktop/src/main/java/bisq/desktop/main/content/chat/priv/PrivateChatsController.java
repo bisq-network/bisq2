@@ -48,7 +48,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
     private final ChatNotificationService chatNotificationService;
     private final ReputationService reputationService;
     private final LeavePrivateChatManager leavePrivateChatManager;
-    private Pin channelItemPin, channelsPin, changedChatNotificationPin;
+    private Pin channelItemPin, channelsPin, changedChatNotificationPin, ignoredUserProfileIdsPin;
     private Subscription openPrivateChatsPin;
 
     public PrivateChatsController(ServiceProvider serviceProvider,
@@ -80,6 +80,8 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
+        ignoredUserProfileIdsPin = userProfileService.getIgnoredUserProfileIds().addObserver(this::ignoredUserProfileIdsChanged);
+
         maybeSelectFirst();
     }
 
@@ -93,6 +95,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
         resetSelectedChildTarget();
         openPrivateChatsPin.unsubscribe();
         changedChatNotificationPin.unbind();
+        ignoredUserProfileIdsPin.unbind();
     }
 
     @Override
@@ -103,6 +106,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
             if (chatChannel == null) {
                 model.getSelectedItem().set(null);
                 model.setPeersReputationScore(null);
+                model.getPeersUserProfileIgnored().set(false);
                 model.getPeersUserProfile().set(null);
                 maybeSelectFirst();
             }
@@ -111,6 +115,7 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                 // Set reputation score first since observable is userProfile, which updates both user and reputation
                 UserProfile peer = userProfileService.getManagedUserProfile(channel.getPeer());
                 model.setPeersReputationScore(reputationService.getReputationScore(peer));
+                model.getPeersUserProfileIgnored().set(userProfileService.isChatUserIgnored(peer));
                 model.getPeersUserProfile().set(peer);
 
                 model.getListItems().stream()
@@ -144,6 +149,15 @@ public abstract class PrivateChatsController extends ChatController<PrivateChats
                     "Not possible to leave a channel which is not a private chat.");
             leavePrivateChatManager.leaveChannel((PrivateChatChannel<?>) selectedChannel);
         }
+    }
+
+    private void ignoredUserProfileIdsChanged() {
+        UIThread.run(() -> {
+            model.getListItems().forEach(item ->
+                    item.setPeerIgnored(userProfileService.isChatUserIgnored(item.getPeersUserProfile())));
+            UserProfile peer = model.getPeersUserProfile().get();
+            model.getPeersUserProfileIgnored().set(peer != null && userProfileService.isChatUserIgnored(peer));
+        });
     }
 
     private void channelsChanged() {
