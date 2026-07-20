@@ -24,6 +24,8 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownListMenu;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
@@ -31,6 +33,7 @@ import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -39,12 +42,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.scene.control.TableView;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -57,12 +62,16 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
     private final Button send, receive;
     private final Label btcBalanceLabel, availableBalanceAmountLabel, reservedFundsAmountLabel,
-            lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel;
+            lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel, latestTxsHeadlineLabel,
+            fundsHeadlineLabel;
+    private final ImageView latestTxsHeadlineActiveIcon, latestTxsHeadlineDefaultIcon, fundsHeadlineActiveIcon, fundsHeadlineDefaultIcon;
     private final DropdownListMenu<CurrencyConverterListItem> currencyConverterDropdownListMenu;
+    private final DropdownMenu overviewMenu;
+    private final OverviewMenuItem latestTxsMenuItem, fundsMenuItem;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
-    private Subscription selectedMarketPin, isMenuShowingPin;
+    private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsPin, isOverviewMenuShowingPin;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -134,10 +143,35 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         headerHBox.setPadding(new Insets(0, 50, 0, 50));
 
         // Latest txs
-        Label latestTxsHeadline = new Label(Res.get("wallet.dashboard.latestTxs.headline"));
-        latestTxsHeadline.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
-        latestTxsHeadline.setGraphic(ImageUtil.getImageViewById("latest-txs-grey"));
-        latestTxsHeadline.setGraphicTextGap(10);
+        latestTxsHeadlineActiveIcon = ImageUtil.getImageViewById("latest-txs-grey"); // TODO: Add active icon
+        latestTxsHeadlineDefaultIcon = ImageUtil.getImageViewById("latest-txs-grey");
+        latestTxsHeadlineLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
+        latestTxsHeadlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
+        latestTxsHeadlineLabel.setGraphic(latestTxsHeadlineDefaultIcon);
+        latestTxsHeadlineLabel.setGraphicTextGap(10);
+
+        fundsHeadlineActiveIcon = ImageUtil.getImageViewById("bisq-btc-logo"); // TODO: Add active and inactive icons
+        fundsHeadlineDefaultIcon = ImageUtil.getImageViewById("bisq-btc-logo");
+        fundsHeadlineLabel = new Label(Res.get("wallet.dashboard.overviewMenu.funds"));
+        fundsHeadlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
+        fundsHeadlineLabel.setGraphic(fundsHeadlineDefaultIcon);
+        fundsHeadlineLabel.setGraphicTextGap(10);
+
+        // TODO: Make bigger icons
+        overviewMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        overviewMenu.setContent(latestTxsHeadlineLabel);
+        overviewMenu.setMaxWidth(Region.USE_PREF_SIZE);
+        overviewMenu.setOpenToTheRight(true);
+        Label latestTxsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
+        // TODO: Add smaller icons
+        ImageView latestTxsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
+        ImageView latestTxsActiveMenuIcon = ImageUtil.getImageViewById("icon-info-white");
+        latestTxsMenuItem = new OverviewMenuItem(latestTxsMenuLabel, latestTxsDefaultMenuIcon, latestTxsActiveMenuIcon);
+        Label fundsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.funds"));
+        ImageView fundsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
+        ImageView fundsActiveMenuIcon = ImageUtil.getImageViewById("icon-info-white");
+        fundsMenuItem = new OverviewMenuItem(fundsMenuLabel, fundsDefaultMenuIcon, fundsActiveMenuIcon);
+        overviewMenu.addMenuItems(latestTxsMenuItem, fundsMenuItem);
 
         latestTxsTableView = new BisqTableView<>(model.getVisibleWalletTxListItems(), false);
         latestTxsTableView.getStyleClass().add("latest-txs-table");
@@ -145,7 +179,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         latestTxsTableView.hideVerticalScrollbar();
         configLatestTxsTable();
 
-        VBox latestTxsVBox = new VBox(20, latestTxsHeadline, latestTxsTableView);
+        VBox latestTxsVBox = new VBox(20, overviewMenu, latestTxsTableView);
         latestTxsVBox.setPadding(new Insets(0, 50, 0, 50));
 
         VBox contentBox = new VBox(20);
@@ -175,7 +209,9 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         lockedFundsAmountLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
 
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket -> UIThread.run(this::updateSelectedMarket));
-        isMenuShowingPin = EasyBind.subscribe(currencyConverterDropdownListMenu.getIsMenuShowing(), isMenuShowing -> UIThread.run(this::updateTableViewSelectionToMarketItem));
+        isCurrencyConverterMenuShowingPin = EasyBind.subscribe(currencyConverterDropdownListMenu.getIsMenuShowing(), isMenuShowing -> UIThread.run(this::updateTableViewSelectionToMarketItem));
+        shouldShowLatestTxsPin = EasyBind.subscribe(model.getShouldShowLatestTxs(), this::applyShowLatestTxs);
+        isOverviewMenuShowingPin = EasyBind.subscribe(overviewMenu.getIsMenuShowing(), this::updateMenuItemsStyle);
 
         latestTxsTableView.heightProperty().addListener(latestTxsTableViewHeightListener);
         model.getSortedWalletTxListItems().addListener(sortedWalletTxListItemsListener);
@@ -183,6 +219,14 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         send.setOnAction(e -> controller.onSend());
         receive.setOnAction(e -> controller.onReceive());
+        latestTxsHeadlineLabel.setOnMouseEntered(e -> updateOverviewMenuHeadlineIcon(latestTxsHeadlineLabel, latestTxsHeadlineActiveIcon));
+        latestTxsHeadlineLabel.setOnMouseClicked(e -> updateOverviewMenuHeadlineIcon(latestTxsHeadlineLabel, latestTxsHeadlineActiveIcon));
+        latestTxsHeadlineLabel.setOnMouseExited(e -> updateOverviewMenuHeadlineIcon(latestTxsHeadlineLabel, latestTxsHeadlineDefaultIcon));
+        fundsHeadlineLabel.setOnMouseEntered(e -> updateOverviewMenuHeadlineIcon(fundsHeadlineLabel, fundsHeadlineActiveIcon));
+        fundsHeadlineLabel.setOnMouseClicked(e -> updateOverviewMenuHeadlineIcon(fundsHeadlineLabel, fundsHeadlineActiveIcon));
+        fundsHeadlineLabel.setOnMouseExited(e -> updateOverviewMenuHeadlineIcon(fundsHeadlineLabel, fundsHeadlineDefaultIcon));
+        latestTxsMenuItem.setOnAction(e -> controller.onSelectLatestTxsMenuItem());
+        fundsMenuItem.setOnAction(e -> controller.onSelectFundsMenuItem());
 
         updateSelectedMarket();
         updateTableViewSelectionToMarketItem();
@@ -200,13 +244,23 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         lockedFundsAmountLabel.textProperty().unbind();
 
         selectedMarketPin.unsubscribe();
-        isMenuShowingPin.unsubscribe();
+        isCurrencyConverterMenuShowingPin.unsubscribe();
+        shouldShowLatestTxsPin.unsubscribe();
+        isOverviewMenuShowingPin.unsubscribe();
 
         latestTxsTableView.heightProperty().removeListener(latestTxsTableViewHeightListener);
         model.getSortedWalletTxListItems().removeListener(sortedWalletTxListItemsListener);
 
         send.setOnAction(null);
         receive.setOnAction(null);
+        latestTxsHeadlineLabel.setOnMouseEntered(null);
+        latestTxsHeadlineLabel.setOnMouseClicked(null);
+        latestTxsHeadlineLabel.setOnMouseExited(null);
+        fundsHeadlineLabel.setOnMouseEntered(null);
+        fundsHeadlineLabel.setOnMouseClicked(null);
+        fundsHeadlineLabel.setOnMouseExited(null);
+        latestTxsMenuItem.setOnAction(null);
+        fundsMenuItem.setOnAction(null);
     }
 
     private Triple<HBox, Label, Label> createBtcBalanceHBox() {
@@ -344,6 +398,33 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         }
     }
 
+    private void updateOverviewMenuHeadlineIcon(Label headline, ImageView newIcon) {
+        if (headline.getGraphic() != newIcon) {
+            headline.setGraphic(newIcon);
+        }
+    }
+
+    private void applyShowLatestTxs(Boolean showLatestTxs) {
+        latestTxsMenuItem.updateSelection(showLatestTxs);
+        fundsMenuItem.updateSelection(!showLatestTxs);
+        overviewMenu.setContent(showLatestTxs ? latestTxsHeadlineLabel : fundsHeadlineLabel);
+    }
+
+    private void updateMenuItemsStyle(Boolean isMenuShowing) {
+        if (isMenuShowing) {
+            if (model.getShouldShowLatestTxs().get()) {
+                latestTxsMenuItem.showAsActive();
+                fundsMenuItem.showAsDefault();
+            } else {
+                latestTxsMenuItem.showAsDefault();
+                fundsMenuItem.showAsActive();
+            }
+        } else {
+            latestTxsMenuItem.resetStyle();
+            fundsMenuItem.resetStyle();
+        }
+    }
+
     private Callback<TableColumn<CurrencyConverterListItem, CurrencyConverterListItem>, TableCell<CurrencyConverterListItem, CurrencyConverterListItem>> getMarketCellFactory() {
         return column -> new TableCell<>() {
             private static final String HEADER_HOVER_BACKGROUND_COLOR = "-fx-background-color: transparent !important; -fx-cursor: default;";
@@ -435,5 +516,75 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                 setFocusTraversable(false);
             }
         };
+    }
+
+    @Getter
+    private static final class OverviewMenuItem extends DropdownMenuItem {
+        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+        private static final String LABEL_ACTIVE_STYLE = "display-label-active";
+        private static final String LABEL_DEFAULT_STYLE = "display-label-default";
+
+        private final ImageView defaultIcon, activeIcon;
+        private final Label displayLabel;
+
+        private OverviewMenuItem(Label displayLabel, ImageView defaultIcon, ImageView activeIcon) {
+            super("check-white", "check-white", displayLabel);
+
+            this.defaultIcon = defaultIcon;
+            this.activeIcon = activeIcon;
+            this.displayLabel = displayLabel;
+
+            getStyleClass().add("dropdown-menu-item");
+            initialize();
+        }
+
+        private void initialize() {
+            displayLabel.setGraphicTextGap(10);
+            resetStyle();
+
+            getContent().setOnMouseClicked(e -> showAsActive());
+            getContent().setOnMouseEntered(e -> showAsActive());
+            getContent().setOnMouseExited(e -> showAsDefault());
+        }
+
+        public void dispose() {
+            setOnAction(null);
+            getContent().setOnMouseClicked(null);
+            getContent().setOnMouseEntered(null);
+            getContent().setOnMouseExited(null);
+        }
+
+        void updateSelection(boolean isSelected) {
+            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+
+        boolean isSelected() {
+            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
+        }
+
+        void resetStyle() {
+            displayLabel.setGraphic(defaultIcon);
+            resetDisplayLabelStyle();
+            displayLabel.getStyleClass().add(LABEL_DEFAULT_STYLE);
+        }
+
+        private void showAsActive() {
+            displayLabel.setGraphic(activeIcon);
+            resetDisplayLabelStyle();
+            displayLabel.getStyleClass().add(LABEL_ACTIVE_STYLE);
+        }
+
+        private void showAsDefault() {
+            if (isSelected()) {
+                showAsActive();
+                return;
+            }
+            resetStyle();
+        }
+
+        private void resetDisplayLabelStyle() {
+            displayLabel.getStyleClass().remove(LABEL_DEFAULT_STYLE);
+            displayLabel.getStyleClass().remove(LABEL_ACTIVE_STYLE);
+        }
     }
 }

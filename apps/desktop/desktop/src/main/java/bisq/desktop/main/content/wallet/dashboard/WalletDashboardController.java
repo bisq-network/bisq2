@@ -152,6 +152,14 @@ public class WalletDashboardController implements Controller {
         updateFilteredMarketListItems();
     }
 
+    void onSelectLatestTxsMenuItem() {
+        model.getShouldShowLatestTxs().set(true);
+    }
+
+    void onSelectFundsMenuItem() {
+        model.getShouldShowLatestTxs().set(false);
+    }
+
     private void updateCurrencyConverterBalance() {
         Coin btcBalance = model.getBalanceAsCoinProperty().get();
         if (btcBalance == null) {

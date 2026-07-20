@@ -23,7 +23,9 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.presentation.formatters.AmountFormatter;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -64,6 +66,8 @@ public class WalletDashboardModel implements Model {
     );
     private final StringProperty formattedCurrencyConverterAmountProperty = new SimpleStringProperty();
     private final StringProperty currencyConverterCodeProperty = new SimpleStringProperty();
+
+    private final BooleanProperty shouldShowLatestTxs = new SimpleBooleanProperty();
 
     private final ObservableList<WalletTxListItem> walletTxListItems = FXCollections.observableArrayList();
     private final FilteredList<WalletTxListItem> filteredWalletTxListItems = new FilteredList<>(walletTxListItems);
