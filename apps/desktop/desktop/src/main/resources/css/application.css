@@ -628,7 +628,7 @@
   -fx-text-fill: -fx-light-text-color !important;
 }
 
-.wallet-dashboard .latest-txs-table.table-view .column-header {
+.wallet-dashboard .overview-table.table-view .column-header {
     -fx-background-color: -bisq-dark-grey-40;
 }
 

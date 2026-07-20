@@ -56,7 +56,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletDashboardView extends View<VBox, WalletDashboardModel, WalletDashboardController> {
-    private static final double LATEST_TXS_TABLE_CELL_HEIGHT = 70;
+    private static final double TABLE_CELL_HEIGHT = 70;
     private static final double CURRENCY_CONVERTER_MENU_WIDTH = 230;
     private static final double CURRENCY_CONVERTER_MENU_CELL_HEIGHT = 50;
 
@@ -143,7 +143,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         HBox headerHBox = new HBox(balanceVBox, Spacer.fillHBox(), summaryAndButtonsVBox);
         headerHBox.setPadding(new Insets(0, 50, 0, 50));
 
-        // Latest txs
+        // Overview tables
         latestTxsHeadlineActiveIcon = ImageUtil.getImageViewById("latest-txs-grey"); // TODO: Add active icon
         latestTxsHeadlineDefaultIcon = ImageUtil.getImageViewById("latest-txs-grey");
         latestTxsHeadlineLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
@@ -174,23 +174,23 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         overviewMenu.addMenuItems(latestTxsMenuItem, fundsMenuItem);
 
         latestTxsTableView = new BisqTableView<>(model.getVisibleWalletTxListItems(), false);
-        latestTxsTableView.getStyleClass().add("latest-txs-table");
-        latestTxsTableView.setFixedCellSize(LATEST_TXS_TABLE_CELL_HEIGHT);
+        latestTxsTableView.getStyleClass().add("overview-table");
+        latestTxsTableView.setFixedCellSize(TABLE_CELL_HEIGHT);
         latestTxsTableView.hideVerticalScrollbar();
         configLatestTxsTable();
 
         fundsTableView = new BisqTableView<>(model.getWalletFundsListItems(), false);
-        fundsTableView.getStyleClass().add("latest-txs-table");
-        fundsTableView.setFixedCellSize(LATEST_TXS_TABLE_CELL_HEIGHT);
+        fundsTableView.getStyleClass().add("overview-table");
+        fundsTableView.setFixedCellSize(TABLE_CELL_HEIGHT);
         fundsTableView.hideVerticalScrollbar();
         configFundsTable();
 
-        VBox latestTxsVBox = new VBox(20, overviewMenu, latestTxsTableView, fundsTableView);
-        latestTxsVBox.setPadding(new Insets(0, 50, 0, 50));
+        VBox overviewVBox = new VBox(20, overviewMenu, latestTxsTableView, fundsTableView);
+        overviewVBox.setPadding(new Insets(0, 50, 0, 50));
 
         VBox contentBox = new VBox(20);
         VBox.setMargin(headerHBox, new Insets(0, 0, 15, 0));
-        contentBox.getChildren().addAll(headerHBox, getHLine(), latestTxsVBox);
+        contentBox.getChildren().addAll(headerHBox, getHLine(), overviewVBox);
         contentBox.getStyleClass().add("dashboard-bg");
         contentBox.setPadding(new Insets(50, 0, 0, 0));
         root.getChildren().addAll(contentBox);
@@ -395,7 +395,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     }
 
     private void updateVisibleWalletTxListItems(double tableHeight) {
-        int numRows = (int) Math.floor((tableHeight - 35) / LATEST_TXS_TABLE_CELL_HEIGHT); // 35 for the header
+        int numRows = (int) Math.floor((tableHeight - 35) / TABLE_CELL_HEIGHT); // 35 for the header
         int maxNumRows = Math.max(0, numRows);
         int numVisibleListItems = Math.min(model.getSortedWalletTxListItems().size(), maxNumRows);
         model.getVisibleWalletTxListItems().setAll(model.getSortedWalletTxListItems().subList(0, numVisibleListItems));
