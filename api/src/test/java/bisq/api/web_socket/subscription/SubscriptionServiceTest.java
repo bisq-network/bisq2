@@ -26,6 +26,7 @@ import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.network.NetworkService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
 import org.glassfish.grizzly.impl.ReadyFutureImpl;
@@ -66,6 +67,7 @@ class SubscriptionServiceTest {
                 mock(TradeService.class, RETURNS_DEEP_STUBS),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
+                mock(NetworkService.class, RETURNS_DEEP_STUBS),
                 mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS)
         );
 
@@ -91,6 +93,7 @@ class SubscriptionServiceTest {
                 mock(TradeService.class, RETURNS_DEEP_STUBS),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
+                mock(NetworkService.class, RETURNS_DEEP_STUBS),
                 mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS)
         );
         SubscriberRepository subscriberRepository = getSubscriberRepository(service);
@@ -132,6 +135,7 @@ class SubscriptionServiceTest {
                 mock(TradeService.class, RETURNS_DEEP_STUBS),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
+                mock(NetworkService.class, RETURNS_DEEP_STUBS),
                 mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS)
         );
 
