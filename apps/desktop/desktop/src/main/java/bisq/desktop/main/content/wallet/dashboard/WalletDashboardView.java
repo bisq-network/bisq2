@@ -69,6 +69,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final DropdownMenu overviewMenu;
     private final OverviewMenuItem latestTxsMenuItem, fundsMenuItem;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
+    private final BisqTableView<WalletFundsListItem> fundsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
     private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsPin, isOverviewMenuShowingPin;
@@ -161,7 +162,6 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         overviewMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         overviewMenu.setContent(latestTxsHeadlineLabel);
         overviewMenu.setMaxWidth(Region.USE_PREF_SIZE);
-        overviewMenu.setOpenToTheRight(true);
         Label latestTxsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
         // TODO: Add smaller icons
         ImageView latestTxsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
@@ -179,7 +179,13 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         latestTxsTableView.hideVerticalScrollbar();
         configLatestTxsTable();
 
-        VBox latestTxsVBox = new VBox(20, overviewMenu, latestTxsTableView);
+        fundsTableView = new BisqTableView<>(model.getWalletFundsListItems(), false);
+        fundsTableView.getStyleClass().add("latest-txs-table");
+        fundsTableView.setFixedCellSize(LATEST_TXS_TABLE_CELL_HEIGHT);
+        fundsTableView.hideVerticalScrollbar();
+        configFundsTable();
+
+        VBox latestTxsVBox = new VBox(20, overviewMenu, latestTxsTableView, fundsTableView);
         latestTxsVBox.setPadding(new Insets(0, 50, 0, 50));
 
         VBox contentBox = new VBox(20);
@@ -359,6 +365,35 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                 .build());
     }
 
+    private void configFundsTable() {
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletFundsListItem>()
+                .title(Res.get("wallet.funds.address"))
+                .minWidth(180)
+                .left()
+                .valueSupplier(WalletFundsListItem::getAddress)
+                .build());
+
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletFundsListItem>()
+                .title(Res.get("wallet.funds.usage"))
+                .minWidth(100)
+                .left()
+                .valueSupplier(WalletFundsListItem::getUsageAsString)
+                .build());
+
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletFundsListItem>()
+                .title(Res.get("wallet.funds.amount"))
+                .minWidth(70)
+                .valueSupplier(WalletFundsListItem::getAmountAsString)
+                .build());
+
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletFundsListItem>()
+                .title(Res.get("wallet.funds.confirmations"))
+                .minWidth(70)
+                .valueSupplier(WalletFundsListItem::getNumConfirmationsAsString)
+                .right()
+                .build());
+    }
+
     private void updateVisibleWalletTxListItems(double tableHeight) {
         int numRows = (int) Math.floor((tableHeight - 35) / LATEST_TXS_TABLE_CELL_HEIGHT); // 35 for the header
         int maxNumRows = Math.max(0, numRows);
@@ -405,9 +440,13 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     }
 
     private void applyShowLatestTxs(Boolean showLatestTxs) {
-        latestTxsMenuItem.updateSelection(showLatestTxs);
-        fundsMenuItem.updateSelection(!showLatestTxs);
         overviewMenu.setContent(showLatestTxs ? latestTxsHeadlineLabel : fundsHeadlineLabel);
+        latestTxsMenuItem.updateSelection(showLatestTxs);
+        latestTxsTableView.setVisible(showLatestTxs);
+        latestTxsTableView.setManaged(showLatestTxs);
+        fundsMenuItem.updateSelection(!showLatestTxs);
+        fundsTableView.setVisible(!showLatestTxs);
+        fundsTableView.setManaged(!showLatestTxs);
     }
 
     private void updateMenuItemsStyle(Boolean isMenuShowing) {
