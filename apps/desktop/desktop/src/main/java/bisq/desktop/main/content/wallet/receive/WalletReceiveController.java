@@ -21,6 +21,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.overlay.OverlayController;
 import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -50,5 +51,9 @@ public class WalletReceiveController implements Controller {
 
     void onCopyToClipboard() {
         ClipboardUtil.copyToClipboard(model.getReceiveAddress().get());
+    }
+
+    void onClose() {
+        OverlayController.hide();
     }
 }

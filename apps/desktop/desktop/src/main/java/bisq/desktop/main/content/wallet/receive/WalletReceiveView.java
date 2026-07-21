@@ -18,43 +18,73 @@
 package bisq.desktop.main.content.wallet.receive;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletReceiveController> {
-
     private final MaterialTextField address;
-    private final Button copyButton;
+    private final Button copyButton, closeIconButton, closeButton;
 
     public WalletReceiveView(WalletReceiveModel model, WalletReceiveController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(30), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
+        root.setPrefWidth(OverlayModel.WIDTH - 20);
+        root.setPrefHeight(OverlayModel.HEIGHT - 20);
+        root.setAlignment(Pos.TOP_LEFT);
+
+        closeIconButton = BisqIconButton.createIconButton("close");
+        HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeIconButton);
+        closeButtonRow.setPadding(new Insets(15, 15, 0, 0));
+
+        Label titleLabel = new Label(Res.get("wallet.receive.header"));
+        titleLabel.getStyleClass().add("bisq-text-headline-2");
+        HBox headlineBox = new HBox(Spacer.fillHBox(), titleLabel, Spacer.fillHBox());
 
         address = new MaterialTextField(Res.get("wallet.receive.address"));
         address.setEditable(false);
         address.showCopyIcon();
+
+        VBox contentBox = new VBox(20);
+        contentBox.setPadding(new Insets(0, 70, 0, 70));
+        contentBox.getChildren().addAll(address);
+
+        closeButton = new Button(Res.get("action.close"));
         copyButton = new Button(Res.get("wallet.receive.copy"));
         copyButton.setDefaultButton(true);
+        HBox buttonsBox = new HBox(20, closeButton, copyButton);
+        buttonsBox.setAlignment(Pos.CENTER);
 
-        root.getChildren().addAll(address, copyButton);
+        root.getChildren().setAll(closeButtonRow, headlineBox, contentBox, buttonsBox);
     }
 
     @Override
     protected void onViewAttached() {
         address.textProperty().bind(model.getReceiveAddress());
+
         copyButton.setOnAction(e -> controller.onCopyToClipboard());
         address.getIconButton().setOnAction(e -> controller.onCopyToClipboard());
+        closeIconButton.setOnAction(e -> controller.onClose());
+        closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
     protected void onViewDetached() {
         address.textProperty().unbind();
+
         copyButton.setOnAction(null);
+        address.getIconButton().setOnAction(null);
+        closeIconButton.setOnAction(null);
+        closeButton.setOnAction(null);
     }
 }
