@@ -71,6 +71,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
     private final BisqTableView<WalletAddressBalanceListItem> fundsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
+    private final ChangeListener<Boolean> overviewMenuHoverListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
     private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsPin, isOverviewMenuShowingPin;
 
@@ -144,21 +145,20 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         headerHBox.setPadding(new Insets(0, 50, 0, 50));
 
         // Overview tables
-        latestTxsHeadlineActiveIcon = ImageUtil.getImageViewById("latest-txs-grey"); // TODO: Add active icon
+        latestTxsHeadlineActiveIcon = ImageUtil.getImageViewById("latest-txs-white");
         latestTxsHeadlineDefaultIcon = ImageUtil.getImageViewById("latest-txs-grey");
         latestTxsHeadlineLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
         latestTxsHeadlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
         latestTxsHeadlineLabel.setGraphic(latestTxsHeadlineDefaultIcon);
         latestTxsHeadlineLabel.setGraphicTextGap(10);
 
-        fundsHeadlineActiveIcon = ImageUtil.getImageViewById("bisq-btc-logo"); // TODO: Add active and inactive icons
-        fundsHeadlineDefaultIcon = ImageUtil.getImageViewById("bisq-btc-logo");
+        fundsHeadlineActiveIcon = ImageUtil.getImageViewById("funds-white");
+        fundsHeadlineDefaultIcon = ImageUtil.getImageViewById("funds-grey");
         fundsHeadlineLabel = new Label(Res.get("wallet.dashboard.overviewMenu.funds"));
         fundsHeadlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
         fundsHeadlineLabel.setGraphic(fundsHeadlineDefaultIcon);
         fundsHeadlineLabel.setGraphicTextGap(10);
 
-        // TODO: Make bigger icons
         overviewMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
         overviewMenu.setContent(latestTxsHeadlineLabel);
         overviewMenu.setMaxWidth(Region.USE_PREF_SIZE);
@@ -200,6 +200,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         VBox.setVgrow(contentBox, Priority.ALWAYS);
 
         latestTxsTableViewHeightListener = (observable, oldValue, newValue) -> updateVisibleWalletTxListItems(newValue.doubleValue());
+        overviewMenuHoverListener = (observable, oldValue, newValue) -> updateOverviewMenuHeadlineIcon();
         sortedWalletTxListItemsListener = change -> updateVisibleWalletTxListItems(latestTxsTableView.getHeight());
     }
 
@@ -220,17 +221,12 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         isOverviewMenuShowingPin = EasyBind.subscribe(overviewMenu.getIsMenuShowing(), this::updateMenuItemsStyle);
 
         latestTxsTableView.heightProperty().addListener(latestTxsTableViewHeightListener);
+        overviewMenu.hoverProperty().addListener(overviewMenuHoverListener);
         model.getSortedWalletTxListItems().addListener(sortedWalletTxListItemsListener);
         updateVisibleWalletTxListItems(latestTxsTableView.getHeight());
 
         send.setOnAction(e -> controller.onSend());
         receive.setOnAction(e -> controller.onReceive());
-        latestTxsHeadlineLabel.setOnMouseEntered(e -> updateOverviewMenuHeadlineIcon(latestTxsHeadlineLabel, latestTxsHeadlineActiveIcon));
-        latestTxsHeadlineLabel.setOnMouseClicked(e -> updateOverviewMenuHeadlineIcon(latestTxsHeadlineLabel, latestTxsHeadlineActiveIcon));
-        latestTxsHeadlineLabel.setOnMouseExited(e -> updateOverviewMenuHeadlineIcon(latestTxsHeadlineLabel, latestTxsHeadlineDefaultIcon));
-        fundsHeadlineLabel.setOnMouseEntered(e -> updateOverviewMenuHeadlineIcon(fundsHeadlineLabel, fundsHeadlineActiveIcon));
-        fundsHeadlineLabel.setOnMouseClicked(e -> updateOverviewMenuHeadlineIcon(fundsHeadlineLabel, fundsHeadlineActiveIcon));
-        fundsHeadlineLabel.setOnMouseExited(e -> updateOverviewMenuHeadlineIcon(fundsHeadlineLabel, fundsHeadlineDefaultIcon));
         latestTxsMenuItem.setOnAction(e -> controller.onSelectLatestTxsMenuItem());
         fundsMenuItem.setOnAction(e -> controller.onSelectFundsMenuItem());
 
@@ -257,16 +253,11 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         isOverviewMenuShowingPin.unsubscribe();
 
         latestTxsTableView.heightProperty().removeListener(latestTxsTableViewHeightListener);
+        overviewMenu.hoverProperty().removeListener(overviewMenuHoverListener);
         model.getSortedWalletTxListItems().removeListener(sortedWalletTxListItemsListener);
 
         send.setOnAction(null);
         receive.setOnAction(null);
-        latestTxsHeadlineLabel.setOnMouseEntered(null);
-        latestTxsHeadlineLabel.setOnMouseClicked(null);
-        latestTxsHeadlineLabel.setOnMouseExited(null);
-        fundsHeadlineLabel.setOnMouseEntered(null);
-        fundsHeadlineLabel.setOnMouseClicked(null);
-        fundsHeadlineLabel.setOnMouseExited(null);
         latestTxsMenuItem.setOnAction(null);
         fundsMenuItem.setOnAction(null);
     }
@@ -435,9 +426,15 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         }
     }
 
-    private void updateOverviewMenuHeadlineIcon(Label headline, ImageView newIcon) {
-        if (headline.getGraphic() != newIcon) {
-            headline.setGraphic(newIcon);
+    private void updateOverviewMenuHeadlineIcon() {
+        boolean isMenuHovered = overviewMenu.isHover();
+        boolean isMenuShowing = overviewMenu.getIsMenuShowing().get();
+        if (isMenuHovered || isMenuShowing) {
+            latestTxsHeadlineLabel.setGraphic(latestTxsHeadlineActiveIcon);
+            fundsHeadlineLabel.setGraphic(fundsHeadlineActiveIcon);
+        } else {
+            latestTxsHeadlineLabel.setGraphic(latestTxsHeadlineDefaultIcon);
+            fundsHeadlineLabel.setGraphic(fundsHeadlineDefaultIcon);
         }
     }
 
@@ -463,6 +460,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         } else {
             latestTxsMenuItem.resetStyle();
             fundsMenuItem.resetStyle();
+            updateOverviewMenuHeadlineIcon();
         }
     }
 
@@ -575,7 +573,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
             this.activeIcon = activeIcon;
             this.displayLabel = displayLabel;
 
-            getStyleClass().add("dropdown-menu-item");
+            getStyleClass().addAll("dropdown-menu-item", "overview-menu-item");
             initialize();
         }
 
@@ -604,13 +602,13 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         }
 
         void resetStyle() {
-            displayLabel.setGraphic(defaultIcon);
+//            displayLabel.setGraphic(defaultIcon);
             resetDisplayLabelStyle();
             displayLabel.getStyleClass().add(LABEL_DEFAULT_STYLE);
         }
 
         private void showAsActive() {
-            displayLabel.setGraphic(activeIcon);
+//            displayLabel.setGraphic(activeIcon);
             resetDisplayLabelStyle();
             displayLabel.getStyleClass().add(LABEL_ACTIVE_STYLE);
         }
