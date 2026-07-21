@@ -1967,6 +1967,26 @@
     -fx-image: url("/images/wallet/calendar-grey.png");
 }
 
+#latest-txs-white {
+    -fx-image: url("/images/wallet/calendar-white.png");
+}
+
+#latest-txs-green {
+    -fx-image: url("/images/wallet/calendar-green.png");
+}
+
+#funds-grey {
+    -fx-image: url("/images/wallet/funds-grey.png");
+}
+
+#funds-white {
+    -fx-image: url("/images/wallet/funds-white.png");
+}
+
+#funds-green {
+    -fx-image: url("/images/wallet/funds-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Misc */

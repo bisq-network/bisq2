@@ -24,6 +24,8 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.DropdownListMenu;
+import bisq.desktop.components.controls.DropdownMenu;
+import bisq.desktop.components.controls.DropdownMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
@@ -31,6 +33,7 @@ import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
+import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -39,30 +42,38 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.scene.control.TableView;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletDashboardView extends View<VBox, WalletDashboardModel, WalletDashboardController> {
-    private static final double LATEST_TXS_TABLE_CELL_HEIGHT = 70;
+    private static final double TABLE_CELL_HEIGHT = 70;
     private static final double CURRENCY_CONVERTER_MENU_WIDTH = 230;
     private static final double CURRENCY_CONVERTER_MENU_CELL_HEIGHT = 50;
 
     private final Button send, receive;
     private final Label btcBalanceLabel, availableBalanceAmountLabel, reservedFundsAmountLabel,
-            lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel;
+            lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel, latestTxsHeadlineLabel,
+            fundsHeadlineLabel;
+    private final ImageView latestTxsHeadlineActiveIcon, latestTxsHeadlineDefaultIcon, fundsHeadlineActiveIcon, fundsHeadlineDefaultIcon;
     private final DropdownListMenu<CurrencyConverterListItem> currencyConverterDropdownListMenu;
+    private final DropdownMenu overviewMenu;
+    private final OverviewMenuItem latestTxsMenuItem, fundsMenuItem;
     private final BisqTableView<WalletTxListItem> latestTxsTableView;
+    private final BisqTableView<WalletAddressBalanceListItem> fundsTableView;
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
+    private final ChangeListener<Boolean> overviewMenuHoverListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
-    private Subscription selectedMarketPin, isMenuShowingPin;
+    private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsPin, isOverviewMenuShowingPin;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -133,24 +144,53 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         HBox headerHBox = new HBox(balanceVBox, Spacer.fillHBox(), summaryAndButtonsVBox);
         headerHBox.setPadding(new Insets(0, 50, 0, 50));
 
-        // Latest txs
-        Label latestTxsHeadline = new Label(Res.get("wallet.dashboard.latestTxs.headline"));
-        latestTxsHeadline.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
-        latestTxsHeadline.setGraphic(ImageUtil.getImageViewById("latest-txs-grey"));
-        latestTxsHeadline.setGraphicTextGap(10);
+        // Overview tables
+        latestTxsHeadlineActiveIcon = ImageUtil.getImageViewById("latest-txs-white");
+        latestTxsHeadlineDefaultIcon = ImageUtil.getImageViewById("latest-txs-grey");
+        latestTxsHeadlineLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
+        latestTxsHeadlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
+        latestTxsHeadlineLabel.setGraphic(latestTxsHeadlineDefaultIcon);
+        latestTxsHeadlineLabel.setGraphicTextGap(10);
+
+        fundsHeadlineActiveIcon = ImageUtil.getImageViewById("funds-white");
+        fundsHeadlineDefaultIcon = ImageUtil.getImageViewById("funds-grey");
+        fundsHeadlineLabel = new Label(Res.get("wallet.dashboard.overviewMenu.funds"));
+        fundsHeadlineLabel.getStyleClass().addAll("dashboard-headline", "bisq-grey-dimmed");
+        fundsHeadlineLabel.setGraphic(fundsHeadlineDefaultIcon);
+        fundsHeadlineLabel.setGraphicTextGap(10);
+
+        overviewMenu = new DropdownMenu("chevron-drop-menu-grey", "chevron-drop-menu-white", false);
+        overviewMenu.setContent(latestTxsHeadlineLabel);
+        overviewMenu.setMaxWidth(Region.USE_PREF_SIZE);
+        overviewMenu.setOpenToTheRight(true);
+        Label latestTxsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
+        // TODO: Add smaller icons
+        ImageView latestTxsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
+        ImageView latestTxsActiveMenuIcon = ImageUtil.getImageViewById("icon-info-white");
+        latestTxsMenuItem = new OverviewMenuItem(latestTxsMenuLabel, latestTxsDefaultMenuIcon, latestTxsActiveMenuIcon);
+        Label fundsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.funds"));
+        ImageView fundsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
+        ImageView fundsActiveMenuIcon = ImageUtil.getImageViewById("icon-info-white");
+        fundsMenuItem = new OverviewMenuItem(fundsMenuLabel, fundsDefaultMenuIcon, fundsActiveMenuIcon);
+        overviewMenu.addMenuItems(latestTxsMenuItem, fundsMenuItem);
 
         latestTxsTableView = new BisqTableView<>(model.getVisibleWalletTxListItems(), false);
-        latestTxsTableView.getStyleClass().add("latest-txs-table");
-        latestTxsTableView.setFixedCellSize(LATEST_TXS_TABLE_CELL_HEIGHT);
+        latestTxsTableView.getStyleClass().add("overview-table");
+        latestTxsTableView.setFixedCellSize(TABLE_CELL_HEIGHT);
         latestTxsTableView.hideVerticalScrollbar();
         configLatestTxsTable();
 
-        VBox latestTxsVBox = new VBox(20, latestTxsHeadline, latestTxsTableView);
-        latestTxsVBox.setPadding(new Insets(0, 50, 0, 50));
+        fundsTableView = new BisqTableView<>(model.getSortedWalletAddressBalanceListItems(), false);
+        fundsTableView.getStyleClass().add("overview-table");
+        fundsTableView.setFixedCellSize(TABLE_CELL_HEIGHT);
+        configFundsTable();
+
+        VBox overviewVBox = new VBox(20, overviewMenu, latestTxsTableView, fundsTableView);
+        overviewVBox.setPadding(new Insets(0, 50, 0, 50));
 
         VBox contentBox = new VBox(20);
         VBox.setMargin(headerHBox, new Insets(0, 0, 15, 0));
-        contentBox.getChildren().addAll(headerHBox, getHLine(), latestTxsVBox);
+        contentBox.getChildren().addAll(headerHBox, getHLine(), overviewVBox);
         contentBox.getStyleClass().add("dashboard-bg");
         contentBox.setPadding(new Insets(50, 0, 0, 0));
         root.getChildren().addAll(contentBox);
@@ -160,6 +200,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         VBox.setVgrow(contentBox, Priority.ALWAYS);
 
         latestTxsTableViewHeightListener = (observable, oldValue, newValue) -> updateVisibleWalletTxListItems(newValue.doubleValue());
+        overviewMenuHoverListener = (observable, oldValue, newValue) -> updateOverviewMenuHeadlineIcon();
         sortedWalletTxListItemsListener = change -> updateVisibleWalletTxListItems(latestTxsTableView.getHeight());
     }
 
@@ -175,14 +216,19 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         lockedFundsAmountLabel.textProperty().bind(model.getFormattedLockedFundsProperty());
 
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket -> UIThread.run(this::updateSelectedMarket));
-        isMenuShowingPin = EasyBind.subscribe(currencyConverterDropdownListMenu.getIsMenuShowing(), isMenuShowing -> UIThread.run(this::updateTableViewSelectionToMarketItem));
+        isCurrencyConverterMenuShowingPin = EasyBind.subscribe(currencyConverterDropdownListMenu.getIsMenuShowing(), isMenuShowing -> UIThread.run(this::updateTableViewSelectionToMarketItem));
+        shouldShowLatestTxsPin = EasyBind.subscribe(model.getShouldShowLatestTxs(), this::applyShowLatestTxs);
+        isOverviewMenuShowingPin = EasyBind.subscribe(overviewMenu.getIsMenuShowing(), this::updateMenuItemsStyle);
 
         latestTxsTableView.heightProperty().addListener(latestTxsTableViewHeightListener);
+        overviewMenu.hoverProperty().addListener(overviewMenuHoverListener);
         model.getSortedWalletTxListItems().addListener(sortedWalletTxListItemsListener);
         updateVisibleWalletTxListItems(latestTxsTableView.getHeight());
 
         send.setOnAction(e -> controller.onSend());
         receive.setOnAction(e -> controller.onReceive());
+        latestTxsMenuItem.setOnAction(e -> controller.onSelectLatestTxsMenuItem());
+        fundsMenuItem.setOnAction(e -> controller.onSelectFundsMenuItem());
 
         updateSelectedMarket();
         updateTableViewSelectionToMarketItem();
@@ -191,6 +237,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     @Override
     protected void onViewDetached() {
         currencyConverterDropdownListMenu.dispose();
+        latestTxsMenuItem.dispose();
+        fundsMenuItem.dispose();
 
         btcBalanceLabel.textProperty().unbind();
         currencyConverterAmountLabel.textProperty().unbind();
@@ -200,13 +248,18 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         lockedFundsAmountLabel.textProperty().unbind();
 
         selectedMarketPin.unsubscribe();
-        isMenuShowingPin.unsubscribe();
+        isCurrencyConverterMenuShowingPin.unsubscribe();
+        shouldShowLatestTxsPin.unsubscribe();
+        isOverviewMenuShowingPin.unsubscribe();
 
         latestTxsTableView.heightProperty().removeListener(latestTxsTableViewHeightListener);
+        overviewMenu.hoverProperty().removeListener(overviewMenuHoverListener);
         model.getSortedWalletTxListItems().removeListener(sortedWalletTxListItemsListener);
 
         send.setOnAction(null);
         receive.setOnAction(null);
+        latestTxsMenuItem.setOnAction(null);
+        fundsMenuItem.setOnAction(null);
     }
 
     private Triple<HBox, Label, Label> createBtcBalanceHBox() {
@@ -305,8 +358,37 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                 .build());
     }
 
+    private void configFundsTable() {
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletAddressBalanceListItem>()
+                .title(Res.get("wallet.funds.address"))
+                .minWidth(180)
+                .left()
+                .valueSupplier(WalletAddressBalanceListItem::getAddress)
+                .build());
+
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletAddressBalanceListItem>()
+                .title(Res.get("wallet.funds.usage"))
+                .minWidth(100)
+                .left()
+                .valueSupplier(WalletAddressBalanceListItem::getUsageAsString)
+                .build());
+
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletAddressBalanceListItem>()
+                .title(Res.get("wallet.funds.confirmations"))
+                .minWidth(70)
+                .valueSupplier(WalletAddressBalanceListItem::getNumConfirmationsAsString)
+                .right()
+                .build());
+
+        fundsTableView.getColumns().add(new BisqTableColumn.Builder<WalletAddressBalanceListItem>()
+                .title(Res.get("wallet.funds.amount"))
+                .minWidth(70)
+                .valueSupplier(WalletAddressBalanceListItem::getAmountAsString)
+                .build());
+    }
+
     private void updateVisibleWalletTxListItems(double tableHeight) {
-        int numRows = (int) Math.floor((tableHeight - 35) / LATEST_TXS_TABLE_CELL_HEIGHT); // 35 for the header
+        int numRows = (int) Math.floor((tableHeight - 35) / TABLE_CELL_HEIGHT); // 35 for the header
         int maxNumRows = Math.max(0, numRows);
         int numVisibleListItems = Math.min(model.getSortedWalletTxListItems().size(), maxNumRows);
         model.getVisibleWalletTxListItems().setAll(model.getSortedWalletTxListItems().subList(0, numVisibleListItems));
@@ -341,6 +423,44 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                     .filter(item -> item instanceof MarketItem && item.equals(selectedMarketItem))
                     .findAny()
                     .ifPresent(item -> table.getSelectionModel().select(item));
+        }
+    }
+
+    private void updateOverviewMenuHeadlineIcon() {
+        boolean isMenuHovered = overviewMenu.isHover();
+        boolean isMenuShowing = overviewMenu.getIsMenuShowing().get();
+        if (isMenuHovered || isMenuShowing) {
+            latestTxsHeadlineLabel.setGraphic(latestTxsHeadlineActiveIcon);
+            fundsHeadlineLabel.setGraphic(fundsHeadlineActiveIcon);
+        } else {
+            latestTxsHeadlineLabel.setGraphic(latestTxsHeadlineDefaultIcon);
+            fundsHeadlineLabel.setGraphic(fundsHeadlineDefaultIcon);
+        }
+    }
+
+    private void applyShowLatestTxs(Boolean showLatestTxs) {
+        overviewMenu.setContent(showLatestTxs ? latestTxsHeadlineLabel : fundsHeadlineLabel);
+        latestTxsMenuItem.updateSelection(showLatestTxs);
+        latestTxsTableView.setVisible(showLatestTxs);
+        latestTxsTableView.setManaged(showLatestTxs);
+        fundsMenuItem.updateSelection(!showLatestTxs);
+        fundsTableView.setVisible(!showLatestTxs);
+        fundsTableView.setManaged(!showLatestTxs);
+    }
+
+    private void updateMenuItemsStyle(Boolean isMenuShowing) {
+        if (isMenuShowing) {
+            if (model.getShouldShowLatestTxs().get()) {
+                latestTxsMenuItem.showAsActive();
+                fundsMenuItem.showAsDefault();
+            } else {
+                latestTxsMenuItem.showAsDefault();
+                fundsMenuItem.showAsActive();
+            }
+        } else {
+            latestTxsMenuItem.resetStyle();
+            fundsMenuItem.resetStyle();
+            updateOverviewMenuHeadlineIcon();
         }
     }
 
@@ -435,5 +555,75 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
                 setFocusTraversable(false);
             }
         };
+    }
+
+    @Getter
+    private static final class OverviewMenuItem extends DropdownMenuItem {
+        private static final PseudoClass SELECTED_PSEUDO_CLASS = PseudoClass.getPseudoClass("selected");
+        private static final String LABEL_ACTIVE_STYLE = "display-label-active";
+        private static final String LABEL_DEFAULT_STYLE = "display-label-default";
+
+        private final ImageView defaultIcon, activeIcon;
+        private final Label displayLabel;
+
+        private OverviewMenuItem(Label displayLabel, ImageView defaultIcon, ImageView activeIcon) {
+            super("check-white", "check-white", displayLabel);
+
+            this.defaultIcon = defaultIcon;
+            this.activeIcon = activeIcon;
+            this.displayLabel = displayLabel;
+
+            getStyleClass().addAll("dropdown-menu-item", "overview-menu-item");
+            initialize();
+        }
+
+        private void initialize() {
+            displayLabel.setGraphicTextGap(10);
+            resetStyle();
+
+            getContent().setOnMouseClicked(e -> showAsActive());
+            getContent().setOnMouseEntered(e -> showAsActive());
+            getContent().setOnMouseExited(e -> showAsDefault());
+        }
+
+        public void dispose() {
+            setOnAction(null);
+            getContent().setOnMouseClicked(null);
+            getContent().setOnMouseEntered(null);
+            getContent().setOnMouseExited(null);
+        }
+
+        void updateSelection(boolean isSelected) {
+            getContent().pseudoClassStateChanged(SELECTED_PSEUDO_CLASS, isSelected);
+        }
+
+        boolean isSelected() {
+            return getContent().getPseudoClassStates().contains(SELECTED_PSEUDO_CLASS);
+        }
+
+        void resetStyle() {
+//            displayLabel.setGraphic(defaultIcon);
+            resetDisplayLabelStyle();
+            displayLabel.getStyleClass().add(LABEL_DEFAULT_STYLE);
+        }
+
+        private void showAsActive() {
+//            displayLabel.setGraphic(activeIcon);
+            resetDisplayLabelStyle();
+            displayLabel.getStyleClass().add(LABEL_ACTIVE_STYLE);
+        }
+
+        private void showAsDefault() {
+            if (isSelected()) {
+                showAsActive();
+                return;
+            }
+            resetStyle();
+        }
+
+        private void resetDisplayLabelStyle() {
+            displayLabel.getStyleClass().remove(LABEL_DEFAULT_STYLE);
+            displayLabel.getStyleClass().remove(LABEL_ACTIVE_STYLE);
+        }
     }
 }

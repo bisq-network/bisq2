@@ -620,7 +620,19 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
-.wallet-dashboard .latest-txs-table.table-view .column-header {
+.wallet-dashboard .display-label-default {
+    -fx-text-fill: -fx-mid-text-color !important;
+}
+
+.wallet-dashboard .display-label-active {
+    -fx-text-fill: -fx-light-text-color !important;
+}
+
+.wallet-dashboard .dropdown-menu-item.overview-menu-item .label {
+    -fx-font-size: 1.15em !important;
+}
+
+.wallet-dashboard .overview-table.table-view .column-header {
     -fx-background-color: -bisq-dark-grey-40;
 }
 
