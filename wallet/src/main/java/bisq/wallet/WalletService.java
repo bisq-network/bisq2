@@ -31,18 +31,21 @@ import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
 import bisq.wallet.vo.Transaction;
 import bisq.wallet.vo.Utxo;
+import bisq.wallet.vo.AddressBalance;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class WalletService implements Service {
     protected final Observable<Coin> balance = new Observable<>();
     protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
+    protected final ObservableSet<AddressBalance> addressBalances = new ObservableSet<>();
     protected final Observable<Boolean> walletInitialized = new Observable<>(false);
     protected final Config config;
     private final WalletGrpcClient client;
@@ -140,6 +143,25 @@ public class WalletService implements Service {
                         .toList());
     }
 
+    public CompletableFuture<ReadOnlyObservableSet<AddressBalance>> requestAddressBalances() {
+        return listUtxos().thenApply(utxos -> {
+            var items = utxos.stream()
+                    .collect(Collectors.groupingBy(Utxo::getAddress))
+                    .entrySet().stream()
+                    .map(e -> {
+                        String address = e.getKey();
+                        var list = e.getValue();
+                        long total = list.stream().mapToLong(Utxo::getAmount).sum();
+                        int numUsage = list.size();
+                        int numConfirmations = list.stream().mapToInt(Utxo::getNumConfirmations).min().orElse(0);
+                        return new AddressBalance(address, total, numUsage, numConfirmations);
+                    })
+                    .toList();
+            addressBalances.setAll(items);
+            return addressBalances;
+        });
+    }
+
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
         var builder = SendToAddressRequest.newBuilder();
         passphrase.ifPresent(builder::setPassphrase);
@@ -186,5 +208,9 @@ public class WalletService implements Service {
 
     public ReadOnlyObservableSet<Transaction> getTransactions() {
         return transactions;
+    }
+
+    public ReadOnlyObservableSet<AddressBalance> getAddressBalances() {
+        return addressBalances;
     }
 }
