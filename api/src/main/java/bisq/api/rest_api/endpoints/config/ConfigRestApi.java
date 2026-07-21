@@ -18,9 +18,11 @@
 package bisq.api.rest_api.endpoints.config;
 
 import bisq.api.dto.DtoMappings;
+import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.common.application.ApplicationVersion;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -76,6 +78,39 @@ public class ConfigRestApi extends RestApiBase {
             return buildOkResponse(dto);
         } catch (Exception e) {
             log.error("Failed to retrieve trade-amount limits", e);
+            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Returns the recent API features this node supports (see {@link ApiFeature}), so a client can
+     * enable or hide feature UI for the node it is paired with.
+     * <p>
+     * How clients use it: fetch once, cache keyed by {@code apiVersion}, and gate each feature on its
+     * key being present. The crucial property is the ABSENCE case — a node too old to have this
+     * endpoint returns 404, which the client reads as "none of these recent features are supported"
+     * and hides them all. So adding a feature to a client only needs a key here; no client-side
+     * version checks.
+     */
+    @GET
+    @Path("/capabilities")
+    @Operation(
+            summary = "Get supported API features",
+            description = "The recent API features this node supports, as stable kebab-case keys, plus the "
+                    + "node's API version. A node without this endpoint (older node / Bisq Desktop) is treated "
+                    + "by clients as supporting none of them.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Supported features retrieved successfully",
+                            content = @Content(schema = @Schema(implementation = ApiCapabilitiesDto.class))),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response getCapabilities() {
+        try {
+            String apiVersion = ApplicationVersion.getVersion().toString();
+            return buildOkResponse(new ApiCapabilitiesDto(apiVersion, ApiFeature.allKeys()));
+        } catch (Exception e) {
+            log.error("Failed to retrieve API capabilities", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
     }
