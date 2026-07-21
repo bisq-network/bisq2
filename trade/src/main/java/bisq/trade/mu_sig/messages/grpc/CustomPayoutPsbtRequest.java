@@ -23,7 +23,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-public class CustomPayoutPsbtRequest implements Proto {
+public final class CustomPayoutPsbtRequest implements Proto {
     private final String tradeId;
     private final long sellersPayoutAmountExcludingFee;
     private final long feeRate;

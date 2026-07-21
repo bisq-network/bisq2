@@ -25,7 +25,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class ContractualTxIds implements Proto {
+public final class ContractualTxIds implements Proto {
     private final String depositTxId;
     private final String buyersWarningTxId;
     private final String sellersWarningTxId;

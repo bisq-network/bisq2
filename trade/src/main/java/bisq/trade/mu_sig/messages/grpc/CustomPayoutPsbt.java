@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Getter
-public class CustomPayoutPsbt implements Proto {
+public final class CustomPayoutPsbt implements Proto {
     private final byte[] psbt;
     private final String txId;
     private final long buyersPayoutAmountIncludingFee;

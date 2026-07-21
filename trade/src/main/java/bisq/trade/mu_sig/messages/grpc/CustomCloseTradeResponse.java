@@ -24,7 +24,7 @@ import lombok.Getter;
 import java.util.Arrays;
 
 @Getter
-public class CustomCloseTradeResponse implements Proto {
+public final class CustomCloseTradeResponse implements Proto {
     private final byte[] customPayoutTx;
 
     public CustomCloseTradeResponse(byte[] customPayoutTx) {

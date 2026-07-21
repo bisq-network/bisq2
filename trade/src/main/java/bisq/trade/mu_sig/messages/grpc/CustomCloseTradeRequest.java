@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @Getter
-public class CustomCloseTradeRequest implements Proto {
+public final class CustomCloseTradeRequest implements Proto {
     private final String tradeId;
     private final byte[] peersCustomPayoutPsbt;
 
