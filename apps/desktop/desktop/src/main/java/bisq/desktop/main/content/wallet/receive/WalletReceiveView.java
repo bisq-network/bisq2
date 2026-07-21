@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletReceiveController> {
     private final MaterialTextField address;
-    private final Button copyButton, closeIconButton, closeButton;;
+    private final Button copyButton, closeIconButton, closeButton;
 
     public WalletReceiveView(WalletReceiveModel model, WalletReceiveController controller) {
         super(new VBox(30), model, controller);
@@ -83,6 +83,7 @@ public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletRece
         address.textProperty().unbind();
 
         copyButton.setOnAction(null);
+        address.getIconButton().setOnAction(null);
         closeIconButton.setOnAction(null);
         closeButton.setOnAction(null);
     }
