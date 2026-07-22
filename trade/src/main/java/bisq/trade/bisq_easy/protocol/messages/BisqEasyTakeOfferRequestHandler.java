@@ -122,6 +122,7 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
             String errorMessage = String.format("Mediators do not match.\n" +
                     "Maker's mediator: %s\n" +
                     "Taker's mediator: %s", mediator, takersContract.getMediator());
+            log.warn(errorMessage);
             throw new TradeProtocolException(errorMessage, TradeProtocolFailure.MEDIATORS_NOT_MATCHING);
         }
 

@@ -58,6 +58,7 @@ import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.exceptions.TradingNotAllowedException;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -179,7 +180,7 @@ public class TakeOfferReviewController implements Controller {
             new Popup().warning(Res.get("bisqEasy.takeOffer.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
                     .onClose(onCancelHandler)
-                    .actionButtonText(Res.get("confirmation.ok"))
+                    .actionButtonText(Res.get("bisqEasy.takeOffer.noMediatorAvailable.proceed"))
                     .onAction(() -> doTakeOffer(bisqEasyOffer, takerIdentity, mediator))
                     .show();
         } else {
@@ -236,16 +237,19 @@ public class TakeOfferReviewController implements Controller {
         peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                     if (peersErrorMessage != null) {
                         UIThread.run(() -> {
-                            if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
+                            if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
                                 String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
                                 new Popup().error(Res.get("bisqEasy.openTrades.failedAtPeer.errorPopup.message",
                                                 peersErrorMessage,
                                                 errorStackTrace))
                                         .show();
                             } else {
+                                String displayMessage = trade.getPeersTradeProtocolFailure() == TradeProtocolFailure.MEDIATORS_NOT_MATCHING
+                                        ? Res.get("bisqEasy.openTrades.failedAtPeer.mediatorsNotMatching")
+                                        : peersErrorMessage;
                                 new Popup().headline(Res.get("bisqEasy.openTrades.atPeer.failure.popup.headline"))
                                         .failure(Res.get("bisqEasy.openTrades.failure.popup.message.header"),
-                                                peersErrorMessage,
+                                                displayMessage,
                                                 Res.get("bisqEasy.openTrades.failure.popup.message.footer"))
                                         .show();
                             }
