@@ -17,6 +17,7 @@
 
 package bisq.api.rest_api.endpoints.config;
 
+import bisq.api.access.AllowUnauthenticated;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
@@ -48,12 +49,20 @@ import lombok.extern.slf4j.Slf4j;
  * Anything user-specific, runtime-mutable, large, or that belongs to a single feature's flow does
  * NOT go here — give it its own feature endpoint. Keeping this endpoint honest avoids turning it
  * into a kitchen-sink blob that couples unrelated features' release cadence and cache invalidation.
+ * <p>
+ * {@link AllowUnauthenticated}: this is public, non-sensitive, version-global metadata (no user data),
+ * so it must be readable by ANY client regardless of its granted permission set. Without this, the
+ * authorization filter rejects it with 403 whenever {@code authorizationRequired=true} (the api-app
+ * default), because {@code RestPermissionMapping} has no per-feature rule for {@code /config} — and
+ * we do NOT want to couple public config reads to a feature permission (e.g. SETTINGS), which would
+ * break API clients paired with a narrower permission set.
  */
 @Slf4j
 @Path("/config")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Config API", description = "Static, version-global bisq2 configuration for clients")
+@AllowUnauthenticated
 public class ConfigRestApi extends RestApiBase {
 
     @GET

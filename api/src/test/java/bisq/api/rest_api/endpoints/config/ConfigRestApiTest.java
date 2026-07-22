@@ -17,6 +17,7 @@
 
 package bisq.api.rest_api.endpoints.config;
 
+import bisq.api.access.AllowUnauthenticated;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
@@ -81,6 +82,18 @@ class ConfigRestApiTest {
                         .isTrue();
             }
         }
+    }
+
+    /**
+     * Guards public reachability: config is version-global, non-sensitive metadata and must be
+     * readable by any client. Without {@link AllowUnauthenticated} the authorization filter returns
+     * 403 for /config whenever authorizationRequired=true (RestPermissionMapping has no /config rule).
+     */
+    @Test
+    void configIsPublicSoTheAuthorizationFilterDoesNotReject403() {
+        assertThat(ConfigRestApi.class.isAnnotationPresent(AllowUnauthenticated.class))
+                .as("/config must be @AllowUnauthenticated — it has no RestPermissionMapping rule and would otherwise 403")
+                .isTrue();
     }
 
     private static boolean hasEndpoint(Class<?> resource, String path) {
