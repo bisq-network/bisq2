@@ -297,6 +297,7 @@ message SetupTradeMessage_C {
 
 message SetupTradeMessage_D {
   PartialSignatures partialSignatures = 1;
+  bytes depositPsbt = 2;
 }
 
 message SendAccountPayloadAndDepositTxMessage {

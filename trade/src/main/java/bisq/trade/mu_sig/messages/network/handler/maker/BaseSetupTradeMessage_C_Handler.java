@@ -93,7 +93,8 @@ public abstract class BaseSetupTradeMessage_C_Handler extends MuSigTradeMessageH
                 trade.getProtocolVersion(),
                 trade.getMyIdentity().getNetworkId(),
                 trade.getPeer().getNetworkId(),
-                getPartialSignatures()));
+                getPartialSignatures(),
+                myDepositPsbt.getDepositPsbt()));
     }
 
     protected abstract PartialSignatures getPartialSignatures();
@@ -103,6 +104,6 @@ public abstract class BaseSetupTradeMessage_C_Handler extends MuSigTradeMessageH
         String role = trade.isBuyer() ? "Maker (as buyer)" : "Maker (as seller)";
         sendLogMessage(role + " received peers nonceShares and partialSignatures.\n" +
                 role + " created his partialSignatures and depositPsbt.\n" +
-                role + " sent his partialSignatures to buyer.");
+                role + " sent his partialSignatures and depositPsbt to buyer.");
     }
 }
