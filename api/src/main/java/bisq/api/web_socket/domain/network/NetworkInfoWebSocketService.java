@@ -156,8 +156,7 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
                 .map(PeerGroupManager::getPeerGroupService)
                 .orElse(null);
 
-        // We traverse the active connections only once, so that numConnections and the connection list
-        // are consistent with each other. Connections can come and go while we build the payload.
+        // Snapshot the currently active connections while building the payload.
         List<ConnectionDto> connections = defaultNode
                 .map(node -> toConnectionDtos(node, peerGroupService))
                 .orElseGet(List::of);
