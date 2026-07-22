@@ -29,17 +29,20 @@ import java.util.stream.Collectors;
 public class CryptoAssetRepository {
     private static final Set<String> AUTO_CONF_SUPPORTED_CODES = Set.of("XMR");
 
-    public static final CryptoAsset BITCOIN = new CryptoAsset("BTC", "Bitcoin");
-    public static final CryptoAsset XMR = new CryptoAsset("XMR", "Monero");
-    public static final CryptoAsset BSQ = new CryptoAsset("BSQ", "BSQ");
-    public static final CryptoAsset LTC = new CryptoAsset("LTC", "Litecoin");
-    public static final CryptoAsset ETH = new CryptoAsset("ETH", "Ether");
-    public static final CryptoAsset ETC = new CryptoAsset("ETC", "Ether Classic");
-    public static final CryptoAsset L_BTC = new CryptoAsset("L-BTC", "Liquid Bitcoin");
-    public static final CryptoAsset LN_BTC = new CryptoAsset("LN-BTC", "Lightning Network Bitcoin");
-    public static final CryptoAsset GRIN = new CryptoAsset("GRIN", "Grin");
-    public static final CryptoAsset ZEC = new CryptoAsset("ZEC", "Zcash");
-    public static final CryptoAsset DOGE = new CryptoAsset("DOGE", "Dogecoin");
+    // The precision is Bisq's trade precision for the coin (<= its native on-chain decimals).
+    // A coin with fewer than 8 decimals (e.g. a future 6-decimal stablecoin) must state it here
+    // so its trade amount stays sendable; see Coin.derivePrecision and the CryptoAsset constructor.
+    public static final CryptoAsset BITCOIN = new CryptoAsset("BTC", "Bitcoin", 8);
+    public static final CryptoAsset XMR = new CryptoAsset("XMR", "Monero", 12);
+    public static final CryptoAsset BSQ = new CryptoAsset("BSQ", "BSQ", 2);
+    public static final CryptoAsset LTC = new CryptoAsset("LTC", "Litecoin", 8);
+    public static final CryptoAsset ETH = new CryptoAsset("ETH", "Ether", 8);
+    public static final CryptoAsset ETC = new CryptoAsset("ETC", "Ether Classic", 8);
+    public static final CryptoAsset L_BTC = new CryptoAsset("L-BTC", "Liquid Bitcoin", 8);
+    public static final CryptoAsset LN_BTC = new CryptoAsset("LN-BTC", "Lightning Network Bitcoin", 8);
+    public static final CryptoAsset GRIN = new CryptoAsset("GRIN", "Grin", 8);
+    public static final CryptoAsset ZEC = new CryptoAsset("ZEC", "Zcash", 8);
+    public static final CryptoAsset DOGE = new CryptoAsset("DOGE", "Dogecoin", 8);
 
     private static final List<CryptoAsset> CRYPTO_ASSETS = List.of(
             BITCOIN,

@@ -18,6 +18,7 @@
 package bisq.common.monetary;
 
 import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.asset.CryptoAsset;
 import bisq.common.asset.Asset;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
@@ -141,14 +142,14 @@ public final class Coin extends Monetary {
         // We add a `c` as prefix for cryptocurrencies to avoid that we get a collusion with the code. 
         // It happened in the past that altcoins used a fiat code.
 
-        super(code + " [crypto]", value, code, precision, code.equals("BSQ") ? 2 : 4);
+        super(code + " [crypto]", value, code, precision, Math.min(precision, 4));
     }
 
     /**
      * @param faceValue Coin value as face value. E.g. 1.12345678 BTC
      */
     private Coin(double faceValue, String code, int precision) {
-        super(code + " [crypto]", faceValue, code, precision, code.equals("BSQ") ? 2 : 4);
+        super(code + " [crypto]", faceValue, code, precision, Math.min(precision, 4));
     }
 
     public Coin(String id, long value, String code, int precision, int lowPrecision) {
@@ -191,10 +192,12 @@ public final class Coin extends Monetary {
         return new Coin(this.value / divisor, this.code, this.precision);
     }
 
+    // Precision is a property of the crypto asset (see CryptoAsset). For a code not listed in
+    // the repository (a custom user crypto whose decimals are unknown) we fall back to 8.
     private static int derivePrecision(String code) {
-        if (code.equals("XMR")) return 12;
-        if (code.equals("BSQ")) return 2;
-        return 8;
+        return CryptoAssetRepository.find(code)
+                .map(CryptoAsset::getPrecision)
+                .orElse(8);
     }
 
     public Coin round(int roundPrecision) {
