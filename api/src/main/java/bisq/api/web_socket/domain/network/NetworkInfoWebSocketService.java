@@ -23,10 +23,12 @@ import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.api.web_socket.subscription.SubscriptionRequest;
 import bisq.api.web_socket.subscription.Topic;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.ServiceNode;
@@ -46,6 +48,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 /**
  * Pushes the local node's network state (peer count, data-sync flag, tor status, own address, key id and
@@ -94,14 +97,21 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
     }
 
     @Override
+    public void validate(SubscriptionRequest request) {
+        if (StringUtils.toOptional(request.getParameter()).isPresent()) {
+            throw new IllegalArgumentException("NETWORK_INFO does not support a subscription parameter");
+        }
+    }
+
+    @Override
     public CompletableFuture<Boolean> initialize() {
         findPrimaryServiceNode().ifPresent(serviceNode -> {
             observedServiceNode = serviceNode;
             serviceNode.getDefaultNode().addListener(nodeListener);
 
             serviceNode.getInventoryService()
-                    .map(InventoryService::getNumPendingInventoryRequests)
-                    .ifPresent(observable -> pins.add(observable.addObserver(numPending -> onChange())));
+                    .map(InventoryService::getInitialInventoryRequestsCompleted)
+                    .ifPresent(observable -> pins.add(observable.addObserver(completed -> onChange())));
         });
 
         return CompletableFuture.completedFuture(true);
@@ -125,7 +135,9 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
     }
 
     private void onChange() {
-        Set<Subscriber> subscribers = subscriberRepository.findSubscribers(topic, Optional.empty());
+        Set<Subscriber> subscribers = subscriberRepository.findSubscribers(topic).values().stream()
+                .flatMap(Set::stream)
+                .collect(Collectors.toSet());
         if (subscribers.isEmpty()) {
             return;
         }
@@ -149,11 +161,10 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
         List<ConnectionDto> connections = defaultNode
                 .map(node -> toConnectionDtos(node, peerGroupService))
                 .orElseGet(List::of);
-        int numConnections = connections.size();
 
         boolean allDataReceived = primaryServiceNode
                 .flatMap(ServiceNode::getInventoryService)
-                .map(inventoryService -> inventoryService.getNumPendingInventoryRequests().get() == 0)
+                .map(inventoryService -> inventoryService.getInitialInventoryRequestsCompleted().get())
                 .orElse(false);
 
         boolean torRunning = networkService.findDefaultNode(TransportType.TOR)
@@ -169,7 +180,7 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
                 .map(node -> node.getNetworkId().getKeyId())
                 .orElse(null);
 
-        return new NetworkInfoDto(numConnections, allDataReceived, torRunning, myAddress, keyId, connections);
+        return new NetworkInfoDto(allDataReceived, torRunning, myAddress, keyId, connections);
     }
 
     private List<ConnectionDto> toConnectionDtos(Node node, @Nullable PeerGroupService peerGroupService) {

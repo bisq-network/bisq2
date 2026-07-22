@@ -20,8 +20,7 @@ package bisq.api.dto.network;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public record NetworkInfoDto(int numConnections,
-                             boolean allDataReceived,
+public record NetworkInfoDto(boolean allDataReceived,
                              boolean torRunning,
                              @Nullable String myAddress,
                              @Nullable String keyId,
