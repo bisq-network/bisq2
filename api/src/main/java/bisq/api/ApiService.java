@@ -219,6 +219,7 @@ public class ApiService implements Service {
                     tradeService,
                     userService,
                     bisqEasyService,
+                    networkService,
                     openTradeItemsService));
         } else {
             webSocketService = Optional.empty();
