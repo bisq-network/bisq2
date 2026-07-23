@@ -83,7 +83,8 @@ public class MuSigOfferbookController implements Controller {
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
     private final AccountService accountService;
-    private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin, selectedMuSigOfferPin;
+    private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin, selectedMuSigOfferPin,
+            userProfileIgnoredPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
             selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin, selectedMarketTypePin,
             selectedMarketFromModelPin;
@@ -279,6 +280,9 @@ public class MuSigOfferbookController implements Controller {
 
         selectedMuSigOfferPin = muSigService.getSelectedMuSigOffer().addObserver(this::maybeSelectOffer);
 
+        userProfileIgnoredPin = userProfileService.getIgnoredUserProfileIds().addObserver(() ->
+                UIThread.run(this::updateFilteredMuSigOfferListItems));
+
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
         updateFilteredMuSigOfferListItems();
@@ -308,6 +312,7 @@ public class MuSigOfferbookController implements Controller {
         }
         selectedMarketFromModelPin.unsubscribe();
         selectedMuSigOfferPin.unbind();
+        userProfileIgnoredPin.unbind();
     }
 
     void onSelectMarketItem(MuSigMarketItem marketItem) {
@@ -336,6 +341,16 @@ public class MuSigOfferbookController implements Controller {
                 .onAction(() -> Navigation.navigateTo(NavigationTarget.FIAT_PAYMENT_ACCOUNTS))
                 .closeButtonText(Res.get("confirmation.no"))
                 .show();
+    }
+
+    void onMakerIgnored(MuSigOffer offer) {
+        userProfileService.findUserProfile(offer.getMakersUserProfileId())
+                .ifPresent(maker -> new Popup().warning(Res.get("offer.takeOffer.makerIgnored.unignoreWarning"))
+                        .hideCloseButton()
+                        .actionButtonText(Res.get("confirmation.no"))
+                        .secondaryActionButtonText(Res.get("confirmation.yes"))
+                        .onSecondaryAction(() -> userProfileService.undoIgnoreUserProfile(maker))
+                        .show());
     }
 
     void onShowOfferDetails(MuSigOffer muSigOffer) {

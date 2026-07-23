@@ -63,6 +63,13 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract(), "Takers contract must not be null");
         BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer(), "Offer from takers contract must not be null");
 
+        if (serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(message.getSender().getId())) {
+            log.warn("We reject the take offer request because we have ignored the taker's user profile. " +
+                    "We do not disclose that to the taker but send a generic rejection reason. takersOffer={}", takersOffer);
+            throw new TradeProtocolException("The maker has rejected the take offer request because the offer is not available anymore.",
+                    TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+        }
+
         List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())

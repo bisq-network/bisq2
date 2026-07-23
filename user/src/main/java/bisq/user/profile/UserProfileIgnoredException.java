@@ -15,12 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.dto.trade;
+package bisq.user.profile;
 
-public enum TradeProtocolFailureDto {
-    UNKNOWN,
-    PRICE_DEVIATION,
-    NO_MATCHING_OFFER_FOUND,
-    MEDIATORS_NOT_MATCHING,
-    OFFER_NOT_AVAILABLE;
+import lombok.Getter;
+
+@Getter
+public class UserProfileIgnoredException extends Exception {
+    private final String userProfileId;
+
+    public UserProfileIgnoredException(String userProfileId) {
+        super("UserProfile with ID " + userProfileId + " is ignored");
+        this.userProfileId = userProfileId;
+    }
 }

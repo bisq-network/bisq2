@@ -60,6 +60,7 @@ import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfileIgnoredException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -84,6 +85,7 @@ public class MuSigTakeOfferReviewController implements Controller {
     private final MuSigService muSigService;
     private Pin errorMessagePin, peersErrorMessagePin;
     private UIScheduler timeoutScheduler;
+    private UIScheduler delayedSuccessScheduler;
 
     public MuSigTakeOfferReviewController(ServiceProvider serviceProvider,
                                           Consumer<Boolean> mainButtonsVisibleHandler,
@@ -162,13 +164,12 @@ public class MuSigTakeOfferReviewController implements Controller {
         }
     }
 
-    public void takeOffer(Runnable onCancelHandler) {
+    public void takeOffer() {
         MuSigOffer muSigOffer = model.getMuSigOffer();
         Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         PaymentMethodSpec<?> paymentMethodSpec = model.getTakersPaymentMethodSpec();
         checkArgument(muSigOffer.getBaseSidePaymentMethodSpecs().size() == 1);
-        mainButtonsVisibleHandler.accept(false);
 
         try {
             UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
@@ -193,9 +194,17 @@ public class MuSigTakeOfferReviewController implements Controller {
             // We have 120 seconds socket timeout, so we should never
             // get triggered here, as the message will be sent as mailbox message
 
+            // A previous attempt's observers must not survive into this attempt (retry case).
+            if (errorMessagePin != null) {
+                errorMessagePin.unbind();
+            }
+            if (peersErrorMessagePin != null) {
+                peersErrorMessagePin.unbind();
+            }
             errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                         if (errorMessage != null) {
                             UIThread.run(() -> {
+                                resetTakeOfferStatusOnFailure();
                                 if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
                                     String errorStackTrace = trade.getErrorStackTrace() != null ? StringUtils.truncate(trade.getErrorStackTrace(), 2000) : "";
                                     new Popup().error(Res.get("muSig.trade.pending.failed.errorPopup.message",
@@ -216,6 +225,7 @@ public class MuSigTakeOfferReviewController implements Controller {
             peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                         if (peersErrorMessage != null) {
                             UIThread.run(() -> {
+                                resetTakeOfferStatusOnFailure();
                                 if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
                                     String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
                                     new Popup().error(Res.get("muSig.trade.pending.failedAtPeer.errorPopup.message",
@@ -237,16 +247,39 @@ public class MuSigTakeOfferReviewController implements Controller {
             // Start the protocol
             muSigService.takeOffer(trade);
 
+            // Hide the navigation buttons only after the synchronous validation passed, so an abort
+            // above leaves the overlay with its Close button intact.
+            mainButtonsVisibleHandler.accept(false);
+
             // todo We send the protocol message and log message inside the protocol handler and don't have an easy way
             //  to get notified about the delivery state.
             model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SENT);
             // todo simulate a small delay until we have a solution for the above issue
-            UIScheduler.run(() -> model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS)).after(200);
+            if (delayedSuccessScheduler != null) {
+                delayedSuccessScheduler.stop();
+            }
+            delayedSuccessScheduler = UIScheduler.run(() -> {
+                if (trade.getErrorMessage() != null || trade.getPeersErrorMessage() != null) {
+                    // The maker rejected the take offer; the error observer already informed the user.
+                    return;
+                }
+                model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS);
+            }).after(200);
         } catch (TradingNotAllowedException e) {
-            UIThread.run(() -> {
-                new Popup().warning(e.getMessage()).show();
-                onCancelHandler.run();
-            });
+            // The timeout scheduler and error observers were already set up above; release them so
+            // the aborted attempt cannot fire the timeout navigation later or stack observers on retry.
+            if (timeoutScheduler != null) {
+                timeoutScheduler.stop();
+            }
+            if (errorMessagePin != null) {
+                errorMessagePin.unbind();
+                errorMessagePin = null;
+            }
+            if (peersErrorMessagePin != null) {
+                peersErrorMessagePin.unbind();
+                peersErrorMessagePin = null;
+            }
+            UIThread.run(() -> new Popup().warning(e.getMessage()).show());
         } catch (UserProfileBannedException e) {
             UIThread.run(() -> {
                 if (muSigOffer.getMakersUserProfileId().equals(e.getUserProfileId())) {
@@ -255,8 +288,9 @@ public class MuSigTakeOfferReviewController implements Controller {
                     // We do not inform banned users about being banned
                     log.debug("Takers user profile was banned");
                 }
-                onCancelHandler.run();
             });
+        } catch (UserProfileIgnoredException e) {
+            UIThread.run(() -> new Popup().warning(Res.get("muSig.offer.taker.ignored.maker.warning")).show());
         } catch (RateLimitExceededException e) {
             UIThread.run(() -> {
                 if (muSigOffer.getMakersUserProfileId().equals(e.getUserProfileId())) {
@@ -265,12 +299,10 @@ public class MuSigTakeOfferReviewController implements Controller {
                     String exceedsLimitInfo = bannedUserService.getExceedsLimitInfo(e.getUserProfileId()).orElseGet(() -> Res.get("data.na"));
                     new Popup().warning(Res.get("muSig.offer.taker.rateLimitsExceeded.taker.warning", exceedsLimitInfo)).show();
                 }
-                onCancelHandler.run();
             });
         } catch (NoMuSigMediatorAvailableException e) {
             UIThread.run(() -> new Popup().warning(Res.get("muSig.offer.taker.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
-                    .onClose(onCancelHandler)
                     .actionButtonText(Res.get("confirmation.ok"))
                     .onAction(() -> {
                         try {
@@ -287,11 +319,7 @@ public class MuSigTakeOfferReviewController implements Controller {
                     })
                     .show());
         } catch (NoMuSigArbitratorAvailableException e) {
-            UIThread.run(() -> {
-                new Popup().warning(Res.get("muSig.offer.taker.noArbitratorAvailable.warning")).show();
-                onCancelHandler.run();
-            });
-
+            UIThread.run(() -> new Popup().warning(Res.get("muSig.offer.taker.noArbitratorAvailable.warning")).show());
         } catch (NoMarketPriceAvailableException e) {
             UIThread.run(() -> new Popup().warning(e.getMessage()).show());
         }
@@ -299,6 +327,17 @@ public class MuSigTakeOfferReviewController implements Controller {
 
     public void reset() {
         model.reset();
+    }
+
+    private void resetTakeOfferStatusOnFailure() {
+        if (timeoutScheduler != null) {
+            timeoutScheduler.stop();
+        }
+        if (delayedSuccessScheduler != null) {
+            delayedSuccessScheduler.stop();
+        }
+        mainButtonsVisibleHandler.accept(true);
+        model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.NOT_STARTED);
     }
 
     @Override
@@ -358,6 +397,9 @@ public class MuSigTakeOfferReviewController implements Controller {
         }
         if (timeoutScheduler != null) {
             timeoutScheduler.stop();
+        }
+        if (delayedSuccessScheduler != null) {
+            delayedSuccessScheduler.stop();
         }
     }
 

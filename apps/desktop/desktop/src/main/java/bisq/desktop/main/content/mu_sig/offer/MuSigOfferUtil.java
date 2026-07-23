@@ -23,6 +23,7 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.mu_sig.MuSigViewUtils;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -50,6 +51,10 @@ public class MuSigOfferUtil {
                 if (item != null && !empty) {
                     userProfileDisplay = new UserProfileDisplay(item.getMakerUserProfile(), true, true);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
+                    if (item.isMakerIgnored()) {
+                        userProfileDisplay.setOpacity(0.4);
+                        Tooltip.install(userProfileDisplay, new BisqTooltip(Res.get("offer.takeOffer.makerIgnored.tooltip")));
+                    }
                     setGraphic(userProfileDisplay);
                 } else {
                     if (userProfileDisplay != null) {

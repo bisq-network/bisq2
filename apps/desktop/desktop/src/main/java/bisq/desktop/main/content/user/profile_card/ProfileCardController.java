@@ -157,6 +157,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
                 .collect(Collectors.toSet());
         model.setUserProfileBondedRoleTypes(bondedRoleTypes);
         model.getIsUserInMyContactList().set(contactListService.isUserInContactList(userProfile));
+        model.getIgnoreUserSelected().set(userProfileService.isChatUserIgnored(userProfile.getId()));
     }
 
     @Override

@@ -1154,6 +1154,7 @@ public class DtoMappings {
                 case PRICE_DEVIATION -> TradeProtocolFailure.PRICE_DEVIATION;
                 case NO_MATCHING_OFFER_FOUND -> TradeProtocolFailure.NO_MATCHING_OFFER_FOUND;
                 case MEDIATORS_NOT_MATCHING -> TradeProtocolFailure.MEDIATORS_NOT_MATCHING;
+                case OFFER_NOT_AVAILABLE -> TradeProtocolFailure.OFFER_NOT_AVAILABLE;
             };
         }
 
@@ -1166,6 +1167,7 @@ public class DtoMappings {
                 case PRICE_DEVIATION -> TradeProtocolFailureDto.PRICE_DEVIATION;
                 case NO_MATCHING_OFFER_FOUND -> TradeProtocolFailureDto.NO_MATCHING_OFFER_FOUND;
                 case MEDIATORS_NOT_MATCHING -> TradeProtocolFailureDto.MEDIATORS_NOT_MATCHING;
+                case OFFER_NOT_AVAILABLE -> TradeProtocolFailureDto.OFFER_NOT_AVAILABLE;
             };
         }
     }
