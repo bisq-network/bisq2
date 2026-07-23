@@ -30,6 +30,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.network.NetworkService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
 import lombok.Getter;
@@ -66,6 +67,7 @@ public class WebSocketService implements Service {
                             TradeService tradeService,
                             UserService userService,
                             BisqEasyService bisqEasyService,
+                            NetworkService networkService,
                             OpenTradeItemsService openTradeItemsService) {
         this.apiConfig = apiConfig;
         subscriptionService = new SubscriptionService(bondedRolesService,
@@ -74,6 +76,7 @@ public class WebSocketService implements Service {
                 tradeService,
                 userService,
                 bisqEasyService,
+                networkService,
                 openTradeItemsService);
         webSocketRestApiService = new WebSocketRestApiService(apiConfig, tlsContextService);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
