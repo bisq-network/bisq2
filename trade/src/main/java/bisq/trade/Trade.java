@@ -17,6 +17,7 @@
 
 package bisq.trade;
 
+import bisq.common.fsm.Event;
 import bisq.common.fsm.FsmModel;
 import bisq.common.fsm.State;
 import bisq.common.monetary.Monetary;
@@ -26,6 +27,7 @@ import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
 import bisq.contract.Contract;
 import bisq.identity.Identity;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.security.DigestUtil;
@@ -37,7 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -114,7 +118,23 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     P taker,
                     P maker,
                     TradeLifecycleState lifecycleState) {
-        super(state);
+        this(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, Set.of(), Set.of());
+    }
+
+    // Used when restoring a trade from persisted data. Passing in the persisted pendingEvents/processedEvents
+    // ensures that FSM events which arrived out of order and could not yet be applied before the previous
+    // shutdown are not silently lost (see bisq.common.fsm.FsmModel and bisq.common.fsm.Fsm#drainEventQueue).
+    protected Trade(C contract,
+                    State state,
+                    String id,
+                    TradeRole tradeRole,
+                    Identity myIdentity,
+                    P taker,
+                    P maker,
+                    TradeLifecycleState lifecycleState,
+                    Set<Event> pendingEvents,
+                    Set<Class<? extends Event>> processedEvents) {
+        super(state, pendingEvents, processedEvents);
 
         this.contract = contract;
         this.id = id;
@@ -141,7 +161,62 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         Optional.ofNullable(getPeersErrorStackTrace()).ifPresent(builder::setPeersErrorStackTrace);
         Optional.ofNullable(getTradeProtocolFailure()).ifPresent(e -> builder.setTradeProtocolFailure(e.toProtoEnum()));
         Optional.ofNullable(getPeersTradeProtocolFailure()).ifPresent(e -> builder.setPeersTradeProtocolFailure(e.toProtoEnum()));
+        // Only network messages are serializable; local, user-triggered events (e.g. BisqEasyConfirmFiatSentEvent)
+        // have no proto representation and are never at risk of being lost across a restart since they are only
+        // ever created while the app is already running.
+        getEventQueue().stream()
+                .filter(EnvelopePayloadMessage.class::isInstance)
+                .map(event -> ((EnvelopePayloadMessage) event).toProto(serializeForHash))
+                .forEach(builder::addPendingFsmEvents);
+        getProcessedEvents().forEach(eventClass -> builder.addProcessedEventClasses(eventClass.getName()));
         return builder;
+    }
+
+    /**
+     * Resolves the persisted pending FSM events (out-of-order network messages) from the given proto.
+     * Any entry which fails to resolve (e.g. an unknown/removed message class from an old persisted trade) is
+     * logged and skipped rather than failing the whole trade load.
+     */
+    protected static Set<Event> pendingEventsFromProto(bisq.trade.protobuf.Trade proto) {
+        Set<Event> pendingEvents = new HashSet<>();
+        for (bisq.network.protobuf.EnvelopePayloadMessage envelopePayloadMessageProto : proto.getPendingFsmEventsList()) {
+            try {
+                EnvelopePayloadMessage envelopePayloadMessage = EnvelopePayloadMessage.fromProto(envelopePayloadMessageProto);
+                if (envelopePayloadMessage instanceof Event event) {
+                    pendingEvents.add(event);
+                } else {
+                    log.warn("Persisted pending FSM event does not implement Event and is dropped. envelopePayloadMessage={}",
+                            envelopePayloadMessage);
+                }
+            } catch (Exception e) {
+                log.warn("Could not resolve a persisted pending FSM event. It will be dropped and not re-applied " +
+                        "after restore. proto={}", envelopePayloadMessageProto, e);
+            }
+        }
+        return pendingEvents;
+    }
+
+    /**
+     * Resolves the persisted processed-event class names from the given proto.
+     * Any entry which fails to resolve (e.g. a class which no longer exists) is logged and skipped rather than
+     * failing the whole trade load.
+     */
+    @SuppressWarnings("unchecked")
+    protected static Set<Class<? extends Event>> processedEventsFromProto(bisq.trade.protobuf.Trade proto) {
+        Set<Class<? extends Event>> processedEvents = new HashSet<>();
+        for (String className : proto.getProcessedEventClassesList()) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                if (Event.class.isAssignableFrom(clazz)) {
+                    processedEvents.add((Class<? extends Event>) clazz);
+                } else {
+                    log.warn("Persisted processed event class does not implement Event and is dropped. className={}", className);
+                }
+            } catch (ClassNotFoundException e) {
+                log.warn("Could not resolve persisted processed event class. It will be dropped. className={}", className, e);
+            }
+        }
+        return processedEvents;
     }
 
     protected void setErrorMessage(String errorMessage) {

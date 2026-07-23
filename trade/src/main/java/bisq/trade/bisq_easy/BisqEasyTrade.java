@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.common.fsm.Event;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
@@ -38,6 +39,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @ToString(callSuper = true)
@@ -88,8 +90,10 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                           Identity myIdentity,
                           BisqEasyTradeParty taker,
                           BisqEasyTradeParty maker,
-                          TradeLifecycleState lifecycleState) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState);
+                          TradeLifecycleState lifecycleState,
+                          Set<Event> pendingEvents,
+                          Set<Class<? extends Event>> processedEvents) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, pendingEvents, processedEvents);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -127,7 +131,9 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
-                TradeLifecycleState.fromProto(proto.getLifecycleState()));
+                TradeLifecycleState.fromProto(proto.getLifecycleState()),
+                pendingEventsFromProto(proto),
+                processedEventsFromProto(proto));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

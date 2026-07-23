@@ -98,11 +98,7 @@ public abstract class Fsm<M extends FsmModel> {
                     } else {
                         model.processedEvents.add(eventClass);
                         // Apply all pending events to see if any of those match our current state.
-                        // If an exception is thrown by the processed pending event it will get thrown to the
-                        // caller. This would be a different triggering event as the event which cause
-                        // the exception (the one from the queue).
-                        // Clone set to avoid ConcurrentModificationException
-                        new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                        drainEventQueue();
                     }
                 } else {
                     log.info("We did not find a transition with state {} and event {}. " +
@@ -134,6 +130,25 @@ public abstract class Fsm<M extends FsmModel> {
     }
 
     protected abstract void persist();
+
+    /**
+     * Re-attempts to handle every event currently sitting in the event queue against the current state.
+     * <br/>
+     * This is called automatically after any successful transition (see {@link #handle(Event)}), but it is
+     * also safe - and sometimes necessary - to call explicitly, e.g. once right after a model has been restored
+     * from persisted data: the event queue itself is not guaranteed to be persisted for every {@link FsmModel}
+     * subclass, so events which arrived out of order before a restart may otherwise never be re-applied because
+     * no further live transition ever occurs for that trade.
+     * <br/>
+     * Safe to call when the queue is empty (no-op) and safe to call multiple times. If an exception is thrown
+     * while handling a queued event it propagates to the caller, same as {@link #handle(Event)}.
+     */
+    public void drainEventQueue() {
+        synchronized (this) {
+            // Clone set to avoid ConcurrentModificationException as handle() mutates model.eventQueue.
+            new HashSet<>(model.getEventQueue()).forEach(this::handle);
+        }
+    }
 
     public TransitionBuilder<M> addTransition() {
         return new TransitionBuilder<>(this);
