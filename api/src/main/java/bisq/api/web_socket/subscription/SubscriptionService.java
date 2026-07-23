@@ -25,6 +25,7 @@ import bisq.api.web_socket.domain.alert_notifications.AlertNotificationsWebSocke
 import bisq.api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.trade.TradeChatMessagesWebSocketService;
 import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
+import bisq.api.web_socket.domain.network.NetworkInfoWebSocketService;
 import bisq.api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.api.web_socket.domain.offers.OffersWebSocketService;
 import bisq.api.web_socket.domain.reputation.ReputationWebSocketService;
@@ -37,6 +38,7 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
+import bisq.network.NetworkService;
 import bisq.trade.TradeService;
 import bisq.common.util.StringUtils;
 import bisq.user.UserService;
@@ -60,6 +62,7 @@ public class SubscriptionService implements Service {
     private final NumUserProfilesWebSocketService numUserProfilesWebSocketService;
     private final TradeRestrictingAlertWebSocketService tradeRestrictingAlertWebSocketService;
     private final AlertNotificationsWebSocketService alertNotificationsWebSocketService;
+    private final NetworkInfoWebSocketService networkInfoWebSocketService;
 
     public SubscriptionService(BondedRolesService bondedRolesService,
                                AlertNotificationsService alertNotificationsService,
@@ -67,6 +70,7 @@ public class SubscriptionService implements Service {
                                TradeService tradeService,
                                UserService userService,
                                BisqEasyService bisqEasyService,
+                               NetworkService networkService,
                                OpenTradeItemsService openTradeItemsService) {
         subscriberRepository = new SubscriberRepository();
 
@@ -84,6 +88,7 @@ public class SubscriptionService implements Service {
         numUserProfilesWebSocketService = new NumUserProfilesWebSocketService(subscriberRepository, userService);
         tradeRestrictingAlertWebSocketService = new TradeRestrictingAlertWebSocketService(subscriberRepository, bondedRolesService.getAlertService());
         alertNotificationsWebSocketService = new AlertNotificationsWebSocketService(subscriberRepository, alertNotificationsService);
+        networkInfoWebSocketService = new NetworkInfoWebSocketService(subscriberRepository, networkService);
     }
 
     @Override
@@ -98,7 +103,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> reputationWebSocketService.initialize())
                 .thenCompose(e -> numUserProfilesWebSocketService.initialize())
                 .thenCompose(e -> tradeRestrictingAlertWebSocketService.initialize())
-                .thenCompose(e -> alertNotificationsWebSocketService.initialize());
+                .thenCompose(e -> alertNotificationsWebSocketService.initialize())
+                .thenCompose(e -> networkInfoWebSocketService.initialize());
     }
 
     @Override
@@ -113,7 +119,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> reputationWebSocketService.shutdown())
                 .thenCompose(e -> numUserProfilesWebSocketService.shutdown())
                 .thenCompose(e -> tradeRestrictingAlertWebSocketService.shutdown())
-                .thenCompose(e -> alertNotificationsWebSocketService.shutdown());
+                .thenCompose(e -> alertNotificationsWebSocketService.shutdown())
+                .thenCompose(e -> networkInfoWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -220,6 +227,9 @@ public class SubscriptionService implements Service {
             }
             case ALERT_NOTIFICATIONS -> {
                 return Optional.of(alertNotificationsWebSocketService);
+            }
+            case NETWORK_INFO -> {
+                return Optional.of(networkInfoWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);
