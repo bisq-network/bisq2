@@ -61,7 +61,18 @@ public abstract class Fsm<M extends FsmModel> {
     abstract protected void configTransitions();
 
     public <E extends Event> void handle(E event) {
-        synchronized (this) {
+        // Synchronize on the model rather than on this Fsm instance: the model (see FsmModel#getStateAndEventQueueSnapshot)
+        // must be lockable directly by callers that only hold a reference to the model - e.g. Trade#getTradeBuilder
+        // during persistence - without needing a reference to this Fsm/TradeProtocol. Locking on the model gives
+        // both sides the same monitor, so a persistence snapshot of {state, eventQueue} can never be taken mid-transition.
+        synchronized (model) {
+            // Tracks whether this call reached a final state, so the finally block below can route the mandatory
+            // post-transition persist() call through persistOnFinalState() instead of the normal persist(). This
+            // matters for privacy/retention (#1622 follow-up): a final state clears eventQueue/processedEvents
+            // in-memory a few lines below, and that wipe must reach disk promptly - persistOnFinalState() bypasses
+            // any write-rate limiting a subclass may apply to the ordinary persist(), so the wipe is not silently
+            // dropped and left stranded on disk for an indefinite time (see RateLimitedPersistenceClient#persistNow).
+            boolean reachedFinalState = false;
             try {
                 checkNotNull(event, "event must not be null");
                 State currentState = model.getState();
@@ -95,14 +106,11 @@ public abstract class Fsm<M extends FsmModel> {
                     if (targetState.isFinalState()) {
                         model.processedEvents.clear();
                         model.eventQueue.clear();
+                        reachedFinalState = true;
                     } else {
                         model.processedEvents.add(eventClass);
                         // Apply all pending events to see if any of those match our current state.
-                        // If an exception is thrown by the processed pending event it will get thrown to the
-                        // caller. This would be a different triggering event as the event which cause
-                        // the exception (the one from the queue).
-                        // Clone set to avoid ConcurrentModificationException
-                        new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                        drainEventQueue();
                     }
                 } else {
                     log.info("We did not find a transition with state {} and event {}. " +
@@ -128,12 +136,53 @@ public abstract class Fsm<M extends FsmModel> {
                 // We throw the exception to allow specific error handling to the implementation class.
                 throw fsmException;
             } finally {
-                persist();
+                if (reachedFinalState) {
+                    persistOnFinalState();
+                } else {
+                    persist();
+                }
             }
         }
     }
 
     protected abstract void persist();
+
+    /**
+     * Called instead of {@link #persist()} exactly once, when a transition reaches a final state. The default
+     * implementation just delegates to {@link #persist()}; override to bypass any write-rate limiting the
+     * concrete {@link #persist()} implementation applies (see {@code bisq.persistence.RateLimitedPersistenceClient}).
+     * <br/>
+     * Reaching a final state clears {@code eventQueue}/{@code processedEvents} in-memory a few lines above in
+     * {@link #handle(Event)}; those may hold sensitive, trade-specific network messages. Without a guaranteed,
+     * unthrottled flush here, a rate-limited persist() call could be silently dropped, leaving the (already
+     * in-memory-wiped) sensitive data sitting on disk for an unbounded time - potentially until the process's
+     * next unrelated persist() call, or its next clean shutdown, neither of which is guaranteed to happen promptly
+     * (or at all, on a crash/kill -9).
+     */
+    protected void persistOnFinalState() {
+        persist();
+    }
+
+    /**
+     * Re-attempts to handle every event currently sitting in the event queue against the current state.
+     * <br/>
+     * This is called automatically after any successful transition (see {@link #handle(Event)}), but it is
+     * also safe - and sometimes necessary - to call explicitly, e.g. once right after a model has been restored
+     * from persisted data: the event queue itself is not guaranteed to be persisted for every {@link FsmModel}
+     * subclass, so events which arrived out of order before a restart may otherwise never be re-applied because
+     * no further live transition ever occurs for that trade.
+     * <br/>
+     * Safe to call when the queue is empty (no-op) and safe to call multiple times. Exceptions from handling a
+     * queued event behave exactly as for a live event: each event goes through the concrete {@link #handle(Event)}
+     * implementation, so whether an {@link FsmException} propagates to the caller or is absorbed is up to the
+     * subclass (e.g. the trade protocols swallow it and surface an error state instead).
+     */
+    public void drainEventQueue() {
+        synchronized (model) {
+            // Clone set to avoid ConcurrentModificationException as handle() mutates model.eventQueue.
+            new HashSet<>(model.getEventQueue()).forEach(this::handle);
+        }
+    }
 
     public TransitionBuilder<M> addTransition() {
         return new TransitionBuilder<>(this);

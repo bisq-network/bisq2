@@ -21,8 +21,12 @@ import lombok.Getter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FsmTest {
 
@@ -156,6 +160,290 @@ public class FsmTest {
         assertEquals("test_comp", fsm.getModel().data);
         assertEquals(0, model.eventQueue.size());
         assertEquals(0, model.processedEvents.size());
+    }
+
+    /**
+     * Reproduces the recovery mechanism behind issue #1622 (a Bisq Easy trade getting stuck because an
+     * out-of-order message sits forever in the FSM's event queue): a queued event, and the model's state,
+     * are captured as if they had just been read back from persisted data (this is exactly what
+     * {@code Trade}'s 3-arg constructor now feeds into {@link FsmModel#FsmModel(State, Set, Set)} when a
+     * trade is restored from proto). We then rebuild a fresh Fsm around that restored model and call
+     * {@link Fsm#drainEventQueue()} once, with no further event delivered, and confirm the queued event is
+     * still applied - proving that recovery no longer depends on some later, unrelated live transition
+     * (or, as happens in production today, an app restart happening to re-deliver the same message via
+     * mailbox replay) to save the trade.
+     */
+    @Test
+    void testDrainEventQueueAfterModelRestore() {
+        // Session 1: an out-of-order event arrives before its prerequisite transition. It gets queued and the
+        // enabling transition (INIT -> S1) never happens live in this session - mirrors the reported bug,
+        // where the buyer's confirm-fiat-sent message arrives before the seller has processed the buyer's
+        // btc-address message.
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        fsm.handle(new MockEvent2(model, "queued"));
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+        assertEquals(1, model.getEventQueue().size());
+
+        // "Restart": rebuild the model purely from the persisted snapshot (state + queue + processedEvents),
+        // exactly as BisqEasyTrade#fromProto now does via Trade#pendingEventsFromProto/processedEventsFromProto.
+        // The restored state (S1) represents the enabling transition having already been persisted; only the
+        // event queue itself was previously at risk of being silently dropped across a restart.
+        MockModel restoredModel = new MockModel(MockState.S1, model.getEventQueue(), model.getProcessedEvents());
+        SimpleFsm<MockModel> restoredFsm = new SimpleFsm<>(restoredModel);
+        restoredFsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        // The restored queue must round-trip faithfully.
+        assertEquals(1, restoredModel.getEventQueue().size());
+        assertEquals(MockState.S1, restoredFsm.getModel().getState());
+
+        // No further event is delivered - only the drain is triggered, as happens once at trade/protocol
+        // reconstruction for a restored trade (BisqEasyTradeService#createAndAddTradeProtocol).
+        restoredFsm.drainEventQueue();
+
+        assertEquals(MockState.S2, restoredFsm.getModel().getState());
+        // MockEventHandler mutates the model referenced by the event itself (the original, pre-restore model,
+        // per the test fixture below) rather than the restoredFsm's model - this confirms the handler for the
+        // queued MockEvent2 genuinely ran during the drain, not just a state placeholder change.
+        assertEquals("queued", model.data);
+        assertTrue(restoredFsm.getModel().getEventQueue().isEmpty());
+    }
+
+    @Test
+    void testDrainEventQueueIsSafeAndIdempotentWhenEmpty() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+
+        // Calling drainEventQueue() on an empty queue must be a safe no-op, and calling it repeatedly must not
+        // change behaviour or throw (re-entrancy is guarded by the same synchronized(model) monitor as handle()).
+        fsm.drainEventQueue();
+        fsm.drainEventQueue();
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+
+        fsm.handle(new MockEvent1(model, "test1"));
+        assertEquals(MockState.S1, fsm.getModel().getState());
+
+        fsm.drainEventQueue();
+        fsm.drainEventQueue();
+        assertEquals(MockState.S1, fsm.getModel().getState());
+        assertEquals("test1", fsm.getModel().data);
+    }
+
+    /**
+     * Regression/documentation guard for the bug itself: if the event queue is NOT carried over on restore
+     * (the behaviour before this fix - {@code Trade} used to call the single-arg {@code FsmModel(State)}
+     * constructor from {@code fromProto}), the queued event is lost forever. Calling drainEventQueue() cannot
+     * recover data that was never restored in the first place; restoring the queue itself (see
+     * {@link #testDrainEventQueueAfterModelRestore}) is what fixes issue #1622, not drainEventQueue() alone.
+     */
+    @Test
+    void testEventIsLostForeverIfQueueIsNotRestored() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        fsm.handle(new MockEvent2(model, "queued"));
+        assertEquals(1, model.getEventQueue().size());
+
+        // "Restart" using only the single-arg constructor - the pre-fix behaviour: the queue is not restored.
+        MockModel restoredModel = new MockModel(MockState.S1);
+        SimpleFsm<MockModel> restoredFsm = new SimpleFsm<>(restoredModel);
+        restoredFsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        assertTrue(restoredModel.getEventQueue().isEmpty());
+        restoredFsm.drainEventQueue();
+
+        // The trade is stuck forever: nothing but the original MockEvent2 instance (now gone) could unstick it.
+        assertEquals(MockState.S1, restoredFsm.getModel().getState());
+        assertNull(restoredFsm.getModel().data);
+    }
+
+    /**
+     * Deterministic proof that {@link FsmModel#getStateAndEventQueueSnapshot()} captures {@code state} and
+     * {@code eventQueue} atomically and independently of later mutation - the concurrency guarantee behind the
+     * #4885 follow-up (making the persisted {state, eventQueue} pair atomic). A genuine data race between
+     * Fsm#handle() and an off-thread persistence read is not something we can reproduce deterministically without
+     * a flaky thread-interleaving test, so instead this pins the single-threaded contract the fix relies on:
+     * a snapshot taken at time T must forever reflect exactly what was true at T, however the model changes after.
+     */
+    @Test
+    void testStateAndEventQueueSnapshotIsAtomicAndIndependentOfLaterMutation() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        // MockEvent2 arrives before the enabling INIT -> S1 transition: no transition matches MockEvent2 from
+        // INIT, so the Fsm parks it in the queue instead of applying it.
+        fsm.handle(new MockEvent2(model, "queued"));
+        assertEquals(MockState.INIT, model.getState());
+        assertEquals(1, model.getEventQueue().size());
+
+        // A snapshot taken now must reflect exactly this pre-transition reality.
+        FsmModel.StateAndEventQueue snapshotBeforeTransition = model.getStateAndEventQueueSnapshot();
+        assertEquals(MockState.INIT, snapshotBeforeTransition.state());
+        assertEquals(1, snapshotBeforeTransition.eventQueue().size());
+
+        // The enabling transition fires: state moves to S1, then the automatic post-transition drain immediately
+        // re-applies the queued MockEvent2, advancing straight on to S2 and emptying the live queue - all within
+        // this single handle() call.
+        fsm.handle(new MockEvent1(model, "test1"));
+        assertEquals(MockState.S2, model.getState());
+        assertTrue(model.getEventQueue().isEmpty());
+
+        // Load-bearing assertion: the snapshot taken BEFORE the transition must be completely unaffected by it.
+        // This proves two things at once: (a) the eventQueue copy was defensive/independent - a reference into
+        // the live CopyOnWriteArraySet would now appear empty, since the live queue was drained - and (b) state
+        // and eventQueue were captured together as of the same instant, not via two independently-racy reads.
+        assertEquals(MockState.INIT, snapshotBeforeTransition.state());
+        assertEquals(1, snapshotBeforeTransition.eventQueue().size());
+
+        // A fresh snapshot taken now must reflect the new, post-transition reality.
+        FsmModel.StateAndEventQueue snapshotAfterTransition = model.getStateAndEventQueueSnapshot();
+        assertEquals(MockState.S2, snapshotAfterTransition.state());
+        assertTrue(snapshotAfterTransition.eventQueue().isEmpty());
+    }
+
+    /**
+     * Follow-up to #4885 (privacy/retention, Henrik's review point): a transition reaching a final state clears
+     * eventQueue/processedEvents in-memory (see Fsm#handle), which may hold sensitive, trade-specific network
+     * messages. The persist call which follows that clear must be routed through {@link Fsm#persistOnFinalState()}
+     * rather than the plain, potentially rate-limited {@link Fsm#persist()}, so that the wipe is not left stranded
+     * on disk. This test pins that dispatch deterministically, without any real I/O or timing involved.
+     */
+    @Test
+    void testPersistOnFinalStateIsUsedInsteadOfPersistWhenReachingFinalState() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.COMPLETED);
+
+        // A normal, non-final transition must go through the ordinary (potentially rate-limited) persist().
+        fsm.handle(new MockEvent1(model, "test1"));
+        assertEquals(MockState.S1, fsm.getModel().getState());
+        assertEquals(1, fsm.persistCallCount);
+        assertEquals(0, fsm.persistOnFinalStateCallCount);
+
+        // The completing transition must be routed through persistOnFinalState() instead - exactly once, and
+        // the ordinary persist() must NOT additionally fire for this same call.
+        fsm.handle(new MockEvent2(model, "test2"));
+        assertEquals(MockState.COMPLETED, fsm.getModel().getState());
+        assertEquals(1, fsm.persistCallCount);
+        assertEquals(1, fsm.persistOnFinalStateCallCount);
+    }
+
+    /**
+     * Follow-up to #4885 (privacy/retention, Henrik's review point): a stuck trade may never reach a final state,
+     * so its parked out-of-order events - which can hold sensitive account-data network messages persisted with the
+     * trade - would otherwise linger on disk indefinitely. {@link FsmModel#clearEventQueue()} is the seam the
+     * data-retention/redaction pass uses to scrub them once a trade passes the redaction threshold. This pins that
+     * it empties both eventQueue and processedEvents.
+     */
+    @Test
+    void testClearEventQueueScrubsParkedEvents() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        // MockEvent2 arrives before its enabling transition, so the Fsm parks it in the queue (the stuck-trade shape).
+        fsm.handle(new MockEvent2(model, "queued"));
+        assertEquals(MockState.INIT, model.getState());
+        assertEquals(1, model.getEventQueue().size());
+
+        model.clearEventQueue();
+
+        assertTrue(model.getEventQueue().isEmpty(), "clearEventQueue() must empty the parked event queue");
+        assertTrue(model.getProcessedEvents().isEmpty(), "clearEventQueue() must also clear processedEvents");
+    }
+
+    @Test
+    void testRemoveQueuedEventsIfScrubsOnlyMatchingParkedEvents() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent3.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S3);
+
+        // Both arrive before their enabling state, so the Fsm parks them (the stuck-trade shape).
+        fsm.handle(new MockEvent2(model, "queued-2"));
+        fsm.handle(new MockEvent3(model, "queued-3"));
+        assertEquals(2, model.getEventQueue().size());
+
+        // The selective scrub used by the restore-drain guard (drop events from a now-banned sender):
+        // only matching events go, the rest stay queued for the drain.
+        boolean removed = model.removeQueuedEventsIf(MockEvent2.class::isInstance);
+
+        assertTrue(removed, "removeQueuedEventsIf must report that something was removed");
+        assertEquals(1, model.getEventQueue().size(), "non-matching events must stay queued");
+        assertTrue(model.getEventQueue().stream().anyMatch(MockEvent3.class::isInstance));
+
+        assertFalse(model.removeQueuedEventsIf(MockEvent2.class::isInstance),
+                "a second scrub with no matches must report nothing removed");
     }
 
     @Test
@@ -608,6 +896,10 @@ public class FsmTest {
         public MockModel(MockState state, String data) {
             super(state);
             this.data = data;
+        }
+
+        public MockModel(MockState state, Set<Event> eventQueue, Set<Class<? extends Event>> processedEvents) {
+            super(state, eventQueue, processedEvents);
         }
 
         private String data = null;

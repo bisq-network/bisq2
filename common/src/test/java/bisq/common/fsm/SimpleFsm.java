@@ -3,6 +3,10 @@ package bisq.common.fsm;
 import java.lang.reflect.InvocationTargetException;
 
 public class SimpleFsm<M extends FsmModel> extends Fsm<M> {
+    // Test-only invocation counters, used to assert which persist path a given transition routed through
+    // (see FsmTest#testPersistOnFinalStateIsUsedInsteadOfPersistWhenReachingFinalState).
+    public int persistCallCount = 0;
+    public int persistOnFinalStateCallCount = 0;
 
     public SimpleFsm(M model) {
         super(model);
@@ -36,6 +40,11 @@ public class SimpleFsm<M extends FsmModel> extends Fsm<M> {
 
     @Override
     protected void persist() {
-        // Ignore for test
+        persistCallCount++;
+    }
+
+    @Override
+    protected void persistOnFinalState() {
+        persistOnFinalStateCallCount++;
     }
 }

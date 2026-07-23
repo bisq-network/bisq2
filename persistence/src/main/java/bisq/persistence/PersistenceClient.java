@@ -49,7 +49,16 @@ public interface PersistenceClient<T extends PersistableStore<T>> {
     PersistableStore<T> getPersistableStore();
 
     default CompletableFuture<Boolean> persist() {
-        return getPersistence().persistAsync(getPersistableStore().getClone())
-                .handle((nil, throwable) -> throwable == null);
+        // Snapshot capture and write-ticket assignment (inside persistAsync) must be one atomic unit:
+        // Persistence's write-id guard skips a write when a higher-ticket write already landed, which is
+        // only correct if ticket order equals capture order. Without this lock, two concurrent persist()
+        // calls (e.g. ProfileAgeService/SignedWitnessService/AccountAgeService are reachable from
+        // scheduler and message-handler threads) could capture in one order and take tickets in the
+        // other, silently dropping the newer snapshot. RateLimitedPersistenceClient overrides this with
+        // its own scheduleLock-based equivalent.
+        synchronized (this) {
+            return getPersistence().persistAsync(getPersistableStore().getClone())
+                    .handle((nil, throwable) -> throwable == null);
+        }
     }
 }
