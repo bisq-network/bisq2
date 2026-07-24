@@ -207,12 +207,14 @@ public class PaymentAccountsRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @SuppressWarnings("deprecation")
     public Response getFiatPaymentMethods() {
         try {
+            // Only rails that can back a standard (classic) payment account belong here — the mobile
+            // client uses this list to drive account creation. Accountless-only rails such as TELE_BIRR
+            // (Bisq Easy-only) must never appear, or mapping them to FiatPaymentRailDto below throws
+            // (there's no DTO constant for them), turning this endpoint into a 500 for everyone.
             List<FiatPaymentMethodDto> items = FiatPaymentRailUtil.getPaymentRails().stream()
-                    .filter(rail -> rail != FiatPaymentRail.CUSTOM)
-                    .filter(rail -> rail != FiatPaymentRail.CASH_APP)
+                    .filter(FiatPaymentRail::supportsStandardAccountCreation)
                     .map(FiatPaymentMethod::fromPaymentRail)
                     .map(FiatPaymentMethodDtoMapping::fromBisq2Model)
                     .sorted(Comparator.comparing(FiatPaymentMethodDto::name, String.CASE_INSENSITIVE_ORDER))
