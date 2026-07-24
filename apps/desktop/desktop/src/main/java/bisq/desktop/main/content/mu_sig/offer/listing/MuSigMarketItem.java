@@ -146,4 +146,8 @@ public class MuSigMarketItem {
     private void removeFromFavourites() {
         favouriteMarketsService.removeFavourite(getMarket());
     }
+
+    boolean hasMarketPrice() {
+        return marketPriceService.findMarketPrice(getMarket()).isPresent();
+    }
 }

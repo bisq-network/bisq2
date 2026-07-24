@@ -98,6 +98,12 @@ public class FiatCurrencyRepository {
         try {
             checkArgument(!StringUtils.isEmpty(countryCode), "countryCode must not be null or empty");
 
+//            //  FIXME(remove): FOR TEST ONLY !!!
+//            if (countryCode.equals("DE")) {
+//                log.warn("Currency for DE is patched to BGN for test.");
+//                return new FiatCurrency("BGN");
+//            }
+
             if (countryCode.equals("XK")) {
                 return new FiatCurrency("EUR");
             }
