@@ -317,6 +317,7 @@ public class PaymentSummaryController implements Controller {
                     new SwiftAccountDetailsGridPane((SwiftAccountPayload) accountPayload, fiatPaymentRail);
             case SWISH ->
                     new SwishAccountDetailsGridPane((SwishAccountPayload) accountPayload, fiatPaymentRail);
+            case TELE_BIRR -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case UPHOLD ->
                     new UpholdAccountDetailsGridPane((UpholdAccountPayload) accountPayload, fiatPaymentRail);
             case UPI ->
@@ -613,6 +614,7 @@ public class PaymentSummaryController implements Controller {
                                 keyPair,
                                 keyType,
                                 accountOrigin);
+                case TELE_BIRR -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
                 case UPHOLD ->
                         new UpholdAccount(StringUtils.createUid(),
                                 System.currentTimeMillis(),
