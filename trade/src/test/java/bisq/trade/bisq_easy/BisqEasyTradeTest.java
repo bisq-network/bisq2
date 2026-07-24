@@ -28,7 +28,6 @@ import bisq.common.market.Market;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.UnresolvableProtobufEnumException;
-import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
@@ -36,7 +35,6 @@ import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkMessageResolver;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -53,30 +51,23 @@ import bisq.trade.bisq_easy.protocol.BisqEasySellerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessage;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
 import bisq.trade.protocol.messages.TradeMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.security.KeyPair;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -157,149 +148,6 @@ class BisqEasyTradeTest {
         // queued confirm-fiat-sent message - the trade is no longer stuck, with no restart-timing luck required.
         assertEquals(BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION, restoredTrade.getTradeState());
         assertTrue(restoredTrade.getEventQueue().isEmpty());
-    }
-
-    /**
-     * Live-recovery-pass counterpart to {@link #confirmFiatSentMessageQueuedWhileBtcAddressPendingSurvivesRestoreAndDrains()}:
-     * reproduces the same #1622 scenario, but recovers the trade WITHOUT a restart and without the peer re-sending
-     * anything, by calling {@link BisqEasyTradeService#reprocessTrade(BisqEasyTrade)} directly. The enabling
-     * btc-address message is only ever visible via the confidential-message layer's own live record of processed
-     * messages (as it would be if it was received but, for whatever reason, never actually reached the FSM) - it
-     * is never delivered to the trade a second time by a peer, and no proto round-trip happens here at all.
-     */
-    @Test
-    void recoveryPassAppliesPendingEnablingMessageAndDrainsQueuedMessageWithoutRestart(@TempDir Path tempDir) throws UnresolvableProtobufEnumException {
-        NetworkId takerNetworkId = createNetworkId("buyer-taker-recovery");
-        NetworkId makerNetworkId = createNetworkId("seller-maker-recovery");
-        BisqEasyOffer offer = createRealOffer(makerNetworkId);
-        BisqEasyContract contract = createRealContract(offer, takerNetworkId);
-
-        BisqEasyTrade trade = createTradeAtState(contract, offer, takerNetworkId, makerNetworkId,
-                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS);
-        String tradeId = trade.getId();
-
-        ConfidentialMessageService confidentialMessageService = mock(ConfidentialMessageService.class);
-        RecoveryHarness harness = createRecoveryHarness(tempDir, confidentialMessageService);
-        BisqEasyTradeService tradeService = harness.tradeService();
-
-        tradeService.getPersistableStore().addTrade(trade);
-        BisqEasyProtocol protocol = tradeService.createAndAddTradeProtocol(trade, false);
-        String protocolVersion = protocol.getVersion();
-
-        // The buyer's confirm-fiat-sent message arrives out of order and is parked in the event queue, exactly as
-        // a genuine live inbound message would be.
-        BisqEasyConfirmFiatSentMessage fiatSentMessage = new BisqEasyConfirmFiatSentMessage(
-                "fiat-sent-msg", tradeId, protocolVersion, takerNetworkId, makerNetworkId);
-        protocol.handle(fiatSentMessage);
-        assertEquals(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
-                trade.getTradeState());
-        assertEquals(1, trade.getEventQueue().size());
-
-        // The genuinely pending btc-address message was received by the confidential-message layer, but never
-        // reached the FSM. It is visible only via the network layer's own live record of everything decrypted
-        // this session - nothing is redelivered by the peer.
-        BisqEasyBtcAddressMessage btcAddressMessage = new BisqEasyBtcAddressMessage(
-                "btc-address-msg", tradeId, protocolVersion, takerNetworkId, makerNetworkId,
-                "bc1qxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzx", offer);
-        Set<EnvelopePayloadMessage> processedMessages = Set.of(btcAddressMessage);
-        when(confidentialMessageService.getProcessedEnvelopePayloadMessages()).thenReturn(processedMessages);
-
-        int numApplied = tradeService.reprocessTrade(trade);
-
-        assertEquals(1, numApplied);
-        assertEquals(BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION, trade.getTradeState());
-        assertTrue(trade.getEventQueue().isEmpty());
-    }
-
-    /**
-     * A healthy, in-progress trade has nothing pending: none of its already-received messages are missing from
-     * processedEvents, so the recovery pass must be a complete no-op - no handler re-runs, no message gets sent to
-     * the peer, and the trade's state is untouched.
-     */
-    @Test
-    void recoveryPassIsNoOpOnHealthyTradeAndSendsNoMessages(@TempDir Path tempDir) throws UnresolvableProtobufEnumException {
-        NetworkId takerNetworkId = createNetworkId("buyer-taker-healthy");
-        NetworkId makerNetworkId = createNetworkId("seller-maker-healthy");
-        BisqEasyOffer offer = createRealOffer(makerNetworkId);
-        BisqEasyContract contract = createRealContract(offer, takerNetworkId);
-
-        BisqEasyTradeState state = BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
-        BisqEasyTrade trade = createTradeAtState(contract, offer, takerNetworkId, makerNetworkId, state);
-
-        ConfidentialMessageService confidentialMessageService = mock(ConfidentialMessageService.class);
-        // Nothing pending: an empty processed-message set represents "no message this trade needs is sitting
-        // anywhere unapplied" - the healthy-trade case the recovery pass must leave completely alone.
-        when(confidentialMessageService.getProcessedEnvelopePayloadMessages()).thenReturn(Set.of());
-        RecoveryHarness harness = createRecoveryHarness(tempDir, confidentialMessageService);
-        BisqEasyTradeService tradeService = harness.tradeService();
-
-        tradeService.getPersistableStore().addTrade(trade);
-        tradeService.createAndAddTradeProtocol(trade, false);
-
-        int numApplied = tradeService.reprocessTrade(trade);
-
-        assertEquals(0, numApplied);
-        assertEquals(state, trade.getTradeState());
-        assertTrue(trade.getEventQueue().isEmpty());
-        verify(harness.networkService(), never()).confidentialSend(any(), any(), any());
-    }
-
-    /**
-     * Guards against the makerCreatesProtocol() IllegalArgumentException regression identified during the #1622
-     * recovery-pass safety review: a maker-side trade's own originating take-offer-request/response are always
-     * present in the confidential-message layer's processed-message set, since that layer never scopes its record
-     * to "not yet applied" - it is a live record of everything decrypted this session. The trade's processedEvents
-     * (restored here via the same proto field the persistence fix introduced, mirroring exactly what a real prior
-     * transition would have recorded) must exclude both messages from re-selection, proving the recovery pass
-     * never routes back through onMessage()/makerCreatesProtocol() - which would otherwise throw, since the
-     * protocol/trade already exists for any trade reaching reprocessTrade.
-     */
-    @Test
-    void recoveryPassNeverThrowsAndSkipsAlreadyAppliedTakeOfferMessagesOnMakerTrade(@TempDir Path tempDir) throws UnresolvableProtobufEnumException {
-        NetworkId takerNetworkId = createNetworkId("buyer-taker-maker-guard");
-        NetworkId makerNetworkId = createNetworkId("seller-maker-guard");
-        BisqEasyOffer offer = createRealOffer(makerNetworkId);
-        BisqEasyContract contract = createRealContract(offer, takerNetworkId);
-
-        BisqEasyTradeState state = BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
-        BisqEasyTrade freshTrade = new BisqEasyTrade(contract, false, false, createIdentity(makerNetworkId), offer,
-                takerNetworkId, makerNetworkId);
-        bisq.trade.protobuf.Trade proto = freshTrade.toProto(false).toBuilder()
-                .setState(state.name())
-                // Mirrors Trade#getTradeBuilder: exactly what a real, already-fired take-offer-request/response
-                // transition would have recorded before this trade was persisted.
-                .addProcessedEventClasses(BisqEasyTakeOfferRequest.class.getName())
-                .addProcessedEventClasses(BisqEasyTakeOfferResponse.class.getName())
-                .build();
-        BisqEasyTrade trade = BisqEasyTrade.fromProto(proto);
-        String tradeId = trade.getId();
-        assertTrue(trade.getProcessedEvents().contains(BisqEasyTakeOfferRequest.class));
-        assertTrue(trade.getProcessedEvents().contains(BisqEasyTakeOfferResponse.class));
-
-        ContractSignatureData contractSignatureData = new ContractSignatureData(new byte[20], new byte[68],
-                KeyGeneration.generateDefaultEcKeyPair().getPublic());
-        BisqEasyTakeOfferRequest takeOfferRequest = new BisqEasyTakeOfferRequest("take-offer-request-msg", tradeId,
-                BisqEasyProtocol.VERSION, takerNetworkId, makerNetworkId, contract, contractSignatureData);
-        BisqEasyTakeOfferResponse takeOfferResponse = new BisqEasyTakeOfferResponse("take-offer-response-msg", tradeId,
-                BisqEasyProtocol.VERSION, makerNetworkId, takerNetworkId, contractSignatureData);
-
-        ConfidentialMessageService confidentialMessageService = mock(ConfidentialMessageService.class);
-        Set<EnvelopePayloadMessage> processedMessages = Set.of(takeOfferRequest, takeOfferResponse);
-        when(confidentialMessageService.getProcessedEnvelopePayloadMessages()).thenReturn(processedMessages);
-        RecoveryHarness harness = createRecoveryHarness(tempDir, confidentialMessageService);
-        BisqEasyTradeService tradeService = harness.tradeService();
-
-        tradeService.getPersistableStore().addTrade(trade);
-        tradeService.createAndAddTradeProtocol(trade, false);
-
-        int numApplied = assertDoesNotThrow(() -> tradeService.reprocessTrade(trade));
-
-        assertEquals(0, numApplied);
-        assertEquals(state, trade.getTradeState());
-        // Never re-created via makerCreatesProtocol(): still exactly one registered trade for this ID.
-        assertEquals(1, tradeService.getTrades().stream().filter(t -> t.getId().equals(tradeId)).count());
-        // Never re-sent the take-offer-response (or anything else) to the peer.
-        verify(harness.networkService(), never()).confidentialSend(any(), any(), any());
     }
 
     /**
@@ -409,10 +257,8 @@ class BisqEasyTradeTest {
     }
 
     // Builds a BisqEasyTradeService harness suitable for exercising the real initialize()/onMessage() lifecycle,
-    // unlike createRecoveryHarness() below (whose tests never call initialize() and therefore don't need to stub
-    // the additional ServiceProvider dependencies initialize() itself touches: getConfidentialMessageServices(),
-    // getDefaultNodeStateByTransportType(), the alert/settings observers, and the periodic
-    // redaction/recovery-pass schedulers).
+    // stubbing every ServiceProvider dependency initialize() itself touches: getConfidentialMessageServices(),
+    // the alert/settings observers, and the periodic redaction scheduler.
     // Each call is given its own persistence directory: a real restart produces a brand-new service/Fsm, and
     // reusing one directory (or one service instance) across "before" and "after" phases would let the two
     // phases silently share state that only a real proto round trip should carry across.
@@ -421,9 +267,6 @@ class BisqEasyTradeTest {
         // Empty: message delivery is driven explicitly via onMessage() in the test body rather than letting
         // initialize()'s own startup replay (of whatever this would return) do it implicitly.
         when(networkService.getConfidentialMessageServices()).thenReturn(Set.of());
-        // Empty: initRecoverStalledTrades() (branch-only) iterates this to wire reconnect-triggered recovery,
-        // which these tests do not exercise.
-        when(networkService.getDefaultNodeStateByTransportType()).thenReturn(Map.of());
         when(networkService.confidentialSend(any(), any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(mock(SendMessageResult.class)));
 
@@ -435,29 +278,6 @@ class BisqEasyTradeTest {
         when(serviceProvider.getBisqEasyTradeService()).thenReturn(tradeService);
 
         return new LifecycleHarness(tradeService, networkService);
-    }
-
-    private record RecoveryHarness(BisqEasyTradeService tradeService, NetworkService networkService) {
-    }
-
-    private static RecoveryHarness createRecoveryHarness(Path tempDir, ConfidentialMessageService confidentialMessageService) {
-        NetworkService networkService = mock(NetworkService.class);
-        when(networkService.getConfidentialMessageServices()).thenReturn(Set.of(confidentialMessageService));
-        when(networkService.confidentialSend(any(), any(), any()))
-                .thenReturn(CompletableFuture.completedFuture(mock(SendMessageResult.class)));
-
-        // Deep stubs for everything else: reprocessTrade() and the FSM handlers it may drive only ever touch
-        // networkService and (indirectly, via BisqEasyProtocol#persist) the trade service's own persistence - any
-        // other ServiceProvider dependency an incidentally-triggered handler reaches for should behave as an inert
-        // default (false/empty/no-op) rather than NPE.
-        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
-        when(serviceProvider.getNetworkService()).thenReturn(networkService);
-        when(serviceProvider.getPersistenceService()).thenReturn(new PersistenceService(tempDir));
-
-        BisqEasyTradeService tradeService = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP);
-        when(serviceProvider.getBisqEasyTradeService()).thenReturn(tradeService);
-
-        return new RecoveryHarness(tradeService, networkService);
     }
 
     private static BisqEasyTrade createTradeAtState(BisqEasyContract contract,

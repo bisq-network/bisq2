@@ -118,12 +118,15 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     P taker,
                     P maker,
                     TradeLifecycleState lifecycleState) {
-        this(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, Set.of(), Set.of());
+        this(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, Set.of());
     }
 
-    // Used when restoring a trade from persisted data. Passing in the persisted pendingEvents/processedEvents
-    // ensures that FSM events which arrived out of order and could not yet be applied before the previous
-    // shutdown are not silently lost (see bisq.common.fsm.FsmModel and bisq.common.fsm.Fsm#drainEventQueue).
+    // Used when restoring a trade from persisted data. Passing in the persisted pendingEvents ensures that FSM
+    // events which arrived out of order and could not yet be applied before the previous shutdown are not
+    // silently lost (see bisq.common.fsm.FsmModel and bisq.common.fsm.Fsm#drainEventQueue). processedEvents is
+    // never restored across a restart: it is only ever used live, in-memory, within a single running session
+    // (populated the moment a transition succeeds, cleared once a final state is reached - see Fsm#handle), so
+    // we always start it out empty here.
     protected Trade(C contract,
                     State state,
                     String id,
@@ -132,9 +135,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     P taker,
                     P maker,
                     TradeLifecycleState lifecycleState,
-                    Set<Event> pendingEvents,
-                    Set<Class<? extends Event>> processedEvents) {
-        super(state, pendingEvents, processedEvents);
+                    Set<Event> pendingEvents) {
+        super(state, pendingEvents, Set.of());
 
         this.contract = contract;
         this.id = id;
@@ -168,7 +170,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .filter(EnvelopePayloadMessage.class::isInstance)
                 .map(event -> ((EnvelopePayloadMessage) event).toProto(serializeForHash))
                 .forEach(builder::addPendingFsmEvents);
-        getProcessedEvents().forEach(eventClass -> builder.addProcessedEventClasses(eventClass.getName()));
         return builder;
     }
 
@@ -194,29 +195,6 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
             }
         }
         return pendingEvents;
-    }
-
-    /**
-     * Resolves the persisted processed-event class names from the given proto.
-     * Any entry which fails to resolve (e.g. a class which no longer exists) is logged and skipped rather than
-     * failing the whole trade load.
-     */
-    @SuppressWarnings("unchecked")
-    protected static Set<Class<? extends Event>> processedEventsFromProto(bisq.trade.protobuf.Trade proto) {
-        Set<Class<? extends Event>> processedEvents = new HashSet<>();
-        for (String className : proto.getProcessedEventClassesList()) {
-            try {
-                Class<?> clazz = Class.forName(className);
-                if (Event.class.isAssignableFrom(clazz)) {
-                    processedEvents.add((Class<? extends Event>) clazz);
-                } else {
-                    log.warn("Persisted processed event class does not implement Event and is dropped. className={}", className);
-                }
-            } catch (ClassNotFoundException e) {
-                log.warn("Could not resolve persisted processed event class. It will be dropped. className={}", className, e);
-            }
-        }
-        return processedEvents;
     }
 
     protected void setErrorMessage(String errorMessage) {

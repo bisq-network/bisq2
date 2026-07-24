@@ -85,9 +85,12 @@ message Trade {
   // unordered phase of the protocol). Persisted so that they are not silently lost across a
   // restart and can be re-applied once the trade is restored.
   repeated network.EnvelopePayloadMessage pendingFsmEvents = 15;
-  // Fully qualified class names of FSM events which have already triggered a transition at least
-  // once. Used to avoid re-queueing stale duplicates after a restore. See bisq.common.fsm.FsmModel.
-  repeated string processedEventClasses = 16;
+  // Field 16 (processedEventClasses: fully qualified class names of already-processed FSM events,
+  // resolved back via Class.forName()) was reserved so the field number is not silently reused -
+  // this field never shipped in a release (it was introduced and removed again within the same
+  // unreleased #1622 fix), so no wire-compatibility concern actually applies here, but reserving
+  // costs nothing and avoids relying on that being true forever.
+  reserved 16;
 
   oneof message {
     BisqEasyTrade bisqEasyTrade = 30;

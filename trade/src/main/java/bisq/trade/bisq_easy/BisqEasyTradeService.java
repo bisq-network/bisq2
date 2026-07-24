@@ -25,7 +25,6 @@ import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
-import bisq.common.fsm.Event;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -40,7 +39,6 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.PriceSpec;
@@ -76,8 +74,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -85,7 +81,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -95,18 +90,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyTradeStore> implements Service, ConfidentialMessageService.Listener {
-    // Debounce window applied after a transport node reaches RUNNING before we run the recovery pass. Mirrors
-    // bisq.network.p2p.services.confidential.resend.ResendMessageService's identical pattern/rationale: right
-    // after a (re)connect a burst of node-state changes and redelivered messages arrive in quick succession, so
-    // we wait briefly for things to settle instead of racing them with a recovery pass.
-    private static final long RECOVER_STALLED_TRADES_RECONNECT_DEBOUNCE_SEC = 10;
-    // Periodic safety net in case no reconnect event ever fires while a trade is nonetheless stalled (e.g. a
-    // long-lived connection during which a message was received but, for whatever reason, never actually reached
-    // the FSM). BisqEasy trades are human-paced (fiat transfer confirmations take minutes to days, not seconds),
-    // and each pass is cheap - an in-memory filter plus, for every trade that is not actually stuck, a handful of
-    // FSM no-ops - so a few minutes bounds the worst-case recovery latency without meaningful CPU/log overhead.
-    private static final long RECOVER_STALLED_TRADES_PERIODIC_INTERVAL_MIN = 5;
-
     private final ServiceProvider serviceProvider;
     private final NetworkService networkService;
     private final IdentityService identityService;
@@ -130,11 +113,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
-    private final Set<Pin> recoverStalledTradesNodeStatePins = new HashSet<>();
-    @Nullable
-    private Scheduler recoverStalledTradesReconnectScheduler;
-    @Nullable
-    private Scheduler recoverStalledTradesPeriodicScheduler;
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
@@ -206,8 +184,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                 .periodically(1, TimeUnit.HOURS);
         numDaysAfterRedactingTradeDataPin = settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
 
-        initRecoverStalledTrades();
-
         return CompletableFuture.completedFuture(true);
     }
 
@@ -224,16 +200,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         if (numDaysAfterRedactingTradeDataScheduler != null) {
             numDaysAfterRedactingTradeDataScheduler.stop();
             numDaysAfterRedactingTradeDataScheduler = null;
-        }
-        recoverStalledTradesNodeStatePins.forEach(Pin::unbind);
-        recoverStalledTradesNodeStatePins.clear();
-        if (recoverStalledTradesReconnectScheduler != null) {
-            recoverStalledTradesReconnectScheduler.stop();
-            recoverStalledTradesReconnectScheduler = null;
-        }
-        if (recoverStalledTradesPeriodicScheduler != null) {
-            recoverStalledTradesPeriodicScheduler.stop();
-            recoverStalledTradesPeriodicScheduler = null;
         }
 
         networkService.removeConfidentialMessageListener(this);
@@ -503,15 +469,16 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         tradeProtocolById.put(id, tradeProtocol);
         if (isRestoredTrade) {
             // Isolate per trade: drainEventQueue() re-applies queued events and can raise an FsmException. The
-            // trade is already created and registered above, so we keep it and let the periodic/reconnect
-            // recovery pass retry. Without this guard a single failing trade would escape the
-            // persistableStore.getTrades().forEach(...) loop in initialize() and block restoring every
-            // subsequent trade - consistent with the per-trade isolation in reprocessTrade()/recoverStalledTrades().
+            // trade is already created and registered above, so we keep it regardless. Without this guard a
+            // single failing trade would escape the persistableStore.getTrades().forEach(...) loop in
+            // initialize() and block restoring every subsequent trade. A failed drain here means the trade
+            // stays stuck until it is manually looked at - there is no periodic or reconnect-triggered safety
+            // net to retry it.
             try {
                 tradeProtocol.drainEventQueue();
             } catch (Exception e) {
                 log.warn("Failed to drain the event queue for restored trade {} on load. The trade is still " +
-                        "loaded; the recovery pass will retry.", id, e);
+                        "loaded but remains stuck until manually investigated.", id, e);
             }
         }
         return tradeProtocol;
@@ -527,154 +494,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
                     "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
                             "The Bisq security manager has published an emergency alert with a min. version required for trading.");
-        }
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Live recovery pass (#1622 follow-up)
-    /* --------------------------------------------------------------------- */
-
-    // See bisq.common.fsm.Fsm#drainEventQueue: a queued event only gets re-attempted after some *further* live
-    // transition happens to occur on that same trade, which may never happen. drainEventQueue() alone therefore
-    // cannot fix a trade where the enabling message was received but, for whatever reason (a transient bug, a
-    // service that was not yet registered as a listener at the time, ...), never even reached the FSM in the
-    // first place - there is nothing queued to drain. This recovery pass additionally re-feeds such messages from
-    // the confidential-message layer's own live, in-memory record of everything it has decrypted this session
-    // (ConfidentialMessageService#getProcessedEnvelopePayloadMessages, which is not scoped to "not yet applied" -
-    // see reprocessTrade for how we filter it safely), so it can recover the trade without needing a restart or a
-    // fresh redelivery from the peer.
-    private void initRecoverStalledTrades() {
-        networkService.getDefaultNodeStateByTransportType().forEach((transportType, nodeState) -> {
-            Pin pin = nodeState.addObserver(state -> {
-                if (state == Node.State.RUNNING) {
-                    if (recoverStalledTradesReconnectScheduler != null) {
-                        recoverStalledTradesReconnectScheduler.stop();
-                    }
-                    recoverStalledTradesReconnectScheduler = Scheduler.run(this::recoverStalledTrades)
-                            .host(this)
-                            .runnableName("recoverStalledTradesOnReconnect")
-                            .after(RECOVER_STALLED_TRADES_RECONNECT_DEBOUNCE_SEC, TimeUnit.SECONDS);
-                }
-            });
-            recoverStalledTradesNodeStatePins.add(pin);
-        });
-
-        // Periodic safety net; the reconnect-triggered pass above is the primary trigger. Delay the first run by
-        // the same interval so we do not duplicate the work initialize() already did a moment ago (persisted-trade
-        // protocol restore + the one-off processed-message replay above).
-        recoverStalledTradesPeriodicScheduler = Scheduler.run(this::recoverStalledTrades)
-                .host(this)
-                .runnableName("recoverStalledTradesPeriodic")
-                .periodically(RECOVER_STALLED_TRADES_PERIODIC_INTERVAL_MIN, RECOVER_STALLED_TRADES_PERIODIC_INTERVAL_MIN, TimeUnit.MINUTES);
-    }
-
-    // Must never throw: this runs both from a Scheduler's Runnable (an uncaught exception would silently stop all
-    // future periodic executions - see java.util.concurrent.ScheduledExecutorService#scheduleWithFixedDelay) and
-    // from a node-state observer callback. Per-trade failures are additionally isolated in reprocessTrade itself,
-    // so this outer guard is defense in depth against a failure in the iteration/filtering step itself.
-    private void recoverStalledTrades() {
-        try {
-            List<BisqEasyTrade> openTrades = getTrades().stream()
-                    .filter(trade -> !trade.getTradeState().isFinalState())
-                    .collect(Collectors.toList());
-            int numTradesReprocessed = 0;
-            int numMessagesReapplied = 0;
-            for (BisqEasyTrade trade : openTrades) {
-                int reapplied = reprocessTrade(trade);
-                if (reapplied > 0) {
-                    numTradesReprocessed++;
-                    numMessagesReapplied += reapplied;
-                }
-            }
-            if (numTradesReprocessed > 0) {
-                log.info("Recovery pass reprocessed {} stalled trade(s) (re-applied {} message(s) in total) out of {} open trade(s) checked.",
-                        numTradesReprocessed, numMessagesReapplied, openTrades.size());
-            } else {
-                log.debug("Recovery pass checked {} open trade(s); none needed reprocessing.", openTrades.size());
-            }
-        } catch (Exception e) {
-            log.error("Unexpected error during recoverStalledTrades. This pass is aborted, but the next " +
-                    "scheduled/reconnect-triggered pass is unaffected.", e);
-        }
-    }
-
-    /**
-     * Re-applies any of the given trade's already-received-but-not-yet-applied protocol messages, then drains the
-     * FSM's event queue. Package-private so it can also be invoked directly (e.g. from tests, or a future manual
-     * "unstick this trade" UI action) without going through the full {@link #recoverStalledTrades()} sweep.
-     * <br/>
-     * Safety properties this relies on (see bisq.common.fsm.Fsm#handle):
-     * <ul>
-     *     <li>Messages are selected only if their event class is not already in the trade's processedEvents,
-     *     which is populated the moment a transition for that class first succeeds. This is what makes the
-     *     re-feed idempotent, and is also why {@code BisqEasyTakeOfferRequest}/{@code BisqEasyTakeOfferResponse}
-     *     (the offer-negotiation messages) are automatically excluded for any trade reaching this method: their
-     *     transition necessarily already fired for a protocol/trade to exist at all.</li>
-     *     <li>We call {@code protocol.handle(message)} directly - never {@link #onMessage(EnvelopePayloadMessage)}
-     *     or the private take-offer routing behind it. Routing a {@code BisqEasyTakeOfferRequest} back through
-     *     {@code onMessage()} would call {@code makerCreatesProtocol()} again, which throws
-     *     {@code IllegalArgumentException} because the protocol/trade already exists for any trade we reprocess -
-     *     the processedEvents filter above prevents that message from ever being selected in the first place, but
-     *     this method still never uses that entry point, as a second line of defense.</li>
-     *     <li>{@code Fsm#handle} and {@code Fsm#drainEventQueue} are both {@code synchronized} on the per-trade
-     *     protocol instance, so this is safe to run concurrently with a genuine live inbound message for the same
-     *     trade (mutual exclusion on the existing per-trade lock; no new shared mutable state is introduced).</li>
-     * </ul>
-     *
-     * @return the number of messages that were re-applied to the trade's FSM (0 if nothing was pending, the trade
-     * has no registered protocol, or the trade already reached a final state).
-     */
-    int reprocessTrade(BisqEasyTrade trade) {
-        String tradeId = trade.getId();
-        if (trade.getTradeState().isFinalState()) {
-            // Defensive: the trade may have reached a final state concurrently with (or just before) this call,
-            // e.g. a live transition completing it on another thread between recoverStalledTrades()'s filter and
-            // this call. processedEvents is cleared once a final state is reached (see Fsm#handle), so selecting
-            // messages against an emptied processedEvents set below would otherwise look exactly like "nothing was
-            // ever applied" and re-select everything, including the original take-offer message. Fsm#handle would
-            // still no-op it via its own isFinalState guard, but there is no reason to do the work.
-            log.debug("Skipping reprocessTrade for trade {} as it already reached the final state {}.", tradeId, trade.getTradeState());
-            return 0;
-        }
-
-        Optional<BisqEasyProtocol> optionalProtocol = findProtocol(tradeId);
-        if (optionalProtocol.isEmpty()) {
-            log.debug("Skipping reprocessTrade for trade {} as no protocol is registered for it (yet).", tradeId);
-            return 0;
-        }
-        BisqEasyProtocol protocol = optionalProtocol.get();
-
-        try {
-            Set<Class<? extends Event>> processedEvents = trade.getProcessedEvents();
-            List<BisqEasyTradeMessage> candidateMessages = networkService.getConfidentialMessageServices().stream()
-                    .flatMap(confidentialMessageService -> confidentialMessageService.getProcessedEnvelopePayloadMessages().stream())
-                    .filter(BisqEasyTradeMessage.class::isInstance)
-                    .map(BisqEasyTradeMessage.class::cast)
-                    .filter(message -> tradeId.equals(message.getTradeId()))
-                    .filter(message -> !processedEvents.contains(message.getClass()))
-                    .collect(Collectors.toList());
-
-            int numApplied = 0;
-            for (BisqEasyTradeMessage message : candidateMessages) {
-                protocol.handle(message);
-                numApplied++;
-                log.info("Recovery pass re-applied {} to trade {}.", message.getClass().getSimpleName(), tradeId);
-            }
-
-            // Whether or not any message above triggered a transition, draining is cheap and safe (no-op on an
-            // empty queue), and covers the case where the newly-applied message unblocked a *different*,
-            // previously queued event rather than one we just re-fed directly.
-            protocol.drainEventQueue();
-
-            if (numApplied > 0) {
-                log.info("Recovery pass reprocessed trade {}: re-applied {} message(s), resulting state={}.",
-                        tradeId, numApplied, trade.getTradeState());
-            }
-            return numApplied;
-        } catch (Exception e) {
-            log.warn("Recovery pass failed to reprocess trade {}. Leaving it for the next pass.", tradeId, e);
-            return 0;
         }
     }
 
