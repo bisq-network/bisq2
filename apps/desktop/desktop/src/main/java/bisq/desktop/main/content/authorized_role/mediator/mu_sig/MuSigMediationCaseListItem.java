@@ -50,6 +50,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,6 +59,9 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTableItem {
+    public static final Comparator<MuSigMediationCaseListItem> BY_LAST_MESSAGE_DATE =
+            Comparator.comparingLong(MuSigMediationCaseListItem::getLastMessageDate);
+
     @EqualsAndHashCode.Include
     private final MuSigMediationCase muSigMediationCase;
     private final ObjectProperty<Optional<MuSigOpenTradeChannel>> channel = new SimpleObjectProperty<>(Optional.empty());
@@ -71,6 +75,9 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
     private final boolean isMakerRequester;
     private final Badge makersBadge = new Badge();
     private final Badge takersBadge = new Badge();
+    private long lastMessageDate;
+    private final StringProperty lastMessageDateString = new SimpleStringProperty("");
+    private final StringProperty lastMessageTimeString = new SimpleStringProperty("");
     private Long closeCaseDate = 0L;
     private final StringProperty closeCaseDateString = new SimpleStringProperty("");
     private final StringProperty closeCaseTimeString = new SimpleStringProperty("");
@@ -78,6 +85,7 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
     private Pin mediatorHasLeftChatPin;
     private Pin changedChatNotificationPin;
     private Pin muSigMediationResultPin;
+    private Pin chatMessagesPin;
 
     MuSigMediationCaseListItem(ServiceProvider serviceProvider,
                                MuSigMediationCase muSigMediationCase,
@@ -130,6 +138,10 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
+
+        updateLastMessageDate();
+        channel.get().ifPresent(openTradeChannel ->
+                chatMessagesPin = openTradeChannel.getChatMessages().addObserver(() -> UIThread.run(this::updateLastMessageDate)));
     }
 
     @Override
@@ -143,6 +155,10 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
             muSigMediationResultPin = null;
         }
         changedChatNotificationPin.unbind();
+        if (chatMessagesPin != null) {
+            chatMessagesPin.unbind();
+            chatMessagesPin = null;
+        }
     }
 
     public Optional<MuSigOpenTradeChannel> getChannel() {
@@ -160,7 +176,39 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
             this.channel.set(Optional.empty());
             makersBadge.setText("");
             takersBadge.setText("");
+            if (chatMessagesPin != null) {
+                chatMessagesPin.unbind();
+                chatMessagesPin = null;
+            }
+            updateLastMessageDate();
         }
+    }
+
+    public String getLastMessageDateString() {
+        return lastMessageDateString.get();
+    }
+
+    public StringProperty getLastMessageDateStringProperty() {
+        return lastMessageDateString;
+    }
+
+    public String getLastMessageTimeString() {
+        return lastMessageTimeString.get();
+    }
+
+    public StringProperty getLastMessageTimeStringProperty() {
+        return lastMessageTimeString;
+    }
+
+    private void updateLastMessageDate() {
+        lastMessageDate = channel.get()
+                .map(openTradeChannel -> openTradeChannel.getChatMessages().stream()
+                        .mapToLong(message -> message.getDate())
+                        .max()
+                        .orElse(date))
+                .orElse(date);
+        lastMessageDateString.set(DateFormatter.formatDate(lastMessageDate));
+        lastMessageTimeString.set(DateFormatter.formatTime(lastMessageDate));
     }
 
     public String getCloseCaseDateString() {
