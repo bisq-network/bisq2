@@ -135,7 +135,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     public CompletableFuture<Boolean> initialize() {
 
-        persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
+        persistableStore.getTrades().forEach(trade -> createAndAddTradeProtocol(trade, true));
 
         networkService.getConfidentialMessageServices().stream()
                 .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
@@ -438,6 +438,17 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     }
 
     private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade) {
+        return createAndAddTradeProtocol(trade, false);
+    }
+
+    // isRestoredTrade is true when the trade was just loaded from persisted data (app startup), as opposed to a
+    // trade which was just created for a brand-new offer/take-offer flow (whose event queue is always empty).
+    // For restored trades we drain the event queue once: the queue itself survives a restart (persisted on
+    // Trade), but nothing would otherwise re-attempt those pending events until some further, unrelated live
+    // transition happens to occur for that same trade - which may never happen. See bisq.common.fsm.Fsm#drainEventQueue.
+    // Package-private (rather than private) so tests can register a hand-placed trade's protocol exactly the way
+    // production code does, without duplicating this wiring.
+    BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade, boolean isRestoredTrade) {
         String id = trade.getId();
         BisqEasyProtocol tradeProtocol;
         boolean isBuyer = trade.isBuyer();
@@ -456,6 +467,20 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
         tradeProtocolById.put(id, tradeProtocol);
+        if (isRestoredTrade) {
+            // Isolate per trade: drainEventQueue() re-applies queued events and can raise an FsmException. The
+            // trade is already created and registered above, so we keep it regardless. Without this guard a
+            // single failing trade would escape the persistableStore.getTrades().forEach(...) loop in
+            // initialize() and block restoring every subsequent trade. A failed drain here means the trade
+            // stays stuck until it is manually looked at - there is no periodic or reconnect-triggered safety
+            // net to retry it.
+            try {
+                tradeProtocol.drainEventQueue();
+            } catch (Exception e) {
+                log.warn("Failed to drain the event queue for restored trade {} on load. The trade is still " +
+                        "loaded but remains stuck until manually investigated.", id, e);
+            }
+        }
         return tradeProtocol;
     }
 

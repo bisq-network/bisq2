@@ -24,8 +24,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 @ToString
@@ -33,9 +33,18 @@ import java.util.Set;
 public class FsmModel {
     private final Observable<State> state = new Observable<>();
 
-    // Package visibility for access from Fsm mutating the collections 
-    final Set<Event> eventQueue = new HashSet<>();
-    final Set<Class<? extends Event>> processedEvents = new HashSet<>();
+    // Package visibility for access from Fsm mutating the collections.
+    // CopyOnWriteArraySet rather than a plain HashSet: Trade#toProto() (see bisq.trade.Trade#getTradeBuilder)
+    // is invoked asynchronously during persistence, off the thread that owns the Fsm's synchronized(this) lock
+    // in Fsm#handle()/Fsm#drainEventQueue(), and iterates getEventQueue()/getProcessedEvents() without acquiring
+    // that lock itself. Concurrently iterating a plain HashSet while another thread structurally mutates it is
+    // undefined behavior (ConcurrentModificationException or a torn read). Both sets are always small (a handful
+    // of pending FSM events per trade at most) and read far more often than mutated, which is exactly
+    // CopyOnWriteArraySet's sweet spot; it also gives every reader (including Fsm#drainEventQueue()'s defensive
+    // copy-before-iterate, which a plain HashSet copy does not actually make safe under concurrent mutation)
+    // consistent snapshot-iterator semantics for free, without requiring any external synchronization.
+    final Set<Event> eventQueue = new CopyOnWriteArraySet<>();
+    final Set<Class<? extends Event>> processedEvents = new CopyOnWriteArraySet<>();
 
     public FsmModel(State initialState) {
         if (initialState == null) {

@@ -21,8 +21,11 @@ import lombok.Getter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FsmTest {
 
@@ -156,6 +159,135 @@ public class FsmTest {
         assertEquals("test_comp", fsm.getModel().data);
         assertEquals(0, model.eventQueue.size());
         assertEquals(0, model.processedEvents.size());
+    }
+
+    /**
+     * Reproduces the recovery mechanism behind issue #1622 (a Bisq Easy trade getting stuck because an
+     * out-of-order message sits forever in the FSM's event queue): a queued event, and the model's state,
+     * are captured as if they had just been read back from persisted data (this is exactly what
+     * {@code Trade}'s 3-arg constructor now feeds into {@link FsmModel#FsmModel(State, Set, Set)} when a
+     * trade is restored from proto). We then rebuild a fresh Fsm around that restored model and call
+     * {@link Fsm#drainEventQueue()} once, with no further event delivered, and confirm the queued event is
+     * still applied - proving that recovery no longer depends on some later, unrelated live transition
+     * (or, as happens in production today, an app restart happening to re-deliver the same message via
+     * mailbox replay) to save the trade.
+     */
+    @Test
+    void testDrainEventQueueAfterModelRestore() {
+        // Session 1: an out-of-order event arrives before its prerequisite transition. It gets queued and the
+        // enabling transition (INIT -> S1) never happens live in this session - mirrors the reported bug,
+        // where the buyer's confirm-fiat-sent message arrives before the seller has processed the buyer's
+        // btc-address message.
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        fsm.handle(new MockEvent2(model, "queued"));
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+        assertEquals(1, model.getEventQueue().size());
+
+        // "Restart": rebuild the model purely from the persisted snapshot (state + queue + processedEvents),
+        // exactly as BisqEasyTrade#fromProto now does via Trade#pendingEventsFromProto/processedEventsFromProto.
+        // The restored state (S1) represents the enabling transition having already been persisted; only the
+        // event queue itself was previously at risk of being silently dropped across a restart.
+        MockModel restoredModel = new MockModel(MockState.S1, model.getEventQueue(), model.getProcessedEvents());
+        SimpleFsm<MockModel> restoredFsm = new SimpleFsm<>(restoredModel);
+        restoredFsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        // The restored queue must round-trip faithfully.
+        assertEquals(1, restoredModel.getEventQueue().size());
+        assertEquals(MockState.S1, restoredFsm.getModel().getState());
+
+        // No further event is delivered - only the drain is triggered, as happens once at trade/protocol
+        // reconstruction for a restored trade (BisqEasyTradeService#createAndAddTradeProtocol).
+        restoredFsm.drainEventQueue();
+
+        assertEquals(MockState.S2, restoredFsm.getModel().getState());
+        // MockEventHandler mutates the model referenced by the event itself (the original, pre-restore model,
+        // per the test fixture below) rather than the restoredFsm's model - this confirms the handler for the
+        // queued MockEvent2 genuinely ran during the drain, not just a state placeholder change.
+        assertEquals("queued", model.data);
+        assertTrue(restoredFsm.getModel().getEventQueue().isEmpty());
+    }
+
+    @Test
+    void testDrainEventQueueIsSafeAndIdempotentWhenEmpty() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+
+        // Calling drainEventQueue() on an empty queue must be a safe no-op, and calling it repeatedly must not
+        // change behaviour or throw (re-entrancy is guarded by the same synchronized(this) monitor as handle()).
+        fsm.drainEventQueue();
+        fsm.drainEventQueue();
+        assertEquals(MockState.INIT, fsm.getModel().getState());
+
+        fsm.handle(new MockEvent1(model, "test1"));
+        assertEquals(MockState.S1, fsm.getModel().getState());
+
+        fsm.drainEventQueue();
+        fsm.drainEventQueue();
+        assertEquals(MockState.S1, fsm.getModel().getState());
+        assertEquals("test1", fsm.getModel().data);
+    }
+
+    /**
+     * Regression/documentation guard for the bug itself: if the event queue is NOT carried over on restore
+     * (the behaviour before this fix - {@code Trade} used to call the single-arg {@code FsmModel(State)}
+     * constructor from {@code fromProto}), the queued event is lost forever. Calling drainEventQueue() cannot
+     * recover data that was never restored in the first place; restoring the queue itself (see
+     * {@link #testDrainEventQueueAfterModelRestore}) is what fixes issue #1622, not drainEventQueue() alone.
+     */
+    @Test
+    void testEventIsLostForeverIfQueueIsNotRestored() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        fsm.handle(new MockEvent2(model, "queued"));
+        assertEquals(1, model.getEventQueue().size());
+
+        // "Restart" using only the single-arg constructor - the pre-fix behaviour: the queue is not restored.
+        MockModel restoredModel = new MockModel(MockState.S1);
+        SimpleFsm<MockModel> restoredFsm = new SimpleFsm<>(restoredModel);
+        restoredFsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        assertTrue(restoredModel.getEventQueue().isEmpty());
+        restoredFsm.drainEventQueue();
+
+        // The trade is stuck forever: nothing but the original MockEvent2 instance (now gone) could unstick it.
+        assertEquals(MockState.S1, restoredFsm.getModel().getState());
+        assertNull(restoredFsm.getModel().data);
     }
 
     @Test
@@ -608,6 +740,10 @@ public class FsmTest {
         public MockModel(MockState state, String data) {
             super(state);
             this.data = data;
+        }
+
+        public MockModel(MockState state, Set<Event> eventQueue, Set<Class<? extends Event>> processedEvents) {
+            super(state, eventQueue, processedEvents);
         }
 
         private String data = null;
