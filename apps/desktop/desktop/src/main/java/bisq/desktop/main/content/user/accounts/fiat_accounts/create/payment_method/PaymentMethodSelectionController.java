@@ -47,6 +47,8 @@ public class PaymentMethodSelectionController implements Controller {
         List<PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
                 .filter(rail -> rail != FiatPaymentRail.CUSTOM)
                 .filter(rail -> rail != FiatPaymentRail.CASH_APP)
+                // TELE_BIRR is a Bisq Easy-only rail with no classic account form yet
+                .filter(rail -> rail != FiatPaymentRail.TELE_BIRR)
                 //.filter(rail -> rail == FiatPaymentRail.CASH_BY_MAIL) //todo
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .map(PaymentMethodItem::new)

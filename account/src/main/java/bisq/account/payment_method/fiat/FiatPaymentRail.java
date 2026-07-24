@@ -197,6 +197,10 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("SEK"),
             FiatPaymentMethodChargebackRisk.LOW),
 
+    TELE_BIRR(countryFromCode("ET"),
+            FiatCurrencyRepository.getCurrencyByCode("ETB"),
+            FiatPaymentMethodChargebackRisk.LOW),
+
     UPHOLD(FiatPaymentRailUtil.getUpholdCountries(),
             FiatPaymentRailUtil.getUpholdCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
@@ -354,6 +358,7 @@ public enum FiatPaymentRail implements PaymentRail {
             case STRIKE -> TradeDuration.DAYS_4;
             case SWIFT -> TradeDuration.DAYS_4;
             case SWISH -> TradeDuration.HOURS_24;
+            case TELE_BIRR -> TradeDuration.HOURS_24;
             case UPHOLD -> TradeDuration.HOURS_24;
             case UPI -> TradeDuration.DAYS_4;
             case US_POSTAL_MONEY_ORDER -> TradeDuration.DAYS_4;
