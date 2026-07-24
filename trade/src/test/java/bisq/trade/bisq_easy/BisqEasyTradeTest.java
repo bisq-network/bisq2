@@ -302,6 +302,141 @@ class BisqEasyTradeTest {
         verify(harness.networkService(), never()).confidentialSend(any(), any(), any());
     }
 
+    /**
+     * End-to-end regression test for issue #1622, driven exclusively through {@link BisqEasyTradeService}'s
+     * public API - {@link BisqEasyTradeService#onMessage(EnvelopePayloadMessage)}, the real
+     * {@code ConfidentialMessageService.Listener} entry point for every inbound trade message, and
+     * {@link BisqEasyTradeService#initialize()}, the real app-bootstrap entry point that restores persisted
+     * trades - rather than by calling {@code protocol.handle()}/{@code drainEventQueue()} directly as
+     * {@link #confirmFiatSentMessageQueuedWhileBtcAddressPendingSurvivesRestoreAndDrains()} above does. This
+     * proves the fix survives the actual node lifecycle, not just the Fsm/Trade unit-level mechanics.
+     * <p>
+     * Phase 1 ("before restart"): a seller-as-maker trade is hand-placed at the state reached after the seller
+     * has sent its account data but not yet received the buyer's btc-address message. A
+     * {@link BisqEasyTradeService} instance registers the trade's protocol via {@code initialize()} (as a
+     * running node's service would on startup), then receives the buyer's confirm-fiat-sent message via
+     * {@code onMessage()} - out of order, since the btc-address leg is still outstanding, so it is queued
+     * rather than applied.
+     * <p>
+     * Phase 2 (restart): the trade is round-tripped through {@code toProto()}/{@code fromProto()}, exactly as
+     * persistence does across a restart. Pre-fix, the queued event is silently dropped here.
+     * <p>
+     * Phase 3 ("after restart"): a brand-new {@link BisqEasyTradeService} instance (a fresh service/Fsm, as a
+     * genuine restart produces - not the same instance from phase 1) registers the restored trade's protocol
+     * via {@code initialize()}, then the genuinely still-pending btc-address message arrives via
+     * {@code onMessage()}. On the fix, {@code initialize()}'s restore drain plus the Fsm's own post-transition
+     * auto-drain re-applies the previously queued confirm-fiat-sent message once the btc-address transition
+     * succeeds, so the trade reaches {@code SELLER_RECEIVED_FIAT_SENT_CONFIRMATION} without the peer needing to
+     * resend anything. Pre-fix, the trade gets stuck one step short, at
+     * {@code MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS}.
+     */
+    @Test
+    void confirmFiatSentMessageQueuedWhileBtcAddressPendingSurvivesRestoreAndDrainsViaRealServiceLifecycle(@TempDir Path tempDir)
+            throws UnresolvableProtobufEnumException {
+        NetworkId takerNetworkId = createNetworkId("buyer-taker-lifecycle");
+        NetworkId makerNetworkId = createNetworkId("seller-maker-lifecycle");
+        BisqEasyOffer offer = createRealOffer(makerNetworkId);
+        BisqEasyContract contract = createRealContract(offer, takerNetworkId);
+
+        BisqEasyTrade trade = createTradeAtState(contract, offer, takerNetworkId, makerNetworkId,
+                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS);
+        String tradeId = trade.getId();
+
+        // Phase 1: "before restart" - a running node's service instance registers the trade's protocol exactly
+        // as a real node does on startup (initialize()), then a real inbound message is routed through the
+        // real ConfidentialMessageService.Listener entry point (onMessage()), never via protocol.handle().
+        LifecycleHarness harnessA = createLifecycleHarness(tempDir.resolve("before-restart"));
+        BisqEasyTradeService tradeServiceA = harnessA.tradeService();
+        tradeServiceA.getPersistableStore().addTrade(trade);
+        tradeServiceA.initialize();
+
+        BisqEasyConfirmFiatSentMessage fiatSentMessage = new BisqEasyConfirmFiatSentMessage(
+                "fiat-sent-msg", tradeId, BisqEasyProtocol.VERSION, takerNetworkId, makerNetworkId);
+        tradeServiceA.onMessage(fiatSentMessage);
+
+        // Diagnostic only: confirms the message really did get queued rather than applied (pre-existing,
+        // unchanged-by-the-fix queuing behavior) - not itself the regression signal.
+        assertEquals(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
+                trade.getTradeState());
+
+        tradeServiceA.shutdown();
+
+        // Phase 2: restart - the exact persistence round trip.
+        bisq.trade.protobuf.Trade proto = trade.toProto(false);
+        BisqEasyTrade restoredTrade = BisqEasyTrade.fromProto(proto);
+
+        // Phase 3: "after restart" - a brand-new service/Fsm (never harnessA/tradeServiceA - a real restart
+        // produces a brand-new process/service), registers the restored trade via initialize() (the real
+        // app-bootstrap entry point), then the genuinely still-pending btc-address message arrives via
+        // onMessage().
+        LifecycleHarness harnessB = createLifecycleHarness(tempDir.resolve("after-restart"));
+        BisqEasyTradeService tradeServiceB = harnessB.tradeService();
+        tradeServiceB.getPersistableStore().addTrade(restoredTrade);
+        tradeServiceB.initialize();
+
+        BisqEasyBtcAddressMessage btcAddressMessage = new BisqEasyBtcAddressMessage(
+                "btc-address-msg", tradeId, BisqEasyProtocol.VERSION, takerNetworkId, makerNetworkId,
+                "bc1qxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzxyzx", offer);
+        try {
+            tradeServiceB.onMessage(btcAddressMessage);
+
+            // The load-bearing assertion: on the fix, the previously queued confirm-fiat-sent message survived
+            // the restart and was re-applied once the btc-address transition unblocked it - the trade is no
+            // longer stuck, without the peer needing to resend anything. Pre-fix this fails, with the trade
+            // stuck one step short at ..._SELLER_RECEIVED_BTC_ADDRESS.
+            assertEquals(BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION, restoredTrade.getTradeState());
+        } finally {
+            tradeServiceB.shutdown();
+        }
+    }
+
+    // NOTE on the buyer-as-taker "bonus" case (skipped - see final report for why): an initial attempt queued
+    // BisqEasyConfirmFiatSentEvent early (the single-source-state transition immediately downstream of
+    // BisqEasyBuyerAsTakerProtocol's analogous two-leg convergence) and round-tripped it through
+    // toProto()/fromProto(), mirroring the seller test above. It failed identically on both the fix and
+    // pre-fix code, because Trade#getTradeBuilder deliberately only serializes eventQueue entries that are
+    // EnvelopePayloadMessage instances (i.e. network messages) - see the comment there: local, user-triggered
+    // events like BisqEasyConfirmFiatSentEvent have no proto representation and are explicitly considered safe
+    // to drop, since they only ever exist while the app is already running. So that scenario was never a valid
+    // regression signal for #1622 to begin with. A genuinely analogous *message*-only race exists
+    // (BisqEasyAccountDataMessage arriving before BisqEasyTakeOfferResponse - see
+    // BisqEasyBuyerAsTakerProtocol#configTransitions "Option 2"), but BisqEasyTakeOfferResponseHandler#verify()
+    // requires a real, hash-matching ContractSignatureData plus a ContractService that reports matching public
+    // keys/valid signature, which the current lightweight ServiceProvider deep-stub does not provide - wiring
+    // that up correctly is materially more effort than the seller case, so it is left as a follow-up.
+
+    private record LifecycleHarness(BisqEasyTradeService tradeService, NetworkService networkService) {
+    }
+
+    // Builds a BisqEasyTradeService harness suitable for exercising the real initialize()/onMessage() lifecycle,
+    // unlike createRecoveryHarness() below (whose tests never call initialize() and therefore don't need to stub
+    // the additional ServiceProvider dependencies initialize() itself touches: getConfidentialMessageServices(),
+    // getDefaultNodeStateByTransportType(), the alert/settings observers, and the periodic
+    // redaction/recovery-pass schedulers).
+    // Each call is given its own persistence directory: a real restart produces a brand-new service/Fsm, and
+    // reusing one directory (or one service instance) across "before" and "after" phases would let the two
+    // phases silently share state that only a real proto round trip should carry across.
+    private static LifecycleHarness createLifecycleHarness(Path persistenceDir) {
+        NetworkService networkService = mock(NetworkService.class);
+        // Empty: message delivery is driven explicitly via onMessage() in the test body rather than letting
+        // initialize()'s own startup replay (of whatever this would return) do it implicitly.
+        when(networkService.getConfidentialMessageServices()).thenReturn(Set.of());
+        // Empty: initRecoverStalledTrades() (branch-only) iterates this to wire reconnect-triggered recovery,
+        // which these tests do not exercise.
+        when(networkService.getDefaultNodeStateByTransportType()).thenReturn(Map.of());
+        when(networkService.confidentialSend(any(), any(), any()))
+                .thenReturn(CompletableFuture.completedFuture(mock(SendMessageResult.class)));
+
+        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
+        when(serviceProvider.getNetworkService()).thenReturn(networkService);
+        when(serviceProvider.getPersistenceService()).thenReturn(new PersistenceService(persistenceDir));
+
+        BisqEasyTradeService tradeService = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP);
+        when(serviceProvider.getBisqEasyTradeService()).thenReturn(tradeService);
+
+        return new LifecycleHarness(tradeService, networkService);
+    }
+
     private record RecoveryHarness(BisqEasyTradeService tradeService, NetworkService networkService) {
     }
 
