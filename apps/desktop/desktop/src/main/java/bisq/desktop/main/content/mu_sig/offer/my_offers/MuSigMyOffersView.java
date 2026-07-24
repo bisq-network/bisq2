@@ -280,11 +280,13 @@ public class MuSigMyOffersView extends View<VBox, MuSigMyOffersModel, MuSigMyOff
                     setUpRowEventHandlersAndListeners();
                     setGraphic(myOfferMainBox);
                     goToOfferMenuItem.setOnAction(e -> controller.onGoToOffer(item.getOffer()));
+                    copyOfferMenuItem.setOnAction(e -> controller.onCopyOffer(item.getOffer()));
                     removeOfferMenuItem.setOnAction(e -> controller.onRemoveOffer(item.getOffer()));
                 } else {
                     resetRowEventHandlersAndListeners();
                     resetVisibilities();
                     goToOfferMenuItem.setOnAction(null);
+                    copyOfferMenuItem.setOnAction(null);
                     removeOfferMenuItem.setOnAction(null);
                     setGraphic(null);
                 }
