@@ -55,8 +55,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -96,7 +99,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     private boolean isApplicationFocussed;
     private final Set<String> prunedAndExpiredChatMessageIds = new HashSet<>();
     @Nullable
-    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin;
+    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin, ignoredUserProfileIdsPin;
     private final Set<Pin> commonPublicChatChannelServicePins = new HashSet<>();
     private final Set<Pin> twoPartyPrivateChatChannelServicePins = new HashSet<>();
     private final Set<Pin> prunedAndExpiredDataRequestPins = new HashSet<>();
@@ -165,6 +168,9 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         prunedAndExpiredChatMessageIds.forEach(this::removeNotification);
         prunedAndExpiredChatMessageIds.clear();
 
+        ignoredUserProfileIdsPin = userProfileService.getIgnoredUserProfileIds()
+                .addObserver(this::consumeNotificationsFromIgnoredUsers);
+
         BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
         bisqEasyOpenTradeChannelServicePin = bisqEasyOpenTradeChannelService.getChannels().addObserver(() ->
                 onChannelsChanged(bisqEasyOpenTradeChannelService.getChannels()));
@@ -190,6 +196,10 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (ignoredUserProfileIdsPin != null) {
+            ignoredUserProfileIdsPin.unbind();
+            ignoredUserProfileIdsPin = null;
+        }
         if (bisqEasyOpenTradeChannelServicePin != null) {
             bisqEasyOpenTradeChannelServicePin.unbind();
             bisqEasyOpenTradeChannelServicePin = null;
@@ -347,6 +357,16 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         if (wasRemoved) {
             persist();
         }
+    }
+
+    @VisibleForTesting
+    void consumeNotificationsFromIgnoredUsers() {
+        List<ChatNotification> notificationsFromIgnoredUsers = getNotConsumedNotifications()
+                .filter(notification -> notification.getSenderUserProfile()
+                        .map(sender -> userProfileService.isChatUserIgnored(sender.getId()))
+                        .orElse(false))
+                .toList();
+        notificationsFromIgnoredUsers.forEach(this::consumeNotification);
     }
 
     private void consumeNotification(ChatNotification notification) {

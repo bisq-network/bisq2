@@ -197,7 +197,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     @Override
     protected Optional<TwoPartyPrivateChatChannel> createNewChannelFromReceivedMessage(TwoPartyPrivateChatMessage message) {
         if (userProfileService.isChatUserIgnored(message.getSenderUserProfile())) {
-            log.info("We received a private chat message from ignored user {} and do not have a channel with them. " +
+            log.debug("We received a private chat message from ignored user {} and do not have a channel with them. " +
                     "We do not create a new channel.", message.getAuthorUserProfileId());
             return Optional.empty();
         }
