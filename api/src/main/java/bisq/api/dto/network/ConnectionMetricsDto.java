@@ -17,10 +17,16 @@
 
 package bisq.api.dto.network;
 
-public record ConnectionDto(String connectionId,
-                            String address,
-                            boolean outbound,
-                            boolean seed,
-                            long establishedAtMillis,
-                            ConnectionMetricsDto metrics) {
+import javax.annotation.Nullable;
+
+/**
+ * Per-peer traffic metrics for one connection, read off {@code Connection.getConnectionMetrics()}.
+ * {@code rttMillis} is {@code null} until a round-trip has actually been measured (handshake /
+ * request-response); byte and message counts are lifetime totals for the connection.
+ */
+public record ConnectionMetricsDto(@Nullable Long rttMillis,
+                                   long sentBytes,
+                                   long sentMessageCount,
+                                   long receivedBytes,
+                                   long receivedMessageCount) {
 }
