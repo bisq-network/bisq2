@@ -57,7 +57,7 @@ public class WalletDashboardController implements Controller {
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
     private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin, selectedMarketPin,
-            addressBalancesPin;
+            addressBalancesPin, shouldShowLatestTxsPin;
     private Subscription balanceAsCoinPin, selectedMarketItemPin;
 
     public WalletDashboardController(ServiceProvider serviceProvider) {
@@ -113,6 +113,9 @@ public class WalletDashboardController implements Controller {
         selectedMarketPin = FxBindings.bindBiDir(model.getSelectedMarket())
                 .to(settingsService.getSelectedWalletMarket(), settingsService::setSelectedWalletMarket);
 
+        shouldShowLatestTxsPin = FxBindings.bindBiDir(model.getShouldShowLatestTxs())
+                .to(settingsService.getShowLatestTxs(), settingsService::setShowLatestTxs);
+
         walletService.requestBalance().whenComplete((balance, throwable) -> {
                     if (throwable == null) {
                         UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
@@ -133,6 +136,7 @@ public class WalletDashboardController implements Controller {
         selectedMarketItemPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketPin.unbind();
+        shouldShowLatestTxsPin.unbind();
     }
 
     void onSend() {

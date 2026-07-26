@@ -64,7 +64,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final Label btcBalanceLabel, availableBalanceAmountLabel, reservedFundsAmountLabel,
             lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel, latestTxsHeadlineLabel,
             fundsHeadlineLabel;
-    private final ImageView latestTxsHeadlineActiveIcon, latestTxsHeadlineDefaultIcon, fundsHeadlineActiveIcon, fundsHeadlineDefaultIcon;
+    private final ImageView latestTxsHeadlineActiveIcon, latestTxsHeadlineDefaultIcon, fundsHeadlineActiveIcon,
+            fundsHeadlineDefaultIcon;
     private final DropdownListMenu<CurrencyConverterListItem> currencyConverterDropdownListMenu;
     private final DropdownMenu overviewMenu;
     private final OverviewMenuItem latestTxsMenuItem, fundsMenuItem;
@@ -73,7 +74,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ChangeListener<Boolean> overviewMenuHoverListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
-    private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsPin, isOverviewMenuShowingPin;
+    private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsFromModelPin,
+            isOverviewMenuShowingPin;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -217,7 +219,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket -> UIThread.run(this::updateSelectedMarket));
         isCurrencyConverterMenuShowingPin = EasyBind.subscribe(currencyConverterDropdownListMenu.getIsMenuShowing(), isMenuShowing -> UIThread.run(this::updateTableViewSelectionToMarketItem));
-        shouldShowLatestTxsPin = EasyBind.subscribe(model.getShouldShowLatestTxs(), this::applyShowLatestTxs);
+        shouldShowLatestTxsFromModelPin = EasyBind.subscribe(model.getShouldShowLatestTxs(), this::applyShowLatestTxs);
         isOverviewMenuShowingPin = EasyBind.subscribe(overviewMenu.getIsMenuShowing(), this::updateMenuItemsStyle);
 
         latestTxsTableView.heightProperty().addListener(latestTxsTableViewHeightListener);
@@ -232,6 +234,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         updateSelectedMarket();
         updateTableViewSelectionToMarketItem();
+        applyShowLatestTxs(model.getShouldShowLatestTxs().get());
     }
 
     @Override
@@ -249,7 +252,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         selectedMarketPin.unsubscribe();
         isCurrencyConverterMenuShowingPin.unsubscribe();
-        shouldShowLatestTxsPin.unsubscribe();
+        shouldShowLatestTxsFromModelPin.unsubscribe();
         isOverviewMenuShowingPin.unsubscribe();
 
         latestTxsTableView.heightProperty().removeListener(latestTxsTableViewHeightListener);
