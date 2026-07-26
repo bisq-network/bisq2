@@ -188,6 +188,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         VBox overviewVBox = new VBox(20, overviewMenu, latestTxsTableView, fundsTableView);
         overviewVBox.setPadding(new Insets(0, 50, 0, 50));
+        VBox.setVgrow(overviewVBox, Priority.ALWAYS);
+        VBox.setVgrow(fundsTableView, Priority.ALWAYS);
 
         VBox contentBox = new VBox(20);
         VBox.setMargin(headerHBox, new Insets(0, 0, 15, 0));
