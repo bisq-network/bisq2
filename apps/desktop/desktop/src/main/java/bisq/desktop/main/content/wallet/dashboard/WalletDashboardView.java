@@ -64,7 +64,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final Label btcBalanceLabel, availableBalanceAmountLabel, reservedFundsAmountLabel,
             lockedFundsAmountLabel, currencyConverterAmountLabel, currencyConverterCodeLabel, latestTxsHeadlineLabel,
             fundsHeadlineLabel;
-    private final ImageView latestTxsHeadlineActiveIcon, latestTxsHeadlineDefaultIcon, fundsHeadlineActiveIcon, fundsHeadlineDefaultIcon;
+    private final ImageView latestTxsHeadlineActiveIcon, latestTxsHeadlineDefaultIcon, fundsHeadlineActiveIcon,
+            fundsHeadlineDefaultIcon;
     private final DropdownListMenu<CurrencyConverterListItem> currencyConverterDropdownListMenu;
     private final DropdownMenu overviewMenu;
     private final OverviewMenuItem latestTxsMenuItem, fundsMenuItem;
@@ -73,7 +74,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
     private final ChangeListener<Number> latestTxsTableViewHeightListener;
     private final ChangeListener<Boolean> overviewMenuHoverListener;
     private final ListChangeListener<WalletTxListItem> sortedWalletTxListItemsListener;
-    private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsPin, isOverviewMenuShowingPin;
+    private Subscription selectedMarketPin, isCurrencyConverterMenuShowingPin, shouldShowLatestTxsFromModelPin,
+            isOverviewMenuShowingPin;
 
     public WalletDashboardView(WalletDashboardModel model, WalletDashboardController controller) {
         super(new VBox(20), model, controller);
@@ -164,13 +166,12 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         overviewMenu.setMaxWidth(Region.USE_PREF_SIZE);
         overviewMenu.setOpenToTheRight(true);
         Label latestTxsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
-        // TODO: Add smaller icons
-        ImageView latestTxsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
-        ImageView latestTxsActiveMenuIcon = ImageUtil.getImageViewById("icon-info-white");
+        ImageView latestTxsDefaultMenuIcon = ImageUtil.getImageViewById("latest-txs-menu-grey");
+        ImageView latestTxsActiveMenuIcon = ImageUtil.getImageViewById("latest-txs-menu-white");
         latestTxsMenuItem = new OverviewMenuItem(latestTxsMenuLabel, latestTxsDefaultMenuIcon, latestTxsActiveMenuIcon);
         Label fundsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.funds"));
-        ImageView fundsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
-        ImageView fundsActiveMenuIcon = ImageUtil.getImageViewById("icon-info-white");
+        ImageView fundsDefaultMenuIcon = ImageUtil.getImageViewById("funds-menu-grey");
+        ImageView fundsActiveMenuIcon = ImageUtil.getImageViewById("funds-menu-white");
         fundsMenuItem = new OverviewMenuItem(fundsMenuLabel, fundsDefaultMenuIcon, fundsActiveMenuIcon);
         overviewMenu.addMenuItems(latestTxsMenuItem, fundsMenuItem);
 
@@ -187,6 +188,8 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         VBox overviewVBox = new VBox(20, overviewMenu, latestTxsTableView, fundsTableView);
         overviewVBox.setPadding(new Insets(0, 50, 0, 50));
+        VBox.setVgrow(overviewVBox, Priority.ALWAYS);
+        VBox.setVgrow(fundsTableView, Priority.ALWAYS);
 
         VBox contentBox = new VBox(20);
         VBox.setMargin(headerHBox, new Insets(0, 0, 15, 0));
@@ -217,7 +220,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         selectedMarketPin = EasyBind.subscribe(model.getSelectedMarketItem(), selectedMarket -> UIThread.run(this::updateSelectedMarket));
         isCurrencyConverterMenuShowingPin = EasyBind.subscribe(currencyConverterDropdownListMenu.getIsMenuShowing(), isMenuShowing -> UIThread.run(this::updateTableViewSelectionToMarketItem));
-        shouldShowLatestTxsPin = EasyBind.subscribe(model.getShouldShowLatestTxs(), this::applyShowLatestTxs);
+        shouldShowLatestTxsFromModelPin = EasyBind.subscribe(model.getShouldShowLatestTxs(), this::applyShowLatestTxs);
         isOverviewMenuShowingPin = EasyBind.subscribe(overviewMenu.getIsMenuShowing(), this::updateMenuItemsStyle);
 
         latestTxsTableView.heightProperty().addListener(latestTxsTableViewHeightListener);
@@ -232,6 +235,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         updateSelectedMarket();
         updateTableViewSelectionToMarketItem();
+        applyShowLatestTxs(model.getShouldShowLatestTxs().get());
     }
 
     @Override
@@ -249,7 +253,7 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
 
         selectedMarketPin.unsubscribe();
         isCurrencyConverterMenuShowingPin.unsubscribe();
-        shouldShowLatestTxsPin.unsubscribe();
+        shouldShowLatestTxsFromModelPin.unsubscribe();
         isOverviewMenuShowingPin.unsubscribe();
 
         latestTxsTableView.heightProperty().removeListener(latestTxsTableViewHeightListener);
@@ -602,13 +606,13 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         }
 
         void resetStyle() {
-//            displayLabel.setGraphic(defaultIcon);
+            displayLabel.setGraphic(defaultIcon);
             resetDisplayLabelStyle();
             displayLabel.getStyleClass().add(LABEL_DEFAULT_STYLE);
         }
 
         private void showAsActive() {
-//            displayLabel.setGraphic(activeIcon);
+            displayLabel.setGraphic(activeIcon);
             resetDisplayLabelStyle();
             displayLabel.getStyleClass().add(LABEL_ACTIVE_STYLE);
         }
