@@ -166,13 +166,12 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         overviewMenu.setMaxWidth(Region.USE_PREF_SIZE);
         overviewMenu.setOpenToTheRight(true);
         Label latestTxsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.latestTxs"));
-        // TODO: Add smaller icons
-        ImageView latestTxsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
-        ImageView latestTxsActiveMenuIcon = ImageUtil.getImageViewById("icon-info-white");
+        ImageView latestTxsDefaultMenuIcon = ImageUtil.getImageViewById("latest-txs-menu-grey");
+        ImageView latestTxsActiveMenuIcon = ImageUtil.getImageViewById("latest-txs-menu-white");
         latestTxsMenuItem = new OverviewMenuItem(latestTxsMenuLabel, latestTxsDefaultMenuIcon, latestTxsActiveMenuIcon);
         Label fundsMenuLabel = new Label(Res.get("wallet.dashboard.overviewMenu.funds"));
-        ImageView fundsDefaultMenuIcon = ImageUtil.getImageViewById("icon-info-grey");
-        ImageView fundsActiveMenuIcon = ImageUtil.getImageViewById("icon-info-white");
+        ImageView fundsDefaultMenuIcon = ImageUtil.getImageViewById("funds-menu-grey");
+        ImageView fundsActiveMenuIcon = ImageUtil.getImageViewById("funds-menu-white");
         fundsMenuItem = new OverviewMenuItem(fundsMenuLabel, fundsDefaultMenuIcon, fundsActiveMenuIcon);
         overviewMenu.addMenuItems(latestTxsMenuItem, fundsMenuItem);
 
@@ -605,13 +604,13 @@ public class WalletDashboardView extends View<VBox, WalletDashboardModel, Wallet
         }
 
         void resetStyle() {
-//            displayLabel.setGraphic(defaultIcon);
+            displayLabel.setGraphic(defaultIcon);
             resetDisplayLabelStyle();
             displayLabel.getStyleClass().add(LABEL_DEFAULT_STYLE);
         }
 
         private void showAsActive() {
-//            displayLabel.setGraphic(activeIcon);
+            displayLabel.setGraphic(activeIcon);
             resetDisplayLabelStyle();
             displayLabel.getStyleClass().add(LABEL_ACTIVE_STYLE);
         }

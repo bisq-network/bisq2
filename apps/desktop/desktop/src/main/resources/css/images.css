@@ -1975,6 +1975,18 @@
     -fx-image: url("/images/wallet/calendar-green.png");
 }
 
+#latest-txs-menu-grey {
+    -fx-image: url("/images/wallet/calendar-grey-m.png");
+}
+
+#latest-txs-menu-white {
+    -fx-image: url("/images/wallet/calendar-white-m.png");
+}
+
+#latest-txs-menu-green {
+    -fx-image: url("/images/wallet/calendar-green-m.png");
+}
+
 #funds-grey {
     -fx-image: url("/images/wallet/funds-grey.png");
 }
@@ -1985,6 +1997,18 @@
 
 #funds-green {
     -fx-image: url("/images/wallet/funds-green.png");
+}
+
+#funds-menu-grey {
+    -fx-image: url("/images/wallet/funds-grey-m.png");
+}
+
+#funds-menu-white {
+    -fx-image: url("/images/wallet/funds-white-m.png");
+}
+
+#funds-menu-green {
+    -fx-image: url("/images/wallet/funds-green-m.png");
 }
 
 
