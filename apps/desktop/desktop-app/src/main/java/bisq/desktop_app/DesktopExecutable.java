@@ -17,6 +17,7 @@
 
 package bisq.desktop_app;
 
+import bisq.application.AnotherInstanceRunningException;
 import bisq.application.Executable;
 import bisq.desktop.DesktopController;
 import bisq.desktop.common.threading.UIScheduler;
@@ -28,6 +29,9 @@ import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import java.awt.GraphicsEnvironment;
 import java.util.Arrays;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
@@ -73,6 +77,27 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                         shutdownAfterStartupFailure("Could not launch JavaFX application.", throwable);
                     }
                 });
+    }
+
+    @Override
+    protected void handleAnotherInstanceRunning(AnotherInstanceRunningException exception) {
+        log.error(exception.getMessage());
+        String headline = Res.get("popup.alreadyRunning.headline", exception.getAppName());
+        String message = Res.get("popup.alreadyRunning.msg", exception.getAppName(), exception.getAppDataDirPath());
+        // We are called before JavaFX is launched, thus we cannot use our Popup. We use a lightweight AWT dialog
+        // instead if a display is available and fall back to stderr otherwise.
+        if (!GraphicsEnvironment.isHeadless()) {
+            try {
+                SwingUtilities.invokeAndWait(() ->
+                        JOptionPane.showMessageDialog(null, message, headline, JOptionPane.WARNING_MESSAGE));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted state
+            } catch (Throwable t) {
+                log.warn("Could not show the 'already running' dialog", t);
+            }
+        }
+        System.err.println("Error: " + message);
+        System.exit(EXIT_FAILURE);
     }
 
     @Override

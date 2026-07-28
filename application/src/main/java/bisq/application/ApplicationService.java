@@ -156,7 +156,9 @@ public abstract class ApplicationService implements Service {
     @Getter
     protected final PersistenceService persistenceService;
     private final MigrationService migrationService;
-    private InstanceLockManager instanceLockManager;
+    // We keep the reference for the lifetime of the application. If the InstanceLock got garbage collected the file
+    // lock would be released silently.
+    private InstanceLock instanceLock;
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -204,16 +206,18 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeWalletSetup(config.isDevModeWalletSetup());
         }
 
-        if (config.isCheckInstanceLock()) {
-            checkInstanceLock();
-        }
-
         Locale locale = LocaleRepository.getDefaultLocale();
         CountryRepository.applyDefaultLocale(locale);
         LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
         FiatCurrencyRepository.setLocale(locale);
         Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
         ResolverConfig.config();
+
+        // We check the instance lock after Res is set up, so that the user facing message can be
+        // localized, but before we create any service which reads from or writes to the data directory.
+        if (config.isCheckInstanceLock()) {
+            checkInstanceLock();
+        }
 
         persistenceService = new PersistenceService(appDataDirPath);
         migrationService = new MigrationService(appDataDirPath);
@@ -264,22 +268,21 @@ public abstract class ApplicationService implements Service {
     }
 
     protected void checkInstanceLock() {
-        // Create a quasi-unique port per data directory
-        // Dynamic/private ports: 49152 – 65535
-        int lowestPort = 49152;
-        int highestPort = 65535;
-        int port = lowestPort + Math.abs(config.getAppDataDirPath().hashCode() % (highestPort - lowestPort));
-        instanceLockManager = new InstanceLockManager();
-        instanceLockManager.acquireLock(port);
-
-        // We release the instance lock with a shutdown hook to ensure it gets release in all cases.
-        // If we throw the NoFileLockException we are still in constructor call and the ApplicationService instance is
-        // not created, thus shutdown would not be called. Therefor the shutdown hook is a more reliable solution.
-        // Usually we try to avoid adding multiple shutdownHooks as the order of their execution is not
-        // defined. In that case the order from other hooks has no impact.
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("InstanceLockManager.releaseLock");
-            instanceLockManager.releaseLock();
-        }));
+        Path appDataDirPath = config.getAppDataDirPath();
+        instanceLock = new InstanceLock(appDataDirPath);
+        try {
+            if (!instanceLock.tryLock()) {
+                throw new AnotherInstanceRunningException(config.getAppName(),
+                        appDataDirPath,
+                        instanceLock.readOwnerPid());
+            }
+        } catch (IOException e) {
+            // The locking mechanism itself is unusable, e.g. a file system without lock support. We fail open
+            // instead of blocking startup, as an unusable lock file must not prevent the application from running.
+            log.warn("Could not acquire the instance lock at {}. We continue without instance lock.", appDataDirPath, e);
+        }
+        // We do not release the lock at shutdown. The OS releases it when the process exits, which covers a crash or
+        // kill as well. Releasing it earlier would open a window in which a second instance could start while we are
+        // still flushing data to disk.
     }
 }
