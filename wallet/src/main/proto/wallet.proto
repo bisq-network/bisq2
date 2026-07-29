@@ -25,6 +25,7 @@ option java_package = "bisq.wallet.protobuf";
 // The WalletService definition.
 service Wallet {
     rpc IsWalletReady (IsWalletReadyRequest) returns (IsWalletReadyResponse);
+    rpc GetNewAddress (GetNewAddressRequest) returns (GetNewAddressResponse);
     rpc GetUnusedAddress (GetUnusedAddressRequest) returns (GetUnusedAddressResponse);
     rpc GetWalletAddresses (GetWalletAddressesRequest) returns (GetWalletAddressesResponse);
     rpc ListTransactions (ListTransactionsRequest) returns (ListTransactionsResponse);
@@ -48,6 +49,12 @@ message IsWalletReadyResponse {
 message GetUnusedAddressRequest {}
 
 message GetUnusedAddressResponse {
+    string address = 1;
+}
+
+message GetNewAddressRequest {}
+
+message GetNewAddressResponse {
     string address = 1;
 }
 
@@ -146,4 +153,14 @@ message Utxo {
     uint64 amount = 3;
     string address = 4;
     uint32 numConfirmations = 5;
+}
+
+message ReceiveAddressEntry {
+  string address = 1;
+  sint64 createdAt = 2;
+  optional string name = 3;
+}
+
+message ReceiveAddressStore {
+  repeated ReceiveAddressEntry receiveAddressEntries = 1;
 }

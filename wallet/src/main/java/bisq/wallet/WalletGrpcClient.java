@@ -26,6 +26,8 @@ import bisq.wallet.protobuf.GetSeedWordsRequest;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
 import bisq.wallet.protobuf.GetUnusedAddressRequest;
 import bisq.wallet.protobuf.GetUnusedAddressResponse;
+import bisq.wallet.protobuf.GetNewAddressRequest;
+import bisq.wallet.protobuf.GetNewAddressResponse;
 import bisq.wallet.protobuf.GetWalletAddressesRequest;
 import bisq.wallet.protobuf.GetWalletAddressesResponse;
 import bisq.wallet.protobuf.IsWalletEncryptedRequest;
@@ -128,6 +130,11 @@ public class WalletGrpcClient implements Service {
     public CompletableFuture<GetUnusedAddressResponse> getUnusedAddress() {
         var request = GetUnusedAddressRequest.newBuilder().build();
         return toCompletableFuture(futureStub.getUnusedAddress(request));
+    }
+
+    public CompletableFuture<GetNewAddressResponse> getNewAddress() {
+        var request = GetNewAddressRequest.newBuilder().build();
+        return toCompletableFuture(futureStub.getNewAddress(request));
     }
 
     public CompletableFuture<GetWalletAddressesResponse> requestWalletAddresses() {

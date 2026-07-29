@@ -118,7 +118,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 ? Optional.of(new WalletService(walletCfg))
                 : Optional.empty();*/
         walletService = walletCfg.isEnabled()
-                ? Optional.of(new MockWalletService(walletCfg))
+                ? Optional.of(new MockWalletService(walletCfg, persistenceService))
                 : Optional.empty();
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),

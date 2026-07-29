@@ -17,7 +17,12 @@
 
 package bisq.common.encoding;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 // See: https://en.bitcoin.it/wiki/BIP_0021
 public class BitcoinURIScheme {
@@ -41,5 +46,29 @@ public class BitcoinURIScheme {
             input = input.replace("BITCOIN:", "bitcoin:");
         }
         return input;
+    }
+
+    /**
+     * Build a BIP21 bitcoin: URI from address and optional amount/label.
+     * Examples:
+     * bitcoin:bc1qxyz...
+     * bitcoin:bc1qxyz...?amount=0.001
+     * bitcoin:bc1qxyz...?label=Savings
+     * bitcoin:bc1qxyz...?amount=0.001&label=Savings
+     */
+    public static String buildBitcoinUri(String address, Optional<String> amount, Optional<String> label) {
+        StringBuilder uri = new StringBuilder("bitcoin:").append(address);
+
+        List<String> params = new ArrayList<>(2);
+        amount.filter(s -> !s.isBlank())
+                .ifPresent(value -> params.add("amount=" + value));
+        label.filter(s -> !s.isBlank())
+                .ifPresent(value -> params.add(
+                        "label=" + URLEncoder.encode(value, StandardCharsets.UTF_8)));
+
+        if (!params.isEmpty()) {
+            uri.append('?').append(String.join("&", params));
+        }
+        return uri.toString();
     }
 }

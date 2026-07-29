@@ -17,11 +17,14 @@
 
 package bisq.wallet;
 
+import bisq.persistence.PersistenceService;
 import bisq.wallet.vo.AddressBalance;
 import bisq.wallet.vo.Utxo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -29,13 +32,15 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WalletServiceTest {
-
+    @TempDir
+    private Path tempDirPath;
     private MockWalletService walletService;
 
     @BeforeEach
     void setUp() {
         WalletService.Config config = new WalletService.Config(true, "localhost", 50051);
-        walletService = new MockWalletService(config);
+        PersistenceService persistenceService = new PersistenceService(tempDirPath);
+        walletService = new MockWalletService(config, persistenceService);
     }
 
     /**
