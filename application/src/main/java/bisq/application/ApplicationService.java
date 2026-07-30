@@ -198,8 +198,6 @@ public abstract class ApplicationService implements Service {
         applicationConfig = rootConfig.getConfig("application");
         config = Config.from(rootConfig, applicationConfig, appDataDirPath);
 
-        setupLogging(appDataDirPath);
-
         DevMode.setDevMode(config.isDevMode());
         if (config.isDevMode()) {
             DevMode.setDevModeReputationScore(config.getDevModeReputationScore());
@@ -214,10 +212,14 @@ public abstract class ApplicationService implements Service {
         ResolverConfig.config();
 
         // We check the instance lock after Res is set up, so that the user facing message can be
-        // localized, but before we create any service which reads from or writes to the data directory.
+        // localized, but before the file based logging and the services which use the data directory
+        // are started: a rejected instance must not append to or rotate the log files of the running
+        // instance. Until the lock is acquired, log output goes to the default console appender only.
         if (config.isCheckInstanceLock()) {
             checkInstanceLock();
         }
+
+        setupLogging(appDataDirPath);
 
         persistenceService = new PersistenceService(appDataDirPath);
         migrationService = new MigrationService(appDataDirPath);
