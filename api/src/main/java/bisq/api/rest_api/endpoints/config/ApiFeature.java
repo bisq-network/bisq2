@@ -37,7 +37,8 @@ import lombok.Getter;
  */
 @Getter
 public enum ApiFeature {
-    CLOSED_TRADES("closed-trades");
+    CLOSED_TRADES("closed-trades"),
+    NETWORK_INFO("network-info");
 
     private final String key;
 
