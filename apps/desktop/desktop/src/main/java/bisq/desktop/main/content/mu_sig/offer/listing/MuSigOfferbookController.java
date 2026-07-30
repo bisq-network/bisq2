@@ -543,8 +543,10 @@ public class MuSigOfferbookController implements Controller {
     }
 
     private void updateAvailablePaymentMethods() {
+        // MuSig offers are backed by a standard payment account, so accountless-only rails such as
+        // TELE_BIRR (Bisq Easy-only) must be excluded here.
         model.getAvailablePaymentMethods().setAll(
-                FiatPaymentMethodUtil.getPaymentMethods(model.getSelectedMarketItem().get().getMarket().getQuoteCurrencyCode()));
+                FiatPaymentMethodUtil.getStandardAccountPaymentMethods(model.getSelectedMarketItem().get().getMarket().getQuoteCurrencyCode()));
         applyCookiePaymentFilters();
     }
 
@@ -555,7 +557,16 @@ public class MuSigOfferbookController implements Controller {
                     for (String paymentName : Arrays.stream(cookie.split(",")).toList()) {
                         try {
                             FiatPaymentRail persisted = FiatPaymentRail.valueOf(FiatPaymentRail.class, paymentName);
-                            model.getSelectedPaymentMethods().add(FiatPaymentMethod.fromPaymentRail(persisted));
+                            FiatPaymentMethod paymentMethod = FiatPaymentMethod.fromPaymentRail(persisted);
+                            // Only re-apply persisted filters that are still available for the current market.
+                            // A rail that was selectable before but no longer is (e.g. TELE_BIRR, now Bisq
+                            // Easy-only and excluded from the MuSig list) would otherwise become an un-clearable
+                            // "ghost" filter - counted as active and hiding all offers, yet not shown in the
+                            // available list so the user can't deselect it. Stale entries drop from the cookie
+                            // on the next filter change.
+                            if (model.getAvailablePaymentMethods().contains(paymentMethod)) {
+                                model.getSelectedPaymentMethods().add(paymentMethod);
+                            }
                         } catch (Exception e) {
                             log.warn("Could not create FiatPaymentRail from persisted name {}. {}", paymentName, ExceptionUtil.getRootCauseMessage(e));
                         }
