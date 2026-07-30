@@ -27,17 +27,16 @@ import java.util.Optional;
  * The {@link Executable} handles it and terminates the application.
  */
 @Getter
-public class AnotherInstanceRunningException extends RuntimeException {
-    private final String appName;
-    private final Path appDataDirPath;
+public class AnotherInstanceRunningException extends InstanceLockException {
     private final Optional<Long> ownerPid;
 
     public AnotherInstanceRunningException(String appName, Path appDataDirPath, Optional<Long> ownerPid) {
         super("Another instance of " + appName + " is already running" +
-                ownerPid.map(pid -> " (PID " + pid + ")").orElse("") +
-                " using the data directory " + appDataDirPath);
-        this.appName = appName;
-        this.appDataDirPath = appDataDirPath;
+                        ownerPid.map(pid -> " (PID " + pid + ")").orElse("") +
+                        " using the data directory " + appDataDirPath,
+                null,
+                appName,
+                appDataDirPath);
         this.ownerPid = ownerPid;
     }
 }

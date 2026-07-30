@@ -172,9 +172,21 @@ public class FileMutatorUtilsTest {
         FileMutatorUtils.createDirectory(srcDirPath);
         FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("file.txt"));
         FileMutatorUtils.writeToPath("skip".getBytes(), srcDirPath.resolve("file.skip"));
-        FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of("skip"));
+        FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of("skip"), Set.of());
         assertTrue(Files.exists(destDirPath.resolve("file.txt")));
         assertFalse(Files.exists(destDirPath.resolve("file.skip")));
+    }
+
+    @Test
+    void testCopyDirectoryWithFileNamesToSkip(@TempDir Path tempDirPath) throws IOException {
+        Path srcDirPath = tempDirPath.resolve("srcdir3");
+        Path destDirPath = tempDirPath.resolve("destdir3");
+        FileMutatorUtils.createDirectory(srcDirPath);
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("file.txt"));
+        FileMutatorUtils.writeToPath("pid".getBytes(), srcDirPath.resolve("instance.lock"));
+        FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of(), Set.of("instance.lock"));
+        assertTrue(Files.exists(destDirPath.resolve("file.txt")));
+        assertFalse(Files.exists(destDirPath.resolve("instance.lock")));
     }
 
     @Test

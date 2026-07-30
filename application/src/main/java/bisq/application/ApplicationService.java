@@ -277,9 +277,12 @@ public abstract class ApplicationService implements Service {
                         instanceLock.readOwnerPid());
             }
         } catch (IOException e) {
-            // The locking mechanism itself is unusable, e.g. a file system without lock support. We fail open
-            // instead of blocking startup, as an unusable lock file must not prevent the application from running.
-            log.warn("Could not acquire the instance lock at {}. We continue without instance lock.", appDataDirPath, e);
+            // The locking mechanism itself is unusable, e.g. an unwritable data directory or a file system without
+            // lock support. We fail closed: we cannot rule out that another instance is running, and two instances
+            // on the same data directory corrupt the persisted state and the wallet. That damage is silent and
+            // irreversible, while a refused startup is visible and the user can act on the message.
+            // Environments which cannot support the lock at all opt out with checkInstanceLock=false.
+            throw new InstanceLockUnavailableException(config.getAppName(), appDataDirPath, e);
         }
         // We do not release the lock at shutdown. The OS releases it when the process exits, which covers a crash or
         // kill as well. Releasing it earlier would open a window in which a second instance could start while we are

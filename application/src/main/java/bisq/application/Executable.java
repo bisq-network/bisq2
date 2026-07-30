@@ -44,25 +44,25 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
     private T createApplicationServiceOrExit(String[] args) {
         try {
             return createApplicationService(args);
-        } catch (AnotherInstanceRunningException e) {
+        } catch (InstanceLockException e) {
             // Startup is aborted, thus there is nothing to shut down. We set shutDownStarted to avoid that our
             // shutdown hook triggers a shutdown of the not yet created application service.
             shutDownStarted = true;
-            handleAnotherInstanceRunning(e);
-            // handleAnotherInstanceRunning is expected to terminate the JVM. In case a custom implementation
+            handleInstanceLockFailure(e);
+            // handleInstanceLockFailure is expected to terminate the JVM. In case a custom implementation
             // returns, we must not continue with a half initialized application.
             throw e;
         }
     }
 
     /**
-     * Called if another instance already uses the same data directory. The default implementation logs the reason
-     * and exits. Applications with a UI override it to inform the user before exiting.
+     * Called if we could not establish that we are the only instance using the data directory. The default
+     * implementation logs the reason and exits. Applications with a UI override it to inform the user before exiting.
      */
-    protected void handleAnotherInstanceRunning(AnotherInstanceRunningException exception) {
+    protected void handleInstanceLockFailure(InstanceLockException exception) {
         // We do not localize the message here. Headless applications are operated from logs and a console, where
         // English is expected. The desktop application overrides this method to show a localized message.
-        log.error(exception.getMessage());
+        log.error(exception.getMessage(), exception.getCause());
         System.err.println("Error: " + exception.getMessage());
         System.exit(PlatformUtils.EXIT_FAILURE);
     }

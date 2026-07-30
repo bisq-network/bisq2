@@ -102,8 +102,21 @@ class InstanceLockTest {
 
     @Test
     void readOwnerPidReturnsPidOfLockOwner() throws IOException {
+        try (InstanceLock firstLock = new InstanceLock(appDataDirPath);
+             InstanceLock secondLock = new InstanceLock(appDataDirPath)) {
+            assertTrue(firstLock.tryLock());
+            assertFalse(secondLock.tryLock());
+            assertEquals(Optional.of(ProcessHandle.current().pid()), secondLock.readOwnerPid());
+        }
+    }
+
+    @Test
+    void readOwnerPidDoesNotReadTheLockFileIfWeOwnTheLock() throws IOException {
+        // Opening the lock file releases our own lock on POSIX systems, thus the owner must answer from memory.
+        // We detect that by corrupting the file content, which a file based lookup could not parse.
         try (InstanceLock instanceLock = new InstanceLock(appDataDirPath)) {
             assertTrue(instanceLock.tryLock());
+            Files.writeString(appDataDirPath.resolve("instance.lock"), "not-a-pid");
             assertEquals(Optional.of(ProcessHandle.current().pid()), instanceLock.readOwnerPid());
         }
     }

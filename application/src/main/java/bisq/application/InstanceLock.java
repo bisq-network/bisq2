@@ -40,14 +40,20 @@ import java.util.Optional;
  * <p>
  * We keep strong references to the {@link FileChannel} and the {@link FileLock}. If they got
  * garbage collected the lock would be released silently.
+ * <p>
+ * <b>No other code must open the lock file.</b> POSIX record locks are owned by the process, not by
+ * the file descriptor. Closing any descriptor to the file releases every lock this process holds on
+ * it, and {@link FileLock#isValid()} keeps returning true afterwards, so the loss is not detectable.
+ * A single {@link Files#copy} or {@link Files#readString} on the lock file therefore disables the
+ * protection for the rest of the session. Callers which walk the data directory must skip
+ * {@link #LOCK_FILE_NAME}.
  */
 @Slf4j
 public class InstanceLock implements AutoCloseable {
-    private static final String LOCK_FILE_NAME = "instance.lock";
+    public static final String LOCK_FILE_NAME = "instance.lock";
     // We lock a region beyond any content of the lock file instead of the whole file. On Windows file locks are
     // mandatory, thus a lock on the region which holds the PID would prevent any other process from reading the
-    // file. That would break the PID diagnostics as well as any code which copies the data directory, like the
-    // backup feature.
+    // file and would break the PID diagnostics of the second instance.
     private static final long LOCK_REGION_POSITION = 1024;
     private static final long LOCK_REGION_SIZE = 1;
 
@@ -100,7 +106,12 @@ public class InstanceLock implements AutoCloseable {
      * @return The PID written by the instance which holds the lock, if it can be read. This is
      * best effort and used for diagnostics only.
      */
-    public Optional<Long> readOwnerPid() {
+    public synchronized Optional<Long> readOwnerPid() {
+        if (fileLock != null) {
+            // We are the owner. Reading the file would open and close a descriptor to it and thus
+            // release our own lock on POSIX systems, so we answer from memory instead.
+            return Optional.of(ProcessHandle.current().pid());
+        }
         try {
             String content = Files.readString(lockFilePath, StandardCharsets.UTF_8).trim();
             return content.isEmpty() ? Optional.empty() : Optional.of(Long.parseLong(content));
