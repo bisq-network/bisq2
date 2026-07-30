@@ -21,12 +21,17 @@ import bisq.api.access.AllowUnauthenticated;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
+import bisq.api.web_socket.domain.BaseWebSocketService;
+import bisq.api.web_socket.domain.network.NetworkInfoWebSocketService;
+import bisq.api.web_socket.subscription.SubscriptionService;
+import bisq.api.web_socket.subscription.Topic;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -67,6 +72,17 @@ class ConfigRestApiTest {
         assertThat(dto.apiVersion()).isNotBlank();
         assertThat(dto.features()).containsExactlyElementsOf(ApiFeature.allKeys());
         assertThat(dto.features()).contains(ApiFeature.CLOSED_TRADES.getKey());
+        assertThat(dto.features()).contains(ApiFeature.NETWORK_INFO.getKey());
+    }
+
+    /**
+     * The keys are the wire contract capability-gated clients match on, so they must stay stable even
+     * if the enum constants get renamed.
+     */
+    @Test
+    void featureKeysAreStableWireIdentifiers() {
+        assertThat(ApiFeature.CLOSED_TRADES.getKey()).isEqualTo("closed-trades");
+        assertThat(ApiFeature.NETWORK_INFO.getKey()).isEqualTo("network-info");
     }
 
     /**
@@ -80,6 +96,14 @@ class ConfigRestApiTest {
                 case CLOSED_TRADES -> assertThat(hasEndpoint(TradeRestApi.class, "/closed"))
                         .as("closed-trades must expose GET /trades/closed")
                         .isTrue();
+                case NETWORK_INFO -> {
+                    assertThat(topicOf(new NetworkInfoWebSocketService(null, null)))
+                            .as("network-info must be backed by a service bound to Topic.NETWORK_INFO")
+                            .isEqualTo(Topic.NETWORK_INFO);
+                    assertThat(hasFieldOfType(SubscriptionService.class, NetworkInfoWebSocketService.class))
+                            .as("SubscriptionService must hold the NetworkInfoWebSocketService so NETWORK_INFO subscriptions resolve")
+                            .isTrue();
+                }
             }
         }
     }
@@ -94,6 +118,20 @@ class ConfigRestApiTest {
         assertThat(ConfigRestApi.class.isAnnotationPresent(AllowUnauthenticated.class))
                 .as("/config must be @AllowUnauthenticated — it has no RestPermissionMapping rule and would otherwise 403")
                 .isTrue();
+    }
+
+    private static Topic topicOf(BaseWebSocketService service) {
+        try {
+            Field field = BaseWebSocketService.class.getDeclaredField("topic");
+            field.setAccessible(true);
+            return (Topic) field.get(service);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Could not read the topic of " + service.getClass().getSimpleName(), e);
+        }
+    }
+
+    private static boolean hasFieldOfType(Class<?> owner, Class<?> fieldType) {
+        return Arrays.stream(owner.getDeclaredFields()).anyMatch(f -> f.getType().equals(fieldType));
     }
 
     private static boolean hasEndpoint(Class<?> resource, String path) {
