@@ -317,6 +317,45 @@ class PerMessageDeflateFilterTest {
                 .isInstanceOf(PerMessageDeflateFilter.MessageTooLarge.class);
     }
 
+    /**
+     * The frames of a compressed message are consumed here rather than forwarded, so the WebSocketFilter
+     * above never sees them and the fragmentation rules it would enforce have to be enforced here.
+     */
+    @Test
+    void inboundRejectsAContinuationWithoutAMessageToContinue() {
+        Buffer input = Buffers.wrap(memoryManager,
+                maskedFrame(OPCODE_CONTINUATION, false, true, "orphan".getBytes(StandardCharsets.UTF_8)));
+
+        assertThatThrownBy(() -> PerMessageDeflateFilter.processInbound(memoryManager, Optional.of(input), state))
+                .isInstanceOf(ProtocolError.class);
+    }
+
+    @Test
+    void inboundRejectsANewDataFrameWhileAMessageIsStillOpen() {
+        ByteArrayOutputStream input = new ByteArrayOutputStream();
+        input.writeBytes(maskedFrame(OPCODE_TEXT, true, false, PerMessageDeflateFilter.deflate(repeat("open", 20))));
+        input.writeBytes(maskedFrame(OPCODE_TEXT, false, true, "interrupting".getBytes(StandardCharsets.UTF_8)));
+
+        assertThatThrownBy(() -> PerMessageDeflateFilter.processInbound(memoryManager,
+                Optional.of(Buffers.wrap(memoryManager, input.toByteArray())), state))
+                .isInstanceOf(ProtocolError.class);
+    }
+
+    /**
+     * RFC 6455 requires a client to mask. Unmasked, a compressed frame would be rebuilt as the unmasked
+     * frame the WebSocketFilter expects from us, so nothing further up could tell the two apart.
+     */
+    @Test
+    void inboundRejectsAnUnmaskedCompressedFrame() {
+        byte[] compressed = PerMessageDeflateFilter.deflate(repeat("unmasked", 20));
+        byte[] frame = PerMessageDeflateFilter.buildFrame(OPCODE_TEXT, compressed);
+        frame[0] |= RSV1;
+        Buffer input = Buffers.wrap(memoryManager, frame);
+
+        assertThatThrownBy(() -> PerMessageDeflateFilter.processInbound(memoryManager, Optional.of(input), state))
+                .isInstanceOf(ProtocolError.class);
+    }
+
     // Helpers
 
     private void assertPlainTextFrame(Optional<Buffer> maybeContent, byte[] expectedPayload) {

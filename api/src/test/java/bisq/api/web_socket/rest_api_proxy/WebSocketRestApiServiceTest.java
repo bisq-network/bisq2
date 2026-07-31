@@ -57,14 +57,14 @@ class WebSocketRestApiServiceTest {
     }
 
     /**
-     * The literal form normalizes before the target check, so it reaches it as a plain path with the
-     * host unchanged and passes it. Whether it is refused rests entirely on the URI validator, which
-     * this pins so the two forms cannot drift apart.
+     * The literal form normalizes to a plain path with the host unchanged, so the target check passes it
+     * and the URI validator finds nothing left to object to. Only the base path check refuses it, which
+     * is what this pins: the encoded form above is caught earlier and the two must not drift apart.
      */
     @Test
     void rejectsLiteralTraversalOutOfTheRestApi() {
         assertThatThrownBy(() -> WebSocketRestApiService.resolveRestApiUri(REST_SERVER_URL, "/api/v1/../../doc/v1/"))
-                .isInstanceOf(Exception.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @ParameterizedTest

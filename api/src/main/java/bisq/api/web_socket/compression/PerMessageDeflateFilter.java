@@ -310,14 +310,24 @@ public class PerMessageDeflateFilter extends BaseFilter {
             if (frame.isControl()) {
                 output.add(input.slice(position, frame.end()));
             } else {
+                // We consume the frames of a compressed message rather than forwarding them, so the
+                // WebSocketFilter above never sees them and cannot validate the fragmentation of such
+                // a message. Whatever it would have rejected has to be rejected here instead.
                 if (frame.opcode() == OPCODE_CONTINUATION) {
+                    if (!state.messageOpen) {
+                        throw new ProtocolError("Continuation frame without a message to continue");
+                    }
                     if (frame.rsv1()) {
                         throw new ProtocolError("RSV1 must not be set on a continuation frame");
                     }
                 } else {
+                    if (state.messageOpen) {
+                        throw new ProtocolError("New data frame while a fragmented message is still open");
+                    }
                     state.messageCompressed = frame.rsv1();
                     state.messageOpcode = frame.opcode();
                 }
+                state.messageOpen = !frame.fin();
                 if (state.messageCompressed) {
                     inflated = true;
                     appendPayload(state, input, frame);
@@ -353,6 +363,11 @@ public class PerMessageDeflateFilter extends BaseFilter {
     }
 
     private static void appendPayload(ConnectionState state, Buffer input, Frame frame) {
+        if (frame.maskStart() < 0) {
+            // RFC 6455 requires a client to mask, and for a compressed frame we are the only parser
+            // that sees it, so an unmasked one has to be refused here.
+            throw new ProtocolError("Client frames must be masked");
+        }
         if (state.messagePayload.isEmpty()) {
             state.messagePayload = Optional.of(new ByteArrayOutputStream());
         }
@@ -360,11 +375,9 @@ public class PerMessageDeflateFilter extends BaseFilter {
             throw new MessageTooLarge("Compressed message exceeds " + MAX_MESSAGE_SIZE + " bytes");
         }
         byte[] payload = copyBytes(input, frame.payloadStart(), frame.payloadStart() + frame.payloadLength());
-        if (frame.maskStart() >= 0) {
-            byte[] mask = copyBytes(input, frame.maskStart(), frame.maskStart() + MASK_SIZE);
-            for (int i = 0; i < payload.length; i++) {
-                payload[i] ^= mask[i % MASK_SIZE];
-            }
+        byte[] mask = copyBytes(input, frame.maskStart(), frame.maskStart() + MASK_SIZE);
+        for (int i = 0; i < payload.length; i++) {
+            payload[i] ^= mask[i % MASK_SIZE];
         }
         state.messagePayload.get().writeBytes(payload);
     }
@@ -669,6 +682,7 @@ public class PerMessageDeflateFilter extends BaseFilter {
         }
 
         private volatile int leftoverRequiredSize;
+        private volatile boolean messageOpen;
         private volatile boolean messageCompressed;
         private volatile byte messageOpcode;
         private volatile Optional<ByteArrayOutputStream> messagePayload = Optional.empty();
