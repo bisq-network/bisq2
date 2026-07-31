@@ -161,6 +161,14 @@ public class MuSigMyOffersController implements Controller {
                 .show();
     }
 
+    void onCopyOffer(MuSigOffer muSigOffer) {
+        new Popup().information(Res.get("muSig.offer.listing.copyOffer.confirmation"))
+                .actionButtonText(Res.get("confirmation.yes"))
+                .onAction(() -> doCopyOffer(muSigOffer))
+                .closeButtonText(Res.get("confirmation.no"))
+                .show();
+    }
+
     void onGoToOffer(MuSigOffer muSigOffer) {
         muSigService.getSelectedMuSigOffer().set(muSigOffer);
         Navigation.navigateTo(NavigationTarget.MU_SIG_OFFERBOOK);
@@ -196,6 +204,22 @@ public class MuSigMyOffersController implements Controller {
         } catch (RateLimitExceededException e) {
             UIThread.run(() -> {
                 new Popup().warning(Res.get("muSig.offer.listing.rateLimitsExceeded.removeOffer.warning")).show();
+            });
+        }
+    }
+
+    private void doCopyOffer(MuSigOffer muSigOffer) {
+        try {
+            MuSigOffer clonedOffer = muSigService.cloneOffer(muSigOffer);
+            muSigService.publishOffer(clonedOffer);
+            muSigService.getSelectedMuSigOffer().set(clonedOffer);
+        } catch (UserProfileBannedException e) {
+            UIThread.run(() -> {
+                // We do not inform banned users about being banned
+            });
+        } catch (RateLimitExceededException e) {
+            UIThread.run(() -> {
+                new Popup().warning(Res.get("muSig.offer.create.rateLimitsExceeded.publish.warning")).show();
             });
         }
     }
