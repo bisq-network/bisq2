@@ -17,8 +17,8 @@
 
 package bisq.api.web_socket.domain.network;
 
+import bisq.api.dto.mappings.network.ConnectionMetricsDtoMapping;
 import bisq.api.dto.network.ConnectionDto;
-import bisq.api.dto.network.ConnectionMetricsDto;
 import bisq.api.dto.network.NetworkInfoDto;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.subscription.ModificationType;
@@ -37,7 +37,6 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
@@ -193,21 +192,9 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
                         connection.isOutboundConnection(),
                         peerGroupService != null && peerGroupService.isSeed(connection),
                         connection.getCreated(),
-                        toConnectionMetricsDto(connection.getConnectionMetrics()))));
+                        ConnectionMetricsDtoMapping.fromBisq2Model(connection.getConnectionMetrics()))));
         return connections;
-    }
-
-    private ConnectionMetricsDto toConnectionMetricsDto(ConnectionMetrics metrics) {
-        // averageRtt is 0 until a round-trip is measured (handshake / request-response); treat that as "unmeasured".
-        // Null-check the raw average, not the rounded value: a measured sub-millisecond rtt still rounds to 0.
-        double rttRaw = metrics.getAverageRtt();
-        return new ConnectionMetricsDto(
-                rttRaw > 0 ? Math.round(rttRaw) : null,
-                metrics.getSentBytes(),
-                metrics.getNumMessagesSent(),
-                metrics.getReceivedBytes(),
-                metrics.getNumMessagesReceived());
-    }
+}
 
     private Optional<ServiceNode> findPrimaryServiceNode() {
         return TRANSPORT_PRIORITY.stream()
