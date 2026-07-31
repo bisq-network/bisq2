@@ -150,6 +150,15 @@ public class PerMessageDeflateFilter extends BaseFilter {
             // so compression is switched on exactly when we confirm the extension to the client.
             if (!state.enabled
                     && httpContent.getHttpHeader() instanceof HttpResponsePacket response
+                    && response.getStatus() != HttpStatus.SWITCHING_PROTOCOLS_101.getStatusCode()) {
+                // The upgrade this offer belonged to failed. Were the state left attached, a retry on
+                // the same connection that does not offer the extension would still be answered with
+                // it, and we would compress frames the client never agreed to decompress.
+                STATE.remove(ctx.getConnection());
+                return ctx.getInvokeAction();
+            }
+            if (!state.enabled
+                    && httpContent.getHttpHeader() instanceof HttpResponsePacket response
                     && response.getStatus() == HttpStatus.SWITCHING_PROTOCOLS_101.getStatusCode()) {
                 // Replaces rather than appends: Grizzly may have written the extensions a
                 // WebSocketApplication declares, but it only echoes their names and cannot apply any of
@@ -538,7 +547,12 @@ public class PerMessageDeflateFilter extends BaseFilter {
                 throw new ProtocolError("Payload length is not minimally encoded");
             }
         }
-        if (payloadLength < 0 || payloadLength > MAX_FRAME_PAYLOAD_SIZE) {
+        if (payloadLength < 0) {
+            // RFC 6455: the most significant bit of a 64 bit length must be 0, so this is a malformed
+            // frame rather than one that is merely too big, and it gets the close code to match.
+            throw new ProtocolError("Payload length must not have the most significant bit set");
+        }
+        if (payloadLength > MAX_FRAME_PAYLOAD_SIZE) {
             throw new MessageTooLarge("Frame payload exceeds " + MAX_FRAME_PAYLOAD_SIZE + " bytes");
         }
 

@@ -69,6 +69,9 @@ class PerMessageDeflateIntegrationTest {
     // Asks the echo application to answer with a fragmented message instead of a single frame
     private static final String FRAGMENT_COMMAND = "fragment-the-reply";
 
+    // A version the server does not speak, so the upgrade is refused before it can succeed
+    private static final String UNSUPPORTED_VERSION = "8";
+
     private static final byte OPCODE_TEXT = 0x1;
     private static final byte OPCODE_CLOSE = 0x8;
 
@@ -212,6 +215,21 @@ class PerMessageDeflateIntegrationTest {
         }
     }
 
+    /**
+     * Pins why {@link PerMessageDeflateHandshakeStateTest#forgetsTheOfferOfAnUpgradeThatFailed()} has to
+     * drive the filter directly: a failed upgrade takes the connection with it, so a retry carrying no
+     * offer cannot be sent over it and the state left behind is not observable from out here. Should
+     * Grizzly ever keep the connection open, this fails and that assumption is worth revisiting.
+     */
+    @Test
+    void closesTheConnectionWhenTheUpgradeFails() throws Exception {
+        try (Client client = new Client(port)) {
+            assertThat(client.attemptFailingHandshake(PATH, OFFER)).doesNotContain("101");
+
+            assertThatThrownBy(client::handshake).isInstanceOf(IOException.class);
+        }
+    }
+
     @Test
     void closesWithTooBigOnAnOversizedFrame() throws Exception {
         try (Client client = new Client(port)) {
@@ -224,6 +242,22 @@ class PerMessageDeflateIntegrationTest {
             Frame close = client.read();
             assertThat(close.opcode()).isEqualTo(OPCODE_CLOSE);
             assertThat(closeCodeOf(close)).isEqualTo(1009);
+        }
+    }
+
+    @Test
+    void closesWithAProtocolErrorOnALengthWithTheMostSignificantBitSet() throws Exception {
+        try (Client client = new Client(port)) {
+            client.handshake(OFFER);
+
+            // RFC 6455 requires the most significant bit of a 64 bit length to be 0, so this is a
+            // malformed frame rather than one that is merely larger than we accept
+            client.write(new byte[]{(byte) (0x80 | OPCODE_TEXT), (byte) (0x80 | 127),
+                    (byte) 0x80, 0, 0, 0, 0, 0, 0, 0});
+
+            Frame close = client.read();
+            assertThat(close.opcode()).isEqualTo(OPCODE_CLOSE);
+            assertThat(closeCodeOf(close)).isEqualTo(1002);
         }
     }
 
@@ -330,33 +364,58 @@ class PerMessageDeflateIntegrationTest {
         }
 
         Map<String, String> handshake(String... extensionOffers) throws IOException {
-            byte[] key = new byte[16];
-            random.nextBytes(key);
-            StringBuilder request = new StringBuilder()
-                    .append("GET ").append(PATH).append(" HTTP/1.1\r\n")
-                    .append("Host: 127.0.0.1\r\n")
-                    .append("Upgrade: websocket\r\n")
-                    .append("Connection: Upgrade\r\n")
-                    .append("Sec-WebSocket-Version: 13\r\n")
-                    .append("Sec-WebSocket-Key: ").append(Base64.getEncoder().encodeToString(key)).append("\r\n");
-            for (String offer : extensionOffers) {
-                request.append("Sec-WebSocket-Extensions: ").append(offer).append("\r\n");
-            }
-            write(request.append("\r\n").toString().getBytes(StandardCharsets.US_ASCII));
-            return readResponseHeaders();
-        }
-
-        private Map<String, String> readResponseHeaders() throws IOException {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            while (!endsWithBlankLine(buffer.toByteArray())) {
-                buffer.write(readByte());
-            }
-            List<String> lines = new ArrayList<>(
-                    Arrays.asList(buffer.toString(StandardCharsets.US_ASCII).split("\r\n")));
+            write(handshakeRequest(PATH, extensionOffers));
+            List<String> lines = readHeaderLines();
             String statusLine = lines.remove(0);
             if (!statusLine.contains("101")) {
                 throw new IOException("Handshake failed: " + statusLine);
             }
+            return parseHeaders(lines);
+        }
+
+        /**
+         * Sends an upgrade request that cannot succeed, by naming a protocol version the server does
+         * not speak.
+         *
+         * @return the status line of the response.
+         */
+        String attemptFailingHandshake(String path, String... extensionOffers) throws IOException {
+            write(handshakeRequest(path, UNSUPPORTED_VERSION, extensionOffers));
+            List<String> lines = readHeaderLines();
+            String statusLine = lines.remove(0);
+            drainBody(parseHeaders(lines));
+            return statusLine;
+        }
+
+        private byte[] handshakeRequest(String path, String... extensionOffers) {
+            return handshakeRequest(path, "13", extensionOffers);
+        }
+
+        private byte[] handshakeRequest(String path, String version, String... extensionOffers) {
+            byte[] key = new byte[16];
+            random.nextBytes(key);
+            StringBuilder request = new StringBuilder()
+                    .append("GET ").append(path).append(" HTTP/1.1\r\n")
+                    .append("Host: 127.0.0.1\r\n")
+                    .append("Upgrade: websocket\r\n")
+                    .append("Connection: Upgrade\r\n")
+                    .append("Sec-WebSocket-Version: ").append(version).append("\r\n")
+                    .append("Sec-WebSocket-Key: ").append(Base64.getEncoder().encodeToString(key)).append("\r\n");
+            for (String offer : extensionOffers) {
+                request.append("Sec-WebSocket-Extensions: ").append(offer).append("\r\n");
+            }
+            return request.append("\r\n").toString().getBytes(StandardCharsets.US_ASCII);
+        }
+
+        private List<String> readHeaderLines() throws IOException {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            while (!endsWithBlankLine(buffer.toByteArray())) {
+                buffer.write(readByte());
+            }
+            return new ArrayList<>(Arrays.asList(buffer.toString(StandardCharsets.US_ASCII).split("\r\n")));
+        }
+
+        private Map<String, String> parseHeaders(List<String> lines) {
             Map<String, String> headers = new HashMap<>();
             for (String line : lines) {
                 int separator = line.indexOf(':');
@@ -366,6 +425,16 @@ class PerMessageDeflateIntegrationTest {
                 }
             }
             return headers;
+        }
+
+        /**
+         * Reads the error body away, so that it is not mistaken for the start of the next response.
+         */
+        private void drainBody(Map<String, String> headers) throws IOException {
+            int length = Integer.parseInt(headers.getOrDefault("content-length", "0"));
+            for (int i = 0; i < length; i++) {
+                readByte();
+            }
         }
 
         private static boolean endsWithBlankLine(byte[] bytes) {

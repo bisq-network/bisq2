@@ -86,9 +86,12 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
 
     @Override
     public void onMessage(WebSocket webSocket, String message) {
-        // Redacted: a client released before the node took the identity from the handshake puts its
-        // session id into the payload, and this line would otherwise write it to disk for every message.
-        log.info("Received message {}", JsonUtil.redactCredentials(message));
+        // Debug rather than info: this is one full message plus a redaction pass per message, which
+        // production should not pay for. Redacted because a client released before the node took the
+        // identity from the handshake puts its session id into the payload.
+        if (log.isDebugEnabled()) {
+            log.debug("Received message {}", JsonUtil.redactCredentials(message));
+        }
         CompletableFuture.runAsync(() -> {
             if (subscriptionService.canHandle(message)) {
                 subscriptionService.onMessage(message, webSocket);

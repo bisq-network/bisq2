@@ -193,6 +193,12 @@ public class WebSocketRestApiService implements Service {
                         && restServerUri.getPort() == uri.getPort()
                         && uri.getRawUserInfo() == null,
                 "Path must not change the target of the request: %s", path);
+        // Checked after normalizing, so that a traversal cannot walk out of the REST API and reach
+        // another handler of the same server — the docs endpoint or a static file handler — with the
+        // credentials of the connection attached.
+        checkArgument(uri.getPath().equals(ApiConfig.REST_API_BASE_PATH)
+                        || uri.getPath().startsWith(ApiConfig.REST_API_BASE_PATH + "/"),
+                "Path must address the REST API: %s", path);
 
         // The REST API applies this to incoming requests as well, but only when authorization is
         // required, whereas a forwarded request has to be safe regardless of that setting.
@@ -201,8 +207,11 @@ public class WebSocketRestApiService implements Service {
     }
 
     /**
-     * Fails rather than forwarding the request without an identity: this is the only place the identity
-     * is established, so a connection we cannot resolve it for must not reach the REST API at all.
+     * Copies the identity of the connection onto the forwarded request. A connection whose upgrade
+     * request cannot be resolved at all is a state we do not expect and refuse to forward for, whereas
+     * an upgrade request carrying no identity headers forwards none: with session handling enabled the
+     * handshake filter has already rejected such a connection, and with it disabled there is no
+     * identity to pass on and the REST API asks for none.
      */
     private static void forwardAuthenticatedIdentity(WebSocket webSocket, HttpRequest.Builder requestBuilder) {
         HttpServletRequest upgradeRequest = findUpgradeRequest(webSocket)
