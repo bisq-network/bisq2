@@ -35,6 +35,7 @@ public final class ApiConfig {
     // api.server.*
     private final boolean restEnabled;
     private final boolean websocketEnabled;
+    private final boolean websocketCompressionEnabled;
 
     // api.server.bind.*
     private final String bindHost;
@@ -65,6 +66,7 @@ public final class ApiConfig {
             boolean writePairingQrCodeToDisk,
             boolean restEnabled,
             boolean websocketEnabled,
+            boolean websocketCompressionEnabled,
             String bindHost,
             int bindPort,
             int onionServicePort,
@@ -81,6 +83,7 @@ public final class ApiConfig {
         this.writePairingQrCodeToDisk = writePairingQrCodeToDisk;
         this.restEnabled = restEnabled;
         this.websocketEnabled = websocketEnabled;
+        this.websocketCompressionEnabled = websocketCompressionEnabled;
         this.bindHost = bindHost;
         this.bindPort = bindPort;
         this.onionServicePort = onionServicePort;
@@ -117,6 +120,7 @@ public final class ApiConfig {
 
                 serverConfig.getBoolean("restEnabled"),
                 serverConfig.getBoolean("websocketEnabled"),
+                serverConfig.getBoolean("websocketCompressionEnabled"),
 
                 bindConfig.getString("host"),
                 bindConfig.getInt("port"),

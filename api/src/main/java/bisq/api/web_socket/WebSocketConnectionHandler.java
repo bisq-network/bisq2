@@ -21,6 +21,7 @@ package bisq.api.web_socket;
 import bisq.api.access.filter.Headers;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
+import bisq.api.web_socket.util.JsonUtil;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
@@ -85,14 +86,16 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
 
     @Override
     public void onMessage(WebSocket webSocket, String message) {
-        log.info("Received message {}", message);
+        // Redacted: a client released before the node took the identity from the handshake puts its
+        // session id into the payload, and this line would otherwise write it to disk for every message.
+        log.info("Received message {}", JsonUtil.redactCredentials(message));
         CompletableFuture.runAsync(() -> {
             if (subscriptionService.canHandle(message)) {
                 subscriptionService.onMessage(message, webSocket);
             } else if (webSocketRestApiService.canHandle(message)) {
                 webSocketRestApiService.onMessage(message, webSocket);
             } else {
-                log.error("No service found for handling message: {}", message);
+                log.error("No service found for handling message: {}", JsonUtil.redactCredentials(message));
             }
         }, executor);
     }
