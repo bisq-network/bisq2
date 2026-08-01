@@ -57,16 +57,37 @@ class PerMessageDeflateFilterTest {
                 "permessage-deflate; client_no_context_takeover; server_no_context_takeover")).isTrue();
     }
 
+    /**
+     * The client's window bounds the compressor at the other end, and RFC 7692 lets the server ignore
+     * the value: our Inflater always uses the largest window and decodes a stream produced with any
+     * smaller one, so such an offer must not cost the connection its compression.
+     */
     @Test
-    void acceptsOfferWithDefaultWindowBits() {
+    void acceptsAnyClientWindowSizeAndIgnoresIt() {
         assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits")).isTrue();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=8")).isTrue();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=10")).isTrue();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=15")).isTrue();
+    }
+
+    /**
+     * The server's window bounds our own compressor, which java.util.zip cannot restrict, so anything
+     * but the largest has to be declined. An offer has to carry a value for it, so one without is
+     * declined as well.
+     */
+    @Test
+    void declinesAServerWindowSizeItCannotHonour() {
         assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; server_max_window_bits=15")).isTrue();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; server_max_window_bits=10")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; server_max_window_bits")).isFalse();
     }
 
     @Test
-    void declinesWindowSizeItCannotHonour() {
-        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; server_max_window_bits=10")).isFalse();
-        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=10")).isFalse();
+    void declinesAWindowSizeOutsideTheRange() {
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=7")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=16")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=08")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=x")).isFalse();
     }
 
     @Test

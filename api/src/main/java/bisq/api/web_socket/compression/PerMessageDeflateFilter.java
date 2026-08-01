@@ -244,10 +244,20 @@ public class PerMessageDeflateFilter extends BaseFilter {
                 case "client_no_context_takeover", "server_no_context_takeover" -> {
                     // We apply both unconditionally
                 }
-                case "client_max_window_bits", "server_max_window_bits" -> {
-                    // java.util.zip cannot restrict the window size, so anything below the default
-                    // cannot be honoured and the offer has to be declined.
-                    if (value.filter(bits -> !"15".equals(bits)).isPresent()) {
+                case "client_max_window_bits" -> {
+                    // Limits the window the CLIENT compresses with, and RFC 7692 lets us ignore the
+                    // value: our Inflater always uses the largest window, which decodes a stream
+                    // produced with any smaller one. Only a value outside the range is refused, as an
+                    // offer we cannot make sense of.
+                    if (value.filter(bits -> !isWindowBits(bits)).isPresent()) {
+                        return false;
+                    }
+                }
+                case "server_max_window_bits" -> {
+                    // Limits the window WE compress with, which java.util.zip cannot restrict, so only
+                    // the largest can be honoured and RFC 7692 has us decline anything else. The offer
+                    // has to carry a value, so one without is refused too.
+                    if (!value.filter("15"::equals).isPresent()) {
                         return false;
                     }
                 }
@@ -258,6 +268,21 @@ public class PerMessageDeflateFilter extends BaseFilter {
             }
         }
         return true;
+    }
+
+    /**
+     * @return true for a window size RFC 7692 allows, which is 8 to 15 without leading zeroes.
+     */
+    private static boolean isWindowBits(String value) {
+        if (value.isEmpty() || value.startsWith("0")) {
+            return false;
+        }
+        try {
+            int bits = Integer.parseInt(value);
+            return bits >= 8 && bits <= 15;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private static String unquote(String value) {
