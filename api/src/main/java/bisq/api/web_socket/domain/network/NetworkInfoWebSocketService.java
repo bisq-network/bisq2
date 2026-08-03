@@ -25,6 +25,9 @@ import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.SubscriptionRequest;
 import bisq.api.web_socket.subscription.Topic;
+import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
@@ -37,6 +40,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.inventory.InventoryService;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
 import lombok.extern.slf4j.Slf4j;
@@ -64,15 +68,31 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
     private static final List<TransportType> TRANSPORT_PRIORITY = List.of(TransportType.TOR, TransportType.I2P, TransportType.CLEAR);
 
     private final NetworkService networkService;
+    private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final Node.Listener nodeListener;
+    private final AuthorizedBondedRolesService.Listener bondedRolesListener;
     private final Set<Pin> pins = new CopyOnWriteArraySet<>();
     @Nullable
     private volatile ServiceNode observedServiceNode;
 
     public NetworkInfoWebSocketService(SubscriberRepository subscriberRepository,
-                                       NetworkService networkService) {
+                                       NetworkService networkService,
+                                       AuthorizedBondedRolesService authorizedBondedRolesService) {
         super(subscriberRepository, Topic.NETWORK_INFO);
         this.networkService = networkService;
+        this.authorizedBondedRolesService = authorizedBondedRolesService;
+
+        bondedRolesListener = new AuthorizedBondedRolesService.Listener() {
+            @Override
+            public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+                onSeedRoleChanged(authorizedData);
+            }
+
+            @Override
+            public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+                onSeedRoleChanged(authorizedData);
+            }
+        };
 
         nodeListener = new Node.Listener() {
             @Override
@@ -105,6 +125,8 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        authorizedBondedRolesService.addListener(bondedRolesListener);
+
         findPrimaryServiceNode().ifPresent(serviceNode -> {
             observedServiceNode = serviceNode;
             serviceNode.getDefaultNode().addListener(nodeListener);
@@ -119,6 +141,8 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        authorizedBondedRolesService.removeListener(bondedRolesListener);
+
         ServiceNode serviceNode = observedServiceNode;
         if (serviceNode != null) {
             serviceNode.getDefaultNode().removeListener(nodeListener);
@@ -145,6 +169,16 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
             send(subscribers, getJsonPayload(), topic, ModificationType.REPLACE);
         } catch (Exception e) {
             log.error("Failed to send network info update", e);
+        }
+    }
+
+    // Adding or removing a seed node bonded role mutates the seed set of the PeerGroupService, which reclassifies
+    // already established connections. AuthorizedBondedRolesService applies that change to the NetworkService before
+    // it notifies its listeners, so the payload we build here already reflects the new classification.
+    private void onSeedRoleChanged(AuthorizedData authorizedData) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole authorizedBondedRole
+                && authorizedBondedRole.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+            onChange();
         }
     }
 

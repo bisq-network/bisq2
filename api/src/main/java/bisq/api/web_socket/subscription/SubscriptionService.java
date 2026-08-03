@@ -88,7 +88,9 @@ public class SubscriptionService implements Service {
         numUserProfilesWebSocketService = new NumUserProfilesWebSocketService(subscriberRepository, userService);
         tradeRestrictingAlertWebSocketService = new TradeRestrictingAlertWebSocketService(subscriberRepository, bondedRolesService.getAlertService());
         alertNotificationsWebSocketService = new AlertNotificationsWebSocketService(subscriberRepository, alertNotificationsService);
-        networkInfoWebSocketService = new NetworkInfoWebSocketService(subscriberRepository, networkService);
+        networkInfoWebSocketService = new NetworkInfoWebSocketService(subscriberRepository,
+                networkService,
+                bondedRolesService.getAuthorizedBondedRolesService());
     }
 
     @Override
