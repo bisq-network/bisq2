@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.support.resources;
 
+import bisq.application.InstanceLock;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.observable.Pin;
 import bisq.common.platform.PlatformUtils;
@@ -136,8 +137,14 @@ public class ResourcesController implements Controller {
                             return;
                         }
                         try {
-                            // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy
-                            FileMutatorUtils.copyDirectory(appDataDirPath, destinationPath, Set.of("log"));
+                            // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy.
+                            // We must not copy the instance lock file. On POSIX systems record locks belong to the process, not to
+                            // the file descriptor, thus reading the file for the copy would release our own lock and disable the
+                            // single instance protection for the rest of the session.
+                            FileMutatorUtils.copyDirectory(appDataDirPath,
+                                    destinationPath,
+                                    Set.of("log"),
+                                    Set.of(InstanceLock.LOCK_FILE_NAME));
                             new Popup().feedback(Res.get("support.resources.backup.success", destinationPath)).show();
                         } catch (IOException e) {
                             new Popup().error(e).show();

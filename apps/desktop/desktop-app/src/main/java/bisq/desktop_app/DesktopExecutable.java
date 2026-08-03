@@ -17,7 +17,10 @@
 
 package bisq.desktop_app;
 
+import bisq.application.AnotherInstanceRunningException;
 import bisq.application.Executable;
+import bisq.application.InstanceLockException;
+import bisq.application.InstanceLockUnavailableException;
 import bisq.desktop.DesktopController;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -28,6 +31,10 @@ import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import java.awt.GraphicsEnvironment;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
@@ -73,6 +80,43 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                         shutdownAfterStartupFailure("Could not launch JavaFX application.", throwable);
                     }
                 });
+    }
+
+    @Override
+    protected void handleInstanceLockFailure(InstanceLockException exception) {
+        log.error(exception.getMessage(), exception.getCause());
+        String appName = exception.getAppName();
+        Path appDataDirPath = exception.getAppDataDirPath();
+        String headline;
+        String message;
+        if (exception instanceof AnotherInstanceRunningException anotherInstanceRunningException) {
+            headline = Res.get("popup.alreadyRunning.headline", appName);
+            // The PID lets the user find the other instance if it is not visible, e.g. a hanging process.
+            // We pass it as string as MessageFormat would render a number with grouping separators.
+            message = Res.get("popup.alreadyRunning.msg", appName, appDataDirPath) +
+                    anotherInstanceRunningException.getOwnerPid()
+                            .map(pid -> "\n\n" + Res.get("popup.alreadyRunning.ownerPid", String.valueOf(pid)))
+                            .orElse("");
+        } else {
+            headline = Res.get("popup.instanceLockFailed.headline", appName);
+            String reason = exception.getCause() != null ? exception.getCause().getMessage() : exception.getMessage();
+            message = Res.get("popup.instanceLockFailed.msg", appName, appDataDirPath,
+                    InstanceLockUnavailableException.DISABLE_CHECK_OPTION, reason);
+        }
+        // We are called before JavaFX is launched, thus we cannot use our Popup. We use a lightweight AWT dialog
+        // instead if a display is available and fall back to stderr otherwise.
+        if (!GraphicsEnvironment.isHeadless()) {
+            try {
+                SwingUtilities.invokeAndWait(() ->
+                        JOptionPane.showMessageDialog(null, message, headline, JOptionPane.WARNING_MESSAGE));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted state
+            } catch (Throwable t) {
+                log.warn("Could not show the 'already running' dialog", t);
+            }
+        }
+        System.err.println("Error: " + message);
+        System.exit(EXIT_FAILURE);
     }
 
     @Override
