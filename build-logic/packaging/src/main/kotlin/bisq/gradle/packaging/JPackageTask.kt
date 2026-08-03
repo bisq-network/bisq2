@@ -122,14 +122,16 @@ abstract class JPackageTask : DefaultTask() {
             contentPaths.add(dest)
         }
 
-        // Stage onion-grater YAMLs into lib/onion-grater/
+        // Stage the Tails onion-grater profile into lib/onion-grater/. Only the Tails profile is
+        // shipped: the deb postinst enables it on Tails, while Whonix gets the Bisq profile from the
+        // OS (onion-grater upstream), so the Whonix variant would be dead weight in the package.
         if (onionGraterDir.isPresent) {
             val onionGraterStageDir = stagingDir.resolve("onion-grater")
             Files.createDirectories(onionGraterStageDir)
             val srcDir = onionGraterDir.asFile.get().toPath()
             Files.list(srcDir).use { paths ->
                 paths
-                    .filter { it.toString().endsWith(".yml") }
+                    .filter { it.fileName.toString().endsWith("_tails.yml") }
                     .forEach { src ->
                         Files.copy(src, onionGraterStageDir.resolve(src.fileName), StandardCopyOption.REPLACE_EXISTING)
                     }

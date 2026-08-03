@@ -21,6 +21,7 @@ import lombok.Builder;
 
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_PORT;
@@ -48,20 +49,20 @@ public class BaseTorrcGenerator implements TorrcConfigGenerator {
     }
 
     @Override
-    public Map<String, String> generate() {
-        Map<String, String> torConfigMap = new LinkedHashMap<>();
-        torConfigMap.put(DATA_DIRECTORY, dataDirPath.toAbsolutePath().toString());
+    public Map<String, List<String>> generate() {
+        Map<String, List<String>> torConfigMap = new LinkedHashMap<>();
+        torConfigMap.put(DATA_DIRECTORY, List.of(dataDirPath.toAbsolutePath().toString()));
 
-        torConfigMap.put(CONTROL_PORT, CONTROL_PORT_AUTO);
-        torConfigMap.put(CONTROL_PORT_WRITE_TO_FILE, controlPortWriteFilePath.toAbsolutePath().toString());
-        torConfigMap.put(HASHED_CONTROL_PASSWORD, hashedControlPassword);
+        torConfigMap.put(CONTROL_PORT, List.of(CONTROL_PORT_AUTO));
+        torConfigMap.put(CONTROL_PORT_WRITE_TO_FILE, List.of(controlPortWriteFilePath.toAbsolutePath().toString()));
+        torConfigMap.put(HASHED_CONTROL_PASSWORD, List.of(hashedControlPassword));
 
         String logLevel = isTestNetwork ? "debug" : "notice";
         torConfigMap.put("Log",
-                logLevel + " file " + dataDirPath.resolve("debug.log").toAbsolutePath()
+                List.of(logLevel + " file " + dataDirPath.resolve("debug.log").toAbsolutePath())
         );
 
-        torConfigMap.put(SOCKS_PORT, SOCKS_PORT_DISABLED);
+        torConfigMap.put(SOCKS_PORT, List.of(SOCKS_PORT_DISABLED));
         return torConfigMap;
     }
 }

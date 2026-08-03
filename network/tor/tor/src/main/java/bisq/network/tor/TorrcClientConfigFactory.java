@@ -25,7 +25,6 @@ import lombok.Builder;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,20 +45,11 @@ public class TorrcClientConfigFactory {
         this.hashedControlPassword = hashedControlPassword;
     }
 
-    public List<String> torrcClientConfigLines(Map<String, List<String>> torrcOverrides) {
-        Map<String, String> baseConfig = clientTorrcGenerator().generate();
-        baseConfig.put(DISABLE_NETWORK, "1");
-
-        List<String> lines = new ArrayList<>();
-        baseConfig.forEach((key, value) -> {
-            if (!torrcOverrides.containsKey(key)) {
-                lines.add(key + " " + value);
-            }
-        });
-        torrcOverrides.forEach((key, values) ->
-                values.forEach(value -> lines.add(key + " " + value))
-        );
-        return lines;
+    public Map<String, List<String>> torrcClientConfigMap(Map<String, List<String>> torrcOverrides) {
+        Map<String, List<String>> torrcClientConfig = clientTorrcGenerator().generate();
+        torrcClientConfig.put(DISABLE_NETWORK, List.of("1"));
+        torrcClientConfig.putAll(torrcOverrides);
+        return torrcClientConfig;
     }
 
     TorrcConfigGenerator clientTorrcGenerator() {

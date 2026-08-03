@@ -37,15 +37,17 @@ import bisq.network.tor.process.control_port.ControlPortFileParser;
 import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.UnixDomainSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -175,7 +177,8 @@ public class TorService implements Service {
 
         FileMutatorUtils.deleteOnExit(controlPortFilePath);
 
-        torController.initialize(controlPort);
+        var socketAddress = new InetSocketAddress("127.0.0.1", controlPort);
+        torController.initialize(socketAddress);
         torController.authenticate(hashedControlPassword);
         torController.bootstrap();
 
@@ -247,8 +250,12 @@ public class TorService implements Service {
     public CompletableFuture<ServerSocket> publishOnionServiceAndCreateServerSocket(int port, TorKeyPair torKeyPair) {
         long ts = System.currentTimeMillis();
         try {
-            InetAddress bindAddress = !LinuxDistribution.isWhonix() ? Inet4Address.getLoopbackAddress()
-                    : Inet4Address.getByName("0.0.0.0");
+            // Whonix's gateway reaches Bisq from a different host, so the maker server socket must
+            // listen on all interfaces there. On Tails the system Tor (via onion-grater) calls back
+            // to 127.0.0.1 — verified on Tails: inbound rendezvous connections to the listen port have
+            // local address 127.0.0.1 — so loopback is correct and required (Tails blocks global binds).
+            InetAddress bindAddress = LinuxDistribution.isWhonix() ? Inet4Address.getByName("0.0.0.0")
+                    : Inet4Address.getLoopbackAddress();
             var localServerSocket = new ServerSocket(RANDOM_PORT, 50, bindAddress);
 
             String onionAddress = torKeyPair.getOnionAddress();
@@ -289,18 +296,14 @@ public class TorService implements Service {
     }
 
     private boolean connectedToExternalTor(Map<String, String> torConfigMap) {
-        ControlEndpoint controlEndpoint = getControlEndpoint(torConfigMap);
+        SocketAddress socketAddress = getControlSocketAddress(torConfigMap);
 
         if (torController != null) {
             torController.shutdown();
         }
         torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
         try {
-            if (controlEndpoint instanceof UnixSocketControlEndpoint socketControlEndpoint) {
-                torController.initialize(socketControlEndpoint.controlSocketPath());
-            } else if (controlEndpoint instanceof TcpControlEndpoint tcpControlEndpoint) {
-                torController.initialize(tcpControlEndpoint.controlHost(), tcpControlEndpoint.controlPort());
-            }
+            torController.initialize(socketAddress);
         } catch (CannotConnectWithTorException e) {
             log.warn("Could not connect to external Tor control endpoint.", e);
             torController.shutdown();
@@ -362,11 +365,11 @@ public class TorService implements Service {
         return true;
     }
 
-    private ControlEndpoint getControlEndpoint(Map<String, String> externalTorConfigMap) {
+    private SocketAddress getControlSocketAddress(Map<String, String> externalTorConfigMap) {
         String controlSocketString = externalTorConfigMap.get(CONTROL_SOCKET);
         if (controlSocketString != null && !controlSocketString.isBlank()) {
             Path controlSocketPath = Path.of(StringUtils.unquote(controlSocketString));
-            return ControlEndpoint.forSocket(controlSocketPath);
+            return UnixDomainSocketAddress.of(controlSocketPath);
         }
 
         String controlPortString = externalTorConfigMap.get(CONTROL_PORT);
@@ -384,7 +387,7 @@ public class TorService implements Service {
             controlHost = "127.0.0.1";
             controlPort = Integer.parseInt(tokens[0]);
         }
-        return ControlEndpoint.forPort(controlHost, controlPort);
+        return new InetSocketAddress(controlHost, controlPort);
     }
 
     private void readExternalTorConfigMap() {
@@ -392,20 +395,23 @@ public class TorService implements Service {
             Path externalTorConfigPath = getExternalTorConfigPath();
             activeExternalTorConfigPath = Optional.of(externalTorConfigPath);
             externalTorConfigMap.clear();
-            String torConfig = readExternalTorConfig(externalTorConfigPath);
-            for (String line : torConfig.lines().toList()) {
-                line = line.trim();
-                if (!line.isEmpty() && !line.startsWith("#")) {
-                    int firstSpaceIndex = line.indexOf(" ");
-                    if (firstSpaceIndex != -1) {
-                        String key = line.substring(0, firstSpaceIndex);
-                        String value = line.substring(firstSpaceIndex + 1);
-                        externalTorConfigMap.put(key, value);
-                    } else {
-                        log.warn("Ignoring malformed line (no key/value separator) in external Tor config: '{}'", line);
-                    }
-                }
-            }
+
+            readExternalTorConfig(externalTorConfigPath)
+                    .lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty() && !line.startsWith("#"))
+                    .forEach(line -> {
+                        int firstSpaceIndex = line.indexOf(" ");
+                        if (firstSpaceIndex != -1) {
+                            String key = line.substring(0, firstSpaceIndex);
+                            String value = line.substring(firstSpaceIndex + 1);
+                            externalTorConfigMap.put(key, value);
+                        } else {
+                            log.warn("Ignoring malformed line (no key/value separator) in external " +
+                                    "Tor config: '{}'", line);
+                        }
+                    });
+
         } catch (IOException e) {
             log.warn("Could not read external tor config file.", e);
         }
@@ -430,14 +436,14 @@ public class TorService implements Service {
     }
 
     private Path getExternalTorConfigPath() {
-        String torrcOverrideFilePath = transportConfig.getTorrcOverrideFilePath();
-        if (torrcOverrideFilePath != null && !torrcOverrideFilePath.isBlank()) {
-            Path overrideFilePath = resolveTorrcOverrideFilePath(transportConfig.getDataDirPath(), torrcOverrideFilePath);
+        Optional<Path> torrcOverrideFilePath = transportConfig.getTorrcOverrideFilePath();
+        if (torrcOverrideFilePath.isPresent()) {
+            Path overrideFilePath = torrcOverrideFilePath.get();
             if (Files.exists(overrideFilePath)) {
                 return overrideFilePath;
             }
             log.warn("torrcOverrideFilePath '{}' does not exist. Falling back to external_tor.config.",
-                    torrcOverrideFilePath);
+                    overrideFilePath);
         }
         return transportConfig.getDataDirPath().resolve("external_tor.config");
     }
@@ -485,77 +491,41 @@ public class TorService implements Service {
         torInstaller.installIfNotUpToDate();
     }
 
-    private List<String> createTorrcConfigFile(Path dataDirPath, PasswordDigest hashedControlPassword) {
+    private void createTorrcConfigFile(Path dataDirPath, PasswordDigest hashedControlPassword) {
         TorrcClientConfigFactory torrcClientConfigFactory = TorrcClientConfigFactory.builder()
                 .isTestNetwork(transportConfig.isTestNetwork())
                 .dataDirPath(dataDirPath)
                 .hashedControlPassword(hashedControlPassword)
                 .build();
 
-        Map<String, List<String>> overrides = resolveOverrides(dataDirPath);
-        List<String> torrcConfigLines = torrcClientConfigFactory.torrcClientConfigLines(overrides);
+        Map<String, List<String>> torrcOverrideConfigs = resolveOverrides();
+        Map<String, List<String>> torrcConfigMap = torrcClientConfigFactory.torrcClientConfigMap(torrcOverrideConfigs);
 
         Path torrcPath = dataDirPath.resolve("torrc");
         var torrcFileGenerator = new TorrcFileGenerator(torrcPath,
-                torrcConfigLines,
+                torrcConfigMap,
                 transportConfig.getDirectoryAuthorities());
         torrcFileGenerator.generate();
-        return torrcConfigLines;
     }
 
     /**
-     * Returns the effective torrc overrides.  If {@code torrcOverrideFilePath} is set it is
-     * resolved against the data directory (when relative) and its contents take precedence over
-     * the inline {@code torrcOverrides} map.  Falls back to {@code torrcOverrides} when the
-     * file path is empty or the file cannot be read.
+     * Returns the effective torrc overrides.  If {@code torrcOverrideFilePath} is set its
+     * contents take precedence over the inline {@code torrcOverrides} map.  Falls back to
+     * {@code torrcOverrides} when the file path is empty or the file cannot be read.
      */
-    private Map<String, List<String>> resolveOverrides(Path dataDirPath) {
-        String filePathStr = transportConfig.getTorrcOverrideFilePath();
-        if (filePathStr == null || filePathStr.isBlank()) {
+    private Map<String, List<String>> resolveOverrides() {
+        Optional<Path> torrcOverrideFilePath = transportConfig.getTorrcOverrideFilePath();
+        if (torrcOverrideFilePath.isEmpty()) {
             return transportConfig.getTorrcOverrides();
         }
+
+        Path overrideFilePath = torrcOverrideFilePath.get();
         try {
-            Path overrideFilePath = resolveTorrcOverrideFilePath(dataDirPath, filePathStr);
-            return TorTransportConfig.parseTorrcOverrideFile(overrideFilePath);
+            return TorrcFileParser.parseTorrcOverrideFile(overrideFilePath);
         } catch (IOException e) {
             log.warn("Could not read torrcOverrideFilePath '{}', falling back to torrcOverrides. Error: {}",
-                    filePathStr, e.getMessage());
+                    overrideFilePath, e.getMessage());
             return transportConfig.getTorrcOverrides();
-        }
-    }
-
-    private Path resolveTorrcOverrideFilePath(Path dataDirPath, String torrcOverrideFilePath) {
-        Path overrideFilePath = Path.of(torrcOverrideFilePath);
-        if (!overrideFilePath.isAbsolute()) {
-            overrideFilePath = dataDirPath.resolve(overrideFilePath);
-        }
-        return overrideFilePath;
-    }
-
-    private sealed interface ControlEndpoint permits TcpControlEndpoint, UnixSocketControlEndpoint {
-
-        static ControlEndpoint forPort(String controlHost, int controlPort) {
-            return new TcpControlEndpoint(controlHost, controlPort);
-        }
-
-        static ControlEndpoint forSocket(Path controlSocketPath) {
-            return new UnixSocketControlEndpoint(controlSocketPath);
-        }
-    }
-
-    private record TcpControlEndpoint(String controlHost, int controlPort) implements ControlEndpoint {
-        @Override
-        @NonNull
-        public String toString() {
-            return String.format("TcpControlEndpoint(host: %s, port: %d)", controlHost, controlPort);
-        }
-    }
-
-    private record UnixSocketControlEndpoint(Path controlSocketPath) implements ControlEndpoint {
-        @Override
-        @NonNull
-        public String toString() {
-            return String.format("UnixSocketControlEndpoint(controlSocketPath: %s)", controlSocketPath);
         }
     }
 }
