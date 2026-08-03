@@ -42,7 +42,7 @@ class TorControlProtocolTest {
 
             TorControlProtocol torControlProtocol = new TorControlProtocol();
             try {
-                torControlProtocol.initialize(controlSocketPath);
+                torControlProtocol.initialize(UnixDomainSocketAddress.of(controlSocketPath));
                 torControlProtocol.authenticate(new byte[0]);
 
                 assertThat(commandReceived.await(2, TimeUnit.SECONDS)).isTrue();

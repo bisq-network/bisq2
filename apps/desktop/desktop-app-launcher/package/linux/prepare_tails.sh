@@ -74,11 +74,10 @@ if [ -L "$TARGET_LINK" ]; then
 elif [ -d "$TARGET_LINK" ]; then
     BACKUP_DIR="${TARGET_LINK}.pre-tails-migration.$(date +%Y%m%d%H%M%S)"
     echo "Found existing non-persistent data at $TARGET_LINK; migrating into $DataDirectory ..."
-    if ! command -v rsync >/dev/null 2>&1; then
-        echo "Error: rsync not found; cannot migrate existing $TARGET_LINK safely." >&2
-        exit 1
-    fi
-    rsync -aHAX --info=stats2 -- "$TARGET_LINK"/ "$DataDirectory"/
+    # Use cp (always present) instead of rsync (not guaranteed). cp -a == -dR --preserve=all,
+    # preserving mode, ownership, timestamps, symlinks, hard links, ACLs and xattrs. The trailing
+    # "/." copies the directory contents (including dotfiles) into the existing $DataDirectory.
+    cp -a -- "$TARGET_LINK"/. "$DataDirectory"/
     mv -- "$TARGET_LINK" "$BACKUP_DIR"
     echo "Backed up original directory to $BACKUP_DIR"
     chown -R amnesia:amnesia "$DataDirectory"

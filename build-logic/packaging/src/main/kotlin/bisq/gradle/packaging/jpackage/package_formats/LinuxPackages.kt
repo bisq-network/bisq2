@@ -1,5 +1,6 @@
 package bisq.gradle.packaging.jpackage.package_formats
 
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 
@@ -36,6 +37,15 @@ class LinuxPackages(
         if (packageFormat == PackageFormat.DEB) {
             arguments.add("--linux-deb-maintainer")
             arguments.add("noreply@bisq.network")
+
+            // Override the deb maintainer scripts (postinst/prerm) to auto-enable Bisq's
+            // onion-grater profile on Tails. jpackage still applies its token substitution to
+            // these overrides, so the default desktop/service integration is preserved.
+            val debResourceDir = resourcesPath.resolve("deb")
+            if (Files.isDirectory(debResourceDir)) {
+                arguments.add("--resource-dir")
+                arguments.add(debResourceDir.toAbsolutePath().toString())
+            }
         }
 
         if (packageFormat == PackageFormat.RPM) {

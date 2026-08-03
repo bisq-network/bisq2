@@ -89,7 +89,7 @@ public class TorControlReader implements AutoCloseable {
                 if (!isStopped) {
                     log.warn("Tor control connection closed unexpectedly.");
                 }
-                replies.offer(CONNECTION_CLOSED_SENTINEL);
+                replies.add(CONNECTION_CLOSED_SENTINEL);
             }
         });
         workerThread = Optional.of(thread);

@@ -17,8 +17,9 @@
 
 package bisq.network.tor.common.torrc;
 
+import java.util.List;
 import java.util.Map;
 
 public interface TorrcConfigGenerator {
-    Map<String, String> generate();
+    Map<String, List<String>> generate();
 }

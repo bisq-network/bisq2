@@ -94,10 +94,15 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
 
-            // Onion-grater profiles for Tails/Whonix packaging
-            val onionGraterPath = File(project.rootProject.projectDir, "network/tor/tor/onion-grater")
-            if (onionGraterPath.isDirectory) {
-                onionGraterDir.set(onionGraterPath)
+            // Onion-grater profiles for Tails/Whonix packaging. apps/desktop is its own Gradle build,
+            // so project.rootProject is that build's root, NOT the repository root. Anchor on this
+            // launcher project (<repo>/apps/desktop/desktop-app-launcher) and walk three levels up to
+            // the repo root, matching the depth the licenseFile lookup above already relies on. Build
+            // the path via Gradle's Directory DSL so segments use the platform separator.
+            val onionGraterDirectory = project.layout.projectDirectory
+                .dir("../../../network/tor/tor/onion-grater")
+            if (onionGraterDirectory.asFile.isDirectory) {
+                onionGraterDir.set(onionGraterDirectory)
             }
 
             runtimeImageDirectory.set(

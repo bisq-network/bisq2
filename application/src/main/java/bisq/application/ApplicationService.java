@@ -29,6 +29,7 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
+import bisq.common.platform.TailsPersistenceGuard;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import ch.qos.logback.classic.Level;
@@ -52,6 +53,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public abstract class ApplicationService implements Service {
     public static final String CUSTOM_CONFIG_FILE_NAME = "bisq.conf";
+    // Explicit user permission to run on Tails without persistent storage (data lost on shutdown).
+    public static final String ALLOW_NON_PERSISTENT_TAILS_ENV = "BISQ_ALLOW_NON_PERSISTENT_TAILS";
 
     @Getter
     @ToString
@@ -159,6 +162,11 @@ public abstract class ApplicationService implements Service {
     // We keep the reference for the lifetime of the application. If the InstanceLock got garbage collected the file
     // lock would be released silently.
     private InstanceLock instanceLock;
+    // True when running on Tails with a data directory that is not on Persistent Storage and the
+    // user has not granted explicit permission to run anyway. The presentation layer decides what
+    // to do with this (the desktop app shows a quit/continue warning popup).
+    @Getter
+    private final boolean tailsDataDirNonPersistent;
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -219,6 +227,8 @@ public abstract class ApplicationService implements Service {
             checkInstanceLock();
         }
 
+        tailsDataDirNonPersistent = evaluateTailsDataDirNonPersistent(appDataDirPath);
+
         setupLogging(appDataDirPath);
 
         persistenceService = new PersistenceService(appDataDirPath);
@@ -267,6 +277,38 @@ public abstract class ApplicationService implements Service {
         log.info("Data directory: {}", appDataDirPath);
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
         log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
+    }
+
+    /**
+     * On Tails, abort early if the data directory is not on the unlocked Persistent Storage volume.
+     * Otherwise the user would lose their identity keys and open offers on shutdown (Tails is amnesic).
+     * The user can override and proceed at their own risk via the {@value #ALLOW_NON_PERSISTENT_TAILS_ENV}
+     * environment variable, which is the explicit permission to run without persistence.
+     */
+    /**
+     * Detects whether we run on Tails with a data directory that is NOT on the Persistent Storage
+     * volume. We do not abort here (that is a UX decision the presentation layer owns — e.g. the
+     * desktop app shows a warning popup with a quit/continue choice). Headless apps still get the
+     * logged warning. Returns false when the user has granted explicit permission to run without
+     * persistence via {@value #ALLOW_NON_PERSISTENT_TAILS_ENV}.
+     */
+    private boolean evaluateTailsDataDirNonPersistent(Path appDataDirPath) {
+        if (!TailsPersistenceGuard.isDataDirAmnesic(appDataDirPath)) {
+            return false;
+        }
+
+        String overrideValue = System.getenv(ALLOW_NON_PERSISTENT_TAILS_ENV);
+        boolean userAllowsNonPersistent = overrideValue != null && !overrideValue.isBlank();
+        if (userAllowsNonPersistent) {
+            log.warn("Running on Tails with a non-persistent data directory ({}). {} is set, so Bisq " +
+                            "continues at the user's request — ALL data will be lost on shutdown.",
+                    appDataDirPath, ALLOW_NON_PERSISTENT_TAILS_ENV);
+            return false;
+        }
+
+        log.warn("Running on Tails but the data directory '{}' is not on the Persistent Storage volume. " +
+                "Identity keys and open offers would be lost on shutdown.", appDataDirPath);
+        return true;
     }
 
     protected void checkInstanceLock() {
