@@ -17,6 +17,7 @@
 
 package bisq.api.web_socket.domain.network;
 
+import bisq.api.dto.mappings.network.ConnectionMetricsDtoMapping;
 import bisq.api.dto.network.ConnectionDto;
 import bisq.api.dto.network.NetworkInfoDto;
 import bisq.api.web_socket.domain.BaseWebSocketService;
@@ -190,9 +191,10 @@ public class NetworkInfoWebSocketService extends BaseWebSocketService {
                         connection.getPeerAddress().getFullAddress(),
                         connection.isOutboundConnection(),
                         peerGroupService != null && peerGroupService.isSeed(connection),
-                        connection.getCreated())));
+                        connection.getCreated(),
+                        ConnectionMetricsDtoMapping.fromBisq2Model(connection.getConnectionMetrics()))));
         return connections;
-    }
+}
 
     private Optional<ServiceNode> findPrimaryServiceNode() {
         return TRANSPORT_PRIORITY.stream()
