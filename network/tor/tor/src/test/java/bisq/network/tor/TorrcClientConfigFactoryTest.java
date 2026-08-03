@@ -28,7 +28,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,98 +58,95 @@ class TorrcClientConfigFactoryTest {
         doReturn(mockGenerator).when(factory).clientTorrcGenerator();
     }
 
+    private static Map<String, List<String>> mutableBaseConfig(Map<String, List<String>> entries) {
+        return new LinkedHashMap<>(entries);
+    }
+
     @Test
-    void baseConfigLinesAppearsWhenNoOverrides() {
-        when(mockGenerator.generate()).thenReturn(new HashMap<>(Map.of(
-                "SocksPort", "auto",
-                "DataDirectory", "/tmp/tor"
+    void baseConfigAppearsWhenNoOverrides() {
+        when(mockGenerator.generate()).thenReturn(mutableBaseConfig(Map.of(
+                "SocksPort", List.of("auto"),
+                "DataDirectory", List.of("/tmp/tor")
         )));
 
-        List<String> lines = factory.torrcClientConfigLines(Map.of());
+        Map<String, List<String>> config = factory.torrcClientConfigMap(Map.of());
 
-        assertThat(lines).contains("SocksPort auto", "DataDirectory /tmp/tor");
+        assertThat(config.get("SocksPort")).containsExactly("auto");
+        assertThat(config.get("DataDirectory")).containsExactly("/tmp/tor");
     }
 
     @Test
     void disableNetworkIsAlwaysAdded() {
-        when(mockGenerator.generate()).thenReturn(new HashMap<>(Map.of("SocksPort", "auto")));
+        when(mockGenerator.generate()).thenReturn(mutableBaseConfig(Map.of("SocksPort", List.of("auto"))));
 
-        List<String> lines = factory.torrcClientConfigLines(Map.of());
+        Map<String, List<String>> config = factory.torrcClientConfigMap(Map.of());
 
-        assertThat(lines).contains(DISABLE_NETWORK + " 1");
+        assertThat(config.get(DISABLE_NETWORK)).containsExactly("1");
     }
 
     @Test
     void overrideReplacesBaseConfigKeyWithSameName() {
-        when(mockGenerator.generate()).thenReturn(new HashMap<>(Map.of(
-                "SocksPort", "auto",
-                "DataDirectory", "/tmp/tor"
+        when(mockGenerator.generate()).thenReturn(mutableBaseConfig(Map.of(
+                "SocksPort", List.of("auto"),
+                "DataDirectory", List.of("/tmp/tor")
         )));
 
-        List<String> lines = factory.torrcClientConfigLines(Map.of("SocksPort", List.of("9999")));
+        Map<String, List<String>> config = factory.torrcClientConfigMap(Map.of("SocksPort", List.of("9999")));
 
-        assertThat(lines).contains("SocksPort 9999");
-        assertThat(lines).doesNotContain("SocksPort auto");
+        assertThat(config.get("SocksPort")).containsExactly("9999");
         // unrelated base config key is still present
-        assertThat(lines).contains("DataDirectory /tmp/tor");
+        assertThat(config.get("DataDirectory")).containsExactly("/tmp/tor");
     }
 
     @Test
     void overrideKeyNotInBaseIsAddedToOutput() {
-        when(mockGenerator.generate()).thenReturn(new HashMap<>(Map.of("SocksPort", "auto")));
+        when(mockGenerator.generate()).thenReturn(mutableBaseConfig(Map.of("SocksPort", List.of("auto"))));
 
-        List<String> lines = factory.torrcClientConfigLines(
-                Map.of("UseBridges", List.of("1")));
+        Map<String, List<String>> config = factory.torrcClientConfigMap(Map.of("UseBridges", List.of("1")));
 
-        assertThat(lines)
-                .contains("SocksPort auto")
-                .contains("UseBridges 1");
+        assertThat(config.get("SocksPort")).containsExactly("auto");
+        assertThat(config.get("UseBridges")).containsExactly("1");
     }
 
     @Test
     void multipleBridgeOverrideValuesAllAppearInOutput() {
-        when(mockGenerator.generate()).thenReturn(new HashMap<>(Map.of("SocksPort", "auto")));
+        when(mockGenerator.generate()).thenReturn(mutableBaseConfig(Map.of("SocksPort", List.of("auto"))));
 
-        List<String> lines = factory.torrcClientConfigLines(Map.of(
+        Map<String, List<String>> config = factory.torrcClientConfigMap(Map.of(
                 "UseBridges", List.of("1"),
                 "Bridge", List.of("obfs4 192.0.2.1:1234 FP1", "obfs4 192.0.2.2:5678 FP2")
         ));
 
-        assertThat(lines)
-                .contains("Bridge obfs4 192.0.2.1:1234 FP1")
-                .contains("Bridge obfs4 192.0.2.2:5678 FP2")
-                .contains("UseBridges 1");
-        assertThat(lines.stream().filter(l -> l.startsWith("Bridge "))).hasSize(2);
-        assertThat(lines.indexOf("Bridge obfs4 192.0.2.1:1234 FP1"))
-                .isLessThan(lines.indexOf("Bridge obfs4 192.0.2.2:5678 FP2"));
+        assertThat(config.get("Bridge")).containsExactly(
+                "obfs4 192.0.2.1:1234 FP1",
+                "obfs4 192.0.2.2:5678 FP2");
+        assertThat(config.get("UseBridges")).containsExactly("1");
     }
 
     @Test
     void overrideReplacesDisableNetworkWhenExplicitlySet() {
-        when(mockGenerator.generate()).thenReturn(new HashMap<>(Map.of("SocksPort", "auto")));
+        when(mockGenerator.generate()).thenReturn(mutableBaseConfig(Map.of("SocksPort", List.of("auto"))));
 
         // DisableNetwork is put into base config by the factory (value "1") — an override can replace it
-        List<String> lines = factory.torrcClientConfigLines(
-                Map.of(DISABLE_NETWORK, List.of("0")));
+        Map<String, List<String>> config = factory.torrcClientConfigMap(Map.of(DISABLE_NETWORK, List.of("0")));
 
-        assertThat(lines).contains(DISABLE_NETWORK + " 0");
-        assertThat(lines.stream().filter(l -> l.startsWith(DISABLE_NETWORK + " "))).hasSize(1);
+        assertThat(config.get(DISABLE_NETWORK)).containsExactly("0");
     }
 
     @Test
     void createTorrcConfigFileFlowWritesMergedConfigToTorrc() throws IOException {
-        when(mockGenerator.generate()).thenReturn(new HashMap<>(Map.of(
-                "SocksPort", "auto",
-                "DataDirectory", "/tmp/tor"
+        when(mockGenerator.generate()).thenReturn(mutableBaseConfig(Map.of(
+                "SocksPort", List.of("auto"),
+                "DataDirectory", List.of("/tmp/tor")
         )));
 
-        List<String> lines = factory.torrcClientConfigLines(Map.of(
+        Map<String, List<String>> config = factory.torrcClientConfigMap(Map.of(
                 "SocksPort", List.of("9999"),
                 "Bridge", List.of("obfs4 192.0.2.1:1234 FP1", "obfs4 192.0.2.2:5678 FP2")
         ));
 
         Path torrcPath = tempDir.resolve("torrc");
-        new TorrcFileGenerator(torrcPath, lines, Set.of()).generate();
+        new TorrcFileGenerator(torrcPath, config, Set.of()).generate();
 
         String torrcContent = Files.readString(torrcPath);
         assertThat(torrcContent)
@@ -162,16 +159,20 @@ class TorrcClientConfigFactoryTest {
         assertThat(torrcContent.lines().filter(l -> l.startsWith("SocksPort "))).hasSize(1);
     }
 
-
     @Test
-    void overrideWithEmptyListRemovesKeyFromOutput() {
-        when(mockGenerator.generate()).thenReturn(new HashMap<>(Map.of(
-                "SocksPort", "auto",
-                "DataDirectory", "/tmp/tor"
+    void overrideWithEmptyListRemovesKeyFromOutput() throws IOException {
+        when(mockGenerator.generate()).thenReturn(mutableBaseConfig(Map.of(
+                "SocksPort", List.of("auto"),
+                "DataDirectory", List.of("/tmp/tor")
         )));
-        List<String> lines = factory.torrcClientConfigLines(Map.of("SocksPort", List.of())); // empty list
-        assertThat(lines).doesNotContain("SocksPort auto");
-        assertThat(lines.stream().filter(l -> l.startsWith("SocksPort "))).isEmpty();
-        assertThat(lines).contains("DataDirectory /tmp/tor");
+
+        Map<String, List<String>> config = factory.torrcClientConfigMap(Map.of("SocksPort", List.of())); // empty list
+
+        assertThat(config.get("SocksPort")).isEmpty();
+        assertThat(config.get("DataDirectory")).containsExactly("/tmp/tor");
+
+        Path torrcPath = tempDir.resolve("torrc");
+        new TorrcFileGenerator(torrcPath, config, Set.of()).generate();
+        assertThat(Files.readString(torrcPath)).doesNotContain("SocksPort ");
     }
 }

@@ -123,8 +123,8 @@ class TorTransportConfigTorrcOverridesTest {
     // ── torrcOverrideFilePath ──────────────────────────────────────────────────
 
     @Test
-    void torrcOverrideFilePathDefaultsToEmptyString(@TempDir Path tempDir) {
-        // When missing from config, torrcOverrideFilePath should be an empty string (feature disabled)
+    void torrcOverrideFilePathDefaultsToEmpty(@TempDir Path tempDir) {
+        // When missing from config, torrcOverrideFilePath should be empty (feature disabled)
         String configStr = MINIMAL_CONFIG_TEMPLATE + "torrcOverrides={}\n";
 
         var config = ConfigFactory.parseString(configStr);
@@ -134,7 +134,7 @@ class TorTransportConfigTorrcOverridesTest {
     }
 
     @Test
-    void torrcOverrideFilePathIsParsedFromConfig(@TempDir Path tempDir) {
+    void torrcOverrideFilePathAbsoluteIsParsedFromConfig(@TempDir Path tempDir) {
         String configStr = MINIMAL_CONFIG_TEMPLATE +
                 "torrcOverrides={}\n" +
                 "torrcOverrideFilePath=\"/etc/bisq/custom.torrc\"\n";
@@ -142,7 +142,21 @@ class TorTransportConfigTorrcOverridesTest {
         var config = ConfigFactory.parseString(configStr);
         TorTransportConfig torTransportConfig = TorTransportConfig.from(tempDir, config);
 
-        assertThat(torTransportConfig.getTorrcOverrideFilePath()).isEqualTo("/etc/bisq/custom.torrc");
+        assertThat(torTransportConfig.getTorrcOverrideFilePath())
+                .contains(Path.of("/etc/bisq/custom.torrc"));
+    }
+
+    @Test
+    void torrcOverrideFilePathRelativeIsResolvedAgainstDataDir(@TempDir Path tempDir) {
+        String configStr = MINIMAL_CONFIG_TEMPLATE +
+                "torrcOverrides={}\n" +
+                "torrcOverrideFilePath=\"custom.torrc\"\n";
+
+        var config = ConfigFactory.parseString(configStr);
+        TorTransportConfig torTransportConfig = TorTransportConfig.from(tempDir, config);
+
+        assertThat(torTransportConfig.getTorrcOverrideFilePath())
+                .contains(tempDir.resolve("custom.torrc"));
     }
 
     @Test
@@ -150,7 +164,7 @@ class TorTransportConfigTorrcOverridesTest {
         Path file = tempDir.resolve("overrides.torrc");
         Files.writeString(file, "SocksPort 9050\nUseBridges 1\n");
 
-        var result = TorTransportConfig.parseTorrcOverrideFile(file);
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
 
         assertThat(result.get("SocksPort")).containsExactly("9050");
         assertThat(result.get("UseBridges")).containsExactly("1");
@@ -164,7 +178,7 @@ class TorTransportConfigTorrcOverridesTest {
                         "Bridge obfs4 1.2.3.4:1234 FP1\n" +
                         "Bridge obfs4 5.6.7.8:5678 FP2\n");
 
-        var result = TorTransportConfig.parseTorrcOverrideFile(file);
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
 
         assertThat(result.get("Bridge")).containsExactly(
                 "obfs4 1.2.3.4:1234 FP1",
@@ -183,7 +197,7 @@ class TorTransportConfigTorrcOverridesTest {
                         "# another comment\n" +
                         "UseBridges 1\n");
 
-        var result = TorTransportConfig.parseTorrcOverrideFile(file);
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
 
         assertThat(result).hasSize(2);
         assertThat(result.get("SocksPort")).containsExactly("9050");
@@ -195,7 +209,7 @@ class TorTransportConfigTorrcOverridesTest {
         Path file = tempDir.resolve("overrides.torrc");
         Files.writeString(file, "SocksPort\t9050\n");
 
-        var result = TorTransportConfig.parseTorrcOverrideFile(file);
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
 
         assertThat(result.get("SocksPort")).containsExactly("9050");
     }
@@ -206,7 +220,7 @@ class TorTransportConfigTorrcOverridesTest {
         // Bridge values contain spaces — everything after the first space is the value
         Files.writeString(file, "Bridge obfs4 1.2.3.4:1234 ABCDEF fingerprint\n");
 
-        var result = TorTransportConfig.parseTorrcOverrideFile(file);
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
 
         assertThat(result.get("Bridge")).containsExactly("obfs4 1.2.3.4:1234 ABCDEF fingerprint");
     }

@@ -20,20 +20,18 @@ package bisq.network.tor;
 import bisq.common.network.TransportConfig;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import com.typesafe.config.ConfigList;
+import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigValue;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -51,8 +49,8 @@ public class TorTransportConfig implements TransportConfig {
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
-                parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
-                config.hasPath("torrcOverrideFilePath") ? config.getString("torrcOverrideFilePath") : "",
+                parseTorrcOverrideConfig(config.getObject("torrcOverrides")),
+                parseTorrcOverrideFilePath(dataDirPath, config),
                 config.getInt("sendMessageThrottleTime"),
                 config.getInt("receiveMessageThrottleTime"),
                 config.getBoolean("useExternalTor")
@@ -75,49 +73,24 @@ public class TorTransportConfig implements TransportConfig {
         return allDirectoryAuthorities;
     }
 
-    private static Map<String, List<String>> parseTorrcOverrideConfig(com.typesafe.config.Config torrcOverrides) {
-        Map<String, List<String>> result = new LinkedHashMap<>();
-        torrcOverrides.entrySet().forEach(entry -> {
-            Object unwrapped = entry.getValue().unwrapped();
-            if (unwrapped instanceof List<?> values) {
-                List<String> stringValues = new ArrayList<>();
-                values.forEach(v -> stringValues.add(String.valueOf(v)));
-                result.put(entry.getKey(), stringValues);
-            } else {
-                result.put(entry.getKey(), List.of(String.valueOf(unwrapped)));
-            }
-        });
-        return result;
+    private static Map<String, List<String>> parseTorrcOverrideConfig(ConfigObject torrcOverrides) {
+        return TorrcOverrideConfigParser.parse(torrcOverrides);
     }
 
-    /**
-     * Parses a torrc-style override file into a map of key → list of values.
-     * Each non-blank, non-comment line is expected to have the form {@code Key Value}.
-     * Repeated keys (e.g. multiple {@code Bridge} lines) accumulate into a list so that
-     * all entries appear in the generated torrc.
-     */
-    public static Map<String, List<String>> parseTorrcOverrideFile(Path filePath) throws IOException {
-        Map<String, List<String>> result = new LinkedHashMap<>();
-        for (String line : Files.readAllLines(filePath)) {
-            String trimmed = line.strip();
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
-                continue;
-            }
-            int spaceIndex = -1;
-            for (int i = 0; i < trimmed.length(); i++) {
-                if (Character.isWhitespace(trimmed.charAt(i))) {
-                    spaceIndex = i;
-                    break;
-                }
-            }
-            if (spaceIndex < 0) {
-                continue; // bare key with no value — skip
-            }
-            String key = trimmed.substring(0, spaceIndex);
-            String value = trimmed.substring(spaceIndex + 1).strip();
-            result.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+    private static Optional<Path> parseTorrcOverrideFilePath(Path dataDirPath,
+                                                             com.typesafe.config.Config config) {
+        if (!config.hasPath("torrcOverrideFilePath")) {
+            return Optional.empty();
         }
-        return result;
+
+        String filePath = config.getString("torrcOverrideFilePath");
+        if (filePath.isBlank()) {
+            return Optional.empty();
+        }
+
+        Path torrcOverridePath = Path.of(filePath);
+        return torrcOverridePath.isAbsolute() ? Optional.of(torrcOverridePath) :
+                Optional.of(dataDirPath.resolve(torrcOverridePath));
     }
 
     private static String getStringFromConfigValue(ConfigValue configValue, String key) {
@@ -138,11 +111,11 @@ public class TorTransportConfig implements TransportConfig {
     private final Map<String, List<String>> torrcOverrides;
     /**
      * Optional path to a torrc-style file whose entries override {@code torrcOverrides}.
-     * Supports both absolute paths and paths relative to the data directory.
-     * When non-empty this file takes precedence over the inline {@code torrcOverrides} map.
-     * Leave empty (the default) to use {@code torrcOverrides} instead.
+     * Relative paths are resolved against the data directory at parse time, so the value
+     * is always absolute when present. When present this file takes precedence over the
+     * inline {@code torrcOverrides} map. Empty (the default) means use {@code torrcOverrides}.
      */
-    private final String torrcOverrideFilePath;
+    private final Optional<Path> torrcOverrideFilePath;
     private final int sendMessageThrottleTime;
     private final int receiveMessageThrottleTime;
     private final boolean useExternalTor;
@@ -155,7 +128,7 @@ public class TorTransportConfig implements TransportConfig {
                               boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
                               Map<String, List<String>> torrcOverrides,
-                              String torrcOverrideFilePath,
+                              Optional<Path> torrcOverrideFilePath,
                               int sendMessageThrottleTime,
                               int receiveMessageThrottleTime,
                               boolean useExternalTor) {
