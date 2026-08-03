@@ -165,4 +165,16 @@ public class StringUtilsTest {
         String expected = "user@example.com";
         assertEquals(expected, StringUtils.cleanUserInput(input));
     }
+
+    @Test
+    void testUnquoteReturnsUnquotedValue() {
+        assertEquals("value", StringUtils.unquote("\"value\""));
+        assertEquals("value", StringUtils.unquote("'value'"));
+    }
+
+    @Test
+    void testUnquoteLeavesNonMatchingQuotesUntouched() {
+        assertEquals("value", StringUtils.unquote("value"));
+        assertEquals("\"value'", StringUtils.unquote("\"value'"));
+    }
 }

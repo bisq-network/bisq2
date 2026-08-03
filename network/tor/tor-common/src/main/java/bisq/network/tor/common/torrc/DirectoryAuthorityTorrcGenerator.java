@@ -17,6 +17,7 @@
 
 package bisq.network.tor.common.torrc;
 
+import java.util.List;
 import java.util.Map;
 
 public class DirectoryAuthorityTorrcGenerator implements TorrcConfigGenerator {
@@ -29,24 +30,24 @@ public class DirectoryAuthorityTorrcGenerator implements TorrcConfigGenerator {
     }
 
     @Override
-    public Map<String, String> generate() {
-        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
+    public Map<String, List<String>> generate() {
+        Map<String, List<String>> torConfigMap = baseTorrcConfigGenerator.generate();
 
-        torConfigMap.put("AuthoritativeDirectory", "1");
-        torConfigMap.put("V3AuthoritativeDirectory", "1");
-        torConfigMap.put("ContactInfo", "auth-" + nickname + "@test.test\n");
+        torConfigMap.put("AuthoritativeDirectory", List.of("1"));
+        torConfigMap.put("V3AuthoritativeDirectory", List.of("1"));
+        torConfigMap.put("ContactInfo", List.of("auth-" + nickname + "@test.test\n"));
 
-        torConfigMap.put("AssumeReachable", "1");
-        torConfigMap.put("TestingV3AuthInitialVotingInterval", "20");
+        torConfigMap.put("AssumeReachable", List.of("1"));
+        torConfigMap.put("TestingV3AuthInitialVotingInterval", List.of("20"));
 
-        torConfigMap.put("TestingV3AuthInitialVoteDelay", "4");
-        torConfigMap.put("TestingV3AuthInitialDistDelay", "4");
+        torConfigMap.put("TestingV3AuthInitialVoteDelay", List.of("4"));
+        torConfigMap.put("TestingV3AuthInitialDistDelay", List.of("4"));
 
-        torConfigMap.put("V3AuthVotingInterval", "20");
-        torConfigMap.put("V3AuthVoteDelay", "4");
-        torConfigMap.put("V3AuthDistDelay", "4");
+        torConfigMap.put("V3AuthVotingInterval", List.of("20"));
+        torConfigMap.put("V3AuthVoteDelay", List.of("4"));
+        torConfigMap.put("V3AuthDistDelay", List.of("4"));
 
-        torConfigMap.put("ExitPolicy", "accept *:*");
+        torConfigMap.put("ExitPolicy", List.of("accept *:*"));
 
         return torConfigMap;
     }
