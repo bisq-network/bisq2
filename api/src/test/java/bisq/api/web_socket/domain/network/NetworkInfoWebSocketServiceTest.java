@@ -39,7 +39,7 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,10 +66,11 @@ class NetworkInfoWebSocketServiceTest {
         listener.onAuthorizedDataAdded(authorizedBondedRoleData(BondedRoleType.MEDIATOR));
         verify(webSocket, never()).send(anyString());
 
-        // Adding and removing a seed node role reclassifies existing connections, so both must trigger an update
+        // Adding and removing a seed node role reclassifies existing connections, so both must trigger an update.
+        // Subscriber.send dispatches to its own executor, so we await the sends instead of verifying immediately.
         listener.onAuthorizedDataAdded(authorizedBondedRoleData(BondedRoleType.SEED_NODE));
         listener.onAuthorizedDataRemoved(authorizedBondedRoleData(BondedRoleType.SEED_NODE));
-        verify(webSocket, times(2)).send(anyString());
+        verify(webSocket, timeout(1000).times(2)).send(anyString());
 
         service.shutdown().join();
         verify(authorizedBondedRolesService).removeListener(listener);
