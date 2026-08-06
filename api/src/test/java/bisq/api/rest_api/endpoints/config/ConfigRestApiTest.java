@@ -22,10 +22,18 @@ import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.web_socket.domain.BaseWebSocketService;
+import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.domain.network.NetworkInfoWebSocketService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.api.web_socket.subscription.Topic;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
+import bisq.chat.ChatService;
+import bisq.network.NetworkService;
+import bisq.trade.TradeService;
+import bisq.user.UserService;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
@@ -34,8 +42,11 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 
 class ConfigRestApiTest {
 
@@ -97,12 +108,13 @@ class ConfigRestApiTest {
                         .as("closed-trades must expose GET /trades/closed")
                         .isTrue();
                 case NETWORK_INFO -> {
-                    assertThat(topicOf(new NetworkInfoWebSocketService(null, null)))
+                    BaseWebSocketService service = routeTopic(Topic.NETWORK_INFO);
+                    assertThat(service)
+                            .as("SubscriptionService must route NETWORK_INFO to a live NetworkInfoWebSocketService")
+                            .isInstanceOf(NetworkInfoWebSocketService.class);
+                    assertThat(topicOf(service))
                             .as("network-info must be backed by a service bound to Topic.NETWORK_INFO")
                             .isEqualTo(Topic.NETWORK_INFO);
-                    assertThat(hasFieldOfType(SubscriptionService.class, NetworkInfoWebSocketService.class))
-                            .as("SubscriptionService must hold the NetworkInfoWebSocketService so NETWORK_INFO subscriptions resolve")
-                            .isTrue();
                 }
             }
         }
@@ -130,8 +142,30 @@ class ConfigRestApiTest {
         }
     }
 
-    private static boolean hasFieldOfType(Class<?> owner, Class<?> fieldType) {
-        return Arrays.stream(owner.getDeclaredFields()).anyMatch(f -> f.getType().equals(fieldType));
+    /**
+     * Resolves the topic through a real {@link SubscriptionService} so the check covers the constructor
+     * wiring and the routing switch, not just a field declaration.
+     */
+    @SuppressWarnings("unchecked")
+    private static BaseWebSocketService routeTopic(Topic topic) {
+        SubscriptionService subscriptionService = new SubscriptionService(
+                mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
+                mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
+                mock(ChatService.class, RETURNS_DEEP_STUBS),
+                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                mock(UserService.class, RETURNS_DEEP_STUBS),
+                mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
+                mock(NetworkService.class, RETURNS_DEEP_STUBS),
+                mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS));
+        try {
+            Method method = SubscriptionService.class.getDeclaredMethod("findWebSocketService", Topic.class);
+            method.setAccessible(true);
+            Optional<BaseWebSocketService> routed =
+                    (Optional<BaseWebSocketService>) method.invoke(subscriptionService, topic);
+            return routed.orElseThrow(() -> new AssertionError("SubscriptionService does not route " + topic));
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("Could not resolve the WebSocketService for " + topic, e);
+        }
     }
 
     private static boolean hasEndpoint(Class<?> resource, String path) {

@@ -25,10 +25,12 @@ import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.common.json.JsonMapperProvider;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.glassfish.grizzly.impl.ReadyFutureImpl;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.junit.jupiter.api.Test;
@@ -147,6 +149,46 @@ class SubscriptionServiceTest {
         assertThat(groups).hasSize(1);
         assertThat(groups.keySet().iterator().next().parameter()).isEqualTo(Optional.of("EUR"));
         assertThat(groups.values().iterator().next()).hasSize(2);
+    }
+
+    /**
+     * Anti-drift guard for the {@code network-info} API capability: a dropped constructor assignment or a
+     * missing routing branch would leave the topic unreachable, which a field-declaration check cannot see.
+     */
+    @Test
+    void networkInfoSubscriptionResolvesToTheInitializedServiceAndIsAnswered() throws Exception {
+        SubscriptionService service = new SubscriptionService(
+                mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
+                mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
+                mock(ChatService.class, RETURNS_DEEP_STUBS),
+                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                mock(UserService.class, RETURNS_DEEP_STUBS),
+                mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
+                mock(NetworkService.class, RETURNS_DEEP_STUBS),
+                mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS)
+        );
+
+        List<String> sentMessages = Collections.synchronizedList(new ArrayList<>());
+        WebSocket webSocket = mock(WebSocket.class, RETURNS_DEEP_STUBS);
+        doAnswer(invocation -> {
+            sentMessages.add(invocation.getArgument(0));
+            return ReadyFutureImpl.create(null);
+        }).when(webSocket).send(anyString());
+
+        service.onMessage(subscriptionJson("request-1", "NETWORK_INFO", null), webSocket);
+
+        assertThat(sentMessages).hasSize(1);
+        JsonNode response = JsonMapperProvider.get().readTree(sentMessages.getFirst());
+        assertThat(response.get("type").asText()).isEqualTo("SubscriptionResponse");
+        assertThat(response.hasNonNull("errorMessage"))
+                .as("a valid NETWORK_INFO subscription must not produce an error response")
+                .isFalse();
+        assertThat(response.hasNonNull("payload")).isTrue();
+        assertThat(response.get("payload").asText())
+                .as("payload must be a NetworkInfoDto")
+                .contains("allDataReceived")
+                .contains("connections");
+        assertThat(getSubscriberRepository(service).findSubscribers(Topic.NETWORK_INFO)).isNotEmpty();
     }
 
     private static String subscriptionJson(String requestId, String topic, String parameter) {
