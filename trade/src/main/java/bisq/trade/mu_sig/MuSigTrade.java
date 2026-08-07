@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.common.fsm.Event;
 import bisq.common.market.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
@@ -40,6 +41,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
@@ -58,6 +60,14 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     private Optional<Long> tradeCompletedDate = Optional.empty();
     private final Observable<MuSigDisputeState> disputeState = new Observable<>(MuSigDisputeState.NO_DISPUTE);
     private Optional<MuSigMediationResult> muSigMediationResult = Optional.empty();
+
+    // Single source for the id a maker-side take-offer request will produce, so callers that need to know the
+    // id BEFORE constructing a trade (e.g. to look up an already-existing protocol for a duplicate delivery)
+    // never have to duplicate the offerId/takerPubKeyHash/takeOfferDate expression below - it must stay
+    // byte-for-byte identical to what the constructor computes via Trade#createId, or the lookup would miss.
+    public static String createId(MuSigContract contract, NetworkId takerNetworkId) {
+        return createId(contract.getOffer().getId(), takerNetworkId.getId(), contract.getTakeOfferDate());
+    }
 
     public MuSigTrade(MuSigContract contract,
                       boolean isBuyer,
@@ -86,8 +96,9 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                        Identity myIdentity,
                        MuSigTradeParty taker,
                        MuSigTradeParty maker,
-                       TradeLifecycleState lifecycleState) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState);
+                       TradeLifecycleState lifecycleState,
+                       Set<Event> pendingEvents) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, pendingEvents);
 
         stateObservable().addObserver(s -> tradeState.set((MuSigTradeState) s));
     }
@@ -126,7 +137,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToMuSigTradeParty(proto.getTaker()),
                 TradeParty.protoToMuSigTradeParty(proto.getMaker()),
-                TradeLifecycleState.fromProto(proto.getLifecycleState()));
+                TradeLifecycleState.fromProto(proto.getLifecycleState()),
+                pendingEventsFromProto(proto));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

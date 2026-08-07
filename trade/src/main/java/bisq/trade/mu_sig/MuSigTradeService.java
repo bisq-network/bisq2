@@ -147,6 +147,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<MuSigTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    // Guards makerCreatesProtocol's check-then-act creation sequence (the duplicate-protocol/duplicate-trade
+    // checks, together with the writes that make the trade+protocol exist). See makerCreatesProtocol for why.
+    private final Object creationLock = new Object();
     private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
 
@@ -180,19 +183,16 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         executor = ExecutorFactory.boundedCachedPool("MuSigTradeService");
 
         return musigGrpcClient.initialize()
-                .thenApply(result -> {
-                    persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
-
-                    networkService.getConfidentialMessageServices().stream()
-                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                            .forEach(this::onMessage);
-                    networkService.addConfidentialMessageListener(this);
-
-                    // At startup we observe all unconfirmed deposit txs
-                    getTrades().stream()
-                            .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
-                            .forEach(this::observeDepositTxConfirmationStatus);
-
+                // thenApplyAsync on this service's own bounded executor (not thenApply): the restored-trade
+                // drainEventQueue() below re-applies queued FSM events via protocol.handle(), and every other
+                // handle() in this service is dispatched onto `executor` (see handleMuSigTradeMessage /
+                // handleMuSigTradeEvent). Running it inline here would drain on the gRPC init-completion thread,
+                // re-entering the blocking gRPC stub from a gRPC callback thread. Keep all FSM work on `executor`.
+                .thenApplyAsync(result -> {
+                    // Register the alert observer BEFORE restoring trades: addObserver() synchronously replays
+                    // the persisted authorized alert data, so the restore-drain guard in
+                    // createAndAddTradeProtocol() sees the last known halt/min-version state instead of a
+                    // vacuously-green default. Mirrors BisqEasyTradeService#initialize().
                     authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
                         @Override
                         public void onAdded(AuthorizedAlertData authorizedAlertData) {
@@ -230,12 +230,41 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                         }
                     });
 
+                    persistableStore.getTrades().forEach(trade -> createAndAddTradeProtocol(trade, true));
+
+                    // Register the live listener BEFORE the startup replay: closes the handoff window in which a
+                    // message processed after the replay's snapshot but before registration was ACKed yet never
+                    // delivered. Duplicate delivery (live + replay) is expected and handled: once a protocol
+                    // exists, a duplicate is absorbed by the FSM; before a protocol exists (a duplicate
+                    // SetupTradeMessage_A), makerCreatesProtocol's checkArguments plus creationLock guard
+                    // against it instead - see there. See BisqEasyTradeService#initialize.
+                    networkService.addConfidentialMessageListener(this);
+                    networkService.getConfidentialMessageServices().stream()
+                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                            .forEach(message -> {
+                                // Per-message isolation: with the alert observer registered above, onMessage()'s
+                                // halt/min-version guards can now legitimately throw during this startup replay.
+                                // A rejected replayed message must not abort initialize().
+                                try {
+                                    onMessage(message);
+                                } catch (Exception e) {
+                                    log.warn("Re-feeding a processed message at startup was rejected (e.g. trading " +
+                                            "halted by an emergency alert). messageType={}",
+                                            message.getClass().getSimpleName(), e);
+                                }
+                            });
+
+                    // At startup we observe all unconfirmed deposit txs
+                    getTrades().stream()
+                            .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
+                            .forEach(this::observeDepositTxConfirmationStatus);
+
                     numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                             .host(this)
                             .periodically(1, TimeUnit.HOURS);
                     numDaysAfterRedactingTradeDataPin = settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
                     return true;
-                });
+                }, executor);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -317,7 +346,17 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
 
     private void handleMuSigTakeOfferMessage(SetupTradeMessage_A message) {
         MuSigContract muSigContract = message.getContract();
-        MuSigProtocol protocol = makerCreatesProtocol(muSigContract, message.getSender(), message.getReceiver());
+        // Duplicate delivery of the very same take-offer request is expected now that the live listener is
+        // registered before the startup replay (see initialize()): the live path and the replay can both hand
+        // us the same message, and a mailbox message can be redelivered too. If a protocol for this trade id
+        // already exists we are looking at a duplicate of an already-completed creation, not a new offer being
+        // taken - route it straight through the normal FSM path below (which absorbs it) instead of attempting
+        // to create a second trade/protocol for it. The id must be derived exactly the way makerCreatesProtocol
+        // derives it (single-sourced in MuSigTrade#createId), or this lookup could miss and fall through to a
+        // redundant creation attempt.
+        String tradeId = MuSigTrade.createId(muSigContract, message.getSender());
+        MuSigProtocol protocol = findProtocol(tradeId)
+                .orElseGet(() -> makerCreatesProtocol(muSigContract, message.getSender(), message.getReceiver()));
         handleMuSigTradeMessage(message, protocol);
     }
 
@@ -326,7 +365,8 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         findProtocol(tradeId).ifPresentOrElse(protocol -> handleMuSigTradeMessage(message, protocol),
                 () -> {
                     log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
-                            "re-processing when the next message arrives. message={}", tradeId, message);
+                            "re-processing when the next message arrives. messageType={}",
+                    tradeId, message.getClass().getSimpleName());
                     pendingMessages.add(message);
                 });
     }
@@ -600,30 +640,67 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private MuSigProtocol makerCreatesProtocol(MuSigContract contract, NetworkId sender, NetworkId receiver) {
-        // We only create the data required for the protocol creation.
-        // Verification will happen in the MuSigTakeOfferRequestHandler
-        MuSigOffer offer = contract.getOffer();
-        Direction makersDirection = offer.getDirection();
-        boolean isBuyer = makersDirection.isBuy();
-        Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-        MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
+    // Package-private (rather than private) so a concurrency test can drive it directly without having to
+    // forge a signed take-offer request.
+    MuSigProtocol makerCreatesProtocol(MuSigContract contract, NetworkId sender, NetworkId receiver) {
+        // The fast path in handleMuSigTakeOfferMessage already routes a duplicate away from here whenever a
+        // protocol for this trade id already exists - but that check is lock-free, so two deliveries for a
+        // trade id that does NOT exist yet (live listener + startup replay, or two mailbox redeliveries) can
+        // both reach here concurrently. Creation must be check-then-act atomic: the "no duplicate exists"
+        // checks below and the writes that make the trade+protocol exist (addTrade/persist/
+        // createAndAddTradeProtocol) have to happen as one unit, or both deliveries can pass the checks and
+        // each create their own trade+protocol for the same id - a split brain where one of the two protocol
+        // instances is silently orphaned (never reachable via findProtocol/tradeProtocolById again) and any
+        // handler side effect runs once per created protocol instead of once overall. Deliberately NOT held
+        // across protocol.handle() in the caller: that takes the FSM model lock and can itself trigger a
+        // persist() call, and is already safe for a duplicate once a protocol exists (forward-only transition
+        // guard / processed-events filter).
+        synchronized (creationLock) {
+            // We only create the data required for the protocol creation.
+            // Verification will happen in the MuSigTakeOfferRequestHandler
+            MuSigOffer offer = contract.getOffer();
+            Direction makersDirection = offer.getDirection();
+            boolean isBuyer = makersDirection.isBuy();
+            Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
+            MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
 
-        AccountPayload<? extends PaymentMethod<?>> accountPayload = findMyAccount(trade).orElseThrow().getAccountPayload();
-        trade.getMyself().setAccountPayload(accountPayload);
+            AccountPayload<? extends PaymentMethod<?>> accountPayload = findMyAccount(trade).orElseThrow().getAccountPayload();
+            trade.getMyself().setAccountPayload(accountPayload);
 
-        String tradeId = trade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the MuSigTakeOfferRequest for an already existing protocol");
-        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
-        persistableStore.addTrade(trade);
-        persist();
+            String tradeId = trade.getId();
+            checkArgument(findProtocol(tradeId).isEmpty(), "We received the MuSigTakeOfferRequest for an already existing protocol");
+            checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
 
-        maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
+            awaitCreationTestSeam(tradeId);
 
-        return createAndAddTradeProtocol(trade);
+            persistableStore.addTrade(trade);
+            persist();
+
+            maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
+
+            return createAndAddTradeProtocol(trade);
+        }
+    }
+
+    // No-op hook, overridden only in tests. Lets a concurrency test deterministically park the thread holding
+    // creationLock here - between the "no duplicate exists" checks above and the writes that make the trade/
+    // protocol exist - while a second thread attempts to race it, forcing the exact interleaving creationLock
+    // guards against instead of relying on scheduling luck.
+    void awaitCreationTestSeam(String tradeId) {
     }
 
     private MuSigProtocol createAndAddTradeProtocol(MuSigTrade trade) {
+        return createAndAddTradeProtocol(trade, false);
+    }
+
+    // isRestoredTrade is true when the trade was just loaded from persisted data (app startup), as opposed to a
+    // trade which was just created for a brand-new offer/take-offer flow (whose event queue is always empty).
+    // For restored trades we drain the event queue once: the queue itself survives a restart (persisted on
+    // Trade), but nothing would otherwise re-attempt those pending events until some further, unrelated live
+    // transition happens to occur for that same trade - which may never happen. See bisq.common.fsm.Fsm#drainEventQueue.
+    // Package-private (rather than private) so tests can register a hand-placed trade's protocol exactly the way
+    // production code does, without duplicating this wiring.
+    MuSigProtocol createAndAddTradeProtocol(MuSigTrade trade, boolean isRestoredTrade) {
         String id = trade.getId();
         MuSigProtocol tradeProtocol;
         boolean isBuyer = trade.isBuyer();
@@ -642,6 +719,38 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
         tradeProtocolById.put(id, tradeProtocol);
+        if (isRestoredTrade) {
+            // Mirror of the BisqEasyTradeService restore-drain guard - see there for the full rationale.
+            // Queued events passed onMessage()'s guards at receipt time, but halt/min-version/ban state may
+            // have changed before the restart: defer the drain (events stay queued) while an emergency alert
+            // is active, and drop queued events whose sender got banned in the meantime.
+            if (haltTrading || isMinVersionForTradingViolated()) {
+                log.warn("Deferring the queued-event drain for restored trade {}: an emergency alert halts " +
+                        "trading or requires a min version. The events stay queued and drain on a later " +
+                        "restart once the alert is lifted.", id);
+            } else {
+                boolean removedBannedSenderEvents = trade.removeQueuedEventsIf(event ->
+                        event instanceof MuSigTradeMessage message &&
+                                bannedUserService.isUserProfileBanned(message.getSender()));
+                if (removedBannedSenderEvents) {
+                    log.warn("Removed queued event(s) from a banned sender for restored trade {} before " +
+                            "draining, mirroring the onMessage() banned-sender check.", id);
+                    persist();
+                }
+                // Isolate per trade: drainEventQueue() re-applies queued events and can raise an FsmException. The
+                // trade is already created and registered above, so we keep it regardless. Without this guard a
+                // single failing trade would escape the persistableStore.getTrades().forEach(...) loop in
+                // initialize() and block restoring every subsequent trade. A failed drain here means the trade
+                // stays stuck until it is manually looked at - there is no periodic or reconnect-triggered safety
+                // net to retry it.
+                try {
+                    tradeProtocol.drainEventQueue();
+                } catch (Exception e) {
+                    log.warn("Failed to drain the event queue for restored trade {} on load. The trade is still " +
+                            "loaded but remains stuck until manually investigated.", id, e);
+                }
+            }
+        }
         return tradeProtocol;
     }
 
@@ -651,11 +760,14 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
-        }
+        checkArgument(!isMinVersionForTradingViolated(),
+                "For trading you need to have version " + minRequiredVersionForTrading.orElse("") + " installed. " +
+                        "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+    }
+
+    private boolean isMinVersionForTradingViolated() {
+        return requireVersionForTrading && minRequiredVersionForTrading.isPresent() &&
+                !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get()));
     }
 
 
@@ -674,12 +786,24 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 .filter(trade -> {
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
-                    //todo
-                    return doRedaction;
+                    if (!doRedaction) {
+                        return false;
+                    }
+                    //todo redact the MuSig account payload fields on the trade itself (still pending).
+                    // Out-of-order events persist the full account-payload network message (SendAccountPayloadMessage);
+                    // a stuck trade may never reach a final state to clear them, so scrub them on the same retention
+                    // threshold rather than leaving sensitive data on disk indefinitely.
+                    if (!trade.getEventQueue().isEmpty()) {
+                        trade.clearEventQueue();
+                        return true;
+                    }
+                    return false;
                 })
                 .count();
         if (numChanges > 0) {
-            persist();
+            // Sensitive data was scrubbed in-memory; route through persistNow() so the write can't be silently
+            // dropped by the rate limiter and leave it on disk (same rationale as the final-state clear).
+            persistNow();
         }
     }
 

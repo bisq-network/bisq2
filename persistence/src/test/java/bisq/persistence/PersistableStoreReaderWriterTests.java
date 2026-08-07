@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PersistableStoreReaderWriterTests {
@@ -126,6 +127,22 @@ public class PersistableStoreReaderWriterTests {
                     .count();
         }
         assertEquals(1, count, "Expected exactly one file starting with " + storageFilePath.getFileName());
+    }
+
+    @Test
+    void writeFailurePropagatesToCaller(@TempDir Path tempDirPath) throws Exception {
+        var timestampStore = new TimestampStore();
+        Path storageFilePath = tempDirPath.resolve("protoFile");
+        var storeFileManager = new PersistableStoreFileManager(storageFilePath);
+        var persistableStoreReaderWriter = new PersistableStoreReaderWriter<TimestampStore>(storeFileManager, new RestoreService());
+
+        // Occupy the temp-file path with a directory so the write cannot succeed
+        Files.createDirectories(storeFileManager.getTempFilePath());
+
+        // Callers (persist futures, RateLimitedPersistenceClient's dirty flag) rely on failures being
+        // propagated rather than swallowed-and-logged
+        assertThatThrownBy(() -> persistableStoreReaderWriter.write(timestampStore))
+                .isInstanceOf(RuntimeException.class);
     }
 
     @Test

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
@@ -42,6 +43,13 @@ public class Persistence<T extends PersistableStore<T>> {
     private final String fileName;
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
+    // Write-id guard: every write request takes a monotonic ticket; a write is SKIPPED when a
+    // higher-ticket write of this store already reached disk. This makes writes monotonic regardless
+    // of which thread performs them - specifically, a direct shutdown-hook write (see
+    // RateLimitedPersistenceClient#persistOnShutdown) cannot be overwritten later by a STALE write
+    // that was still queued on the shared executor when the hook ran.
+    private final AtomicLong writeRequestId = new AtomicLong();
+    private final AtomicLong lastWrittenId = new AtomicLong();
 
     public Persistence(Path directoryPath, String fileName, MaxBackupSize maxBackupSize, RestoreService restoreService) {
         this.fileName = fileName;
@@ -61,11 +69,49 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
-        return CompletableFuture.runAsync(() -> persist(serializable), EXECUTOR);
+        // Ticket taken at SUBMISSION time, so a direct persist() call issued later (shutdown hook)
+        // always outranks every write already sitting in the executor queue.
+        long writeId = writeRequestId.incrementAndGet();
+        return CompletableFuture.runAsync(() -> writeIfNotSuperseded(serializable, writeId), EXECUTOR);
     }
 
     protected void persist(T persistableStore) {
+        writeIfNotSuperseded(persistableStore, writeRequestId.incrementAndGet());
+    }
+
+    /** The actual disk write - the single overridable seam below the write-id guard. */
+    protected void doWrite(T persistableStore) {
         persistableStoreReaderWriter.write(persistableStore);
+    }
+
+    /**
+     * Reserves a write ticket WITHOUT writing. Callers that capture their snapshot under a lock (see
+     * RateLimitedPersistenceClient's scheduleLock) must reserve the ticket under that SAME lock and pass
+     * it to {@link #persist(PersistableStore, long)} - otherwise a concurrent submission can capture a
+     * newer snapshot yet receive an OLDER ticket, and the guard would skip the newer write as stale.
+     * Ticket order must equal snapshot-capture order for the guard to be correct.
+     */
+    long reserveWriteId() {
+        return writeRequestId.incrementAndGet();
+    }
+
+    void persist(T persistableStore, long writeId) {
+        writeIfNotSuperseded(persistableStore, writeId);
+    }
+
+    private void writeIfNotSuperseded(T persistableStore, long writeId) {
+        // Same monitor as PersistableStoreReaderWriter#write (a synchronized method): the stale check,
+        // the disk write and the watermark update must be one atomic unit. Without it a stale task
+        // could pass the check, block on an in-flight newer write, and then overwrite it anyway.
+        synchronized (persistableStoreReaderWriter) {
+            if (lastWrittenId.get() > writeId) {
+                log.info("Skipping write {} of {}: a newer snapshot (write {}) is already on disk.",
+                        writeId, fileName, lastWrittenId.get());
+                return;
+            }
+            doWrite(persistableStore);
+            lastWrittenId.accumulateAndGet(writeId, Math::max);
+        }
     }
 
     public CompletableFuture<Void> pruneBackups() {
