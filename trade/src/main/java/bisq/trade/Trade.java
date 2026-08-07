@@ -156,6 +156,10 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         // un-synchronized pair of reads could tear: capturing the state AFTER a transition together with the
         // just-applied event STILL in the queue (a double-apply on restore), or the state BEFORE the transition
         // with the event already removed (a silent loss). Taking both from the same locked snapshot closes that gap.
+        // getStateAndEventQueueSnapshot() bounds its wait for this lock and throws SnapshotLockTimeoutException
+        // rather than block indefinitely - this runs on the single, JVM-wide Persistence executor thread, which
+        // must never stall behind one trade's live transition. Deliberately left uncaught here: it must propagate
+        // out of toProto() and fail this trade's/store's write for the cycle (see BisqEasyTradeStore#getBuilder).
         StateAndEventQueue snapshot = getStateAndEventQueueSnapshot();
         bisq.trade.protobuf.Trade.Builder builder = bisq.trade.protobuf.Trade.newBuilder()
                 .setContract(contract.toProto(serializeForHash))

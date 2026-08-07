@@ -239,8 +239,8 @@ class MuSigTradeServiceRestoreDrainTest {
     }
 
     /**
-     * MuSig mirror of {@code BisqEasyTradeTest#restoreDrainDropsQueuedEventsFromNowBannedSender} (#4885, Kim's
-     * review point): the queued message passed onMessage()'s banned-sender check when originally received, but
+     * MuSig mirror of {@code BisqEasyTradeTest#restoreDrainDropsQueuedEventsFromNowBannedSender}:
+     * the queued message passed onMessage()'s banned-sender check when originally received, but
      * the sender got banned before the restart. The restore drain bypasses onMessage(), so the guard in
      * {@link MuSigTradeService#createAndAddTradeProtocol} must scrub the banned sender's queued events before
      * draining. Same trade shape as {@link #restoredTradeWithQueuedMessageDrainsAndAdvancesOnRestore} - a state
@@ -309,9 +309,10 @@ class MuSigTradeServiceRestoreDrainTest {
     }
 
     /**
-     * MuSig mirror of the BisqEasy creation-atomicity fix (Kim's #4885 follow-up finding): makerCreatesProtocol
-     * gained a creationLock plus a lock-free fast path in handleMuSigTakeOfferMessage that looks up an
-     * already-existing protocol by id BEFORE attempting creation - see {@code MuSigTradeService#makerCreatesProtocol}
+     * MuSig mirror of the BisqEasy creation-atomicity fix:
+     * makerCreatesProtocol gained a creationLock plus a lock-free fast path in handleMuSigTakeOfferMessage that looks
+     * up an already-existing protocol by id BEFORE attempting creation
+     * see {@code MuSigTradeService#makerCreatesProtocol}
      * and {@code MuSigTrade#createId}. This pins the one piece of that fix that is safely testable here: the
      * fast path's id derivation (from the contract/sender, before a trade object exists) must be byte-for-byte
      * identical to what constructing the trade actually produces, or the fast path could miss and fall through

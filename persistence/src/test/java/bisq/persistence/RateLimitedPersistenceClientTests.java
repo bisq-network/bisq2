@@ -17,9 +17,13 @@
 
 package bisq.persistence;
 
+import bisq.common.fsm.FsmModel;
+import bisq.common.fsm.SnapshotLockTimeoutException;
+import bisq.common.fsm.State;
 import bisq.common.proto.ProtoResolver;
 import bisq.persistence.backup.MaxBackupSize;
 import bisq.persistence.backup.RestoreService;
+import com.google.protobuf.Any;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -30,6 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -126,6 +131,65 @@ public class RateLimitedPersistenceClientTests {
         assertThat(client.isDropped()).isFalse();
     }
 
+    /**
+     * persist()/persistNow() update lastWrite BEFORE the asynchronous write even
+     * starts. Before this fix, a FAILED write left lastWrite exactly as if it had succeeded, so the generation
+     * pair correctly kept the store dirty (isDropped()==true) but nothing ACTIVELY retried it: the very next
+     * ORDINARY persist() call - within getMaxWriteRateInMs() of the failed attempt - would be silently dropped
+     * (tooFast) instead of retrying, and only an explicit persistNow(), the shutdown fallback, or some unrelated
+     * call landing outside the throttle window would ever close the gap. No persistNow(), no sleep here - the
+     * retry must go through the plain ordinary path.
+     */
+    @Test
+    void failedOrdinaryPersistRollsBackThrottleSoNextOrdinaryPersistRetriesWithoutPersistNow(@TempDir Path tempDirPath) {
+        var persistence = new ManualPersistence(tempDirPath);
+        var client = new TestClient(persistence);
+        var inFlightWrite = new CompletableFuture<Void>();
+        persistence.nextWrite.set(inFlightWrite);
+
+        CompletableFuture<Boolean> firstResult = client.persist();
+        inFlightWrite.completeExceptionally(new IOException("disk full"));
+        assertThat(firstResult.join()).isFalse();
+        assertThat(client.isDropped()).isTrue();
+
+        // Immediately after - well within getMaxWriteRateInMs() - a plain ordinary persist() call.
+        CompletableFuture<Boolean> secondResult = client.persist();
+        assertThat(secondResult.join())
+                .as("the failed write's rollback must let the very next ordinary persist() pass the tooFast check")
+                .isTrue();
+        assertThat(client.isDropped()).isFalse();
+    }
+
+    /**
+     * Control for the fix above: the rollback must apply to FAILURES only. A successful write still has to
+     * consume the rate-limit budget exactly as before, or persist() stops rate-limiting altogether.
+     */
+    @Test
+    void successfulOrdinaryPersistStillEnforcesRateLimitOnNextCall(@TempDir Path tempDirPath) {
+        var persistence = new ManualPersistence(tempDirPath);
+        var client = new TestClient(persistence);
+        var inFlightWrite = new CompletableFuture<Void>();
+        persistence.nextWrite.set(inFlightWrite);
+
+        CompletableFuture<Boolean> firstResult = client.persist();
+        inFlightWrite.complete(null);
+        assertThat(firstResult.join()).isTrue();
+        assertThat(client.isDropped()).isFalse();
+
+        // Immediately after a SUCCESSFUL write, a second ordinary persist() must still be throttled.
+        CompletableFuture<Boolean> secondResult = client.persist();
+        assertThat(secondResult.join())
+                .as("a successful write must still consume the rate-limit budget - the rollback is failure-only")
+                .isFalse();
+        // requestedGeneration is bumped BEFORE the throttle check on every persist() call, dropped or not (by
+        // design, unrelated to this fix - see persist()'s own comment) - so isDropped() correctly flips back to
+        // true here: this second call represents a real, not-yet-covered persist REQUEST. What this test pins is
+        // narrower: unlike the failure case, this drop is a genuine throttle (tooFast), not something the
+        // rollback should have prevented - a later persist()/persistNow() call still needs to actually run to
+        // clear it.
+        assertThat(client.isDropped()).isTrue();
+    }
+
     @Test
     void olderSnapshotCannotBeWrittenAfterNewerOne(@TempDir Path tempDirPath) throws Exception {
         var persistence = new ManualPersistence(tempDirPath);
@@ -210,6 +274,161 @@ public class RateLimitedPersistenceClientTests {
         persistence.failSyncPersist = true;
         client.persistOnShutdown();
         assertThat(persistence.syncPersistCalls.get()).isEqualTo(1);
+    }
+
+    /**
+     * End-to-end proof for the FsmModel#getStateAndEventQueueSnapshot() bounded-tryLock fix: a real
+     * SnapshotLockTimeoutException thrown from serialization (toAny(), the entry point
+     * PersistableStoreReaderWriter#writeStoreToFilePath actually calls - see PersistenceWriteGuardTests'
+     * GatedSerializationStore for the same seam), driven through the REAL Persistence/PersistableStoreReaderWriter
+     * write path (not the ManualPersistence stand-in above), proves this PR's own machinery already handles it
+     * correctly with no further changes needed: the failed write leaves the client dirty (isDropped()==true) and
+     * does not corrupt disk, and the next unthrottled retry (mirroring Fsm#persistOnFinalState's persistNow()
+     * route, or the shutdown fallback) succeeds once the simulated lock contention has cleared.
+     */
+    @Test
+    void snapshotLockTimeoutDuringSerializationKeepsClientDirtyAndRetries(@TempDir Path tempDirPath) {
+        registerTimestampStoreResolver();
+        var writePersistence = new Persistence<FlakySerializationStore>(tempDirPath, "TimestampStore", MaxBackupSize.ZERO, new RestoreService());
+        var failNextSerialization = new AtomicBoolean(true);
+        var store = new FlakySerializationStore(failNextSerialization, 1L);
+        var client = new RealPersistenceTestClient(writePersistence, store);
+
+        // First write cycle: the model lock is (simulated as) held by a live transition past the bounded wait.
+        assertThat(client.persistNow().join()).isFalse();
+        assertThat(client.isDropped()).isTrue();
+        assertThat(readVersion(tempDirPath)).isEmpty();
+
+        // The transition has since released the lock (simulated by arming the store to succeed): the next
+        // write cycle's retry must succeed and reach disk.
+        store.bumpVersion(2L);
+        assertThat(client.persistNow().join()).isTrue();
+        assertThat(client.isDropped()).isFalse();
+        assertThat(readVersion(tempDirPath)).contains(2L);
+    }
+
+    /**
+     * end-to-end: same SnapshotLockTimeoutException-driven failure as the sibling
+     * test above, but the retry this time is a single plain, ORDINARY persist() call - no persistNow(), no
+     * sleep - proving the rollback-on-failure fix closes the retry gap through the exact real-world path
+     * (AuthenticatedDataStorageService.add()/remove()/refresh() etc. only ever call the ordinary persist()).
+     */
+    @Test
+    void snapshotLockTimeoutDuringSerializationRetriesOnNextOrdinaryPersistWithoutPersistNow(@TempDir Path tempDirPath) {
+        registerTimestampStoreResolver();
+        var writePersistence = new Persistence<FlakySerializationStore>(tempDirPath, "TimestampStore", MaxBackupSize.ZERO, new RestoreService());
+        var failNextSerialization = new AtomicBoolean(true);
+        var store = new FlakySerializationStore(failNextSerialization, 1L);
+        var client = new RealPersistenceTestClient(writePersistence, store);
+
+        // First write cycle: the model lock is (simulated as) held by a live transition past the bounded wait.
+        assertThat(client.persist().join()).isFalse();
+        assertThat(client.isDropped()).isTrue();
+        assertThat(readVersion(tempDirPath)).isEmpty();
+
+        // The transition has since released the lock (simulated by arming the store to succeed). A single
+        // ORDINARY persist() call, immediately after and well within getMaxWriteRateInMs(), must retry and land
+        // on disk
+        store.bumpVersion(2L);
+        assertThat(client.persist().join()).isTrue();
+        assertThat(client.isDropped()).isFalse();
+        assertThat(readVersion(tempDirPath)).contains(2L);
+    }
+
+    // Reads back through a separately-typed Persistence<TimestampStore> pointed at the same file: the bytes on
+    // disk are genuinely a TimestampStore proto (FlakySerializationStore#toAny() packs via the delegate), resolved
+    // through the global registry - reading them back as the self-typed FlakySerializationStore would be an
+    // unchecked, erasure-hidden cast to the wrong runtime type.
+    private static java.util.Optional<Long> readVersion(Path tempDirPath) {
+        var readPersistence = new Persistence<TimestampStore>(tempDirPath, "TimestampStore", MaxBackupSize.ZERO, new RestoreService());
+        return readPersistence.read().map(store -> store.getTimestampsByProfileId().get("version"));
+    }
+
+    private static void registerTimestampStoreResolver() {
+        try {
+            PersistableStoreResolver.addResolver(new TimestampStore().getResolver());
+        } catch (Exception e) {
+            // Already registered by another test in this JVM - fine.
+        }
+    }
+
+    /**
+     * Store whose serialization ({@link #toAny()}) throws a real {@link SnapshotLockTimeoutException} exactly
+     * once (while armed), simulating FsmModel#getStateAndEventQueueSnapshot()'s bounded tryLock giving up on a
+     * live transition, then serializes normally - simulating the transition having released the lock by the next
+     * write cycle. Self-typed as {@code PersistableStore<FlakySerializationStore>} (rather than wrapping
+     * TimestampStore as its type parameter) so that {@link RateLimitedPersistenceClient#persist()}'s
+     * {@code getPersistableStore().getClone()} returns an object whose {@code toAny()} is still this flaky
+     * behaviour - exactly like BisqEasyTradeStore#getClone()'s shallow copy still reaches the same live trades.
+     */
+    private static final class FlakySerializationStore implements PersistableStore<FlakySerializationStore> {
+        private final TimestampStore delegate = new TimestampStore();
+        private final AtomicBoolean failNextSerialization;
+
+        private FlakySerializationStore(AtomicBoolean failNextSerialization, long version) {
+            this.failNextSerialization = failNextSerialization;
+            delegate.getTimestampsByProfileId().put("version", version);
+        }
+
+        void bumpVersion(long version) {
+            delegate.getTimestampsByProfileId().put("version", version);
+        }
+
+        @Override
+        public Any toAny() {
+            if (failNextSerialization.compareAndSet(true, false)) {
+                throw new SnapshotLockTimeoutException(new FsmModel(State.FsmState.ERROR), 500);
+            }
+            return Any.pack(delegate.toProto(false));
+        }
+
+        @Override
+        public bisq.persistence.protobuf.TimestampStore toProto(boolean serializeForHash) {
+            return delegate.toProto(serializeForHash);
+        }
+
+        @Override
+        public bisq.persistence.protobuf.TimestampStore.Builder getBuilder(boolean serializeForHash) {
+            return delegate.getBuilder(serializeForHash);
+        }
+
+        @Override
+        public FlakySerializationStore getClone() {
+            // Shallow: shares the same delegate and flag, like BisqEasyTradeStore#getClone()'s Set.copyOf of live
+            // trade references - the point being pinned is that the CLONE's serialization can still fail/block on
+            // live state, not that this test harness needs a deep copy.
+            return this;
+        }
+
+        @Override
+        public void applyPersisted(FlakySerializationStore persisted) {
+            delegate.applyPersisted(persisted.delegate);
+        }
+
+        @Override
+        public ProtoResolver<PersistableStore<?>> getResolver() {
+            return delegate.getResolver();
+        }
+    }
+
+    private static final class RealPersistenceTestClient extends RateLimitedPersistenceClient<FlakySerializationStore> {
+        private final Persistence<FlakySerializationStore> persistence;
+        private final PersistableStore<FlakySerializationStore> store;
+
+        private RealPersistenceTestClient(Persistence<FlakySerializationStore> persistence, PersistableStore<FlakySerializationStore> store) {
+            this.persistence = persistence;
+            this.store = store;
+        }
+
+        @Override
+        public Persistence<FlakySerializationStore> getPersistence() {
+            return persistence;
+        }
+
+        @Override
+        public PersistableStore<FlakySerializationStore> getPersistableStore() {
+            return store;
+        }
     }
 
     private static final class ManualPersistence extends Persistence<TimestampStore> {

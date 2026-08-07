@@ -346,7 +346,7 @@ class BisqEasyTradeTest {
     }
 
     /**
-     * Strengthens the real-service-lifecycle regression above (Kim's #4885 review point) by exercising the
+     * Strengthens the real-service-lifecycle exercising the
      * ACTUAL on-disk persistence round trip - {@link BisqEasyTradeService#persist()} (real
      * {@code RateLimitedPersistenceClient#persist()} -> {@code Persistence#persistAsync()/write()}), then
      * {@link BisqEasyTradeService#readPersisted()} (real {@code Persistence#read()}) - rather than a manual
@@ -508,9 +508,9 @@ class BisqEasyTradeTest {
     // that up correctly is materially more effort than the seller case, so it is left as a follow-up.
 
     /**
-     * Creation-atomicity regression (Kim's #4885 follow-up finding): registering the live listener before the
-     * startup replay (see initialize()) makes duplicate delivery of the very same take-offer request expected,
-     * not exceptional. Two deliveries for a trade id that does not exist yet must not each create their own
+     * Registering the live listener before the startup replay (see initialize()) makes duplicate delivery of
+     * the very same take-offer request expected, not exceptional.
+     * Two deliveries for a trade id that does not exist yet must not each create their own
      * trade+protocol - that would be a split brain where one protocol instance is silently orphaned and any
      * handler side effect (e.g. sending the take-offer response) runs twice.
      * <br/>

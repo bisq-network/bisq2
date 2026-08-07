@@ -7,6 +7,11 @@ public class SimpleFsm<M extends FsmModel> extends Fsm<M> {
     // (see FsmTest#testPersistOnFinalStateIsUsedInsteadOfPersistWhenReachingFinalState).
     public int persistCallCount = 0;
     public int persistOnFinalStateCallCount = 0;
+    // Test-only capture of the FsmException this class otherwise swallows below, so tests can assert on its
+    // message content (e.g. that it never renders a full event instance - see
+    // FsmTest#testNoTransitionExceptionMessageDoesNotLeakEventContent /
+    // #testHandlerExceptionMessageDoesNotLeakEventContent).
+    public FsmException lastSwallowedException;
 
     public SimpleFsm(M model) {
         super(model);
@@ -34,7 +39,8 @@ public class SimpleFsm<M extends FsmModel> extends Fsm<M> {
         try {
             super.handle(event);
         } catch (FsmException fsmException) {
-            // We swallow the exception
+            // We swallow the exception - test-only capture for assertions, see lastSwallowedException above.
+            lastSwallowedException = fsmException;
         }
     }
 

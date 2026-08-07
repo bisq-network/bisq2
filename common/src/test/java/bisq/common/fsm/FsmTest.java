@@ -22,13 +22,20 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FsmTest {
+    // Standin for private payment-account data that a real domain event's generated toString() could contain
+    // (e.g. BisqEasyAccountDataMessage / MuSig SendAccountPayloadMessage). Used by SentinelMockEvent below.
+    private static final String SENTINEL_SECRET = "SECRET_PAYMENT_ACCOUNT_DATA_MUST_NOT_LEAK";
 
     @Test
     void testTransitions() {
@@ -343,6 +350,57 @@ public class FsmTest {
         FsmModel.StateAndEventQueue snapshotAfterTransition = model.getStateAndEventQueueSnapshot();
         assertEquals(MockState.S2, snapshotAfterTransition.state());
         assertTrue(snapshotAfterTransition.eventQueue().isEmpty());
+    }
+
+    /**
+     * Pins the bounded-tryLock behaviour {@link FsmModel#getStateAndEventQueueSnapshot()} needs for the single,
+     * JVM-wide {@code Persistence} executor thread (see {@code Trade#getTradeBuilder}): while a live transition
+     * holds the model's lock for a long-running event handler (simulating blocking I/O, e.g. MuSig's gRPC calls),
+     * a concurrent snapshot attempt must give up close to its bound instead of blocking indefinitely, and must
+     * throw {@link SnapshotLockTimeoutException} rather than fall back to an unsynchronized (and possibly torn)
+     * read. Once the transition completes and releases the lock, the very next snapshot attempt must succeed and
+     * reflect the settled, post-transition state.
+     */
+    @Test
+    void testGetStateAndEventQueueSnapshotTimesOutWhileHandleHoldsLockThenSucceedsAfterRelease() throws InterruptedException {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(BlockingMockEventHandler.class)
+                .to(MockState.S1);
+
+        BlockingMockEventHandler.started = new CountDownLatch(1);
+        BlockingMockEventHandler.release = new CountDownLatch(1);
+        try {
+            Thread slowHandlerThread = new Thread(() -> fsm.handle(new MockEvent1(model, "slow")), "slow-handler");
+            slowHandlerThread.start();
+            assertTrue(BlockingMockEventHandler.started.await(2, TimeUnit.SECONDS), "handler never started");
+
+            // The slow-handler thread now holds model's lock for the whole transition (Fsm#handle wraps
+            // eventHandler.handle()). A concurrent bounded snapshot attempt - exactly what Trade#getTradeBuilder
+            // does from the shared Persistence executor thread - must not block indefinitely.
+            long startNanos = System.nanoTime();
+            assertThrows(SnapshotLockTimeoutException.class, model::getStateAndEventQueueSnapshot);
+            long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
+            assertTrue(elapsedMs < 2000,
+                    "tryLock must give up close to its bound, not block indefinitely; took " + elapsedMs + "ms");
+
+            // Release the slow handler; the transition completes normally.
+            BlockingMockEventHandler.release.countDown();
+            slowHandlerThread.join(2000);
+            assertEquals(MockState.S1, model.getState());
+
+            // Once the lock is free again, the very next snapshot call must succeed and reflect the now-settled
+            // state, proving this is a bounded wait, not a permanently broken lock.
+            FsmModel.StateAndEventQueue snapshot = model.getStateAndEventQueueSnapshot();
+            assertEquals(MockState.S1, snapshot.state());
+            assertTrue(snapshot.eventQueue().isEmpty());
+        } finally {
+            BlockingMockEventHandler.started = null;
+            BlockingMockEventHandler.release = null;
+        }
     }
 
     /**
@@ -810,6 +868,54 @@ public class FsmTest {
     }
 
 
+    /**
+     * The generic Fsm layer must never string-render a full
+     * event instance - domain events (e.g. BisqEasyAccountDataMessage / MuSig SendAccountPayloadMessage) have
+     * generated toString() output that can contain private payment-account data, and the FsmException message
+     * built here (via {@code ExceptionUtil#getRootCauseMessage}) ends up both in the trade's persisted error
+     * info and in the BisqEasyReportErrorMessage sent to the peer. This drives the no-transition-found path
+     * (Fsm#handle's checkArgument), the one site whose message used to concatenate the event instance directly.
+     */
+    @Test
+    void testNoTransitionExceptionMessageDoesNotLeakEventContent() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        // Deliberately no transition registered for SentinelMockEvent at all.
+
+        fsm.handle(new SentinelMockEvent());
+
+        assertNotNull(fsm.lastSwallowedException, "handle() must have hit the no-transition-found path");
+        String message = fsm.lastSwallowedException.getMessage();
+        assertTrue(message.contains(SentinelMockEvent.class.getSimpleName()),
+                "message should still identify the event's class for diagnostics: " + message);
+        assertFalse(message.contains(SENTINEL_SECRET),
+                "message must not render the event instance itself: " + message);
+    }
+
+    /**
+     * Same guard as above, for the OTHER generic catch site in Fsm#handle: an event handler throwing mid-transition.
+     * The FSM layer's own log.error/FsmException construction must not add a leak here either - what the handler's
+     * own exception message says is outside the FSM layer's control (it's generic, not domain-aware), but the
+     * framework itself must not concatenate the event on top of that.
+     */
+    @Test
+    void testHandlerExceptionMessageDoesNotLeakEventContent() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(SentinelMockEvent.class)
+                .run(SentinelThrowingMockEventHandler.class)
+                .to(MockState.S1);
+
+        fsm.handle(new SentinelMockEvent());
+
+        assertNotNull(fsm.lastSwallowedException, "handle() must have hit the handler-exception path");
+        String message = fsm.lastSwallowedException.getMessage();
+        assertFalse(message.contains(SENTINEL_SECRET),
+                "message must not render the event instance itself: " + message);
+    }
+
     @Getter
     public enum MockState implements State {
         INIT,
@@ -885,6 +991,56 @@ public class FsmTest {
         @Override
         public void handle(Event event) {
             throw new RuntimeException("event is FsmException");
+        }
+    }
+
+    /**
+     * Standin for a domain event whose generated toString() carries private data. Used to prove the generic
+     * Fsm layer only ever renders the event's CLASS, never the instance itself (see
+     * testNoTransitionExceptionMessageDoesNotLeakEventContent / testHandlerExceptionMessageDoesNotLeakEventContent).
+     */
+    public static class SentinelMockEvent implements Event {
+        @Override
+        public String toString() {
+            return SENTINEL_SECRET;
+        }
+    }
+
+    public static class SentinelThrowingMockEventHandler implements EventHandler<Event> {
+        public SentinelThrowingMockEventHandler() {
+        }
+
+        @Override
+        public void handle(Event event) {
+            throw new RuntimeException("handler failed");
+        }
+    }
+
+    /**
+     * Simulates a slow/blocking event handler (e.g. MuSig's gRPC calls) to test that a concurrent, bounded
+     * {@link FsmModel#getStateAndEventQueueSnapshot()} does not block indefinitely on the model lock this handler
+     * holds for the whole transition. Handler classes are constructed reflectively via a no-arg constructor (see
+     * {@link SimpleFsm#newEventHandlerFromClass}), so per-run coordination must be static - reset by the test
+     * before and after use.
+     */
+    public static class BlockingMockEventHandler implements EventHandler<MockEvent1> {
+        static volatile CountDownLatch started;
+        static volatile CountDownLatch release;
+
+        @Override
+        public void handle(MockEvent1 event) {
+            started.countDown();
+            boolean released;
+            try {
+                released = release.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("interrupted while blocking", e);
+            }
+            if (!released) {
+                throw new IllegalStateException("blocking handler was never released");
+            }
+            event.model.data = event.data;
         }
     }
 

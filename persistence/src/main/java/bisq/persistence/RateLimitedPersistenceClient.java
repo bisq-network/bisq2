@@ -39,7 +39,16 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     // write can't hang JVM shutdown indefinitely.
     private static final long SHUTDOWN_WRITE_AWAIT_MS = 2000;
 
+    // lastWrite/lastWriteGeneration are only ever read or written under scheduleLock (including the failure-path
+    // rollback below) - the volatile on lastWrite predates that and is now redundant, but harmless; left as-is to
+    // keep this fix minimal.
     private volatile long lastWrite;
+    // Tags lastWrite with the generation that last set it, so the failure-path rollback (see the completion
+    // handler in persist()/persistNow()) can tell whether it's still safe to restore the PREVIOUS lastWrite value,
+    // or whether a newer call has since moved lastWrite past it (in which case rolling back would clobber
+    // legitimate, newer throttle state). A plain timestamp equality check would work for the common case but is
+    // vulnerable to two calls landing in the same millisecond; the generation counter is unique by construction.
+    private long lastWriteGeneration;
     // Throttle heuristic only: with the generation pair below, CORRECTNESS no longer depends on this flag,
     // so its benign races (two threads may both observe it false) cost at most an extra write.
     private volatile boolean writeInProgress;
@@ -88,27 +97,65 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
             if (tooFast || writeInProgress) {
                 return CompletableFuture.completedFuture(false);
             }
+            long previousLastWrite = lastWrite;
             lastWrite = System.currentTimeMillis();
+            lastWriteGeneration = myGeneration;
             writeInProgress = true;
-            CompletableFuture<Boolean> future = getPersistence()
-                    .persistAsync(getPersistableStore().getClone())
-                    .handle((nil, throwable) -> {
-                        writeInProgress = false;
-                        boolean success = throwable == null;
-                        if (success) {
-                            // The snapshot was taken after the bump to myGeneration, so it covers everything up
-                            // to it. max() keeps persistedGeneration monotone; it can never claim a generation a
-                            // newer request has already moved past.
-                            persistedGeneration.accumulateAndGet(myGeneration, Math::max);
-                        }
-                        return success;
-                    });
-            return future;
+            return scheduleWrite(myGeneration, previousLastWrite);
         }
     }
 
     protected long getMaxWriteRateInMs() {
         return 1000;
+    }
+
+    /**
+     * Submits the actual write and wires up its completion. Called from within scheduleLock by persist()/
+     * persistNow(), but the returned future's completion handler itself runs later, off the persistence
+     * executor thread, OUTSIDE scheduleLock (persistAsync() only submits and returns immediately - the write
+     * itself, and this handler, run asynchronously).
+     */
+    private CompletableFuture<Boolean> scheduleWrite(long myGeneration, long previousLastWrite) {
+        return getPersistence()
+                .persistAsync(getPersistableStore().getClone())
+                .handle((nil, throwable) -> {
+                    writeInProgress = false;
+                    boolean success = throwable == null;
+                    if (success) {
+                        // The snapshot was taken after the bump to myGeneration, so it covers everything up
+                        // to it. max() keeps persistedGeneration monotone; it can never claim a generation a
+                        // newer request has already moved past.
+                        persistedGeneration.accumulateAndGet(myGeneration, Math::max);
+                    } else {
+                        // A failed write must not consume the rate-limit budget: without this, lastWrite already
+                        // reflects "we just wrote" even though nothing reached disk, so every ORDINARY persist()
+                        // call within the next getMaxWriteRateInMs() window is silently dropped (tooFast) instead
+                        // of retrying. The generation pair still correctly reports the store dirty (isDropped()),
+                        // but nothing actively retries it until either an unrelated call happens to land outside
+                        // that window, or an explicit persistNow()/the shutdown fallback runs - for a store with
+                        // no further natural persist() traffic that can be an unbounded wait. Rolling lastWrite
+                        // back to what it was before this attempt makes the very next ordinary persist() call
+                        // retry through the normal path, exactly as if this failed attempt had never happened.
+                        rollBackLastWriteIfStillOurs(myGeneration, previousLastWrite);
+                    }
+                    return success;
+                });
+    }
+
+    /**
+     * Undoes this call's lastWrite update, but ONLY if no newer call has since moved lastWrite past it - this
+     * completion handler runs outside scheduleLock (see scheduleWrite), concurrently with any new persist()/
+     * persistNow() call that already took the lock and legitimately advanced lastWrite/lastWriteGeneration past
+     * ours; unconditionally overwriting lastWrite here would clobber that newer call's throttle state and let a
+     * write happen sooner than intended for state this failed write never even covered. Guarded by the unique
+     * generation counter, not a timestamp equality check, since two calls can land in the same millisecond.
+     */
+    private void rollBackLastWriteIfStillOurs(long myGeneration, long previousLastWrite) {
+        synchronized (scheduleLock) {
+            if (lastWriteGeneration == myGeneration) {
+                lastWrite = previousLastWrite;
+            }
+        }
     }
 
     /**
@@ -124,19 +171,14 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     public CompletableFuture<Boolean> persistNow() {
         synchronized (scheduleLock) {
             long myGeneration = requestedGeneration.incrementAndGet();
+            long previousLastWrite = lastWrite;
             lastWrite = System.currentTimeMillis();
+            lastWriteGeneration = myGeneration;
             writeInProgress = true;
-            CompletableFuture<Boolean> future = getPersistence()
-                    .persistAsync(getPersistableStore().getClone())
-                    .handle((nil, throwable) -> {
-                        writeInProgress = false;
-                        boolean success = throwable == null;
-                        if (success) {
-                            persistedGeneration.accumulateAndGet(myGeneration, Math::max);
-                        }
-                        return success;
-                    });
-            return future;
+            // Same rollback-on-failure contract as persist() (see scheduleWrite): persistNow() bypasses the
+            // throttle for ITSELF, but still updates lastWrite, so a failed persistNow() must not silently
+            // throttle away the NEXT ordinary persist() call either.
+            return scheduleWrite(myGeneration, previousLastWrite);
         }
     }
 
