@@ -23,15 +23,19 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
+import bisq.persistence.PersistenceService;
+import bisq.wallet.protobuf.GetNewAddressResponse;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
 import bisq.wallet.protobuf.GetUnusedAddressResponse;
 import bisq.wallet.protobuf.IsWalletEncryptedResponse;
 import bisq.wallet.protobuf.IsWalletReadyResponse;
 import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
+import bisq.wallet.receive_address.ReceiveAddressService;
 import bisq.wallet.vo.Transaction;
 import bisq.wallet.vo.Utxo;
 import bisq.wallet.vo.AddressBalance;
+import bisq.wallet.receive_address.ReceiveAddressEntry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,13 +46,14 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class WalletService implements Service {
+    private final WalletGrpcClient client;
+    protected final ReceiveAddressService receiveAddressService;
     protected final Observable<Coin> balance = new Observable<>();
     protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
     protected final ObservableSet<AddressBalance> addressBalances = new ObservableSet<>();
     protected final Observable<Boolean> walletInitialized = new Observable<>(false);
     protected final Config config;
-    private final WalletGrpcClient client;
 
     @Getter
     public static class Config {
@@ -71,9 +76,11 @@ public class WalletService implements Service {
         }
     }
 
-    public WalletService(Config config) {
+    public WalletService(Config config,
+                         PersistenceService persistenceService) {
         this.config = config;
-        client = new WalletGrpcClient(config.host, config.port);
+        this.client = new WalletGrpcClient(config.host, config.port);
+        this.receiveAddressService = new ReceiveAddressService(persistenceService);
     }
 
     @Override
@@ -162,6 +169,21 @@ public class WalletService implements Service {
         });
     }
 
+    public CompletableFuture<ReceiveAddressEntry> createReceiveAddress() {
+        return client.getNewAddress()
+                .thenApply(GetNewAddressResponse::getAddress)
+                .thenApply(address -> {
+                    ReceiveAddressEntry receiveAddress = new ReceiveAddressEntry(address);
+                    receiveAddressService.addReceiveAddressEntry(receiveAddress);
+                    return receiveAddress;
+                });
+    }
+
+    public boolean updateReceiveAddress(ReceiveAddressEntry receiveAddressEntry,
+                                        Optional<String> name) {
+        return receiveAddressService.updateReceiveAddressEntry(receiveAddressEntry, name);
+    }
+
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
         var builder = SendToAddressRequest.newBuilder();
         passphrase.ifPresent(builder::setPassphrase);
@@ -212,5 +234,11 @@ public class WalletService implements Service {
 
     public ReadOnlyObservableSet<AddressBalance> getAddressBalances() {
         return addressBalances;
+    }
+
+    public Optional<ReceiveAddressEntry> findReceiveAddressEntry(String receiveAddress) {
+        return receiveAddressService.getReceiveAddressEntries().stream()
+                .filter(entry -> entry.getAddress().equals(receiveAddress))
+                .findFirst();
     }
 }
