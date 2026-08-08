@@ -78,6 +78,7 @@ public class WalletReceiveWizardController extends NavigationController {
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
+        model.getCurrentIndex().set(0);
         model.getSelectedChildTarget().set(model.getChildTargets().getFirst());
 
         selectedAddressPin = EasyBind.subscribe(walletReceiveAddressController.getReceiveAddress(), receiveAddress -> {
@@ -116,6 +117,12 @@ public class WalletReceiveWizardController extends NavigationController {
     }
 
     void onNext() {
+        if (model.getCurrentIndex().get() == 0
+                && walletReceiveAddressController.getReceiveAddress().get() == null) {
+            // Do nothing, as there's no valid receive address yet to generate the QR code
+            return;
+        }
+
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
             model.setAnimateRightOut(false);

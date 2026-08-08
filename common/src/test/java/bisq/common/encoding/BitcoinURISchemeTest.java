@@ -18,9 +18,6 @@
 package bisq.common.encoding;
 
 import org.junit.jupiter.api.Test;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -77,31 +74,43 @@ public class BitcoinURISchemeTest {
     }
 
     @Test
-    void shouldUrlEncodeLabel() {
-        String label = "Savings Account #1";
-
+    void shouldPercentEncodeSpacesInLabel() {
         String uri = BitcoinURIScheme.buildBitcoinUri(
                 "bc1qxyz123",
                 Optional.empty(),
-                Optional.of(label));
+                Optional.of("Savings Account #1"));
 
-        String expectedLabel = URLEncoder.encode(label, StandardCharsets.UTF_8);
-
-        assertEquals("bitcoin:bc1qxyz123?label=" + expectedLabel, uri);
+        assertEquals("bitcoin:bc1qxyz123?label=Savings%20Account%20%231", uri);
     }
 
     @Test
-    void shouldUrlEncodeSpecialCharactersInLabel() {
-        String label = "Coffee & Bagel?";
-
+    void shouldPercentEncodeSpecialCharactersInLabel() {
         String uri = BitcoinURIScheme.buildBitcoinUri(
                 "bc1qxyz123",
                 Optional.empty(),
-                Optional.of(label));
+                Optional.of("Coffee & Bagel?"));
 
-        String expectedLabel = URLEncoder.encode(label, StandardCharsets.UTF_8);
+        assertEquals("bitcoin:bc1qxyz123?label=Coffee%20%26%20Bagel%3F", uri);
+    }
 
-        assertEquals("bitcoin:bc1qxyz123?label=" + expectedLabel, uri);
+    @Test
+    void shouldPercentEncodeUnicodeCharactersInLabel() {
+        String uri = BitcoinURIScheme.buildBitcoinUri(
+                "bc1qxyz123",
+                Optional.empty(),
+                Optional.of("Café"));
+
+        assertEquals("bitcoin:bc1qxyz123?label=Caf%C3%A9", uri);
+    }
+
+    @Test
+    void shouldPercentEncodePlusCharacterInLabel() {
+        String uri = BitcoinURIScheme.buildBitcoinUri(
+                "bc1qxyz123",
+                Optional.empty(),
+                Optional.of("A+B"));
+
+        assertEquals("bitcoin:bc1qxyz123?label=A%2BB", uri);
     }
 
     @Test
@@ -121,7 +130,7 @@ public class BitcoinURISchemeTest {
                 Optional.empty(),
                 Optional.of(""));
 
-        assertEquals("bitcoin:bc1qxyz123?label=", uri);
+        assertEquals("bitcoin:bc1qxyz123", uri);
     }
 
     @Test

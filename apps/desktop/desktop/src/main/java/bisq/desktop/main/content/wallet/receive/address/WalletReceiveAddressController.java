@@ -48,8 +48,8 @@ public class WalletReceiveAddressController implements Controller {
                         walletService.findReceiveAddressEntry(receiveAddress).ifPresent(entry -> {
                             model.getReceiveAddressEntry().setValue(entry);
                             model.getReceiveAddressName().setValue(entry.getName().orElse(null));
-                            updateIsNewAddress(false);
                         });
+                        updateIsNewAddress(false);
                     });
                 });
     }

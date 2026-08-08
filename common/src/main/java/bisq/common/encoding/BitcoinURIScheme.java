@@ -20,7 +20,6 @@ package bisq.common.encoding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -58,17 +57,39 @@ public class BitcoinURIScheme {
      */
     public static String buildBitcoinUri(String address, Optional<String> amount, Optional<String> label) {
         StringBuilder uri = new StringBuilder("bitcoin:").append(address);
-
         List<String> params = new ArrayList<>(2);
-        amount.filter(s -> !s.isBlank())
-                .ifPresent(value -> params.add("amount=" + value));
-        label.filter(s -> !s.isBlank())
-                .ifPresent(value -> params.add(
-                        "label=" + URLEncoder.encode(value, StandardCharsets.UTF_8)));
-
+        amount.filter(s -> !s.isBlank()).ifPresent(value -> params.add("amount=" + value));
+        label.filter(s -> !s.isBlank()).ifPresent(value -> params.add("label=" + percentEncode(value)));
         if (!params.isEmpty()) {
             uri.append('?').append(String.join("&", params));
         }
         return uri.toString();
+    }
+
+    private static String percentEncode(String value) {
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+        StringBuilder encoded = new StringBuilder(bytes.length);
+
+        for (byte b : bytes) {
+            int c = b & 0xff;
+
+            if ((c >= 'a' && c <= 'z')
+                    || (c >= 'A' && c <= 'Z')
+                    || (c >= '0' && c <= '9')
+                    || c == '-'
+                    || c == '.'
+                    || c == '_'
+                    || c == '~') {
+                encoded.append((char) c);
+            } else {
+                encoded.append('%');
+                encoded.append(Character.toUpperCase(
+                        Character.forDigit((c >> 4) & 0x0f, 16)));
+                encoded.append(Character.toUpperCase(
+                        Character.forDigit(c & 0x0f, 16)));
+            }
+        }
+
+        return encoded.toString();
     }
 }

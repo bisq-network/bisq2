@@ -57,7 +57,8 @@ public class ReceiveAddressService implements Service, PersistenceClient<Receive
         boolean wasUpdated = false;
         Optional<ReceiveAddressEntry> receiveAddress = findReceiveAddressEntry(receiveAddressEntry);
         if (receiveAddress.isPresent() && name.isPresent() && isNameValid(name.get())) {
-            ReceiveAddressEntry updatedEntry = new ReceiveAddressEntry(receiveAddressEntry.getAddress(), receiveAddressEntry.getCreatedAt(), name);
+            ReceiveAddressEntry existingEntry = receiveAddress.get();
+            ReceiveAddressEntry updatedEntry = new ReceiveAddressEntry(existingEntry.getAddress(), existingEntry.getCreatedAt(), name);
             wasUpdated = persistableStore.updateReceiveAddressEntry(updatedEntry);
             if (wasUpdated) {
                 persist();
