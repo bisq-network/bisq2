@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.api.rest_api.error.TradingNotAllowedExceptionMapper;
+import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
@@ -122,6 +123,7 @@ class TradeRestApiTest {
                 mock(MarketPriceService.class),
                 userService,
                 supportService,
-                tradeService);
+                tradeService,
+                mock(ClosedTradeItemsService.class));
     }
 }
