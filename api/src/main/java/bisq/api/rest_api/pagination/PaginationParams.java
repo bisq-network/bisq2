@@ -25,11 +25,20 @@ public record PaginationParams(int page, int pageSize) {
     public static final int DEFAULT_PAGE_SIZE = 20;
     public static final int MAX_PAGE_SIZE = 100;
 
+    /**
+     * Defaults apply only when a parameter is absent. An explicitly supplied value below 1 is a
+     * client error and is rejected (the endpoints map {@link IllegalArgumentException} to 400)
+     * rather than silently replaced — silent replacement would hide client bugs behind page 1.
+     */
     public static PaginationParams of(Optional<Integer> page, Optional<Integer> pageSize) {
-        int resolvedPage = page.filter(p -> p >= 1).orElse(DEFAULT_PAGE);
-        int resolvedSize = pageSize.filter(s -> s >= 1)
-                .map(s -> Math.min(s, MAX_PAGE_SIZE))
-                .orElse(DEFAULT_PAGE_SIZE);
+        page.filter(p -> p < 1).ifPresent(p -> {
+            throw new IllegalArgumentException("page must be >= 1, got: " + p);
+        });
+        pageSize.filter(s -> s < 1).ifPresent(s -> {
+            throw new IllegalArgumentException("pageSize must be >= 1, got: " + s);
+        });
+        int resolvedPage = page.orElse(DEFAULT_PAGE);
+        int resolvedSize = pageSize.map(s -> Math.min(s, MAX_PAGE_SIZE)).orElse(DEFAULT_PAGE_SIZE);
         return new PaginationParams(resolvedPage, resolvedSize);
     }
 
@@ -40,8 +49,10 @@ public record PaginationParams(int page, int pageSize) {
             throw new IllegalArgumentException(
                     "Page " + page + " out of range; total pages: " + totalPages);
         }
-        int fromIndex = Math.min((page - 1) * pageSize, total);
-        int toIndex = Math.min(fromIndex + pageSize, total);
+        // Long arithmetic: with total == 0 the out-of-range guard above does not fire, and an
+        // extreme page value would overflow int multiplication into a negative fromIndex.
+        int fromIndex = (int) Math.min((long) (page - 1) * pageSize, total);
+        int toIndex = (int) Math.min((long) fromIndex + pageSize, total);
         return new PaginatedResponse<>(
                 items.subList(fromIndex, toIndex),
                 page,

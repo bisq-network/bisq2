@@ -59,6 +59,9 @@ public final class ClosedTradeListItemDtoFactory {
         String bitcoinSettlementMethod = contract.getBaseSidePaymentMethodSpec().getPaymentMethodName();
         String fiatPaymentMethod = contract.getQuoteSidePaymentMethodSpec().getPaymentMethodName();
 
+        // Snapshot taken when the item is indexed; it can go stale until the item is rebuilt
+        // (e.g. on restart). Acceptable for a closed-trade list — this is historical context,
+        // not the live reputation surface.
         ReputationScore peersReputationScore = reputationService.getReputationScore(peersUserProfile.getId());
         ReputationScoreDto peersReputationScoreDto = DtoMappings.ReputationScoreMapping.fromBisq2Model(peersReputationScore);
 
@@ -93,7 +96,7 @@ public final class ClosedTradeListItemDtoFactory {
         String bitcoinSettlementMethodDisplayString = contract.getBaseSidePaymentMethodSpec().getShortDisplayString();
         String fiatPaymentMethodDisplayString = contract.getQuoteSidePaymentMethodSpec().getShortDisplayString();
 
-        return new ClosedTradeIndexedItem(
+        return ClosedTradeIndexedItem.of(
                 dto,
                 market,
                 directionalTitle,
