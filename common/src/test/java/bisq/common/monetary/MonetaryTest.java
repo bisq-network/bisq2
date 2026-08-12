@@ -254,16 +254,7 @@ public class MonetaryTest {
         assertEquals(666667, priceQuote.getValue());
         assertEquals(0.00666667, priceQuote.asDouble());
 
-        //noinspection CatchMayIgnoreException
-        try {
-            // overflow as we movePointRight by 12 with xmr
-            xmr = Coin.asXmrFromFaceValue(15000000d);
-            btc = Coin.asBtcFromFaceValue(100000.0);
-            priceQuote = PriceQuote.from(xmr, btc);
-            assertEquals(666667, priceQuote.getValue());
-            assertEquals(0.00666667, priceQuote.asDouble());
-        } catch (Exception e) {
-            assertInstanceOf(ArithmeticException.class, e);
-        }
+        // overflow as we movePointRight by 12 with xmr
+        assertThrows(ArithmeticException.class, () -> Coin.asXmrFromFaceValue(15000000d));
     }
 }
