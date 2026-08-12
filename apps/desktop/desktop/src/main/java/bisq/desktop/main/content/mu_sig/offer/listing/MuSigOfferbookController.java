@@ -136,12 +136,23 @@ public class MuSigOfferbookController implements Controller {
                 UIThread.run(() -> {
                     String offerId = muSigOffer.getId();
                     if (!model.getMuSigOfferIds().contains(offerId)) {
-                        model.getMuSigOfferListItems().add(new MuSigOfferListItem(muSigOffer,
-                                marketPriceService,
-                                userProfileService,
-                                identityService,
-                                reputationService,
-                                accountService));
+                        MuSigOfferListItem item;
+                        try {
+                            item = new MuSigOfferListItem(muSigOffer,
+                                    marketPriceService,
+                                    userProfileService,
+                                    identityService,
+                                    reputationService,
+                                    accountService);
+                        } catch (ArithmeticException e) {
+                            // The item formats the offer amounts at construction; an offer whose
+                            // amounts overflow at the current price is not listed instead of
+                            // failing on the JavaFX thread.
+                            log.warn("Skipping offer {}: its amounts cannot be converted at the current market price",
+                                    offerId);
+                            return;
+                        }
+                        model.getMuSigOfferListItems().add(item);
                         model.getMuSigOfferIds().add(offerId);
                         updateFilteredMuSigOfferListItems();
                     }
