@@ -740,8 +740,17 @@ public class AmountSelectionController implements Controller {
         if (baseSideAmount == null) {
             return;
         }
-        maxOrFixedQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount));
-        invertedMaxOrFixedQuoteSideAmountDisplay.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount));
+        Monetary quoteSideAmount;
+        try {
+            quoteSideAmount = priceQuote.toQuoteSideMonetary(baseSideAmount);
+        } catch (ArithmeticException e) {
+            // An amount whose conversion overflows at the current price is ignored; the
+            // previously displayed amounts stay in place instead of showing a wrapped value.
+            log.warn("Ignoring an amount whose conversion overflows: {}", baseSideAmount);
+            return;
+        }
+        maxOrFixedQuoteSideAmountInput.setAmount(quoteSideAmount);
+        invertedMaxOrFixedQuoteSideAmountDisplay.setAmount(quoteSideAmount);
     }
 
     private void setMinQuoteFromBase() {
@@ -753,8 +762,17 @@ public class AmountSelectionController implements Controller {
         if (baseSideAmount == null) {
             return;
         }
-        minQuoteSideAmountInput.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount));
-        invertedMinQuoteSideAmountDisplay.setAmount(priceQuote.toQuoteSideMonetary(baseSideAmount));
+        Monetary quoteSideAmount;
+        try {
+            quoteSideAmount = priceQuote.toQuoteSideMonetary(baseSideAmount);
+        } catch (ArithmeticException e) {
+            // An amount whose conversion overflows at the current price is ignored; the
+            // previously displayed amounts stay in place instead of showing a wrapped value.
+            log.warn("Ignoring an amount whose conversion overflows: {}", baseSideAmount);
+            return;
+        }
+        minQuoteSideAmountInput.setAmount(quoteSideAmount);
+        invertedMinQuoteSideAmountDisplay.setAmount(quoteSideAmount);
     }
 
     private void setMaxOrFixedBaseFromQuote() {
@@ -766,8 +784,17 @@ public class AmountSelectionController implements Controller {
         if (quoteSideAmount == null) {
             return;
         }
-        maxOrFixedBaseSideAmountDisplay.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
-        invertedMaxOrFixedBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+        Monetary baseSideAmount;
+        try {
+            baseSideAmount = priceQuote.toBaseSideMonetary(quoteSideAmount);
+        } catch (ArithmeticException e) {
+            // An amount whose conversion overflows at the current price is ignored; the
+            // previously displayed amounts stay in place instead of showing a wrapped value.
+            log.warn("Ignoring an amount whose conversion overflows: {}", quoteSideAmount);
+            return;
+        }
+        maxOrFixedBaseSideAmountDisplay.setAmount(baseSideAmount);
+        invertedMaxOrFixedBaseSideAmountInput.setAmount(baseSideAmount);
     }
 
     private void setMinBaseFromQuote() {
@@ -779,8 +806,17 @@ public class AmountSelectionController implements Controller {
         if (quoteSideAmount == null) {
             return;
         }
-        minBaseSideAmountDisplay.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
-        invertedMinBaseSideAmountInput.setAmount(priceQuote.toBaseSideMonetary(quoteSideAmount));
+        Monetary baseSideAmount;
+        try {
+            baseSideAmount = priceQuote.toBaseSideMonetary(quoteSideAmount);
+        } catch (ArithmeticException e) {
+            // An amount whose conversion overflows at the current price is ignored; the
+            // previously displayed amounts stay in place instead of showing a wrapped value.
+            log.warn("Ignoring an amount whose conversion overflows: {}", quoteSideAmount);
+            return;
+        }
+        minBaseSideAmountDisplay.setAmount(baseSideAmount);
+        invertedMinBaseSideAmountInput.setAmount(baseSideAmount);
     }
 
     private void applyQuote() {
