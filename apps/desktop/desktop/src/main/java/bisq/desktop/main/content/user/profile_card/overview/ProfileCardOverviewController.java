@@ -124,7 +124,15 @@ public class ProfileCardOverviewController implements Controller {
         return getOffers(userProfileId)
                 .map(message -> message.getBisqEasyOffer().orElseThrow())
                 .filter(predicate)
-                .flatMap(offer -> OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, offer).stream())
+                .flatMap(offer -> {
+                    try {
+                        return OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, offer).stream();
+                    } catch (ArithmeticException e) {
+                        // An offer whose amounts overflow at the current price cannot contribute
+                        // to the total; it is hidden from the offer lists as invalid.
+                        return java.util.stream.Stream.<bisq.common.monetary.Monetary>empty();
+                    }
+                })
                 .mapToLong(Monetary::getValue)
                 .sum();
     }

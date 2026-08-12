@@ -17,6 +17,8 @@
 
 package bisq.bisq_easy;
 
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.offer.amount.OfferAmountUtil;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -36,15 +38,18 @@ public class BisqEasyOfferbookMessageService implements Service {
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final BannedUserService bannedUserService;
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
+    private final MarketPriceService marketPriceService;
     private final UserProfileService userProfileService;
 
     public BisqEasyOfferbookMessageService(ChatService chatService,
                                            UserService userService,
-                                           BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService) {
+                                           BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService,
+                                           MarketPriceService marketPriceService) {
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         bannedUserService = userService.getBannedUserService();
         userProfileService = userService.getUserProfileService();
         this.bisqEasySellersReputationBasedTradeAmountService = bisqEasySellersReputationBasedTradeAmountService;
+        this.marketPriceService = marketPriceService;
     }
 
     public Stream<BisqEasyOffer> getAllOffers() {
@@ -95,8 +100,32 @@ public class BisqEasyOfferbookMessageService implements Service {
         return isNotBanned(message) &&
                 isNotIgnored(message) &&
                 (isTextMessage(message) ||
-                        isBuyOffer(message) ||
-                        hasSellerSufficientReputation(message));
+                        (hasResolvableAmounts(message) &&
+                                (isBuyOffer(message) || hasSellerSufficientReputation(message))));
+    }
+
+    // An offer whose amounts cannot be resolved on both sides - because a conversion overflows
+    // at its price, or because the required market price is missing and the conversions come
+    // back empty - cannot be rendered or taken: the rendering paths call orElseThrow on these
+    // values. Such an offer is invalid regardless of direction, so no list item is ever
+    // constructed from it. Probing both sides covers every conversion the rendering paths
+    // perform.
+    private boolean hasResolvableAmounts(BisqEasyOfferbookMessage message) {
+        return message.getBisqEasyOffer().map(offer -> {
+            try {
+                return OfferAmountUtil.findBaseSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(),
+                        offer.getPriceSpec(), offer.getMarket()).isPresent()
+                        && OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(),
+                        offer.getPriceSpec(), offer.getMarket()).isPresent()
+                        && OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, offer.getAmountSpec(),
+                        offer.getPriceSpec(), offer.getMarket()).isPresent()
+                        && OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, offer.getAmountSpec(),
+                        offer.getPriceSpec(), offer.getMarket()).isPresent();
+            } catch (ArithmeticException e) {
+                log.debug("Offer {} has amounts which cannot be converted at its price", offer.getId());
+                return false;
+            }
+        }).orElse(true);
     }
 
 }
