@@ -208,6 +208,17 @@ message SwapTxSignature {
   bytes peerOutputPrvKeyShare = 2;
 }
 
+message PeerCustomPayoutPsbt {
+  string txId = 1;
+  bytes psbt = 2;
+}
+
+message MuSigCustomPayoutPartyData {
+  optional musigrpc.CustomPayoutPsbt myCustomPayoutPsbt = 1;
+  optional PeerCustomPayoutPsbt peersCustomPayoutPsbt = 2;
+  optional musigrpc.CustomCloseTradeResponse myCustomCloseTradeResponse = 3;
+}
+
 // Trade domain
 message MuSigTradeParty {
   optional musigrpc.PubKeySharesResponse myPubKeySharesResponse = 1;
@@ -224,6 +235,8 @@ message MuSigTradeParty {
   optional common.ByteArray peersOutputPrvKeyShare = 12;
   optional account.AccountPayload accountPayload = 13;
   optional bool mediationResultAccepted = 14;
+  optional MuSigCustomPayoutPartyData customPayoutData = 15;
+  bool mediationResultRejected = 16;
 }
 
 enum MuSigDisputeState {
