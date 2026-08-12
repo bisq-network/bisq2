@@ -282,6 +282,7 @@ message MuSigTradeMessage {
     PaymentReceivedMessage_F paymentReceivedMessage_F = 27;
     CooperativeClosureMessage_G cooperativeClosureMessage_G = 28;
     MuSigReportErrorMessage muSigReportErrorMessage = 29;
+    MuSigCustomPayoutPsbtMessage muSigCustomPayoutPsbtMessage = 30;
   }
 }
 
@@ -333,4 +334,10 @@ message PaymentReceivedMessage_F {
 
 message CooperativeClosureMessage_G {
   common.ByteArray peerOutputPrvKeyShare = 1;
+}
+
+message MuSigCustomPayoutPsbtMessage {
+  bytes mediationResultHash = 1;
+  string txId = 2;
+  bytes psbt = 3;
 }
