@@ -34,7 +34,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
@@ -176,19 +179,34 @@ public class PairingService {
         }
     }
 
-    private void writePairingQrCodeToDataDir(String pairingQrCode) {
+    // Package-private for testing
+    void writePairingQrCodeToDataDir(String pairingQrCode) {
+        Path path = appDataDirPath.resolve("pairing_qr_code.txt");
         try {
-            Path path = appDataDirPath.resolve("pairing_qr_code.txt");
             StringBuilder content = new StringBuilder(pairingQrCode);
             try {
                 content.append("\n\n\n").append(TextQrCodeRenderer.render(pairingQrCode));
             } catch (Exception e) {
                 log.warn("Failed to render text QR code", e);
             }
-            FileMutatorUtils.writeToPath(content.toString(), path);
+            // The file is rewritten on every code regeneration. Write to a temp file and move
+            // atomically so a concurrent reader never observes a truncated payload.
+            Path tempPath = appDataDirPath.resolve("pairing_qr_code.txt.tmp");
+            FileMutatorUtils.writeToPath(content.toString(), tempPath);
+            try {
+                Files.move(tempPath, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(tempPath, path, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                // ATOMIC_MOVE with an existing target is implementation specific and can fail
+                // with a plain IOException (e.g. a concurrent reader holding the file on
+                // Windows). Losing atomicity for one rotation is better than not updating.
+                log.warn("Atomic move of pairing QR code failed, falling back to non-atomic replace", e);
+                Files.move(tempPath, path, StandardCopyOption.REPLACE_EXISTING);
+            }
             log.info("Pairing QR code written to {}", path);
         } catch (IOException e) {
-            log.error("Error at write pairing QR code to disk at {}", appDataDirPath.resolve("pairing_qr_code.txt"), e);
+            log.error("Error at write pairing QR code to disk at {}", path, e);
         }
     }
 }

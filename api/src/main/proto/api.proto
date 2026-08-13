@@ -38,6 +38,10 @@ enum Permission {
 
 message PermissionSet {
   repeated Permission permissions = 1;
+  // When true the client is granted all current and future auto-grantable permissions,
+  // never sensitive ones. The expanded list is still written to `permissions` so nodes
+  // running a version without this field keep working after a downgrade.
+  bool grantAll = 2;
 }
 
 message ClientProfile {
@@ -50,4 +54,9 @@ message ClientProfile {
 message ApiAccessStore {
   map<string, ClientProfile> clientProfileByIdMap = 2;
   map<string, PermissionSet> permissionsByClientId = 3;
+  // Informational only. A node running a version without this field rewrites the store from
+  // its own model and drops it, so it cannot survive a downgrade and must never gate a
+  // security decision. Promotion of entries to grantAll is evidence-based at load time
+  // (only a set exactly matching the running version's auto-grantable permission set is promoted).
+  uint32 permissionsSchemaVersion = 4;
 }
