@@ -46,6 +46,7 @@ public class WalletAddressQrCodeView extends View<VBox, WalletAddressQrCodeModel
         qrImageView.setPreserveRatio(true);
         btcUri = new Label();
         copyBtcUri = new BisqMenuItem("copy-green", "copy-white");
+        copyBtcUri.setTooltip(Res.get("wallet.receive.copyBtcUri"));
         HBox btcUriHBox = new HBox(10, Spacer.fillHBox(), btcUri, copyBtcUri, Spacer.fillHBox());
         VBox qrCodeVBox = new VBox(10, qrImageView,  btcUriHBox);
         qrCodeVBox.setAlignment(Pos.CENTER);
