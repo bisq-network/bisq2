@@ -58,7 +58,8 @@ public class WalletReceiveWizardController extends NavigationController {
         model = new WalletReceiveWizardModel();
         view = new WalletReceiveWizardView(model, this);
 
-        walletReceiveAddressController = new WalletReceiveAddressController(serviceProvider);
+        walletReceiveAddressController = new WalletReceiveAddressController(serviceProvider,
+                this::onNext);
         walletAddressQrCodeController = new WalletAddressQrCodeController(serviceProvider);
     }
 
