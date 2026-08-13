@@ -58,7 +58,10 @@ public final class ApiConfig {
     private final int sessionTtlInMinutes;
 
     // TODO This should move to typesafe config
-    private final Set<Permission> grantedPermissions = Set.of(Permission.values());
+    // Auto-grantable ("standard") permissions only — identical to all values today, but the
+    // moment a sensitive permission is declared it is excluded here by construction: pairing
+    // never hands out sensitive capabilities; those need an explicit per-device approval flow.
+    private final Set<Permission> grantedPermissions = Permission.autoGrantable();
 
     public ApiConfig(
             ApiAccessTransportType apiAccessTransportType,

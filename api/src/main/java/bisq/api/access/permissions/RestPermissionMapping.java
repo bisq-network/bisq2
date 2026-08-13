@@ -23,6 +23,28 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Maps REST paths to required permissions. Unmapped paths are rejected (fail-closed).
+ * <p>
+ * For devs adding new endpoints or permissions:
+ * <ul>
+ * <li>Prefer mapping a new endpoint to an existing permission when one fits semantically —
+ *     established precedent: {@code /trade-restricting-alert} and {@code /alert-notifications}
+ *     map to {@link Permission#SETTINGS}.</li>
+ * <li>When adding a new {@link Permission} value, ids are append-only and must never be reused.
+ *     Already-paired clients holding a grantAll grant gain new non-sensitive permissions
+ *     automatically at read time (see {@link PermissionSet}) — no re-pairing needed. Explicit
+ *     grants are never expanded.</li>
+ * <li>Coordinate with a Connect app release: apps without the tolerant pairing-code decoder
+ *     (bisq-mobile, 2026-08) reject pairing codes that carry more permissions than they know,
+ *     so new permissions break pairing for older apps.</li>
+ * <li>Security-sensitive permissions (e.g. anything wallet/spend related) are never covered by
+ *     the grantAll expansion — declare them with {@code autoGrantable = false} on the
+ *     {@link Permission} enum and the exclusion is enforced by construction (see
+ *     {@link PermissionSet}); they then always require an explicit per-device grant with
+ *     deliberate approval.</li>
+ * </ul>
+ */
 @Slf4j
 public final class RestPermissionMapping implements PermissionMapping {
     private final List<PermissionRule> rules;

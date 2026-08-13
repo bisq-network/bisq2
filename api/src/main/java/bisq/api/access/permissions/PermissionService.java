@@ -20,7 +20,6 @@ package bisq.api.access.permissions;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import lombok.Getter;
 
-import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
@@ -39,11 +38,19 @@ public class PermissionService<T extends PermissionMapping> {
     }
 
     public void putPermissions(String clientId, Set<Permission> permissions) {
-        apiAccessStoreService.putPermissions(clientId, permissions);
+        // A grant EXACTLY equal to this version's auto-grantable ("standard") set is stored as
+        // grantAll so it keeps covering standard permissions added by future versions. Strict
+        // equality on purpose: a grant that additionally carries a sensitive permission must
+        // stay explicit — folding it into grantAll would drop the sensitive permission from the
+        // expansion (grantAll never covers sensitive ones; see PermissionSet).
+        PermissionSet permissionSet = permissions.equals(Permission.autoGrantable())
+                ? PermissionSet.grantAll()
+                : new PermissionSet(permissions);
+        apiAccessStoreService.putPermissions(clientId, permissionSet);
     }
 
     public Optional<Set<Permission>> findPermissions(String clientId) {
         return Optional.ofNullable(apiAccessStoreService.getPermissionsByClientId().get(clientId))
-                .map(Collections::unmodifiableSet);
+                .map(PermissionSet::getPermissions);
     }
 }
