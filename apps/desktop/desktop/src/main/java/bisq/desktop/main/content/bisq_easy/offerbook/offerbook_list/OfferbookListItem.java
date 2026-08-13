@@ -40,6 +40,8 @@ import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -71,7 +73,8 @@ public class OfferbookListItem {
     private final Pin marketPriceByCurrencyMapPin;
     private final long offerAgeInDays;
     private double priceSpecAsPercent;
-    private String formattedPercentagePrice, priceTooltipText;
+    private final StringProperty formattedPercentagePrice = new SimpleStringProperty();
+    private final StringProperty priceTooltipText = new SimpleStringProperty();
 
     public OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                              UserProfile senderUserProfile,
@@ -122,9 +125,15 @@ public class OfferbookListItem {
     }
 
     private void updatePriceSpecAsPercent() {
-        priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
-        formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
-        priceTooltipText = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer);
+        // A fixed-price offer in a market without a market price has no percent to derive;
+        // the properties keep their previous values and refresh through the observer once a
+        // price arrives; the table cells bind to them so visible rows follow.
+        PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer)
+                .ifPresent(percent -> {
+                    priceSpecAsPercent = percent;
+                    formattedPercentagePrice.set(PercentageFormatter.formatToPercentWithSignAndSymbol(percent));
+                    priceTooltipText.set(PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer));
+                });
     }
 
     private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {

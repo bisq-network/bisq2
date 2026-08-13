@@ -479,13 +479,17 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    percentagePriceLabel.setText(item.getFormattedPercentagePrice());
+                    // Bound, not copied: the item updates the properties when a market price
+                    // arrives or changes, and the visible cell has to follow.
+                    percentagePriceLabel.textProperty().bind(item.getFormattedPercentagePrice());
                     percentagePriceLabel.setStyle(item.isFixPrice() ? "-fx-text-fill: -bisq2-green-lit-20" : "");
-                    tooltip.setText(item.getPriceTooltipText());
+                    tooltip.textProperty().bind(item.getPriceTooltipText());
                     percentagePriceLabel.setTooltip(tooltip);
                     setGraphic(percentagePriceLabel);
                 } else {
+                    percentagePriceLabel.textProperty().unbind();
                     percentagePriceLabel.setText("");
+                    tooltip.textProperty().unbind();
                     percentagePriceLabel.setTooltip(null);
                     setGraphic(null);
                 }

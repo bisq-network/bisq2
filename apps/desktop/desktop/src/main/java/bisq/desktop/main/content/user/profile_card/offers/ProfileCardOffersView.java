@@ -195,12 +195,16 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    tooltip.setText(item.getPriceTooltipText());
-                    percentagePriceLabel.setText(item.getFormattedPercentagePrice());
+                    // Bound, not copied: the item updates the properties when a market price
+                    // arrives or changes, and the visible cell has to follow.
+                    tooltip.textProperty().bind(item.getPriceTooltipText());
+                    percentagePriceLabel.textProperty().bind(item.getFormattedPercentagePrice());
                     percentagePriceLabel.setTooltip(tooltip);
                     setGraphic(percentagePriceLabel);
                 } else {
+                    percentagePriceLabel.textProperty().unbind();
                     percentagePriceLabel.setText("");
+                    tooltip.textProperty().unbind();
                     percentagePriceLabel.setTooltip(null);
                     setGraphic(null);
                 }
