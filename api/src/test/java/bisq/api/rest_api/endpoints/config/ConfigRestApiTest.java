@@ -98,15 +98,24 @@ class ConfigRestApiTest {
 
     /**
      * Anti-drift guard: a declared feature must be backed by a real, wired endpoint/topic — never a
-     * key for something not implemented in this build. As features are added here, extend this check.
+     * key for something not implemented in this build.
+     * <p>
+     * A switch <i>expression</i> on purpose: exhaustiveness is compile-checked, so adding an
+     * {@link ApiFeature} without extending this check breaks the build instead of being silently
+     * skipped (arrow-form switch statements over enums are not exhaustiveness-checked, which is
+     * how a feature could otherwise ship unguarded). Each case asserts its own specifics and
+     * yields; the yielded value exists only to force the expression form.
      */
     @Test
     void everyDeclaredFeatureIsBackedByARealImplementation() {
         for (ApiFeature feature : ApiFeature.values()) {
-            switch (feature) {
-                case CLOSED_TRADES -> assertThat(hasEndpoint(TradeRestApi.class, "/closed"))
-                        .as("closed-trades must expose GET /trades/closed")
-                        .isTrue();
+            boolean checked = switch (feature) {
+                case CLOSED_TRADES -> {
+                    assertThat(hasEndpoint(TradeRestApi.class, "/closed"))
+                            .as("closed-trades must expose GET /trades/closed")
+                            .isTrue();
+                    yield true;
+                }
                 case NETWORK_INFO -> {
                     BaseWebSocketService service = routeTopic(Topic.NETWORK_INFO);
                     assertThat(service)
@@ -115,8 +124,10 @@ class ConfigRestApiTest {
                     assertThat(topicOf(service))
                             .as("network-info must be backed by a service bound to Topic.NETWORK_INFO")
                             .isEqualTo(Topic.NETWORK_INFO);
+                    yield true;
                 }
-            }
+            };
+            assertThat(checked).isTrue();
         }
     }
 

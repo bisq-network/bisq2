@@ -96,14 +96,21 @@ public final class ClosedTradesQuery {
         // timestamp for trades that never reached a completion state (e.g. cancelled before any
         // completion event was recorded). takeOfferDate is monotonic and always populated, so
         // the fallback guarantees a stable ordering even for never-completed trades.
+        // Every field appends the trade id as a final tie-breaker: equal primary values must order
+        // deterministically, or items can repeat or vanish across page requests when the source
+        // list shifts between fetches.
         DATE(Comparator
                 .comparingLong((ClosedTradeIndexedItem item) ->
                         item.dto().tradeCompletedDate().orElse(item.dto().trade().contract().takeOfferDate()))
                 .thenComparing(item -> item.dto().trade().id())),
-        MARKET(Comparator.comparing(ClosedTradeIndexedItem::market, String.CASE_INSENSITIVE_ORDER)),
-        QUOTE_AMOUNT(Comparator.comparingLong(item -> item.dto().quoteAmount())),
-        BASE_AMOUNT(Comparator.comparingLong(item -> item.dto().baseAmount())),
-        ROLE(Comparator.comparing((ClosedTradeIndexedItem item) -> item.dto().trade().tradeRole()));
+        MARKET(Comparator.comparing(ClosedTradeIndexedItem::market, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(item -> item.dto().trade().id())),
+        QUOTE_AMOUNT(Comparator.comparingLong((ClosedTradeIndexedItem item) -> item.dto().quoteAmount())
+                .thenComparing(item -> item.dto().trade().id())),
+        BASE_AMOUNT(Comparator.comparingLong((ClosedTradeIndexedItem item) -> item.dto().baseAmount())
+                .thenComparing(item -> item.dto().trade().id())),
+        ROLE(Comparator.comparing((ClosedTradeIndexedItem item) -> item.dto().trade().tradeRole())
+                .thenComparing(item -> item.dto().trade().id()));
 
         private final Comparator<ClosedTradeIndexedItem> comparator;
 
@@ -159,23 +166,8 @@ public final class ClosedTradesQuery {
     }
 
     private static boolean matches(ClosedTradeIndexedItem item, String needleLower) {
-        var dto = item.dto();
-        return contains(dto.trade().id(), needleLower)
-                || contains(item.market(), needleLower)
-                || contains(item.directionalTitle(), needleLower)
-                || contains(item.formattedMyRole(), needleLower)
-                || contains(item.formattedPrice(), needleLower)
-                || contains(item.formattedBaseAmount(), needleLower)
-                || contains(item.formattedQuoteAmount(), needleLower)
-                || contains(dto.makerUserProfile().userName(), needleLower)
-                || contains(dto.makerUserProfile().nym(), needleLower)
-                || contains(dto.takerUserProfile().userName(), needleLower)
-                || contains(dto.takerUserProfile().nym(), needleLower)
-                || contains(item.bitcoinSettlementMethodDisplayString(), needleLower)
-                || contains(item.fiatPaymentMethodDisplayString(), needleLower);
-    }
-
-    private static boolean contains(String value, String needleLower) {
-        return value.toLowerCase(Locale.ROOT).contains(needleLower);
+        // The blob is precomputed lowercase over all searchable fields (see ClosedTradeIndexedItem.of),
+        // so filtering is one contains() per item instead of lowercasing each field per keystroke.
+        return item.searchBlob().contains(needleLower);
     }
 }
