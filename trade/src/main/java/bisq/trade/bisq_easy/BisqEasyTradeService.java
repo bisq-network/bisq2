@@ -113,6 +113,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    // Guards makerCreatesProtocol's check-then-act creation sequence (the duplicate-protocol/duplicate-trade
+    // checks, together with the writes that make the trade+protocol exist). See makerCreatesProtocol for why.
+    private final Object creationLock = new Object();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
@@ -135,13 +138,11 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     public CompletableFuture<Boolean> initialize() {
 
-        persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
-
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
-        networkService.addConfidentialMessageListener(this);
-
+        // Register the alert observer BEFORE restoring trades: addObserver() synchronously replays the
+        // persisted authorized alert data (CollectionObserver#onAllAdded), so haltTrading /
+        // requireVersionForTrading reflect the last known alert state by the time the restore drain below
+        // re-applies queued events. Registered after the restore (as before), the drain-time checks would be
+        // vacuously green on every cold start.
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(AuthorizedAlertData authorizedAlertData) {
@@ -178,6 +179,33 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                 minRequiredVersionForTrading = Optional.empty();
             }
         });
+
+        persistableStore.getTrades().forEach(trade -> createAndAddTradeProtocol(trade, true));
+
+        // Register the live listener BEFORE the startup replay below. With the reverse order there was a
+        // handoff window: a message the network finished processing after the replay read its snapshot but
+        // before registration was ACKed and removed from the mailbox without ever reaching the FSM - lost for
+        // good. Register-first closes that window structurally, at the cost of possible duplicate delivery
+        // (live + replay) - which is expected and handled: once a protocol exists, a duplicate is absorbed by
+        // the FSM (processed-events filter, forward-only transition guard); before a protocol exists (a
+        // duplicate take-offer request), makerCreatesProtocol's checkArguments plus creationLock guard against
+        // it instead - see there. A live message arriving before its predecessor is replayed is exactly the
+        // out-of-order case the FSM event queue absorbs.
+        networkService.addConfidentialMessageListener(this);
+        networkService.getConfidentialMessageServices().stream()
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                .forEach(message -> {
+                    // Per-message isolation: with the alert observer registered above, onMessage()'s
+                    // halt/min-version guards can now legitimately throw during this startup replay (they
+                    // could not before - the observer used to be registered only after this loop). A rejected
+                    // replayed message must not abort initialize() and skip every subsequent message.
+                    try {
+                        onMessage(message);
+                    } catch (Exception e) {
+                        log.warn("Re-feeding a processed message at startup was rejected (e.g. trading halted " +
+                                "by an emergency alert). messageType={}", message.getClass().getSimpleName(), e);
+                    }
+                });
 
         numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                 .host(this)
@@ -237,7 +265,17 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     private void handleBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
         BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
-        BisqEasyProtocol protocol = makerCreatesProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
+        // Duplicate delivery of the very same take-offer request is expected now that the live listener is
+        // registered before the startup replay (see initialize()): the live path and the replay can both hand
+        // us the same message, and a mailbox message can be redelivered too. If a protocol for this trade id
+        // already exists we are looking at a duplicate of an already-completed creation, not a new offer being
+        // taken - route it straight through the normal FSM path below (which absorbs it) instead of attempting
+        // to create a second trade/protocol for it. The id must be derived exactly the way makerCreatesProtocol
+        // derives it (single-sourced in BisqEasyTrade#createId), or this lookup could miss and fall through to
+        // a redundant creation attempt.
+        String tradeId = BisqEasyTrade.createId(bisqEasyContract, message.getSender());
+        BisqEasyProtocol protocol = findProtocol(tradeId)
+                .orElseGet(() -> makerCreatesProtocol(bisqEasyContract, message.getSender(), message.getReceiver()));
         handleBisqEasyTradeMessage(message, protocol);
     }
 
@@ -246,7 +284,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         findProtocol(tradeId).ifPresentOrElse(protocol -> handleBisqEasyTradeMessage(message, protocol),
                 () -> {
                     log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
-                            "re-processing when the next message arrives. message={}", tradeId, message);
+                            "re-processing when the next message arrives. messageType={}",
+                    tradeId, message.getClass().getSimpleName());
                     pendingMessages.add(message);
                 });
     }
@@ -418,26 +457,62 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private BisqEasyProtocol makerCreatesProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
-        // We only create the data required for the protocol creation.
-        // Verification will happen in the BisqEasyTakeOfferRequestHandler
-        BisqEasyOffer offer = contract.getOffer();
-        boolean isBuyer = offer.getMakersDirection().isBuy();
-        Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
-        String tradeId = bisqEasyTrade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
-        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
+    // Package-private (rather than private) so a concurrency test can drive it directly without having to
+    // forge a signed take-offer request.
+    BisqEasyProtocol makerCreatesProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
+        // The fast path in handleBisqEasyTakeOfferMessage already routes a duplicate away from here whenever a
+        // protocol for this trade id already exists - but that check is lock-free, so two deliveries for a
+        // trade id that does NOT exist yet (live listener + startup replay, or two mailbox redeliveries) can
+        // both reach here concurrently. Creation must be check-then-act atomic: the "no duplicate exists"
+        // checks below and the writes that make the trade+protocol exist (addTrade/persist/
+        // createAndAddTradeProtocol) have to happen as one unit, or both deliveries can pass the checks and
+        // each create their own trade+protocol for the same id - a split brain where one of the two protocol
+        // instances is silently orphaned (never reachable via findProtocol/tradeProtocolById again) and any
+        // handler side effect (e.g. sending the take-offer response to the peer) runs once per created
+        // protocol instead of once overall. Deliberately NOT held across protocol.handle() in the caller: that
+        // takes the FSM model lock and can itself trigger a persist() call, and is already safe for a
+        // duplicate once a protocol exists (forward-only transition guard / processed-events filter).
+        synchronized (creationLock) {
+            // We only create the data required for the protocol creation.
+            // Verification will happen in the BisqEasyTakeOfferRequestHandler
+            BisqEasyOffer offer = contract.getOffer();
+            boolean isBuyer = offer.getMakersDirection().isBuy();
+            Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
+            BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
+            String tradeId = bisqEasyTrade.getId();
+            checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
+            checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
 
-        persistableStore.addTrade(bisqEasyTrade);
-        persist();
+            awaitCreationTestSeam(tradeId);
 
-        maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
+            persistableStore.addTrade(bisqEasyTrade);
+            persist();
 
-        return createAndAddTradeProtocol(bisqEasyTrade);
+            maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
+
+            return createAndAddTradeProtocol(bisqEasyTrade);
+        }
+    }
+
+    // No-op hook, overridden only in tests. Lets a concurrency test deterministically park the thread holding
+    // creationLock here - between the "no duplicate exists" checks above and the writes that make the trade/
+    // protocol exist - while a second thread attempts to race it, forcing the exact interleaving creationLock
+    // guards against instead of relying on scheduling luck.
+    void awaitCreationTestSeam(String tradeId) {
     }
 
     private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade) {
+        return createAndAddTradeProtocol(trade, false);
+    }
+
+    // isRestoredTrade is true when the trade was just loaded from persisted data (app startup), as opposed to a
+    // trade which was just created for a brand-new offer/take-offer flow (whose event queue is always empty).
+    // For restored trades we drain the event queue once: the queue itself survives a restart (persisted on
+    // Trade), but nothing would otherwise re-attempt those pending events until some further, unrelated live
+    // transition happens to occur for that same trade - which may never happen. See bisq.common.fsm.Fsm#drainEventQueue.
+    // Package-private (rather than private) so tests can register a hand-placed trade's protocol exactly the way
+    // production code does, without duplicating this wiring.
+    BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade, boolean isRestoredTrade) {
         String id = trade.getId();
         BisqEasyProtocol tradeProtocol;
         boolean isBuyer = trade.isBuyer();
@@ -456,6 +531,43 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
         tradeProtocolById.put(id, tradeProtocol);
+        if (isRestoredTrade) {
+            // The queued events passed onMessage()'s guards when they were originally received, but those
+            // conditions may have changed before the restart. Draining applies them directly through the FSM,
+            // so re-check here what onMessage() would check for a live message:
+            //  - Trading halt / min-version (global, temporary): defer the drain entirely and KEEP the events
+            //    queued - they persist and drain on a later restart once the emergency alert is lifted.
+            //    Deliberately no throw: the catch below would mislabel it "stuck until investigated".
+            //  - Banned sender (per event): DROP the event, mirroring onMessage() ignoring a banned sender's
+            //    live message. Kept queued it would get applied after a ban-lift restart - something
+            //    onMessage() would never have allowed.
+            if (haltTrading || isMinVersionForTradingViolated()) {
+                log.warn("Deferring the queued-event drain for restored trade {}: an emergency alert halts " +
+                        "trading or requires a min version. The events stay queued and drain on a later " +
+                        "restart once the alert is lifted.", id);
+            } else {
+                boolean removedBannedSenderEvents = trade.removeQueuedEventsIf(event ->
+                        event instanceof BisqEasyTradeMessage message &&
+                                bannedUserService.isUserProfileBanned(message.getSender()));
+                if (removedBannedSenderEvents) {
+                    log.warn("Removed queued event(s) from a banned sender for restored trade {} before " +
+                            "draining, mirroring the onMessage() banned-sender check.", id);
+                    persist();
+                }
+                // Isolate per trade: drainEventQueue() re-applies queued events and can raise an FsmException. The
+                // trade is already created and registered above, so we keep it regardless. Without this guard a
+                // single failing trade would escape the persistableStore.getTrades().forEach(...) loop in
+                // initialize() and block restoring every subsequent trade. A failed drain here means the trade
+                // stays stuck until it is manually looked at - there is no periodic or reconnect-triggered safety
+                // net to retry it.
+                try {
+                    tradeProtocol.drainEventQueue();
+                } catch (Exception e) {
+                    log.warn("Failed to drain the event queue for restored trade {} on load. The trade is still " +
+                            "loaded but remains stuck until manually investigated.", id, e);
+                }
+            }
+        }
         return tradeProtocol;
     }
 
@@ -465,11 +577,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
-        }
+        checkArgument(!isMinVersionForTradingViolated(),
+                "For trading you need to have version " + minRequiredVersionForTrading.orElse("") + " installed. " +
+                        "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+    }
+
+    private boolean isMinVersionForTradingViolated() {
+        return requireVersionForTrading && minRequiredVersionForTrading.isPresent() &&
+                !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get()));
     }
 
 
@@ -477,31 +592,47 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // Redact sensible data
     /* --------------------------------------------------------------------- */
 
-    private void maybeRedactDataOfCompletedTrades() {
+    // Package-private (rather than private) so tests can drive the retention pass deterministically instead of
+    // waiting on the periodic scheduler.
+    void maybeRedactDataOfCompletedTrades() {
         int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
         long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
         // Trades which ended up with a failure or got stuck will never get the completed date set.
         // We use a more constrained duration of 45-90 days.
         int numDaysForNotCompletedTrades = Math.max(45, Math.min(90, numDays));
         long redactDateForNotCompletedTrades = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDaysForNotCompletedTrades);
-        String redactedMarker = Res.get("data.redacted");
         long numChanges = getAllTrades().stream()
                 .filter(trade -> {
-                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get()) ||
-                            trade.getPaymentAccountData().get().equals(redactedMarker)) {
-                        return false;
-                    }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
-                    if (doRedaction) {
-
-                        trade.getPaymentAccountData().set(redactedMarker);
+                    if (!doRedaction) {
+                        return false;
                     }
-                    return doRedaction;
+                    boolean changed = false;
+                    String paymentAccountData = trade.getPaymentAccountData().get();
+                    if (!StringUtils.isEmpty(paymentAccountData)) {
+                        // Resolve the marker lazily (only when there is account data to redact) so the pass does no
+                        // i18n lookup for trades that just need their pending event queue scrubbed.
+                        String redactedMarker = Res.get("data.redacted");
+                        if (!paymentAccountData.equals(redactedMarker)) {
+                            trade.getPaymentAccountData().set(redactedMarker);
+                            changed = true;
+                        }
+                    }
+                    // Out-of-order events persist the full account-data network message (BisqEasyAccountDataMessage);
+                    // a stuck trade may never reach a final state to clear them, so scrub them on the same retention
+                    // threshold rather than leaving sensitive data on disk indefinitely.
+                    if (!trade.getEventQueue().isEmpty()) {
+                        trade.clearEventQueue();
+                        changed = true;
+                    }
+                    return changed;
                 })
                 .count();
         if (numChanges > 0) {
-            persist();
+            // Sensitive data was scrubbed in-memory; route through persistNow() so the write can't be silently
+            // dropped by the rate limiter and leave it on disk (same rationale as the final-state clear).
+            persistNow();
         }
     }
 

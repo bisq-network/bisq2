@@ -60,8 +60,9 @@ docker/data_dirs
 /tx
 /.java-version
 
-# sym link to bisq2-umbrel repo
+# sym link to bisq2-* platforms repo
 bisq2-umbrel
+bisq2-startos
 
 # Directory for temp files
 /temp

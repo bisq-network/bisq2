@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.common.fsm.Event;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
@@ -38,6 +39,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @ToString(callSuper = true)
@@ -60,6 +62,14 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
 
     @EqualsAndHashCode.Exclude
     private final Observable<Optional<Long>> tradeCompletedDate = new Observable<>(Optional.empty());
+
+    // Single source for the id a maker-side take-offer request will produce, so callers that need to know the
+    // id BEFORE constructing a trade (e.g. to look up an already-existing protocol for a duplicate delivery)
+    // never have to duplicate the offerId/takerPubKeyHash/takeOfferDate expression below - it must stay
+    // byte-for-byte identical to what the constructor computes via Trade#createId, or the lookup would miss.
+    public static String createId(BisqEasyContract contract, NetworkId takerNetworkId) {
+        return createId(contract.getOffer().getId(), takerNetworkId.getId(), contract.getTakeOfferDate());
+    }
 
     public BisqEasyTrade(BisqEasyContract contract,
                          boolean isBuyer,
@@ -88,8 +98,9 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                           Identity myIdentity,
                           BisqEasyTradeParty taker,
                           BisqEasyTradeParty maker,
-                          TradeLifecycleState lifecycleState) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState);
+                          TradeLifecycleState lifecycleState,
+                          Set<Event> pendingEvents) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, pendingEvents);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -127,7 +138,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                 Identity.fromProto(proto.getMyIdentity()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                 TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
-                TradeLifecycleState.fromProto(proto.getLifecycleState()));
+                TradeLifecycleState.fromProto(proto.getLifecycleState()),
+                pendingEventsFromProto(proto));
         if (proto.hasErrorMessage()) {
             trade.setErrorMessage(proto.getErrorMessage());
         }

@@ -61,6 +61,11 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         return readStoreFromFileOrRestoreFromBackup();
     }
 
+    /**
+     * Failures are rethrown (after logging) instead of being swallowed, so that callers' persist futures complete
+     * exceptionally rather than falsely reporting a successful write - {@code RateLimitedPersistenceClient} relies
+     * on that to keep its dirty flag set when a retention-critical write did not actually reach disk.
+     */
     public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
         try {
@@ -72,8 +77,10 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             storeFileManager.renameTempFileToCurrentFile();
         } catch (CouldNotSerializePersistableStore e) {
             log.error("Couldn't serialize {}", persistableStore, e);
+            throw e;
         } catch (Exception e) {
             log.error("Couldn't write persistable store to disk.", e);
+            throw new RuntimeException("Couldn't write persistable store to disk.", e);
         }
     }
 

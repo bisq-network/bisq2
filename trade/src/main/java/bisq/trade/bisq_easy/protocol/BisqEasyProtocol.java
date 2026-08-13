@@ -58,6 +58,14 @@ public abstract class BisqEasyProtocol extends TradeProtocol<BisqEasyTrade> {
         getServiceProvider().getBisqEasyTradeService().persist();
     }
 
+    @Override
+    protected void persistOnFinalState() {
+        // Bypasses the normal write-rate limiting: a final state clears this trade's pending FSM events
+        // in-memory, and that wipe must reach disk promptly rather than risk being silently dropped by the
+        // rate limiter (see Fsm#persistOnFinalState and RateLimitedPersistenceClient#persistNow).
+        getServiceProvider().getBisqEasyTradeService().persistNow();
+    }
+
     public BisqEasyTrade getTrade() {
         return getModel();
     }
