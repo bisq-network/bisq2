@@ -36,6 +36,7 @@ import java.util.List;
 @Slf4j
 @Getter
 public class WalletReceiveWizardModel extends NavigationModel {
+    private final StringProperty titleText = new SimpleStringProperty();
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
@@ -56,6 +57,7 @@ public class WalletReceiveWizardModel extends NavigationModel {
     }
 
     public void reset() {
+        titleText.set("");
         currentIndex.set(0);
         nextButtonText.set("");
         backButtonVisible.set(false);
