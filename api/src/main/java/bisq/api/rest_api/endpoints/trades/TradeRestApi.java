@@ -137,7 +137,10 @@ public class TradeRestApi extends RestApiBase {
                     "'role' (BUYER|SELLER, optional), " +
                     "'state' (BisqEasyTradeStateDto value; repeatable or comma-separated, optional).",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Closed trades retrieved successfully",
+                    @ApiResponse(responseCode = "200",
+                            description = "Closed trades retrieved successfully. PaginatedResponse whose " +
+                                    "'items' are ClosedTradeListItemDto (generic binding not expressible in " +
+                                    "the schema annotation since PaginatedResponse is a record).",
                             content = @Content(schema = @Schema(implementation = PaginatedResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Invalid query parameters"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -159,7 +162,9 @@ public class TradeRestApi extends RestApiBase {
                     Optional.ofNullable(role));
             Set<BisqEasyTradeStateDto> stateFilter = ClosedTradesQuery.parseStates(states);
             List<ClosedTradeIndexedItem> filtered = ClosedTradesQuery.apply(
-                    closedTradeItemsService.getItems().getList(),
+                    // Snapshot, not the live synchronized list: iteration during a concurrent
+                    // trade-close would throw ConcurrentModificationException.
+                    closedTradeItemsService.getItemsSnapshot(),
                     Optional.ofNullable(search),
                     roleFilter,
                     stateFilter,
@@ -169,7 +174,7 @@ public class TradeRestApi extends RestApiBase {
                     PaginationParams.of(Optional.ofNullable(page), Optional.ofNullable(pageSize)),
                     ClosedTradeIndexedItem::dto);
         } catch (IllegalArgumentException e) {
-            return buildResponse(Response.Status.BAD_REQUEST, e.getMessage());
+            return buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             log.error("Error retrieving closed trades", e);
             return buildErrorResponse("An unexpected error occurred");

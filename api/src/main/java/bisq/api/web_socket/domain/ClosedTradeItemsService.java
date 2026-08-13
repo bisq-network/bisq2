@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -90,5 +91,19 @@ public class ClosedTradeItemsService implements Service {
         return items.stream()
                 .filter(item -> item.dto().trade().id().equals(tradeId))
                 .findAny();
+    }
+
+    /**
+     * Immutable snapshot for iteration off the mutation path. The backing list is a
+     * {@link java.util.Collections#synchronizedList(java.util.List)}, whose per-call
+     * synchronization does NOT cover iteration — streaming it while a trade closes concurrently
+     * throws ConcurrentModificationException. Copying under the list's monitor is the contract
+     * that javadoc requires.
+     */
+    public List<ClosedTradeIndexedItem> getItemsSnapshot() {
+        List<ClosedTradeIndexedItem> list = items.getList();
+        synchronized (list) {
+            return List.copyOf(list);
+        }
     }
 }

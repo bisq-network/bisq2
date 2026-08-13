@@ -38,6 +38,48 @@ public record ClosedTradeIndexedItem(
         String formattedBaseAmount,
         String formattedQuoteAmount,
         String bitcoinSettlementMethodDisplayString,
-        String fiatPaymentMethodDisplayString
+        String fiatPaymentMethodDisplayString,
+        // Pre-lowercased concatenation of every searchable field, so the search filter does a
+        // single contains() per item instead of lowercasing each field on every keystroke.
+        String searchBlob
 ) {
+    /**
+     * Canonical way to build an item — computes {@link #searchBlob} from the same fields the
+     * search filter matches on, so the two cannot drift apart.
+     */
+    public static ClosedTradeIndexedItem of(ClosedTradeListItemDto dto,
+                                            String market,
+                                            String directionalTitle,
+                                            String formattedMyRole,
+                                            String formattedPrice,
+                                            String formattedBaseAmount,
+                                            String formattedQuoteAmount,
+                                            String bitcoinSettlementMethodDisplayString,
+                                            String fiatPaymentMethodDisplayString) {
+        String searchBlob = String.join("\n",
+                        dto.trade().id(),
+                        market,
+                        directionalTitle,
+                        formattedMyRole,
+                        formattedPrice,
+                        formattedBaseAmount,
+                        formattedQuoteAmount,
+                        dto.makerUserProfile().userName(),
+                        dto.makerUserProfile().nym(),
+                        dto.takerUserProfile().userName(),
+                        dto.takerUserProfile().nym(),
+                        bitcoinSettlementMethodDisplayString,
+                        fiatPaymentMethodDisplayString)
+                .toLowerCase(java.util.Locale.ROOT);
+        return new ClosedTradeIndexedItem(dto,
+                market,
+                directionalTitle,
+                formattedMyRole,
+                formattedPrice,
+                formattedBaseAmount,
+                formattedQuoteAmount,
+                bitcoinSettlementMethodDisplayString,
+                fiatPaymentMethodDisplayString,
+                searchBlob);
+    }
 }

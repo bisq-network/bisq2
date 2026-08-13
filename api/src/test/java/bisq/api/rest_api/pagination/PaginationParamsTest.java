@@ -47,15 +47,31 @@ class PaginationParamsTest {
     }
 
     @Test
-    void of_replacesNonPositivePageWithDefault() {
-        PaginationParams p = PaginationParams.of(Optional.of(0), Optional.of(10));
-        assertEquals(PaginationParams.DEFAULT_PAGE, p.page());
+    void of_rejectsExplicitNonPositivePage() {
+        // Absent -> default, but an explicitly supplied invalid value is a client error: silently
+        // replacing it with page 1 would hide client bugs.
+        assertThrows(IllegalArgumentException.class,
+                () -> PaginationParams.of(Optional.of(0), Optional.of(10)));
+        assertThrows(IllegalArgumentException.class,
+                () -> PaginationParams.of(Optional.of(-3), Optional.of(10)));
     }
 
     @Test
-    void of_replacesNonPositivePageSizeWithDefault() {
-        PaginationParams p = PaginationParams.of(Optional.of(1), Optional.of(0));
-        assertEquals(PaginationParams.DEFAULT_PAGE_SIZE, p.pageSize());
+    void of_rejectsExplicitNonPositivePageSize() {
+        assertThrows(IllegalArgumentException.class,
+                () -> PaginationParams.of(Optional.of(1), Optional.of(0)));
+        assertThrows(IllegalArgumentException.class,
+                () -> PaginationParams.of(Optional.of(1), Optional.of(-1)));
+    }
+
+    @Test
+    void paginate_extremePageOnEmptyListDoesNotOverflow() {
+        // With an empty list the page-out-of-range guard does not fire; int multiplication of an
+        // extreme page value would overflow negative and subList would throw.
+        PaginationParams p = PaginationParams.of(Optional.of(Integer.MAX_VALUE), Optional.of(PaginationParams.MAX_PAGE_SIZE));
+        PaginatedResponse<Integer> resp = p.paginate(List.of());
+        assertTrue(resp.items().isEmpty());
+        assertEquals(0L, resp.totalItems());
     }
 
     @Test
