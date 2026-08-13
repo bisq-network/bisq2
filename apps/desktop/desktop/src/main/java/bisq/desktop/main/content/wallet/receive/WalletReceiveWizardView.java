@@ -44,6 +44,7 @@ public class WalletReceiveWizardView extends NavigationView<VBox, WalletReceiveW
 
     private final Button nextButton, backButton, closeIconButton;
     private final VBox contentVBox;
+    private final Label titleLabel;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
 
     public WalletReceiveWizardView(WalletReceiveWizardModel model, WalletReceiveWizardController controller) {
@@ -56,7 +57,7 @@ public class WalletReceiveWizardView extends NavigationView<VBox, WalletReceiveW
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeIconButton);
         closeButtonRow.setPadding(new Insets(15, 15, 0, 0));
 
-        Label titleLabel = new Label(Res.get("wallet.receive.header"));
+        titleLabel = new Label();
         titleLabel.getStyleClass().add("bisq-text-headline-2");
         HBox headlineBox = new HBox(Spacer.fillHBox(), titleLabel, Spacer.fillHBox());
 
@@ -95,6 +96,7 @@ public class WalletReceiveWizardView extends NavigationView<VBox, WalletReceiveW
 
     @Override
     protected void onViewAttached() {
+        titleLabel.textProperty().bind(model.getTitleText());
         nextButton.textProperty().bind(model.getNextButtonText());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
@@ -110,6 +112,7 @@ public class WalletReceiveWizardView extends NavigationView<VBox, WalletReceiveW
 
     @Override
     protected void onViewDetached() {
+        titleLabel.textProperty().unbind();
         nextButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
