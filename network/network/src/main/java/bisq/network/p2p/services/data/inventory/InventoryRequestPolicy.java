@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.facades.FacadeProvider;
 import bisq.common.network.Address;
 import bisq.common.util.CollectionUtil;
 import bisq.network.p2p.node.Connection;
@@ -132,11 +133,11 @@ class InventoryRequestPolicy {
                 .limit(config.getMaxSeedsForRequest())
                 .collect(Collectors.toCollection(ArrayList::new));
         if (!seeds.isEmpty()) {
-            Connection selectedSeed = seeds.removeFirst();
+            Connection selectedSeed = FacadeProvider.getJdkFacade().removeFirst(seeds);
             candidates.addAll(seeds);
 
             candidates = CollectionUtil.toShuffledList(candidates);
-            candidates.addFirst(selectedSeed); // ensure seed at front
+            FacadeProvider.getJdkFacade().addFirst(candidates, selectedSeed); // ensure seed at front
         }
 
         int limit = config.getMaxPendingRequestsAtPeriodicRequests();
