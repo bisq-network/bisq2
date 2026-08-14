@@ -26,5 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class ProfileCardOffersModel implements Model {
-    private final ObservableList<ProfileCardOfferListItem> offerbookListItems = FXCollections.observableArrayList();
+    // Extractor on the formatted percentage: it is set together with the sortable
+    // percentage, so a market price that resolves a previously empty percentage emits a
+    // list-update event and the SortedList re-sorts the row to its new position.
+    private final ObservableList<ProfileCardOfferListItem> offerbookListItems =
+            FXCollections.observableArrayList(item -> new javafx.beans.Observable[]{item.getFormattedPercentagePrice()});
 }

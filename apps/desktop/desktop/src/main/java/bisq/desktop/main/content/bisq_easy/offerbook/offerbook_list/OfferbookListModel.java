@@ -32,7 +32,11 @@ import java.util.Set;
 @Getter
 class OfferbookListModel implements bisq.desktop.common.view.Model {
     private final Set<String> chatMessageIds = new HashSet<>();
-    private final ObservableList<OfferbookListItem> offerbookListItems = FXCollections.observableArrayList();
+    // Extractor on the formatted percentage: it is set together with the sortable
+    // percentage, so a market price that resolves a previously empty percentage emits a
+    // list-update event and the SortedList re-sorts the row to its new position.
+    private final ObservableList<OfferbookListItem> offerbookListItems =
+            FXCollections.observableArrayList(item -> new javafx.beans.Observable[]{item.getFormattedPercentagePrice()});
     private final FilteredList<OfferbookListItem> filteredOfferbookListItems = new FilteredList<>(offerbookListItems);
     private final StringProperty fiatAmountTitle = new SimpleStringProperty();
     private final BooleanProperty showBuyOffers = new SimpleBooleanProperty();

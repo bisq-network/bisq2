@@ -85,7 +85,7 @@ class OfferbookListItemTest extends TestFxHeadlessSupport {
     void fixedPriceOfferInMarketWithoutPriceConstructsWithoutPercent() {
         OfferbookListItem item = new OfferbookListItem(message, senderUserProfile, reputationService, marketPriceService);
 
-        assertThat(item.getPriceSpecAsPercent()).isEqualTo(0.0);
+        assertThat(item.getPriceSpecAsPercent()).isEmpty();
         assertThat(item.getFormattedPercentagePrice().get()).isNull();
         item.dispose();
     }
@@ -102,7 +102,7 @@ class OfferbookListItemTest extends TestFxHeadlessSupport {
         marketPriceByCurrencyMap.put(MARKET, marketPrice);
         WaitForAsyncUtils.waitForFxEvents();
 
-        assertThat(item.getPriceSpecAsPercent()).isEqualTo(0.25);
+        assertThat(item.getPriceSpecAsPercent()).hasValue(0.25);
         assertThat(item.getFormattedPercentagePrice().get()).isNotNull();
         assertThat(boundLabel.getText()).isEqualTo(item.getFormattedPercentagePrice().get());
         item.dispose();
@@ -116,7 +116,7 @@ class OfferbookListItemTest extends TestFxHeadlessSupport {
 
         OfferbookListItem item = new OfferbookListItem(message, senderUserProfile, reputationService, marketPriceService);
 
-        assertThat(item.getPriceSpecAsPercent()).isEqualTo(0.25);
+        assertThat(item.getPriceSpecAsPercent()).hasValue(0.25);
         assertThat(item.getFormattedPercentagePrice().get()).isNotNull();
         item.dispose();
     }

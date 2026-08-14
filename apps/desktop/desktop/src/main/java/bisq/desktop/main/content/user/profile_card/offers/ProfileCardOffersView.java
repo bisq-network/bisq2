@@ -39,6 +39,7 @@ import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
+import java.util.OptionalDouble;
 
 @Slf4j
 public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, ProfileCardOffersController> {
@@ -106,13 +107,16 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .valueSupplier(ProfileCardOfferListItem::getFormattedRangeQuoteAmount)
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
+        BisqTableColumn<ProfileCardOfferListItem>[] priceColumnHolder = new BisqTableColumn[1];
+        BisqTableColumn<ProfileCardOfferListItem> priceColumn = new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.price"))
                 .right()
                 .minWidth(90)
-                .comparator(Comparator.comparing(ProfileCardOfferListItem::getPriceSpecAsPercent))
+                .comparator(priceComparator(() -> priceColumnHolder[0]))
                 .setCellFactory(getPriceCellFactory())
-                .build());
+                .build();
+        priceColumnHolder[0] = priceColumn;
+        tableView.getColumns().add(priceColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.paymentMethods"))
@@ -127,6 +131,29 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .isSortable(false)
                 .setCellFactory(getGotToOfferCellFactory())
                 .build());
+    }
+
+    private static boolean isDescending(TableColumn<?, ?> column) {
+        return column != null && column.getSortType() == TableColumn.SortType.DESCENDING;
+    }
+
+    // Places offers with an unresolved percentage after those with a known one, in both sort
+    // directions. JavaFX reverses the comparator result for a descending column, so the empty
+    // ordering is pre-inverted for that case to stay last either way.
+    static java.util.Comparator<ProfileCardOfferListItem> priceComparator(
+            java.util.function.Supplier<TableColumn<?, ?>> columnSupplier) {
+        return (o1, o2) -> {
+            OptionalDouble p1 = o1.getPriceSpecAsPercent();
+            OptionalDouble p2 = o2.getPriceSpecAsPercent();
+            if (p1.isEmpty() || p2.isEmpty()) {
+                if (p1.isEmpty() == p2.isEmpty()) {
+                    return 0;
+                }
+                int emptyLast = p1.isEmpty() ? 1 : -1;
+                return isDescending(columnSupplier.get()) ? -emptyLast : emptyLast;
+            }
+            return Double.compare(p1.getAsDouble(), p2.getAsDouble());
+        };
     }
 
     private Callback<TableColumn<ProfileCardOfferListItem, ProfileCardOfferListItem>,

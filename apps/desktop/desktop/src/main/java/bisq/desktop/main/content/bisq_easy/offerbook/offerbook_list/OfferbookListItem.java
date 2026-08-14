@@ -48,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -72,7 +73,10 @@ public class OfferbookListItem {
     private final long totalScore;
     private final Pin marketPriceByCurrencyMapPin;
     private final long offerAgeInDays;
-    private double priceSpecAsPercent;
+    // Empty while the offer has no resolvable percentage (a fixed-price offer without a
+    // market price yet); comparators place these after known values instead of treating
+    // them as an exactly-at-market 0%.
+    private OptionalDouble priceSpecAsPercent = OptionalDouble.empty();
     private final StringProperty formattedPercentagePrice = new SimpleStringProperty();
     private final StringProperty priceTooltipText = new SimpleStringProperty();
 
@@ -130,7 +134,7 @@ public class OfferbookListItem {
         // price arrives; the table cells bind to them so visible rows follow.
         PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer)
                 .ifPresent(percent -> {
-                    priceSpecAsPercent = percent;
+                    priceSpecAsPercent = OptionalDouble.of(percent);
                     formattedPercentagePrice.set(PercentageFormatter.formatToPercentWithSignAndSymbol(percent));
                     priceTooltipText.set(PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer));
                 });
