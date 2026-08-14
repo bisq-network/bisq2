@@ -82,4 +82,12 @@ public class MyMuSigOffersService extends RateLimitedPersistenceClient<MyMuSigOf
                 .filter(offer -> offer.getId().equals(offerId))
                 .findAny();
     }
+
+    // Deactivated offers stay retained in getOffers(); a caller establishing that an offer is
+    // currently takeable must use this lookup, not findOffer.
+    public Optional<MuSigOffer> findActivatedOffer(String offerId) {
+        return getActivatedOffers().stream()
+                .filter(offer -> offer.getId().equals(offerId))
+                .findAny();
+    }
 }

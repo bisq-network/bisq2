@@ -33,6 +33,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.mu_sig.MyMuSigOffersService;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
@@ -128,6 +129,52 @@ class MuSigTakeOfferRequestValidatorTest {
         assertRejected(message);
     }
 
+    @Test
+    void activatedOwnOfferPasses() throws GeneralSecurityException {
+        MuSigContract contract = createContract();
+        SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
+        MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
+        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id"))
+                .thenReturn(Optional.of(contract.getOffer()));
+
+        assertThatCode(() -> MuSigTakeOfferRequestValidator.validateOffer(myOffers, message))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void unknownOrDeactivatedOfferIsRejected() throws GeneralSecurityException {
+        MuSigContract contract = createContract();
+        SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
+        // findActivatedOffer covers both cases: an unknown offer and a retained-but-deactivated
+        // offer are equally absent from the activated set.
+        MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
+        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id")).thenReturn(Optional.empty());
+
+        assertOfferRejected(myOffers, message);
+    }
+
+    @Test
+    void embeddedOfferDifferingFromOwnOfferIsRejected() throws GeneralSecurityException {
+        MuSigContract contract = createContract();
+        SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
+        // Same id, different terms: the taker altered the embedded offer while keeping the id
+        // of a genuine activated offer.
+        MuSigOffer myRealOffer = createOffer(new BaseSideFixedAmountSpec(999_999L));
+        MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
+        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id"))
+                .thenReturn(Optional.of(myRealOffer));
+
+        assertOfferRejected(myOffers, message);
+    }
+
+    private void assertOfferRejected(MyMuSigOffersService myOffers, SetupTradeMessage_A message) {
+        assertThatThrownBy(() -> MuSigTakeOfferRequestValidator.validateOffer(myOffers, message))
+                .isInstanceOf(TradeProtocolException.class)
+                .satisfies(e -> org.assertj.core.api.Assertions.assertThat(
+                                ((TradeProtocolException) e).getTradeProtocolFailure())
+                        .isEqualTo(TradeProtocolFailure.OFFER_NOT_AVAILABLE));
+    }
+
     private void assertRejected(SetupTradeMessage_A message) {
         assertThatThrownBy(() -> MuSigTakeOfferRequestValidator.validateIdentity(contractService, message))
                 .isInstanceOf(TradeProtocolException.class)
@@ -173,15 +220,7 @@ class MuSigTakeOfferRequestValidatorTest {
         PaymentMethodSpec<?> nonBtcPaymentMethodSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
                 FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER),
                 "USD");
-        MuSigOffer offer = new MuSigOffer("test-id",
-                OFFER_MAKER_NETWORK_ID,
-                Direction.BUY,
-                market,
-                new BaseSideFixedAmountSpec(111L),
-                new FixPriceSpec(PriceQuote.fromFiatPrice(50_000, "USD")),
-                List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
-                List.of(),
-                "1.0.0");
+        MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(111L));
         return new MuSigContract(1_700_000_000_000L,
                 offer,
                 TAKER_NETWORK_ID,
@@ -193,6 +232,22 @@ class MuSigTakeOfferRequestValidatorTest {
                 Optional.empty(),
                 offer.getPriceSpec(),
                 0);
+    }
+
+    private static MuSigOffer createOffer(bisq.offer.amount.spec.AmountSpec amountSpec) {
+        Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
+        PaymentMethodSpec<?> nonBtcPaymentMethodSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER),
+                "USD");
+        return new MuSigOffer("test-id",
+                OFFER_MAKER_NETWORK_ID,
+                Direction.BUY,
+                market,
+                amountSpec,
+                new FixPriceSpec(PriceQuote.fromFiatPrice(50_000, "USD")),
+                List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
+                List.of(),
+                "1.0.0");
     }
 
     private static NetworkId createNetworkId(String keyIdSuffix, int port, KeyPair keyPair) {

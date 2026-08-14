@@ -22,6 +22,8 @@ import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
+import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.mu_sig.MyMuSigOffersService;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.Trade;
 import bisq.trade.exceptions.TradeProtocolException;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Optional;
 
 /**
  * Validates an incoming take offer request before any trade is created or persisted. Every
@@ -48,15 +51,15 @@ public final class MuSigTakeOfferRequestValidator {
         }
         NetworkId takerNetworkId = contract.getTaker().getNetworkId();
         if (!message.getSender().equals(takerNetworkId)) {
-            throw reject("The authenticated message sender does not match the taker in the contract. sender="
-                    + message.getSender() + ", contract taker=" + takerNetworkId);
+            throw reject("The authenticated message sender does not match the taker in the contract. senderId="
+                    + sanitizeForLog(message.getSender().getId()) + ", contract takerId=" + sanitizeForLog(takerNetworkId.getId()));
         }
         if (!message.getReceiver().equals(contract.getOffer().getMakerNetworkId())) {
             // On a node owning several identities the confidential layer only binds the message
             // to the receiving identity; without this check a request naming maker A in the
             // contract but sent to identity B would build a trade mixing both identities.
-            throw reject("The message receiver does not match the offer's maker network id. receiver="
-                    + message.getReceiver() + ", offer maker=" + contract.getOffer().getMakerNetworkId());
+            throw reject("The message receiver does not match the offer's maker network id. receiverId="
+                    + sanitizeForLog(message.getReceiver().getId()) + ", offer makerId=" + sanitizeForLog(contract.getOffer().getMakerNetworkId().getId()));
         }
         String expectedTradeId = Trade.createId(contract.getOffer().getId(),
                 takerNetworkId.getId(),
@@ -90,8 +93,28 @@ public final class MuSigTakeOfferRequestValidator {
         }
     }
 
+    public static void validateOffer(MyMuSigOffersService myMuSigOffersService, SetupTradeMessage_A message) {
+        MuSigOffer embeddedOffer = message.getContract().getOffer();
+        // Only the activated set establishes takeability: deactivated offers stay retained in
+        // the store, and the public offerbook is not authoritative for the maker's own offers.
+        // Deliberately NO fallback to existing trades for the same offer - accepting a request
+        // because the offer was taken before would let a cached copy of a removed offer be
+        // replayed indefinitely.
+        Optional<MuSigOffer> myOffer = myMuSigOffersService.findActivatedOffer(embeddedOffer.getId());
+        if (myOffer.isEmpty()) {
+            throw reject("The offer is not one of the maker's activated offers. offerId="
+                    + sanitizeForLog(embeddedOffer.getId()));
+        }
+        if (!myOffer.get().equals(embeddedOffer)) {
+            // The id belongs to a genuine offer but the embedded terms differ: the maker's own
+            // retained offer is the authority, not the taker-supplied copy.
+            throw reject("The embedded offer does not equal the maker's own offer with that id. offerId="
+                    + sanitizeForLog(embeddedOffer.getId()));
+        }
+    }
+
     private static String sanitizeForLog(String value) {
-        return StringUtils.truncate(value.replaceAll("\\p{Cntrl}", "?"), 60);
+        return StringUtils.truncate(value.replaceAll("[\\p{Cntrl}\\u2028\\u2029]", "?"), 60);
     }
 
     private static TradeProtocolException reject(String logMessage) {
