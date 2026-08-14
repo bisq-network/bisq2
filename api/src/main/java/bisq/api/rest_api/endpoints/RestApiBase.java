@@ -86,6 +86,6 @@ public abstract class RestApiBase {
                 page.pageSize(),
                 page.totalItems(),
                 page.totalPages());
-        return Response.status(Response.Status.OK).entity(body).build();
+        return buildOkResponse(body);
     }
 }

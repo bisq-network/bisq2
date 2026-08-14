@@ -87,7 +87,7 @@ class ClosedTradesQueryTest {
                 Optional.empty(),
                 tradeCompletedDate
         );
-        return new ClosedTradeIndexedItem(
+        return ClosedTradeIndexedItem.of(
                 dto, market, directionalTitle, formattedMyRole,
                 formattedPrice, formattedBaseAmount, formattedQuoteAmount,
                 btcMethodDisplay, fiatMethodDisplay);
@@ -195,6 +195,23 @@ class ClosedTradesQueryTest {
                 List.of(usd, eur), Optional.empty(), Optional.empty(), Set.of(),
                 ClosedTradesQuery.SortField.MARKET, SortDirection.ASC);
         assertEquals(List.of(eur, usd), asc);
+    }
+
+    @Test
+    void apply_equalPrimarySortValuesOrderDeterministicallyByTradeId() {
+        // Equal primary keys must tie-break on trade id, or items can repeat/vanish across page
+        // requests when the source list order shifts between fetches.
+        ClosedTradeIndexedItem c = makerBuyer("C", 1L, Optional.of(1L), 100, 10, 30000, "BTC/USD");
+        ClosedTradeIndexedItem a = makerBuyer("A", 1L, Optional.of(1L), 100, 10, 30000, "BTC/USD");
+        ClosedTradeIndexedItem b = makerBuyer("B", 1L, Optional.of(1L), 100, 10, 30000, "BTC/USD");
+        List<ClosedTradeIndexedItem> input = List.of(c, a, b);
+
+        for (ClosedTradesQuery.SortField field : ClosedTradesQuery.SortField.values()) {
+            List<ClosedTradeIndexedItem> asc = ClosedTradesQuery.apply(
+                    input, Optional.empty(), Optional.empty(), Set.of(), field, SortDirection.ASC);
+            assertEquals(List.of(a, b, c), asc,
+                    "equal " + field + " values must order by trade id");
+        }
     }
 
     @Test
