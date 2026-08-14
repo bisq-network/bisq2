@@ -38,6 +38,7 @@ import bisq.common.observable.map.HashMapObserver;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.Version;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.StringUtils;
 import bisq.common.timer.Scheduler;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
@@ -61,6 +62,7 @@ import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.trade.ServiceProvider;
+import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradingNotAllowedException;
 import bisq.trade.mu_sig.arbitration.MuSigTraderArbitrationService;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
@@ -73,6 +75,7 @@ import bisq.trade.mu_sig.mediation.MuSigTraderMediationService;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.handler.maker.MuSigTakeOfferRequestValidator;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
@@ -381,6 +384,15 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     /* --------------------------------------------------------------------- */
 
     private void handleMuSigTakeOfferMessage(SetupTradeMessage_A message) {
+        try {
+            // The request is validated before any trade is created or persisted; a rejected
+            // request must not leave a failed trade, a protocol entry or a contact-list entry.
+            MuSigTakeOfferRequestValidator.validateIdentity(serviceProvider.getContractService(), message);
+        } catch (TradeProtocolException e) {
+            log.warn("Dropping an invalid MuSig take offer request. tradeId={}",
+                    StringUtils.truncate(message.getTradeId().replaceAll("\\p{Cntrl}", "?"), 60));
+            return;
+        }
         MuSigContract muSigContract = message.getContract();
         MuSigProtocol protocol = makerCreatesProtocol(muSigContract, message.getSender(), message.getReceiver());
         handleMuSigTradeMessage(message, protocol);
