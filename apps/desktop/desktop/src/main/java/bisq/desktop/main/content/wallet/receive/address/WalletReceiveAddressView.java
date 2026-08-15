@@ -56,7 +56,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         addressBarHBox.setMaxWidth(440);
         addressBarHBox.setAlignment(Pos.CENTER);
 
-        createAddressButton = new BisqMenuItem("try-again-green", "try-again-white");
+        createAddressButton = new BisqMenuItem("new-address-green", "new-address-white");
         createAddressButton.setTooltip(Res.get("wallet.receive.createNew"));
         HBox addressBarAndCreateButtonHBox = new HBox(20, addressBarHBox, createAddressButton);
         addressBarAndCreateButtonHBox.setAlignment(Pos.CENTER_LEFT);
