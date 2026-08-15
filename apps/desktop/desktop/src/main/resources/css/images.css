@@ -1186,11 +1186,15 @@
 }
 
 #close-mid-grey {
-    -fx-image: url("/images/icons/close-mid-icon-grey.png");
+    -fx-image: url("/images/icons/close-mid-grey.png");
 }
 
 #close-mid-white {
-    -fx-image: url("/images/icons/close-mid-icon-white.png");
+    -fx-image: url("/images/icons/close-mid-white.png");
+}
+
+#close-mid-green {
+    -fx-image: url("/images/icons/close-mid-green.png");
 }
 
 #tac-decentr {
