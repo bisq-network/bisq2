@@ -57,9 +57,9 @@ public class WalletAddressQrCodeModel implements Model {
     void reset() {
         receiveAddress = null;
         qrCodeImage.set(null);
-        btcUri.setValue(null);
-        amount.setValue(null);
-        isAmountValid.setValue(false);
-        label.setValue(null);
+        btcUri.set(null);
+        amount.set(null);
+        isAmountValid.set(false);
+        label.set(null);
     }
 }

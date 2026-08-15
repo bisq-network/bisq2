@@ -283,6 +283,18 @@
     -fx-image: url("/images/icons/chevron-drop-menu-grey.png");
 }
 
+#chevron-drop-menu-up-green {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-green.png");
+}
+
+#chevron-drop-menu-up-white {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-white.png");
+}
+
+#chevron-drop-menu-up-grey {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-grey.png");
+}
+
 #close-mini-black {
     -fx-image: url("/images/icons/close-mini-black.png");
 }
@@ -1186,23 +1198,15 @@
 }
 
 #close-mid-grey {
-    -fx-image: url("/images/icons/close-mid-icon-grey.png");
+    -fx-image: url("/images/icons/close-mid-grey.png");
 }
 
 #close-mid-white {
-    -fx-image: url("/images/icons/close-mid-icon-white.png");
+    -fx-image: url("/images/icons/close-mid-white.png");
 }
 
-#save-grey {
-    -fx-image: url("/images/icons/save-icon-grey.png");
-}
-
-#save-white {
-    -fx-image: url("/images/icons/save-icon-white.png");
-}
-
-#save-green {
-    -fx-image: url("/images/icons/save-icon-green.png");
+#close-mid-green {
+    -fx-image: url("/images/icons/close-mid-green.png");
 }
 
 #tac-decentr {
