@@ -17,14 +17,16 @@
 
 package bisq.desktop.main.content.wallet.receive.address;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -34,13 +36,16 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressModel, WalletReceiveAddressController> {
-    private final MaterialTextField name;
+    private final AddressNoteInputBox addressNoteInputBox;
     private final Label addressDescriptionLabel, addressLabel;
-    private final BisqMenuItem createAddressButton, saveNameButton, generateQrCodeButton, copyAddressButton;
-    private Subscription isAddressNameEditablePin, isNewAddressPin, isNameValidPin, isNameEditablePin;
+    private final BisqMenuItem createAddressButton, saveNoteButton, deleteNoteButton, generateQrCodeButton,
+            copyAddressButton, addAddressNoteButton;
+    private final ImageView chevronDownWhite, chevronDownGrey, chevronUpWhite, chevronUpGrey;
+    private final HBox addressNoteHBox;
+    private Subscription isNewAddressPin, isAddressNoteValidPin, isAddressNoteEditablePin, shouldShowAddressNotePin;
 
     public WalletReceiveAddressView(WalletReceiveAddressModel model, WalletReceiveAddressController controller) {
-        super(new VBox(30), model, controller);
+        super(new VBox(40), model, controller);
 
         // Address
         addressLabel = new Label();
@@ -66,45 +71,73 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         VBox.setMargin(addressDescriptionLabel, new Insets(0, 0, 0, 15));
         VBox addressVBox = new VBox(2, addressDescriptionLabel, addressBarAndCreateButtonHBox);
 
-        // Address name
-        name = new MaterialTextField();
-        name.setEditable(true);
-        name.setMinWidth(230);
-        name.setValidators(model.getAddressNameMinMaxLengthValidator());
+        // More options
+        chevronDownWhite = ImageUtil.getImageViewById("chevron-drop-menu-white");
+        chevronDownGrey = ImageUtil.getImageViewById("chevron-drop-menu-grey");
+        chevronUpWhite = ImageUtil.getImageViewById("chevron-drop-menu-up-white");
+        chevronUpGrey = ImageUtil.getImageViewById("chevron-drop-menu-up-grey");
+        addAddressNoteButton = new BisqMenuItem(Res.get("wallet.receive.addLocalNote"));
+        addAddressNoteButton.setContentDisplay(ContentDisplay.RIGHT);
 
-        saveNameButton = new BisqMenuItem("save-mid-green", "save-mid-white");
-        saveNameButton.setTooltip(Res.get("wallet.receive.save"));
+        // Address note
+        addressNoteInputBox = new AddressNoteInputBox();
+        addressNoteInputBox.setEditable(true);
+        addressNoteInputBox.setMinWidth(230);
+        addressNoteInputBox.setValidators(model.getAddressNameMinMaxLengthValidator());
+        addressNoteInputBox.setPromptText(Res.get("wallet.receive.addNote"));
+        addressNoteInputBox.setIconTooltip(Res.get("wallet.receive.addressNoteInfo"));
 
-        HBox nameBox = new HBox(20, name, saveNameButton, Spacer.fillHBox());
-        nameBox.setAlignment(Pos.CENTER_LEFT);
+        saveNoteButton = new BisqMenuItem("save-mid-grey", "save-mid-white");
+        saveNoteButton.setTooltip(Res.get("wallet.receive.save"));
 
-        root.getChildren().setAll(addressVBox, nameBox);
-        root.setPadding(new Insets(60, 70, 0, 70));
+        deleteNoteButton = new BisqMenuItem("close-mid-grey", "close-mid-white");
+        deleteNoteButton.setTooltip(Res.get("action.delete"));
+
+        HBox.setMargin(saveNoteButton, new Insets(8, 0, -8, 0));
+        HBox.setMargin(deleteNoteButton, new Insets(8, 0, -8, -10));
+        addressNoteHBox = new HBox(20, addressNoteInputBox, saveNoteButton, deleteNoteButton);
+        addressNoteHBox.setAlignment(Pos.TOP_CENTER);
+        addressNoteHBox.setMinHeight(56);
+
+        VBox.setMargin(addressVBox, new Insets(0, 0, 0, 40));
+        VBox.setMargin(addressNoteHBox, new Insets(-30, 0, 0, 65));
+        root.getChildren().setAll(addressVBox, addAddressNoteButton, addressNoteHBox);
+        root.setPadding(new Insets(100, 70, 0, 70));
         root.setMinHeight(276);
         root.getStyleClass().add("wallet-receive-address");
+        root.setAlignment(Pos.CENTER);
     }
 
     @Override
     protected void onViewAttached() {
         addressDescriptionLabel.textProperty().bind(model.getAddressTextFieldDescription());
         addressLabel.textProperty().bind(model.getReceiveAddress());
-        name.visibleProperty().bind(model.getShouldShowAddressName());
-        name.managedProperty().bind(model.getShouldShowAddressName());
-        name.textProperty().bindBidirectional(model.getReceiveAddressName());
-        name.descriptionProperty().bind(model.getNameTextFieldDescription());
+        addressNoteHBox.visibleProperty().bind(model.getShouldShowAddressNote());
+        addressNoteInputBox.textProperty().bindBidirectional(model.getReceiveAddressName());
 
-        isAddressNameEditablePin = EasyBind.subscribe(model.getIsAddressNameEditable(), name::setEditable);
         isNewAddressPin = EasyBind.subscribe(model.getIsNewAddress(), this::resetValidation);
-        isNameValidPin = EasyBind.subscribe(name.isValidProperty(), isValid -> updateSaveNameButtonVisibility());
-        isNameEditablePin = EasyBind.subscribe(model.getIsAddressNameEditable(), isEditable -> updateSaveNameButtonVisibility());
+        isAddressNoteValidPin = EasyBind.subscribe(addressNoteInputBox.isValidProperty(), isValid -> {
+            updateAddressNoteButtonsVisibility();
+        });
+        isAddressNoteEditablePin = EasyBind.subscribe(model.getIsAddressNameEditable(), isEditable -> {
+            addressNoteInputBox.setEditable(isEditable);
+            updateAddressNoteButtonsVisibility();
+        });
+        shouldShowAddressNotePin = EasyBind.subscribe(model.getShouldShowAddressNote(), shouldShow -> {
+            updateAddAddressNoteButtonIcon();
+        });
 
         generateQrCodeButton.setOnAction(e -> controller.onGenerateQrCode());
         copyAddressButton.setOnAction(e -> controller.onCopyToClipboard());
         createAddressButton.setOnAction(e -> controller.onCreateNewReceiveAddress());
-        saveNameButton.setOnAction(e -> controller.onSaveAddressName());
+        saveNoteButton.setOnAction(e -> controller.onSaveAddressName());
+        deleteNoteButton.setOnAction(e -> controller.onDeleteAddressName());
+        addAddressNoteButton.setOnAction(e -> controller.onAddAddressNote());
+        addAddressNoteButton.setOnMouseEntered(e -> updateAddAddressNoteButtonIcon());
+        addAddressNoteButton.setOnMouseExited(e -> updateAddAddressNoteButtonIcon());
         root.setOnMouseClicked(e -> {
             root.requestFocus();
-            name.validate();
+            addressNoteInputBox.validate();
         });
     }
 
@@ -112,35 +145,47 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
     protected void onViewDetached() {
         addressDescriptionLabel.textProperty().unbind();
         addressLabel.textProperty().unbind();
-        name.visibleProperty().unbind();
-        name.managedProperty().unbind();
-        name.textProperty().unbindBidirectional(model.getReceiveAddressName());
-        name.descriptionProperty().unbind();
+        addressNoteHBox.visibleProperty().unbind();
+        addressNoteInputBox.textProperty().unbindBidirectional(model.getReceiveAddressName());
 
-        isAddressNameEditablePin.unsubscribe();
         isNewAddressPin.unsubscribe();
-        isNameValidPin.unsubscribe();
-        isNameEditablePin.unsubscribe();
+        isAddressNoteValidPin.unsubscribe();
+        isAddressNoteEditablePin.unsubscribe();
+        shouldShowAddressNotePin.unsubscribe();
 
         generateQrCodeButton.setOnAction(null);
         copyAddressButton.setOnAction(null);
         createAddressButton.setOnAction(null);
-        saveNameButton.setOnAction(null);
+        saveNoteButton.setOnAction(null);
+        deleteNoteButton.setOnAction(null);
+        addAddressNoteButton.setOnAction(null);
+        addAddressNoteButton.setOnMouseEntered(null);
+        addAddressNoteButton.setOnMouseExited(null);
         root.setOnMouseClicked(null);
 
-        name.resetValidation();
+        addressNoteInputBox.resetValidation();
     }
 
     private void resetValidation(boolean isNewAddress) {
-        name.resetValidation();
-        updateSaveNameButtonVisibility();
+        addressNoteInputBox.resetValidation();
+        updateAddressNoteButtonsVisibility();
     }
 
-    private void updateSaveNameButtonVisibility() {
+    private void updateAddressNoteButtonsVisibility() {
         boolean shouldBeVisible = model.getIsNewAddress().get()
-                && name.isValidProperty().get()
+                && addressNoteInputBox.isValidProperty().get()
                 && model.getIsAddressNameEditable().get();
-        saveNameButton.setVisible(shouldBeVisible);
-        saveNameButton.setManaged(shouldBeVisible);
+        saveNoteButton.setVisible(shouldBeVisible);
+        deleteNoteButton.setVisible(shouldBeVisible);
+    }
+
+    private void updateAddAddressNoteButtonIcon() {
+        boolean shouldShowAddressNote = model.getShouldShowAddressNote().get();
+        boolean isHovered = addAddressNoteButton.isHover();
+        if (shouldShowAddressNote) {
+            addAddressNoteButton.setGraphic(isHovered ? chevronUpWhite : chevronUpGrey);
+        } else {
+            addAddressNoteButton.setGraphic(isHovered ? chevronDownWhite : chevronDownGrey);
+        }
     }
 }
