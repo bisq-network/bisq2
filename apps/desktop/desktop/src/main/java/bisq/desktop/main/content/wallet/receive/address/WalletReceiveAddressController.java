@@ -35,8 +35,11 @@ public class WalletReceiveAddressController implements Controller {
     private final WalletReceiveAddressView view;
     private final WalletReceiveAddressModel model;
     private final WalletService walletService;
+    private final Runnable onNextHandler;
 
-    public WalletReceiveAddressController(ServiceProvider serviceProvider) {
+    public WalletReceiveAddressController(ServiceProvider serviceProvider,
+                                          Runnable onNextHandler) {
+        this.onNextHandler = onNextHandler;
         model = new WalletReceiveAddressModel();
         view = new WalletReceiveAddressView(model, this);
         walletService = serviceProvider.getWalletService().orElseThrow();
@@ -68,6 +71,10 @@ public class WalletReceiveAddressController implements Controller {
 
     @Override
     public void onDeactivate() {
+    }
+
+    void onGenerateQrCode() {
+        onNextHandler.run();
     }
 
     void onCopyToClipboard() {

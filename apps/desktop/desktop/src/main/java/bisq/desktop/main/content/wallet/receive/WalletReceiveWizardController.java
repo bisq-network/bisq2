@@ -58,7 +58,8 @@ public class WalletReceiveWizardController extends NavigationController {
         model = new WalletReceiveWizardModel();
         view = new WalletReceiveWizardView(model, this);
 
-        walletReceiveAddressController = new WalletReceiveAddressController(serviceProvider);
+        walletReceiveAddressController = new WalletReceiveAddressController(serviceProvider,
+                this::onNext);
         walletAddressQrCodeController = new WalletAddressQrCodeController(serviceProvider);
     }
 
@@ -99,9 +100,11 @@ public class WalletReceiveWizardController extends NavigationController {
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         if (navigationTarget == NavigationTarget.WALLET_RECEIVE_ADDRESS) {
+            model.getTitleText().set(Res.get("wallet.receive.header.receiveAddress"));
             model.getBackButtonVisible().set(false);
             model.getNextButtonText().set(Res.get("wallet.receive.generateQRCode"));
         } else if (navigationTarget == NavigationTarget.WALLET_ADDRESS_QR_CODE) {
+            model.getTitleText().set(Res.get("wallet.receive.header.qrCode"));
             model.getBackButtonVisible().set(true);
             model.getNextButtonText().set(Res.get("action.close"));
         }

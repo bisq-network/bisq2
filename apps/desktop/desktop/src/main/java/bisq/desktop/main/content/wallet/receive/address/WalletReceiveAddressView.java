@@ -24,7 +24,9 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -32,24 +34,37 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressModel, WalletReceiveAddressController> {
-    private final MaterialTextField address, name;
-    private final BisqMenuItem createAddressButton, saveNameButton;
+    private final MaterialTextField name;
+    private final Label addressDescriptionLabel, addressLabel;
+    private final BisqMenuItem createAddressButton, saveNameButton, generateQrCodeButton, copyAddressButton;
     private Subscription isAddressNameEditablePin, isNewAddressPin, isNameValidPin, isNameEditablePin;
 
     public WalletReceiveAddressView(WalletReceiveAddressModel model, WalletReceiveAddressController controller) {
         super(new VBox(30), model, controller);
 
         // Address
-        address = new MaterialTextField();
-        address.setEditable(false);
-        address.showCopyIcon();
-        address.setPrefWidth(430);
+        addressLabel = new Label();
+        addressLabel.setMinWidth(Region.USE_PREF_SIZE);
+        generateQrCodeButton = new BisqMenuItem("qr-code-green", "qr-code-white");
+        generateQrCodeButton.setTooltip(Res.get("wallet.receive.generateQRCode"));
+        copyAddressButton = new BisqMenuItem("copy-green", "copy-white");
+        copyAddressButton.setTooltip(Res.get("wallet.receive.copyAddress"));
+        HBox addressBarHBox = new HBox(10, addressLabel, Spacer.fillHBox(), generateQrCodeButton, copyAddressButton);
+        addressBarHBox.setPadding(new Insets(15));
+        addressBarHBox.getStyleClass().add("address-bar");
+        addressBarHBox.setMinWidth(440);
+        addressBarHBox.setMaxWidth(440);
+        addressBarHBox.setAlignment(Pos.CENTER);
 
-        createAddressButton = new BisqMenuItem("try-again-green", "try-again-white");
+        createAddressButton = new BisqMenuItem("new-address-green", "new-address-white");
         createAddressButton.setTooltip(Res.get("wallet.receive.createNew"));
+        HBox addressBarAndCreateButtonHBox = new HBox(20, addressBarHBox, createAddressButton);
+        addressBarAndCreateButtonHBox.setAlignment(Pos.CENTER_LEFT);
 
-        HBox addressHBox = new HBox(20, address, createAddressButton);
-        addressHBox.setAlignment(Pos.CENTER_LEFT);
+        addressDescriptionLabel = new Label();
+        addressDescriptionLabel.getStyleClass().add("address-description");
+        VBox.setMargin(addressDescriptionLabel, new Insets(0, 0, 0, 15));
+        VBox addressVBox = new VBox(2, addressDescriptionLabel, addressBarAndCreateButtonHBox);
 
         // Address name
         name = new MaterialTextField();
@@ -57,22 +72,22 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         name.setMinWidth(230);
         name.setValidators(model.getAddressNameMinMaxLengthValidator());
 
-        saveNameButton = new BisqMenuItem("save-green", "save-white");
+        saveNameButton = new BisqMenuItem("save-mid-green", "save-mid-white");
         saveNameButton.setTooltip(Res.get("wallet.receive.save"));
 
         HBox nameBox = new HBox(20, name, saveNameButton, Spacer.fillHBox());
         nameBox.setAlignment(Pos.CENTER_LEFT);
 
-        root.getChildren().setAll(addressHBox, nameBox);
+        root.getChildren().setAll(addressVBox, nameBox);
         root.setPadding(new Insets(60, 70, 0, 70));
         root.setMinHeight(276);
+        root.getStyleClass().add("wallet-receive-address");
     }
-
 
     @Override
     protected void onViewAttached() {
-        address.descriptionProperty().bind(model.getAddressTextFieldDescription());
-        address.textProperty().bind(model.getReceiveAddress());
+        addressDescriptionLabel.textProperty().bind(model.getAddressTextFieldDescription());
+        addressLabel.textProperty().bind(model.getReceiveAddress());
         name.visibleProperty().bind(model.getShouldShowAddressName());
         name.managedProperty().bind(model.getShouldShowAddressName());
         name.textProperty().bindBidirectional(model.getReceiveAddressName());
@@ -83,7 +98,8 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         isNameValidPin = EasyBind.subscribe(name.isValidProperty(), isValid -> updateSaveNameButtonVisibility());
         isNameEditablePin = EasyBind.subscribe(model.getIsAddressNameEditable(), isEditable -> updateSaveNameButtonVisibility());
 
-        address.getIconButton().setOnAction(e -> controller.onCopyToClipboard());
+        generateQrCodeButton.setOnAction(e -> controller.onGenerateQrCode());
+        copyAddressButton.setOnAction(e -> controller.onCopyToClipboard());
         createAddressButton.setOnAction(e -> controller.onCreateNewReceiveAddress());
         saveNameButton.setOnAction(e -> controller.onSaveAddressName());
         root.setOnMouseClicked(e -> {
@@ -94,8 +110,8 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
 
     @Override
     protected void onViewDetached() {
-        address.descriptionProperty().unbind();
-        address.textProperty().unbind();
+        addressDescriptionLabel.textProperty().unbind();
+        addressLabel.textProperty().unbind();
         name.visibleProperty().unbind();
         name.managedProperty().unbind();
         name.textProperty().unbindBidirectional(model.getReceiveAddressName());
@@ -106,7 +122,8 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         isNameValidPin.unsubscribe();
         isNameEditablePin.unsubscribe();
 
-        address.getIconButton().setOnAction(null);
+        generateQrCodeButton.setOnAction(null);
+        copyAddressButton.setOnAction(null);
         createAddressButton.setOnAction(null);
         saveNameButton.setOnAction(null);
         root.setOnMouseClicked(null);
