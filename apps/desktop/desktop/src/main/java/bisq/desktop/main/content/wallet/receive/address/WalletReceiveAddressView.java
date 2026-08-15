@@ -63,8 +63,8 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
 
         addressDescriptionLabel = new Label();
         addressDescriptionLabel.getStyleClass().add("address-description");
-        VBox.setMargin(addressBarHBox, new Insets(0, 0, 0, 5));
-        VBox addressVBox = new VBox(10, addressDescriptionLabel, addressBarAndCreateButtonHBox);
+        VBox.setMargin(addressDescriptionLabel, new Insets(0, 0, 0, 15));
+        VBox addressVBox = new VBox(2, addressDescriptionLabel, addressBarAndCreateButtonHBox);
 
         // Address name
         name = new MaterialTextField();
