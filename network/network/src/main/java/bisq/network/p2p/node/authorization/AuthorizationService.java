@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.node.authorization;
 
-import bisq.common.facades.FacadeProvider;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashTokenService;
@@ -140,7 +139,7 @@ public class AuthorizationService {
         return myPreferredAuthorizationTokenTypes.stream()
                 .filter(peersAuthorizationTokenTypes::contains)
                 .findFirst()
-                .orElseGet(() -> FacadeProvider.getJdkFacade().getFirst(peersAuthorizationTokenTypes));
+                .orElseGet(() -> peersAuthorizationTokenTypes.get(0));
     }
 
     private static List<AuthorizationTokenType> toAuthorizationTypes(Collection<Feature> features) {
