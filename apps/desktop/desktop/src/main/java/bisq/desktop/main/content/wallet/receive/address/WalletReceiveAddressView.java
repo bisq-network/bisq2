@@ -45,7 +45,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         // Address
         addressLabel = new Label();
         addressLabel.setMinWidth(Region.USE_PREF_SIZE);
-        generateQrCodeButton = new BisqMenuItem("copy-green", "copy-white");
+        generateQrCodeButton = new BisqMenuItem("qr-code-green", "qr-code-white");
         generateQrCodeButton.setTooltip(Res.get("wallet.receive.generateQRCode"));
         copyAddressButton = new BisqMenuItem("copy-green", "copy-white");
         copyAddressButton.setTooltip(Res.get("wallet.receive.copyAddress"));
@@ -54,6 +54,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         addressBarHBox.getStyleClass().add("address-bar");
         addressBarHBox.setMinWidth(440);
         addressBarHBox.setMaxWidth(440);
+        addressBarHBox.setAlignment(Pos.CENTER);
 
         createAddressButton = new BisqMenuItem("try-again-green", "try-again-white");
         createAddressButton.setTooltip(Res.get("wallet.receive.createNew"));
