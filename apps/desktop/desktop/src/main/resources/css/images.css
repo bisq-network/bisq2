@@ -1301,6 +1301,18 @@
     -fx-image: url("/images/icons/new-address-green.png");
 }
 
+#save-mid-grey {
+    -fx-image: url("/images/icons/save-mid-grey.png");
+}
+
+#save-mid-white {
+    -fx-image: url("/images/icons/save-mid-white.png");
+}
+
+#save-mid-green {
+    -fx-image: url("/images/icons/save-mid-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
