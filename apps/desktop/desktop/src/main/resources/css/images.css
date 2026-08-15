@@ -1277,6 +1277,18 @@
     -fx-image: url("/images/icons/download-green.png");
 }
 
+#qr-code-grey {
+    -fx-image: url("/images/icons/qr-code-grey.png");
+}
+
+#qr-code-white {
+    -fx-image: url("/images/icons/qr-code-white.png");
+}
+
+#qr-code-green {
+    -fx-image: url("/images/icons/qr-code-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
