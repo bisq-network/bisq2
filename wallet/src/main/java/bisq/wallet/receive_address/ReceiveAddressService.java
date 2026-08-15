@@ -28,7 +28,6 @@ import lombok.Getter;
 import java.util.Optional;
 
 public class ReceiveAddressService implements Service, PersistenceClient<ReceiveAddressStore> {
-    public final static int RECEIVE_ADDRESS_ENTRY_NAME_MIN_LENGTH = 1;
     public final static int RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH = 20;
 
     @Getter
@@ -74,7 +73,6 @@ public class ReceiveAddressService implements Service, PersistenceClient<Receive
     }
 
     private boolean isNameValid(String name) {
-        return name.length() >= RECEIVE_ADDRESS_ENTRY_NAME_MIN_LENGTH
-                && name.length() <= RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH;
+        return !name.isEmpty() && name.length() <= RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH;
     }
 }

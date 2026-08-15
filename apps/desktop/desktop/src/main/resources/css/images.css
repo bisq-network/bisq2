@@ -283,6 +283,18 @@
     -fx-image: url("/images/icons/chevron-drop-menu-grey.png");
 }
 
+#chevron-drop-menu-up-green {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-green.png");
+}
+
+#chevron-drop-menu-up-white {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-white.png");
+}
+
+#chevron-drop-menu-up-grey {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-grey.png");
+}
+
 #close-mini-black {
     -fx-image: url("/images/icons/close-mini-black.png");
 }

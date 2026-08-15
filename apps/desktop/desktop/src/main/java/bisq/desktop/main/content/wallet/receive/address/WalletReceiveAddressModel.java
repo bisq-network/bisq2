@@ -18,7 +18,7 @@
 package bisq.desktop.main.content.wallet.receive.address;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
+import bisq.desktop.components.controls.validator.TextMaxLengthValidator;
 import bisq.i18n.Res;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
 import bisq.wallet.receive_address.ReceiveAddressService;
@@ -39,29 +39,25 @@ public class WalletReceiveAddressModel implements Model {
     private final StringProperty receiveAddressName = new SimpleStringProperty();
     private final BooleanProperty isNewAddress = new SimpleBooleanProperty();
     private final BooleanProperty isAddressNameEditable = new SimpleBooleanProperty();
-    private final BooleanProperty shouldShowAddressName = new SimpleBooleanProperty();
+    private final BooleanProperty shouldShowAddressNote = new SimpleBooleanProperty();
     private final StringProperty addressTextFieldDescription =  new SimpleStringProperty();
-    private final StringProperty nameTextFieldDescription =  new SimpleStringProperty();
 
-    private final TextMinMaxLengthValidator addressNameMinMaxLengthValidator =
-            new TextMinMaxLengthValidator(
-                    Res.get("wallet.receive.name.minMaxLength",
-                            ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NAME_MIN_LENGTH,
+    private final TextMaxLengthValidator addressNameMinMaxLengthValidator =
+            new TextMaxLengthValidator(
+                    Res.get("wallet.receive.name.maxLength",
                             ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH),
-                    ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NAME_MIN_LENGTH,
                     ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH);
 
     public WalletReceiveAddressModel() {
     }
 
     void reset() {
-        receiveAddressEntry.setValue(null);
-        receiveAddress.setValue(null);
-        receiveAddressName.setValue(null);
-        isNewAddress.setValue(false);
-        isAddressNameEditable.setValue(false);
-        shouldShowAddressName.setValue(false);
-        addressTextFieldDescription.setValue(null);
-        nameTextFieldDescription.setValue(null);
+        receiveAddressEntry.set(null);
+        receiveAddress.set(null);
+        receiveAddressName.set(null);
+        isNewAddress.set(false);
+        isAddressNameEditable.set(false);
+        shouldShowAddressNote.set(false);
+        addressTextFieldDescription.set(null);
     }
 }
