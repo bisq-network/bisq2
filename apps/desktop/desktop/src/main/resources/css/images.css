@@ -1289,6 +1289,18 @@
     -fx-image: url("/images/icons/qr-code-green.png");
 }
 
+#new-address-grey {
+    -fx-image: url("/images/icons/new-address-grey.png");
+}
+
+#new-address-white {
+    -fx-image: url("/images/icons/new-address-white.png");
+}
+
+#new-address-green {
+    -fx-image: url("/images/icons/new-address-green.png");
+}
+
 
 /* ------------------------------------------------------------------------------------ */
 /* Chat */
