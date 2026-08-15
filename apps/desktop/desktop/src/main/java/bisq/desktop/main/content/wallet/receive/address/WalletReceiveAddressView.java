@@ -72,7 +72,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         name.setMinWidth(230);
         name.setValidators(model.getAddressNameMinMaxLengthValidator());
 
-        saveNameButton = new BisqMenuItem("save-green", "save-white");
+        saveNameButton = new BisqMenuItem("save-mid-green", "save-mid-white");
         saveNameButton.setTooltip(Res.get("wallet.receive.save"));
 
         HBox nameBox = new HBox(20, name, saveNameButton, Spacer.fillHBox());
