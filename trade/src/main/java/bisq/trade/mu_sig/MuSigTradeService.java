@@ -389,18 +389,25 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             // must not leave a trade, a protocol entry or a contact-list entry behind. The
             // handler keeps its own check as defense in depth.
             log.warn("Dropping a take offer request from an ignored taker. tradeId={}",
-                    StringUtils.truncate(message.getTradeId().replaceAll("[\\p{Cntrl}\\u2028\\u2029]", "?"), 60));
+                    StringUtils.sanitizeForLog(message.getTradeId()));
             return;
         }
         try {
             // The request is validated before any trade is created or persisted; a rejected
             // request must not leave a failed trade, a protocol entry or a contact-list entry.
             MuSigTakeOfferRequestValidator.validateIdentity(serviceProvider.getContractService(), message);
+            MuSigTakeOfferRequestValidator.validateTakerProfileKnown(userProfileService, message);
             MuSigTakeOfferRequestValidator.validateOffer(
                     serviceProvider.getOfferService().getMuSigOfferService().getMyMuSigOffersService(), message);
+            MuSigTakeOfferRequestValidator.validateEconomics(
+                    serviceProvider.getBondedRolesService().getMarketPriceService(),
+                    settingsService,
+                    muSigTraderMediationService,
+                    muSigTraderArbitrationService,
+                    message);
         } catch (TradeProtocolException e) {
             log.warn("Dropping an invalid MuSig take offer request. tradeId={}",
-                    StringUtils.truncate(message.getTradeId().replaceAll("[\\p{Cntrl}\\u2028\\u2029]", "?"), 60));
+                    StringUtils.sanitizeForLog(message.getTradeId()));
             return;
         }
         MuSigContract muSigContract = message.getContract();
