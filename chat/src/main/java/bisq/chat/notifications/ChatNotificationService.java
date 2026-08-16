@@ -29,6 +29,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -567,8 +568,21 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
             // can't classify.
             return false;
         }
-        return isMobileEligible(chatMessage.getChatMessageType())
-                && isMobileEligible(chatMessage.getChatChannelDomain());
+        return isMobileEligible(chatMessage.getChatMessageType(),
+                chatMessage.getChatChannelDomain(),
+                chatMessage instanceof TwoPartyPrivateChatMessage);
+    }
+
+    /**
+     * Adds the case the two single-axis whitelists below cannot express: a DM lives in
+     * {@link ChatChannelDomain#DISCUSSION} alongside the public discussion channels, so the
+     * domain alone cannot tell them apart. A DM is the directed, low-volume signal the mobile
+     * inbox is for, so it bypasses the domain whitelist — but not the type whitelist.
+     */
+    static boolean isMobileEligible(ChatMessageType type,
+                                    ChatChannelDomain domain,
+                                    boolean isTwoPartyPrivateChat) {
+        return isMobileEligible(type) && (isTwoPartyPrivateChat || isMobileEligible(domain));
     }
 
     /**
@@ -632,6 +646,9 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
      * Exhaustive switch by design: adding a new {@link ChatChannelDomain} value
      * is a compile error here, forcing a deliberate push/no-push decision rather
      * than silently inheriting the wrong default.
+     * <p>
+     * {@code DISCUSSION} also carries two-party private messages, which are eligible — see
+     * {@link #isMobileEligible(ChatMessageType, ChatChannelDomain, boolean)}.
      */
     static boolean isMobileEligible(ChatChannelDomain domain) {
         return switch (domain) {

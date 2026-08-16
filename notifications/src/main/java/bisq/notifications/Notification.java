@@ -28,9 +28,41 @@ public interface Notification {
      * Default {@link Optional#empty()} keeps non-trade notifications (alerts,
      * generic announcements) on the category-based fallback route — mobile
      * clients use the category to choose the destination when no tradeId is
-     * present (see {@code BisqFirebaseMessagingService.deepLinkRouteFor}).
+     * present (see {@code BisqFirebaseMessagingService.PushNotification.from}).
      */
     default Optional<String> getTradeId() {
+        return Optional.empty();
+    }
+
+    /**
+     * The chat channel this notification came from, if it has one. Surfaced to the
+     * mobile relay so a tap on a private message can deep-link straight to that
+     * conversation ({@code bisq://PrivateChat/<channelId>}) instead of the generic
+     * fallback.
+     * <p>
+     * Report the channel whenever there is one; whether it reaches the wire is decided
+     * at the transport boundary by {@code MobileNotificationPayload#from(Notification)}.
+     * Default {@link Optional#empty()} keeps non-chat notifications unaffected.
+     */
+    default Optional<String> getChannelId() {
+        return Optional.empty();
+    }
+
+    /**
+     * The counterparty this notification is about, if there is one.
+     * <p>
+     * Surfaced as its own field rather than leaving the client to read {@link #getTitle()},
+     * because that title is built here with {@code Res.get(...)} — in the <i>node's</i> locale.
+     * A client that displayed it would show the banner in whatever language the node runs in.
+     * With the name as data, the client composes the banner from its own resources, in the
+     * user's locale, and never has to display {@link #getMessage()} — which for a chat
+     * notification is the message body.
+     * <p>
+     * Only chat notifications report one, so the field never accompanies a trade update. That
+     * is a property of the producers, not a rule imposed on the wire: nothing here forbids a
+     * future notification type from reporting a name too.
+     */
+    default Optional<String> getPeerUserName() {
         return Optional.empty();
     }
 

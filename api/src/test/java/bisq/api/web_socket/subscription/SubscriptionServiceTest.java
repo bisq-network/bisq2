@@ -17,6 +17,7 @@
 
 package bisq.api.web_socket.subscription;
 
+import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.bisq_easy.BisqEasyService;
@@ -36,6 +37,7 @@ import org.glassfish.grizzly.websockets.WebSocket;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -189,6 +191,38 @@ class SubscriptionServiceTest {
                 .contains("allDataReceived")
                 .contains("connections");
         assertThat(getSubscriberRepository(service).findSubscribers(Topic.NETWORK_INFO)).isNotEmpty();
+    }
+
+    /**
+     * {@code findWebSocketService} switches over {@link Topic} in arrow form, which the compiler does
+     * not require to be exhaustive. A topic added without its case therefore compiles, and only shows
+     * up as a client whose subscribe never gets answered. This is the check that catches it.
+     */
+    @Test
+    void everyTopicResolvesToAWebSocketService() throws Exception {
+        SubscriptionService service = new SubscriptionService(
+                mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
+                mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
+                mock(ChatService.class, RETURNS_DEEP_STUBS),
+                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                mock(UserService.class, RETURNS_DEEP_STUBS),
+                mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
+                mock(NetworkService.class, RETURNS_DEEP_STUBS),
+                mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS)
+        );
+
+        Method findWebSocketService = SubscriptionService.class
+                .getDeclaredMethod("findWebSocketService", Topic.class);
+        findWebSocketService.setAccessible(true);
+
+        for (Topic topic : Topic.values()) {
+            @SuppressWarnings("unchecked")
+            Optional<BaseWebSocketService> webSocketService =
+                    (Optional<BaseWebSocketService>) findWebSocketService.invoke(service, topic);
+            assertThat(webSocketService)
+                    .as("Topic %s has no WebSocketService wired in SubscriptionService", topic)
+                    .isPresent();
+        }
     }
 
     private static String subscriptionJson(String requestId, String topic, String parameter) {
