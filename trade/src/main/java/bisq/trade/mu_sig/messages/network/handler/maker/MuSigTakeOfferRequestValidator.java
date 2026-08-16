@@ -357,13 +357,23 @@ public final class MuSigTakeOfferRequestValidator {
         if (usdAtomic.compareTo(java.math.BigDecimal.valueOf(MuSigTradeAmountLimitsPolicy.MIN_USD_TRADE_AMOUNT.getValue())) < 0) {
             throw reject("The trade amount lies below the absolute minimum. usd=" + usdAtomic.toPlainString());
         }
+        // The payment-rail cap limits the fiat obligation, which is the non-Bitcoin side. The
+        // two-sided price tolerance lets that side sit up to the tolerance above the Bitcoin value,
+        // so valuing the cap on the Bitcoin side alone would let the fiat obligation exceed the cap
+        // by the tolerance. When the fiat side is quoted in USD it is directly comparable in the
+        // same atomic scale, so cap on the larger of the Bitcoin-derived value and the actual USD
+        // obligation. (Non-USD fiat still needs a fiat/USD conversion - a disclosed follow-up.)
+        java.math.BigDecimal obligationUsd = usdAtomic;
+        if (market.isBaseCurrencyBitcoin() && "USD".equals(market.getQuoteCurrencyCode())) {
+            obligationUsd = obligationUsd.max(java.math.BigDecimal.valueOf(quoteSideAmount));
+        }
         PaymentMethodSpec<?> nonBtcSideSpec = market.isBaseCurrencyBitcoin()
                 ? contract.getQuoteSidePaymentMethodSpec()
                 : contract.getBaseSidePaymentMethodSpec();
         Fiat railLimit = MuSigTradeAmountLimitsPolicy.getMaxTradeLimitInUsd(
                 nonBtcSideSpec.getPaymentMethod().getPaymentRail());
-        if (usdAtomic.compareTo(java.math.BigDecimal.valueOf(railLimit.getValue())) > 0) {
-            throw reject("The trade amount exceeds the payment rail's limit. usd=" + usdAtomic.toPlainString()
+        if (obligationUsd.compareTo(java.math.BigDecimal.valueOf(railLimit.getValue())) > 0) {
+            throw reject("The trade amount exceeds the payment rail's limit. usd=" + obligationUsd.toPlainString()
                     + ", limit=" + railLimit.getValue());
         }
     }
@@ -410,7 +420,14 @@ public final class MuSigTakeOfferRequestValidator {
     // value, so it is compared explicitly; the remaining version fields stay excluded so a benign
     // profile-version skew does not reject a genuine agent.
     private static boolean sameDisputeAgent(Optional<UserProfile> mine, Optional<UserProfile> theirs) {
+        // UserProfile.equals omits version, applicationVersion and avatarVersion, yet all three are
+        // part of the contract the maker co-signs (the version field even selects which fields
+        // serializeForHash clears). Compare equals plus those three fields - i.e. the whole profile
+        // - so a taker cannot forge dispute-agent profile metadata into the signed contract while
+        // this check still accepts it.
         return mine.equals(theirs)
+                && mine.map(UserProfile::getVersion).equals(theirs.map(UserProfile::getVersion))
+                && mine.map(UserProfile::getApplicationVersion).equals(theirs.map(UserProfile::getApplicationVersion))
                 && mine.map(UserProfile::getAvatarVersion).equals(theirs.map(UserProfile::getAvatarVersion));
     }
 

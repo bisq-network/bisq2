@@ -689,6 +689,40 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
+    void mediatorWithForgedApplicationVersionIsRejected() {
+        // applicationVersion is excluded from UserProfile.equals but is hash-relevant for a
+        // version-1 profile, so the maker's selection and the contract's copy must agree on it,
+        // else a taker forges a different agent profile into the co-signed contract.
+        bisq.security.pow.ProofOfWork proofOfWork = org.mockito.Mockito.mock(bisq.security.pow.ProofOfWork.class);
+        org.mockito.Mockito.when(proofOfWork.getSolution()).thenReturn(new byte[72]);
+        NetworkId agentNetworkId = createNetworkId("dispute-agent", 9988, null);
+        UserProfile genuine = new UserProfile(1, "agent", proofOfWork, 0, agentNetworkId, "", "", "2.1.4");
+        UserProfile forged = new UserProfile(1, "agent", proofOfWork, 0, agentNetworkId, "", "", "9.9.9");
+        org.mockito.Mockito.when(mediationService.selectMediator(
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(Optional.of(genuine));
+        MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(2_000_000L));
+        MuSigContract contract = createContract(offer, 2_000_000L, 10_000_000L, offer.getPriceSpec(),
+                Optional.of(forged), Optional.of(arbitratorProfile));
+
+        assertEconomicsRejected(contract, TradeProtocolFailure.MEDIATORS_NOT_MATCHING);
+    }
+
+    @Test
+    void fiatObligationExceedingTheRailCapIsRejected() {
+        // The two-sided tolerance lets the USD quote sit up to 5% above the Bitcoin value, so the
+        // rail cap must be valued on the actual fiat obligation, not the Bitcoin side. 0.1 BTC at
+        // $50,000 is exactly the $5,000 ACH cap on the Bitcoin side, but a +5% quote is a $5,250
+        // ACH obligation above the cap.
+        assertEconomicsRejected(fiatContract(10_000_000L, 52_500_000L, new BaseSideFixedAmountSpec(10_000_000L)),
+                TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+        // The consistent $5,000 quote is at the cap and accepted.
+        assertEconomicsAccepted(fiatContract(10_000_000L, 50_000_000L, new BaseSideFixedAmountSpec(10_000_000L)));
+    }
+
+    @Test
     void arbitratorNotMatchingOwnSelectionIsRejected() {
         MuSigContract contract = fiatContract(2_000_000L, 10_000_000L);
         UserProfile myArbitrator = org.mockito.Mockito.mock(UserProfile.class);

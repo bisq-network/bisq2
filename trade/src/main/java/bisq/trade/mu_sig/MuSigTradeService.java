@@ -703,11 +703,33 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             }
             MuSigOffer offer = contract.getOffer();
             boolean isBuyer = offer.getDirection().isBuy();
-            Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-            MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
+            // The maker's own identity and payment account can be removed while the offer is still
+            // active; drop the request cleanly instead of throwing NoSuchElementException on the
+            // network notify thread. No trade is created in that case.
+            Optional<Identity> myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId());
+            if (myIdentity.isEmpty()) {
+                log.warn("Dropping a take offer request: no local identity backs the offer's maker. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                return Optional.empty();
+            }
+            // findAnyIdentityByNetworkId also returns retired identities, but the handler needs an
+            // active user identity (SetupTradeMessage_A_Handler resolves it with orElseThrow); if
+            // the maker retired its user identity while the offer stayed active, drop cleanly here
+            // rather than persist a trade whose handler would then fail.
+            if (serviceProvider.getUserService().getUserIdentityService().findUserIdentity(myIdentity.get().getId()).isEmpty()) {
+                log.warn("Dropping a take offer request: the offer's maker is no longer an active user identity. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                return Optional.empty();
+            }
+            MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity.get(), offer, sender, receiver);
 
-            AccountPayload<? extends PaymentMethod<?>> accountPayload = findMyAccount(trade).orElseThrow().getAccountPayload();
-            trade.getMyself().setAccountPayload(accountPayload);
+            Optional<Account<? extends PaymentMethod<?>, ?>> myAccount = findMyAccount(trade);
+            if (myAccount.isEmpty()) {
+                log.warn("Dropping a take offer request: no maker account backs the offer's payment method anymore. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                return Optional.empty();
+            }
+            trade.getMyself().setAccountPayload(myAccount.get().getAccountPayload());
 
             persistableStore.addTrade(trade);
             persist();
