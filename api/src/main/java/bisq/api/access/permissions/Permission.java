@@ -52,7 +52,8 @@ public enum Permission implements ProtoEnum {
     TRADES(7, Kind.STANDARD),
     USER_IDENTITIES(8, Kind.STANDARD),
     USER_PROFILES(9, Kind.STANDARD),
-    MOBILE_DEVICES(10, Kind.STANDARD);
+    MOBILE_DEVICES(10, Kind.STANDARD),
+    PRIVATE_CHAT_CHANNELS(11, Kind.STANDARD);
 
     /** Grant classification. Named so a declaration reads as an explicit security decision. */
     public enum Kind {

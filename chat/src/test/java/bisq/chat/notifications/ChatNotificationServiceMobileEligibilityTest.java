@@ -42,7 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *       the "global community chat keeps notifying my phone after my trade
  *       closed" bug reported in {@code bisq-network/bisq-mobile#1464}.</li>
  * </ol>
- * Both checks must pass for a message to reach the mobile relay.
+ * Both checks must pass for a message to reach the mobile relay, with one exception:
+ * a two-party private message (a DM) bypasses the domain check. That third axis is
+ * pinned in its own section at the bottom.
  */
 public class ChatNotificationServiceMobileEligibilityTest {
 
@@ -174,6 +176,56 @@ public class ChatNotificationServiceMobileEligibilityTest {
                                 " (expected=" + expected + ", actual=" + actual + "). " +
                                 "If this is intentional, update EXPECTED_MOBILE_ELIGIBLE_DOMAINS in this test " +
                                 "and note the change in the #1464 follow-up.");
+            }
+        }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Two-party private chat axis
+    /* --------------------------------------------------------------------- */
+
+    @Test
+    void twoPartyPrivateMessagesAreMobileEligibleDespiteTheirDomain() {
+        assertTrue(ChatNotificationService.isMobileEligible(ChatMessageType.TEXT,
+                        ChatChannelDomain.DISCUSSION,
+                        true),
+                "A DM is a directed message to this user — the whole point of the mobile inbox. " +
+                        "It lives in DISCUSSION only because that is where Bisq 2 registers the single " +
+                        "two-party channel service, not because it is community chatter");
+    }
+
+    @Test
+    void publicDiscussionMessagesStaySuppressedFromMobile() {
+        assertFalse(ChatNotificationService.isMobileEligible(ChatMessageType.TEXT,
+                        ChatChannelDomain.DISCUSSION,
+                        false),
+                "Same domain as a DM, but not directed at anyone — this is the #1464 noise, still desktop only");
+    }
+
+    /**
+     * Same loud-failure pin as the two axes above, extended with the DM flag: the rule is
+     * "the type whitelist always, the domain whitelist unless it is a DM". Expectations come
+     * from the EXPECTED_* sets, not from the production helpers, so a change inside those
+     * helpers fails here instead of being echoed back.
+     */
+    @Test
+    void combinedRuleIsTypeAlwaysAndDomainUnlessItIsADm() {
+        for (ChatMessageType type : ChatMessageType.values()) {
+            for (ChatChannelDomain domain : ChatChannelDomain.values()) {
+                for (boolean isTwoPartyPrivateChat : new boolean[]{true, false}) {
+                    boolean actual = ChatNotificationService.isMobileEligible(type, domain, isTwoPartyPrivateChat);
+                    boolean expected = EXPECTED_MOBILE_ELIGIBLE_TYPES.contains(type)
+                            && (isTwoPartyPrivateChat || EXPECTED_MOBILE_ELIGIBLE_DOMAINS.contains(domain));
+                    if (actual != expected) {
+                        throw new AssertionError(
+                                "Combined mobile-eligibility changed for " + type + " / " + domain +
+                                        " / isTwoPartyPrivateChat=" + isTwoPartyPrivateChat +
+                                        " (expected=" + expected + ", actual=" + actual + "). " +
+                                        "If this is intentional, update the EXPECTED_* sets in this test " +
+                                        "and note the change in the #1450 / #1464 follow-up.");
+                    }
+                }
             }
         }
     }

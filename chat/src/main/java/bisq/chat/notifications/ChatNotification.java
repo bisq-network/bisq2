@@ -56,6 +56,32 @@ public class ChatNotification implements Notification, PersistableProto {
         return tradeId;
     }
 
+    /**
+     * The channel is already a domain field, so this needs no proto change. Reported for
+     * every chat notification, trade chats included: {@code MobileNotificationPayload#from}
+     * is where it gets dropped in favour of the trade id.
+     */
+    @Override
+    public Optional<String> getChannelId() {
+        return Optional.of(chatChannelId);
+    }
+
+    /**
+     * The message sender, which is the counterparty for every notification that reaches the mobile
+     * relay: the eligibility whitelists let through only trade chats and DMs, and a user is never
+     * notified about their own message. In a public channel the sender is nobody's counterparty, but
+     * those notifications stay on the desktop. Already a domain field, so this needs no proto change
+     * either.
+     * <p>
+     * Empty when the profile could not be resolved, which is the same condition under which
+     * {@link #title} falls back to {@code Res.get("data.na")}. The client treats that as "no name"
+     * rather than displaying a placeholder it cannot localise.
+     */
+    @Override
+    public Optional<String> getPeerUserName() {
+        return senderUserProfile.map(UserProfile::getUserName);
+    }
+
     private final String id;
     private final String title;
     private final String message;
