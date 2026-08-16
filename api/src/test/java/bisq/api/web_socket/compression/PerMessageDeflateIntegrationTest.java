@@ -95,8 +95,12 @@ class PerMessageDeflateIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        WebSocketEngine.getEngine().unregister(application);
-        server.shutdownNow();
+        if (application != null) {
+            WebSocketEngine.getEngine().unregister(application);
+        }
+        if (server != null) {
+            server.shutdownNow();
+        }
     }
 
     @Test
