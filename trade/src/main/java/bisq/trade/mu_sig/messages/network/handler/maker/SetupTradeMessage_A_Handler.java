@@ -137,6 +137,18 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
                 peersUserProfile,
                 trade.getContract().getMediator(),
                 trade.getContract().getArbitrator());
+
+        // Add the taker to the contact list only now that the request has been verified and
+        // processed. Best-effort and last: this auxiliary action must not turn an accepted trade
+        // into a failed one, so a failure here is logged and swallowed.
+        try {
+            serviceProvider.getMuSigTradeService().maybeAddPeerToContactList(
+                    trade.getPeer().getNetworkId().getId(),
+                    trade.getMyIdentity().getId());
+        } catch (RuntimeException e) {
+            log.warn("Adding the peer to the contact list failed for tradeId={}. The trade is unaffected.",
+                    StringUtils.sanitizeForLog(trade.getId()), e);
+        }
     }
 
     @Override

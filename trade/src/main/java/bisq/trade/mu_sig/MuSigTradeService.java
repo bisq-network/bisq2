@@ -48,7 +48,6 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
@@ -163,6 +162,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
     private final Object disputeStateLock = new Object();
+    // Serializes maker-side trade creation so two concurrent take requests for the same trade id
+    // cannot race a second trade or protocol into the registries.
+    private final Object tradeCreationLock = new Object();
 
     private ExecutorService executor;
 
@@ -411,8 +413,8 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             return;
         }
         MuSigContract muSigContract = message.getContract();
-        MuSigProtocol protocol = makerCreatesProtocol(muSigContract, message.getSender(), message.getReceiver());
-        handleMuSigTradeMessage(message, protocol);
+        makerCreatesProtocol(muSigContract, message.getTradeId(), message.getSender(), message.getReceiver())
+                .ifPresent(protocol -> handleMuSigTradeMessage(message, protocol));
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message) {
@@ -683,27 +685,37 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private MuSigProtocol makerCreatesProtocol(MuSigContract contract, NetworkId sender, NetworkId receiver) {
+    private Optional<MuSigProtocol> makerCreatesProtocol(MuSigContract contract, String tradeId, NetworkId sender, NetworkId receiver) {
         // We only create the data required for the protocol creation.
-        // Verification will happen in the MuSigTakeOfferRequestHandler
-        MuSigOffer offer = contract.getOffer();
-        Direction makersDirection = offer.getDirection();
-        boolean isBuyer = makersDirection.isBuy();
-        Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-        MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
+        // Verification will happen in the MuSigTakeOfferRequestHandler.
+        // tradeId is the validated message trade id (== the id derived from the contract).
+        synchronized (tradeCreationLock) {
+            // A duplicate or concurrent request for the same trade id must not race a second trade
+            // or protocol into the registries; drop it cleanly instead of throwing on the network
+            // notify thread. The duplicate check runs before the identity/account lookups so a
+            // duplicate that arrives after the account or identity was removed still drops cleanly
+            // rather than throwing. Resuming a persisted INIT trade on a resend is a separate
+            // concern (see the take-offer follow-ups).
+            if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
+                log.warn("Dropping a duplicate MuSig take offer request for an existing trade. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                return Optional.empty();
+            }
+            MuSigOffer offer = contract.getOffer();
+            boolean isBuyer = offer.getDirection().isBuy();
+            Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
+            MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
 
-        AccountPayload<? extends PaymentMethod<?>> accountPayload = findMyAccount(trade).orElseThrow().getAccountPayload();
-        trade.getMyself().setAccountPayload(accountPayload);
+            AccountPayload<? extends PaymentMethod<?>> accountPayload = findMyAccount(trade).orElseThrow().getAccountPayload();
+            trade.getMyself().setAccountPayload(accountPayload);
 
-        String tradeId = trade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the MuSigTakeOfferRequest for an already existing protocol");
-        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
-        persistableStore.addTrade(trade);
-        persist();
-
-        maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
-
-        return createAndAddTradeProtocol(trade);
+            persistableStore.addTrade(trade);
+            persist();
+            // The peer is added to the contact list only after the handler has verified and
+            // processed the request (SetupTradeMessage_A_Handler.commit), so a rejected or failed
+            // take leaves no contact-list entry.
+            return Optional.of(createAndAddTradeProtocol(trade));
+        }
     }
 
     private MuSigProtocol createAndAddTradeProtocol(MuSigTrade trade) {
@@ -771,7 +783,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // Misc
     /* --------------------------------------------------------------------- */
 
-    private void maybeAddPeerToContactList(String peersProfileId, String myProfileId) {
+    public void maybeAddPeerToContactList(String peersProfileId, String myProfileId) {
         if (settingsService.getDoAutoAddToContactList()) {
             Optional<UserProfile> peersProfile = userProfileService.findUserProfile(peersProfileId);
             Optional<UserProfile> myProfile = userProfileService.findUserProfile(myProfileId);
