@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.accounts.crypto;
+package bisq.account.accounts.crypto.monero;
 
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.accounts.crypto.CryptoAssetAccount;
 import bisq.account.timestamp.KeyType;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
