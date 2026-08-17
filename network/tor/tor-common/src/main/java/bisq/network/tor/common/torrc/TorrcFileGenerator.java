@@ -21,16 +21,17 @@ import bisq.common.file.FileMutatorUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class TorrcFileGenerator {
     private final Path torrcPath;
-    private final Map<String, String> torrcConfigMap;
+    private final Map<String, List<String>> torrcConfigMap;
     private final Set<DirectoryAuthority> customDirectoryAuthorities;
 
     public TorrcFileGenerator(Path torrcPath,
-                              Map<String, String> torrcConfigMap,
+                              Map<String, List<String>> torrcConfigMap,
                               Set<DirectoryAuthority> customDirectoryAuthorities) {
         this.torrcPath = torrcPath;
         this.torrcConfigMap = torrcConfigMap;
@@ -39,12 +40,16 @@ public class TorrcFileGenerator {
 
     public void generate() {
         StringBuilder torrcStringBuilder = new StringBuilder();
-        torrcConfigMap.forEach((key, value) ->
+
+        for (Map.Entry<String, List<String>> entry : torrcConfigMap.entrySet()) {
+            String key = entry.getKey();
+            for (String value : entry.getValue()) {
                 torrcStringBuilder.append(key)
                         .append(" ")
                         .append(value)
-                        .append("\n")
-        );
+                        .append("\n");
+            }
+        }
 
         customDirectoryAuthorities.forEach(dirAuthority ->
                 torrcStringBuilder.append("DirAuthority ").append(dirAuthority.getNickname())
