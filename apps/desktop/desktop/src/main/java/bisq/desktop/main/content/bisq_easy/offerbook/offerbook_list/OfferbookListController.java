@@ -38,6 +38,7 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import lombok.Getter;
@@ -47,6 +48,9 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,7 +65,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     private final UserIdentityService userIdentityService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private Pin showBuyOffersPin, showOfferListExpandedSettingsPin, offerMessagesPin, showMyOffersOnlyPin,
-            userIdentityPin, userProfileIdWithScoreChangePin;
+            userIdentityPin, userProfileIdWithScoreChangePin, marketPriceByCurrencyMapPin;
     private Subscription showBuyOffersFromModelPin, activeMarketPaymentsCountPin, showMyOffersOnlyFromModelPin;
 
     public OfferbookListController(ServiceProvider serviceProvider) {
@@ -97,6 +101,8 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         showMyOffersOnlyFromModelPin = EasyBind.subscribe(model.getShowMyOffersOnly(), showMyOffersOnly -> updatePredicate());
         userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> UIThread.run(this::updatePredicate));
         userProfileIdWithScoreChangePin = reputationService.getUserProfileIdWithScoreChange().addObserver(userProfileId -> UIThread.run(this::updatePredicate));
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
+                UIThread.run(this::reprocessSelectedChannelOffers));
     }
 
     @Override
@@ -115,6 +121,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
         showMyOffersOnlyFromModelPin.unsubscribe();
         userIdentityPin.unbind();
         userProfileIdWithScoreChangePin.unbind();
+        marketPriceByCurrencyMapPin.unbind();
     }
 
     private void disposeAndClearOfferbookListItems() {
@@ -139,19 +146,8 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             @Override
             public void onAdded(BisqEasyOfferbookMessage offerbookMessage) {
                 UIThread.runOnNextRenderFrame(() -> {
-                    if (!model.getChatMessageIds().contains(offerbookMessage.getId()) &&
-                            offerbookMessage.hasBisqEasyOffer()) {
-                        if (bisqEasyOfferbookMessageService.isValid(offerbookMessage)) {
-                            userProfileService.findUserProfile(offerbookMessage.getAuthorUserProfileId())
-                                    .ifPresent(authorUserProfile -> {
-                                        OfferbookListItem item = new OfferbookListItem(offerbookMessage,
-                                                authorUserProfile,
-                                                reputationService,
-                                                marketPriceService);
-                                        model.getOfferbookListItems().add(item);
-                                        model.getChatMessageIds().add(offerbookMessage.getId());
-                                    });
-                        }
+                    if (model.getChannel().get() == channel) {
+                        maybeAddOfferbookMessage(offerbookMessage);
                     }
                 });
             }
@@ -181,6 +177,50 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
                 });
             }
         });
+    }
+
+    private void reprocessSelectedChannelOffers() {
+        BisqEasyOfferbookChannel channel = model.getChannel().get();
+        if (channel != null) {
+            reprocessOffers(channel,
+                    model.getChatMessageIds(),
+                    bisqEasyOfferbookMessageService::isValid,
+                    this::addOfferbookMessage);
+        }
+    }
+
+    @VisibleForTesting
+    static void reprocessOffers(BisqEasyOfferbookChannel channel,
+                                Set<String> processedMessageIds,
+                                Predicate<BisqEasyOfferbookMessage> validator,
+                                Consumer<BisqEasyOfferbookMessage> processor) {
+        channel.getChatMessages().stream()
+                .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
+                .filter(message -> !processedMessageIds.contains(message.getId()))
+                .filter(validator)
+                .forEach(processor);
+    }
+
+    private void maybeAddOfferbookMessage(BisqEasyOfferbookMessage offerbookMessage) {
+        if (model.getChatMessageIds().contains(offerbookMessage.getId()) ||
+                !offerbookMessage.hasBisqEasyOffer() ||
+                !bisqEasyOfferbookMessageService.isValid(offerbookMessage)) {
+            return;
+        }
+
+        addOfferbookMessage(offerbookMessage);
+    }
+
+    private void addOfferbookMessage(BisqEasyOfferbookMessage offerbookMessage) {
+        userProfileService.findUserProfile(offerbookMessage.getAuthorUserProfileId())
+                .ifPresent(authorUserProfile -> {
+                    OfferbookListItem item = new OfferbookListItem(offerbookMessage,
+                            authorUserProfile,
+                            reputationService,
+                            marketPriceService);
+                    model.getOfferbookListItems().add(item);
+                    model.getChatMessageIds().add(offerbookMessage.getId());
+                });
     }
 
     void onToggleOfferList() {
