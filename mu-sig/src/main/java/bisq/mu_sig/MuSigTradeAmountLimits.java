@@ -18,7 +18,6 @@
 package bisq.mu_sig;
 
 import bisq.account.payment_method.PaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;

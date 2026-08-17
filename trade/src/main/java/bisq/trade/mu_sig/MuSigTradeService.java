@@ -62,6 +62,7 @@ import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.trade.ServiceProvider;
 import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.exceptions.TradingNotAllowedException;
 import bisq.trade.mu_sig.arbitration.MuSigTraderArbitrationService;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
@@ -72,6 +73,7 @@ import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
 import bisq.trade.mu_sig.grpc.MusigGrpcClient;
 import bisq.trade.mu_sig.mediation.MuSigTraderMediationService;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
+import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.handler.maker.MuSigTakeOfferRequestValidator;
@@ -395,26 +397,73 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             return;
         }
         try {
-            // The request is validated before any trade is created or persisted; a rejected
-            // request must not leave a failed trade, a protocol entry or a contact-list entry.
-            MuSigTakeOfferRequestValidator.validateIdentity(serviceProvider.getContractService(), message);
-            MuSigTakeOfferRequestValidator.validateTakerProfileKnown(userProfileService, message);
-            MuSigTakeOfferRequestValidator.validateOffer(
-                    serviceProvider.getOfferService().getMuSigOfferService().getMyMuSigOffersService(), message);
-            MuSigTakeOfferRequestValidator.validateEconomics(
-                    serviceProvider.getBondedRolesService().getMarketPriceService(),
-                    settingsService,
-                    muSigTraderMediationService,
-                    muSigTraderArbitrationService,
-                    message);
+            try {
+                // The request is validated before any trade is created or persisted; a rejected
+                // request must not leave a failed trade, a protocol entry or a contact-list entry.
+                MuSigTakeOfferRequestValidator.validateIdentity(serviceProvider.getContractService(), message);
+                MuSigTakeOfferRequestValidator.validateTakerProfileKnown(userProfileService, message);
+                MuSigTakeOfferRequestValidator.validateOffer(
+                        serviceProvider.getOfferService().getMuSigOfferService().getMyMuSigOffersService(), message);
+                MuSigTakeOfferRequestValidator.validateEconomics(
+                        serviceProvider.getBondedRolesService().getMarketPriceService(),
+                        settingsService,
+                        muSigTraderMediationService,
+                        muSigTraderArbitrationService,
+                        message);
+            } catch (TradeProtocolException e) {
+                throw e;
+            } catch (RuntimeException e) {
+                log.warn("Unexpected failure while validating a MuSig take offer request. tradeId={}",
+                        StringUtils.sanitizeForLog(message.getTradeId()), e);
+                throw new TradeProtocolException(
+                        "The maker has rejected the take offer request because the offer is not available anymore.",
+                        TradeProtocolFailure.OFFER_NOT_AVAILABLE,
+                        e);
+            }
+            MuSigContract muSigContract = message.getContract();
+            makerCreatesProtocol(muSigContract, message.getTradeId(), message.getSender(), message.getReceiver())
+                    .ifPresent(protocol -> handleMuSigTradeMessage(message, protocol));
         } catch (TradeProtocolException e) {
             log.warn("Dropping an invalid MuSig take offer request. tradeId={}",
                     StringUtils.sanitizeForLog(message.getTradeId()));
+            reportTakeOfferRejection(networkService, identityService, message, e);
             return;
         }
-        MuSigContract muSigContract = message.getContract();
-        makerCreatesProtocol(muSigContract, message.getTradeId(), message.getSender(), message.getReceiver())
-                .ifPresent(protocol -> handleMuSigTradeMessage(message, protocol));
+    }
+
+    static void reportTakeOfferRejection(NetworkService networkService,
+                                         IdentityService identityService,
+                                         SetupTradeMessage_A message,
+                                         TradeProtocolException exception) {
+        try {
+            Optional<Identity> receivingIdentity = identityService.findAnyIdentityByNetworkId(message.getReceiver());
+            if (receivingIdentity.isEmpty()) {
+                log.warn("Cannot report a MuSig take offer rejection because the receiving identity is unavailable. tradeId={}",
+                        StringUtils.sanitizeForLog(message.getTradeId()));
+                return;
+            }
+            Identity identity = receivingIdentity.orElseThrow();
+            String errorMessage = Optional.ofNullable(exception.getMessage())
+                    .orElse(exception.getTradeProtocolFailure().name());
+            MuSigReportErrorMessage error = new MuSigReportErrorMessage(
+                    StringUtils.createUid(),
+                    message.getTradeId(),
+                    MuSigProtocol.VERSION,
+                    identity.getNetworkId(),
+                    message.getSender(),
+                    StringUtils.truncate(errorMessage, MuSigReportErrorMessage.MAX_LENGTH_ERROR_MESSAGE),
+                    "",
+                    exception.getTradeProtocolFailure());
+            networkService.confidentialSend(error, message.getSender(), identity.getNetworkIdWithKeyPair())
+                    .exceptionally(throwable -> {
+                        log.warn("Sending a MuSig take offer rejection failed. tradeId={}",
+                                StringUtils.sanitizeForLog(message.getTradeId()), throwable);
+                        return null;
+                    });
+        } catch (RuntimeException e) {
+            log.warn("Creating or sending a MuSig take offer rejection failed. tradeId={}",
+                    StringUtils.sanitizeForLog(message.getTradeId()), e);
+        }
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message) {
@@ -686,16 +735,12 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     /* --------------------------------------------------------------------- */
 
     private Optional<MuSigProtocol> makerCreatesProtocol(MuSigContract contract, String tradeId, NetworkId sender, NetworkId receiver) {
-        // We only create the data required for the protocol creation.
-        // Verification will happen in the MuSigTakeOfferRequestHandler.
-        // tradeId is the validated message trade id (== the id derived from the contract).
+        // The handler performs its FSM-level verification after protocol creation. tradeId is the
+        // validated message trade id.
         synchronized (tradeCreationLock) {
-            // A duplicate or concurrent request for the same trade id must not race a second trade
-            // or protocol into the registries; drop it cleanly instead of throwing on the network
-            // notify thread. The duplicate check runs before the identity/account lookups so a
-            // duplicate that arrives after the account or identity was removed still drops cleanly
-            // rather than throwing. Resuming a persisted INIT trade on a resend is a separate
-            // concern (see the take-offer follow-ups).
+            // Serialize creation and drop a duplicate cleanly instead of racing or throwing. The
+            // check runs before the identity/account lookups so a late removal also drops cleanly.
+            // Resuming a persisted INIT trade on a resend is a follow-up.
             if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
                 log.warn("Dropping a duplicate MuSig take offer request for an existing trade. tradeId={}",
                         StringUtils.sanitizeForLog(tradeId));
@@ -703,39 +748,37 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             }
             MuSigOffer offer = contract.getOffer();
             boolean isBuyer = offer.getDirection().isBuy();
-            // The maker's own identity and payment account can be removed while the offer is still
-            // active; drop the request cleanly instead of throwing NoSuchElementException on the
-            // network notify thread. No trade is created in that case.
+            // The maker's own identity/account can be gone while the offer is still active; reject
+            // before creating partial state.
             Optional<Identity> myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId());
             if (myIdentity.isEmpty()) {
-                log.warn("Dropping a take offer request: no local identity backs the offer's maker. tradeId={}",
+                log.warn("Rejecting a take offer request: no local identity backs the offer's maker. tradeId={}",
                         StringUtils.sanitizeForLog(tradeId));
-                return Optional.empty();
+                throw new TradeProtocolException("The maker can no longer take this offer.",
+                        TradeProtocolFailure.OFFER_NOT_AVAILABLE);
             }
-            // findAnyIdentityByNetworkId also returns retired identities, but the handler needs an
-            // active user identity (SetupTradeMessage_A_Handler resolves it with orElseThrow); if
-            // the maker retired its user identity while the offer stayed active, drop cleanly here
-            // rather than persist a trade whose handler would then fail.
+            // findAnyIdentityByNetworkId includes retired identities, but the handler needs an
+            // active user identity, so require one here.
             if (serviceProvider.getUserService().getUserIdentityService().findUserIdentity(myIdentity.get().getId()).isEmpty()) {
-                log.warn("Dropping a take offer request: the offer's maker is no longer an active user identity. tradeId={}",
+                log.warn("Rejecting a take offer request: the offer's maker is no longer an active user identity. tradeId={}",
                         StringUtils.sanitizeForLog(tradeId));
-                return Optional.empty();
+                throw new TradeProtocolException("The maker can no longer take this offer.",
+                        TradeProtocolFailure.OFFER_NOT_AVAILABLE);
             }
             MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity.get(), offer, sender, receiver);
 
             Optional<Account<? extends PaymentMethod<?>, ?>> myAccount = findMyAccount(trade);
             if (myAccount.isEmpty()) {
-                log.warn("Dropping a take offer request: no maker account backs the offer's payment method anymore. tradeId={}",
+                log.warn("Rejecting a take offer request: no maker account backs the offer's payment method anymore. tradeId={}",
                         StringUtils.sanitizeForLog(tradeId));
-                return Optional.empty();
+                throw new TradeProtocolException("The maker can no longer take this offer.",
+                        TradeProtocolFailure.OFFER_NOT_AVAILABLE);
             }
             trade.getMyself().setAccountPayload(myAccount.get().getAccountPayload());
 
             persistableStore.addTrade(trade);
             persist();
-            // The peer is added to the contact list only after the handler has verified and
-            // processed the request (SetupTradeMessage_A_Handler.commit), so a rejected or failed
-            // take leaves no contact-list entry.
+            // The contact-list add is done by the handler after it verifies and processes the request.
             return Optional.of(createAndAddTradeProtocol(trade));
         }
     }

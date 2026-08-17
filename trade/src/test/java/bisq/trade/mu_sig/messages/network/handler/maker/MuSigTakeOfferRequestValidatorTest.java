@@ -23,6 +23,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.ClearnetAddress;
@@ -33,6 +34,7 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.mu_sig.MyMuSigOffersService;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -41,9 +43,9 @@ import bisq.security.keys.PubKey;
 import bisq.trade.Trade;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
-import bisq.user.profile.UserProfile;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
+import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;
@@ -52,6 +54,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static bisq.common.validation.NetworkDataValidation.TWO_HOURS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -357,6 +361,61 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
+    void wholeFiatRoundingAtBaseRangeBoundsIsAccepted() {
+        PriceQuote price = PriceQuote.fromFiatPrice(50_131, "USD");
+        MuSigOffer offer = createOffer(new BaseSideRangeAmountSpec(1_000_000L, 2_000_000L), price);
+
+        long roundedMinQuote = price.toQuoteSideMonetary(Coin.asBtcFromValue(1_000_000L)).round(0).getValue();
+        long derivedMinBase = price.toBaseSideMonetary(Fiat.fromValue(roundedMinQuote, "USD")).getValue();
+        long roundedMaxQuote = price.toQuoteSideMonetary(Coin.asBtcFromValue(2_000_000L)).round(0).getValue();
+        long derivedMaxBase = price.toBaseSideMonetary(Fiat.fromValue(roundedMaxQuote, "USD")).getValue();
+
+        assertThat(derivedMinBase).isEqualTo(999_382L);
+        assertThat(derivedMaxBase).isEqualTo(2_000_758L);
+        assertEconomicsAccepted(createContract(offer, derivedMinBase, roundedMinQuote, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile)));
+        assertEconomicsAccepted(createContract(offer, derivedMaxBase, roundedMaxQuote, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile)));
+    }
+
+    @Test
+    void wholeFiatRoundingAtBaseFixedAmountIsAccepted() {
+        PriceQuote price = PriceQuote.fromFiatPrice(50_131, "USD");
+        MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(2_000_000L), price);
+        long roundedQuote = price.toQuoteSideMonetary(Coin.asBtcFromValue(2_000_000L)).round(0).getValue();
+        long derivedBase = price.toBaseSideMonetary(Fiat.fromValue(roundedQuote, "USD")).getValue();
+
+        assertThat(derivedBase).isEqualTo(2_000_758L);
+        assertEconomicsAccepted(createContract(offer, derivedBase, roundedQuote, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile)));
+    }
+
+    @Test
+    void baseRangeAmountBeyondWholeFiatRoundingIsRejected() {
+        PriceQuote price = PriceQuote.fromFiatPrice(50_131, "USD");
+        MuSigOffer offer = createOffer(new BaseSideRangeAmountSpec(1_000_000L, 2_000_000L), price);
+        long outsideBase = 2_002_000L;
+        long roundedQuote = price.toQuoteSideMonetary(Coin.asBtcFromValue(outsideBase)).round(0).getValue();
+        MuSigContract contract = createContract(offer, outsideBase, roundedQuote, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
+
+        assertEconomicsRejected(contract, TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+    }
+
+    @Test
+    void baseAmountOutsideSpecWithoutWholeFiatQuoteIsRejected() {
+        PriceQuote price = PriceQuote.fromFiatPrice(50_131, "USD");
+        MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(2_000_000L), price);
+        long outsideBase = 2_000_001L;
+        long unroundedQuote = price.toQuoteSideMonetary(Coin.asBtcFromValue(outsideBase)).getValue();
+        MuSigContract contract = createContract(offer, outsideBase, unroundedQuote, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
+
+        assertThat(unroundedQuote % Fiat.fromFaceValue(1, "USD").getValue()).isNotZero();
+        assertEconomicsRejected(contract, TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+    }
+
+    @Test
     void quoteAmountBeyondPriceToleranceIsRejected() {
         // Maker gives the quote side (maker buys BTC): a quote 10% above the resolved price is
         // adverse and beyond the 5% tolerance; 4% above is tolerated.
@@ -443,11 +502,9 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void takeDatePredatingTheOfferIsRejected() {
-        // The take date is taker-chosen; a take dated before the offer existed drives the UI's
-        // remaining trade time and would show as already expired. It must not precede the offer.
+    void takeDateEarlierThanTheClockSkewWindowIsRejected() {
         MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(2_000_000L));
-        MuSigContract contract = new MuSigContract(offer.getDate() - 1,
+        MuSigContract contract = new MuSigContract(offer.getDate() - TWO_HOURS - 1,
                 offer,
                 TAKER_NETWORK_ID,
                 2_000_000L,
@@ -460,6 +517,24 @@ class MuSigTakeOfferRequestValidatorTest {
                 0);
 
         assertEconomicsRejected(contract, TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+    }
+
+    @Test
+    void takeDateWithinTheClockSkewWindowIsAccepted() {
+        MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(2_000_000L));
+        MuSigContract contract = new MuSigContract(offer.getDate() - TWO_HOURS + 1,
+                offer,
+                TAKER_NETWORK_ID,
+                2_000_000L,
+                10_000_000L,
+                offer.getQuoteSidePaymentMethodSpecs().get(0),
+                new byte[20],
+                Optional.of(mediatorProfile),
+                Optional.of(arbitratorProfile),
+                offer.getPriceSpec(),
+                0);
+
+        assertEconomicsAccepted(contract);
     }
 
     @Test
@@ -650,13 +725,17 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void mediatorWithForgedProfileMetadataIsRejected() {
-        // Same network id as the maker's selection, but a forged nickname: the full-profile
-        // comparison rejects it so the maker never signs an altered dispute-agent profile.
-        NetworkId mediatorNetworkId = mediatorProfile.getNetworkId();
-        UserProfile forged = org.mockito.Mockito.mock(UserProfile.class);
-        org.mockito.Mockito.when(forged.getNetworkId()).thenReturn(mediatorNetworkId);
-        org.mockito.Mockito.when(forged.getUserName()).thenReturn("forged");
+    void mediatorWithForgedNicknameIsRejected() {
+        bisq.security.pow.ProofOfWork proofOfWork = org.mockito.Mockito.mock(bisq.security.pow.ProofOfWork.class);
+        org.mockito.Mockito.when(proofOfWork.getSolution()).thenReturn(new byte[72]);
+        NetworkId agentNetworkId = createNetworkId("dispute-agent", 9988, null);
+        UserProfile genuine = new UserProfile(0, "agent", proofOfWork, 0, agentNetworkId, "", "", "");
+        UserProfile forged = new UserProfile(0, "forged", proofOfWork, 0, agentNetworkId, "", "", "");
+        org.mockito.Mockito.when(mediationService.selectMediator(
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(Optional.of(genuine));
         MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(2_000_000L));
         MuSigContract contract = createContract(offer, 2_000_000L, 10_000_000L, offer.getPriceSpec(),
                 Optional.of(forged), Optional.of(arbitratorProfile));
@@ -768,11 +847,6 @@ class MuSigTakeOfferRequestValidatorTest {
         MuSigOffer offer = createOffer(amountSpec);
         return createContract(offer, baseSideAmount, quoteSideAmount, offer.getPriceSpec(),
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
-    }
-
-    private MuSigContract altcoinContract(long baseSideAmount, long quoteSideAmount) {
-        // Raw BUY: the maker buys XMR (the base) and gives BTC (the quote).
-        return altcoinContract(Direction.BUY, baseSideAmount, quoteSideAmount);
     }
 
     private MuSigContract altcoinContract(Direction direction, long baseSideAmount, long quoteSideAmount) {
@@ -913,6 +987,10 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     private static MuSigOffer createOffer(bisq.offer.amount.spec.AmountSpec amountSpec) {
+        return createOffer(amountSpec, PriceQuote.fromFiatPrice(50_000, "USD"));
+    }
+
+    private static MuSigOffer createOffer(bisq.offer.amount.spec.AmountSpec amountSpec, PriceQuote price) {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         PaymentMethodSpec<?> nonBtcPaymentMethodSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
                 FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER),
@@ -922,7 +1000,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 Direction.BUY,
                 market,
                 amountSpec,
-                new FixPriceSpec(PriceQuote.fromFiatPrice(50_000, "USD")),
+                new FixPriceSpec(price),
                 List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
                 List.of(),
                 "1.0.0");
