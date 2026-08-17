@@ -17,6 +17,7 @@
 
 package bisq.bisq_easy;
 
+import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -27,6 +28,7 @@ import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.user.UserService;
 import org.junit.jupiter.api.Test;
 
@@ -87,28 +89,23 @@ class BisqEasyOfferbookMessageServiceTest {
         BisqEasyOffer offer = message.getBisqEasyOffer().orElseThrow();
         // A market price spec without an available market price: the conversions return empty
         // instead of throwing, and downstream list items call orElseThrow on them.
-        when(offer.getPriceSpec()).thenReturn(new bisq.offer.price.spec.MarketPriceSpec());
+        when(offer.getPriceSpec()).thenReturn(new MarketPriceSpec());
 
         assertFalse(service.isValid(message));
     }
 
     @Test
-    void marketPricedOfferBecomesValidOnceItsPriceArrives() {
-        // The offer-first, price-later case: a market-priced offer is invalid while its price
-        // is unavailable, but the same offer becomes valid once the price arrives, so a
-        // controller re-scan on price change re-admits it. An overflow, by contrast, is
-        // permanent (covered by the overflow test below).
+    void marketPricedOfferCanBeRevalidatedOnceItsPriceArrives() {
         MarketPriceService marketPriceService = mock(MarketPriceService.class);
         when(marketPriceService.findMarketPrice(market)).thenReturn(Optional.empty());
         BisqEasyOfferbookMessageService service = createService(marketPriceService);
         BisqEasyOfferbookMessage message = messageWithOffer(Direction.BUY, 50_000);
         BisqEasyOffer offer = message.getBisqEasyOffer().orElseThrow();
-        when(offer.getPriceSpec()).thenReturn(new bisq.offer.price.spec.MarketPriceSpec());
+        when(offer.getPriceSpec()).thenReturn(new MarketPriceSpec());
 
         assertFalse(service.isValid(message));
 
-        bisq.bonded_roles.market_price.MarketPrice marketPrice =
-                mock(bisq.bonded_roles.market_price.MarketPrice.class);
+        MarketPrice marketPrice = mock(MarketPrice.class);
         when(marketPrice.getPriceQuote()).thenReturn(PriceQuote.fromFiatPrice(50_000, "USD"));
         when(marketPriceService.findMarketPrice(market)).thenReturn(Optional.of(marketPrice));
 

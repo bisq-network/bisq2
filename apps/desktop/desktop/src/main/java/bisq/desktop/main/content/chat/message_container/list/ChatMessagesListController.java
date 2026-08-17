@@ -129,7 +129,7 @@ public class ChatMessagesListController implements Controller {
     private final DontShowAgainService dontShowAgainService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin,
-            ignoredUserProfileIdsPin;
+            ignoredUserProfileIdsPin, marketPriceByCurrencyMapPin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
     private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
@@ -175,6 +175,9 @@ public class ChatMessagesListController implements Controller {
         ignoredUserProfileIdsPin = userProfileService.getIgnoredUserProfileIds()
                 .addObserver(() -> UIThread.run(this::updatePredicate));
 
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
+                UIThread.run(this::reprocessSelectedOfferbookMessages));
+
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
         }
@@ -209,6 +212,10 @@ public class ChatMessagesListController implements Controller {
         if (ignoredUserProfileIdsPin != null) {
             ignoredUserProfileIdsPin.unbind();
             ignoredUserProfileIdsPin = null;
+        }
+        if (marketPriceByCurrencyMapPin != null) {
+            marketPriceByCurrencyMapPin.unbind();
+            marketPriceByCurrencyMapPin = null;
         }
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
@@ -744,30 +751,10 @@ public class ChatMessagesListController implements Controller {
             @Override
             public void onAdded(M chatMessage) {
                 UIThread.run(() -> {
-                    // Avoid to add already existing items
-                    if (model.getChatMessageIds().contains(chatMessage.getId())) {
-                        return;
-                    }
-                    if (chatMessage.getChatMessageType() == TAKE_BISQ_EASY_OFFER) {
-                        return;
-                    }
-                    if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage &&
-                            !bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage)) {
+                    if (!maybeAddChatMessage(chatMessage, channel)) {
                         return;
                     }
 
-                    ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
-                            channel,
-                            marketPriceService,
-                            userProfileService,
-                            reputationService,
-                            bisqEasyTradeService,
-                            userIdentityService,
-                            networkService,
-                            resendMessageService,
-                            authorizedBondedRolesService);
-                    model.getChatMessages().add(item);
-                    model.getChatMessageIds().add(chatMessage.getId());
                     maybeScrollDownOnNewItemAdded();
                     maybeAddExpiredMessagesIndicator();
                     updateHasBisqEasyOfferMessages();
@@ -802,6 +789,45 @@ public class ChatMessagesListController implements Controller {
                 });
             }
         });
+    }
+
+    private void reprocessSelectedOfferbookMessages() {
+        if (!(model.getSelectedChannel().get() instanceof BisqEasyOfferbookChannel channel)) {
+            return;
+        }
+
+        boolean wasMessageAdded = false;
+        for (BisqEasyOfferbookMessage message : channel.getChatMessages()) {
+            wasMessageAdded |= maybeAddChatMessage(message, channel);
+        }
+        if (wasMessageAdded) {
+            maybeScrollDownOnNewItemAdded();
+            maybeAddExpiredMessagesIndicator();
+            updateHasBisqEasyOfferMessages();
+        }
+    }
+
+    private <M extends ChatMessage, C extends ChatChannel<M>> boolean maybeAddChatMessage(M chatMessage, C channel) {
+        if (model.getChatMessageIds().contains(chatMessage.getId()) ||
+                chatMessage.getChatMessageType() == TAKE_BISQ_EASY_OFFER ||
+                (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage &&
+                        !bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage))) {
+            return false;
+        }
+
+        ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
+                channel,
+                marketPriceService,
+                userProfileService,
+                reputationService,
+                bisqEasyTradeService,
+                userIdentityService,
+                networkService,
+                resendMessageService,
+                authorizedBondedRolesService);
+        model.getChatMessages().add(item);
+        model.getChatMessageIds().add(chatMessage.getId());
+        return true;
     }
 
     private void publishChatMessageReaction(ChatMessage chatMessage, Reaction reaction, UserIdentity userIdentity) {
