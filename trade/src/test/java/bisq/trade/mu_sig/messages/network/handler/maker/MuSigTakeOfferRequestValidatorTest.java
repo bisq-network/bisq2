@@ -180,21 +180,22 @@ class MuSigTakeOfferRequestValidatorTest {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
         MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
-        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id"))
-                .thenReturn(Optional.of(contract.getOffer()));
+        MuSigOffer claimedOffer = MuSigOffer.fromProto(contract.getOffer().toProto(false));
+        org.mockito.Mockito.when(myOffers.claimActivatedOffer("test-id"))
+                .thenReturn(Optional.of(claimedOffer));
 
-        assertThatCode(() -> MuSigTakeOfferRequestValidator.validateOffer(myOffers, message))
-                .doesNotThrowAnyException();
+        assertThat(MuSigTakeOfferRequestValidator.validateOffer(myOffers, message))
+                .isSameAs(claimedOffer);
     }
 
     @Test
     void unknownOrDeactivatedOfferIsRejected() throws GeneralSecurityException {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
-        // findActivatedOffer covers both cases: an unknown offer and a retained-but-deactivated
+        // claimActivatedOffer covers both cases: an unknown offer and a retained-but-deactivated
         // offer are equally absent from the activated set.
         MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
-        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id")).thenReturn(Optional.empty());
+        org.mockito.Mockito.when(myOffers.claimActivatedOffer("test-id")).thenReturn(Optional.empty());
 
         assertOfferRejected(myOffers, message);
     }
@@ -207,7 +208,7 @@ class MuSigTakeOfferRequestValidatorTest {
         // of a genuine activated offer.
         MuSigOffer myRealOffer = createOffer(new BaseSideFixedAmountSpec(999_999L));
         MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
-        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id"))
+        org.mockito.Mockito.when(myOffers.claimActivatedOffer("test-id"))
                 .thenReturn(Optional.of(myRealOffer));
 
         assertOfferRejected(myOffers, message);
@@ -225,7 +226,7 @@ class MuSigTakeOfferRequestValidatorTest {
         MuSigContract forged = MuSigContract.fromProto(forgedProto);
         SetupTradeMessage_A message = createMessage(forged, TAKER_NETWORK_ID, sign(genuine, TAKER_KEY_PAIR));
         MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
-        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id"))
+        org.mockito.Mockito.when(myOffers.claimActivatedOffer("test-id"))
                 .thenReturn(Optional.of(forged.getOffer()));
 
         assertOfferRejected(myOffers, message);
@@ -244,7 +245,7 @@ class MuSigTakeOfferRequestValidatorTest {
         MuSigContract forged = MuSigContract.fromProto(forgedProto);
         SetupTradeMessage_A message = createMessage(forged, TAKER_NETWORK_ID, sign(genuine, TAKER_KEY_PAIR));
         MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
-        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id"))
+        org.mockito.Mockito.when(myOffers.claimActivatedOffer("test-id"))
                 .thenReturn(Optional.of(forged.getOffer()));
 
         assertOfferRejected(myOffers, message);
@@ -266,7 +267,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 Optional.empty(), Optional.empty());
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
         MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
-        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id")).thenReturn(Optional.of(makersOffer));
+        org.mockito.Mockito.when(myOffers.claimActivatedOffer("test-id")).thenReturn(Optional.of(makersOffer));
 
         assertOfferRejected(myOffers, message);
     }
@@ -284,7 +285,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 otherVersion.getPriceSpec(), Optional.empty(), Optional.empty());
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
         MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
-        org.mockito.Mockito.when(myOffers.findActivatedOffer("test-id")).thenReturn(Optional.of(makersOffer));
+        org.mockito.Mockito.when(myOffers.claimActivatedOffer("test-id")).thenReturn(Optional.of(makersOffer));
 
         assertThatCode(() -> MuSigTakeOfferRequestValidator.validateOffer(myOffers, message))
                 .doesNotThrowAnyException();

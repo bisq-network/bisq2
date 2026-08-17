@@ -127,11 +127,11 @@ public final class MuSigTakeOfferRequestValidator {
         }
     }
 
-    public static void validateOffer(MyMuSigOffersService myMuSigOffersService, SetupTradeMessage_A message) {
+    public static MuSigOffer validateOffer(MyMuSigOffersService myMuSigOffersService, SetupTradeMessage_A message) {
         MuSigOffer embeddedOffer = message.getContract().getOffer();
         // Only the activated set establishes takeability. No fallback to existing trades: that
         // would let a cached copy of a removed offer be replayed.
-        Optional<MuSigOffer> myOffer = myMuSigOffersService.findActivatedOffer(embeddedOffer.getId());
+        Optional<MuSigOffer> myOffer = myMuSigOffersService.claimActivatedOffer(embeddedOffer.getId());
         if (myOffer.isEmpty()) {
             throw reject("The offer is not one of the maker's activated offers. offerId="
                     + StringUtils.sanitizeForLog(embeddedOffer.getId()));
@@ -155,6 +155,7 @@ public final class MuSigTakeOfferRequestValidator {
             throw reject("The contract's party roles are not canonical. makerRole=" + contract.getMaker().getRole()
                     + ", takerRole=" + contract.getTaker().getRole());
         }
+        return myOffer.get();
     }
 
     public static void validateEconomics(MarketPriceService marketPriceService,
