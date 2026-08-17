@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.user.profile_card.offers;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -30,5 +31,5 @@ public class ProfileCardOffersModel implements Model {
     // percentage, so a market price that resolves a previously empty percentage emits a
     // list-update event and the SortedList re-sorts the row to its new position.
     private final ObservableList<ProfileCardOfferListItem> offerbookListItems =
-            FXCollections.observableArrayList(item -> new javafx.beans.Observable[]{item.getFormattedPercentagePrice()});
+            FXCollections.observableArrayList(item -> new Observable[]{item.getFormattedPercentagePrice()});
 }

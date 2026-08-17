@@ -73,12 +73,12 @@ public class OfferbookListItem {
     private final long totalScore;
     private final Pin marketPriceByCurrencyMapPin;
     private final long offerAgeInDays;
+    private final StringProperty formattedPercentagePrice = new SimpleStringProperty();
+    private final StringProperty priceTooltipText = new SimpleStringProperty();
     // Empty while the offer has no resolvable percentage (a fixed-price offer without a
     // market price yet); comparators place these after known values instead of treating
     // them as an exactly-at-market 0%.
     private OptionalDouble priceSpecAsPercent = OptionalDouble.empty();
-    private final StringProperty formattedPercentagePrice = new SimpleStringProperty();
-    private final StringProperty priceTooltipText = new SimpleStringProperty();
 
     public OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                              UserProfile senderUserProfile,

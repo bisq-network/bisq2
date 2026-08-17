@@ -26,6 +26,7 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -107,15 +108,13 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .valueSupplier(ProfileCardOfferListItem::getFormattedRangeQuoteAmount)
                 .build());
 
-        BisqTableColumn<ProfileCardOfferListItem>[] priceColumnHolder = new BisqTableColumn[1];
         BisqTableColumn<ProfileCardOfferListItem> priceColumn = new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.price"))
                 .right()
                 .minWidth(90)
-                .comparator(priceComparator(() -> priceColumnHolder[0]))
                 .setCellFactory(getPriceCellFactory())
                 .build();
-        priceColumnHolder[0] = priceColumn;
+        priceColumn.setComparator(priceComparator(priceColumn));
         tableView.getColumns().add(priceColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
@@ -140,8 +139,8 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
     // Places offers with an unresolved percentage after those with a known one, in both sort
     // directions. JavaFX reverses the comparator result for a descending column, so the empty
     // ordering is pre-inverted for that case to stay last either way.
-    static java.util.Comparator<ProfileCardOfferListItem> priceComparator(
-            java.util.function.Supplier<TableColumn<?, ?>> columnSupplier) {
+    @VisibleForTesting
+    static Comparator<ProfileCardOfferListItem> priceComparator(TableColumn<?, ?> column) {
         return (o1, o2) -> {
             OptionalDouble p1 = o1.getPriceSpecAsPercent();
             OptionalDouble p2 = o2.getPriceSpecAsPercent();
@@ -150,7 +149,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                     return 0;
                 }
                 int emptyLast = p1.isEmpty() ? 1 : -1;
-                return isDescending(columnSupplier.get()) ? -emptyLast : emptyLast;
+                return isDescending(column) ? -emptyLast : emptyLast;
             }
             return Double.compare(p1.getAsDouble(), p2.getAsDouble());
         };

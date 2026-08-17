@@ -31,15 +31,19 @@ import bisq.offer.price.spec.FixPriceSpec;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.collections.transformation.SortedList;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.util.WaitForAsyncUtils;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -114,15 +118,14 @@ class ProfileCardOfferListItemTest extends TestFxHeadlessSupport {
         ProfileCardOfferListItem plus25 = itemWithMarketPrice(40_000.0);   // +25%
         ProfileCardOfferListItem noPrice = itemWithMarketPrice(null);      // empty
 
-        javafx.scene.control.TableColumn<ProfileCardOfferListItem, ?> column = new javafx.scene.control.TableColumn<>();
-        java.util.Comparator<ProfileCardOfferListItem> comparator =
-                bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersView.priceComparator(() -> column);
+        TableColumn<ProfileCardOfferListItem, ?> column = new TableColumn<>();
+        Comparator<ProfileCardOfferListItem> comparator = ProfileCardOffersView.priceComparator(column);
 
-        column.setSortType(javafx.scene.control.TableColumn.SortType.ASCENDING);
+        column.setSortType(TableColumn.SortType.ASCENDING);
         assertThat(sortAsJavaFx(List.of(noPrice, plus25, atMarket), comparator, column))
                 .containsExactly(atMarket, plus25, noPrice);
 
-        column.setSortType(javafx.scene.control.TableColumn.SortType.DESCENDING);
+        column.setSortType(TableColumn.SortType.DESCENDING);
         assertThat(sortAsJavaFx(List.of(noPrice, atMarket, plus25), comparator, column))
                 .containsExactly(plus25, atMarket, noPrice);
 
@@ -144,12 +147,10 @@ class ProfileCardOfferListItemTest extends TestFxHeadlessSupport {
                 messageWithFixedPrice(50_000), senderUserProfile, reputationService, priceService);
         model.getOfferbookListItems().addAll(known, resolving);
 
-        javafx.scene.control.TableColumn<ProfileCardOfferListItem, ?> column = new javafx.scene.control.TableColumn<>();
-        column.setSortType(javafx.scene.control.TableColumn.SortType.ASCENDING);
-        javafx.collections.transformation.SortedList<ProfileCardOfferListItem> sorted =
-                new javafx.collections.transformation.SortedList<>(model.getOfferbookListItems());
-        sorted.setComparator((o1, o2) -> bisq.desktop.main.content.user.profile_card.offers.ProfileCardOffersView
-                .priceComparator(() -> column).compare(o1, o2));
+        TableColumn<ProfileCardOfferListItem, ?> column = new TableColumn<>();
+        column.setSortType(TableColumn.SortType.ASCENDING);
+        SortedList<ProfileCardOfferListItem> sorted = new SortedList<>(model.getOfferbookListItems());
+        sorted.setComparator(ProfileCardOffersView.priceComparator(column));
 
         // Empty percentage sorts last initially.
         assertThat(sorted).containsExactly(known, resolving);
@@ -168,12 +169,12 @@ class ProfileCardOfferListItemTest extends TestFxHeadlessSupport {
     }
 
     private static List<ProfileCardOfferListItem> sortAsJavaFx(List<ProfileCardOfferListItem> items,
-                                                               java.util.Comparator<ProfileCardOfferListItem> comparator,
-                                                               javafx.scene.control.TableColumn<?, ?> column) {
+                                                               Comparator<ProfileCardOfferListItem> comparator,
+                                                               TableColumn<?, ?> column) {
         // Mirrors JavaFX TableColumnComparator: a descending column reverses the comparator result.
-        boolean descending = column.getSortType() == javafx.scene.control.TableColumn.SortType.DESCENDING;
-        java.util.Comparator<ProfileCardOfferListItem> effective = descending ? comparator.reversed() : comparator;
-        return items.stream().sorted(effective).collect(java.util.stream.Collectors.toList());
+        boolean descending = column.getSortType() == TableColumn.SortType.DESCENDING;
+        Comparator<ProfileCardOfferListItem> effective = descending ? comparator.reversed() : comparator;
+        return items.stream().sorted(effective).collect(Collectors.toList());
     }
 
     private ProfileCardOfferListItem itemWithMarketPrice(Double marketPriceValue) {
