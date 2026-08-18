@@ -94,6 +94,18 @@ public class BisqEasyOfferbookMessageService implements Service {
                 // Fired at registration with all known scores; one revision instead of one per score.
                 incrementOfferValidityRevision();
             }
+
+            @Override
+            public void remove(Object userProfileId) {
+                if (userProfileId instanceof String id && isMakerOfAnyOffer(id)) {
+                    incrementOfferValidityRevision();
+                }
+            }
+
+            @Override
+            public void clear() {
+                incrementOfferValidityRevision();
+            }
         });
         return CompletableFuture.completedFuture(true);
     }

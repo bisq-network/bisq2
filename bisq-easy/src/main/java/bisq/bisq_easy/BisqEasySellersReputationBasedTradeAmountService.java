@@ -69,6 +69,18 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
             public void put(String userProfileId, Long score) {
                 userProfileScoreChanged(userProfileId);
             }
+
+            @Override
+            public void remove(Object userProfileId) {
+                if (userProfileId instanceof String id) {
+                    userProfileScoreChanged(id);
+                }
+            }
+
+            @Override
+            public void clear() {
+                invalidateCache();
+            }
         });
         // The required reputation score derives from the offer amount in USD, so cached results
         // become stale whenever market prices change.
@@ -181,6 +193,10 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
     }
 
     private void marketPricesChanged() {
+        invalidateCache();
+    }
+
+    private void invalidateCache() {
         synchronized (cacheInvalidationLock) {
             cacheInvalidationCount++;
             sellOffersWithInsufficientReputationByMakersProfileId.clear();
