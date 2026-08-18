@@ -125,4 +125,29 @@ class OfferbookListItemTest extends TestFxHeadlessSupport {
                 .isEqualTo(PercentageFormatter.formatToPercentWithSignAndSymbol(0.25));
         item.dispose();
     }
+
+    @Test
+    void disposedItemNoLongerFollowsMarketPriceUpdates() {
+        putMarketPrice(90_000);
+        OfferbookListItem item = new OfferbookListItem(message, senderUserProfile, reputationService, marketPriceService);
+        Optional<Double> percentAt90k = item.getPriceSpecAsPercent();
+
+        putMarketPrice(80_000);
+        WaitForAsyncUtils.waitForFxEvents();
+        Optional<Double> percentAt80k = item.getPriceSpecAsPercent();
+        assertThat(percentAt80k).isNotEqualTo(percentAt90k);
+
+        item.dispose();
+        putMarketPrice(70_000);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(item.getPriceSpecAsPercent()).isEqualTo(percentAt80k);
+    }
+
+    private void putMarketPrice(double price) {
+        MarketPrice marketPrice = mock(MarketPrice.class);
+        when(marketPrice.getPriceQuote()).thenReturn(PriceQuote.fromFiatPrice(price, "USD"));
+        when(marketPriceService.findMarketPrice(MARKET)).thenReturn(Optional.of(marketPrice));
+        marketPriceByCurrencyMap.put(MARKET, marketPrice);
+    }
 }
