@@ -20,6 +20,7 @@ package bisq.common.facades.android;
 import bisq.common.facades.JdkFacade;
 
 import java.io.File;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class AndroidJdkFacade implements JdkFacade {
@@ -51,5 +52,22 @@ public class AndroidJdkFacade implements JdkFacade {
     public void redirectOutput(ProcessBuilder processBuilder) {
         // ProcessBuilder.Redirect.DISCARD not supported on Android
         processBuilder.redirectError(new File("/dev/null"));
+    }
+
+    @Override
+    public <T> T removeFirst(List<T> list) {
+        // List.removeFirst/addFirst crash Android below API 35
+        return list.remove(0);
+    }
+
+    @Override
+    public <T> void addFirst(List<T> list, T element) {
+        // List.removeFirst/addFirst crash Android below API 35
+        list.add(0, element);
+    }
+
+    @Override
+    public <T> T getFirst(List<T> list) {
+        return list.get(0);
     }
 }
