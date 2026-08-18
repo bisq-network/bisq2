@@ -179,6 +179,15 @@ class BisqEasyOfferbookMessageServiceTest {
 
         scoreByUserProfileId.putAll(Map.of("maker-id", 3_000L, "not-a-maker-id", 3_000L, "other-maker-id", 3_000L));
         assertEquals(List.of(revision, revision + 1, revision + 2, revision + 3, revision + 4, revision + 5), observedRevisions);
+
+        scoreByUserProfileId.remove("not-a-maker-id");
+        assertEquals(6, observedRevisions.size());
+
+        scoreByUserProfileId.remove("maker-id");
+        assertEquals(7, observedRevisions.size());
+
+        scoreByUserProfileId.clear();
+        assertEquals(8, observedRevisions.size());
     }
 
     @Test
