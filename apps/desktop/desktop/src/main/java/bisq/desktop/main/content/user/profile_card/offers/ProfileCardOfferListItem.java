@@ -125,15 +125,13 @@ public class ProfileCardOfferListItem {
     }
 
     private void updatePriceSpecAsPercent() {
-        // A fixed-price offer in a market without a market price has no percent to derive;
-        // the properties keep their previous values and refresh through the observer once a
-        // price arrives; the table cells bind to them so visible rows follow.
-        PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer)
-                .ifPresent(percent -> {
-                    priceSpecAsPercent = Optional.of(percent);
-                    formattedPercentagePrice.set(PercentageFormatter.formatToPercentWithSignAndSymbol(percent));
-                    priceTooltipText.set(PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer));
-                });
+        // A fixed-price offer in a market without a market price has no percent to derive; the
+        // table cells bind to the properties, so visible rows follow once a price arrives.
+        priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer);
+        formattedPercentagePrice.set(priceSpecAsPercent
+                .map(PercentageFormatter::formatToPercentWithSignAndSymbol)
+                .orElseGet(() -> Res.get("data.na")));
+        priceTooltipText.set(PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer));
     }
 
     private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {

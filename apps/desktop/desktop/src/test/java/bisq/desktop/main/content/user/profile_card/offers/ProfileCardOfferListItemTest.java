@@ -24,6 +24,7 @@ import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -90,7 +91,8 @@ class ProfileCardOfferListItemTest extends TestFxHeadlessSupport {
         ProfileCardOfferListItem item = new ProfileCardOfferListItem(message, senderUserProfile, reputationService, marketPriceService);
 
         assertThat(item.getPriceSpecAsPercent()).isEmpty();
-        assertThat(item.getFormattedPercentagePrice().get()).isNull();
+        assertThat(item.getFormattedPercentagePrice().get()).isEqualTo(Res.get("data.na"));
+        assertThat(item.getPriceTooltipText().get()).contains("50000");
         item.dispose();
     }
 
