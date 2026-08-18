@@ -22,6 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -40,7 +41,10 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
     private final Map<String, Set<String>> sellOffersWithInsufficientReputationByMakersProfileId = new ConcurrentHashMap<>();
-    private Pin userProfileIdWithScoreChangePin;
+    // Guards a computation which started before an invalidation from re-inserting a stale result.
+    private final Object cacheInvalidationLock = new Object();
+    private long cacheInvalidationCount;
+    private Pin scoreByUserProfileIdPin, marketPriceByCurrencyMapPin;
 
     public BisqEasySellersReputationBasedTradeAmountService(UserProfileService userProfileService,
                                                             ReputationService reputationService,
@@ -58,15 +62,30 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        userProfileIdWithScoreChangePin = reputationService.getUserProfileIdWithScoreChange().addObserver(this::userProfileIdWithScoreChanged);
+        // The score map notifies on every put, unlike the equality-gated score change observable
+        // which stays silent when the same profile changes twice in a row.
+        scoreByUserProfileIdPin = reputationService.getScoreByUserProfileId().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(String userProfileId, Long score) {
+                userProfileScoreChanged(userProfileId);
+            }
+        });
+        // The required reputation score derives from the offer amount in USD, so cached results
+        // become stale whenever market prices change.
+        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap()
+                .addObserver(this::marketPricesChanged);
 
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        if (userProfileIdWithScoreChangePin != null) {
-            userProfileIdWithScoreChangePin.unbind();
-            userProfileIdWithScoreChangePin = null;
+        if (scoreByUserProfileIdPin != null) {
+            scoreByUserProfileIdPin.unbind();
+            scoreByUserProfileIdPin = null;
+        }
+        if (marketPriceByCurrencyMapPin != null) {
+            marketPriceByCurrencyMapPin.unbind();
+            marketPriceByCurrencyMapPin = null;
         }
         return CompletableFuture.completedFuture(true);
     }
@@ -96,6 +115,10 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
 
         String offerId = bisqEasyOffer.getId();
         String makersUserProfileId = bisqEasyOffer.getMakersUserProfileId();
+        long cacheInvalidationCountAtStart;
+        synchronized (cacheInvalidationLock) {
+            cacheInvalidationCountAtStart = cacheInvalidationCount;
+        }
         if (useCache) {
             // The computeIfPresent method invocation is performed atomically.
             Set<String> sellOffersWithInsufficientReputation = sellOffersWithInsufficientReputationByMakersProfileId
@@ -107,9 +130,18 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
             }
         }
 
-        Optional<Long> requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+        Optional<Long> requiredReputationScoreForMaxOrFixedAmount;
+        Optional<Long> requiredReputationScoreForMinAmount;
+        try {
+            requiredReputationScoreForMaxOrFixedAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+            requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMinAmount(marketPriceService, bisqEasyOffer);
+        } catch (ArithmeticException e) {
+            // The offer amount converts to the offer's fiat currency but overflows in USD, so the
+            // required score cannot be determined at current prices.
+            log.debug("Required reputation score for offer {} cannot be calculated at current prices", offerId);
+            return false;
+        }
         if (requiredReputationScoreForMaxOrFixedAmount.isPresent()) {
-            Optional<Long> requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreForMinAmount(marketPriceService, bisqEasyOffer);
             long requiredReputationScoreForMaxOrFixed = requiredReputationScoreForMaxOrFixedAmount.get();
             long requiredReputationScoreForMinOrFixed = requiredReputationScoreForMinAmount.orElse(requiredReputationScoreForMaxOrFixed);
             long sellersScore = userProfileService.findUserProfile(makersUserProfileId)
@@ -119,15 +151,19 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
             boolean hasInsufficientReputation = BisqEasyTradeAmountLimits.withTolerance(sellersScore) < requiredReputationScoreForMinOrFixed;
             if (hasInsufficientReputation) {
                 if (useCache) {
-                    // The compute method invocation is performed atomically.
-                    sellOffersWithInsufficientReputationByMakersProfileId
-                            .compute(makersUserProfileId, (k, set) -> {
-                                if (set == null) {
-                                    set = ConcurrentHashMap.newKeySet();
-                                }
-                                set.add(offerId);
-                                return set;
-                            });
+                    synchronized (cacheInvalidationLock) {
+                        if (cacheInvalidationCountAtStart == cacheInvalidationCount) {
+                            // The compute method invocation is performed atomically.
+                            sellOffersWithInsufficientReputationByMakersProfileId
+                                    .compute(makersUserProfileId, (k, set) -> {
+                                        if (set == null) {
+                                            set = ConcurrentHashMap.newKeySet();
+                                        }
+                                        set.add(offerId);
+                                        return set;
+                                    });
+                        }
+                    }
                 }
                 return false;
             }
@@ -136,10 +172,18 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
         return true;
     }
 
-    private void userProfileIdWithScoreChanged(String userProfileId) {
-        if (userProfileId != null) {
-            // We remove the cached data if we get any change of the users reputation score
+    private void userProfileScoreChanged(String userProfileId) {
+        // We remove the cached data if we get any change of the users reputation score
+        synchronized (cacheInvalidationLock) {
+            cacheInvalidationCount++;
             sellOffersWithInsufficientReputationByMakersProfileId.remove(userProfileId);
+        }
+    }
+
+    private void marketPricesChanged() {
+        synchronized (cacheInvalidationLock) {
+            cacheInvalidationCount++;
+            sellOffersWithInsufficientReputationByMakersProfileId.clear();
         }
     }
 }

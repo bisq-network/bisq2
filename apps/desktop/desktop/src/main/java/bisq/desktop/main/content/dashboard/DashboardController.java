@@ -55,7 +55,7 @@ public class DashboardController implements Controller {
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private final AlertNotificationsService alertNotificationsService;
     private final MuSigService muSigService;
-    private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin, isNotificationVisiblePin, unconsumedAlertsPin;
+    private Pin selectedMarketPin, marketPricePin, offerValidityRevisionPin, getNumUserProfilesPin, isNotificationVisiblePin, unconsumedAlertsPin;
     private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
     private Pin muSigActivatedPin;
@@ -92,6 +92,8 @@ public class DashboardController implements Controller {
         channelsPins.addAll(bisqEasyOfferbookChannelService.getChannels().stream()
                 .map(channel -> channel.getChatMessages().addObserver(this::updateOffersOnline))
                 .collect(Collectors.toSet()));
+        offerValidityRevisionPin = bisqEasyOfferbookMessageService.getOfferValidityRevision()
+                .addObserver(revision -> updateOffersOnline());
 
         // We trigger a call of updateOffersOnline for each channel when registering our observer. But we only want one call, 
         // so we block execution of the code inside updateOffersOnline to only call it once.
@@ -107,11 +109,13 @@ public class DashboardController implements Controller {
         muSigActivatedPin.unbind();
         selectedMarketPin.unbind();
         marketPricePin.unbind();
+        offerValidityRevisionPin.unbind();
         getNumUserProfilesPin.unbind();
         isNotificationVisiblePin.unbind();
         unconsumedAlertsPin.unbind();
         channelsPins.forEach(Pin::unbind);
         channelsPins.clear();
+        allowUpdateOffersOnline = false;
     }
 
     public void onBuildReputation() {
