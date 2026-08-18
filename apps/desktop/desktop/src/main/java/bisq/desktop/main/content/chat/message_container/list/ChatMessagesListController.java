@@ -83,6 +83,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.scene.Scene;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +93,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -129,10 +131,11 @@ public class ChatMessagesListController implements Controller {
     private final DontShowAgainService dontShowAgainService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin,
-            ignoredUserProfileIdsPin, marketPriceByCurrencyMapPin;
+            ignoredUserProfileIdsPin, offerValidityRevisionPin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
     private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
+    private int channelBindingGeneration;
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
                                       Consumer<UserProfile> mentionUserHandler,
@@ -165,6 +168,11 @@ public class ChatMessagesListController implements Controller {
         view = new ChatMessagesListView(model, this);
     }
 
+    @VisibleForTesting
+    ChatMessagesListModel getModel() {
+        return model;
+    }
+
     @Override
     public void onActivate() {
         model.getSortedChatMessages().setComparator(ChatMessageListItem::compareTo);
@@ -175,8 +183,8 @@ public class ChatMessagesListController implements Controller {
         ignoredUserProfileIdsPin = userProfileService.getIgnoredUserProfileIds()
                 .addObserver(() -> UIThread.run(this::updatePredicate));
 
-        marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
-                UIThread.run(this::reprocessSelectedOfferbookMessages));
+        offerValidityRevisionPin = bisqEasyOfferbookMessageService.getOfferValidityRevision().addObserver(revision ->
+                UIThread.run(this::reconcileSelectedOfferbookMessages));
 
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
@@ -213,9 +221,9 @@ public class ChatMessagesListController implements Controller {
             ignoredUserProfileIdsPin.unbind();
             ignoredUserProfileIdsPin = null;
         }
-        if (marketPriceByCurrencyMapPin != null) {
-            marketPriceByCurrencyMapPin.unbind();
-            marketPriceByCurrencyMapPin = null;
+        if (offerValidityRevisionPin != null) {
+            offerValidityRevisionPin.unbind();
+            offerValidityRevisionPin = null;
         }
         if (selectedChannelPin != null) {
             selectedChannelPin.unbind();
@@ -714,21 +722,14 @@ public class ChatMessagesListController implements Controller {
     private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
         // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
         // but as we have a contains() check there it will not have any effect.
+        int bindingGeneration = ++channelBindingGeneration;
 
         Set<ChatMessageListItem<M, C>> items = channel.getChatMessages().stream()
                 .filter(chatMessage -> chatMessage.getChatMessageType() != TAKE_BISQ_EASY_OFFER)
                 .filter(chatMessage -> !(chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) ||
                         bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage))
-                .map(chatMessage -> new ChatMessageListItem<>(chatMessage,
-                        channel,
-                        marketPriceService,
-                        userProfileService,
-                        reputationService,
-                        bisqEasyTradeService,
-                        userIdentityService,
-                        networkService,
-                        resendMessageService,
-                        authorizedBondedRolesService))
+                .map(chatMessage -> tryCreateChatMessageListItem(chatMessage, channel))
+                .flatMap(Optional::stream)
                 .collect(Collectors.toCollection(LinkedHashSet::new)); // preserve insertion order
         model.getChatMessages().addAll(items);
         model.getChatMessageIds().clear();
@@ -751,7 +752,7 @@ public class ChatMessagesListController implements Controller {
             @Override
             public void onAdded(M chatMessage) {
                 UIThread.run(() -> {
-                    if (!maybeAddChatMessage(chatMessage, channel)) {
+                    if (!isSelected(channel, bindingGeneration) || !maybeAddChatMessage(chatMessage, channel)) {
                         return;
                     }
 
@@ -764,7 +765,7 @@ public class ChatMessagesListController implements Controller {
             @Override
             public void onRemoved(Object element) {
                 UIThread.run(() -> {
-                    if (element instanceof ChatMessage chatMessage) {
+                    if (isSelected(channel, bindingGeneration) && element instanceof ChatMessage chatMessage) {
                         Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
                                 model.getChatMessages().stream()
                                         .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
@@ -782,6 +783,9 @@ public class ChatMessagesListController implements Controller {
             @Override
             public void onCleared() {
                 UIThread.run(() -> {
+                    if (!isSelected(channel, bindingGeneration)) {
+                        return;
+                    }
                     model.getChatMessages().forEach(ChatMessageListItem::dispose);
                     model.getChatMessages().clear();
                     model.getChatMessageIds().clear();
@@ -791,10 +795,29 @@ public class ChatMessagesListController implements Controller {
         });
     }
 
-    private void reprocessSelectedOfferbookMessages() {
-        if (!(model.getSelectedChannel().get() instanceof BisqEasyOfferbookChannel channel)) {
+    private boolean isSelected(ChatChannel<?> channel, int bindingGeneration) {
+        return selectedChannelPin != null &&
+                bindingGeneration == channelBindingGeneration &&
+                model.getSelectedChannel().get() == channel;
+    }
+
+    private void reconcileSelectedOfferbookMessages() {
+        if (offerValidityRevisionPin == null ||
+                !(model.getSelectedChannel().get() instanceof BisqEasyOfferbookChannel channel) ||
+                !isSelected(channel, channelBindingGeneration)) {
             return;
         }
+
+        List<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> invalidItems =
+                model.getChatMessages().stream()
+                        .filter(item -> item.getChatMessage() instanceof BisqEasyOfferbookMessage offerbookMessage &&
+                                !bisqEasyOfferbookMessageService.isValid(offerbookMessage))
+                        .toList();
+        invalidItems.forEach(item -> {
+            item.dispose();
+            model.getChatMessages().remove(item);
+            model.getChatMessageIds().remove(item.getChatMessage().getId());
+        });
 
         boolean wasMessageAdded = false;
         for (BisqEasyOfferbookMessage message : channel.getChatMessages()) {
@@ -803,6 +826,8 @@ public class ChatMessagesListController implements Controller {
         if (wasMessageAdded) {
             maybeScrollDownOnNewItemAdded();
             maybeAddExpiredMessagesIndicator();
+        }
+        if (wasMessageAdded || !invalidItems.isEmpty()) {
             updateHasBisqEasyOfferMessages();
         }
     }
@@ -815,19 +840,31 @@ public class ChatMessagesListController implements Controller {
             return false;
         }
 
-        ChatMessageListItem<M, C> item = new ChatMessageListItem<>(chatMessage,
-                channel,
-                marketPriceService,
-                userProfileService,
-                reputationService,
-                bisqEasyTradeService,
-                userIdentityService,
-                networkService,
-                resendMessageService,
-                authorizedBondedRolesService);
-        model.getChatMessages().add(item);
-        model.getChatMessageIds().add(chatMessage.getId());
-        return true;
+        Optional<ChatMessageListItem<M, C>> item = tryCreateChatMessageListItem(chatMessage, channel);
+        item.ifPresent(listItem -> {
+            model.getChatMessages().add(listItem);
+            model.getChatMessageIds().add(chatMessage.getId());
+        });
+        return item.isPresent();
+    }
+
+    private <M extends ChatMessage, C extends ChatChannel<M>> Optional<ChatMessageListItem<M, C>> tryCreateChatMessageListItem(M chatMessage,
+                                                                                                                                C channel) {
+        try {
+            return Optional.of(new ChatMessageListItem<>(chatMessage,
+                    channel,
+                    marketPriceService,
+                    userProfileService,
+                    reputationService,
+                    bisqEasyTradeService,
+                    userIdentityService,
+                    networkService,
+                    resendMessageService,
+                    authorizedBondedRolesService));
+        } catch (RuntimeException e) {
+            log.warn("Could not create the list item for chat message {}", chatMessage.getId(), e);
+            return Optional.empty();
+        }
     }
 
     private void publishChatMessageReaction(ChatMessage chatMessage, Reaction reaction, UserIdentity userIdentity) {
