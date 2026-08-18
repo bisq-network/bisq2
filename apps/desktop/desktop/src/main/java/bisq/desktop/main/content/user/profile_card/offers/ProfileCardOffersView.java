@@ -40,7 +40,7 @@ import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
-import java.util.OptionalDouble;
+import java.util.Optional;
 
 @Slf4j
 public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, ProfileCardOffersController> {
@@ -142,8 +142,8 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
     @VisibleForTesting
     static Comparator<ProfileCardOfferListItem> priceComparator(TableColumn<?, ?> column) {
         return (o1, o2) -> {
-            OptionalDouble p1 = o1.getPriceSpecAsPercent();
-            OptionalDouble p2 = o2.getPriceSpecAsPercent();
+            Optional<Double> p1 = o1.getPriceSpecAsPercent();
+            Optional<Double> p2 = o2.getPriceSpecAsPercent();
             if (p1.isEmpty() || p2.isEmpty()) {
                 if (p1.isEmpty() == p2.isEmpty()) {
                     return 0;
@@ -151,7 +151,7 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 int emptyLast = p1.isEmpty() ? 1 : -1;
                 return isDescending(column) ? -emptyLast : emptyLast;
             }
-            return Double.compare(p1.getAsDouble(), p2.getAsDouble());
+            return Double.compare(p1.get(), p2.get());
         };
     }
 

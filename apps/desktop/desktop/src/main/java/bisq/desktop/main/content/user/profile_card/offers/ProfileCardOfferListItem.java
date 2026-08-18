@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.OptionalDouble;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -78,7 +78,7 @@ public class ProfileCardOfferListItem {
     // Empty while the offer has no resolvable percentage (a fixed-price offer without a
     // market price yet); comparators place these after known values instead of treating
     // them as an exactly-at-market 0%.
-    private OptionalDouble priceSpecAsPercent = OptionalDouble.empty();
+    private Optional<Double> priceSpecAsPercent = Optional.empty();
 
     public ProfileCardOfferListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                                     UserProfile senderUserProfile,
@@ -130,7 +130,7 @@ public class ProfileCardOfferListItem {
         // price arrives; the table cells bind to them so visible rows follow.
         PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer)
                 .ifPresent(percent -> {
-                    priceSpecAsPercent = OptionalDouble.of(percent);
+                    priceSpecAsPercent = Optional.of(percent);
                     formattedPercentagePrice.set(PercentageFormatter.formatToPercentWithSignAndSymbol(percent));
                     priceTooltipText.set(PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer));
                 });

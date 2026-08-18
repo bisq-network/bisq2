@@ -59,7 +59,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.Optional;
-import java.util.OptionalDouble;
 
 @Slf4j
 public class OfferbookListView extends bisq.desktop.common.view.View<VBox, OfferbookListModel, OfferbookListController> {
@@ -411,8 +410,8 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 .setCellFactory(getPriceCellFactory())
                 .build();
         priceColumn.setComparator((o1, o2) -> {
-            OptionalDouble p1 = o1.getPriceSpecAsPercent();
-            OptionalDouble p2 = o2.getPriceSpecAsPercent();
+            Optional<Double> p1 = o1.getPriceSpecAsPercent();
+            Optional<Double> p2 = o2.getPriceSpecAsPercent();
             if (p1.isEmpty() || p2.isEmpty()) {
                 // An offer without a resolvable percentage sorts after known ones, in
                 // both sort directions. JavaFX reverses the comparator's result for a
@@ -425,9 +424,9 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 return isDescending(priceColumn) ? -emptyLast : emptyLast;
             }
             if (o1.getBisqEasyOffer().getDirection().isSell()) {
-                return Double.compare(p1.getAsDouble(), p2.getAsDouble());
+                return Double.compare(p1.get(), p2.get());
             } else {
-                return Double.compare(p2.getAsDouble(), p1.getAsDouble());
+                return Double.compare(p2.get(), p1.get());
             }
         });
         tableView.getColumns().add(priceColumn);
