@@ -28,6 +28,7 @@ import bisq.oracle_node.bisq1_bridge.grpc.messages.BsqBlocksRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BsqBlocksResponse;
 import bisq.user.reputation.data.AuthorizedBondedReputationData;
 import bisq.user.reputation.data.AuthorizedProofOfBurnData;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,8 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntConsumer;
@@ -47,13 +50,18 @@ import java.util.function.IntConsumer;
  */
 @Slf4j
 public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockDto> {
+    private static final int NO_HISTORICAL_REQUEST = -1;
+
     @Getter
     private final BlockingQueue<AuthorizedProofOfBurnData> authorizedProofOfBurnDataQueue = new LinkedBlockingQueue<>(10000);
     @Getter
     private final BlockingQueue<AuthorizedBondedReputationData> authorizedBondedReputationDataQueue = new LinkedBlockingQueue<>(10000);
     private final IntConsumer liveBlockHandler;
-    private final Set<String> processedTransactionIds = ConcurrentHashMap.newKeySet();
+    private final Object continuityLock = new Object();
+    private final ConcurrentNavigableMap<Integer, Set<String>> processedTransactionIdsByHeight =
+            new ConcurrentSkipListMap<>();
     private final AtomicInteger lastContiguousBlockHeight = new AtomicInteger();
+    private int activeHistoricalRequestStartHeight = NO_HISTORICAL_REQUEST;
     private volatile int latestSnapshotHeight;
 
     public BsqBlockGrpcService(boolean staticPublicKeysProvided,
@@ -68,6 +76,10 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     public CompletableFuture<Boolean> shutdown() {
         authorizedProofOfBurnDataQueue.clear();
         authorizedBondedReputationDataQueue.clear();
+        synchronized (continuityLock) {
+            processedTransactionIdsByHeight.clear();
+            activeHistoricalRequestStartHeight = NO_HISTORICAL_REQUEST;
+        }
         return super.shutdown();
     }
 
@@ -87,7 +99,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         log.info("Received BsqBlockDto at height {}", data.getHeight());
         data.getTxDtoList()
                 .stream()
-                .filter(txDto -> processedTransactionIds.add(txDto.getTxId()))
+                .filter(txDto -> markTransactionProcessed(data.getHeight(), txDto.getTxId()))
                 .forEach(txDto -> {
                     txDto.getProofOfBurnDto()
                             .map(proofOfBurnDto -> toAuthorizedProofOfBurnData(data, txDto, proofOfBurnDto))
@@ -104,10 +116,33 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     }
 
     @Override
+    protected int prepareHistoricalRequest() {
+        synchronized (continuityLock) {
+            int startBlockHeight = getStartBlockHeight();
+            activeHistoricalRequestStartHeight = startBlockHeight;
+            return startBlockHeight;
+        }
+    }
+
+    @Override
     protected void onHistoricalRequestComplete() {
         if (latestSnapshotHeight > 0) {
-            lastContiguousBlockHeight.accumulateAndGet(latestSnapshotHeight, Math::max);
+            synchronized (continuityLock) {
+                lastContiguousBlockHeight.accumulateAndGet(latestSnapshotHeight, Math::max);
+                pruneProcessedTransactions();
+            }
             liveBlockHandler.accept(latestSnapshotHeight);
+        }
+    }
+
+    @Override
+    protected void onHistoricalRequestFinished(boolean successful) {
+        synchronized (continuityLock) {
+            if (!successful && activeHistoricalRequestStartHeight != NO_HISTORICAL_REQUEST) {
+                processedTransactionIdsByHeight.tailMap(activeHistoricalRequestStartHeight, true).clear();
+            }
+            activeHistoricalRequestStartHeight = NO_HISTORICAL_REQUEST;
+            pruneProcessedTransactions();
         }
     }
 
@@ -147,13 +182,8 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     }
 
     void handleLiveResponse(BsqBlockDto block) {
-        handleResponse(block);
-        liveBlockHandler.accept(block.getHeight());
-        advanceOrRecoverContiguousHeight(block.getHeight());
-    }
-
-    private void advanceOrRecoverContiguousHeight(int blockHeight) {
-        while (true) {
+        synchronized (continuityLock) {
+            int blockHeight = block.getHeight();
             int lastHeight = lastContiguousBlockHeight.get();
             if (blockHeight <= lastHeight) {
                 return;
@@ -162,10 +192,30 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
                 requestAsync();
                 return;
             }
-            if (lastContiguousBlockHeight.compareAndSet(lastHeight, blockHeight)) {
-                return;
-            }
+            handleResponse(block);
+            lastContiguousBlockHeight.set(blockHeight);
+            pruneProcessedTransactions();
         }
+        liveBlockHandler.accept(block.getHeight());
+    }
+
+    private boolean markTransactionProcessed(int blockHeight, String transactionId) {
+        return processedTransactionIdsByHeight
+                .computeIfAbsent(blockHeight, ignored -> ConcurrentHashMap.newKeySet())
+                .add(transactionId);
+    }
+
+    private void pruneProcessedTransactions() {
+        int pruneThroughHeight = lastContiguousBlockHeight.get();
+        if (activeHistoricalRequestStartHeight != NO_HISTORICAL_REQUEST) {
+            pruneThroughHeight = Math.min(pruneThroughHeight, activeHistoricalRequestStartHeight - 1);
+        }
+        processedTransactionIdsByHeight.headMap(pruneThroughHeight, true).clear();
+    }
+
+    @VisibleForTesting
+    int getProcessedTransactionCount() {
+        return processedTransactionIdsByHeight.values().stream().mapToInt(Set::size).sum();
     }
 
     private AuthorizedProofOfBurnData toAuthorizedProofOfBurnData(BsqBlockDto blockDto,

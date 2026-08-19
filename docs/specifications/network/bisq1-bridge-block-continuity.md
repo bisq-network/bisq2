@@ -23,8 +23,11 @@ must be harmless.
 - The catch-up cursor advances to a successfully completed snapshot height.
 - A live block advances the cursor only when its height is exactly the next contiguous height.
 - A live height above the expected next height triggers catch-up from the cursor rather than skipping
-  the missing interval.
-- Snapshot/live overlap is deduplicated by transaction id before authorized data is queued.
+  the missing interval. Its transactions and block-completion callback are deferred until catch-up.
+- A live block at or below the completed cursor is ignored, including for block-completion callbacks.
+- Snapshot/live overlap is deduplicated by block height and transaction id before authorized data is
+  queued. Deduplication entries are retained only while they can overlap an active historical request
+  and are pruned when the completed cursor makes them unreachable by future recovery.
 - Completing a recovered snapshot triggers bonded-role revalidation even if the sparse response
   contains no exported transactions.
 
