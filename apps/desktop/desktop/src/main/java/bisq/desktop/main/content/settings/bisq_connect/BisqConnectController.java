@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.settings.bisq_connect;
 
 import bisq.api.ApiService;
+import bisq.api.access.ApiAccessService;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
@@ -53,6 +54,7 @@ public class BisqConnectController implements Controller {
     private final Optional<WebSocketService> optionalWebSocketService;
     private final PairingService pairingService;
     private final SessionService sessionService;
+    private final ApiAccessService apiAccessService;
     private final Set<Pin> pins = new HashSet<>();
     private final DontShowAgainService dontShowAgainService;
     private final ApiService apiService;
@@ -64,6 +66,7 @@ public class BisqConnectController implements Controller {
         optionalWebSocketService = apiService.getWebSocketService();
         pairingService = apiService.getPairingService();
         sessionService = apiService.getSessionService();
+        apiAccessService = apiService.getApiAccessService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
 
         ApiConfigController apiConfigController = new ApiConfigController(serviceProvider);
@@ -127,16 +130,10 @@ public class BisqConnectController implements Controller {
                 .actionButtonText(Res.get("settings.bisqConnect.clients.revoke"))
                 .onAction(() -> {
                     item.getClientId().ifPresent(clientId -> {
-                        boolean profileRemoved = pairingService.revokeClientProfile(clientId);
-                        // Always clean up session and WebSocket regardless of profile removal result.
-                        // The profile may have been already removed but the session/connection is still active.
-                        sessionService.removeSessionByClientId(clientId);
-                        optionalWebSocketService.ifPresent(ws -> ws.disconnectClient(clientId));
-                        if (profileRemoved) {
-                            log.info("Revoked client {} ({})", item.getClientName(), clientId);
-                        } else {
-                            log.warn("Client profile not found for {}, but session/connection cleaned up", clientId);
-                        }
+                        // Session and connection cleanup is part of revokeClient, so the same
+                        // revocation semantics apply here and on the REST endpoint.
+                        apiAccessService.revokeClient(clientId);
+                        log.info("Revoked client {} ({})", item.getClientName(), clientId);
                     });
                 })
                 .secondaryActionButtonText(Res.get("settings.bisqConnect.clients.expireSession"))
