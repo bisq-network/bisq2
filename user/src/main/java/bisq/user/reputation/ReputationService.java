@@ -65,18 +65,21 @@ public class ReputationService implements Service {
                 userProfileService,
                 bannedUserService,
                 authorizedBondedRolesService);
+        WitnessReputationClaimRegistry witnessClaimRegistry = new WitnessReputationClaimRegistry();
         accountAgeService = new AccountAgeService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 bannedUserService,
-                authorizedBondedRolesService);
+                authorizedBondedRolesService,
+                witnessClaimRegistry);
         signedWitnessService = new SignedWitnessService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 bannedUserService,
-                authorizedBondedRolesService);
+                authorizedBondedRolesService,
+                witnessClaimRegistry);
         profileAgeService = new ProfileAgeService(persistenceService,
                 networkService,
                 userIdentityService,

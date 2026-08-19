@@ -34,6 +34,7 @@ import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
+import bisq.user.reputation.WitnessReputationProtocol;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.data.AuthorizedBondedReputationData;
 import bisq.user.reputation.data.AuthorizedProofOfBurnData;
@@ -396,12 +397,18 @@ public class ReputationRankingView extends View<VBox, ReputationRankingModel, Re
 
             applyReputationSourceValue(ReputationSource.BISQ1_ACCOUNT_AGE,
                     Optional.ofNullable(reputationService.getAccountAgeService().getDataSetByHash().get(userProfile.getAccountAgeKey()))
-                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedAccountAgeData::getDate).sum())
+                            .map(dataSet -> dataSet.stream()
+                                    .mapToLong(data -> Math.min(System.currentTimeMillis(),
+                                            WitnessReputationProtocol.getLatestPossibleDate(data.getDateBucket())))
+                                    .sum())
                             .orElse(0L));
 
             applyReputationSourceValue(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
                     Optional.ofNullable(reputationService.getSignedWitnessService().getDataSetByHash().get(userProfile.getSignedWitnessKey()))
-                            .map(dataSet -> dataSet.stream().mapToLong(AuthorizedSignedWitnessData::getWitnessSignDate).sum())
+                            .map(dataSet -> dataSet.stream()
+                                    .mapToLong(data -> Math.min(System.currentTimeMillis(),
+                                            WitnessReputationProtocol.getLatestPossibleDate(data.getDateBucket())))
+                                    .sum())
                             .orElse(0L));
 
             applyReputationSourceValue(ReputationSource.PROFILE_AGE,
