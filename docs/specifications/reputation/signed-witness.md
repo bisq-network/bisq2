@@ -33,7 +33,7 @@ version `2`.
 
 The request is confidential. The oracle must bind the target profile to the authenticated sender,
 reject legacy and unsupported versions, obtain the nullifier and date bucket from the bridge,
-persist the complete request before publication, and fail closed on every proof, bridge or
+persist the complete request before publication, and fail closed on every proof, bridge, timeout or
 persistence error.
 
 ## Authorized data and conflicts

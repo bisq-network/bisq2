@@ -37,7 +37,9 @@ This transport binding proves control of the target Bisq 2 profile. It is indepe
 required in addition to, the Bisq 1 witness ownership proof.
 
 Any unsupported or legacy request is rejected before publication. A bridge error, missing witness,
-invalid proof, sender mismatch or persistence failure must fail closed for new issuance.
+invalid proof, sender mismatch, request timeout or persistence failure must fail closed for new
+issuance. Interactive bridge calls have a bounded deadline so an unavailable local bridge cannot
+consume every oracle request worker indefinitely.
 
 ## Authorized data
 

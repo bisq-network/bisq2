@@ -51,7 +51,8 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
     @Override
     protected List<BurningmanBlockDto> doRequest(int startBlockHeight) {
         var protoRequest = new BurningmanBlocksRequest(startBlockHeight).completeProto();
-        var protoResponse = grpcClient.getBurningmanBlockingStub().requestBurningmanBlocks(protoRequest);
+        var protoResponse = GrpcClient.withBulkRequestDeadline(grpcClient.getBurningmanBlockingStub())
+                .requestBurningmanBlocks(protoRequest);
         BurningmanBlocksResponse response = BurningmanBlocksResponse.fromProto(protoResponse);
         return response.getBlocks();
     }

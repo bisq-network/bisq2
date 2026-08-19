@@ -36,7 +36,8 @@ public class AccountAgeWitnessGrpcService implements Service {
         log.info("verifyAndRequestAuthorization {}", request);
         try {
             var protoRequest = new AccountAgeWitnessOwnershipRequest(request).completeProto();
-            var protoResponse = grpcClient.getAccountAgeWitnessBlockingStub()
+            var protoResponse = GrpcClient.withInteractiveRequestDeadline(
+                            grpcClient.getAccountAgeWitnessBlockingStub())
                     .verifyAccountAgeWitnessOwnership(protoRequest);
             return AccountAgeWitnessOwnershipResponse.fromProto(protoResponse);
         } catch (Exception e) {
