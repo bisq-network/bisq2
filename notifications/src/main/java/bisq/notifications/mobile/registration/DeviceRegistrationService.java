@@ -76,12 +76,6 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         log.info("Device registration: platform={}, deviceIdLength={}, descriptorLength={}, hasSymmetricKey={}",
                 platform, deviceId.length(), deviceDescriptor.length(), symmetricKeyBase64.isPresent());
 
-        MobileDeviceProfile existing = persistableStore.getDeviceByDeviceId().get(deviceId);
-        if (existing != null && existing.getClientId().filter(owner -> !owner.equals(clientId)).isPresent()) {
-            log.warn("Client {} tried to register a device ID owned by another client", clientId);
-            return false;
-        }
-
         MobileDeviceProfile mobileDeviceProfile = new MobileDeviceProfile(deviceId,
                 deviceToken,
                 publicKeyBase64,
@@ -89,11 +83,22 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
                 platform,
                 symmetricKeyBase64,
                 Optional.of(clientId));
-        persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
-        if (!mobileDeviceProfile.equals(existing)) {
-            persist();
+        // The owner check and the write have to be one step: otherwise two clients registering
+        // the same new device ID both pass the check and the later write silently takes the
+        // device, which is the takeover the check exists to prevent.
+        synchronized (persistableStore) {
+            MobileDeviceProfile existing = persistableStore.getDeviceByDeviceId().get(deviceId);
+            if (existing != null && existing.getClientId().filter(owner -> !owner.equals(clientId)).isPresent()) {
+                log.warn("Client {} tried to register a device ID owned by another client", clientId);
+                return false;
+            }
+
+            persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
+            if (!mobileDeviceProfile.equals(existing)) {
+                persist();
+            }
+            return true;
         }
-        return true;
     }
 
     /**
@@ -113,19 +118,21 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
 
-        MobileDeviceProfile profile = persistableStore.getDeviceByDeviceId().get(deviceId);
-        if (profile == null) {
-            return false;
-        }
-        Optional<String> owner = profile.getClientId();
-        if (owner.isPresent() && !owner.get().equals(clientId)) {
-            log.warn("Client {} tried to unregister a device owned by another client", clientId);
-            return false;
-        }
+        synchronized (persistableStore) {
+            MobileDeviceProfile profile = persistableStore.getDeviceByDeviceId().get(deviceId);
+            if (profile == null) {
+                return false;
+            }
+            Optional<String> owner = profile.getClientId();
+            if (owner.isPresent() && !owner.get().equals(clientId)) {
+                log.warn("Client {} tried to unregister a device owned by another client", clientId);
+                return false;
+            }
 
-        persistableStore.getDeviceByDeviceId().remove(deviceId);
-        persist();
-        return true;
+            persistableStore.getDeviceByDeviceId().remove(deviceId);
+            persist();
+            return true;
+        }
     }
 
     /**
@@ -141,20 +148,27 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
     public Set<String> unregisterByClientId(String clientId) {
         checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
 
-        Set<String> deviceIds = persistableStore.getDeviceByDeviceId().values().stream()
-                .filter(profile -> profile.getClientId().filter(clientId::equals).isPresent())
-                .map(MobileDeviceProfile::getDeviceId)
-                .collect(Collectors.toSet());
-        if (deviceIds.isEmpty()) {
-            return Set.of();
+        synchronized (persistableStore) {
+            Set<String> deviceIds = persistableStore.getDeviceByDeviceId().values().stream()
+                    .filter(profile -> profile.getClientId().filter(clientId::equals).isPresent())
+                    .map(MobileDeviceProfile::getDeviceId)
+                    .collect(Collectors.toSet());
+            if (deviceIds.isEmpty()) {
+                return Set.of();
+            }
+            // Selecting and removing under the same monitor, so a registration claimed by another
+            // client in between is not removed on this client's behalf.
+            deviceIds.forEach(persistableStore.getDeviceByDeviceId()::remove);
+            persist();
+            log.info("Removed {} push registration(s) of revoked client {}", deviceIds.size(), clientId);
+            return deviceIds;
         }
-        deviceIds.forEach(persistableStore.getDeviceByDeviceId()::remove);
-        persist();
-        log.info("Removed {} push registration(s) of revoked client {}", deviceIds.size(), clientId);
-        return deviceIds;
     }
 
+    /** Snapshot taken under the same monitor as the mutators, so it never straddles a write. */
     public Set<MobileDeviceProfile> getMobileDeviceProfiles() {
-        return Set.copyOf(persistableStore.getDeviceByDeviceId().values());
+        synchronized (persistableStore) {
+            return Set.copyOf(persistableStore.getDeviceByDeviceId().values());
+        }
     }
 }

@@ -21,9 +21,16 @@ import bisq.persistence.PersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -140,5 +147,34 @@ class DeviceRegistrationServiceTest {
 
         assertTrue(service.unregisterByClientId(CLIENT_ID).isEmpty());
         assertEquals(1, service.getMobileDeviceProfiles().size());
+    }
+
+    @Test
+    void concurrentRegistrationsOfANewDeviceIdProduceExactlyOneOwner() throws Exception {
+        // The owner check and the write must be one step: otherwise every racing client passes
+        // the check on an unknown device ID and the last write silently takes the device.
+        int numClients = 8;
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(numClients);
+        try {
+            List<Future<Boolean>> results = IntStream.range(0, numClients)
+                    .mapToObj(i -> executor.submit(() -> {
+                        start.await();
+                        return register("contested-device", "client-" + i);
+                    }))
+                    .toList();
+            start.countDown();
+
+            long accepted = 0;
+            for (Future<Boolean> result : results) {
+                if (result.get(10, TimeUnit.SECONDS)) {
+                    accepted++;
+                }
+            }
+            assertEquals(1, accepted);
+            assertEquals(1, service.getMobileDeviceProfiles().size());
+        } finally {
+            executor.shutdownNow();
+        }
     }
 }
