@@ -83,7 +83,7 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
 
             @Override
             public void onCompleted() {
-                log.info("BlockDtoSubscription completed");
+                handleStreamObserverCompleted();
             }
         });
     }

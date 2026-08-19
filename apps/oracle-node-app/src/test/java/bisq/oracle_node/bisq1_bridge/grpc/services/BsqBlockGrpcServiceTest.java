@@ -17,28 +17,101 @@
 
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
+import bisq.bridge.protobuf.BsqBlockSubscriptionEvent;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
+import bisq.oracle_node.bisq1_bridge.grpc.dto.ProofOfBurnDto;
+import bisq.oracle_node.bisq1_bridge.grpc.dto.TxDto;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 class BsqBlockGrpcServiceTest {
     @Test
     void anEmptyLiveBlockStillTriggersRegistrationRevalidation() {
         AtomicInteger notifiedHeight = new AtomicInteger(-1);
-        BsqBlockGrpcService service = new BsqBlockGrpcService(false,
+        BsqBlockGrpcService service = spy(new BsqBlockGrpcService(false,
                 mock(GrpcClient.class),
-                notifiedHeight::set);
+                notifiedHeight::set));
+        doNothing().when(service).requestAsync();
 
         service.handleLiveResponse(new BsqBlockDto(941001, 0, List.of()));
 
         assertThat(notifiedHeight).hasValue(941001);
         assertThat(service.getAuthorizedProofOfBurnDataQueue()).isEmpty();
         assertThat(service.getAuthorizedBondedReputationDataQueue()).isEmpty();
+    }
+
+    @Test
+    void contiguousLiveBlocksAdvanceTheCatchUpCursor() {
+        BsqBlockGrpcService service = new BsqBlockGrpcService(false,
+                mock(GrpcClient.class),
+                ignored -> {
+                });
+        int initialStartHeight = service.getStartBlockHeight();
+
+        service.handleLiveResponse(new BsqBlockDto(initialStartHeight, 0, List.of()));
+
+        assertThat(service.getStartBlockHeight()).isEqualTo(initialStartHeight + 1);
+    }
+
+    @Test
+    void liveGapRequestsCatchUpWithoutSkippingTheMissingHeight() {
+        BsqBlockGrpcService service = spy(new BsqBlockGrpcService(false,
+                mock(GrpcClient.class),
+                ignored -> {
+                }));
+        doNothing().when(service).requestAsync();
+        int initialStartHeight = service.getStartBlockHeight();
+
+        service.handleLiveResponse(new BsqBlockDto(initialStartHeight + 1, 0, List.of()));
+
+        assertThat(service.getStartBlockHeight()).isEqualTo(initialStartHeight);
+        verify(service).requestAsync();
+    }
+
+    @Test
+    void subscriptionReadyEventRequestsCatchUpWithoutAdvancingTheCursor() {
+        BsqBlockGrpcService service = spy(new BsqBlockGrpcService(false,
+                mock(GrpcClient.class),
+                ignored -> {
+                }));
+        doNothing().when(service).requestAsync();
+        int initialStartHeight = service.getStartBlockHeight();
+
+        service.handleSubscriptionEvent(BsqBlockSubscriptionEvent.newBuilder()
+                .setSubscriptionReadyHeight(initialStartHeight + 10)
+                .build());
+
+        assertThat(service.getStartBlockHeight()).isEqualTo(initialStartHeight);
+        verify(service).requestAsync();
+    }
+
+    @Test
+    void snapshotAndLiveOverlapDoesNotQueueATransactionTwice() {
+        BsqBlockGrpcService service = new BsqBlockGrpcService(false,
+                mock(GrpcClient.class),
+                ignored -> {
+                });
+        String txId = "a".repeat(64);
+        TxDto tx = new TxDto(txId,
+                Optional.of(new ProofOfBurnDto(1, new byte[20])),
+                Optional.empty());
+        BsqBlockDto block = new BsqBlockDto(service.getStartBlockHeight(),
+                System.currentTimeMillis(),
+                List.of(tx));
+
+        service.handleResponse(block);
+        service.handleLiveResponse(block);
+
+        assertThat(service.getAuthorizedProofOfBurnDataQueue()).hasSize(1);
     }
 }

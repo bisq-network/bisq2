@@ -87,9 +87,10 @@ the `staticPublicKeysProvided` transport field, which is intentionally excluded 
 
 ## DAO revalidation
 
-At startup and after every completed live DAO block, the oracle sends one batch containing all
-registrations it still considers active. The Bisq 1 bridge evaluates the batch against one DAO-state
-snapshot and returns its block height and one result in request order.
+At startup, after every completed live DAO block and after every successful historical catch-up, the
+oracle sends one batch containing all registrations it still considers active. The Bisq 1 bridge
+evaluates the batch against one DAO-state snapshot and returns its block height and one result in
+request order.
 
 - The response cardinality must equal the request cardinality. Otherwise the oracle ignores the
   malformed response and retains every registration.
@@ -100,9 +101,9 @@ snapshot and returns its block height and one result in request order.
 - A transport error, deadline expiry or unavailable bridge does not deactivate registrations. The
   next startup or live-block trigger retries an authoritative snapshot. Every unary verification has
   a bounded deadline so one stalled bridge call cannot permanently stop revalidation.
-- Live block notifications include blocks without proof-of-burn or bonded-reputation records.
-  Historical sparse block retrieval does not trigger revalidation because startup batch verification
-  already evaluates current DAO state.
+- Live block notifications include blocks without proof-of-burn or bonded-reputation records. A
+  successful historical catch-up also triggers revalidation at its completed snapshot height even
+  when the sparse response contains no exported transaction.
 
 Concurrent block triggers are coalesced, but a trigger received during an in-progress request must
 cause one more snapshot after that request completes.
