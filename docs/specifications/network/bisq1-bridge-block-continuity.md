@@ -23,7 +23,10 @@ must be harmless.
 - The catch-up cursor advances to a successfully completed snapshot height.
 - A live block advances the cursor only when its height is exactly the next contiguous height.
 - A live height above the expected next height triggers catch-up from the cursor rather than skipping
-  the missing interval. Its transactions and block-completion callback are deferred until catch-up.
+  the missing interval. It and subsequent out-of-order live blocks are buffered by height. After a
+  live block or completed snapshot advances the cursor, newly contiguous buffered blocks are processed
+  in height order, including their transactions and block-completion callbacks. Buffered blocks covered
+  by the completed snapshot are discarded as overlap.
 - A live block at or below the completed cursor is ignored, including for block-completion callbacks.
 - Snapshot/live overlap is deduplicated by block height and transaction id before authorized data is
   queued. Deduplication entries are retained only while they can overlap an active historical request

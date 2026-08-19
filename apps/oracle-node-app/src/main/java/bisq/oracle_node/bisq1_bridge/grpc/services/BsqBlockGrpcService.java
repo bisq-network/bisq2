@@ -33,8 +33,11 @@ import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,6 +61,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     private final BlockingQueue<AuthorizedBondedReputationData> authorizedBondedReputationDataQueue = new LinkedBlockingQueue<>(10000);
     private final IntConsumer liveBlockHandler;
     private final Object continuityLock = new Object();
+    private final NavigableMap<Integer, BsqBlockDto> bufferedLiveBlocks = new TreeMap<>();
     private final ConcurrentNavigableMap<Integer, Set<String>> processedTransactionIdsByHeight =
             new ConcurrentSkipListMap<>();
     private final AtomicInteger lastContiguousBlockHeight = new AtomicInteger();
@@ -77,6 +81,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         authorizedProofOfBurnDataQueue.clear();
         authorizedBondedReputationDataQueue.clear();
         synchronized (continuityLock) {
+            bufferedLiveBlocks.clear();
             processedTransactionIdsByHeight.clear();
             activeHistoricalRequestStartHeight = NO_HISTORICAL_REQUEST;
         }
@@ -127,11 +132,15 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     @Override
     protected void onHistoricalRequestComplete() {
         if (latestSnapshotHeight > 0) {
+            List<Integer> newlyContiguousLiveBlockHeights;
             synchronized (continuityLock) {
                 lastContiguousBlockHeight.accumulateAndGet(latestSnapshotHeight, Math::max);
+                bufferedLiveBlocks.headMap(lastContiguousBlockHeight.get(), true).clear();
+                newlyContiguousLiveBlockHeights = processContiguousBufferedBlocks();
                 pruneProcessedTransactions();
             }
             liveBlockHandler.accept(latestSnapshotHeight);
+            newlyContiguousLiveBlockHeights.forEach(liveBlockHandler::accept);
         }
     }
 
@@ -182,21 +191,35 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     }
 
     void handleLiveResponse(BsqBlockDto block) {
+        List<Integer> newlyContiguousLiveBlockHeights;
+        boolean catchUpRequired;
         synchronized (continuityLock) {
             int blockHeight = block.getHeight();
             int lastHeight = lastContiguousBlockHeight.get();
             if (blockHeight <= lastHeight) {
                 return;
             }
-            if (blockHeight > lastHeight + 1) {
-                requestAsync();
-                return;
-            }
-            handleResponse(block);
-            lastContiguousBlockHeight.set(blockHeight);
+
+            bufferedLiveBlocks.putIfAbsent(blockHeight, block);
+            newlyContiguousLiveBlockHeights = processContiguousBufferedBlocks();
+            catchUpRequired = !bufferedLiveBlocks.isEmpty();
             pruneProcessedTransactions();
         }
-        liveBlockHandler.accept(block.getHeight());
+        newlyContiguousLiveBlockHeights.forEach(liveBlockHandler::accept);
+        if (catchUpRequired) {
+            requestAsync();
+        }
+    }
+
+    private List<Integer> processContiguousBufferedBlocks() {
+        List<Integer> processedBlockHeights = new ArrayList<>();
+        BsqBlockDto nextBlock;
+        while ((nextBlock = bufferedLiveBlocks.remove(lastContiguousBlockHeight.get() + 1)) != null) {
+            handleResponse(nextBlock);
+            lastContiguousBlockHeight.set(nextBlock.getHeight());
+            processedBlockHeights.add(nextBlock.getHeight());
+        }
+        return processedBlockHeights;
     }
 
     private boolean markTransactionProcessed(int blockHeight, String transactionId) {

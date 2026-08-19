@@ -17,22 +17,29 @@
 
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
+import bisq.bridge.protobuf.BsqBlockGrpcServiceGrpc;
 import bisq.bridge.protobuf.BsqBlockSubscriptionEvent;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.ProofOfBurnDto;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.TxDto;
+import bisq.oracle_node.bisq1_bridge.grpc.messages.BsqBlocksResponse;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class BsqBlockGrpcServiceTest {
     @Test
@@ -64,24 +71,45 @@ class BsqBlockGrpcServiceTest {
     }
 
     @Test
-    void liveGapRequestsCatchUpWithoutSkippingTheMissingHeight() {
-        AtomicInteger notificationCount = new AtomicInteger();
+    void catchUpProcessesBufferedLiveBlocksInHeightOrder() {
+        GrpcClient grpcClient = mock(GrpcClient.class);
+        BsqBlockGrpcServiceGrpc.BsqBlockGrpcServiceBlockingStub blockingStub =
+                mock(BsqBlockGrpcServiceGrpc.BsqBlockGrpcServiceBlockingStub.class, Answers.RETURNS_SELF);
+        when(grpcClient.getBsqBlockBlockingStub()).thenReturn(blockingStub);
+        List<Integer> notifiedHeights = new ArrayList<>();
         BsqBlockGrpcService service = spy(new BsqBlockGrpcService(false,
-                mock(GrpcClient.class),
-                ignored -> notificationCount.incrementAndGet()));
+                grpcClient,
+                notifiedHeights::add));
         doNothing().when(service).requestAsync();
         int initialStartHeight = service.getStartBlockHeight();
-        TxDto tx = new TxDto("b".repeat(64),
+        TxDto laterTx = new TxDto("b".repeat(64),
                 Optional.of(new ProofOfBurnDto(1, new byte[20])),
                 Optional.empty());
+        TxDto earlierTx = new TxDto("c".repeat(64),
+                Optional.of(new ProofOfBurnDto(2, new byte[20])),
+                Optional.empty());
+        when(blockingStub.requestBsqBlocks(any()))
+                .thenReturn(new BsqBlocksResponse(List.of(), initialStartHeight).toProto(false));
+        long blockTime = System.currentTimeMillis();
 
-        service.handleLiveResponse(new BsqBlockDto(initialStartHeight + 1, 0, List.of(tx)));
+        service.handleLiveResponse(new BsqBlockDto(initialStartHeight + 2, blockTime, List.of(laterTx)));
+        service.handleLiveResponse(new BsqBlockDto(initialStartHeight + 1, blockTime, List.of(earlierTx)));
 
         assertThat(service.getStartBlockHeight()).isEqualTo(initialStartHeight);
-        assertThat(notificationCount).hasValue(0);
+        assertThat(notifiedHeights).isEmpty();
         assertThat(service.getAuthorizedProofOfBurnDataQueue()).isEmpty();
         assertThat(service.getProcessedTransactionCount()).isZero();
-        verify(service).requestAsync();
+
+        service.request();
+
+        assertThat(service.getStartBlockHeight()).isEqualTo(initialStartHeight + 3);
+        assertThat(notifiedHeights).containsExactly(initialStartHeight,
+                initialStartHeight + 1,
+                initialStartHeight + 2);
+        assertThat(service.getAuthorizedProofOfBurnDataQueue())
+                .extracting(data -> data.getTxId())
+                .containsExactly(earlierTx.getTxId(), laterTx.getTxId());
+        verify(service, times(2)).requestAsync();
     }
 
     @Test
