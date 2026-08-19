@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.bridge.protobuf.BsqBlockSubscription;
+import bisq.bridge.protobuf.BsqBlockSubscriptionEvent;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
@@ -32,9 +33,12 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntConsumer;
 
 /**
@@ -48,12 +52,16 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     @Getter
     private final BlockingQueue<AuthorizedBondedReputationData> authorizedBondedReputationDataQueue = new LinkedBlockingQueue<>(10000);
     private final IntConsumer liveBlockHandler;
+    private final Set<String> processedTransactionIds = ConcurrentHashMap.newKeySet();
+    private final AtomicInteger lastContiguousBlockHeight = new AtomicInteger();
+    private volatile int latestSnapshotHeight;
 
     public BsqBlockGrpcService(boolean staticPublicKeysProvided,
                                GrpcClient grpcClient,
                                IntConsumer liveBlockHandler) {
         super(staticPublicKeysProvided, grpcClient);
         this.liveBlockHandler = liveBlockHandler;
+        lastContiguousBlockHeight.set(super.getStartBlockHeight() - 1);
     }
 
     @Override
@@ -69,6 +77,8 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         var protoResponse = GrpcClient.withBulkRequestDeadline(grpcClient.getBsqBlockBlockingStub())
                 .requestBsqBlocks(protoRequest);
         BsqBlocksResponse response = BsqBlocksResponse.fromProto(protoResponse);
+        response.verify();
+        latestSnapshotHeight = response.getSnapshotHeight();
         return response.getBlocks();
     }
 
@@ -76,6 +86,8 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     protected void handleResponse(BsqBlockDto data) {
         log.info("Received BsqBlockDto at height {}", data.getHeight());
         data.getTxDtoList()
+                .stream()
+                .filter(txDto -> processedTransactionIds.add(txDto.getTxId()))
                 .forEach(txDto -> {
                     txDto.getProofOfBurnDto()
                             .map(proofOfBurnDto -> toAuthorizedProofOfBurnData(data, txDto, proofOfBurnDto))
@@ -87,12 +99,25 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     }
 
     @Override
+    protected int getStartBlockHeight() {
+        return Math.max(super.getStartBlockHeight(), lastContiguousBlockHeight.get() + 1);
+    }
+
+    @Override
+    protected void onHistoricalRequestComplete() {
+        if (latestSnapshotHeight > 0) {
+            lastContiguousBlockHeight.accumulateAndGet(latestSnapshotHeight, Math::max);
+            liveBlockHandler.accept(latestSnapshotHeight);
+        }
+    }
+
+    @Override
     protected void subscribe() {
         var subscription = BsqBlockSubscription.newBuilder().build();
-        grpcClient.getBsqBlockStub().subscribe(subscription, new StreamObserver<>() {
+        grpcClient.getBsqBlockStub().subscribeWithSnapshot(subscription, new StreamObserver<>() {
             @Override
-            public void onNext(bisq.bridge.protobuf.BsqBlockDto proto) {
-                handleLiveResponse(BsqBlockDto.fromProto(proto));
+            public void onNext(BsqBlockSubscriptionEvent event) {
+                handleSubscriptionEvent(event);
 
                 // reset
                 subscribeRetryInterval.set(1);
@@ -105,14 +130,42 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
 
             @Override
             public void onCompleted() {
-                log.info("BsqBlockSubscription completed");
+                handleStreamObserverCompleted();
             }
         });
+    }
+
+    void handleSubscriptionEvent(BsqBlockSubscriptionEvent event) {
+        switch (event.getPayloadCase()) {
+            case SUBSCRIPTIONREADYHEIGHT -> {
+                log.info("BSQ block subscription established at height {}", event.getSubscriptionReadyHeight());
+                requestAsync();
+            }
+            case BSQBLOCK -> handleLiveResponse(BsqBlockDto.fromProto(event.getBsqBlock()));
+            case PAYLOAD_NOT_SET -> throw new IllegalArgumentException("BSQ block subscription event has no payload");
+        }
     }
 
     void handleLiveResponse(BsqBlockDto block) {
         handleResponse(block);
         liveBlockHandler.accept(block.getHeight());
+        advanceOrRecoverContiguousHeight(block.getHeight());
+    }
+
+    private void advanceOrRecoverContiguousHeight(int blockHeight) {
+        while (true) {
+            int lastHeight = lastContiguousBlockHeight.get();
+            if (blockHeight <= lastHeight) {
+                return;
+            }
+            if (blockHeight > lastHeight + 1) {
+                requestAsync();
+                return;
+            }
+            if (lastContiguousBlockHeight.compareAndSet(lastHeight, blockHeight)) {
+                return;
+            }
+        }
     }
 
     private AuthorizedProofOfBurnData toAuthorizedProofOfBurnData(BsqBlockDto blockDto,

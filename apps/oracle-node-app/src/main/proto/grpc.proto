@@ -25,10 +25,19 @@ option java_multiple_files = true;
 service BsqBlockGrpcService {
   rpc Subscribe (BsqBlockSubscription) returns (stream BsqBlockDto);
 
+  rpc SubscribeWithSnapshot (BsqBlockSubscription) returns (stream BsqBlockSubscriptionEvent);
+
   rpc RequestBsqBlocks (BsqBlocksRequest) returns (BsqBlocksResponse);
 }
 
 message BsqBlockSubscription {
+}
+
+message BsqBlockSubscriptionEvent {
+  oneof payload {
+    sint32 subscriptionReadyHeight = 1;
+    BsqBlockDto bsqBlock = 2;
+  }
 }
 
 message BsqBlocksRequest {
@@ -37,6 +46,7 @@ message BsqBlocksRequest {
 
 message BsqBlocksResponse {
   repeated BsqBlockDto bsqBlocks = 1;
+  sint32 snapshotHeight = 2;
 }
 
 message BsqBlockDto {

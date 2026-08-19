@@ -34,20 +34,31 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 public final class BsqBlocksResponse implements NetworkProto {
     private final List<BsqBlockDto> blocks;
+    private final int snapshotHeight;
 
     public BsqBlocksResponse(List<BsqBlockDto> blocks) {
+        this(blocks, 0);
+    }
+
+    public BsqBlocksResponse(List<BsqBlockDto> blocks, int snapshotHeight) {
         this.blocks = blocks;
+        this.snapshotHeight = snapshotHeight;
     }
 
     @Override
     public void verify() {
         checkArgument(blocks.size() < 10000);
+        checkArgument(snapshotHeight >= 0);
+        if (snapshotHeight > 0) {
+            checkArgument(blocks.stream().allMatch(block -> block.getHeight() <= snapshotHeight));
+        }
     }
 
     @Override
     public bisq.bridge.protobuf.BsqBlocksResponse.Builder getBuilder(boolean serializeForHash) {
         return bisq.bridge.protobuf.BsqBlocksResponse.newBuilder()
-                .addAllBsqBlocks(blocks.stream().map(e -> e.toProto(serializeForHash)).collect(Collectors.toList()));
+                .addAllBsqBlocks(blocks.stream().map(e -> e.toProto(serializeForHash)).collect(Collectors.toList()))
+                .setSnapshotHeight(snapshotHeight);
     }
 
     @Override
@@ -56,6 +67,7 @@ public final class BsqBlocksResponse implements NetworkProto {
     }
 
     public static BsqBlocksResponse fromProto(bisq.bridge.protobuf.BsqBlocksResponse proto) {
-        return new BsqBlocksResponse(proto.getBsqBlocksList().stream().map(BsqBlockDto::fromProto).collect(Collectors.toList()));
+        return new BsqBlocksResponse(proto.getBsqBlocksList().stream().map(BsqBlockDto::fromProto).collect(Collectors.toList()),
+                proto.getSnapshotHeight());
     }
 }

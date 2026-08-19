@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
@@ -42,6 +43,9 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     protected final AtomicLong subscribeRetryInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestAttempts = new AtomicLong(0);
+    private final AtomicBoolean requestInProgress = new AtomicBoolean();
+    private final AtomicBoolean requestPending = new AtomicBoolean();
+    private final AtomicBoolean streamRecoveryScheduled = new AtomicBoolean();
     protected volatile boolean shutdownCalled;
 
     public BridgeSubscriptionGrpcService(boolean staticPublicKeysProvided, GrpcClient grpcClient) {
@@ -57,8 +61,8 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        request();
         subscribe();
+        request();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -78,14 +82,28 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         if (shutdownCalled) {
             return;
         }
+        if (!requestInProgress.compareAndSet(false, true)) {
+            requestPending.set(true);
+            return;
+        }
         try {
             doRequest(getStartBlockHeight()).forEach(this::handleResponse);
+            onHistoricalRequestComplete();
 
             retryRequestAttempts.set(0);
             retryRequestInterval.set(1);
         } catch (Exception e) {
             handleRequestException(e);
+        } finally {
+            requestInProgress.set(false);
+            if (requestPending.getAndSet(false) && !shutdownCalled) {
+                requestAsync();
+            }
         }
+    }
+
+    protected void requestAsync() {
+        CompletableFuture.runAsync(this::request, commonForkJoinPool());
     }
 
     protected int getStartBlockHeight() {
@@ -96,6 +114,9 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     protected abstract List<T> doRequest(int startBlockHeight);
 
     protected abstract void handleResponse(T data);
+
+    protected void onHistoricalRequestComplete() {
+    }
 
     protected abstract void subscribe();
 
@@ -146,14 +167,28 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     }
 
     protected void handleStreamObserverError(Throwable throwable) {
+        recoverStream(throwable);
+    }
+
+    protected void handleStreamObserverCompleted() {
+        recoverStream(new IllegalStateException("Bridge block subscription completed unexpectedly"));
+    }
+
+    private void recoverStream(Throwable throwable) {
         if (shutdownCalled) {
             return;
         }
+        if (!streamRecoveryScheduled.compareAndSet(false, true)) {
+            return;
+        }
 
-        log.error("Error at StreamObserver. We call subscribe again after {} sec. Error message: {}", subscribeRetryInterval.get(), throwable.getMessage());
+        log.error("Bridge stream ended. We resubscribe and catch up after {} sec. Error message: {}",
+                subscribeRetryInterval.get(), throwable.getMessage());
         Delay.run(() -> {
+                    streamRecoveryScheduled.set(false);
                     if (!shutdownCalled) {
                         subscribe();
+                        request();
                     }
                 })
                 .withExecutor(commonForkJoinPool())
