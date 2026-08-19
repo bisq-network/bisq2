@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.api.ApiConfig;
 import bisq.api.HttpServerBootstrapService;
 import bisq.api.access.ApiAccessService;
+import bisq.api.access.ClientRevocationService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
@@ -64,6 +65,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.annotation.Nullable;
 import java.awt.*;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -185,7 +187,12 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
             TlsContextService tlsContextService = new TlsContextService(apiConfig, config.getAppDataDirPath());
             SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-            ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
+            ClientRevocationService clientRevocationService = new ClientRevocationService(pairingService,
+                    sessionService,
+                    List.of());
+            ApiAccessService apiAccessService = new ApiAccessService(pairingService,
+                    sessionService,
+                    clientRevocationService);
             AccessApi accessApi = new AccessApi(apiAccessService);
 
             ResourceConfig resourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,

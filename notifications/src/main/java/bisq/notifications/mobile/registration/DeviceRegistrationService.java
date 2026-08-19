@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -43,13 +44,26 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
-    public void register(String deviceId,
-                         String deviceToken,
-                         String publicKeyBase64,
-                         String deviceDescriptor,
-                         MobileDevicePlatform platform,
-                         Optional<String> symmetricKeyBase64) {
+    /**
+     * Creates or updates the registration of a device on behalf of the given API client.
+     * <p>
+     * A device ID is chosen by the client, so without an owner check any client could register
+     * another client's device ID, take ownership of the entry and redirect that device's push
+     * notifications to its own token. Registrations without an owner predate the ownership link
+     * and are claimable, which is how they gain one.
+     *
+     * @return {@code true} if the registration was stored; {@code false} if the device ID is
+     * already registered to another client
+     */
+    public boolean register(String deviceId,
+                            String deviceToken,
+                            String publicKeyBase64,
+                            String deviceDescriptor,
+                            MobileDevicePlatform platform,
+                            Optional<String> symmetricKeyBase64,
+                            String clientId) {
         checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(deviceToken), "deviceToken must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(publicKeyBase64), "publicKeyBase64 must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(deviceDescriptor), "deviceDescriptor must not be null or empty");
@@ -62,27 +76,82 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         log.info("Device registration: platform={}, deviceIdLength={}, descriptorLength={}, hasSymmetricKey={}",
                 platform, deviceId.length(), deviceDescriptor.length(), symmetricKeyBase64.isPresent());
 
+        MobileDeviceProfile existing = persistableStore.getDeviceByDeviceId().get(deviceId);
+        if (existing != null && existing.getClientId().filter(owner -> !owner.equals(clientId)).isPresent()) {
+            log.warn("Client {} tried to register a device ID owned by another client", clientId);
+            return false;
+        }
+
         MobileDeviceProfile mobileDeviceProfile = new MobileDeviceProfile(deviceId,
                 deviceToken,
                 publicKeyBase64,
                 deviceDescriptor,
                 platform,
-                symmetricKeyBase64);
-        MobileDeviceProfile previous = persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
-        if (previous == null || !previous.equals(mobileDeviceProfile)) {
+                symmetricKeyBase64,
+                Optional.of(clientId));
+        persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
+        if (!mobileDeviceProfile.equals(existing)) {
             persist();
         }
+        return true;
     }
 
-    public boolean unregister(String deviceId) {
+    /**
+     * Removes a registration on behalf of the given API client. A client may only remove its own
+     * registrations, so a device ID alone is not enough to unregister someone else's device.
+     * <p>
+     * Registrations persisted before the ownership link existed have no owner and stay removable
+     * by any client; they lose that exemption as soon as the owning app registers again and claims
+     * them.
+     *
+     * @param deviceId The device to unregister
+     * @param clientId The API client requesting the removal
+     * @return {@code true} if a registration was removed; {@code false} if none was found or it is
+     * owned by another client
+     */
+    public boolean unregister(String deviceId, String clientId) {
         checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
 
-        MobileDeviceProfile previous = persistableStore.getDeviceByDeviceId().remove(deviceId);
-        boolean hadValue = previous != null;
-        if (hadValue) {
-            persist();
+        MobileDeviceProfile profile = persistableStore.getDeviceByDeviceId().get(deviceId);
+        if (profile == null) {
+            return false;
         }
-        return hadValue;
+        Optional<String> owner = profile.getClientId();
+        if (owner.isPresent() && !owner.get().equals(clientId)) {
+            log.warn("Client {} tried to unregister a device owned by another client", clientId);
+            return false;
+        }
+
+        persistableStore.getDeviceByDeviceId().remove(deviceId);
+        persist();
+        return true;
+    }
+
+    /**
+     * Removes all registrations owned by the given API client. Called when the client is revoked:
+     * a revoked client must stop receiving push notifications, not just lose API access.
+     * <p>
+     * Registrations persisted before the ownership link existed carry no client ID and are not
+     * matched here; they have to be removed by device ID.
+     *
+     * @param clientId The API client whose registrations should be removed
+     * @return The device IDs that were removed
+     */
+    public Set<String> unregisterByClientId(String clientId) {
+        checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
+
+        Set<String> deviceIds = persistableStore.getDeviceByDeviceId().values().stream()
+                .filter(profile -> profile.getClientId().filter(clientId::equals).isPresent())
+                .map(MobileDeviceProfile::getDeviceId)
+                .collect(Collectors.toSet());
+        if (deviceIds.isEmpty()) {
+            return Set.of();
+        }
+        deviceIds.forEach(persistableStore.getDeviceByDeviceId()::remove);
+        persist();
+        log.info("Removed {} push registration(s) of revoked client {}", deviceIds.size(), clientId);
+        return deviceIds;
     }
 
     public Set<MobileDeviceProfile> getMobileDeviceProfiles() {
