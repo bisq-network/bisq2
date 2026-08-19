@@ -170,14 +170,15 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         if (!(o instanceof AuthorizedAccountAgeData that)) {
             return false;
         }
-        return dateBucket == that.dateBucket &&
+        return version == that.version &&
+                dateBucket == that.dateBucket &&
                 profileId.equals(that.profileId) &&
                 java.util.Arrays.equals(witnessNullifier, that.witnessNullifier);
     }
 
     @Override
     public int hashCode() {
-        int result = java.util.Objects.hash(profileId, dateBucket);
+        int result = java.util.Objects.hash(version, profileId, dateBucket);
         return 31 * result + java.util.Arrays.hashCode(witnessNullifier);
     }
 

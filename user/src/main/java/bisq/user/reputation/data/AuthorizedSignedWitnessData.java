@@ -172,14 +172,15 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         if (!(o instanceof AuthorizedSignedWitnessData that)) {
             return false;
         }
-        return dateBucket == that.dateBucket &&
+        return version == that.version &&
+                dateBucket == that.dateBucket &&
                 profileId.equals(that.profileId) &&
                 Arrays.equals(witnessNullifier, that.witnessNullifier);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(profileId, dateBucket);
+        int result = Objects.hash(version, profileId, dateBucket);
         return 31 * result + Arrays.hashCode(witnessNullifier);
     }
 
