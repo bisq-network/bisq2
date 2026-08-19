@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.IntConsumer;
 
 /**
  * Requests BSQ blocks to extract AuthorizedProofOfBurnData and AuthorizedBondedReputationData.
@@ -46,9 +47,13 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     private final BlockingQueue<AuthorizedProofOfBurnData> authorizedProofOfBurnDataQueue = new LinkedBlockingQueue<>(10000);
     @Getter
     private final BlockingQueue<AuthorizedBondedReputationData> authorizedBondedReputationDataQueue = new LinkedBlockingQueue<>(10000);
+    private final IntConsumer liveBlockHandler;
 
-    public BsqBlockGrpcService(boolean staticPublicKeysProvided, GrpcClient grpcClient) {
+    public BsqBlockGrpcService(boolean staticPublicKeysProvided,
+                               GrpcClient grpcClient,
+                               IntConsumer liveBlockHandler) {
         super(staticPublicKeysProvided, grpcClient);
+        this.liveBlockHandler = liveBlockHandler;
     }
 
     @Override
@@ -86,7 +91,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         grpcClient.getBsqBlockStub().subscribe(subscription, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bridge.protobuf.BsqBlockDto proto) {
-                handleResponse(BsqBlockDto.fromProto(proto));
+                handleLiveResponse(BsqBlockDto.fromProto(proto));
 
                 // reset
                 subscribeRetryInterval.set(1);
@@ -102,6 +107,11 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
                 log.info("BsqBlockSubscription completed");
             }
         });
+    }
+
+    void handleLiveResponse(BsqBlockDto block) {
+        handleResponse(block);
+        liveBlockHandler.accept(block.getHeight());
     }
 
     private AuthorizedProofOfBurnData toAuthorizedProofOfBurnData(BsqBlockDto blockDto,

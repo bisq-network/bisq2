@@ -17,6 +17,7 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
+import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
@@ -51,13 +52,17 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
     private final Set<AuthorizeSignedWitnessRequest> signedWitnessRequests = new CopyOnWriteArraySet<>();
     @Getter(AccessLevel.PACKAGE)
     private final Map<ByteArray, Long> accountTimestampDateByHash = new ConcurrentHashMap<>();
+    @Getter(AccessLevel.PACKAGE)
+    private final Set<BondedRoleRegistrationRequest> bondedRoleRegistrationRequests = new CopyOnWriteArraySet<>();
 
     private Bisq1BridgeRequestStore(Set<AuthorizeAccountAgeRequest> accountAgeRequests,
                                     Set<AuthorizeSignedWitnessRequest> signedWitnessRequests,
-                                    Map<ByteArray, Long> accountTimestampDateByHash) {
+                                    Map<ByteArray, Long> accountTimestampDateByHash,
+                                    Set<BondedRoleRegistrationRequest> bondedRoleRegistrationRequests) {
         this.accountAgeRequests.addAll(accountAgeRequests);
         this.signedWitnessRequests.addAll(signedWitnessRequests);
         this.accountTimestampDateByHash.putAll(accountTimestampDateByHash);
+        this.bondedRoleRegistrationRequests.addAll(bondedRoleRegistrationRequests);
     }
 
     @Override
@@ -68,6 +73,9 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
                         .map(e -> e.toValueProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .addAllSignedWitnessRequests(signedWitnessRequests.stream()
+                        .map(e -> e.toValueProto(serializeForHash))
+                        .collect(Collectors.toList()))
+                .addAllBondedRoleRegistrationRequests(bondedRoleRegistrationRequests.stream()
                         .map(e -> e.toValueProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .putAllAccountTimestampDateByHash(accountTimestampDateByHash.entrySet().stream()
@@ -92,7 +100,17 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
                         .collect(Collectors.toMap(
                                 e -> new ByteArray(Hex.decode(e.getKey())),
                                 Map.Entry::getValue
-                        )));
+                        )),
+                proto.getBondedRoleRegistrationRequestsList().stream()
+                        .map(BondedRoleRegistrationRequest::fromProto)
+                        .filter(request -> {
+                            if (request.isCancellationRequest()) {
+                                log.warn("Ignoring cancellation request found in the persisted bonded-role registration set");
+                                return false;
+                            }
+                            return true;
+                        })
+                        .collect(Collectors.toSet()));
     }
 
     @Override
@@ -110,7 +128,8 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
     public Bisq1BridgeRequestStore getClone() {
         return new Bisq1BridgeRequestStore(Set.copyOf(accountAgeRequests),
                 Set.copyOf(signedWitnessRequests),
-                Map.copyOf(accountTimestampDateByHash));
+                Map.copyOf(accountTimestampDateByHash),
+                Set.copyOf(bondedRoleRegistrationRequests));
     }
 
     @Override
@@ -121,5 +140,7 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
         signedWitnessRequests.addAll(persisted.getSignedWitnessRequests());
         accountTimestampDateByHash.clear();
         accountTimestampDateByHash.putAll(persisted.getAccountTimestampDateByHash());
+        bondedRoleRegistrationRequests.clear();
+        bondedRoleRegistrationRequests.addAll(persisted.getBondedRoleRegistrationRequests());
     }
 }

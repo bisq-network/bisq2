@@ -20,12 +20,14 @@ package bisq.bonded_roles.bonded_role;
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -40,15 +42,20 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.Set;
 
+import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.LEGACY_VERSION;
+import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.PROPOSAL_KEY_VERSION;
 import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
-    private static final int VERSION = 1;
+    private static final int LEGACY_DATA_VERSION = 1;
+    private static final int PROPOSAL_KEY_DATA_VERSION = 2;
+    private static final int CURRENT_DATA_VERSION = PROPOSAL_KEY_DATA_VERSION;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
@@ -75,6 +82,13 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
+    private final int registrationProtocolVersion;
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
+    private final String proposalTxId;
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
+    private final String lockupTxId;
+
     public AuthorizedBondedRole(String profileId,
                                 String authorizedPublicKey,
                                 BondedRoleType bondedRoleType,
@@ -84,7 +98,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                 NetworkId networkId,
                                 Optional<AuthorizedOracleNode> authorizingOracleNode,
                                 boolean staticPublicKeysProvided) {
-        this(VERSION,
+        this(LEGACY_DATA_VERSION,
                 profileId,
                 authorizedPublicKey,
                 bondedRoleType,
@@ -93,7 +107,39 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 addressByTransportTypeMap,
                 networkId,
                 authorizingOracleNode,
-                staticPublicKeysProvided);
+                staticPublicKeysProvided,
+                LEGACY_VERSION,
+                "",
+                "");
+        verifyRegistration();
+    }
+
+    public AuthorizedBondedRole(String profileId,
+                                String authorizedPublicKey,
+                                BondedRoleType bondedRoleType,
+                                String bondUserName,
+                                String signatureBase64,
+                                Optional<AddressByTransportTypeMap> addressByTransportTypeMap,
+                                NetworkId networkId,
+                                Optional<AuthorizedOracleNode> authorizingOracleNode,
+                                boolean staticPublicKeysProvided,
+                                int registrationProtocolVersion,
+                                String proposalTxId,
+                                String lockupTxId) {
+        this(dataVersionForProtocol(registrationProtocolVersion),
+                profileId,
+                authorizedPublicKey,
+                bondedRoleType,
+                bondUserName,
+                signatureBase64,
+                addressByTransportTypeMap,
+                networkId,
+                authorizingOracleNode,
+                staticPublicKeysProvided,
+                registrationProtocolVersion,
+                proposalTxId,
+                lockupTxId);
+        verifyRegistration();
     }
 
     private AuthorizedBondedRole(int version,
@@ -105,7 +151,10 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                                  Optional<AddressByTransportTypeMap> addressByTransportTypeMap,
                                  NetworkId networkId,
                                  Optional<AuthorizedOracleNode> authorizingOracleNode,
-                                 boolean staticPublicKeysProvided) {
+                                 boolean staticPublicKeysProvided,
+                                 int registrationProtocolVersion,
+                                 String proposalTxId,
+                                 String lockupTxId) {
         this.version = version;
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
@@ -116,6 +165,9 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         this.networkId = networkId;
         this.authorizingOracleNode = authorizingOracleNode;
         this.staticPublicKeysProvided = staticPublicKeysProvided;
+        this.registrationProtocolVersion = registrationProtocolVersion;
+        this.proposalTxId = proposalTxId;
+        this.lockupTxId = lockupTxId;
 
         verify();
     }
@@ -126,6 +178,39 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         NetworkDataValidation.validatePubKeyHex(authorizedPublicKey);
         NetworkDataValidation.validateBondUserName(bondUserName);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
+        checkArgument(version >= 0, "AuthorizedBondedRole version must not be negative");
+        checkArgument(registrationProtocolVersion >= 0,
+                "Bonded-role registration protocol version must not be negative");
+        checkArgument(proposalTxId.isEmpty() || BitcoinTransactionValidation.isValid(proposalTxId),
+                "Proposal tx ID must be empty or a valid Bitcoin transaction ID");
+        checkArgument(lockupTxId.isEmpty() || BitcoinTransactionValidation.isValid(lockupTxId),
+                "Lockup tx ID must be empty or a valid Bitcoin transaction ID");
+    }
+
+    public boolean canReconstructForRemoval() {
+        return version == LEGACY_DATA_VERSION || version == PROPOSAL_KEY_DATA_VERSION;
+    }
+
+    public void verifyRegistration() {
+        if (version > CURRENT_DATA_VERSION) {
+            return;
+        }
+        BondedRoleRegistrationProtocol.verifyProof(registrationProtocolVersion, proposalTxId, lockupTxId);
+        checkArgument(switch (version) {
+                    case 0, LEGACY_DATA_VERSION -> registrationProtocolVersion == LEGACY_VERSION;
+                    case PROPOSAL_KEY_DATA_VERSION -> registrationProtocolVersion == PROPOSAL_KEY_VERSION;
+                    default -> false;
+                },
+                "AuthorizedBondedRole version does not match its registration protocol version");
+    }
+
+    private static int dataVersionForProtocol(int registrationProtocolVersion) {
+        return switch (registrationProtocolVersion) {
+            case LEGACY_VERSION -> LEGACY_DATA_VERSION;
+            case PROPOSAL_KEY_VERSION -> PROPOSAL_KEY_DATA_VERSION;
+            default -> throw new IllegalArgumentException(
+                    "Unsupported bonded-role registration protocol version: " + registrationProtocolVersion);
+        };
     }
 
     @Override
@@ -138,7 +223,10 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto(serializeForHash))
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .setVersion(version);
+                .setVersion(version)
+                .setRegistrationProtocolVersion(registrationProtocolVersion)
+                .setProposalTxId(proposalTxId)
+                .setLockupTxId(lockupTxId);
         addressByTransportTypeMap.ifPresent(e -> builder.setAddressByTransportTypeMap(e.toProto(serializeForHash)));
         authorizingOracleNode.ifPresent(oracleNode -> builder.setAuthorizingOracleNode(oracleNode.toProto(serializeForHash)));
         return builder;
@@ -164,7 +252,11 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 proto.hasAuthorizingOracleNode() ?
                         Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) :
                         Optional.empty(),
-                proto.getStaticPublicKeysProvided()
+                proto.getStaticPublicKeysProvided(),
+                BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
+                        proto.getRegistrationProtocolVersion()),
+                proto.getProposalTxId(),
+                proto.getLockupTxId()
         );
     }
 
@@ -229,6 +321,9 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    addressByTransportTypeMap=" + addressByTransportTypeMap +
                 ",\r\n                    authorizedOracleNode=" + authorizingOracleNode +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided +
+                ",\r\n                    registrationProtocolVersion=" + registrationProtocolVersion +
+                ",\r\n                    proposalTxId='" + proposalTxId + '\'' +
+                ",\r\n                    lockupTxId='" + lockupTxId + '\'' +
                 ",\r\n                    metaData=" + metaData +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";

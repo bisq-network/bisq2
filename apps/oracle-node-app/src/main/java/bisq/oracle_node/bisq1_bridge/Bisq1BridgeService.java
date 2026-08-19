@@ -37,6 +37,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.services.BsqBlockGrpcService;
@@ -52,6 +53,7 @@ import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -77,17 +79,20 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         private final int throttleDelayInSeconds; // 1 sec by default
         private final int numConnectionsForRepublish;
         private final boolean ignorePublishAgeCheck;
+        private final boolean bondedRoleRegistrationEnabled;
 
         public Config(int grpcServicePort,
                       int initialDelayInSeconds,
                       int throttleDelayInSeconds,
                       int numConnectionsForRepublish,
-                      boolean ignorePublishAgeCheck) {
+                      boolean ignorePublishAgeCheck,
+                      boolean bondedRoleRegistrationEnabled) {
             this.grpcServicePort = grpcServicePort;
             this.initialDelayInSeconds = initialDelayInSeconds;
             this.throttleDelayInSeconds = throttleDelayInSeconds;
             this.numConnectionsForRepublish = numConnectionsForRepublish;
             this.ignorePublishAgeCheck = ignorePublishAgeCheck;
+            this.bondedRoleRegistrationEnabled = bondedRoleRegistrationEnabled;
         }
 
         public static Bisq1BridgeService.Config from(com.typesafe.config.Config config) {
@@ -96,7 +101,8 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
                     config.getInt("initialDelayInSeconds"),
                     config.getInt("throttleDelayInSeconds"),
                     config.getInt("numConnectionsForRepublish"),
-                    config.getBoolean("ignorePublishAgeCheck"));
+                    config.getBoolean("ignorePublishAgeCheck"),
+                    config.getBoolean("bondedRoleRegistrationEnabled"));
         }
     }
 
@@ -140,8 +146,6 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
 
-        bsqBlockGrpcService = new BsqBlockGrpcService(staticPublicKeysProvided, grpcClient);
-
         burningmanGrpcService = new BurningmanGrpcService(staticPublicKeysProvided, grpcClient);
 
         bisq1BridgeRequestService = new Bisq1BridgeRequestService(persistenceService,
@@ -151,8 +155,13 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
                 authorizedPrivateKey,
                 authorizedPublicKey,
                 staticPublicKeysProvided,
+                config.isBondedRoleRegistrationEnabled(),
                 myAuthorizedOracleNode,
                 grpcClient);
+
+        bsqBlockGrpcService = new BsqBlockGrpcService(staticPublicKeysProvided,
+                grpcClient,
+                blockHeight -> bisq1BridgeRequestService.revalidateBondedRoles());
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -247,10 +256,18 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
         String storageKey = AuthorizedBondedRole.class.getSimpleName();
         String myAuthorizedOracleNodeProfileId = myAuthorizedOracleNode.getProfileId();
+        byte[] myAuthorizedPublicKeyBytes = authorizedPublicKey.getEncoded();
         networkService.getDataService()
                 .stream() // turns Optional<DataService> into Stream<DataService>
                 .flatMap(dataService ->
                         dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
+                                // The authorizingOracleNode field inside the role is informational and excluded from
+                                // the data hash. Only the outer authorization signing key proves that this oracle
+                                // published the record, so we require it before we re-sign and republish.
+                                .filter(AuthorizedData.class::isInstance)
+                                .map(AuthorizedData.class::cast)
+                                .filter(authorizedData -> Arrays.equals(authorizedData.getAuthorizedPublicKeyBytes(),
+                                        myAuthorizedPublicKeyBytes))
                                 .map(AuthenticatedData::getDistributedData)
                                 .filter(AuthorizedBondedRole.class::isInstance)
                                 .map(AuthorizedBondedRole.class::cast)

@@ -17,10 +17,14 @@
 
 package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
+import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.common.proto.NetworkProto;
+import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @EqualsAndHashCode
@@ -29,15 +33,24 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
     private final String roleType;
     private final String profileId;
     private final String signatureBase64;
+    private final String proposalTxId;
+    private final String lockupTxId;
+    private final int protocolVersion;
 
     public BondedRoleVerificationRequest(String bondUserName,
                                          String roleType,
                                          String profileId,
-                                         String signatureBase64) {
+                                         String signatureBase64,
+                                         String proposalTxId,
+                                         String lockupTxId,
+                                         int protocolVersion) {
         this.bondUserName = bondUserName;
         this.roleType = roleType;
         this.profileId = profileId;
         this.signatureBase64 = signatureBase64;
+        this.proposalTxId = proposalTxId;
+        this.lockupTxId = lockupTxId;
+        this.protocolVersion = protocolVersion;
     }
 
     @Override
@@ -46,6 +59,12 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
         NetworkDataValidation.validateText(roleType, 1, 200);
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
+        checkArgument(protocolVersion >= 0,
+                "Bonded-role registration protocol version must not be negative");
+        checkArgument(proposalTxId.isEmpty() || BitcoinTransactionValidation.isValid(proposalTxId),
+                "Proposal tx ID must be empty or a valid Bitcoin transaction ID");
+        checkArgument(lockupTxId.isEmpty() || BitcoinTransactionValidation.isValid(lockupTxId),
+                "Lockup tx ID must be empty or a valid Bitcoin transaction ID");
     }
 
     @Override
@@ -54,7 +73,10 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
                 .setBondUserName(bondUserName)
                 .setRoleType(roleType)
                 .setProfileId(profileId)
-                .setSignatureBase64(signatureBase64);
+                .setSignatureBase64(signatureBase64)
+                .setProposalTxId(proposalTxId)
+                .setLockupTxId(lockupTxId)
+                .setProtocolVersion(protocolVersion);
     }
 
     @Override
@@ -71,7 +93,10 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
         return new BondedRoleVerificationRequest(proto.getBondUserName(),
                 proto.getRoleType(),
                 proto.getProfileId(),
-                proto.getSignatureBase64()
+                proto.getSignatureBase64(),
+                proto.getProposalTxId(),
+                proto.getLockupTxId(),
+                BondedRoleRegistrationProtocol.versionFromProto(proto.hasProtocolVersion(), proto.getProtocolVersion())
         );
     }
 }

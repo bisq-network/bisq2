@@ -30,6 +30,7 @@ import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Locale;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -54,9 +55,18 @@ public class BondedRoleRegistrationService implements Service {
                                                  BondedRoleType bondedRoleType,
                                                  String bondUserName,
                                                  String signatureBase64,
+                                                 int registrationProtocolVersion,
+                                                 String proposalTxId,
+                                                 String lockupTxId,
                                                  Optional<AddressByTransportTypeMap> addressByTransportTypeMap,
                                                  NetworkIdWithKeyPair senderNetworkIdWithKeyPair,
                                                  boolean isCancellationRequest) {
+        String canonicalProposalTxId = proposalTxId.toLowerCase(Locale.ROOT);
+        String canonicalLockupTxId = lockupTxId.toLowerCase(Locale.ROOT);
+        BondedRoleRegistrationProtocol.verifyProof(registrationProtocolVersion,
+                canonicalProposalTxId,
+                canonicalLockupTxId);
+
         ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();
         if (authorizedOracleNodes.isEmpty()) {
             log.warn("authorizedOracleNodes is empty");
@@ -73,7 +83,10 @@ public class BondedRoleRegistrationService implements Service {
                 signatureBase64,
                 addressByTransportTypeMap,
                 networkId,
-                isCancellationRequest);
+                isCancellationRequest,
+                registrationProtocolVersion,
+                canonicalProposalTxId,
+                canonicalLockupTxId);
         authorizedOracleNodes.forEach(oracleNode -> {
             NetworkId oracleNodeNetworkId = oracleNode.getNetworkId();
             log.info("Send BondedRoleRegistrationRequest to oracleNode {}.\nBondedRoleRegistrationRequest={}", oracleNodeNetworkId, request);
