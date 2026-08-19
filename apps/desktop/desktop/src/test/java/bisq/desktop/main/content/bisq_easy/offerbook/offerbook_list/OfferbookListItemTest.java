@@ -26,6 +26,7 @@ import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.testutil.TestFxHeadlessSupport;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.presentation.formatters.PercentageFormatter;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -105,7 +106,8 @@ class OfferbookListItemTest extends TestFxHeadlessSupport {
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(item.getPriceSpecAsPercent()).hasValue(0.25);
-        assertThat(item.getFormattedPercentagePrice().get()).isNotNull();
+        assertThat(item.getFormattedPercentagePrice().get())
+                .isEqualTo(PercentageFormatter.formatToPercentWithSignAndSymbol(0.25));
         assertThat(boundLabel.getText()).isEqualTo(item.getFormattedPercentagePrice().get());
         item.dispose();
     }
@@ -119,7 +121,8 @@ class OfferbookListItemTest extends TestFxHeadlessSupport {
         OfferbookListItem item = new OfferbookListItem(message, senderUserProfile, reputationService, marketPriceService);
 
         assertThat(item.getPriceSpecAsPercent()).hasValue(0.25);
-        assertThat(item.getFormattedPercentagePrice().get()).isNotNull();
+        assertThat(item.getFormattedPercentagePrice().get())
+                .isEqualTo(PercentageFormatter.formatToPercentWithSignAndSymbol(0.25));
         item.dispose();
     }
 }
