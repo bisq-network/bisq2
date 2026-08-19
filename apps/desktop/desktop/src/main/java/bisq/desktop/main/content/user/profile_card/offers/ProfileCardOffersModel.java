@@ -18,15 +18,21 @@
 package bisq.desktop.main.content.user.profile_card.offers;
 
 import bisq.desktop.common.view.Model;
+import bisq.user.profile.UserProfile;
 import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 @Getter
 public class ProfileCardOffersModel implements Model {
+    @Setter
+    private Optional<UserProfile> userProfile = Optional.empty();
     // Extractor on the formatted percentage: it is set together with the sortable
     // percentage, so a market price that resolves a previously empty percentage emits a
     // list-update event and the SortedList re-sorts the row to its new position.
