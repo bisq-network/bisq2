@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.OrderedList;
+import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
 import bisq.desktop.main.content.components.MaterialUserProfileSelection;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
@@ -46,7 +47,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrationModel, C extends BondedRolesRegistrationController> extends View<VBox, M, C> {
     protected final Hyperlink learnMore;
-    protected final MaterialTextField bondHolderName, profileId, signature;
+    protected final MaterialTextField bondHolderName, profileId, signature, proposalTxId, lockupTxId;
     protected final Button requestRegistrationButton, requestCancellationButton;
     protected final Label aboutHeadline, howHeadline;
     protected final HBox headerHBox, buttons;
@@ -103,6 +104,10 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
 
         bondHolderName = new MaterialTextField(Res.get("user.bondedRoles.registration.bondHolderName"), Res.get("user.bondedRoles.registration.bondHolderName.prompt"));
         signature = new MaterialTextField(Res.get("user.bondedRoles.registration.signature"), Res.get("user.bondedRoles.registration.signature.prompt"));
+        proposalTxId = new MaterialTextField(Res.get("user.bondedRoles.registration.proposalTxId"), Res.get("user.bondedRoles.registration.proposalTxId.prompt"));
+        lockupTxId = new MaterialTextField(Res.get("user.bondedRoles.registration.lockupTxId"), Res.get("user.bondedRoles.registration.lockupTxId.prompt"));
+        proposalTxId.setValidator(new BitcoinTransactionValidator());
+        lockupTxId.setValidator(new BitcoinTransactionValidator());
 
         requestRegistrationButton = new Button(Res.get("user.bondedRoles.registration.requestRegistration"));
         requestRegistrationButton.setDefaultButton(true);
@@ -124,7 +129,7 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         VBox.setVgrow(howHeadline, Priority.ALWAYS);
         root.getChildren().addAll(headerHBox, aboutInfoTextFlow,
                 howHeadline, howInfo,
-                registerHeadline, materialUserProfileSelection, profileId, bondHolderName, signature,
+                registerHeadline, materialUserProfileSelection, profileId, bondHolderName, signature, proposalTxId, lockupTxId,
                 buttons);
     }
 
@@ -132,15 +137,25 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
     protected void onViewAttached() {
         bondHolderName.textProperty().bindBidirectional(model.getBondUserName());
         signature.textProperty().bindBidirectional(model.getSignature());
+        proposalTxId.textProperty().bindBidirectional(model.getProposalTxId());
+        lockupTxId.textProperty().bindBidirectional(model.getLockupTxId());
+        proposalTxId.isValidProperty().bindBidirectional(model.getProposalTxIdValid());
+        lockupTxId.isValidProperty().bindBidirectional(model.getLockupTxIdValid());
         profileId.textProperty().bind(model.getProfileId());
-        requestRegistrationButton.disableProperty().bind(model.getRequestButtonDisabled());
-        requestCancellationButton.disableProperty().bind(model.getRequestButtonDisabled());
+        requestRegistrationButton.disableProperty().bind(model.getRequestRegistrationButtonDisabled());
+        requestCancellationButton.disableProperty().bind(model.getRequestCancellationButtonDisabled());
         requestCancellationButton.visibleProperty().bind(model.getRequestCancellationButtonVisible());
         requestCancellationButton.managedProperty().bind(model.getRequestCancellationButtonVisible());
         profileId.getIconButton().setOnAction(e -> controller.onCopyToClipboard());
         learnMore.setOnAction(e -> controller.onLearnMore());
-        requestRegistrationButton.setOnAction(e -> controller.onRequestAuthorization());
-        requestCancellationButton.setOnAction(e -> controller.onRequestCancellation());
+        requestRegistrationButton.setOnAction(e -> {
+            validateTransactionIds();
+            controller.onRequestAuthorization();
+        });
+        requestCancellationButton.setOnAction(e -> {
+            validateTransactionIds();
+            controller.onRequestCancellation();
+        });
         hideInfo.setOnMouseClicked(e -> controller.onCollapse());
         showInfo.setOnMouseClicked(e -> controller.onExpand());
         headerHBox.setOnMouseClicked(e -> controller.onHeaderClicked());
@@ -174,6 +189,10 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
     protected void onViewDetached() {
         bondHolderName.textProperty().unbindBidirectional(model.getBondUserName());
         signature.textProperty().unbindBidirectional(model.getSignature());
+        proposalTxId.textProperty().unbindBidirectional(model.getProposalTxId());
+        lockupTxId.textProperty().unbindBidirectional(model.getLockupTxId());
+        proposalTxId.isValidProperty().unbindBidirectional(model.getProposalTxIdValid());
+        lockupTxId.isValidProperty().unbindBidirectional(model.getLockupTxIdValid());
         profileId.textProperty().unbind();
         requestRegistrationButton.disableProperty().unbind();
         requestCancellationButton.disableProperty().unbind();
@@ -189,5 +208,10 @@ public abstract class BondedRolesRegistrationView<M extends BondedRolesRegistrat
         headerHBox.setOnMouseClicked(null);
 
         isExpandedPin.unsubscribe();
+    }
+
+    private void validateTransactionIds() {
+        proposalTxId.validate();
+        lockupTxId.validate();
     }
 }

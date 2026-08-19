@@ -362,6 +362,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData,
                                                               AuthorizedBondedRole authorizedBondedRole) {
+        try {
+            authorizedBondedRole.verifyRegistration();
+        } catch (IllegalArgumentException e) {
+            log.warn("Ignoring invalid AuthorizedBondedRole registration data", e);
+            return Optional.empty();
+        }
+
         // AuthorizedBondedRoles are published only by an oracle node. The oracle node use either a hard coded pubKey
         // or has been authorized by another already authorized oracle node. There need to be at least one root node 
         // with a hard coded pubKey.

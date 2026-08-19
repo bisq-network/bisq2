@@ -5,6 +5,7 @@ option java_multiple_files = true;
 import "common.proto";
 import "network.proto";
 import "user.proto";
+import "bonded_roles.proto";
 
 message TimestampStore {
   repeated common.StringLongPair stringLongPairs = 1;
@@ -14,4 +15,5 @@ message Bisq1BridgeRequestStore {
   repeated user.AuthorizeAccountAgeRequest accountAgeRequests = 1;
   repeated user.AuthorizeSignedWitnessRequest signedWitnessRequests = 2;
   map<string, uint64> accountTimestampDateByHash = 3;
+  repeated bonded_roles.BondedRoleRegistrationRequest bondedRoleRegistrationRequests = 4;
 }

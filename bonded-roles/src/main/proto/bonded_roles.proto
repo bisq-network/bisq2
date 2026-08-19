@@ -36,6 +36,9 @@ message BondedRoleRegistrationRequest {
   optional common.AddressByTransportTypeMap addressByTransportTypeMap = 6;
   network.identity.NetworkId networkId = 7;
   bool isCancellationRequest = 8;
+  optional uint32 registrationProtocolVersion = 9; // Missing is read as legacy version 1.
+  string proposalTxId = 10;
+  string lockupTxId = 11;
 }
 
 message AuthorizedBondedRole {
@@ -49,6 +52,9 @@ message AuthorizedBondedRole {
   optional AuthorizedOracleNode authorizingOracleNode = 8;
   bool staticPublicKeysProvided = 9;
   sint32 version = 10;
+  optional uint32 registrationProtocolVersion = 11; // Missing is read as legacy version 1.
+  string proposalTxId = 12;
+  string lockupTxId = 13;
 }
 
 enum AlertType {
