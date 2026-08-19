@@ -32,6 +32,7 @@ import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
@@ -96,6 +97,64 @@ class WitnessReputationRemovalTest {
 
         assertThat(service.getDataSetByHash()).doesNotContainKey(profileKey());
         assertThat(service.getScoreByUserProfileId()).doesNotContainKey(PROFILE_ID);
+    }
+
+    @Test
+    void futureAccountAgeRemovalDoesNotMatchCurrentAuthorization() {
+        AccountAgeService service = new AccountAgeService(
+                mock(PersistenceService.class),
+                mock(NetworkService.class),
+                mock(UserIdentityService.class),
+                mock(UserProfileService.class),
+                mock(BannedUserService.class),
+                authorizedBondedRolesService(),
+                new WitnessReputationClaimRegistry());
+        AuthorizedAccountAgeData current = new AuthorizedAccountAgeData(
+                PROFILE_ID,
+                dateBucket(),
+                new byte[WitnessReputationProtocol.NULLIFIER_LENGTH],
+                false);
+        AuthorizedAccountAgeData future = AuthorizedAccountAgeData.fromProto(
+                current.toProto(false).toBuilder().setVersion(3).build());
+        PublicKey oraclePublicKey = KeyGeneration.generateDefaultEcKeyPair().getPublic();
+        AuthorizedData currentAuthorization = new AuthorizedData(current, oraclePublicKey);
+        service.onAuthorizedDataAdded(currentAuthorization);
+        long score = service.calculateScore(current);
+        seedProcessedScore(service, current, score);
+
+        service.onAuthorizedDataRemoved(new AuthorizedData(future, oraclePublicKey));
+
+        assertThat(service.getDataSetByHash()).containsKey(profileKey());
+        assertThat(service.getScoreByUserProfileId()).containsEntry(PROFILE_ID, score);
+    }
+
+    @Test
+    void futureSignedWitnessRemovalDoesNotMatchCurrentAuthorization() {
+        SignedWitnessService service = new SignedWitnessService(
+                mock(PersistenceService.class),
+                mock(NetworkService.class),
+                mock(UserIdentityService.class),
+                mock(UserProfileService.class),
+                mock(BannedUserService.class),
+                authorizedBondedRolesService(),
+                new WitnessReputationClaimRegistry());
+        AuthorizedSignedWitnessData current = new AuthorizedSignedWitnessData(
+                PROFILE_ID,
+                dateBucket(),
+                new byte[WitnessReputationProtocol.NULLIFIER_LENGTH],
+                false);
+        AuthorizedSignedWitnessData future = AuthorizedSignedWitnessData.fromProto(
+                current.toProto(false).toBuilder().setVersion(3).build());
+        PublicKey oraclePublicKey = KeyGeneration.generateDefaultEcKeyPair().getPublic();
+        AuthorizedData currentAuthorization = new AuthorizedData(current, oraclePublicKey);
+        service.onAuthorizedDataAdded(currentAuthorization);
+        long score = service.calculateScore(current);
+        seedProcessedScore(service, current, score);
+
+        service.onAuthorizedDataRemoved(new AuthorizedData(future, oraclePublicKey));
+
+        assertThat(service.getDataSetByHash()).containsKey(profileKey());
+        assertThat(service.getScoreByUserProfileId()).containsEntry(PROFILE_ID, score);
     }
 
     @Test

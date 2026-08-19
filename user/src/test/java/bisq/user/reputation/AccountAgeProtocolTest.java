@@ -128,6 +128,8 @@ class AccountAgeProtocolTest {
                 current.toProto(false).toBuilder().setVersion(3).build());
 
         assertThat(current.serializeForHash()).isNotEqualTo(rewrittenAsFuture.serializeForHash());
+        assertThat(current).isNotEqualTo(rewrittenAsFuture);
+        assertThat(current.hashCode()).isNotEqualTo(rewrittenAsFuture.hashCode());
     }
 
     @Test
@@ -195,6 +197,8 @@ class AccountAgeProtocolTest {
                 current.toProto(false).toBuilder().setVersion(3).build());
 
         assertThat(current.serializeForHash()).isNotEqualTo(rewrittenAsFuture.serializeForHash());
+        assertThat(current).isNotEqualTo(rewrittenAsFuture);
+        assertThat(current.hashCode()).isNotEqualTo(rewrittenAsFuture.hashCode());
     }
 
     @Test

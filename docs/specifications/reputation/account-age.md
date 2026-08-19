@@ -49,6 +49,10 @@ nullifier and date bucket are security-critical and are included in the oracle-a
 Consequently, a relay cannot rewrite a current record as an unsupported future version or alter its
 identity or age bucket without invalidating the oracle signature.
 
+The authorized-data version is also part of internal record equality. Deduplication, pending-data
+tracking and removal must not treat records with different semantic versions as the same record,
+even when their profile id, bucket and nullifier are byte-identical.
+
 The bridge derives the 32-byte nullifier from the exact verified witness preimage using canonical
 four-byte big-endian length framing:
 
