@@ -38,7 +38,8 @@ public class AccountTimestampGrpcService implements Service {
         try {
             log.debug("requestAccountTimestamp for hash {}", Hex.encode(hash));
             var protoRequest = new AccountTimestampRequest(hash).completeProto();
-            var protoResponse = grpcClient.getAccountTimestampBlockingStub().requestAccountTimestamp(protoRequest);
+            var protoResponse = GrpcClient.withInteractiveRequestDeadline(grpcClient.getAccountTimestampBlockingStub())
+                    .requestAccountTimestamp(protoRequest);
             AccountTimestampResponse response = AccountTimestampResponse.fromProto(protoResponse);
             return Result.success(response.getDate());
         } catch (StatusRuntimeException e) {

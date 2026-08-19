@@ -97,8 +97,9 @@ snapshot and returns its block height and one result in request order.
 - A result with an error removes only that exact oracle-published authorization and then removes its
   persisted request. This covers confirmed unlocks, expired unlocks, confiscation, illegal spending,
   invalid lockups and no-longer-canonical proposals.
-- A transport error or unavailable bridge does not deactivate registrations. The next startup or
-  live-block trigger retries an authoritative snapshot.
+- A transport error, deadline expiry or unavailable bridge does not deactivate registrations. The
+  next startup or live-block trigger retries an authoritative snapshot. Every unary verification has
+  a bounded deadline so one stalled bridge call cannot permanently stop revalidation.
 - Live block notifications include blocks without proof-of-burn or bonded-reputation records.
   Historical sparse block retrieval does not trigger revalidation because startup batch verification
   already evaluates current DAO state.

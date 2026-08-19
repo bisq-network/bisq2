@@ -27,6 +27,7 @@ import bisq.common.application.Service;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
+import io.grpc.stub.AbstractStub;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,6 +36,9 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class GrpcClient implements Service {
+    static final long INTERACTIVE_REQUEST_TIMEOUT_SECONDS = 30;
+    static final long BULK_REQUEST_TIMEOUT_MINUTES = 10;
+
     private final String host;
     private final int port;
     private ManagedChannel managedChannel;
@@ -63,6 +67,14 @@ public class GrpcClient implements Service {
     public GrpcClient(String host, int port) {
         this.host = host;
         this.port = port;
+    }
+
+    public static <T extends AbstractStub<T>> T withInteractiveRequestDeadline(T stub) {
+        return stub.withDeadlineAfter(INTERACTIVE_REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    public static <T extends AbstractStub<T>> T withBulkRequestDeadline(T stub) {
+        return stub.withDeadlineAfter(BULK_REQUEST_TIMEOUT_MINUTES, TimeUnit.MINUTES);
     }
 
 

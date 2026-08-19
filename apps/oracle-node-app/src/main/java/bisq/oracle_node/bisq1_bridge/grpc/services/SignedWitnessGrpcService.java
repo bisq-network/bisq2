@@ -36,7 +36,8 @@ public class SignedWitnessGrpcService implements Service {
         log.info("verifyAndRequestAuthorization {}", request);
         try {
             var protoRequest = new SignedWitnessOwnershipRequest(request).completeProto();
-            var protoResponse = grpcClient.getSignedWitnessBlockingStub()
+            var protoResponse = GrpcClient.withInteractiveRequestDeadline(
+                            grpcClient.getSignedWitnessBlockingStub())
                     .verifySignedWitnessOwnership(protoRequest);
             return SignedWitnessOwnershipResponse.fromProto(protoResponse);
         } catch (Exception e) {

@@ -53,7 +53,8 @@ public class BondedRoleGrpcService implements Service {
             checkArgument(profileId.equals(sendersProfileId), "Senders pub key is not matching the profile ID");
 
             var protoRequest = toVerificationRequest(request).completeProto();
-            var protoResponse = grpcClient.getBondedRoleBlockingStub().requestBondedRoleVerification(protoRequest);
+            var protoResponse = GrpcClient.withInteractiveRequestDeadline(grpcClient.getBondedRoleBlockingStub())
+                    .requestBondedRoleVerification(protoRequest);
             return BondedRoleVerificationResponse.fromProto(protoResponse);
         } catch (Exception e) {
             log.warn("Error at requestBondedRoleVerification", e);
@@ -66,7 +67,7 @@ public class BondedRoleGrpcService implements Service {
         var request = new BondedRolesVerificationRequest(requests.stream()
                 .map(BondedRoleGrpcService::toVerificationRequest)
                 .toList());
-        var response = grpcClient.getBondedRoleBlockingStub()
+        var response = GrpcClient.withInteractiveRequestDeadline(grpcClient.getBondedRoleBlockingStub())
                 .requestBondedRoleBatchVerification(request.completeProto());
         return BondedRolesVerificationResponse.fromProto(response);
     }
