@@ -104,6 +104,7 @@ message AccountTimestampDateResponse {
 
 service AccountAgeWitnessGrpcService {
   rpc RequestAccountAgeWitnessDate (AccountAgeWitnessDateRequest) returns (AccountAgeWitnessDateResponse);
+  rpc VerifyAccountAgeWitnessOwnership (AccountAgeWitnessOwnershipRequest) returns (AccountAgeWitnessOwnershipResponse);
 }
 
 message AccountAgeWitnessDateRequest {
@@ -113,8 +114,24 @@ message AccountAgeWitnessDateResponse {
   sint64 date = 1;
 }
 
+message AccountAgeWitnessOwnershipRequest {
+  uint32 protocolVersion = 1;
+  string profileId = 2;
+  bytes witnessHash = 3;
+  bytes accountInputDataWithSalt = 4;
+  bytes ownerPublicKey = 5;
+  bytes signature = 6;
+}
+message AccountAgeWitnessOwnershipResponse {
+  reserved 1;
+  reserved "date";
+  sint64 dateBucket = 2;
+  bytes witnessNullifier = 3;
+}
+
 service SignedWitnessGrpcService {
   rpc RequestSignedWitnessDate (SignedWitnessDateRequest) returns (SignedWitnessDateResponse);
+  rpc VerifySignedWitnessOwnership (SignedWitnessOwnershipRequest) returns (SignedWitnessOwnershipResponse);
 }
 
 message SignedWitnessDateRequest {
@@ -122,6 +139,20 @@ message SignedWitnessDateRequest {
 }
 message SignedWitnessDateResponse {
   sint64 date = 1;
+}
+message SignedWitnessOwnershipRequest {
+  uint32 protocolVersion = 1;
+  string profileId = 2;
+  bytes witnessHash = 3;
+  bytes accountInputDataWithSalt = 4;
+  bytes ownerPublicKey = 5;
+  bytes signature = 6;
+}
+message SignedWitnessOwnershipResponse {
+  reserved 1;
+  reserved "date";
+  sint64 dateBucket = 2;
+  bytes witnessNullifier = 3;
 }
 
 

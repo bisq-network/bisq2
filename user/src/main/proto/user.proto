@@ -93,6 +93,8 @@ message AuthorizeAccountAgeRequest {
   sint64 date = 3;
   string pubKeyBase64 = 4;
   string signatureBase64 = 5;
+  optional uint32 protocolVersion = 6; // Missing is read as legacy version 1.
+  bytes accountInputDataWithSalt = 7;
 }
 
 message AuthorizeSignedWitnessRequest {
@@ -102,6 +104,8 @@ message AuthorizeSignedWitnessRequest {
   sint64 witnessSignDate = 4;
   string pubKeyBase64 = 5;
   string signatureBase64 = 6;
+  optional uint32 protocolVersion = 7; // Missing is read as legacy version 1.
+  bytes accountInputDataWithSalt = 8;
 }
 
 message AuthorizeTimestampRequest {
@@ -133,16 +137,18 @@ message AuthorizedBondedReputationData {
 
 message AuthorizedAccountAgeData {
   string profileId = 1;
-  sint64 date = 2;
+  sint64 dateBucket = 2;
   bool staticPublicKeysProvided = 3;
   sint32 version = 4;
+  bytes witnessNullifier = 5;
 }
 
 message AuthorizedSignedWitnessData {
   string profileId = 1;
-  sint64 witnessSignDate = 2;
+  sint64 dateBucket = 2;
   bool staticPublicKeysProvided = 3;
   sint32 version = 4;
+  bytes witnessNullifier = 5;
 }
 
 message AuthorizedTimestampData {

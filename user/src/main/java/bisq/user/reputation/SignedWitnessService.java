@@ -8,8 +8,8 @@
  *
  * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+ * for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
@@ -19,9 +19,11 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
+import bisq.common.data.Pair;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -38,68 +40,73 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * We persist our json request data and do the authorisation request again at each start if the age of the last request
- * exceeds the half of the TTL of the AuthorizedSignedWitnessData. That way the network does not keep inactive data for
- * too long.
+ * Persists ownership-proof requests and periodically renews their authorized network data.
  */
 @Getter
 @Slf4j
-public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> implements PersistenceClient<SignedWitnessStore> {
+public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData>
+        implements PersistenceClient<SignedWitnessStore> {
     public static final double WEIGHT = 10;
     public static final long MAX_DAYS_AGE_SCORE = 2000;
     public static final long MIN_DAYS_AGE_SCORE = 61;
 
-    // Has to be in sync with Bisq1 class
     @Getter
     static class SignedWitnessDto {
+        private final int protocolVersion;
         private final String profileId;
         private final String hashAsHex;
-        private final long accountAgeWitnessDate;
-        private final long witnessSignDate;
+        private final String accountInputDataWithSaltBase64;
         private final String pubKeyBase64;
         private final String signatureBase64;
 
-        public SignedWitnessDto(String profileId,
+        public SignedWitnessDto(int protocolVersion,
+                                String profileId,
                                 String hashAsHex,
-                                long accountAgeWitnessDate,
-                                long witnessSignDate,
+                                String accountInputDataWithSaltBase64,
                                 String pubKeyBase64,
                                 String signatureBase64) {
+            this.protocolVersion = protocolVersion;
             this.profileId = profileId;
             this.hashAsHex = hashAsHex;
-            this.accountAgeWitnessDate = accountAgeWitnessDate;
-            this.witnessSignDate = witnessSignDate;
+            this.accountInputDataWithSaltBase64 = accountInputDataWithSaltBase64;
             this.pubKeyBase64 = pubKeyBase64;
             this.signatureBase64 = signatureBase64;
         }
     }
 
-    @Getter
     private final SignedWitnessStore persistableStore = new SignedWitnessStore();
-    @Getter
     private final Persistence<SignedWitnessStore> persistence;
+    private final Set<AuthorizedData> activeAuthorizations = new CopyOnWriteArraySet<>();
+    private final WitnessReputationClaimRegistry claimRegistry;
+    private final WitnessReputationClaimRegistry.Listener claimListener =
+            affectedProfileIds -> affectedProfileIds.forEach(this::recalculateScore);
 
     public SignedWitnessService(PersistenceService persistenceService,
                                 NetworkService networkService,
                                 UserIdentityService userIdentityService,
                                 UserProfileService userProfileService,
                                 BannedUserService bannedUserService,
-                                AuthorizedBondedRolesService authorizedBondedRolesService) {
+                                AuthorizedBondedRolesService authorizedBondedRolesService,
+                                WitnessReputationClaimRegistry claimRegistry) {
         super(networkService, userIdentityService, userProfileService, bannedUserService, authorizedBondedRolesService);
+        this.claimRegistry = claimRegistry;
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        claimRegistry.addListener(claimListener);
         // We delay a bit to ensure the network is well established
         Scheduler.run(this::maybeRequestAgain)
                 .host(this)
@@ -108,36 +115,67 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         return super.initialize();
     }
 
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        claimRegistry.removeListener(claimListener);
+        return super.shutdown();
+    }
+
     public Set<String> getJsonRequests() {
         return persistableStore.getJsonRequests();
     }
 
     public boolean requestAuthorization(String json) {
-        persistableStore.getJsonRequests().add(json);
-        persist();
-        return doRequestAuthorization(json);
+        boolean sent = doRequestAuthorization(json);
+        if (sent) {
+            persistableStore.getJsonRequests().add(json);
+            persist();
+        }
+        return sent;
     }
 
     @Override
-    protected Optional<AuthorizedSignedWitnessData> findRelevantData(AuthorizedDistributedData authorizedDistributedData) {
-        return authorizedDistributedData instanceof AuthorizedSignedWitnessData ?
-                Optional.of((AuthorizedSignedWitnessData) authorizedDistributedData) :
-                Optional.empty();
+    public synchronized void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedSignedWitnessData data) {
+            boolean removed = activeAuthorizations.removeIf(existing ->
+                    Arrays.equals(existing.getAuthorizedPublicKeyBytes(),
+                            authorizedData.getAuthorizedPublicKeyBytes()) &&
+                            existing.getAuthorizedDistributedData().equals(data));
+            if (removed) {
+                if (activeAuthorizations.stream()
+                        .noneMatch(existing -> existing.getAuthorizedDistributedData().equals(data))) {
+                    removeFromPendingDataSet(data);
+                }
+                claimRegistry.remove(authorizedData, data.getProfileId(), data.getWitnessNullifier());
+                recalculateScore(data.getProfileId());
+            }
+        }
+    }
+
+    @Override
+    public synchronized void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        if (!(authorizedData.getAuthorizedDistributedData() instanceof AuthorizedSignedWitnessData data) ||
+                !data.isCurrentVersion() ||
+                !isAuthorized(authorizedData) ||
+                !activeAuthorizations.add(authorizedData)) {
+            return;
+        }
+        claimRegistry.add(authorizedData, data.getProfileId(), data.getWitnessNullifier());
+        super.onAuthorizedDataAdded(authorizedData);
+    }
+
+    @Override
+    protected Optional<AuthorizedSignedWitnessData> findRelevantData(
+            AuthorizedDistributedData authorizedDistributedData) {
+        return authorizedDistributedData instanceof AuthorizedSignedWitnessData data && data.isCurrentVersion()
+                ? Optional.of(data)
+                : Optional.empty();
     }
 
     @Override
     protected void addToDataSet(Set<AuthorizedSignedWitnessData> dataSet, AuthorizedSignedWitnessData data) {
-        if (dataSet.isEmpty()) {
-            dataSet.add(data);
-            return;
-        }
-
-        // If new data is older than existing entry we clear set and add our new data, otherwise we ignore the new data.
-        AuthorizedSignedWitnessData existing = new ArrayList<>(dataSet).get(0);
-        if (existing.getWitnessSignDate() > data.getWitnessSignDate()) {
-            dataSet.clear();
-            dataSet.add(data);
-        }
+        dataSet.clear();
+        dataSet.add(data);
     }
 
     @Override
@@ -152,7 +190,9 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
 
     @Override
     public long calculateScore(AuthorizedSignedWitnessData data) {
-        return doCalculateScore(getAgeInDays(data.getWitnessSignDate()));
+        return !data.isCurrentVersion() || claimRegistry.hasConflict(data.getWitnessNullifier())
+                ? 0
+                : doCalculateScore(WitnessReputationProtocol.getConservativeAgeInDays(data.getDateBucket()));
     }
 
     public static long doCalculateScore(long ageInDays) {
@@ -164,27 +204,23 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         return MathUtils.roundDoubleToLong(boundedAgeInDays * WEIGHT);
     }
 
+    @Override
+    protected void putScore(String userProfileId, Set<AuthorizedSignedWitnessData> ignored) {
+        recalculateScore(userProfileId);
+    }
+
     private boolean doRequestAuthorization(String json) {
-        getJsonRequests().add(json);
-        persist();
         try {
             SignedWitnessDto dto = new Gson().fromJson(json, SignedWitnessDto.class);
-            long witnessSignDate = dto.getWitnessSignDate();
-            long age = getAgeInDays(witnessSignDate);
-            if (age < MIN_DAYS_AGE_SCORE) {
-                log.error("witnessSignDate has to be at least {} days. witnessSignDate={}", MIN_DAYS_AGE_SCORE, witnessSignDate);
-                return false;
-            }
-            String profileId = dto.getProfileId();
-            return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
-                        AuthorizeSignedWitnessRequest request = new AuthorizeSignedWitnessRequest(profileId,
-                                dto.getHashAsHex(),
-                                dto.getAccountAgeWitnessDate(),
-                                witnessSignDate,
-                                dto.getPubKeyBase64(),
-                                dto.getSignatureBase64());
-                        return send(userIdentity, request);
-                    })
+            checkArgument(dto.getProtocolVersion() == AuthorizeSignedWitnessRequest.CURRENT_VERSION,
+                    "Unsupported signed-witness authorization protocol version");
+            return userIdentityService.findUserIdentity(dto.getProfileId())
+                    .map(userIdentity -> send(userIdentity,
+                            new AuthorizeSignedWitnessRequest(dto.getProfileId(),
+                                    dto.getHashAsHex(),
+                                    Base64.getDecoder().decode(dto.getAccountInputDataWithSaltBase64()),
+                                    dto.getPubKeyBase64(),
+                                    dto.getSignatureBase64())))
                     .orElse(false);
         } catch (Exception e) {
             log.error("Error at requestAuthorization", e);
@@ -202,5 +238,37 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
                 persist();
             }
         }
+    }
+
+    private void recalculateScore(String userProfileId) {
+        Optional<AuthorizedSignedWitnessData> bestData = activeAuthorizations.stream()
+                .map(AuthorizedData::getAuthorizedDistributedData)
+                .map(AuthorizedSignedWitnessData.class::cast)
+                .filter(data -> data.getProfileId().equals(userProfileId))
+                .filter(data -> !claimRegistry.hasConflict(data.getWitnessNullifier()))
+                .min(java.util.Comparator.comparingLong(AuthorizedSignedWitnessData::getDateBucket));
+        ByteArray userProfileKey = new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+
+        if (bestData.isEmpty()) {
+            dataSetByHash.remove(userProfileKey);
+            scoreByUserProfileId.remove(userProfileId);
+            userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
+            return;
+        }
+
+        // Keep authorization data pending until its profile has been observed, but continue to update a score that
+        // was already associated with a profile which is temporarily absent from the shorter-lived profile store.
+        if (userProfileService.findUserProfile(userProfileId).isEmpty() &&
+                !dataSetByHash.containsKey(userProfileKey)) {
+            return;
+        }
+
+        Set<AuthorizedSignedWitnessData> dataSet = new CopyOnWriteArraySet<>();
+        dataSet.add(bestData.get());
+        dataSetByHash.put(userProfileKey, dataSet);
+        long score = doCalculateScore(
+                WitnessReputationProtocol.getConservativeAgeInDays(bestData.get().getDateBucket()));
+        scoreByUserProfileId.put(userProfileId, score);
+        userProfileIdScorePair.set(new Pair<>(userProfileId, score));
     }
 }

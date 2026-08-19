@@ -26,8 +26,9 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.user.reputation.WitnessReputationProtocol;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,44 +39,48 @@ import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
-@EqualsAndHashCode
 @Getter
 public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
-    private static final int VERSION = 1;
+    public static final int LEGACY_VERSION = 1;
+    public static final int VERSION = 2;
     public static final long TTL = TTL_30_DAYS;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
-    @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
     private final int version;
     private final String profileId;
-    private final long date;
+    private final long dateBucket;
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
+    private final byte[] witnessNullifier;
 
     // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
     // We add version 2 and 3 for extra safety...
     // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
     // and use default `@ExcludeForHash` instead.
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedAccountAgeData(String profileId,
-                                    long date,
+                                    long dateBucket,
+                                    byte[] witnessNullifier,
                                     boolean staticPublicKeysProvided) {
         this(VERSION,
                 profileId,
-                date,
+                dateBucket,
+                witnessNullifier,
                 staticPublicKeysProvided);
     }
 
     private AuthorizedAccountAgeData(int version,
                                      String profileId,
-                                     long date,
+                                     long dateBucket,
+                                     byte[] witnessNullifier,
                                      boolean staticPublicKeysProvided) {
         this.version = version;
         this.profileId = profileId;
-        this.date = date;
+        this.dateBucket = dateBucket;
+        this.witnessNullifier = witnessNullifier.clone();
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         verify();
@@ -84,16 +89,23 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     @Override
     public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
-        NetworkDataValidation.validateDate(date);
+        if (version >= VERSION) {
+            WitnessReputationProtocol.validateDateBucket(dateBucket);
+            WitnessReputationProtocol.validateNullifier(witnessNullifier);
+        } else {
+            NetworkDataValidation.validateDate(dateBucket);
+            NetworkDataValidation.validateByteArray(witnessNullifier, 0);
+        }
     }
 
     @Override
     public bisq.user.protobuf.AuthorizedAccountAgeData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedAccountAgeData.newBuilder()
                 .setProfileId(profileId)
-                .setDate(date)
+                .setDateBucket(dateBucket)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .setVersion(version);
+                .setVersion(version)
+                .setWitnessNullifier(ByteString.copyFrom(witnessNullifier));
     }
 
     @Override
@@ -105,7 +117,8 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         return new AuthorizedAccountAgeData(
                 proto.getVersion(),
                 proto.getProfileId(),
-                proto.getDate(),
+                proto.getDateBucket(),
+                proto.getWitnessNullifier().toByteArray(),
                 proto.getStaticPublicKeysProvided()
         );
     }
@@ -144,11 +157,36 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         return staticPublicKeysProvided;
     }
 
+    public boolean isCurrentVersion() {
+        return version == VERSION;
+    }
+
+    public byte[] getWitnessNullifier() {
+        return witnessNullifier.clone();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AuthorizedAccountAgeData that)) {
+            return false;
+        }
+        return dateBucket == that.dateBucket &&
+                profileId.equals(that.profileId) &&
+                java.util.Arrays.equals(witnessNullifier, that.witnessNullifier);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = java.util.Objects.hash(profileId, dateBucket);
+        return 31 * result + java.util.Arrays.hashCode(witnessNullifier);
+    }
+
     @Override
     public String toString() {
         return "AuthorizedAccountAgeData{" +
                 ",\r\n                    profileId=" + profileId +
-                ",\r\n                    time=" + new Date(date) +
+                ",\r\n                    witnessNullifier=" + bisq.common.encoding.Hex.encode(witnessNullifier) +
+                ",\r\n                    dateBucket=" + new Date(dateBucket) +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";

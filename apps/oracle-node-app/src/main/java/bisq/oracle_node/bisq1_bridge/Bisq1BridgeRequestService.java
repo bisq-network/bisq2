@@ -33,6 +33,7 @@ import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Result;
+import bisq.common.encoding.Hex;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.identity.Identity;
@@ -54,6 +55,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -86,8 +88,8 @@ public class Bisq1BridgeRequestService implements Service,
     @Getter
     private final Persistence<Bisq1BridgeRequestStore> persistence;
     private final BondedRoleGrpcService bondedRoleGrpcService;
-    private final SignedWitnessGrpcService signedWitnessGrpcService;
     private final AccountAgeWitnessGrpcService accountAgeWitnessGrpcService;
+    private final SignedWitnessGrpcService signedWitnessGrpcService;
     private final AccountTimestampGrpcService accountTimestampGrpcService;
     private final IdentityService identityService;
     private final NetworkService networkService;
@@ -97,6 +99,7 @@ public class Bisq1BridgeRequestService implements Service,
     private final PublicKey authorizedPublicKey;
     private final boolean staticPublicKeysProvided;
     private final boolean bondedRoleRegistrationEnabled;
+    private final Object witnessRequestLock = new Object();
     private final Object bondedRoleRegistrationLock = new Object();
     private final AtomicBoolean revalidationInProgress = new AtomicBoolean();
     private final AtomicBoolean revalidationRequested = new AtomicBoolean();
@@ -139,6 +142,35 @@ public class Bisq1BridgeRequestService implements Service,
                               AuthorizedOracleNode myAuthorizedOracleNode,
                               GrpcClient grpcClient,
                               BondedRoleGrpcService bondedRoleGrpcService) {
+        this(persistenceService,
+                identityService,
+                networkService,
+                authorizedBondedRolesService,
+                authorizedPrivateKey,
+                authorizedPublicKey,
+                staticPublicKeysProvided,
+                bondedRoleRegistrationEnabled,
+                myAuthorizedOracleNode,
+                grpcClient,
+                bondedRoleGrpcService,
+                new AccountAgeWitnessGrpcService(grpcClient),
+                new SignedWitnessGrpcService(grpcClient));
+    }
+
+    @VisibleForTesting
+    Bisq1BridgeRequestService(PersistenceService persistenceService,
+                              IdentityService identityService,
+                              NetworkService networkService,
+                              AuthorizedBondedRolesService authorizedBondedRolesService,
+                              PrivateKey authorizedPrivateKey,
+                              PublicKey authorizedPublicKey,
+                              boolean staticPublicKeysProvided,
+                              boolean bondedRoleRegistrationEnabled,
+                              AuthorizedOracleNode myAuthorizedOracleNode,
+                              GrpcClient grpcClient,
+                              BondedRoleGrpcService bondedRoleGrpcService,
+                              AccountAgeWitnessGrpcService accountAgeWitnessGrpcService,
+                              SignedWitnessGrpcService signedWitnessGrpcService) {
         this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
@@ -148,9 +180,9 @@ public class Bisq1BridgeRequestService implements Service,
         this.bondedRoleRegistrationEnabled = bondedRoleRegistrationEnabled;
         this.myAuthorizedOracleNode = myAuthorizedOracleNode;
 
-        accountAgeWitnessGrpcService = new AccountAgeWitnessGrpcService(grpcClient);
+        this.accountAgeWitnessGrpcService = accountAgeWitnessGrpcService;
+        this.signedWitnessGrpcService = signedWitnessGrpcService;
         accountTimestampGrpcService = new AccountTimestampGrpcService(grpcClient);
-        signedWitnessGrpcService = new SignedWitnessGrpcService(grpcClient);
         this.bondedRoleGrpcService = bondedRoleGrpcService;
 
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
@@ -186,8 +218,8 @@ public class Bisq1BridgeRequestService implements Service,
         revalidationExecutor = ExecutorFactory.newSingleThreadExecutor("BondedRoleRevalidation");
 
         return accountAgeWitnessGrpcService.initialize()
-                .thenCompose(result -> accountTimestampGrpcService.initialize())
                 .thenCompose(result -> signedWitnessGrpcService.initialize())
+                .thenCompose(result -> accountTimestampGrpcService.initialize())
                 .thenCompose(result -> bondedRoleGrpcService.initialize())
                 .thenApply(result -> {
                     authorizedBondedRolesService.addListener(this);
@@ -209,8 +241,8 @@ public class Bisq1BridgeRequestService implements Service,
         ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
         executor = null;
         return bondedRoleGrpcService.shutdown()
-                .thenCompose(result -> signedWitnessGrpcService.shutdown())
                 .thenCompose(result -> accountTimestampGrpcService.shutdown())
+                .thenCompose(result -> signedWitnessGrpcService.shutdown())
                 .thenCompose(result -> accountAgeWitnessGrpcService.shutdown());
     }
 
@@ -221,11 +253,7 @@ public class Bisq1BridgeRequestService implements Service,
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof AuthorizeAccountAgeRequest request) {
-            processAuthorizeAccountAgeRequest(request);
-        } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest request) {
-            processAuthorizeSignedWitnessRequest(request);
-        } else if (envelopePayloadMessage instanceof AuthorizeAccountTimestampV1Request request) {
+        if (envelopePayloadMessage instanceof AuthorizeAccountTimestampV1Request request) {
             processAuthorizeAccountTimestampV1Request(request);
         } else if (envelopePayloadMessage instanceof AuthorizeAccountTimestampV2Request request) {
             processAuthorizeAccountTimestampV2Request(request);
@@ -234,7 +262,11 @@ public class Bisq1BridgeRequestService implements Service,
 
     @Override
     public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
-        if (envelopePayloadMessage instanceof BondedRoleRegistrationRequest request) {
+        if (envelopePayloadMessage instanceof AuthorizeAccountAgeRequest request) {
+            processAuthorizeAccountAgeRequest(senderPublicKey, request);
+        } else if (envelopePayloadMessage instanceof AuthorizeSignedWitnessRequest request) {
+            processAuthorizeSignedWitnessRequest(senderPublicKey, request);
+        } else if (envelopePayloadMessage instanceof BondedRoleRegistrationRequest request) {
             processBondedRoleRegistrationRequest(senderPublicKey, request);
         }
     }
@@ -334,34 +366,132 @@ public class Bisq1BridgeRequestService implements Service,
                 .forEach(this::onAuthorizedDataAdded));
     }
 
-    private void processAuthorizeAccountAgeRequest(AuthorizeAccountAgeRequest request) {
+    private void processAuthorizeAccountAgeRequest(PublicKey senderPublicKey,
+                                                   AuthorizeAccountAgeRequest request) {
         CompletableFuture.runAsync(() -> {
             try {
-                long date = accountAgeWitnessGrpcService.verifyAndRequestDate(request);
+                if (request.getProtocolVersion() != AuthorizeAccountAgeRequest.CURRENT_VERSION) {
+                    log.warn("Rejecting legacy or unsupported account age authorization protocol version {}",
+                            request.getProtocolVersion());
+                    return;
+                }
+                String senderProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
+                if (!request.getProfileId().equals(senderProfileId)) {
+                    log.warn("Rejecting account age authorization whose profile does not match the confidential sender");
+                    return;
+                }
+                if (hasWitnessClaimConflict(request.getHashAsHex(), request.getProfileId())) {
+                    log.warn("Rejecting account age witness {} because it is already authorized for another profile",
+                            request.getHashAsHex());
+                    return;
+                }
+                var response = accountAgeWitnessGrpcService.verifyAndRequestAuthorization(request);
+                if (!persistAccountAgeRequest(request)) {
+                    log.warn("Failed to persist account age witness authorization for profile {}",
+                            request.getProfileId());
+                    return;
+                }
 
-                persistableStore.getAccountAgeRequests().add(request);
-                persist();
-
-                publishAuthorizedData(new AuthorizedAccountAgeData(request.getProfileId(), date, staticPublicKeysProvided));
+                publishAuthorizedData(new AuthorizedAccountAgeData(request.getProfileId(),
+                        response.getDateBucket(),
+                        response.getWitnessNullifier(),
+                        staticPublicKeysProvided));
             } catch (Exception e) {
                 log.error("processAuthorizeAccountAgeRequest failed", e);
             }
         }, executor);
     }
 
-    private void processAuthorizeSignedWitnessRequest(AuthorizeSignedWitnessRequest request) {
+    private boolean hasWitnessClaimConflict(String hashAsHex, String profileId) {
+        boolean accountAgeConflict = persistableStore.getAccountAgeRequests().stream()
+                .filter(existing -> existing.getProtocolVersion() == AuthorizeAccountAgeRequest.CURRENT_VERSION)
+                .filter(existing -> existing.getHashAsHex().equalsIgnoreCase(hashAsHex))
+                .anyMatch(existing -> !existing.getProfileId().equals(profileId));
+        return accountAgeConflict || persistableStore.getSignedWitnessRequests().stream()
+                .filter(existing -> existing.getProtocolVersion() == AuthorizeSignedWitnessRequest.CURRENT_VERSION)
+                .filter(existing -> existing.getHashAsHex().equalsIgnoreCase(hashAsHex))
+                .anyMatch(existing -> !existing.getProfileId().equals(profileId));
+    }
+
+    @VisibleForTesting
+    boolean persistAccountAgeRequest(AuthorizeAccountAgeRequest request) {
+        synchronized (witnessRequestLock) {
+            if (hasWitnessClaimConflict(request.getHashAsHex(), request.getProfileId())) {
+                return false;
+            }
+            boolean alreadyPersisted = persistableStore.getAccountAgeRequests().stream()
+                    .filter(existing -> existing.getProtocolVersion() == AuthorizeAccountAgeRequest.CURRENT_VERSION)
+                    .filter(existing -> existing.getHashAsHex().equalsIgnoreCase(request.getHashAsHex()))
+                    .anyMatch(existing -> existing.getProfileId().equals(request.getProfileId()));
+            if (alreadyPersisted) {
+                return true;
+            }
+
+            persistableStore.getAccountAgeRequests().add(request);
+            boolean persisted = persist().join();
+            if (!persisted) {
+                persistableStore.getAccountAgeRequests().remove(request);
+            }
+            return persisted;
+        }
+    }
+
+    private void processAuthorizeSignedWitnessRequest(PublicKey senderPublicKey,
+                                                       AuthorizeSignedWitnessRequest request) {
         CompletableFuture.runAsync(() -> {
             try {
-                long date = signedWitnessGrpcService.verifyAndRequestDate(request);
+                if (request.getProtocolVersion() != AuthorizeSignedWitnessRequest.CURRENT_VERSION) {
+                    log.warn("Rejecting legacy or unsupported signed-witness authorization protocol version {}",
+                            request.getProtocolVersion());
+                    return;
+                }
+                String senderProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
+                if (!request.getProfileId().equals(senderProfileId)) {
+                    log.warn("Rejecting signed-witness authorization whose profile does not match the confidential sender");
+                    return;
+                }
+                if (hasWitnessClaimConflict(request.getHashAsHex(), request.getProfileId())) {
+                    log.warn("Rejecting signed witness {} because it is already authorized for another profile",
+                            request.getHashAsHex());
+                    return;
+                }
+                var response = signedWitnessGrpcService.verifyAndRequestAuthorization(request);
+                if (!persistSignedWitnessRequest(request)) {
+                    log.warn("Failed to persist signed-witness authorization for profile {}", request.getProfileId());
+                    return;
+                }
 
-                persistableStore.getSignedWitnessRequests().add(request);
-                persist();
-
-                publishAuthorizedData(new AuthorizedSignedWitnessData(request.getProfileId(), date, staticPublicKeysProvided));
+                publishAuthorizedData(new AuthorizedSignedWitnessData(request.getProfileId(),
+                        response.getDateBucket(),
+                        response.getWitnessNullifier(),
+                        staticPublicKeysProvided));
             } catch (Exception e) {
                 log.error("processAuthorizeSignedWitnessRequest failed", e);
             }
         }, executor);
+    }
+
+    @VisibleForTesting
+    boolean persistSignedWitnessRequest(AuthorizeSignedWitnessRequest request) {
+        synchronized (witnessRequestLock) {
+            if (hasWitnessClaimConflict(request.getHashAsHex(), request.getProfileId())) {
+                return false;
+            }
+            boolean alreadyPersisted = persistableStore.getSignedWitnessRequests().stream()
+                    .filter(existing -> existing.getProtocolVersion() == AuthorizeSignedWitnessRequest.CURRENT_VERSION)
+                    .filter(existing -> existing.getHashAsHex().equalsIgnoreCase(request.getHashAsHex()))
+                    .anyMatch(existing -> existing.getProfileId().equals(request.getProfileId()));
+            if (alreadyPersisted) {
+                return true;
+            }
+
+            persistableStore.getSignedWitnessRequests().add(request);
+            boolean persisted = persist().join();
+            if (!persisted) {
+                persistableStore.getSignedWitnessRequests().remove(request);
+            }
+            return persisted;
+        }
     }
 
     private void processBondedRoleRegistrationRequest(PublicKey senderPublicKey,

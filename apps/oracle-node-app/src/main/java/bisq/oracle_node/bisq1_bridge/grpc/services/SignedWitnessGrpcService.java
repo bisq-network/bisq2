@@ -8,8 +8,8 @@
  *
  * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+ * for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
@@ -19,19 +19,10 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.common.application.Service;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
-import bisq.oracle_node.bisq1_bridge.grpc.messages.SignedWitnessDateRequest;
-import bisq.oracle_node.bisq1_bridge.grpc.messages.SignedWitnessDateResponse;
-import bisq.security.SignatureUtil;
-import bisq.security.keys.KeyGeneration;
+import bisq.oracle_node.bisq1_bridge.grpc.messages.SignedWitnessOwnershipRequest;
+import bisq.oracle_node.bisq1_bridge.grpc.messages.SignedWitnessOwnershipResponse;
 import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import lombok.extern.slf4j.Slf4j;
-
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.PublicKey;
-import java.util.Base64;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class SignedWitnessGrpcService implements Service {
@@ -41,49 +32,16 @@ public class SignedWitnessGrpcService implements Service {
         this.grpcClient = grpcClient;
     }
 
-    public long verifyAndRequestDate(AuthorizeSignedWitnessRequest request) {
-        log.info("verifyAndRequestDate {}", request);
+    public SignedWitnessOwnershipResponse verifyAndRequestAuthorization(AuthorizeSignedWitnessRequest request) {
+        log.info("verifyAndRequestAuthorization {}", request);
         try {
-            verifySignature(request);
-
-            String hashAsHex = request.getHashAsHex();
-            long date = requestDate(hashAsHex);
-
-            long witnessSignDate = request.getWitnessSignDate();
-            checkArgument(date == witnessSignDate,
-                    "Date of signed witness for %s is not matching the date from the users request. " +
-                            "Date from bridge service call: %s; Date from users request: %s",
-                    hashAsHex, date, witnessSignDate);
-
-            return date;
+            var protoRequest = new SignedWitnessOwnershipRequest(request).completeProto();
+            var protoResponse = grpcClient.getSignedWitnessBlockingStub()
+                    .verifySignedWitnessOwnership(protoRequest);
+            return SignedWitnessOwnershipResponse.fromProto(protoResponse);
         } catch (Exception e) {
-            log.warn("Error at verifyAndRequestDate", e);
+            log.warn("Error at verifyAndRequestAuthorization", e);
             throw new RuntimeException(e);
         }
-    }
-
-    private void verifySignature(AuthorizeSignedWitnessRequest request) throws GeneralSecurityException {
-        long witnessSignDate = request.getWitnessSignDate();
-        String profileId = request.getProfileId();
-        String hashAsHex = request.getHashAsHex();
-        long accountAgeWitnessDate = request.getAccountAgeWitnessDate();
-        byte[] signature = Base64.getDecoder().decode(request.getSignatureBase64());
-        String pubKeyBase64 = request.getPubKeyBase64();
-
-        String messageString = profileId + hashAsHex + accountAgeWitnessDate + witnessSignDate;
-        byte[] message = messageString.getBytes(StandardCharsets.UTF_8);
-        PublicKey publicKey = KeyGeneration.generatePublic(Base64.getDecoder().decode(pubKeyBase64), KeyGeneration.DSA);
-        boolean isValid = SignatureUtil.verify(message,
-                signature,
-                publicKey,
-                SignatureUtil.SHA256withDSA);
-        checkArgument(isValid, "Signature verification for %s failed", request);
-    }
-
-    private long requestDate(String hashAsHex) {
-        var protoRequest = new SignedWitnessDateRequest(hashAsHex).completeProto();
-        var protoResponse = grpcClient.getSignedWitnessBlockingStub().requestSignedWitnessDate(protoRequest);
-        SignedWitnessDateResponse response = SignedWitnessDateResponse.fromProto(protoResponse);
-        return response.getDate();
     }
 }
