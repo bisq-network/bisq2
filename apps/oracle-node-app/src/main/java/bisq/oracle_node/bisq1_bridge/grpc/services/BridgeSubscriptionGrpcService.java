@@ -86,18 +86,29 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
             requestPending.set(true);
             return;
         }
+        boolean historicalRequestPrepared = false;
+        boolean historicalRequestSuccessful = false;
         try {
-            doRequest(getStartBlockHeight()).forEach(this::handleResponse);
+            int startBlockHeight = prepareHistoricalRequest();
+            historicalRequestPrepared = true;
+            doRequest(startBlockHeight).forEach(this::handleResponse);
             onHistoricalRequestComplete();
+            historicalRequestSuccessful = true;
 
             retryRequestAttempts.set(0);
             retryRequestInterval.set(1);
         } catch (Exception e) {
             handleRequestException(e);
         } finally {
-            requestInProgress.set(false);
-            if (requestPending.getAndSet(false) && !shutdownCalled) {
-                requestAsync();
+            try {
+                if (historicalRequestPrepared) {
+                    onHistoricalRequestFinished(historicalRequestSuccessful);
+                }
+            } finally {
+                requestInProgress.set(false);
+                if (requestPending.getAndSet(false) && !shutdownCalled) {
+                    requestAsync();
+                }
             }
         }
     }
@@ -111,11 +122,18 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         return DevMode.isDevMode() ? 0 : LAUNCH_BLOCK_HEIGHT;
     }
 
+    protected int prepareHistoricalRequest() {
+        return getStartBlockHeight();
+    }
+
     protected abstract List<T> doRequest(int startBlockHeight);
 
     protected abstract void handleResponse(T data);
 
     protected void onHistoricalRequestComplete() {
+    }
+
+    protected void onHistoricalRequestFinished(boolean successful) {
     }
 
     protected abstract void subscribe();

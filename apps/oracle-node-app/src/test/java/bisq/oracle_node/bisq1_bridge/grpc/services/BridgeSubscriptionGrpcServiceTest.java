@@ -18,6 +18,8 @@
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -53,19 +55,38 @@ class BridgeSubscriptionGrpcServiceTest {
         service.shutdown();
     }
 
+    @Test
+    void failedHistoricalRequestStillFinishesItsLifecycle() {
+        TestService service = new TestService(new StatusRuntimeException(Status.UNIMPLEMENTED));
+
+        service.initialize();
+
+        assertThat(service.finishedRequestCount).hasValue(1);
+    }
+
     private static final class TestService extends BridgeSubscriptionGrpcService<Integer> {
         private final List<String> calls = new ArrayList<>();
         private final AtomicInteger subscribeCount = new AtomicInteger();
         private final AtomicInteger requestCount = new AtomicInteger();
+        private final AtomicInteger finishedRequestCount = new AtomicInteger();
         private final CountDownLatch secondRequest = new CountDownLatch(1);
+        private final RuntimeException requestFailure;
 
         private TestService() {
+            this(null);
+        }
+
+        private TestService(RuntimeException requestFailure) {
             super(false, mock(GrpcClient.class));
+            this.requestFailure = requestFailure;
         }
 
         @Override
         protected List<Integer> doRequest(int startBlockHeight) {
             calls.add("request");
+            if (requestFailure != null) {
+                throw requestFailure;
+            }
             if (requestCount.incrementAndGet() == 2) {
                 secondRequest.countDown();
             }
@@ -80,6 +101,11 @@ class BridgeSubscriptionGrpcServiceTest {
         @Override
         protected void onHistoricalRequestComplete() {
             calls.add("snapshot-complete");
+        }
+
+        @Override
+        protected void onHistoricalRequestFinished(boolean successful) {
+            finishedRequestCount.incrementAndGet();
         }
 
         @Override

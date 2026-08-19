@@ -87,10 +87,10 @@ the `staticPublicKeysProvided` transport field, which is intentionally excluded 
 
 ## DAO revalidation
 
-At startup, after every completed live DAO block and after every successful historical catch-up, the
-oracle sends one batch containing all registrations it still considers active. The Bisq 1 bridge
-evaluates the batch against one DAO-state snapshot and returns its block height and one result in
-request order.
+At startup, after every live DAO block which advances the contiguous bridge view and after every
+successful historical catch-up, the oracle sends one batch containing all registrations it still
+considers active. The Bisq 1 bridge evaluates the batch against one DAO-state snapshot and returns
+its block height and one result in request order.
 
 - The response cardinality must equal the request cardinality. Otherwise the oracle ignores the
   malformed response and retains every registration.
