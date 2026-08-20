@@ -132,8 +132,11 @@ public class BisqConnectController implements Controller {
                     item.getClientId().ifPresent(clientId -> {
                         // Session and connection cleanup is part of revokeClient, so the same
                         // revocation semantics apply here and on the REST endpoint.
-                        apiAccessService.revokeClient(clientId);
-                        log.info("Revoked client {} ({})", item.getClientName(), clientId);
+                        if (apiAccessService.revokeClient(clientId)) {
+                            log.info("Revoked client {} ({})", item.getClientName(), clientId);
+                        }
+                        // The not-found path is a no-op here (stale list entry or double click);
+                        // the service already warns and cleans up session and connection.
                     });
                 })
                 .secondaryActionButtonText(Res.get("settings.bisqConnect.clients.expireSession"))
