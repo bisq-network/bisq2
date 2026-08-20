@@ -101,12 +101,30 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
             log.debug("Received message {}", JsonUtil.redactCredentials(message));
         }
         CompletableFuture.runAsync(() -> {
-            if (subscriptionService.canHandle(message)) {
-                subscriptionService.onMessage(message, webSocket);
-            } else if (webSocketRestApiService.canHandle(message)) {
-                webSocketRestApiService.onMessage(message, webSocket);
-            } else {
-                log.error("No service found for handling message: {}", JsonUtil.redactCredentials(message));
+            // Rechecked here because the check above happened before this task was queued, and a
+            // revocation in between must not be able to subscribe the socket again.
+            if (!getWebSockets().contains(webSocket)) {
+                log.warn("Dropping queued message of a disconnected WebSocket");
+                closeQuietly(webSocket);
+                return;
+            }
+            try {
+                if (subscriptionService.canHandle(message)) {
+                    subscriptionService.onMessage(message, webSocket);
+                } else if (webSocketRestApiService.canHandle(message)) {
+                    webSocketRestApiService.onMessage(message, webSocket);
+                } else {
+                    log.error("No service found for handling message: {}", JsonUtil.redactCredentials(message));
+                }
+            } finally {
+                // The recheck and the handling are still two steps, so a revocation can land while
+                // the message is being handled and its cleanup would run before the subscription
+                // exists. Sweeping afterwards makes that self correcting: a subscription added by
+                // a revoked socket is removed again instead of outliving the revocation.
+                if (!getWebSockets().contains(webSocket)) {
+                    subscriptionService.onConnectionClosed(webSocket);
+                    closeQuietly(webSocket);
+                }
             }
         }, executor);
     }

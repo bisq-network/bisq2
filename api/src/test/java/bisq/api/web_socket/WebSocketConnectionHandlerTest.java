@@ -22,17 +22,23 @@ import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
+import org.glassfish.grizzly.websockets.WebSocket;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,6 +56,22 @@ class WebSocketConnectionHandlerTest {
         }
     }
 
+    /** Reports the socket as registered once, then as gone, as a revocation between the two would. */
+    private static class DropAfterFirstCheckHandler extends TestableHandler {
+        private final AtomicBoolean firstCheckDone = new AtomicBoolean();
+
+        DropAfterFirstCheckHandler(SubscriptionService subscriptionService,
+                                   WebSocketRestApiService restApiService) {
+            super(subscriptionService, restApiService);
+        }
+
+        @Override
+        protected Set<WebSocket> getWebSockets() {
+            Set<WebSocket> sockets = super.getWebSockets();
+            return firstCheckDone.compareAndSet(false, true) ? sockets : Set.of();
+        }
+    }
+
     private SubscriptionService subscriptionService;
     private WebSocketRestApiService webSocketRestApiService;
     private TestableHandler handler;
@@ -62,11 +84,15 @@ class WebSocketConnectionHandlerTest {
     }
 
     private DefaultWebSocket connect(String clientId) {
+        return connect(handler, clientId);
+    }
+
+    private DefaultWebSocket connect(TestableHandler target, String clientId) {
         DefaultWebSocket webSocket = mock(DefaultWebSocket.class, RETURNS_DEEP_STUBS);
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getHeader(Headers.CLIENT_ID)).thenReturn(clientId);
         when(webSocket.getUpgradeRequest()).thenReturn(request);
-        handler.onConnect(webSocket);
+        target.onConnect(webSocket);
         return webSocket;
     }
 
@@ -81,6 +107,8 @@ class WebSocketConnectionHandlerTest {
 
         verify(failing).close();
         verify(closing).close();
+        assertFalse(handler.isRegistered(failing));
+        assertFalse(handler.isRegistered(closing));
         assertTrue(handler.isRegistered(otherClient));
     }
 
@@ -112,12 +140,47 @@ class WebSocketConnectionHandlerTest {
     }
 
     @Test
+    void aRevocationDuringMessageHandlingSweepsWhatTheMessageAdded() {
+        // The registration recheck and the handling are two steps, so a revocation can land in
+        // between and its cleanup runs before the subscription exists. Without the sweep the
+        // subscription would outlive the revocation and keep feeding a revoked client.
+        DefaultWebSocket webSocket = connect(REVOKED_CLIENT_ID);
+        when(subscriptionService.canHandle(anyString())).thenReturn(true);
+        doAnswer(invocation -> {
+            handler.disconnectClient(REVOKED_CLIENT_ID);
+            return null;
+        }).when(subscriptionService).onMessage(anyString(), any());
+
+        handler.onMessage(webSocket, "{\"anything\":true}");
+
+        // Once from the revocation itself, once from the sweep after the message was handled.
+        verify(subscriptionService, timeout(5000).times(2)).onConnectionClosed(webSocket);
+    }
+
+    @Test
+    void aMessageIsDroppedWhenTheSocketIsRevokedBeforeItsTaskRuns() {
+        // The socket passes the synchronous check and is deregistered before the queued task runs.
+        // Simulated rather than raced: the executor hands each message to its own thread, so a
+        // real revocation cannot be timed against the task deterministically.
+        DropAfterFirstCheckHandler racingHandler =
+                new DropAfterFirstCheckHandler(subscriptionService, webSocketRestApiService);
+        DefaultWebSocket webSocket = connect(racingHandler, REVOKED_CLIENT_ID);
+        when(subscriptionService.canHandle(anyString())).thenReturn(true);
+
+        racingHandler.onMessage(webSocket, "{\"anything\":true}");
+
+        verify(webSocket, timeout(5000).atLeastOnce()).close();
+        verify(subscriptionService, never()).onMessage(anyString(), any());
+        verify(webSocketRestApiService, never()).onMessage(anyString(), any());
+    }
+
+    @Test
     void aConnectedSocketStillProcessesMessages() {
         DefaultWebSocket webSocket = connect("live-client");
         when(subscriptionService.canHandle(anyString())).thenReturn(true);
 
         handler.onMessage(webSocket, "{\"anything\":true}");
 
-        verify(subscriptionService, org.mockito.Mockito.timeout(5000)).onMessage(anyString(), any());
+        verify(subscriptionService, timeout(5000)).onMessage(anyString(), any());
     }
 }
