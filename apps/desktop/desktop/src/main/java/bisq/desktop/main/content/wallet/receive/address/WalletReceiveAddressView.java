@@ -38,7 +38,7 @@ import org.fxmisc.easybind.Subscription;
 public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressModel, WalletReceiveAddressController> {
     private final AddressNoteInputBox addressNoteInputBox;
     private final Label addressDescriptionLabel, addressLabel;
-    private final BisqMenuItem createAddressButton, saveNoteButton, deleteNoteButton, generateQrCodeButton,
+    private final BisqMenuItem createAddressButton, saveNoteButton, clearNoteButton, generateQrCodeButton,
             copyAddressButton, addAddressNoteButton;
     private final ImageView chevronDownWhite, chevronDownGrey, chevronUpWhite, chevronUpGrey;
     private final HBox addressNoteHBox;
@@ -90,12 +90,12 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         saveNoteButton = new BisqMenuItem("save-mid-grey", "save-mid-white");
         saveNoteButton.setTooltip(Res.get("wallet.receive.save"));
 
-        deleteNoteButton = new BisqMenuItem("close-mid-grey", "close-mid-white");
-        deleteNoteButton.setTooltip(Res.get("action.delete"));
+        clearNoteButton = new BisqMenuItem("close-mid-grey", "close-mid-white");
+        clearNoteButton.setTooltip(Res.get("wallet.receive.clear"));
 
         HBox.setMargin(saveNoteButton, new Insets(8, 0, -8, 0));
-        HBox.setMargin(deleteNoteButton, new Insets(8, 0, -8, -10));
-        addressNoteHBox = new HBox(20, addressNoteInputBox, saveNoteButton, deleteNoteButton);
+        HBox.setMargin(clearNoteButton, new Insets(8, 0, -8, -10));
+        addressNoteHBox = new HBox(20, addressNoteInputBox, saveNoteButton, clearNoteButton);
         addressNoteHBox.setAlignment(Pos.TOP_CENTER);
         addressNoteHBox.setMinHeight(56);
 
@@ -131,7 +131,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         copyAddressButton.setOnAction(e -> controller.onCopyToClipboard());
         createAddressButton.setOnAction(e -> controller.onCreateNewReceiveAddress());
         saveNoteButton.setOnAction(e -> controller.onSaveAddressNote());
-        deleteNoteButton.setOnAction(e -> controller.onDeleteAddressNote());
+        clearNoteButton.setOnAction(e -> controller.onClearAddressNote());
         addAddressNoteButton.setOnAction(e -> controller.onAddAddressNote());
         addAddressNoteButton.setOnMouseEntered(e -> updateAddAddressNoteButtonIcon());
         addAddressNoteButton.setOnMouseExited(e -> updateAddAddressNoteButtonIcon());
@@ -157,7 +157,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         copyAddressButton.setOnAction(null);
         createAddressButton.setOnAction(null);
         saveNoteButton.setOnAction(null);
-        deleteNoteButton.setOnAction(null);
+        clearNoteButton.setOnAction(null);
         addAddressNoteButton.setOnAction(null);
         addAddressNoteButton.setOnMouseEntered(null);
         addAddressNoteButton.setOnMouseExited(null);
@@ -176,7 +176,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
                 && addressNoteInputBox.isValidProperty().get()
                 && model.getIsAddressNoteEditable().get();
         saveNoteButton.setVisible(shouldBeVisible);
-        deleteNoteButton.setVisible(shouldBeVisible);
+        clearNoteButton.setVisible(shouldBeVisible);
     }
 
     private void updateAddAddressNoteButtonIcon() {

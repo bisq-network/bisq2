@@ -106,7 +106,7 @@ public class WalletReceiveAddressController implements Controller {
         });
     }
 
-    void onDeleteAddressNote() {
+    void onClearAddressNote() {
         UIThread.run(() -> {
             model.getReceiveAddressNote().set("");
         });
