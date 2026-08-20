@@ -24,7 +24,6 @@ import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
@@ -107,7 +106,7 @@ public class ApiService implements Service {
     @Getter
     private final PairingService pairingService;
     @Getter
-    private final PermissionService<RestPermissionMapping> permissionService;
+    private final PermissionService permissionService;
     @Getter
     private final SessionService sessionService;
     @Getter
@@ -150,7 +149,7 @@ public class ApiService implements Service {
                 apiConfig.getOnionServicePort());
 
         ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
-        permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
+        permissionService = new PermissionService(apiAccessStoreService);
         pairingService = new PairingService(apiConfig, appDataDirPath, apiAccessStoreService, permissionService);
         sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
         tlsContextService = new TlsContextService(apiConfig, appDataDirPath);
@@ -158,7 +157,27 @@ public class ApiService implements Service {
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-        ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
+        if (apiConfig.isWebsocketEnabled()) {
+            webSocketService = Optional.of(new WebSocketService(apiConfig,
+                    tlsContextService,
+                    bondedRolesService,
+                    alertNotificationsService,
+                    chatService,
+                    tradeService,
+                    userService,
+                    bisqEasyService,
+                    networkService,
+                    openTradeItemsService,
+                    permissionService));
+        } else {
+            webSocketService = Optional.empty();
+        }
+
+        // Built before ApiAccessService because revoking a client has to end its connection, and
+        // nothing between here and where this used to sit needs the WebSocket server.
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService,
+                sessionService,
+                webSocketService);
         AccessApi accessApi = new AccessApi(apiAccessService);
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
@@ -216,26 +235,10 @@ public class ApiService implements Service {
             resourceConfig = new PairingApiResourceConfig(accessApi);
         }
 
-        if (apiConfig.isWebsocketEnabled()) {
-            webSocketService = Optional.of(new WebSocketService(apiConfig,
-                    tlsContextService,
-                    bondedRolesService,
-                    alertNotificationsService,
-                    chatService,
-                    tradeService,
-                    userService,
-                    bisqEasyService,
-                    networkService,
-                    openTradeItemsService));
-        } else {
-            webSocketService = Optional.empty();
-        }
-
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
                 resourceConfig,
                 webSocketService,
                 sessionAuthenticationService,
-                permissionService,
                 tlsContextService);
     }
 
