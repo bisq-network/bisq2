@@ -86,6 +86,14 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
 
     @Override
     public void onMessage(WebSocket webSocket, String message) {
+        // A socket dropped by disconnectClient is deregistered even when its close failed, and a
+        // revoked client must not keep subscribing or receiving data through a socket that stayed
+        // alive. Checked before the async dispatch so no work is queued for it.
+        if (!getWebSockets().contains(webSocket)) {
+            log.warn("Ignoring message from a disconnected WebSocket");
+            closeQuietly(webSocket);
+            return;
+        }
         // Debug rather than info: this is one full message plus a redaction pass per message, which
         // production should not pay for. Redacted because a client released before the node took the
         // identity from the handshake puts its session id into the payload.
@@ -109,7 +117,9 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
      * <p>
      * A client can hold more than one connection, so a failing close is caught per socket: an
      * exception escaping here would leave the client's remaining sockets connected, and a revoked
-     * client must not keep a live connection.
+     * client must not keep a live connection. A close that fails cannot be forced at this level,
+     * so the socket is instead unsubscribed and deregistered, which stops both pushed data and
+     * anything it tries to send.
      *
      * @param clientId The client ID whose connections should be closed
      */
@@ -131,8 +141,26 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
                         webSocket.close();
                     } catch (Exception e) {
                         log.warn("Could not close WebSocket of revoked client {}", clientId, e);
+                    } finally {
+                        // Applied regardless of whether the close succeeded. A socket whose close
+                        // failed stays connected, and subscriptions carry no permission check of
+                        // their own, so dropping the subscriptions and deregistering the socket is
+                        // what actually stops data reaching a revoked client. Deregistering also
+                        // makes onMessage reject anything the socket still sends. Both are
+                        // idempotent, so the onClose that follows a successful close is harmless.
+                        subscriptionService.onConnectionClosed(webSocket);
+                        remove(webSocket);
                     }
                 });
+        updateWebsocketClients();
+    }
+
+    private void closeQuietly(WebSocket webSocket) {
+        try {
+            webSocket.close();
+        } catch (Exception e) {
+            log.debug("Repeated close of an already dropped WebSocket failed", e);
+        }
     }
 
     private void updateWebsocketClients() {
