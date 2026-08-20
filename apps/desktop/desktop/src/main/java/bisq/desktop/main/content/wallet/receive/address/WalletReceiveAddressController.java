@@ -50,7 +50,7 @@ public class WalletReceiveAddressController implements Controller {
                         model.getReceiveAddress().set(receiveAddress);
                         walletService.findReceiveAddressEntry(receiveAddress).ifPresent(entry -> {
                             model.getReceiveAddressEntry().set(entry);
-                            model.getReceiveAddressName().set(entry.getName().orElse(null));
+                            model.getReceiveAddressNote().set(entry.getNote().orElse(null));
                         });
                         updateIsNewAddress(false);
                     });
@@ -87,28 +87,28 @@ public class WalletReceiveAddressController implements Controller {
                     UIThread.run(() -> {
                         model.getReceiveAddressEntry().set(receiveAddressEntry);
                         model.getReceiveAddress().set(receiveAddressEntry.getAddress());
-                        model.getReceiveAddressName().set(null);
+                        model.getReceiveAddressNote().set(null);
                         updateIsNewAddress(true);
                     });
                 });
     }
 
-    void onSaveAddressName() {
+    void onSaveAddressNote() {
         UIThread.run(() -> {
             if (model.getReceiveAddressEntry().get() != null
-                    && model.getReceiveAddressName().get() != null) {
-                String addressName = model.getReceiveAddressName().get().trim();
-                boolean wasUpdated = walletService.updateReceiveAddress(model.getReceiveAddressEntry().get(), Optional.of(addressName));
+                    && model.getReceiveAddressNote().get() != null) {
+                String addressNote = model.getReceiveAddressNote().get().trim();
+                boolean wasUpdated = walletService.updateReceiveAddress(model.getReceiveAddressEntry().get(), Optional.of(addressNote));
                 if (wasUpdated) {
-                    model.getIsAddressNameEditable().set(false);
+                    model.getIsAddressNoteEditable().set(false);
                 }
             }
         });
     }
 
-    void onDeleteAddressName() {
+    void onDeleteAddressNote() {
         UIThread.run(() -> {
-            model.getReceiveAddressName().set("");
+            model.getReceiveAddressNote().set("");
         });
     }
 
@@ -124,8 +124,8 @@ public class WalletReceiveAddressController implements Controller {
         model.getAddressTextFieldDescription().set(isNewAddress
                 ? Res.get("wallet.receive.newUnusedAddress")
                 : Res.get("wallet.receive.unusedAddress"));
-        boolean hasName = model.getReceiveAddressName().get() != null;
-        model.getIsAddressNameEditable().set(isNewAddress && !hasName);
-        model.getShouldShowAddressNote().set(hasName);
+        boolean hasNote = model.getReceiveAddressNote().get() != null;
+        model.getIsAddressNoteEditable().set(isNewAddress && !hasNote);
+        model.getShouldShowAddressNote().set(hasNote);
     }
 }

@@ -83,7 +83,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         addressNoteInputBox = new AddressNoteInputBox();
         addressNoteInputBox.setEditable(true);
         addressNoteInputBox.setMinWidth(230);
-        addressNoteInputBox.setValidators(model.getAddressNameMinMaxLengthValidator());
+        addressNoteInputBox.setValidators(model.getAddressNoteMaxLengthValidator());
         addressNoteInputBox.setPromptText(Res.get("wallet.receive.addNote"));
         addressNoteInputBox.setIconTooltip(Res.get("wallet.receive.addressNoteInfo"));
 
@@ -113,13 +113,13 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         addressDescriptionLabel.textProperty().bind(model.getAddressTextFieldDescription());
         addressLabel.textProperty().bind(model.getReceiveAddress());
         addressNoteHBox.visibleProperty().bind(model.getShouldShowAddressNote());
-        addressNoteInputBox.textProperty().bindBidirectional(model.getReceiveAddressName());
+        addressNoteInputBox.textProperty().bindBidirectional(model.getReceiveAddressNote());
 
         isNewAddressPin = EasyBind.subscribe(model.getIsNewAddress(), this::resetValidation);
         isAddressNoteValidPin = EasyBind.subscribe(addressNoteInputBox.isValidProperty(), isValid -> {
             updateAddressNoteButtonsVisibility();
         });
-        isAddressNoteEditablePin = EasyBind.subscribe(model.getIsAddressNameEditable(), isEditable -> {
+        isAddressNoteEditablePin = EasyBind.subscribe(model.getIsAddressNoteEditable(), isEditable -> {
             addressNoteInputBox.setEditable(isEditable);
             updateAddressNoteButtonsVisibility();
         });
@@ -130,8 +130,8 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         generateQrCodeButton.setOnAction(e -> controller.onGenerateQrCode());
         copyAddressButton.setOnAction(e -> controller.onCopyToClipboard());
         createAddressButton.setOnAction(e -> controller.onCreateNewReceiveAddress());
-        saveNoteButton.setOnAction(e -> controller.onSaveAddressName());
-        deleteNoteButton.setOnAction(e -> controller.onDeleteAddressName());
+        saveNoteButton.setOnAction(e -> controller.onSaveAddressNote());
+        deleteNoteButton.setOnAction(e -> controller.onDeleteAddressNote());
         addAddressNoteButton.setOnAction(e -> controller.onAddAddressNote());
         addAddressNoteButton.setOnMouseEntered(e -> updateAddAddressNoteButtonIcon());
         addAddressNoteButton.setOnMouseExited(e -> updateAddAddressNoteButtonIcon());
@@ -146,7 +146,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         addressDescriptionLabel.textProperty().unbind();
         addressLabel.textProperty().unbind();
         addressNoteHBox.visibleProperty().unbind();
-        addressNoteInputBox.textProperty().unbindBidirectional(model.getReceiveAddressName());
+        addressNoteInputBox.textProperty().unbindBidirectional(model.getReceiveAddressNote());
 
         isNewAddressPin.unsubscribe();
         isAddressNoteValidPin.unsubscribe();
@@ -174,7 +174,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
     private void updateAddressNoteButtonsVisibility() {
         boolean shouldBeVisible = model.getIsNewAddress().get()
                 && addressNoteInputBox.isValidProperty().get()
-                && model.getIsAddressNameEditable().get();
+                && model.getIsAddressNoteEditable().get();
         saveNoteButton.setVisible(shouldBeVisible);
         deleteNoteButton.setVisible(shouldBeVisible);
     }

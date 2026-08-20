@@ -48,7 +48,7 @@ public class WalletAddressQrCodeModel implements Model {
 
     private final BitcoinUriAmountValidator bitcoinUriAmountValidator = new BitcoinUriAmountValidator();
     private final TextMaxLengthValidator labelMaxLengthValidator =
-            new TextMaxLengthValidator(Res.get("wallet.receive.name.maxLength", LABEL_MAX_LENGTH), LABEL_MAX_LENGTH);
+            new TextMaxLengthValidator(Res.get("wallet.receive.note.maxLength", LABEL_MAX_LENGTH), LABEL_MAX_LENGTH);
 
     public WalletAddressQrCodeModel(int qrCodeSize) {
         this.qrCodeSize = qrCodeSize;

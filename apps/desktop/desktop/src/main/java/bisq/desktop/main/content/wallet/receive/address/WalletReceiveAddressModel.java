@@ -36,17 +36,17 @@ import lombok.extern.slf4j.Slf4j;
 public class WalletReceiveAddressModel implements Model {
     private final ObjectProperty<ReceiveAddressEntry> receiveAddressEntry = new SimpleObjectProperty<>();
     private final StringProperty receiveAddress = new SimpleStringProperty();
-    private final StringProperty receiveAddressName = new SimpleStringProperty();
+    private final StringProperty receiveAddressNote = new SimpleStringProperty();
     private final BooleanProperty isNewAddress = new SimpleBooleanProperty();
-    private final BooleanProperty isAddressNameEditable = new SimpleBooleanProperty();
+    private final BooleanProperty isAddressNoteEditable = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowAddressNote = new SimpleBooleanProperty();
     private final StringProperty addressTextFieldDescription =  new SimpleStringProperty();
 
-    private final TextMaxLengthValidator addressNameMinMaxLengthValidator =
+    private final TextMaxLengthValidator addressNoteMaxLengthValidator =
             new TextMaxLengthValidator(
-                    Res.get("wallet.receive.name.maxLength",
-                            ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH),
-                    ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH);
+                    Res.get("wallet.receive.note.maxLength",
+                            ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH),
+                    ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH);
 
     public WalletReceiveAddressModel() {
     }
@@ -54,9 +54,9 @@ public class WalletReceiveAddressModel implements Model {
     void reset() {
         receiveAddressEntry.set(null);
         receiveAddress.set(null);
-        receiveAddressName.set(null);
+        receiveAddressNote.set(null);
         isNewAddress.set(false);
-        isAddressNameEditable.set(false);
+        isAddressNoteEditable.set(false);
         shouldShowAddressNote.set(false);
         addressTextFieldDescription.set(null);
     }

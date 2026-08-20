@@ -180,8 +180,8 @@ public class WalletService implements Service {
     }
 
     public boolean updateReceiveAddress(ReceiveAddressEntry receiveAddressEntry,
-                                        Optional<String> name) {
-        return receiveAddressService.updateReceiveAddressEntry(receiveAddressEntry, name);
+                                        Optional<String> note) {
+        return receiveAddressService.updateReceiveAddressEntry(receiveAddressEntry, note);
     }
 
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
