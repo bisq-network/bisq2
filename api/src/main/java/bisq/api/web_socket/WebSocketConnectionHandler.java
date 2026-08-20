@@ -104,10 +104,14 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     }
 
     /**
-     * Closes the WebSocket connection for a specific client.
+     * Closes all WebSocket connections of a specific client.
      * Called after revoking a client profile to force immediate disconnection.
+     * <p>
+     * A client can hold more than one connection, so a failing close is caught per socket: an
+     * exception escaping here would leave the client's remaining sockets connected, and a revoked
+     * client must not keep a live connection.
      *
-     * @param clientId The client ID whose connection should be closed
+     * @param clientId The client ID whose connections should be closed
      */
     public void disconnectClient(String clientId) {
         getWebSockets().stream()
@@ -123,7 +127,11 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
                 })
                 .forEach(webSocket -> {
                     log.info("Disconnecting revoked client: {}", clientId);
-                    webSocket.close();
+                    try {
+                        webSocket.close();
+                    } catch (Exception e) {
+                        log.warn("Could not close WebSocket of revoked client {}", clientId, e);
+                    }
                 });
     }
 
