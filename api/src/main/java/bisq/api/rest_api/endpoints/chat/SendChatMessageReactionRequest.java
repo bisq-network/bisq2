@@ -15,12 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.rest_api.endpoints.chat.trade;
-
-
-import bisq.api.dto.chat.CitationDto;
+package bisq.api.rest_api.endpoints.chat;
 
 import javax.annotation.Nullable;
 
-public record SendChatMessageRequest(String text, @Nullable CitationDto citation) {
+public record SendChatMessageReactionRequest(int reactionId, boolean isRemoved, @Nullable String senderUserProfileId) {
 }

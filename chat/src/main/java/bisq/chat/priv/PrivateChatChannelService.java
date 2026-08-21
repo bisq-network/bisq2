@@ -96,11 +96,9 @@ public abstract class PrivateChatChannelService<
                                                                ChatMessageType chatMessageType,
                                                                long date) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
-        if (isPeerBanned(receiver)) {
-            return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
+        Optional<SendRejection> rejection = findSendRejection(channel, receiver);
+        if (rejection.isPresent()) {
+            return CompletableFuture.failedFuture(new RuntimeException(rejection.get().name()));
         }
 
         M chatMessage = createAndGetNewPrivateChatMessage(messageId,
@@ -116,6 +114,22 @@ public abstract class PrivateChatChannelService<
         NetworkId receiverNetworkId = receiver.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
         return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
+    }
+
+    /**
+     * Why a send to this receiver would be refused before anything is stored, if it would. Both send
+     * paths guard on it, and callers that need to tell a local refusal apart from a delivery failure
+     * have to ask here: the future they get back cannot separate the two, because a refusal happens
+     * before {@link #addMessage} and a delivery failure after it.
+     */
+    public Optional<SendRejection> findSendRejection(C channel, UserProfile receiver) {
+        if (bannedUserService.isUserProfileBanned(channel.getMyUserIdentity().getUserProfile())) {
+            return Optional.of(SendRejection.MY_PROFILE_BANNED);
+        }
+        if (isPeerBanned(receiver)) {
+            return Optional.of(SendRejection.PEER_BANNED);
+        }
+        return Optional.empty();
     }
 
     protected boolean isPeerBanned(UserProfile userProfile) {
@@ -164,11 +178,9 @@ public abstract class PrivateChatChannelService<
                                                                        String messageReactionId,
                                                                        boolean isRemoved) {
         UserIdentity myUserIdentity = chatChannel.getMyUserIdentity();
-        if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
-        if (isPeerBanned(receiver)) {
-            return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
+        Optional<SendRejection> rejection = findSendRejection(chatChannel, receiver);
+        if (rejection.isPresent()) {
+            return CompletableFuture.failedFuture(new RuntimeException(rejection.get().name()));
         }
 
         R chatMessageReaction = createAndGetNewPrivateChatMessageReaction(message, myUserIdentity.getUserProfile(),

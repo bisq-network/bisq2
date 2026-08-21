@@ -5,6 +5,7 @@ import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.rest_api.endpoints.access.AccessApi;
+import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.endpoints.config.ConfigRestApi;
 import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
@@ -34,6 +35,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  OfferbookRestApi offerbookRestApi,
                                  TradeRestApi tradeRestApi,
                                  TradeChatMessagesRestApi tradeChatMessagesRestApi,
+                                 PrivateChatRestApi privateChatRestApi,
                                  UserIdentityRestApi userIdentityRestApi,
                                  MarketPriceRestApi marketPriceRestApi,
                                  SettingsRestApi settingsRestApi,
@@ -55,6 +57,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
         register(OfferbookRestApi.class);
         register(TradeRestApi.class);
         register(TradeChatMessagesRestApi.class);
+        register(PrivateChatRestApi.class);
         register(UserIdentityRestApi.class);
         register(MarketPriceRestApi.class);
         register(SettingsRestApi.class);
@@ -74,6 +77,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                 bind(offerbookRestApi).to(OfferbookRestApi.class);
                 bind(tradeRestApi).to(TradeRestApi.class);
                 bind(tradeChatMessagesRestApi).to(TradeChatMessagesRestApi.class);
+                bind(privateChatRestApi).to(PrivateChatRestApi.class);
                 bind(userIdentityRestApi).to(UserIdentityRestApi.class);
                 bind(marketPriceRestApi).to(MarketPriceRestApi.class);
                 bind(settingsRestApi).to(SettingsRestApi.class);

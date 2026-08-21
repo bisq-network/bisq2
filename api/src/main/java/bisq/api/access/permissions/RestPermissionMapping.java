@@ -53,6 +53,7 @@ public final class RestPermissionMapping implements PermissionMapping {
         // TODO apply rules to actual endpoints and methods. Atm we only check the root path
         this.rules = List.of(
                 new PermissionRule("^/trade-chat-channels(/.*)?$", Optional.empty(), Permission.TRADE_CHAT_CHANNELS),
+                new PermissionRule("^/private-chat-channels(/.*)?$", Optional.empty(), Permission.PRIVATE_CHAT_CHANNELS),
                 new PermissionRule("^/explorer(/.*)?$", Optional.empty(), Permission.EXPLORER),
                 new PermissionRule("^/market-price(/.*)?$", Optional.empty(), Permission.MARKET_PRICE),
                 new PermissionRule("^/offerbook(/.*)?$", Optional.empty(), Permission.OFFERBOOK),
