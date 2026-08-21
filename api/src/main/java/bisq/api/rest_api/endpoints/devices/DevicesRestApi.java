@@ -20,6 +20,7 @@ package bisq.api.rest_api.endpoints.devices;
 import bisq.api.access.filter.Headers;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.common.util.StringUtils;
+import bisq.notifications.mobile.registration.DeviceRegistrationResult;
 import bisq.notifications.mobile.registration.DeviceRegistrationService;
 import bisq.notifications.mobile.registration.MobileDevicePlatform;
 
@@ -74,6 +75,7 @@ public class DevicesRestApi extends RestApiBase {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Device registered or updated"),
                     @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+                    @ApiResponse(responseCode = "401", description = "Client was revoked, pairing is required"),
                     @ApiResponse(responseCode = "403", description = "Device is registered to another client"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
@@ -148,7 +150,7 @@ public class DevicesRestApi extends RestApiBase {
         try {
             // The clientId ties the registration to the calling API client, so revoking that
             // client also stops its push notifications, and no other client can claim the device.
-            boolean registered = deviceRegistrationService.register(
+            DeviceRegistrationResult result = deviceRegistrationService.register(
                     deviceId,
                     deviceToken,
                     publicKeyBase64,
@@ -157,8 +159,13 @@ public class DevicesRestApi extends RestApiBase {
                     symmetricKeyBase64,
                     clientId
             );
-            if (!registered) {
+            if (result == DeviceRegistrationResult.DEVICE_OWNED_BY_ANOTHER_CLIENT) {
                 return buildResponse(Response.Status.FORBIDDEN, "Device is registered to another client");
+            }
+            if (result == DeviceRegistrationResult.CLIENT_REVOKED) {
+                // The client was revoked while this request was in flight. 401 rather than 403, so
+                // the app treats it as "pair again" instead of "permission missing".
+                return buildResponse(Response.Status.UNAUTHORIZED, "Client was revoked, pairing is required");
             }
 
             log.info("Device registered: deviceId={}, platform={}", deviceId, platform);

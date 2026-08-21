@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -39,6 +40,17 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
     private final DeviceRegistrationStore persistableStore = new DeviceRegistrationStore();
     @Getter
     private final Persistence<DeviceRegistrationStore> persistence;
+    /**
+     * Clients revoked in this process. A registration request that passed authorization before the
+     * revocation can resume afterwards and would otherwise recreate a registration owned by a
+     * client that no longer exists, which nothing would ever revoke again.
+     * <p>
+     * Not persisted, and it does not need to be: it only has to outlive in-flight requests. Once
+     * the profile is gone, any new request from that client fails authorization, and after a
+     * restart there are no in-flight requests. Client IDs are random and never reused, so entries
+     * never turn into false rejections.
+     */
+    private final Set<String> revokedClientIds = ConcurrentHashMap.newKeySet();
 
     public DeviceRegistrationService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
@@ -52,10 +64,9 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
      * notifications to its own token. Registrations without an owner predate the ownership link
      * and are claimable, which is how they gain one.
      *
-     * @return {@code true} if the registration was stored; {@code false} if the device ID is
-     * already registered to another client
+     * @return the outcome of the request; see {@link DeviceRegistrationResult}
      */
-    public boolean register(String deviceId,
+    public DeviceRegistrationResult register(String deviceId,
                             String deviceToken,
                             String publicKeyBase64,
                             String deviceDescriptor,
@@ -87,17 +98,24 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         // the same new device ID both pass the check and the later write silently takes the
         // device, which is the takeover the check exists to prevent.
         synchronized (persistableStore) {
+            // Checked under the same monitor as the revocation removal, so a request that resumes
+            // mid-revocation is either removed by it or rejected here, never left behind.
+            if (revokedClientIds.contains(clientId)) {
+                log.warn("Rejecting device registration of revoked client {}", clientId);
+                return DeviceRegistrationResult.CLIENT_REVOKED;
+            }
+
             MobileDeviceProfile existing = persistableStore.getDeviceByDeviceId().get(deviceId);
             if (existing != null && existing.getClientId().filter(owner -> !owner.equals(clientId)).isPresent()) {
                 log.warn("Client {} tried to register a device ID owned by another client", clientId);
-                return false;
+                return DeviceRegistrationResult.DEVICE_OWNED_BY_ANOTHER_CLIENT;
             }
 
             persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
             if (!mobileDeviceProfile.equals(existing)) {
                 persist();
             }
-            return true;
+            return DeviceRegistrationResult.REGISTERED;
         }
     }
 
@@ -149,6 +167,9 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
 
         synchronized (persistableStore) {
+            // Recorded before the removal so a concurrent registration of this client is rejected
+            // rather than landing after the removal has taken its snapshot.
+            revokedClientIds.add(clientId);
             Set<String> deviceIds = persistableStore.getDeviceByDeviceId().values().stream()
                     .filter(profile -> profile.getClientId().filter(clientId::equals).isPresent())
                     .map(MobileDeviceProfile::getDeviceId)
