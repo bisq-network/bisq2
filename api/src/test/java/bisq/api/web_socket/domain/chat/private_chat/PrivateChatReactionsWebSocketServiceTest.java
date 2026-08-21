@@ -27,6 +27,8 @@ import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
@@ -39,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.api.web_socket.domain.chat.private_chat.PrivateChatTestMocks.mockUserProfile;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,8 +55,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Covers the two things this service does that its trade-chat sibling
- * ({@code ChatReactionsWebSocketService}) cannot be relied on to cover: the per-channel nesting of the
- * reaction pins, which is the whole reason this class is not a copy, and the two-event shape an
+ * ({@code ChatReactionsWebSocketService}) cannot be relied on to cover: the per-channel ownership of
+ * the reaction pins, which is the whole reason this class is not a copy, and the two-event shape an
  * un-reaction takes on the wire.
  */
 class PrivateChatReactionsWebSocketServiceTest {
@@ -61,6 +64,7 @@ class PrivateChatReactionsWebSocketServiceTest {
     private static final String MESSAGE_ID = "message-1";
 
     private ObservableSet<TwoPartyPrivateChatChannel> channels;
+    private ObservableSet<TwoPartyPrivateChatMessage> messages;
     private ObservableSet<TwoPartyPrivateChatMessageReaction> reactions;
     private TwoPartyPrivateChatChannel channel;
     private Subscriber subscriber;
@@ -70,12 +74,8 @@ class PrivateChatReactionsWebSocketServiceTest {
     @BeforeEach
     void setUp() {
         reactions = new ObservableSet<>();
-        TwoPartyPrivateChatMessage message = mock(TwoPartyPrivateChatMessage.class, RETURNS_DEEP_STUBS);
-        when(message.getId()).thenReturn(MESSAGE_ID);
-        when(message.getChatMessageReactions()).thenReturn(reactions);
-
-        ObservableSet<TwoPartyPrivateChatMessage> messages = new ObservableSet<>();
-        messages.add(message);
+        messages = new ObservableSet<>();
+        messages.add(mockMessage(MESSAGE_ID, reactions));
 
         channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
         when(channel.getId()).thenReturn(CHANNEL_ID);
@@ -154,9 +154,9 @@ class PrivateChatReactionsWebSocketServiceTest {
     }
 
     /**
-     * What the nested {@code chatMessageReactionsPinsByChannelId} buys over the flat message-id map of
-     * the trade-chat sibling. Leaving a DM is routine, so a channel's reaction observers have to go with
-     * it — otherwise they outlive the channel and keep pushing for a conversation the node dropped.
+     * What holding the reaction pins per channel buys over the flat message-id map of the trade-chat
+     * sibling. Leaving a DM is routine, so a channel's reaction observers have to go with it — otherwise
+     * they outlive the channel and keep pushing for a conversation the node dropped.
      */
     @Test
     void leavingAChannelUnbindsTheReactionObserversOfItsMessages() {
@@ -171,14 +171,77 @@ class PrivateChatReactionsWebSocketServiceTest {
      * The bulk path to the same unbinding, and reachable for the same reason as in the sibling services:
      * {@code ChannelStore#applyPersisted} replaces the set through {@code setAll}, whose observer contract
      * is {@code onCleared()} then {@code onAllAdded(values)}. Covered separately from the single-channel
-     * case because {@code unbindAllChannelPins} iterates the message-pin keys rather than the reaction-pin
-     * ones, on the argument that a channel never holds the second without the first.
+     * case because it reaches the pins through {@code unbindAllChannelPins} rather than through the
+     * per-channel removal.
      */
     @Test
     void clearingTheChannelCollectionUnbindsTheReactionObserversToo() {
         channels.clear();
 
         reactions.add(reaction("reaction-1", false));
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * A message arriving as the channel is being left. {@link bisq.common.observable.Pin#unbind} only
+     * drops an observer from a copy-on-write list, so the callback already running when the leave lands
+     * still finishes — and what it does next decides whether anything is left behind.
+     * <p>
+     * Forced deterministically on one thread by having the reaction set perform the leave inside
+     * {@code addObserver}, which puts it exactly between creating the reaction observer and storing its
+     * pin. That is the window in which a version keyed by channel id recreates the entry the teardown
+     * has just removed, leaving an observer that nothing enumerates and that keeps pushing reactions for
+     * a channel the node dropped.
+     */
+    @Test
+    void aMessageArrivingWhileTheChannelIsLeftBindsNoReactionObserver() {
+        ObservableSet<TwoPartyPrivateChatMessageReaction> lateReactions = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessageReaction> observer) {
+                Pin pin = super.addObserver(observer);
+                channels.remove(channel);
+                return pin;
+            }
+        };
+        // Added after initialize(), so the callback runs on the path an inbound message takes rather
+        // than inside the replay addObserver does while the channel is still being bound.
+        messages.add(mockMessage("message-2", lateReactions));
+
+        lateReactions.add(reaction("reaction-1", false));
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * The same window at the other end: the channel is left while it is still being bound, so its
+     * message pin is created after the teardown has already run and has to be discarded rather than
+     * stored. A guard rather than a reproducer — a version that binds inside a {@code compute} on the
+     * channel key reenters that {@code compute} from within itself here, and what
+     * {@code ConcurrentHashMap} does with that is not something to assert on.
+     */
+    @Test
+    void aChannelLeftWhileItIsBeingBoundBindsNothing() {
+        AtomicReference<TwoPartyPrivateChatChannel> leftChannel = new AtomicReference<>();
+        ObservableSet<TwoPartyPrivateChatMessage> lateMessages = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessage> observer) {
+                Pin pin = super.addObserver(observer);
+                channels.remove(leftChannel.get());
+                return pin;
+            }
+        };
+        ObservableSet<TwoPartyPrivateChatMessageReaction> lateReactions = new ObservableSet<>();
+        lateMessages.add(mockMessage("message-2", lateReactions));
+
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+        leftChannel.set(other);
+
+        channels.add(other);
+
+        lateReactions.add(reaction("reaction-1", false));
 
         verify(subscriber, never()).send(anyString());
     }
@@ -209,6 +272,14 @@ class PrivateChatReactionsWebSocketServiceTest {
         UserProfile sender = reaction.getSenderUserProfile();
         when(bannedUserService.isUserProfileBanned(sender)).thenReturn(true);
         return reaction;
+    }
+
+    private static TwoPartyPrivateChatMessage mockMessage(String id,
+                                                          ObservableSet<TwoPartyPrivateChatMessageReaction> reactions) {
+        TwoPartyPrivateChatMessage message = mock(TwoPartyPrivateChatMessage.class, RETURNS_DEEP_STUBS);
+        when(message.getId()).thenReturn(id);
+        when(message.getChatMessageReactions()).thenReturn(reactions);
+        return message;
     }
 
     private static TwoPartyPrivateChatMessageReaction reaction(String id, boolean isRemoved) {
