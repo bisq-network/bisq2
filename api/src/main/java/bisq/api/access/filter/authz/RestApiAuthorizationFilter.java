@@ -9,11 +9,13 @@ import jakarta.annotation.Priority;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -47,8 +49,17 @@ public class RestApiAuthorizationFilter extends RestApiFilter {
             Set<Permission> granted = optionalPermissionSet.get();
             Permission required = permissionService.getPermissionMapping().getRequiredPermission(requestUri.getPath(), context.getMethod());
             if (!permissionService.hasPermission(granted, required)) {
-                throw new AuthorizationException(String.format("Required permission %s not granted. Granted permissions: %s",
-                        required.name(), granted));
+                // Structured body so clients can distinguish "this grant lacks one permission"
+                // (e.g. paired before the node gained a feature — fixable by re-pairing) from a
+                // plain 403 and prompt the user instead of showing a generic error. The caller
+                // already knows its own grant, so naming the missing permission leaks nothing.
+                log.warn("REST authz failed: required permission {} not granted. requestUri={}", required.name(), requestUri);
+                context.abortWith(Response.status(Response.Status.FORBIDDEN)
+                        .entity(Map.of("error", "permission_not_granted",
+                                "required", required.name()))
+                        .type(MediaType.APPLICATION_JSON_TYPE)
+                        .build());
+                return;
             }
         } catch (AuthorizationException | IllegalArgumentException | ForbiddenException e) {
             log.warn("REST authz failed. requestUri={}", requestUri, e);
