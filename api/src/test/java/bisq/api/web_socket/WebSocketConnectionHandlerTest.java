@@ -56,8 +56,13 @@ class WebSocketConnectionHandlerTest {
         }
     }
 
-    /** Reports the socket as registered once, then as gone, as a revocation between the two would. */
+    /**
+     * Once armed, reports the socket as registered for one check and as gone afterwards, as a
+     * revocation landing between the two checks would. Arming is explicit because connection setup
+     * queries the registry too and would otherwise consume the one-time answer.
+     */
     private static class DropAfterFirstCheckHandler extends TestableHandler {
+        private final AtomicBoolean armed = new AtomicBoolean();
         private final AtomicBoolean firstCheckDone = new AtomicBoolean();
 
         DropAfterFirstCheckHandler(SubscriptionService subscriptionService,
@@ -65,9 +70,16 @@ class WebSocketConnectionHandlerTest {
             super(subscriptionService, restApiService);
         }
 
+        void armRevocationAfterNextCheck() {
+            armed.set(true);
+        }
+
         @Override
         protected Set<WebSocket> getWebSockets() {
             Set<WebSocket> sockets = super.getWebSockets();
+            if (!armed.get()) {
+                return sockets;
+            }
             return firstCheckDone.compareAndSet(false, true) ? sockets : Set.of();
         }
     }
@@ -166,6 +178,9 @@ class WebSocketConnectionHandlerTest {
                 new DropAfterFirstCheckHandler(subscriptionService, webSocketRestApiService);
         DefaultWebSocket webSocket = connect(racingHandler, REVOKED_CLIENT_ID);
         when(subscriptionService.canHandle(anyString())).thenReturn(true);
+        // Armed after setup, so the synchronous check still sees the socket and the message is
+        // dispatched; only the recheck inside the task finds it gone.
+        racingHandler.armRevocationAfterNextCheck();
 
         racingHandler.onMessage(webSocket, "{\"anything\":true}");
 
