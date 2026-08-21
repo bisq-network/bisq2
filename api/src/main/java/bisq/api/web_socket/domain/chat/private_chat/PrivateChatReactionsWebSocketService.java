@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -69,13 +70,12 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
     private final BannedUserService bannedUserService;
     @Nullable
     private Pin channelsPin;
-    private final Map<String, Pin> chatMessagesPinsByChannelId = new ConcurrentHashMap<>();
     /**
-     * Nested by channel, not a flat message-id map, so that leaving a channel can unbind exactly its
+     * Held per channel, not as a flat message-id map, so that leaving a channel can unbind exactly its
      * reaction observers. Leaving a DM is a routine user action, unlike leaving a trade channel, so a
      * flat map would accumulate pins for the lifetime of the process.
      */
-    private final Map<String, Map<String, Pin>> chatMessageReactionsPinsByChannelId = new ConcurrentHashMap<>();
+    private final Map<String, ChannelPins> pinsByChannelId = new ConcurrentHashMap<>();
 
     public PrivateChatReactionsWebSocketService(SubscriberRepository subscriberRepository,
                                                 TwoPartyPrivateChatChannelService channelService,
@@ -91,57 +91,7 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
         channelsPin = channelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(TwoPartyPrivateChatChannel channel) {
-                String channelId = channel.getId();
-                // Atomic operation
-                chatMessagesPinsByChannelId.compute(channelId, (key, oldPin) -> {
-                    if (oldPin != null) {
-                        oldPin.unbind();
-                    }
-
-                    return channel.getChatMessages().addObserver(new CollectionObserver<>() {
-                        @Override
-                        public void onAdded(TwoPartyPrivateChatMessage message) {
-                            String messageId = message.getId();
-                            Map<String, Pin> reactionPins = chatMessageReactionsPinsByChannelId
-                                    .computeIfAbsent(channelId, key -> new ConcurrentHashMap<>());
-
-                            reactionPins.compute(messageId, (key, oldReactionPin) -> {
-                                if (oldReactionPin != null) {
-                                    oldReactionPin.unbind();
-                                }
-
-                                return message.getChatMessageReactions().addObserver(new CollectionObserver<>() {
-                                    @Override
-                                    public void onAdded(TwoPartyPrivateChatMessageReaction reaction) {
-                                        handleReaction(reaction, ModificationType.ADDED);
-                                    }
-
-                                    @Override
-                                    public void onRemoved(Object element) {
-                                        if (element instanceof TwoPartyPrivateChatMessageReaction reaction) {
-                                            handleReaction(reaction, ModificationType.REMOVED);
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onCleared() {
-                                        throw new UnsupportedOperationException("Clear method is not supported for chatMessageReactions.");
-                                    }
-                                });
-                            });
-                        }
-
-                        @Override
-                        public void onRemoved(Object element) {
-                            // Messages cannot be removed
-                        }
-
-                        @Override
-                        public void onCleared() {
-                            // Messages cannot be cleared
-                        }
-                    });
-                });
+                bindChannel(channel);
             }
 
             @Override
@@ -159,25 +109,82 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
         return CompletableFuture.completedFuture(true);
     }
 
-    /**
-     * Keyed off the message pins alone: a channel's reaction pins are only ever created inside its
-     * message observer, so there is no channel that holds the second kind without the first.
-     */
+    private void bindChannel(TwoPartyPrivateChatChannel channel) {
+        String channelId = channel.getId();
+        ChannelPins pins = new ChannelPins();
+        // Published before anything is observed, because addObserver replays the messages already on
+        // the channel and each of those replayed callbacks stores its reaction pin into this instance.
+        ChannelPins previous = pinsByChannelId.put(channelId, pins);
+        if (previous != null) {
+            previous.close();
+        }
+
+        Pin messagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAdded(TwoPartyPrivateChatMessage message) {
+                bindMessageReactions(message, pins);
+            }
+
+            @Override
+            public void onRemoved(Object element) {
+                // Messages cannot be removed
+            }
+
+            @Override
+            public void onCleared() {
+                // Messages cannot be cleared
+            }
+        });
+        if (!pins.setMessagesPin(messagesPin)) {
+            messagesPin.unbind();
+        }
+
+        // A channel is in the collection before its add is notified, so it is missing here only if it
+        // was removed while we were registering — and that removal ran past pinsByChannelId before we
+        // published to it, so nobody else will collect this.
+        if (!channelService.getChannels().contains(channel)) {
+            pinsByChannelId.remove(channelId, pins);
+            pins.close();
+        }
+    }
+
+    private void bindMessageReactions(TwoPartyPrivateChatMessage message, ChannelPins pins) {
+        Pin reactionsPin = message.getChatMessageReactions().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAdded(TwoPartyPrivateChatMessageReaction reaction) {
+                handleReaction(reaction, ModificationType.ADDED);
+            }
+
+            @Override
+            public void onRemoved(Object element) {
+                if (element instanceof TwoPartyPrivateChatMessageReaction reaction) {
+                    handleReaction(reaction, ModificationType.REMOVED);
+                }
+            }
+
+            @Override
+            public void onCleared() {
+                throw new UnsupportedOperationException("Clear method is not supported for chatMessageReactions.");
+            }
+        });
+        // Created before the store rather than inside it: addObserver replays the reactions already on
+        // the message, and those callbacks reach findSubscribers and send. Holding the ChannelPins
+        // monitor across that would be a lock around a callback.
+        if (!pins.putReactionPin(message.getId(), reactionsPin)) {
+            reactionsPin.unbind();
+        }
+    }
+
     private void unbindAllChannelPins() {
-        new ArrayList<>(chatMessagesPinsByChannelId.keySet()).forEach(this::unbindChannelPins);
+        new ArrayList<>(pinsByChannelId.keySet()).forEach(this::unbindChannelPins);
     }
 
     /** Unbinds only this channel's observers — the message pin and every reaction pin under it. */
     private void unbindChannelPins(String channelId) {
-        // Atomic operations
-        chatMessagesPinsByChannelId.computeIfPresent(channelId, (key, pin) -> {
-            pin.unbind();
-            return null;  // returning null removes the key
-        });
-        chatMessageReactionsPinsByChannelId.computeIfPresent(channelId, (key, reactionPins) -> {
-            reactionPins.values().forEach(Pin::unbind);
-            return null;
-        });
+        ChannelPins pins = pinsByChannelId.remove(channelId);
+        if (pins != null) {
+            pins.close();
+        }
     }
 
     @Override
@@ -253,5 +260,62 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
 
     private TwoPartyPrivateChatMessageReactionDto toDto(TwoPartyPrivateChatMessageReaction reaction) {
         return TwoPartyPrivateChatMessageReactionDtoMapping.fromBisq2Model(reaction);
+    }
+
+    /**
+     * One channel's observers, held together so that binding them and tearing them down cannot
+     * interleave into a state nothing collects. {@link Pin#unbind} only drops the observer from a
+     * copy-on-write list, so a callback already in flight when the channel is removed still runs to
+     * completion. Such a callback holds this instance directly rather than looking it up by channel id,
+     * so it finds the state that was closed underneath it, is told so, and unbinds the pin it just
+     * created — where a map lookup would instead recreate the entry the teardown had removed.
+     * <p>
+     * The reaction pins live here rather than being resolved back out of {@code pinsByChannelId},
+     * because {@code addObserver} replays the collection synchronously: binding the message observer
+     * runs the reaction binding inside the enclosing call, so a lookup there would be a recursive
+     * update on the key that call is already working on — which {@code ConcurrentHashMap} does not
+     * support. For the same reason the class holds no {@code compute} at all; {@link #closed} is what
+     * makes the plain {@code put} and {@code remove} safe, since whichever of two racing binds loses is
+     * closed by the winner and cleans up after itself.
+     * <p>
+     * Every field is guarded by the instance monitor, but pins are always created by the caller and
+     * only handed over here, so the monitor is never held across an observer callback.
+     */
+    private static final class ChannelPins {
+        private final Map<String, Pin> reactionPinsByMessageId = new HashMap<>();
+        @Nullable
+        private Pin messagesPin;
+        private boolean closed;
+
+        /** @return false if the channel is already gone, leaving the pin for the caller to unbind. */
+        private synchronized boolean setMessagesPin(Pin pin) {
+            if (closed) {
+                return false;
+            }
+            messagesPin = pin;
+            return true;
+        }
+
+        /** @return false if the channel is already gone, leaving the pin for the caller to unbind. */
+        private synchronized boolean putReactionPin(String messageId, Pin pin) {
+            if (closed) {
+                return false;
+            }
+            Pin previous = reactionPinsByMessageId.put(messageId, pin);
+            if (previous != null) {
+                previous.unbind();
+            }
+            return true;
+        }
+
+        private synchronized void close() {
+            closed = true;
+            if (messagesPin != null) {
+                messagesPin.unbind();
+                messagesPin = null;
+            }
+            reactionPinsByMessageId.values().forEach(Pin::unbind);
+            reactionPinsByMessageId.clear();
+        }
     }
 }
