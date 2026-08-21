@@ -70,15 +70,25 @@ public class SettingsRestApi extends RestApiBase {
 
     @GET
     @Path("/version")
-    @Operation(description = "Get the current Bisq2 version")
+    @Operation(description = "Get the current Bisq2 version. Containerised distributions report their " +
+            "granular image version (e.g. 2.1.11.2) via BISQ_IMAGE_VERSION; otherwise the core version.")
     public Response getVersion() {
         try {
-            String version = ApplicationVersion.getVersion().toString();
+            String version = resolveVersion(System.getenv("BISQ_IMAGE_VERSION"));
             return Response.ok(new SettingsApiVersionDto(version)).build();
         } catch (Exception e) {
             log.error("Error getting version", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
+    }
+
+    // Clients key caches of static node config on this string, so a distribution that can be
+    // updated in place under the same core version (docker image rebuilds) must report a version
+    // that changes with every update. The image version embeds the core version as its prefix.
+    static String resolveVersion(String imageVersion) {
+        return imageVersion == null || imageVersion.isBlank()
+                ? ApplicationVersion.getVersion().toString()
+                : imageVersion.trim();
     }
 
     @PATCH
