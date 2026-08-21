@@ -59,6 +59,7 @@ import bisq.settings.SettingsService;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
+import bisq.support.mediation.mu_sig.MuSigMediationResultRejectionMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.trade.ServiceProvider;
 import bisq.trade.exceptions.TradeProtocolException;
@@ -374,6 +375,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             }
         } else if (envelopePayloadMessage instanceof MuSigMediationStateChangeMessage ||
                 envelopePayloadMessage instanceof MuSigMediationResultAcceptanceMessage ||
+                envelopePayloadMessage instanceof MuSigMediationResultRejectionMessage ||
                 envelopePayloadMessage instanceof MuSigDisputeCasePaymentDetailsRequest ||
                 envelopePayloadMessage instanceof MuSigArbitrationStateChangeMessage) {
             synchronized (disputeStateLock) {
