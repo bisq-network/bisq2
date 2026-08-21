@@ -26,6 +26,7 @@ import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.chat.priv.SendRejection;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
@@ -147,7 +148,8 @@ public class PrivateChatRestApi extends RestApiBase {
             summary = "Send a message to a private chat channel",
             description = "Sends a text message to the peer of the given channel. Optionally includes a citation "
                     + "reference. A 204 confirms the message was accepted and stored locally, not that the peer "
-                    + "received it — delivery happens asynchronously on the P2P network.",
+                    + "received it — delivery happens asynchronously on the P2P network. A 409 means the node "
+                    + "refused it outright and stored nothing, so it will not appear on the message stream either.",
             requestBody = @RequestBody(
                     description = "Message to send to the peer",
                     required = true,
@@ -157,6 +159,8 @@ public class PrivateChatRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "204", description = "Message sent successfully"),
                     @ApiResponse(responseCode = "404", description = "No channel found for given channel ID"),
                     @ApiResponse(responseCode = "400", description = "Invalid input, e.g. empty text"),
+                    @ApiResponse(responseCode = "409",
+                            description = "Refused locally: either my own profile or the peer is banned"),
                     @ApiResponse(responseCode = "503", description = "Request timed out"),
                     @ApiResponse(responseCode = "500", description = "Unexpected internal error")
             }
@@ -172,6 +176,9 @@ public class PrivateChatRestApi extends RestApiBase {
                 return;
             }
             withChannel(channelId, asyncResponse, channel -> {
+                if (resumeIfRejected(channel, asyncResponse)) {
+                    return;
+                }
                 Optional<Citation> citation = Optional.ofNullable(request.citation())
                         .map(DtoMappings.CitationMapping::toBisq2Model);
                 channelService.sendTextMessage(request.text(), citation, channel);
@@ -189,7 +196,8 @@ public class PrivateChatRestApi extends RestApiBase {
     @Operation(
             summary = "Send or remove a private chat message reaction",
             description = "Adds or removes a reaction on a message within a private chat channel. As with sending a "
-                    + "message, a 204 confirms local acceptance rather than delivery to the peer.",
+                    + "message, a 204 confirms local acceptance rather than delivery to the peer, and a 409 means "
+                    + "the node refused it outright and stored nothing.",
             requestBody = @RequestBody(
                     description = "Request containing the reaction data to be added or removed",
                     required = true,
@@ -200,6 +208,8 @@ public class PrivateChatRestApi extends RestApiBase {
                             description = "Reaction processed successfully, or already present (idempotent)"),
                     @ApiResponse(responseCode = "400", description = "Invalid input or missing required fields"),
                     @ApiResponse(responseCode = "404", description = "No channel or message found for the given IDs"),
+                    @ApiResponse(responseCode = "409",
+                            description = "Refused locally: either my own profile or the peer is banned"),
                     @ApiResponse(responseCode = "503", description = "Request timed out"),
                     @ApiResponse(responseCode = "500", description = "Unexpected internal error")
             }
@@ -258,6 +268,11 @@ public class PrivateChatRestApi extends RestApiBase {
                 }
                 TwoPartyPrivateChatMessage message = optionalMessage.get();
                 if (isRemoveRequest || !alreadyReactedWith(message, reactionId)) {
+                    // Inside this branch on purpose: the idempotent no-op below neither sends nor stores
+                    // anything, so its 204 stays honest even when a send would have been refused.
+                    if (resumeIfRejected(channel, asyncResponse)) {
+                        return;
+                    }
                     channelService.sendTextMessageReaction(message, channel, reaction, isRemoveRequest);
                 }
                 // Idempotent on the add side: re-sending a reaction the user already has is a no-op, and a
@@ -351,5 +366,35 @@ public class PrivateChatRestApi extends RestApiBase {
         channelService.findChannel(channelId)
                 .ifPresentOrElse(handler, () -> asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND,
                         "No channel found for channel ID " + channelId)));
+    }
+
+    /**
+     * Asked before sending, because the send itself cannot answer it. The channel service refuses a
+     * banned sender or peer before it stores anything, but reports that by completing the future it
+     * returns exceptionally — indistinguishable, from out here, from a delivery failure that happens
+     * after the message was stored. Left to the future we would answer 204 for a message that exists
+     * nowhere.
+     * <p>
+     * Still check-then-act: the service re-checks authoritatively, so a ban landing in the gap costs us
+     * the silent 204 we would have returned anyway.
+     *
+     * @return true if a response was resumed and the caller must stop
+     */
+    private boolean resumeIfRejected(TwoPartyPrivateChatChannel channel, AsyncResponse asyncResponse) {
+        Optional<SendRejection> rejection = channelService.findSendRejection(channel, channel.getPeer());
+        rejection.ifPresent(reason ->
+                asyncResponse.resume(buildResponse(Response.Status.CONFLICT, describe(reason))));
+        return rejection.isPresent();
+    }
+
+    /**
+     * Not 403: the caller is authorised — 403 is what the permission filter answers — and what refuses
+     * the send is the state of the conversation, not the client's grant.
+     */
+    private static String describe(SendRejection rejection) {
+        return switch (rejection) {
+            case MY_PROFILE_BANNED -> "Your user profile is banned.";
+            case PEER_BANNED -> "The peer's user profile is banned.";
+        };
     }
 }
