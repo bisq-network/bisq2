@@ -49,6 +49,10 @@ class DeviceRegistrationServiceTest {
     }
 
     private boolean register(String deviceId, String clientId) {
+        return registerWithResult(deviceId, clientId) == DeviceRegistrationResult.REGISTERED;
+    }
+
+    private DeviceRegistrationResult registerWithResult(String deviceId, String clientId) {
         return service.register(deviceId,
                 "a".repeat(64),
                 "publicKey",
@@ -176,5 +180,34 @@ class DeviceRegistrationServiceTest {
         } finally {
             executor.shutdownNow();
         }
+    }
+
+    @Test
+    void aRevokedClientCannotRegisterAgain() {
+        // A request that passed authorization before the revocation can resume after it. Without
+        // the tombstone it would recreate a registration owned by a client that no longer exists,
+        // which nothing would ever revoke again.
+        register("device-1", CLIENT_ID);
+        service.unregisterByClientId(CLIENT_ID);
+
+        assertEquals(DeviceRegistrationResult.CLIENT_REVOKED, registerWithResult("device-1", CLIENT_ID));
+        assertTrue(service.getMobileDeviceProfiles().isEmpty());
+    }
+
+    @Test
+    void revokingOneClientDoesNotBlockAnother() {
+        service.unregisterByClientId(CLIENT_ID);
+
+        assertEquals(DeviceRegistrationResult.REGISTERED, registerWithResult("device-1", "other-client"));
+    }
+
+    @Test
+    void aRevokedClientIsRejectedRatherThanTreatedAsADeviceConflict() {
+        register("device-1", CLIENT_ID);
+        service.unregisterByClientId(CLIENT_ID);
+
+        // Distinct from DEVICE_OWNED_BY_ANOTHER_CLIENT: the caller has to pair again, not pick
+        // another device ID.
+        assertEquals(DeviceRegistrationResult.CLIENT_REVOKED, registerWithResult("device-2", CLIENT_ID));
     }
 }
