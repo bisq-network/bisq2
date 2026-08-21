@@ -22,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.management.ManagementFactory;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -60,5 +63,11 @@ public class JavaSeJdkFacade implements JdkFacade {
     @Override
     public <T> T getFirst(List<T> list) {
         return list.getFirst();
+    }
+
+    @Override
+    public <T> CompletableFuture<T> exceptionallyCompose(CompletableFuture<T> future,
+                                                         Function<Throwable, ? extends CompletionStage<T>> fn) {
+        return future.exceptionallyCompose(fn);
     }
 }
