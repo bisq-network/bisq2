@@ -165,4 +165,14 @@ public class StringUtilsTest {
         String expected = "user@example.com";
         assertEquals(expected, StringUtils.cleanUserInput(input));
     }
+
+    @Test
+    void sanitizeForLogStripsControlFormatAndBidiCharacters() {
+        // \p{Cntrl} misses U+0085 (NEL, a C1 control) and the format/bidi category (U+202E,
+        // U+200B); each stripped character becomes '?'. A crafted id must not carry a line
+        // break or a reordering control into a log line.
+        String injected = "x\u0085WARN forged\u2028line reversed\u202Etext\u0007bell\u200Bzwsp";
+        assertEquals("x?WARN forged?line reversed?text?bell?zwsp", StringUtils.sanitizeForLog(injected));
+        assertEquals("", StringUtils.sanitizeForLog(null));
+    }
 }

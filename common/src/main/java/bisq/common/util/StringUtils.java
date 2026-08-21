@@ -44,6 +44,18 @@ public class StringUtils {
     public static final String DOT_ELLIPSIS = "...";
     public static final String UNICODE_ELLIPSIS = "…";
 
+    // Strips every character that could forge or reorder a log line before truncating, so an
+    // attacker-controlled value (e.g. a peer-supplied id) cannot inject a fake record. \p{Cntrl}
+    // alone misses the C1 controls (U+0085 NEL) and the format/bidi category (U+202E), so the
+    // class is spelled out: \p{Cc} all controls, \p{Cf} format/bidi, U+2028/U+2029 the line and
+    // paragraph separators.
+    public static String sanitizeForLog(String value) {
+        if (value == null) {
+            return "";
+        }
+        return truncate(value.replaceAll("[\\p{Cc}\\p{Cf}\\u2028\\u2029]", "?"), 60);
+    }
+
     public static String truncate(Object value) {
         return truncate(value.toString());
     }

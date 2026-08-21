@@ -90,10 +90,77 @@ class PerMessageDeflateFilterTest {
         assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; client_max_window_bits=x")).isFalse();
     }
 
+    /**
+     * RFC 7692 defines both takeover parameters as flags, so an offer giving one a value is malformed.
+     */
+    @Test
+    void declinesANoContextTakeoverParameterCarryingAValue() {
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "permessage-deflate; client_no_context_takeover=1")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "permessage-deflate; server_no_context_takeover=true")).isFalse();
+    }
+
+    @Test
+    void declinesAnOfferRepeatingAParameter() {
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "permessage-deflate; client_no_context_takeover; client_no_context_takeover")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "permessage-deflate; server_max_window_bits=15; server_max_window_bits=15")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "permessage-deflate; Client_No_Context_Takeover; client_no_context_takeover")).isFalse();
+    }
+
+    /**
+     * A repetition only disqualifies the offer it appears in: a client is free to list the same
+     * parameter once in each of several alternative offers.
+     */
+    @Test
+    void countsRepetitionsPerOfferRatherThanPerHeader() {
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "permessage-deflate; client_no_context_takeover, permessage-deflate; client_no_context_takeover"))
+                .isTrue();
+    }
+
     @Test
     void declinesUnknownParameterAndUnknownExtension() {
         assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; unexpected=1")).isFalse();
         assertThat(PerMessageDeflateFilter.acceptsOffer("x-webkit-deflate-frame")).isFalse();
+    }
+
+    @Test
+    void acceptsAQuotedParameterValue() {
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "permessage-deflate; server_max_window_bits=\"15\"")).isTrue();
+    }
+
+    /**
+     * RFC 6455 lets a parameter value be a quoted string, so a separator inside one is data. Reading it
+     * as a separator would let the value of an unrelated extension pose as an offer of our own.
+     */
+    @Test
+    void treatsSeparatorsInsideAQuotedValueAsData() {
+        assertThat(PerMessageDeflateFilter.acceptsOffer("x-foo; bar=\"a, permessage-deflate ,b\"")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "x-foo; bar=\"a\\\", permessage-deflate ,b\"")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer(
+                "permessage-deflate; server_max_window_bits=\"15; client_max_window_bits\"")).isFalse();
+    }
+
+    /**
+     * RFC 6455 has a ";" introduce a parameter, so an offer ending in one, or holding an empty part
+     * between two of them, is malformed rather than an offer with a parameter left out.
+     */
+    @Test
+    void declinesAnOfferWithAnEmptyParameter() {
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate;")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate;; client_no_context_takeover")).isFalse();
+    }
+
+    @Test
+    void declinesAHeaderWithAnUnclosedQuote() {
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate; server_max_window_bits=\"15")).isFalse();
+        assertThat(PerMessageDeflateFilter.acceptsOffer("permessage-deflate, x-foo; bar=\"a")).isFalse();
     }
 
     @Test

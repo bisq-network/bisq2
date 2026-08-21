@@ -39,9 +39,11 @@ import org.glassfish.grizzly.websockets.ProtocolError;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -148,23 +150,19 @@ public class PerMessageDeflateFilter extends BaseFilter {
         if (message instanceof HttpContent httpContent) {
             // The handshake response is the only point where we know the upgrade actually succeeded,
             // so compression is switched on exactly when we confirm the extension to the client.
-            if (!state.enabled
-                    && httpContent.getHttpHeader() instanceof HttpResponsePacket response
-                    && response.getStatus() != HttpStatus.SWITCHING_PROTOCOLS_101.getStatusCode()) {
-                // The upgrade this offer belonged to failed. Were the state left attached, a retry on
-                // the same connection that does not offer the extension would still be answered with
-                // it, and we would compress frames the client never agreed to decompress.
-                STATE.remove(ctx.getConnection());
-                return ctx.getInvokeAction();
-            }
-            if (!state.enabled
-                    && httpContent.getHttpHeader() instanceof HttpResponsePacket response
-                    && response.getStatus() == HttpStatus.SWITCHING_PROTOCOLS_101.getStatusCode()) {
-                // Replaces rather than appends: Grizzly may have written the extensions a
-                // WebSocketApplication declares, but it only echoes their names and cannot apply any of
-                // them, so permessage-deflate is the only one this response can honestly confirm.
-                response.setHeader(SEC_WEBSOCKET_EXTENSIONS, NEGOTIATED_EXTENSION);
-                state.enabled = true;
+            if (!state.enabled && httpContent.getHttpHeader() instanceof HttpResponsePacket response) {
+                if (response.getStatus() == HttpStatus.SWITCHING_PROTOCOLS_101.getStatusCode()) {
+                    // Replaces rather than appends: Grizzly may have written the extensions a
+                    // WebSocketApplication declares, but it only echoes their names and cannot apply any
+                    // of them, so permessage-deflate is the only one this response can honestly confirm.
+                    response.setHeader(SEC_WEBSOCKET_EXTENSIONS, NEGOTIATED_EXTENSION);
+                    state.enabled = true;
+                } else {
+                    // The upgrade this offer belonged to failed. Were the state left attached, a retry on
+                    // the same connection that does not offer the extension would still be answered with
+                    // it, and we would compress frames the client never agreed to decompress.
+                    STATE.remove(ctx.getConnection());
+                }
             }
             return ctx.getInvokeAction();
         }
@@ -222,27 +220,76 @@ public class PerMessageDeflateFilter extends BaseFilter {
     }
 
     static boolean acceptsOffer(String header) {
-        for (String offer : header.split(",")) {
-            String[] parts = offer.trim().split(";");
-            if (EXTENSION_NAME.equalsIgnoreCase(parts[0].trim()) && canHonour(parts)) {
-                return true;
-            }
-        }
-        return false;
+        return parseOffers(header).stream()
+                .flatMap(List::stream)
+                .anyMatch(offer -> EXTENSION_NAME.equalsIgnoreCase(offer.get(0)) && canHonour(offer));
     }
 
-    private static boolean canHonour(String[] offerParts) {
-        for (int i = 1; i < offerParts.length; i++) {
-            String parameter = offerParts[i].trim();
+    /**
+     * Splits a header into its offers and every offer into its parts, the extension name followed by its
+     * parameters. RFC 6455 lets a parameter value be a quoted string, in which a "," or a ";" is data
+     * rather than a separator, so a plain split would read one offer as several and could see an offer
+     * the client never made.
+     *
+     * @return the offers, each with its name in the first position, or empty if the header is malformed,
+     * which here means a quote that is never closed
+     */
+    private static Optional<List<List<String>>> parseOffers(String header) {
+        List<List<String>> offers = new ArrayList<>();
+        List<String> parts = new ArrayList<>();
+        StringBuilder part = new StringBuilder();
+        boolean quoted = false;
+        boolean escaped = false;
+        for (int i = 0; i < header.length(); i++) {
+            char character = header.charAt(i);
+            if (escaped) {
+                // A quoted pair stands for the character it escapes, but as no parameter we honour has a
+                // value that needs escaping, it is kept as written and left for the value checks to refuse
+                escaped = false;
+            } else if (quoted && character == '\\') {
+                escaped = true;
+            } else if (character == '"') {
+                quoted = !quoted;
+            } else if (!quoted && (character == ';' || character == ',')) {
+                parts.add(part.toString().trim());
+                part.setLength(0);
+                if (character == ',') {
+                    offers.add(parts);
+                    parts = new ArrayList<>();
+                }
+                continue;
+            }
+            part.append(character);
+        }
+        // An escape only ever starts inside a quoted string, so a header ending in one is unclosed as well
+        if (quoted) {
+            return Optional.empty();
+        }
+        parts.add(part.toString().trim());
+        offers.add(parts);
+        return Optional.of(offers);
+    }
+
+    private static boolean canHonour(List<String> offerParts) {
+        Set<String> seen = new HashSet<>();
+        for (int i = 1; i < offerParts.size(); i++) {
+            String parameter = offerParts.get(i);
             int separator = parameter.indexOf('=');
             String name = (separator < 0 ? parameter : parameter.substring(0, separator))
                     .trim().toLowerCase(Locale.ROOT);
             Optional<String> value = separator < 0
                     ? Optional.empty()
                     : Optional.of(unquote(parameter.substring(separator + 1).trim()));
+            // RFC 7692: an offer repeating a parameter must not be accepted
+            if (!seen.add(name)) {
+                return false;
+            }
             switch (name) {
                 case "client_no_context_takeover", "server_no_context_takeover" -> {
-                    // We apply both unconditionally
+                    // We apply both unconditionally, but RFC 7692 has them carry no value
+                    if (value.isPresent()) {
+                        return false;
+                    }
                 }
                 case "client_max_window_bits" -> {
                     // Limits the window the CLIENT compresses with, and RFC 7692 lets us ignore the
@@ -257,7 +304,7 @@ public class PerMessageDeflateFilter extends BaseFilter {
                     // Limits the window WE compress with, which java.util.zip cannot restrict, so only
                     // the largest can be honoured and RFC 7692 has us decline anything else. The offer
                     // has to carry a value, so one without is refused too.
-                    if (!value.filter("15"::equals).isPresent()) {
+                    if (value.filter("15"::equals).isEmpty()) {
                         return false;
                     }
                 }
@@ -497,6 +544,11 @@ public class PerMessageDeflateFilter extends BaseFilter {
 
         byte[] compressedFrame = buildFrame(frame.opcode(), compressed);
         compressedFrame[0] |= RSV1;
+        // Grizzly does not reclaim the buffer that ctx.setMessage() replaces, so a pooled MemoryManager
+        // would want a buffer.tryDispose() here. Nothing configures one, so the default HeapMemoryManager
+        // applies and disposing would be a no-op. Add the call along with any switch to a pooled manager,
+        // and only on this path: every earlier return hands back the very buffer that is about to be
+        // written.
         return Buffers.wrap(memoryManager, compressedFrame);
     }
 

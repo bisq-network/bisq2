@@ -18,7 +18,6 @@
 package bisq.mu_sig;
 
 import bisq.account.payment_method.PaymentRail;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
@@ -29,6 +28,7 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.MathUtils;
 import bisq.offer.Direction;
+import bisq.offer.mu_sig.MuSigTradeAmountLimitsPolicy;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -53,17 +53,13 @@ import static bisq.bonded_roles.market_price.MarketBasedAmountConversion.usdToFi
 
 @Slf4j
 public class MuSigTradeAmountLimits {
-    public static final Fiat MIN_USD_TRADE_AMOUNT = Fiat.fromFaceValue(10, "USD");
-
-
-    /* --------------------------------------------------------------------- */
-    // MaxTradeLimit
-    /* --------------------------------------------------------------------- */
-
-    public static final Fiat MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(10000, "USD");
+    // The absolute and rail-dependent limits are the shared policy in the offer module, so the
+    // maker-side trade protocol validation applies the same numbers as the offer-side consumers.
+    public static final Fiat MIN_USD_TRADE_AMOUNT = MuSigTradeAmountLimitsPolicy.MIN_USD_TRADE_AMOUNT;
+    public static final Fiat MAX_USD_TRADE_AMOUNT = MuSigTradeAmountLimitsPolicy.MAX_USD_TRADE_AMOUNT;
 
     public static Fiat getMaxTradeLimitInUsd(PaymentRail paymentRail) {
-        return getMaxTradeLimitInUsd(paymentRail, MAX_USD_TRADE_AMOUNT);
+        return MuSigTradeAmountLimitsPolicy.getMaxTradeLimitInUsd(paymentRail);
     }
 
     public static String getFormattedMaxTradeLimitInUsd(PaymentRail paymentRail) {
@@ -72,27 +68,7 @@ public class MuSigTradeAmountLimits {
     }
 
     public static Fiat getMaxTradeLimitInUsd(PaymentRail paymentRail, Fiat maxTradeLimitByProtocol) {
-        if (paymentRail instanceof FiatPaymentRail fiatPaymentRail) {
-            switch (fiatPaymentRail.getChargebackRisk()) {
-                case VERY_LOW -> {
-                    return maxTradeLimitByProtocol;
-                }
-                case LOW -> {
-                    return maxTradeLimitByProtocol.multiply(0.8);
-                }
-                case MEDIUM -> {
-                    return maxTradeLimitByProtocol.multiply(0.65);
-                }
-                case MODERATE -> {
-                    return maxTradeLimitByProtocol.multiply(0.5);
-                }
-                default -> {
-                    return maxTradeLimitByProtocol.multiply(0d);
-                }
-            }
-        } else {
-            return maxTradeLimitByProtocol;
-        }
+        return MuSigTradeAmountLimitsPolicy.getMaxTradeLimitInUsd(paymentRail, maxTradeLimitByProtocol);
     }
 
 
