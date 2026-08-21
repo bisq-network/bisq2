@@ -40,12 +40,15 @@ import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import com.google.common.base.Joiner;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -70,8 +73,12 @@ public class OfferbookListItem {
     private final long totalScore;
     private final Pin marketPriceByCurrencyMapPin;
     private final long offerAgeInDays;
-    private double priceSpecAsPercent;
-    private String formattedPercentagePrice, priceTooltipText;
+    private final StringProperty formattedPercentagePrice = new SimpleStringProperty();
+    private final StringProperty priceTooltipText = new SimpleStringProperty();
+    // Empty while the offer has no resolvable percentage (a fixed-price offer without a
+    // market price yet); comparators place these after known values instead of treating
+    // them as an exactly-at-market 0%.
+    private Optional<Double> priceSpecAsPercent = Optional.empty();
 
     public OfferbookListItem(BisqEasyOfferbookMessage bisqEasyOfferbookMessage,
                              UserProfile senderUserProfile,
@@ -122,9 +129,13 @@ public class OfferbookListItem {
     }
 
     private void updatePriceSpecAsPercent() {
-        priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer).orElseThrow();
-        formattedPercentagePrice = PercentageFormatter.formatToPercentWithSignAndSymbol(priceSpecAsPercent);
-        priceTooltipText = PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer);
+        // A fixed-price offer in a market without a market price has no percent to derive; the
+        // table cells bind to the properties, so visible rows follow once a price arrives.
+        priceSpecAsPercent = PriceUtil.findPercentFromMarketPrice(marketPriceService, bisqEasyOffer);
+        formattedPercentagePrice.set(priceSpecAsPercent
+                .map(PercentageFormatter::formatToPercentWithSignAndSymbol)
+                .orElseGet(() -> Res.get("data.na")));
+        priceTooltipText.set(PriceSpecFormatter.getFormattedPriceSpecWithOfferPrice(bisqEasyOffer.getPriceSpec(), marketPriceService, bisqEasyOffer));
     }
 
     private List<FiatPaymentMethod> retrieveAndSortFiatPaymentMethods() {

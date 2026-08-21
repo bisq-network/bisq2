@@ -29,8 +29,10 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.overlay.OverlayController;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ProfileCardOffersController implements Controller {
@@ -55,18 +57,37 @@ public class ProfileCardOffersController implements Controller {
 
     @Override
     public void onActivate() {
+        // The controller is cached: rows disposed at the last deactivation are rebuilt so their
+        // market price observers are live again.
+        model.getUserProfile().ifPresent(this::applyOffers);
     }
 
     @Override
     public void onDeactivate() {
-        model.getOfferbookListItems().forEach(ProfileCardOfferListItem::dispose);
+        disposeAndClearOffers();
+    }
+
+    @VisibleForTesting
+    ProfileCardOffersModel getModel() {
+        return model;
     }
 
     public void setUserProfile(UserProfile userProfile) {
+        model.setUserProfile(Optional.of(userProfile));
+        applyOffers(userProfile);
+    }
+
+    private void applyOffers(UserProfile userProfile) {
+        disposeAndClearOffers();
         model.getOfferbookListItems().setAll(bisqEasyOfferbookMessageService.getAllOfferbookMessagesWithOffer(userProfile.getId())
                 .map(userChatMessageWithOffer -> new ProfileCardOfferListItem(
                         userChatMessageWithOffer, userProfile, reputationService, marketPriceService))
                 .collect(Collectors.toList()));
+    }
+
+    private void disposeAndClearOffers() {
+        model.getOfferbookListItems().forEach(ProfileCardOfferListItem::dispose);
+        model.getOfferbookListItems().clear();
     }
 
     public String getNumberOffers() {
