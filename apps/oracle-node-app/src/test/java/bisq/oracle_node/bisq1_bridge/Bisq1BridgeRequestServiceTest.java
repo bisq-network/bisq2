@@ -17,6 +17,7 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
+import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
@@ -58,7 +59,10 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import static bisq.oracle_node.TestBondedRoleRegistrations.LOCKUP_TX_ID;
+import static bisq.oracle_node.TestBondedRoleRegistrations.PROPOSAL_TX_ID;
 import static bisq.oracle_node.TestBondedRoleRegistrations.createCurrentRequest;
+import static bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRolesVerificationRequest.MAX_REGISTRATIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -297,6 +301,44 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
+    void malformedLoadedRegistrationDoesNotAbortRecoveryOfRemainingRecords() {
+        BondedRoleRegistrationRequest request = createCurrentRequest();
+        var authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        AuthorizedBondedRole malformedRole = mock(AuthorizedBondedRole.class);
+        when(malformedRole.canReconstructForRemoval()).thenReturn(true);
+        when(malformedRole.getProfileId()).thenReturn("invalid");
+        AuthorizedBondedRole validRole = new AuthorizedBondedRole(request.getProfileId(),
+                request.getAuthorizedPublicKey(),
+                request.getBondedRoleType(),
+                request.getBondUserName(),
+                request.getSignatureBase64(),
+                request.getAddressByTransportTypeMap(),
+                request.getNetworkId(),
+                Optional.empty(),
+                false,
+                request.getRegistrationProtocolVersion(),
+                request.getProposalTxId(),
+                request.getLockupTxId());
+        AuthorizedData malformedData = new AuthorizedData(malformedRole, authorizedKeyPair.getPublic());
+        AuthorizedData validData = new AuthorizedData(validRole, authorizedKeyPair.getPublic());
+
+        DataService dataService = mock(DataService.class);
+        when(dataService.getAuthorizedData()).thenReturn(Stream.of(malformedData, validData));
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.getDataService()).thenReturn(Optional.of(dataService));
+        AuthorizedBondedRolesService authorizedBondedRolesService = mock(AuthorizedBondedRolesService.class);
+        when(authorizedBondedRolesService.getAuthorizedBondedRoleStream(true))
+                .thenAnswer(ignored -> Stream.of(malformedRole, validRole));
+        Bisq1BridgeRequestService service = createService(authorizedKeyPair,
+                networkService,
+                authorizedBondedRolesService);
+
+        service.recoverRegistrationRequestsFromLoadedData();
+
+        assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).containsExactly(request);
+    }
+
+    @Test
     void skipsNetworkDataThatCannotBeReconstructedForRemoval() {
         BondedRoleRegistrationRequest request = createCurrentRequest();
         var authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -520,17 +562,51 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
+    void oneUnverifiableRegistrationDoesNotStopRevalidationOfTheRemainingOnes() {
+        BondedRoleRegistrationRequest valid = createCurrentRequest();
+        // A record which passes its own structural validation but cannot be expressed as a bridge message. The
+        // bridge has no way to find a bond without a bond user name, so it can never be verified.
+        BondedRoleRegistrationRequest unverifiable = mock(BondedRoleRegistrationRequest.class);
+        when(unverifiable.getRegistrationProtocolVersion())
+                .thenReturn(BondedRoleRegistrationProtocol.CURRENT_VERSION);
+        when(unverifiable.getBondUserName()).thenReturn("");
+        when(unverifiable.getBondedRoleType()).thenReturn(BondedRoleType.MEDIATOR);
+        when(unverifiable.getProfileId()).thenReturn("0123456789abcdef0123456789abcdef01234567");
+        when(unverifiable.getSignatureBase64()).thenReturn("signature");
+        when(unverifiable.getProposalTxId()).thenReturn(PROPOSAL_TX_ID);
+        when(unverifiable.getLockupTxId()).thenReturn(LOCKUP_TX_ID);
+
+        BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
+        when(bondedRoleGrpcService.requestBondedRoleBatchVerification(any()))
+                .thenReturn(new BondedRolesVerificationResponse(941001,
+                        List.of(new BondedRoleVerificationResponse(Optional.empty()))));
+        Bisq1BridgeRequestService service = createServiceWithBondedRoleGrpcService(bondedRoleGrpcService);
+        service.getPersistableStore().getBondedRoleRegistrationRequests().add(unverifiable);
+        service.getPersistableStore().getBondedRoleRegistrationRequests().add(valid);
+
+        service.revalidateBondedRolesNow();
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<BondedRoleRegistrationRequest>> batchCaptor = ArgumentCaptor.forClass(List.class);
+        verify(bondedRoleGrpcService).requestBondedRoleBatchVerification(batchCaptor.capture());
+        assertThat(batchCaptor.getValue()).containsExactly(valid);
+        assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests())
+                .containsExactlyInAnyOrder(unverifiable, valid);
+    }
+
+    @Test
     void batchAboveLimitRetainsRegistrationsWithoutCallingTheBridge() {
         BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
         Bisq1BridgeRequestService service = createServiceWithBondedRoleGrpcService(bondedRoleGrpcService);
-        for (int port = 1; port <= 1001; port++) {
+        int registrationCount = MAX_REGISTRATIONS + 1;
+        for (int port = 1; port <= registrationCount; port++) {
             service.getPersistableStore().getBondedRoleRegistrationRequests()
                     .add(createCurrentRequest(port, "b".repeat(64)));
         }
 
         service.revalidateBondedRolesNow();
 
-        assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).hasSize(1001);
+        assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).hasSize(registrationCount);
         verify(bondedRoleGrpcService, never()).requestBondedRoleBatchVerification(any());
     }
 

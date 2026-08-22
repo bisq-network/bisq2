@@ -72,6 +72,21 @@ public class BondedRoleGrpcService implements Service {
         return BondedRolesVerificationResponse.fromProto(response);
     }
 
+    /**
+     * A persisted registration which cannot be expressed as a bridge message can never be verified. Callers use
+     * this to retain and report such a record instead of aborting a whole batch, which would leave every other
+     * registration unrevalidated for as long as that record exists.
+     */
+    public static boolean canBeVerifiedByBridge(BondedRoleRegistrationRequest request) {
+        try {
+            toVerificationRequest(request);
+            return true;
+        } catch (Exception e) {
+            log.warn("Bonded-role registration {} cannot be converted into a bridge verification message", request, e);
+            return false;
+        }
+    }
+
     static BondedRoleVerificationRequest toVerificationRequest(BondedRoleRegistrationRequest request) {
         return new BondedRoleVerificationRequest(request.getBondUserName(),
                 toBisq1RoleTypeName(request.getBondedRoleType()),
