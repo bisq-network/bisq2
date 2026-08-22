@@ -161,7 +161,16 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
 
     @Override
     public void onPersistedApplied(SettingsStore persisted) {
-        String languageTag = getLanguageTag().get();
+        applyLanguageTag(getLanguageTag().get());
+    }
+
+    /**
+     * Applies the given language tag to all locale-dependent singletons
+     * (Res i18n bundles, default locale, country/currency repositories).
+     * Called both on startup (via onPersistedApplied) and on live language changes
+     * (via setLanguageTag) to ensure Res.get() immediately reflects the new language.
+     */
+    private void applyLanguageTag(String languageTag) {
         LanguageRepository.setDefaultLanguageTag(languageTag);
         Res.setAndApplyLanguageTag(languageTag);
         Locale locale = Locale.forLanguageTag(languageTag);
@@ -346,6 +355,7 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     public void setLanguageTag(String languageTag) {
         if (languageTag != null && LanguageRepository.LANGUAGE_TAGS.contains(languageTag)) {
             persistableStore.languageTag.set(languageTag);
+            applyLanguageTag(languageTag);
         }
     }
 

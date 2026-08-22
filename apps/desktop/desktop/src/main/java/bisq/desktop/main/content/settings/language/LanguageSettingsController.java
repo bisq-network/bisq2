@@ -23,8 +23,6 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.components.overlay.Popup;
-import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +70,6 @@ public class LanguageSettingsController implements Controller {
     void onSelectLanguageTag(String languageTag) {
         model.setSelectedLanguageTag(languageTag);
         settingsService.setLanguageTag(languageTag);
-        new Popup().feedback(Res.get("settings.language.restart")).useShutDownButton().show();
     }
 
     String getDisplayLanguage(String languageTag) {

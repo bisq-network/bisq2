@@ -17,16 +17,18 @@
 
 package bisq.api.web_socket.domain.trades;
 
+import bisq.api.dto.presentation.open_trades.TradeItemPresentationDto;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.api.dto.presentation.open_trades.TradeItemPresentationDto;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -92,10 +94,13 @@ public class TradesWebSocketService extends BaseWebSocketService {
 
     private void send(List<TradeItemPresentationDto> items, ModificationType modificationType) {
         // The payload is defined as a list to support batch data delivery at subscribe.
-        toJson(items).ifPresent(json -> {
-            subscriberRepository.findSubscribers(topic)
-                    .ifPresent(subscribers -> subscribers
-                            .forEach(subscriber -> send(json, subscriber, modificationType)));
-        });
+        List<Subscriber> subscribers = subscriberRepository.findSubscribers(topic).values().stream()
+                .flatMap(Collection::stream)
+                .toList();
+        if (subscribers.isEmpty()) {
+            return;
+        }
+        toJson(items).ifPresent(json ->
+                subscribers.forEach(subscriber -> send(json, subscriber, modificationType)));
     }
 }

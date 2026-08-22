@@ -114,8 +114,8 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
     }
 
     @Override
-    protected String getParam(HttpRequestUrlProvider provider, Void requestData) {
-        return provider.getApiPath();
+    protected HttpRequest buildRequest(HttpRequestUrlProvider provider, Void requestData) {
+        return HttpRequest.get(provider.getApiPath());
     }
 
     public CompletableFuture<Long> request() {

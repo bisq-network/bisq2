@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -60,7 +61,7 @@ public class AlertNotificationsService implements Service {
                 if (authorizedAlertData == null) {
                     return;
                 }
-                if (authorizedAlertData.getAppType() == appType && shouldProcessAlert(authorizedAlertData)) {
+                if (matchesConfiguredAppType(authorizedAlertData) && shouldProcessAlert(authorizedAlertData)) {
                     unconsumedAlerts.add(authorizedAlertData);
                 }
             }
@@ -68,7 +69,7 @@ public class AlertNotificationsService implements Service {
             @Override
             public void onRemoved(Object element) {
                 if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAppType() == appType) {
+                    if (matchesConfiguredAppType(authorizedAlertData)) {
                         unconsumedAlerts.remove(authorizedAlertData);
                     }
                 }
@@ -100,6 +101,21 @@ public class AlertNotificationsService implements Service {
         checkNotNull(authorizedAlertData, "Cannot dismiss alert because it's null.");
         settingsService.getConsumedAlertIds().add(authorizedAlertData.getId());
         unconsumedAlerts.remove(authorizedAlertData);
+    }
+
+    public Stream<AuthorizedAlertData> getUnconsumedAlertsByAppType(AppType appType) {
+        return unconsumedAlerts.stream()
+                .filter(authorizedAlertData -> matchesAppType(authorizedAlertData, appType));
+    }
+
+    private boolean matchesConfiguredAppType(AuthorizedAlertData authorizedAlertData) {
+        return matchesAppType(authorizedAlertData, appType);
+    }
+
+    private boolean matchesAppType(AuthorizedAlertData authorizedAlertData, AppType appType) {
+        return appType == AppType.UNSPECIFIED
+                || authorizedAlertData.getAppType() == AppType.UNSPECIFIED
+                || authorizedAlertData.getAppType() == appType;
     }
 
     private boolean shouldProcessAlert(AuthorizedAlertData authorizedAlertData) {

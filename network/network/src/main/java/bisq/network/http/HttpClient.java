@@ -30,6 +30,14 @@ public interface HttpClient {
 
     String getBaseUrl();
 
+    /**
+     * Variant of {@link #getBaseUrl()} that is safe to write to log files.
+     * Identical to {@link #getBaseUrl()} unless the caller built the client
+     * with a redacted form (e.g. when the path embeds device tokens, session
+     * ids, or other sensitive segments).
+     */
+    String getLogBaseUrl();
+
     boolean hasPendingRequest();
 
     CompletableFuture<Boolean> shutdown();

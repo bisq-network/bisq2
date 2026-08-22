@@ -68,7 +68,9 @@ public class MobileNotificationService implements Service {
                     String platform = isAndroid ? "Android" : "iOS";
                     MobileNotificationPayload payload = new MobileNotificationPayload(notification.getId(),
                             notification.getTitle(),
-                            notification.getMessage());
+                            notification.getMessage(),
+                            notification.getCategory(),
+                            notification.getTradeId().orElse(null));
                     try {
                         String json = JsonMapperProvider.get().writeValueAsString(payload);
 

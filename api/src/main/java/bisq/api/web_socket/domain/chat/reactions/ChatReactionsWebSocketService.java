@@ -17,8 +17,11 @@
 
 package bisq.api.web_socket.domain.chat.reactions;
 
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.chat.reactions.BisqEasyOpenTradeMessageReactionDto;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -26,12 +29,11 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.api.dto.DtoMappings;
-import bisq.api.dto.chat.reactions.BisqEasyOpenTradeMessageReactionDto;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -181,11 +183,14 @@ public class ChatReactionsWebSocketService extends BaseWebSocketService {
     private void handleReaction(List<BisqEasyOpenTradeMessageReactionDto> reactions,
                                 ModificationType modificationType) {
         // The payload is defined as a list to support batch data delivery at subscribe.
-        subscriberRepository.findSubscribers(topic).ifPresent(subscribers -> {
-            toJson(reactions).ifPresent(json -> {
-                subscribers.forEach(subscriber -> send(json, subscriber, modificationType));
-            });
-        });
+        List<Subscriber> subscribers = subscriberRepository.findSubscribers(topic).values().stream()
+                .flatMap(Collection::stream)
+                .toList();
+        if (subscribers.isEmpty()) {
+            return;
+        }
+        toJson(reactions).ifPresent(json ->
+                subscribers.forEach(subscriber -> send(json, subscriber, modificationType)));
     }
 
     private BisqEasyOpenTradeMessageReactionDto toDto(BisqEasyOpenTradeMessageReaction reaction) {
