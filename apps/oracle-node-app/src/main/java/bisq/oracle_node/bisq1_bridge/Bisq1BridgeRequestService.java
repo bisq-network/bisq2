@@ -238,6 +238,7 @@ public class Bisq1BridgeRequestService implements Service,
         ExecutorService currentRevalidationExecutor = revalidationExecutor;
         revalidationExecutor = null;
         ExecutorFactory.shutdownAndAwaitTermination(currentRevalidationExecutor, 100);
+        revalidationInProgress.set(false);
         ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
         executor = null;
         return bondedRoleGrpcService.shutdown()
@@ -278,6 +279,14 @@ public class Bisq1BridgeRequestService implements Service,
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        try {
+            recoverRegistrationRequest(authorizedData);
+        } catch (Exception e) {
+            log.error("Could not recover a bonded-role registration from authorized data", e);
+        }
+    }
+
+    private void recoverRegistrationRequest(AuthorizedData authorizedData) {
         if (!(authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole authorizedBondedRole)) {
             return;
         }
@@ -360,10 +369,8 @@ public class Bisq1BridgeRequestService implements Service,
         // AuthorizedBondedRolesService.addListener replays stored data only when that service completed its own
         // initialization first. This explicit replay makes recovery independent of the initialization order and is
         // idempotent. Read the authorized wrappers here because their outer signing key is required for ownership.
-        networkService.getDataService().ifPresent(dataService -> dataService.getAuthorizedData()
-                .filter(authorizedData ->
-                        authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                .forEach(this::onAuthorizedDataAdded));
+        networkService.getDataService().ifPresent(dataService ->
+                dataService.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
     }
 
     private void processAuthorizeAccountAgeRequest(PublicKey senderPublicKey,

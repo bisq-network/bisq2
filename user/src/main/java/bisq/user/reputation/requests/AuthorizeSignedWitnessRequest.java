@@ -92,15 +92,17 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
     public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateHashAsHex(hashAsHex);
-        if (accountAgeWitnessDate != 0) {
-            NetworkDataValidation.validateDate(accountAgeWitnessDate);
+        if (protocolVersion >= CURRENT_VERSION) {
+            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, 1, MAX_ACCOUNT_INPUT_LENGTH);
+        } else {
+            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, MAX_ACCOUNT_INPUT_LENGTH);
         }
-        if (witnessSignDate != 0) {
+        if (protocolVersion == LEGACY_VERSION) {
+            NetworkDataValidation.validateDate(accountAgeWitnessDate);
             NetworkDataValidation.validateDate(witnessSignDate);
         }
         NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
-        NetworkDataValidation.validateByteArray(accountInputDataWithSalt, MAX_ACCOUNT_INPUT_LENGTH);
     }
 
     @Override

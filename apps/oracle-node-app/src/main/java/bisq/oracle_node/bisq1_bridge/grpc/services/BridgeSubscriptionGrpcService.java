@@ -21,6 +21,7 @@ import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.timer.Delay;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
@@ -43,8 +45,7 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     protected final AtomicLong subscribeRetryInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestAttempts = new AtomicLong(0);
-    private final AtomicBoolean requestInProgress = new AtomicBoolean();
-    private final AtomicBoolean requestPending = new AtomicBoolean();
+    private final AtomicReference<RequestState> requestState = new AtomicReference<>(RequestState.initial());
     private final AtomicBoolean streamRecoveryScheduled = new AtomicBoolean();
     protected volatile boolean shutdownCalled;
 
@@ -82,13 +83,26 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         if (shutdownCalled) {
             return;
         }
-        if (!requestInProgress.compareAndSet(false, true)) {
-            requestPending.set(true);
+        requestState.updateAndGet(RequestState::queueRequest);
+        executePendingRequest();
+    }
+
+    private void executePendingRequest() {
+        if (shutdownCalled) {
             return;
         }
+        RequestState currentState;
+        do {
+            currentState = requestState.get();
+            if (currentState.requestInProgress() || !currentState.hasPendingRequest()) {
+                return;
+            }
+        } while (!requestState.compareAndSet(currentState, currentState.startRequest()));
+
         boolean historicalRequestPrepared = false;
         boolean historicalRequestSuccessful = false;
         try {
+            onRequestExecutionAcquired();
             int startBlockHeight = prepareHistoricalRequest();
             historicalRequestPrepared = true;
             doRequest(startBlockHeight).forEach(this::handleResponse);
@@ -105,9 +119,9 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                     onHistoricalRequestFinished(historicalRequestSuccessful);
                 }
             } finally {
-                requestInProgress.set(false);
-                if (requestPending.getAndSet(false) && !shutdownCalled) {
-                    requestAsync();
+                RequestState completedState = requestState.updateAndGet(RequestState::completeRequest);
+                if (completedState.hasPendingRequest() && !shutdownCalled) {
+                    CompletableFuture.runAsync(this::executePendingRequest, commonForkJoinPool());
                 }
             }
         }
@@ -134,6 +148,10 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     }
 
     protected void onHistoricalRequestFinished(boolean successful) {
+    }
+
+    @VisibleForTesting
+    void onRequestExecutionAcquired() {
     }
 
     protected abstract void subscribe();
@@ -196,6 +214,15 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         if (shutdownCalled) {
             return;
         }
+        Status status = Status.fromThrowable(throwable);
+        if (status.getCode() == Status.Code.UNIMPLEMENTED) {
+            log.warn("Bridge version mismatch: the configured Bisq 1 bridge does not implement the " +
+                            "continuity-aware block subscription. Upgrade the bridge before starting the oracle. " +
+                            "Status: {}{}",
+                    status.getCode(),
+                    status.getDescription() == null ? "" : " (" + status.getDescription() + ")");
+            return;
+        }
         if (!streamRecoveryScheduled.compareAndSet(false, true)) {
             return;
         }
@@ -212,5 +239,29 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                 .withExecutor(commonForkJoinPool())
                 .after(subscribeRetryInterval.get(), TimeUnit.SECONDS);
         subscribeRetryInterval.set(Math.min(10, subscribeRetryInterval.incrementAndGet()));
+    }
+
+    private record RequestState(boolean requestInProgress,
+                                long requestedGeneration,
+                                long startedGeneration) {
+        private static RequestState initial() {
+            return new RequestState(false, 0, 0);
+        }
+
+        private RequestState queueRequest() {
+            return new RequestState(requestInProgress, requestedGeneration + 1, startedGeneration);
+        }
+
+        private boolean hasPendingRequest() {
+            return requestedGeneration != startedGeneration;
+        }
+
+        private RequestState startRequest() {
+            return new RequestState(true, requestedGeneration, requestedGeneration);
+        }
+
+        private RequestState completeRequest() {
+            return new RequestState(false, requestedGeneration, startedGeneration);
+        }
     }
 }

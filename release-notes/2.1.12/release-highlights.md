@@ -20,4 +20,4 @@
 ## Release Status
 
 - Transifex CI supply-chain handling is hardened.
-- The checkout remains versioned `2.1.11`; bump version declarations before releasing `2.1.12`.
+- The release version is `2.1.12`.
