@@ -46,9 +46,13 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
                         .replace("-1.x86_64", "")
                 val fileWithoutExtension = canonicalFileName.substring(0, canonicalFileName.length - 4)
                 val fileExtension = canonicalFileName.substring(canonicalFileName.length - 4, canonicalFileName.length)
-                val platformName = getPlatform().platformName
-                // E.g. Bisq-2.0.4-macos_arm64.dmg
-                "$fileWithoutExtension-$platformName$fileExtension"
+                val platform = getPlatform()
+                val platformName = platform.platformName
+                when (platform) {
+                    Platform.MACOS_X86_64 -> canonicalFileName.replaceFirst("Bisq-", "Bisq-x86_64-")
+                    Platform.MACOS_ARM_64 -> canonicalFileName.replaceFirst("Bisq-", "Bisq-aarch64-")
+                    else -> "$fileWithoutExtension-$platformName$fileExtension"
+                }
             }
         }
     }
