@@ -59,6 +59,7 @@ public class WalletReceiveWizardController extends NavigationController {
         view = new WalletReceiveWizardView(model, this);
 
         walletReceiveAddressController = new WalletReceiveAddressController(serviceProvider,
+                this::setMainButtonsVisibleState,
                 this::onNext);
         walletAddressQrCodeController = new WalletAddressQrCodeController(serviceProvider);
     }
@@ -128,6 +129,10 @@ public class WalletReceiveWizardController extends NavigationController {
 
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
+            if (!validate()) {
+                return;
+            }
+
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
@@ -141,6 +146,10 @@ public class WalletReceiveWizardController extends NavigationController {
     void onBack() {
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
+            if (!validate()) {
+                return;
+            }
+
             model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
@@ -159,6 +168,16 @@ public class WalletReceiveWizardController extends NavigationController {
         KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent, getView().getRoot(), this::onNext);
     }
 
+    private boolean validate() {
+        if (model.getSelectedChildTarget().get() == NavigationTarget.WALLET_RECEIVE_ADDRESS) {
+            return walletReceiveAddressController.validate();
+        }
+        if (model.getSelectedChildTarget().get() == NavigationTarget.WALLET_ADDRESS_QR_CODE) {
+            return walletAddressQrCodeController.validate();
+        }
+        return true;
+    }
+
     private void reset() {
         resetSelectedChildTarget();
 
@@ -166,5 +185,10 @@ public class WalletReceiveWizardController extends NavigationController {
         walletAddressQrCodeController.reset();
 
         model.reset();
+    }
+
+    private void setMainButtonsVisibleState(boolean value) {
+        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.WALLET_RECEIVE_ADDRESS);
+        model.getNextButtonVisible().set(value);
     }
 }

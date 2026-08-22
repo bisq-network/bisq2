@@ -98,6 +98,8 @@ public class WalletReceiveWizardView extends NavigationView<VBox, WalletReceiveW
     protected void onViewAttached() {
         titleLabel.textProperty().bind(model.getTitleText());
         nextButton.textProperty().bind(model.getNextButtonText());
+        nextButton.visibleProperty().bind(model.getNextButtonVisible());
+        nextButton.managedProperty().bind(model.getNextButtonVisible());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
 
@@ -114,6 +116,8 @@ public class WalletReceiveWizardView extends NavigationView<VBox, WalletReceiveW
     protected void onViewDetached() {
         titleLabel.textProperty().unbind();
         nextButton.textProperty().unbind();
+        nextButton.visibleProperty().unbind();
+        nextButton.managedProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
 

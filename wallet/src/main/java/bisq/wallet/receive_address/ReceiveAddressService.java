@@ -19,6 +19,7 @@ package bisq.wallet.receive_address;
 
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
+import bisq.common.util.StringUtils;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -28,7 +29,7 @@ import lombok.Getter;
 import java.util.Optional;
 
 public class ReceiveAddressService implements Service, PersistenceClient<ReceiveAddressStore> {
-    public final static int RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH = 20;
+    public final static int RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH = 20;
 
     @Getter
     private final ReceiveAddressStore persistableStore = new ReceiveAddressStore();
@@ -52,12 +53,12 @@ public class ReceiveAddressService implements Service, PersistenceClient<Receive
     }
 
     public boolean updateReceiveAddressEntry(ReceiveAddressEntry receiveAddressEntry,
-                                             Optional<String> name) {
+                                             Optional<String> note) {
         boolean wasUpdated = false;
         Optional<ReceiveAddressEntry> receiveAddress = findReceiveAddressEntry(receiveAddressEntry);
-        if (receiveAddress.isPresent() && name.isPresent() && isNameValid(name.get())) {
+        if (receiveAddress.isPresent() && note.isPresent() && isNoteValid(note.get())) {
             ReceiveAddressEntry existingEntry = receiveAddress.get();
-            ReceiveAddressEntry updatedEntry = new ReceiveAddressEntry(existingEntry.getAddress(), existingEntry.getCreatedAt(), name);
+            ReceiveAddressEntry updatedEntry = new ReceiveAddressEntry(existingEntry.getAddress(), existingEntry.getCreatedAt(), note);
             wasUpdated = persistableStore.updateReceiveAddressEntry(updatedEntry);
             if (wasUpdated) {
                 persist();
@@ -72,7 +73,18 @@ public class ReceiveAddressService implements Service, PersistenceClient<Receive
                 .findAny();
     }
 
-    private boolean isNameValid(String name) {
-        return !name.isEmpty() && name.length() <= RECEIVE_ADDRESS_ENTRY_NAME_MAX_LENGTH;
+    public ReceiveAddressEntry findOrAddReceiveAddressEntry(String receiveAddress) {
+        ReceiveAddressEntry receiveAddressEntry = new ReceiveAddressEntry(receiveAddress);
+        Optional<ReceiveAddressEntry> optionalExistingEntry = findReceiveAddressEntry(receiveAddressEntry);
+        if (optionalExistingEntry.isPresent()) {
+            return optionalExistingEntry.get();
+        } else {
+            addReceiveAddressEntry(receiveAddressEntry);
+            return receiveAddressEntry;
+        }
+    }
+
+    private boolean isNoteValid(String note) {
+        return !StringUtils.isEmpty(note) && note.length() <= RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH;
     }
 }

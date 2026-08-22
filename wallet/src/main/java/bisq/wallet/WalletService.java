@@ -123,9 +123,10 @@ public class WalletService implements Service {
         return client.isWalletReady().thenApply(IsWalletReadyResponse::getReady);
     }
 
-    public CompletableFuture<String> getUnusedAddress() {
+    public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {
         return client.getUnusedAddress()
-                .thenApply(GetUnusedAddressResponse::getAddress);
+                .thenApply(GetUnusedAddressResponse::getAddress)
+                .thenApply(receiveAddressService::findOrAddReceiveAddressEntry);
     }
 
     public CompletableFuture<ReadOnlyObservableSet<String>> requestWalletAddresses() {
@@ -172,16 +173,18 @@ public class WalletService implements Service {
     public CompletableFuture<ReceiveAddressEntry> createReceiveAddress() {
         return client.getNewAddress()
                 .thenApply(GetNewAddressResponse::getAddress)
-                .thenApply(address -> {
-                    ReceiveAddressEntry receiveAddress = new ReceiveAddressEntry(address);
-                    receiveAddressService.addReceiveAddressEntry(receiveAddress);
-                    return receiveAddress;
-                });
+                .thenApply(this::addReceiveAddress);
     }
 
     public boolean updateReceiveAddress(ReceiveAddressEntry receiveAddressEntry,
-                                        Optional<String> name) {
-        return receiveAddressService.updateReceiveAddressEntry(receiveAddressEntry, name);
+                                        Optional<String> note) {
+        return receiveAddressService.updateReceiveAddressEntry(receiveAddressEntry, note);
+    }
+
+    public ReceiveAddressEntry addReceiveAddress(String address) {
+        ReceiveAddressEntry receiveAddressEntry = new ReceiveAddressEntry(address);
+        receiveAddressService.addReceiveAddressEntry(receiveAddressEntry);
+        return receiveAddressEntry;
     }
 
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {

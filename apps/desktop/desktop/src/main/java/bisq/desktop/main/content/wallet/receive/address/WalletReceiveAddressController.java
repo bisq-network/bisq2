@@ -20,14 +20,17 @@ package bisq.desktop.main.content.wallet.receive.address;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
 import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Slf4j
 public class WalletReceiveAddressController implements Controller {
@@ -36,22 +39,24 @@ public class WalletReceiveAddressController implements Controller {
     private final WalletReceiveAddressModel model;
     private final WalletService walletService;
     private final Runnable onNextHandler;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
 
     public WalletReceiveAddressController(ServiceProvider serviceProvider,
+                                          Consumer<Boolean> navigationButtonsVisibleHandler,
                                           Runnable onNextHandler) {
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.onNextHandler = onNextHandler;
+
         model = new WalletReceiveAddressModel();
         view = new WalletReceiveAddressView(model, this);
         walletService = serviceProvider.getWalletService().orElseThrow();
 
         walletService.getUnusedAddress().
-                thenAccept(receiveAddress -> {
+                thenAccept(receiveAddressEntry -> {
                     UIThread.run(() -> {
-                        model.getReceiveAddress().set(receiveAddress);
-                        walletService.findReceiveAddressEntry(receiveAddress).ifPresent(entry -> {
-                            model.getReceiveAddressEntry().set(entry);
-                            model.getReceiveAddressName().set(entry.getName().orElse(null));
-                        });
+                        model.getReceiveAddressEntry().set(receiveAddressEntry);
+                        model.getReceiveAddress().set(receiveAddressEntry.getAddress());
+                        model.getReceiveAddressNote().set(receiveAddressEntry.getNote().orElse(null));
                         updateIsNewAddress(false);
                     });
                 });
@@ -65,8 +70,23 @@ public class WalletReceiveAddressController implements Controller {
         model.reset();
     }
 
+    public boolean validate() {
+        boolean isAddressNoteUnsaved = model.getIsAddressNoteEditable().get()
+                && model.getReceiveAddressNote().get() != null
+                && !model.getReceiveAddressNote().get().isBlank();
+        boolean skipSavingAddressNote = model.getSkipSavingAddressNote().get();
+        if (isAddressNoteUnsaved && !skipSavingAddressNote) {
+            navigationButtonsVisibleHandler.accept(false);
+            model.getShouldShowOverlay().set(true);
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public void onActivate() {
+        model.getSkipSavingAddressNote().set(false);
     }
 
     @Override
@@ -87,28 +107,32 @@ public class WalletReceiveAddressController implements Controller {
                     UIThread.run(() -> {
                         model.getReceiveAddressEntry().set(receiveAddressEntry);
                         model.getReceiveAddress().set(receiveAddressEntry.getAddress());
-                        model.getReceiveAddressName().set(null);
+                        model.getReceiveAddressNote().set(null);
                         updateIsNewAddress(true);
                     });
                 });
     }
 
-    void onSaveAddressName() {
+    void onSaveAddressNote() {
         UIThread.run(() -> {
             if (model.getReceiveAddressEntry().get() != null
-                    && model.getReceiveAddressName().get() != null) {
-                String addressName = model.getReceiveAddressName().get().trim();
-                boolean wasUpdated = walletService.updateReceiveAddress(model.getReceiveAddressEntry().get(), Optional.of(addressName));
+                    && model.getReceiveAddressNote().get() != null) {
+                String addressNote = model.getReceiveAddressNote().get().trim();
+                if (addressNote.isEmpty()) {
+                    return;
+                }
+                boolean wasUpdated = walletService.updateReceiveAddress(
+                        model.getReceiveAddressEntry().get(), Optional.of(addressNote));
                 if (wasUpdated) {
-                    model.getIsAddressNameEditable().set(false);
+                    model.getIsAddressNoteEditable().set(false);
                 }
             }
         });
     }
 
-    void onDeleteAddressName() {
+    void onClearAddressNote() {
         UIThread.run(() -> {
-            model.getReceiveAddressName().set("");
+            model.getReceiveAddressNote().set("");
         });
     }
 
@@ -119,13 +143,34 @@ public class WalletReceiveAddressController implements Controller {
         });
     }
 
+    void onProceedOverlay() {
+        UIThread.run(() -> {
+            model.getSkipSavingAddressNote().set(true);
+            model.getShouldShowOverlay().set(false);
+            navigationButtonsVisibleHandler.accept(true);
+            onNextHandler.run();
+        });
+    }
+
+    void onCloseOverlay() {
+        if (model.getShouldShowOverlay().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getShouldShowOverlay().set(false);
+        }
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onProceedOverlay);
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
+    }
+
     private void updateIsNewAddress(boolean isNewAddress) {
         model.getIsNewAddress().set(isNewAddress);
         model.getAddressTextFieldDescription().set(isNewAddress
                 ? Res.get("wallet.receive.newUnusedAddress")
                 : Res.get("wallet.receive.unusedAddress"));
-        boolean hasName = model.getReceiveAddressName().get() != null;
-        model.getIsAddressNameEditable().set(isNewAddress && !hasName);
-        model.getShouldShowAddressNote().set(hasName);
+        boolean hasNote = model.getReceiveAddressNote().get() != null;
+        model.getIsAddressNoteEditable().set(isNewAddress && !hasNote);
+        model.getShouldShowAddressNote().set(hasNote);
     }
 }
