@@ -89,8 +89,8 @@ val bisq2InstallerReleaseAssets = listOf(
     "Bisq-%s-linux_arm64.deb",
     "Bisq-%s-linux_x86_64.rpm",
     "Bisq-%s-linux_arm64.rpm",
-    "Bisq-%s-macos_x86_64.dmg",
-    "Bisq-%s-macos_arm64.dmg",
+    "Bisq-x86_64-%s.dmg",
+    "Bisq-aarch64-%s.dmg",
     "Bisq-%s-win_x86_64.exe",
     "Bisq-%s-win_x86_64.msi",
 )

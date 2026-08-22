@@ -18,6 +18,7 @@
 package bisq.evolution.updater;
 
 import bisq.common.file.FileMutatorUtils;
+import bisq.common.platform.Platform;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -29,6 +30,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UpdaterUtilsTest {
+
+    @Test
+    void getInstallerFileNameUsesIntelMacOsAsset() {
+        String fileName = UpdaterUtils.getInstallerFileName("2.1.12", Platform.MACOS_X86_64, ".dmg");
+
+        assertEquals("Bisq-x86_64-2.1.12.dmg", fileName);
+    }
+
+    @Test
+    void getInstallerFileNameUsesAppleSiliconMacOsAsset() {
+        String fileName = UpdaterUtils.getInstallerFileName("2.1.12", Platform.MACOS_ARM_64, ".dmg");
+
+        assertEquals("Bisq-aarch64-2.1.12.dmg", fileName);
+    }
+
+    @Test
+    void getInstallerFileNameRemainsGenericForOtherPlatforms() {
+        assertEquals("Bisq-2.1.12.deb",
+                UpdaterUtils.getInstallerFileName("2.1.12", Platform.LINUX_X86_64, ".deb"));
+        assertEquals("Bisq-2.1.12.exe",
+                UpdaterUtils.getInstallerFileName("2.1.12", Platform.WIN_X86_64, ".exe"));
+    }
 
     @Test
     void testReadVersionFromVersionFile(@TempDir Path tempDirPath) throws IOException {
