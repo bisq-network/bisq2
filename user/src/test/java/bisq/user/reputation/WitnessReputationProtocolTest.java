@@ -18,8 +18,11 @@
 package bisq.user.reputation;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,10 +41,13 @@ class WitnessReputationProtocolTest {
                 latestPossibleDate + TimeUnit.DAYS.toMillis(61))).isEqualTo(61);
     }
 
-    @Test
-    void conservativeAgeNeverExceedsExactAge() {
+    @ParameterizedTest
+    @MethodSource("exactDateOffsets")
+    void conservativeAgeNeverExceedsExactAge(long exactDateOffset) {
         long dateBucket = TimeUnit.DAYS.toMillis(18_000);
-        long exactDate = dateBucket;
+        assertThat(exactDateOffset).isBetween(0L,
+                WitnessReputationProtocol.DATE_BUCKET_SIZE_MILLIS - 1);
+        long exactDate = dateBucket + exactDateOffset;
         long now = dateBucket + WitnessReputationProtocol.DATE_BUCKET_SIZE_MILLIS +
                 TimeUnit.DAYS.toMillis(100);
         long latestPossibleDate = WitnessReputationProtocol.getLatestPossibleDate(dateBucket);
@@ -49,9 +55,15 @@ class WitnessReputationProtocolTest {
         long conservativeAge = WitnessReputationProtocol.getConservativeAgeInDays(dateBucket, now);
 
         assertThat(latestPossibleDate - exactDate)
-                .isLessThan(TimeUnit.DAYS.toMillis(1));
+                .isLessThan(WitnessReputationProtocol.DATE_BUCKET_SIZE_MILLIS);
         assertThat(conservativeAge).isLessThanOrEqualTo(exactAge);
         assertThat(exactAge - conservativeAge).isLessThanOrEqualTo(1);
+    }
+
+    private static Stream<Long> exactDateOffsets() {
+        return Stream.of(0L,
+                WitnessReputationProtocol.DATE_BUCKET_SIZE_MILLIS / 2,
+                WitnessReputationProtocol.DATE_BUCKET_SIZE_MILLIS - 1);
     }
 
     @Test
