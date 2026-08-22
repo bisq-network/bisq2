@@ -19,6 +19,7 @@ package bisq.network.http;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
@@ -186,20 +187,20 @@ public abstract class HttpRequestService<T, R> implements Service {
     }
 
     private CompletableFuture<R> requestWithFailover(T requestData, AtomicInteger recursionDepth) {
-        return request(requestData, recursionDepth)
-                .exceptionallyCompose(throwable -> {
-                    ProviderFailoverException providerFailoverException = null;
-                    if (throwable instanceof ProviderFailoverException e1) {
-                        providerFailoverException = e1;
-                    } else if (ExceptionUtil.getRootCause(throwable) instanceof ProviderFailoverException e2) {
-                        providerFailoverException = e2;
-                    }
-                    if (providerFailoverException != null) {
-                        return requestWithFailover(requestData, providerFailoverException.getRecursionDepth());
-                    }
+        // exceptionallyCompose goes via the JdkFacade as Android only provides it from API 34
+        return FacadeProvider.getJdkFacade().exceptionallyCompose(request(requestData, recursionDepth), throwable -> {
+            ProviderFailoverException providerFailoverException = null;
+            if (throwable instanceof ProviderFailoverException e1) {
+                providerFailoverException = e1;
+            } else if (ExceptionUtil.getRootCause(throwable) instanceof ProviderFailoverException e2) {
+                providerFailoverException = e2;
+            }
+            if (providerFailoverException != null) {
+                return requestWithFailover(requestData, providerFailoverException.getRecursionDepth());
+            }
 
-                    return CompletableFuture.failedFuture(throwable);
-                });
+            return CompletableFuture.failedFuture(throwable);
+        });
     }
 
     private CompletableFuture<R> request(T requestData, AtomicInteger recursionDepth) {
@@ -213,7 +214,7 @@ public abstract class HttpRequestService<T, R> implements Service {
         HttpRequestUrlProvider providerForThisRequest = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
         HttpRequest httpRequest = buildRequest(providerForThisRequest, requestData);
         try {
-            return CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<R> requestFuture = CompletableFuture.supplyAsync(() -> {
                         // For POST the path is appended to the http-client baseUrl when the
                         // client is constructed, since BaseHttpClient.post(param, header) treats
                         // 'param' as the body. TODO: refactor BaseHttpClient.post to accept
@@ -303,24 +304,25 @@ public abstract class HttpRequestService<T, R> implements Service {
                             }
                         }
                     }, executorService)
-                    .orTimeout(conf.getTimeoutInSeconds(), SECONDS)
-                    .exceptionallyCompose(throwable -> {
-                        if (ExceptionUtil.getRootCause(throwable) instanceof TimeoutException) {
-                            log.warn("Request to provider {} timed out after {} seconds",
-                                    providerForThisRequest.getBaseUrl(), conf.getTimeoutInSeconds());
-                            if (!isServerErrorRetryAllowed(httpRequest)) {
-                                return CompletableFuture.failedFuture(new RuntimeException(
-                                        "Timeout. Non-idempotent POST — not retrying. Provider=" + providerForThisRequest.getBaseUrl(),
-                                        throwable));
-                            }
-                            boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
-                            Exception exception = shouldRetry
-                                    ? new ProviderFailoverException("Timeout. Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth)
-                                    : new RuntimeException("Timeout. We failed at all possible providers and give up. Provider=" + providerForThisRequest.getBaseUrl());
-                            return CompletableFuture.failedFuture(exception);
-                        }
-                        return CompletableFuture.failedFuture(throwable);
-                    });
+                    .orTimeout(conf.getTimeoutInSeconds(), SECONDS);
+            // exceptionallyCompose goes via the JdkFacade as Android only provides it from API 34
+            return FacadeProvider.getJdkFacade().exceptionallyCompose(requestFuture, throwable -> {
+                if (ExceptionUtil.getRootCause(throwable) instanceof TimeoutException) {
+                    log.warn("Request to provider {} timed out after {} seconds",
+                            providerForThisRequest.getBaseUrl(), conf.getTimeoutInSeconds());
+                    if (!isServerErrorRetryAllowed(httpRequest)) {
+                        return CompletableFuture.failedFuture(new RuntimeException(
+                                "Timeout. Non-idempotent POST — not retrying. Provider=" + providerForThisRequest.getBaseUrl(),
+                                throwable));
+                    }
+                    boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
+                    Exception exception = shouldRetry
+                            ? new ProviderFailoverException("Timeout. Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth)
+                            : new RuntimeException("Timeout. We failed at all possible providers and give up. Provider=" + providerForThisRequest.getBaseUrl());
+                    return CompletableFuture.failedFuture(exception);
+                }
+                return CompletableFuture.failedFuture(throwable);
+            });
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected request task.", e);
             return CompletableFuture.failedFuture(e);
