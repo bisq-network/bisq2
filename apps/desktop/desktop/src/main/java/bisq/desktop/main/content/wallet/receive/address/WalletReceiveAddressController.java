@@ -52,13 +52,11 @@ public class WalletReceiveAddressController implements Controller {
         walletService = serviceProvider.getWalletService().orElseThrow();
 
         walletService.getUnusedAddress().
-                thenAccept(receiveAddress -> {
+                thenAccept(receiveAddressEntry -> {
                     UIThread.run(() -> {
-                        model.getReceiveAddress().set(receiveAddress);
-                        walletService.findReceiveAddressEntry(receiveAddress).ifPresent(entry -> {
-                            model.getReceiveAddressEntry().set(entry);
-                            model.getReceiveAddressNote().set(entry.getNote().orElse(null));
-                        });
+                        model.getReceiveAddressEntry().set(receiveAddressEntry);
+                        model.getReceiveAddress().set(receiveAddressEntry.getAddress());
+                        model.getReceiveAddressNote().set(receiveAddressEntry.getNote().orElse(null));
                         updateIsNewAddress(false);
                     });
                 });
@@ -120,7 +118,8 @@ public class WalletReceiveAddressController implements Controller {
             if (model.getReceiveAddressEntry().get() != null
                     && model.getReceiveAddressNote().get() != null) {
                 String addressNote = model.getReceiveAddressNote().get().trim();
-                boolean wasUpdated = walletService.updateReceiveAddress(model.getReceiveAddressEntry().get(), Optional.of(addressNote));
+                boolean wasUpdated = walletService.updateReceiveAddress(
+                        model.getReceiveAddressEntry().get(), Optional.of(addressNote));
                 if (wasUpdated) {
                     model.getIsAddressNoteEditable().set(false);
                 }

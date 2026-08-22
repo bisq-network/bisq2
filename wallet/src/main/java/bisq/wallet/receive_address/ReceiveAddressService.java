@@ -72,6 +72,17 @@ public class ReceiveAddressService implements Service, PersistenceClient<Receive
                 .findAny();
     }
 
+    public ReceiveAddressEntry findOrAddReceiveAddressEntry(String receiveAddress) {
+        ReceiveAddressEntry receiveAddressEntry = new ReceiveAddressEntry(receiveAddress);
+        Optional<ReceiveAddressEntry> optionalExistingEntry = findReceiveAddressEntry(receiveAddressEntry);
+        if (optionalExistingEntry.isPresent()) {
+            return optionalExistingEntry.get();
+        } else {
+            addReceiveAddressEntry(receiveAddressEntry);
+            return receiveAddressEntry;
+        }
+    }
+
     private boolean isNoteValid(String note) {
         return !note.isEmpty() && note.length() <= RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH;
     }
