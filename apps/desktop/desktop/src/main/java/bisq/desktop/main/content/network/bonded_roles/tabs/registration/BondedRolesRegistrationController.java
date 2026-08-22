@@ -39,6 +39,8 @@ import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.CURRENT_VERSION;
+import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.LEGACY_VERSION;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -93,15 +95,20 @@ public abstract class BondedRolesRegistrationController implements Controller {
     public void onDeactivate() {
         selectedUserProfilePin.unbind();
         bondedRoleSetPin.unbind();
-        model.getRequestButtonDisabled().unbind();
+        model.getRequestRegistrationButtonDisabled().unbind();
+        model.getRequestCancellationButtonDisabled().unbind();
     }
 
     public void onRequestAuthorization() {
-        requestBondedRoleRegistration(false);
+        if (transactionIdsAreValid()) {
+            requestBondedRoleRegistration(false);
+        }
     }
 
     public void onRequestCancellation() {
-        requestBondedRoleRegistration(true);
+        if (transactionIdsAreValid()) {
+            requestBondedRoleRegistration(true);
+        }
     }
 
     public void onLearnMore() {
@@ -130,7 +137,12 @@ public abstract class BondedRolesRegistrationController implements Controller {
     }
 
     protected void applyRequestRegistrationButtonDisabledBinding() {
-        model.getRequestButtonDisabled().bind(model.getBondUserName().isEmpty().or(model.getSignature().isEmpty()));
+        var missingCommonField = model.getBondUserName().isEmpty().or(model.getSignature().isEmpty());
+        model.getRequestRegistrationButtonDisabled().bind(missingCommonField
+                .or(model.getProposalTxId().isEmpty())
+                .or(model.getLockupTxId().isEmpty()));
+        model.getRequestCancellationButtonDisabled().bind(missingCommonField
+                .or(model.getProposalTxId().isEmpty().isNotEqualTo(model.getLockupTxId().isEmpty())));
     }
 
     protected void applyRequestCancellationButtonVisible() {
@@ -143,18 +155,33 @@ public abstract class BondedRolesRegistrationController implements Controller {
     protected void requestBondedRoleRegistration(boolean isCancellationRequest) {
         checkNotNull(model.getProfileId().get());
         checkNotNull(model.getAuthorizedPublicKey());
-        boolean success = bondedRoleRegistrationService.requestBondedRoleRegistration(
-                model.getProfileId().get(),
-                model.getAuthorizedPublicKey(),
-                model.getBondedRoleType(),
-                model.getBondUserName().get(),
-                model.getSignature().get(),
-                model.getAddressByNetworkType(),
-                userIdentityService.getSelectedUserIdentity().getNetworkIdWithKeyPair(),
-                isCancellationRequest);
+        boolean legacyCancellation = isCancellationRequest &&
+                model.getProposalTxId().isEmpty().get() &&
+                model.getLockupTxId().isEmpty().get();
+        int registrationProtocolVersion = legacyCancellation ? LEGACY_VERSION : CURRENT_VERSION;
+        boolean success;
+        try {
+            success = bondedRoleRegistrationService.requestBondedRoleRegistration(
+                    model.getProfileId().get(),
+                    model.getAuthorizedPublicKey(),
+                    model.getBondedRoleType(),
+                    model.getBondUserName().get(),
+                    model.getSignature().get(),
+                    registrationProtocolVersion,
+                    model.getProposalTxId().get(),
+                    model.getLockupTxId().get(),
+                    model.getAddressByNetworkType(),
+                    userIdentityService.getSelectedUserIdentity().getNetworkIdWithKeyPair(),
+                    isCancellationRequest);
+        } catch (IllegalArgumentException e) {
+            showFailure(isCancellationRequest, e.getMessage());
+            return;
+        }
         if (success) {
             model.getBondUserName().set("");
             model.getSignature().set("");
+            model.getProposalTxId().set("");
+            model.getLockupTxId().set("");
             String successMessage = isCancellationRequest ?
                     Res.get("user.bondedRoles.cancellation.success") :
                     Res.get("user.bondedRoles.registration.success");
@@ -163,13 +190,21 @@ public abstract class BondedRolesRegistrationController implements Controller {
                     .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
                     .show();
         } else {
-            String warnMessage = isCancellationRequest ?
-                    Res.get("user.bondedRoles.cancellation.failed", StringUtils.truncate(model.getSignature().get())) :
-                    Res.get("user.bondedRoles.registration.failed", StringUtils.truncate(model.getSignature().get()));
-            new Popup().warning(warnMessage)
-                    .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
-                    .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
-                    .show();
+            showFailure(isCancellationRequest, StringUtils.truncate(model.getSignature().get()));
         }
+    }
+
+    private boolean transactionIdsAreValid() {
+        return model.getProposalTxIdValid().get() && model.getLockupTxIdValid().get();
+    }
+
+    private void showFailure(boolean isCancellationRequest, String errorMessage) {
+        String warnMessage = isCancellationRequest ?
+                Res.get("user.bondedRoles.cancellation.failed", errorMessage) :
+                Res.get("user.bondedRoles.registration.failed", errorMessage);
+        new Popup().warning(warnMessage)
+                .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                .show();
     }
 }

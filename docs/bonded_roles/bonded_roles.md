@@ -1,5 +1,8 @@
 # Bonded roles
 
+The authoritative Bisq 2 oracle registration and DAO-revalidation rules are defined in
+[`docs/specifications/bonded-roles/registration.md`](../specifications/bonded-roles/registration.md).
+
 All important roles and network nodes require a BSQ bond to secure the roles.
 For Seed nodes and oracle nodes we require at least 1 node which is available by default as otherwise it would be a
 chicken-and-egg problem.
@@ -32,4 +35,3 @@ out the features and fully understand what the role can do and how it interacts 
 
 Registered roles are listed with the relevant details for verification.
 <img src="img/list.png" width="1200"/>
-

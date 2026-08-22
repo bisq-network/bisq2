@@ -117,10 +117,15 @@ public class NodeRegistrationController extends BondedRolesRegistrationControlle
 
     @Override
     protected void applyRequestRegistrationButtonDisabledBinding() {
-        model.getRequestButtonDisabled().bind(model.getBondUserName().isEmpty()
+        var missingCommonField = model.getBondUserName().isEmpty()
                 .or(getNodesRegistrationModel().getAddressInfoJson().isEmpty())
                 .or(model.getSignature().isEmpty())
-                .or(getNodesRegistrationModel().getJsonValid().not()));
+                .or(getNodesRegistrationModel().getJsonValid().not());
+        model.getRequestRegistrationButtonDisabled().bind(missingCommonField
+                .or(model.getProposalTxId().isEmpty())
+                .or(model.getLockupTxId().isEmpty()));
+        model.getRequestCancellationButtonDisabled().bind(missingCommonField
+                .or(model.getProposalTxId().isEmpty().isNotEqualTo(model.getLockupTxId().isEmpty())));
     }
 
     private AddressByTransportTypeMap addressByNetworkTypeFromJson(String json) {

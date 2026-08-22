@@ -47,12 +47,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @Getter
 public final class AuthorizedBondedReputationData implements AuthorizedDistributedData, PublishDateAware {
-    private static final int VERSION = 1;
+    public static final int LEGACY_VERSION = 1;
+    public static final int VERSION = 2;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {0, LEGACY_VERSION})
     private final int version;
     private final long blockTime;
     private final long amount;
@@ -63,9 +64,9 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     @ExcludeForHash(excludeOnlyInVersions = {0})
     private final String lockupTxId;
 
-    // Added in v2.2.0
-    // Once most users have updated, we can change to version 2 and later remove the excludeOnlyInVersions param
-    @ExcludeForHash(excludeOnlyInVersions = {1})
+    // Version 1 excluded this field for compatibility with clients which predated the removal signal. Version 2
+    // includes it in the oracle-authorized hash so an untrusted relay cannot add or strip an unlock marker.
+    @ExcludeForHash(excludeOnlyInVersions = {LEGACY_VERSION})
     private final Optional<String> unlockTxId;  // Only set at unlock tx
 
     // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
@@ -191,6 +192,10 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     @Override
     public boolean staticPublicKeysProvided() {
         return staticPublicKeysProvided;
+    }
+
+    public boolean isCurrentVersion() {
+        return version == VERSION;
     }
 
     @Override

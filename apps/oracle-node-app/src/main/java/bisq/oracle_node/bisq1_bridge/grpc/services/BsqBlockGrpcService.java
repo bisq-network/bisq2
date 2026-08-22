@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.bridge.protobuf.BsqBlockSubscription;
+import bisq.bridge.protobuf.BsqBlockSubscriptionEvent;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
@@ -27,14 +28,24 @@ import bisq.oracle_node.bisq1_bridge.grpc.messages.BsqBlocksRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BsqBlocksResponse;
 import bisq.user.reputation.data.AuthorizedBondedReputationData;
 import bisq.user.reputation.data.AuthorizedProofOfBurnData;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableMap;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntConsumer;
 
 /**
  * Requests BSQ blocks to extract AuthorizedProofOfBurnData and AuthorizedBondedReputationData.
@@ -42,27 +53,49 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 @Slf4j
 public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockDto> {
+    private static final int NO_HISTORICAL_REQUEST = -1;
+
     @Getter
     private final BlockingQueue<AuthorizedProofOfBurnData> authorizedProofOfBurnDataQueue = new LinkedBlockingQueue<>(10000);
     @Getter
     private final BlockingQueue<AuthorizedBondedReputationData> authorizedBondedReputationDataQueue = new LinkedBlockingQueue<>(10000);
+    private final IntConsumer liveBlockHandler;
+    private final Object continuityLock = new Object();
+    private final NavigableMap<Integer, BsqBlockDto> bufferedLiveBlocks = new TreeMap<>();
+    private final ConcurrentNavigableMap<Integer, Set<String>> processedTransactionIdsByHeight =
+            new ConcurrentSkipListMap<>();
+    private final AtomicInteger lastContiguousBlockHeight = new AtomicInteger();
+    private int activeHistoricalRequestStartHeight = NO_HISTORICAL_REQUEST;
+    private volatile int latestSnapshotHeight;
 
-    public BsqBlockGrpcService(boolean staticPublicKeysProvided, GrpcClient grpcClient) {
+    public BsqBlockGrpcService(boolean staticPublicKeysProvided,
+                               GrpcClient grpcClient,
+                               IntConsumer liveBlockHandler) {
         super(staticPublicKeysProvided, grpcClient);
+        this.liveBlockHandler = liveBlockHandler;
+        lastContiguousBlockHeight.set(super.getStartBlockHeight() - 1);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         authorizedProofOfBurnDataQueue.clear();
         authorizedBondedReputationDataQueue.clear();
+        synchronized (continuityLock) {
+            bufferedLiveBlocks.clear();
+            processedTransactionIdsByHeight.clear();
+            activeHistoricalRequestStartHeight = NO_HISTORICAL_REQUEST;
+        }
         return super.shutdown();
     }
 
     @Override
     protected List<BsqBlockDto> doRequest(int startBlockHeight) {
         var protoRequest = new BsqBlocksRequest(startBlockHeight).completeProto();
-        var protoResponse = grpcClient.getBsqBlockBlockingStub().requestBsqBlocks(protoRequest);
+        var protoResponse = GrpcClient.withBulkRequestDeadline(grpcClient.getBsqBlockBlockingStub())
+                .requestBsqBlocks(protoRequest);
         BsqBlocksResponse response = BsqBlocksResponse.fromProto(protoResponse);
+        response.verify();
+        latestSnapshotHeight = response.getSnapshotHeight();
         return response.getBlocks();
     }
 
@@ -70,6 +103,8 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     protected void handleResponse(BsqBlockDto data) {
         log.info("Received BsqBlockDto at height {}", data.getHeight());
         data.getTxDtoList()
+                .stream()
+                .filter(txDto -> markTransactionProcessed(data.getHeight(), txDto.getTxId()))
                 .forEach(txDto -> {
                     txDto.getProofOfBurnDto()
                             .map(proofOfBurnDto -> toAuthorizedProofOfBurnData(data, txDto, proofOfBurnDto))
@@ -81,12 +116,52 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     }
 
     @Override
+    protected int getStartBlockHeight() {
+        return Math.max(super.getStartBlockHeight(), lastContiguousBlockHeight.get() + 1);
+    }
+
+    @Override
+    protected int prepareHistoricalRequest() {
+        synchronized (continuityLock) {
+            int startBlockHeight = getStartBlockHeight();
+            activeHistoricalRequestStartHeight = startBlockHeight;
+            return startBlockHeight;
+        }
+    }
+
+    @Override
+    protected void onHistoricalRequestComplete() {
+        if (latestSnapshotHeight > 0) {
+            List<Integer> newlyContiguousLiveBlockHeights;
+            synchronized (continuityLock) {
+                lastContiguousBlockHeight.accumulateAndGet(latestSnapshotHeight, Math::max);
+                bufferedLiveBlocks.headMap(lastContiguousBlockHeight.get(), true).clear();
+                newlyContiguousLiveBlockHeights = processContiguousBufferedBlocks();
+                pruneProcessedTransactions();
+            }
+            liveBlockHandler.accept(latestSnapshotHeight);
+            newlyContiguousLiveBlockHeights.forEach(liveBlockHandler::accept);
+        }
+    }
+
+    @Override
+    protected void onHistoricalRequestFinished(boolean successful) {
+        synchronized (continuityLock) {
+            if (!successful && activeHistoricalRequestStartHeight != NO_HISTORICAL_REQUEST) {
+                processedTransactionIdsByHeight.tailMap(activeHistoricalRequestStartHeight, true).clear();
+            }
+            activeHistoricalRequestStartHeight = NO_HISTORICAL_REQUEST;
+            pruneProcessedTransactions();
+        }
+    }
+
+    @Override
     protected void subscribe() {
         var subscription = BsqBlockSubscription.newBuilder().build();
-        grpcClient.getBsqBlockStub().subscribe(subscription, new StreamObserver<>() {
+        grpcClient.getBsqBlockStub().subscribeWithSnapshot(subscription, new StreamObserver<>() {
             @Override
-            public void onNext(bisq.bridge.protobuf.BsqBlockDto proto) {
-                handleResponse(BsqBlockDto.fromProto(proto));
+            public void onNext(BsqBlockSubscriptionEvent event) {
+                handleSubscriptionEvent(event);
 
                 // reset
                 subscribeRetryInterval.set(1);
@@ -99,9 +174,71 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
 
             @Override
             public void onCompleted() {
-                log.info("BsqBlockSubscription completed");
+                handleStreamObserverCompleted();
             }
         });
+    }
+
+    void handleSubscriptionEvent(BsqBlockSubscriptionEvent event) {
+        switch (event.getPayloadCase()) {
+            case SUBSCRIPTIONREADYHEIGHT -> {
+                log.info("BSQ block subscription established at height {}", event.getSubscriptionReadyHeight());
+                requestAsync();
+            }
+            case BSQBLOCK -> handleLiveResponse(BsqBlockDto.fromProto(event.getBsqBlock()));
+            case PAYLOAD_NOT_SET -> throw new IllegalArgumentException("BSQ block subscription event has no payload");
+        }
+    }
+
+    void handleLiveResponse(BsqBlockDto block) {
+        List<Integer> newlyContiguousLiveBlockHeights;
+        boolean catchUpRequired;
+        synchronized (continuityLock) {
+            int blockHeight = block.getHeight();
+            int lastHeight = lastContiguousBlockHeight.get();
+            if (blockHeight <= lastHeight) {
+                return;
+            }
+
+            bufferedLiveBlocks.putIfAbsent(blockHeight, block);
+            newlyContiguousLiveBlockHeights = processContiguousBufferedBlocks();
+            catchUpRequired = !bufferedLiveBlocks.isEmpty();
+            pruneProcessedTransactions();
+        }
+        newlyContiguousLiveBlockHeights.forEach(liveBlockHandler::accept);
+        if (catchUpRequired) {
+            requestAsync();
+        }
+    }
+
+    private List<Integer> processContiguousBufferedBlocks() {
+        List<Integer> processedBlockHeights = new ArrayList<>();
+        BsqBlockDto nextBlock;
+        while ((nextBlock = bufferedLiveBlocks.remove(lastContiguousBlockHeight.get() + 1)) != null) {
+            handleResponse(nextBlock);
+            lastContiguousBlockHeight.set(nextBlock.getHeight());
+            processedBlockHeights.add(nextBlock.getHeight());
+        }
+        return processedBlockHeights;
+    }
+
+    private boolean markTransactionProcessed(int blockHeight, String transactionId) {
+        return processedTransactionIdsByHeight
+                .computeIfAbsent(blockHeight, ignored -> ConcurrentHashMap.newKeySet())
+                .add(transactionId);
+    }
+
+    private void pruneProcessedTransactions() {
+        int pruneThroughHeight = lastContiguousBlockHeight.get();
+        if (activeHistoricalRequestStartHeight != NO_HISTORICAL_REQUEST) {
+            pruneThroughHeight = Math.min(pruneThroughHeight, activeHistoricalRequestStartHeight - 1);
+        }
+        processedTransactionIdsByHeight.headMap(pruneThroughHeight, true).clear();
+    }
+
+    @VisibleForTesting
+    int getProcessedTransactionCount() {
+        return processedTransactionIdsByHeight.values().stream().mapToInt(Set::size).sum();
     }
 
     private AuthorizedProofOfBurnData toAuthorizedProofOfBurnData(BsqBlockDto blockDto,

@@ -27,6 +27,7 @@ import bisq.user.reputation.ProofOfBurnService;
 import bisq.user.reputation.ReputationService;
 import bisq.user.reputation.ReputationSource;
 import bisq.user.reputation.SignedWitnessService;
+import bisq.user.reputation.WitnessReputationProtocol;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -78,7 +79,8 @@ public class ProfileCardReputationController implements Controller {
         Optional.ofNullable(accountAgeService.getDataSetByHash().get(userProfile.getAccountAgeKey()))
                 .ifPresent(dataSet -> model.getListItems().addAll(dataSet.stream()
                         .map(data -> new ProfileCardReputationView.ListItem(ReputationSource.BISQ1_ACCOUNT_AGE,
-                                data.getDate(),
+                                Math.min(System.currentTimeMillis(),
+                                        WitnessReputationProtocol.getLatestPossibleDate(data.getDateBucket())),
                                 accountAgeService.calculateScore(data)))
                         .toList()));
 
@@ -86,7 +88,8 @@ public class ProfileCardReputationController implements Controller {
         Optional.ofNullable(signedWitnessService.getDataSetByHash().get(userProfile.getSignedWitnessKey()))
                 .ifPresent(dataSet -> model.getListItems().addAll(dataSet.stream()
                         .map(data -> new ProfileCardReputationView.ListItem(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
-                                data.getWitnessSignDate(),
+                                Math.min(System.currentTimeMillis(),
+                                        WitnessReputationProtocol.getLatestPossibleDate(data.getDateBucket())),
                                 signedWitnessService.calculateScore(data)))
                         .toList()));
 

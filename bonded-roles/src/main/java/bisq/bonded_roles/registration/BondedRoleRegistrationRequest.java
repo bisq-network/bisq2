@@ -20,6 +20,7 @@ package bisq.bonded_roles.registration;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
@@ -36,6 +37,7 @@ import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -52,6 +54,9 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
     private final NetworkId networkId;
     private final boolean isCancellationRequest;
     private final Optional<AddressByTransportTypeMap> addressByTransportTypeMap;
+    private final int registrationProtocolVersion;
+    private final String proposalTxId;
+    private final String lockupTxId;
 
     public BondedRoleRegistrationRequest(String profileId,
                                          String authorizedPublicKey,
@@ -60,7 +65,10 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
                                          String signatureBase64,
                                          Optional<AddressByTransportTypeMap> addressByTransportTypeMap,
                                          NetworkId networkId,
-                                         boolean isCancellationRequest) {
+                                         boolean isCancellationRequest,
+                                         int registrationProtocolVersion,
+                                         String proposalTxId,
+                                         String lockupTxId) {
         this.profileId = profileId;
         this.authorizedPublicKey = authorizedPublicKey;
         this.bondedRoleType = bondedRoleType;
@@ -69,6 +77,9 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
         this.addressByTransportTypeMap = addressByTransportTypeMap;
         this.networkId = networkId;
         this.isCancellationRequest = isCancellationRequest;
+        this.registrationProtocolVersion = registrationProtocolVersion;
+        this.proposalTxId = proposalTxId;
+        this.lockupTxId = lockupTxId;
 
         verify();
     }
@@ -79,6 +90,12 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
         NetworkDataValidation.validatePubKeyHex(authorizedPublicKey);
         NetworkDataValidation.validateBondUserName(bondUserName);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
+        checkArgument(registrationProtocolVersion >= 0,
+                "Bonded-role registration protocol version must not be negative");
+        checkArgument(proposalTxId.isEmpty() || BitcoinTransactionValidation.isValid(proposalTxId),
+                "Proposal tx ID must be empty or a valid Bitcoin transaction ID");
+        checkArgument(lockupTxId.isEmpty() || BitcoinTransactionValidation.isValid(lockupTxId),
+                "Lockup tx ID must be empty or a valid Bitcoin transaction ID");
     }
 
     @Override
@@ -90,9 +107,17 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
                 .setBondUserName(bondUserName)
                 .setSignatureBase64(signatureBase64)
                 .setNetworkId(networkId.toProto(serializeForHash))
-                .setIsCancellationRequest(isCancellationRequest);
+                .setIsCancellationRequest(isCancellationRequest)
+                .setRegistrationProtocolVersion(registrationProtocolVersion)
+                .setProposalTxId(proposalTxId)
+                .setLockupTxId(lockupTxId);
         addressByTransportTypeMap.ifPresent(e -> builder.setAddressByTransportTypeMap(e.toProto(serializeForHash)));
         return builder;
+    }
+
+    @Override
+    public bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
     }
 
     public static BondedRoleRegistrationRequest fromProto(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto) {
@@ -105,7 +130,11 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
                         Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
                         Optional.empty(),
                 NetworkId.fromProto(proto.getNetworkId()),
-                proto.getIsCancellationRequest());
+                proto.getIsCancellationRequest(),
+                BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
+                        proto.getRegistrationProtocolVersion()),
+                proto.getProposalTxId(),
+                proto.getLockupTxId());
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
