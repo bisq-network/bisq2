@@ -27,6 +27,7 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
+import bisq.network.http.HttpRequest;
 import bisq.network.http.HttpRequestService;
 import bisq.network.http.HttpRequestServiceConfig;
 import bisq.network.http.HttpRequestUrlProvider;
@@ -130,8 +131,8 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
     }
 
     @Override
-    protected String getParam(HttpRequestUrlProvider provider, Void requestData) {
-        return provider.getApiPath();
+    protected HttpRequest buildRequest(HttpRequestUrlProvider provider, Void requestData) {
+        return HttpRequest.get(provider.getApiPath());
     }
 
     Map<Market, MarketPrice> loadStaticDevMarketPrice() {

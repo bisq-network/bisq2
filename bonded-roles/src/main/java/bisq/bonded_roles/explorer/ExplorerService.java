@@ -22,6 +22,7 @@ import bisq.common.json.JsonMapperProvider;
 import bisq.common.network.TransportType;
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
+import bisq.network.http.HttpRequest;
 import bisq.network.http.HttpRequestService;
 import bisq.network.http.HttpRequestServiceConfig;
 import bisq.network.http.HttpRequestUrlProvider;
@@ -59,17 +60,17 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
     }
 
     @Override
-    protected String getParam(HttpRequestUrlProvider provider, RequestData requestData) {
+    protected HttpRequest buildRequest(HttpRequestUrlProvider provider, RequestData requestData) {
         if (provider instanceof Provider explorerServiceProvider) {
             String apiPath = explorerServiceProvider.getApiPath();
             if (requestData instanceof TxRequestData txRequestData) {
                 String txPath = explorerServiceProvider.getTxPath();
                 String txId = txRequestData.getTxId();
-                return apiPath + "/" + txPath + "/" + txId;
+                return HttpRequest.get(apiPath + "/" + txPath + "/" + txId);
             } else if (requestData instanceof AddressRequestData addressRequestData) {
                 String addressPath = explorerServiceProvider.getAddressPath();
                 String address = addressRequestData.getAddress();
-                return apiPath + "/" + addressPath + "/" + address;
+                return HttpRequest.get(apiPath + "/" + addressPath + "/" + address);
             } else {
                 throw new IllegalArgumentException("requestData of unsupported type. requestData = " + requestData);
             }

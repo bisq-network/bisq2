@@ -17,6 +17,10 @@
 
 package bisq.common.facades;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -36,4 +40,19 @@ public interface JdkFacade {
     void redirectError(ProcessBuilder processBuilder);
 
     void redirectOutput(ProcessBuilder processBuilder);
+
+    // The JDK 21 SequencedCollection methods List.removeFirst()/addFirst()/getFirst() only exist on
+    // Android 15+ (API 35) and crash older devices with NoSuchMethodError.
+
+    <T> T removeFirst(List<T> list);
+
+    <T> void addFirst(List<T> list, T element);
+
+    <T> T getFirst(List<T> list);
+
+    // CompletableFuture.exceptionallyCompose is JDK 12+; on Android it only exists from API 34
+    // and crashes older devices with NoSuchMethodError.
+
+    <T> CompletableFuture<T> exceptionallyCompose(CompletableFuture<T> future,
+                                                  Function<Throwable, ? extends CompletionStage<T>> fn);
 }

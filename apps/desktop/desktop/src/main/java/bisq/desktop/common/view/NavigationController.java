@@ -79,6 +79,10 @@ public abstract class NavigationController implements Controller {
     protected void onNoNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
     }
 
+    public void clearControllerCache() {
+        controllerCache.clear();
+    }
+
     public void resetSelectedChildTarget() {
         getModel().setNavigationTarget(getModel().getDefaultNavigationTarget());
         getModel().setView(null);

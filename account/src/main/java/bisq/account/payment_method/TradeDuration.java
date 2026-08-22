@@ -34,14 +34,20 @@ public enum TradeDuration {
     DAYS_8(8, TimeUnit.DAYS);
 
     private final long time;
-    private final String displayString;
+    private final long duration;
+    private final TimeUnit unit;
 
     TradeDuration(long duration, TimeUnit unit) {
+        this.duration = duration;
+        this.unit = unit;
         this.time = unit.toMillis(duration);
+    }
+
+    public String getDisplayString() {
         if (unit == TimeUnit.HOURS) {
-            this.displayString = Res.get("temporal.hour.*", (int) duration);
+            return Res.get("temporal.hour.*", (int) duration);
         } else {
-            this.displayString = Res.get("temporal.day.*", (int) duration);
+            return Res.get("temporal.day.*", (int) duration);
         }
     }
 }

@@ -25,6 +25,7 @@ import bisq.api.access.transport.TlsContext;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.rest_api.util.StaticFileHandler;
 import bisq.api.web_socket.WebSocketService;
+import bisq.api.web_socket.compression.PerMessageDeflateAddOn;
 import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -135,6 +136,10 @@ public class HttpServerBootstrapService implements Service {
                         checkArgument(webSocketService.isPresent(), "If websocketEnabled is true we expect that webSocketService is present");
                         networkListener.registerAddOn(new WebSocketAddOn());
                         networkListener.registerAddOn(new WebSocketFilterAddOn(apiConfig, sessionAuthenticationService));
+                        if (apiConfig.isWebsocketCompressionEnabled()) {
+                            // Registered last so the filter ends up directly below the WebSocketFilter
+                            networkListener.registerAddOn(new PerMessageDeflateAddOn());
+                        }
                         WebSocketEngine.getEngine().register("", "/websocket", webSocketService.get().getWebSocketConnectionHandler());
                     }
 

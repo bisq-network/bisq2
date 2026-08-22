@@ -796,6 +796,10 @@
     -fx-image: url("/images/payment/swish.png");
 }
 
+#TELE_BIRR {
+    -fx-image: url("/images/payment/telebirr.png");
+}
+
 #UPHOLD {
     -fx-image: url("/images/payment/uphold.png");
 }

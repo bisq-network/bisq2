@@ -43,12 +43,12 @@ public class ClearNetHttpClient extends BaseHttpClient {
     private Proxy proxy;
     private HttpURLConnection connection;
 
-    public ClearNetHttpClient(String baseUrl, String userAgent) {
-        super(baseUrl, userAgent);
+    public ClearNetHttpClient(String baseUrl, String logBaseUrl, String userAgent) {
+        super(baseUrl, logBaseUrl, userAgent);
     }
 
-    public ClearNetHttpClient(String baseUrl, String userAgent, Proxy proxy) {
-        super(baseUrl, userAgent);
+    public ClearNetHttpClient(String baseUrl, String logBaseUrl, String userAgent, Proxy proxy) {
+        super(baseUrl, logBaseUrl, userAgent);
         this.proxy = proxy;
     }
 
@@ -91,7 +91,15 @@ public class ClearNetHttpClient extends BaseHttpClient {
         hasPendingRequest = true;
 
         long ts = System.currentTimeMillis();
-        log.debug("requestWithoutProxy: URL={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
+        // Safe-to-log representation of param. For POST 'param' is the request
+        // body (may contain plaintext payload), so log only its size. For GET
+        // 'param' is the path; current callers do not embed secrets there, but
+        // sensitive GET paths should be redacted by the caller via the
+        // descriptor's logPath before reaching this layer.
+        String safeParam = httpMethod == HttpMethod.POST
+                ? "[body " + param.length() + " chars]"
+                : param;
+        log.debug("requestWithoutProxy: URL={}, param={}, httpMethod={}", logBaseUrl, safeParam, httpMethod);
         String spec = httpMethod == HttpMethod.GET ? baseUrl + "/" + param : baseUrl;
         try {
             URL url = new URI(spec).toURL();
@@ -117,8 +125,8 @@ public class ClearNetHttpClient extends BaseHttpClient {
             if (isSuccess(responseCode)) {
                 String response = inputStreamToString(connection.getInputStream());
                 log.debug("Response from {} with param {} took {} ms. Data size:{}, response: {}",
-                        baseUrl,
-                        param,
+                        logBaseUrl,
+                        safeParam,
                         System.currentTimeMillis() - ts,
                         StringUtils.fromBytes(response.getBytes().length),
                         StringUtils.truncate(response, 100));
@@ -132,20 +140,23 @@ public class ClearNetHttpClient extends BaseHttpClient {
                 log.info("Received errorMsg '{}' with responseCode {} from {}. Response took: {} ms. param: {}",
                         error,
                         responseCode,
-                        baseUrl,
+                        logBaseUrl,
                         System.currentTimeMillis() - ts,
-                        param);
+                        safeParam);
                 throw new HttpException(error, responseCode);
             } else {
                 log.info("Response with responseCode {} from {}. Response took: {} ms. param: {}",
                         responseCode,
-                        baseUrl,
+                        logBaseUrl,
                         System.currentTimeMillis() - ts,
-                        param);
+                        safeParam);
                 throw new HttpException("Request failed", responseCode);
             }
         } catch (Exception e) {
-            String message = "Request to " + baseUrl + "/" + param + " failed with error: " + ExceptionUtil.getRootCauseMessage(e);
+            // For POST the URL is already complete in logBaseUrl; for GET param
+            // is the path so we append it to form the full request target.
+            String requestTarget = httpMethod == HttpMethod.GET ? logBaseUrl + "/" + param : logBaseUrl;
+            String message = "Request to " + requestTarget + " failed with error: " + ExceptionUtil.getRootCauseMessage(e);
             throw new IOException(message, e);
         } finally {
             try {
