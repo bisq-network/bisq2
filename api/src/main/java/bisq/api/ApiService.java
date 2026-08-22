@@ -19,6 +19,7 @@ package bisq.api;
 
 import bisq.account.AccountService;
 import bisq.api.access.ApiAccessService;
+import bisq.api.access.ClientRevocationService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
@@ -110,6 +111,8 @@ public class ApiService implements Service {
     @Getter
     private final SessionService sessionService;
     @Getter
+    private final ApiAccessService apiAccessService;
+    @Getter
     private final HttpServerBootstrapService httpServerBootstrapService;
     @Getter
     private final TlsContextService tlsContextService;
@@ -157,7 +160,32 @@ public class ApiService implements Service {
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-        ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
+        if (apiConfig.isWebsocketEnabled()) {
+            webSocketService = Optional.of(new WebSocketService(apiConfig,
+                    tlsContextService,
+                    bondedRolesService,
+                    alertNotificationsService,
+                    chatService,
+                    tradeService,
+                    userService,
+                    bisqEasyService,
+                    networkService,
+                    openTradeItemsService));
+        } else {
+            webSocketService = Optional.empty();
+        }
+
+        // Deliberately not exposed: callers reach revocation through ApiAccessService, so the
+        // access layer keeps a single entry point.
+        ClientRevocationService clientRevocationService = new ClientRevocationService(pairingService,
+                sessionService,
+                List.of(
+                        // WebSocket auth happens at the handshake only, so a revoked client keeps
+                        // receiving data until the socket is closed explicitly.
+                        clientId -> webSocketService.ifPresent(service -> service.disconnectClient(clientId)),
+                        // Push registrations are keyed by device and outlive both session and profile.
+                        deviceRegistrationService::unregisterByClientId));
+        apiAccessService = new ApiAccessService(pairingService, sessionService, clientRevocationService);
         AccessApi accessApi = new AccessApi(apiAccessService);
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
@@ -211,21 +239,6 @@ public class ApiService implements Service {
                     configRestApi);
         } else {
             resourceConfig = new PairingApiResourceConfig(accessApi);
-        }
-
-        if (apiConfig.isWebsocketEnabled()) {
-            webSocketService = Optional.of(new WebSocketService(apiConfig,
-                    tlsContextService,
-                    bondedRolesService,
-                    alertNotificationsService,
-                    chatService,
-                    tradeService,
-                    userService,
-                    bisqEasyService,
-                    networkService,
-                    openTradeItemsService));
-        } else {
-            webSocketService = Optional.empty();
         }
 
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,

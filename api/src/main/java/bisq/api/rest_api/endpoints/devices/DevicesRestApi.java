@@ -17,14 +17,17 @@
 
 package bisq.api.rest_api.endpoints.devices;
 
+import bisq.api.access.filter.Headers;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.common.util.StringUtils;
+import bisq.notifications.mobile.registration.DeviceRegistrationResult;
 import bisq.notifications.mobile.registration.DeviceRegistrationService;
 import bisq.notifications.mobile.registration.MobileDevicePlatform;
 
 import java.util.Base64;
 import java.util.Optional;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -32,6 +35,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -71,15 +75,26 @@ public class DevicesRestApi extends RestApiBase {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Device registered or updated"),
                     @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
+                    @ApiResponse(responseCode = "401", description = "Client was revoked, pairing is required"),
+                    @ApiResponse(responseCode = "403", description = "Device is registered to another client"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response registerDevice(RegisterDeviceRequest request) {
+    public Response registerDevice(
+            @Parameter(hidden = true) @HeaderParam(Headers.CLIENT_ID) String clientId,
+            RegisterDeviceRequest request) {
         if (!isValid(request)) {
             return buildResponse(
                     Response.Status.BAD_REQUEST,
                     "deviceId, deviceToken, publicKeyBase64, deviceDescriptor and platform are required"
             );
+        }
+        if (StringUtils.isEmpty(clientId)) {
+            // Refusing an unowned registration keeps the set of registrations without an owner
+            // limited to those persisted before the ownership link existed, so it only shrinks.
+            // The authorization filter guarantees the header, so this cannot be hit by a client
+            // that got past authentication.
+            return buildResponse(Response.Status.BAD_REQUEST, "clientId is required");
         }
 
         String deviceId = request.getDeviceId();
@@ -133,14 +148,25 @@ public class DevicesRestApi extends RestApiBase {
         }
 
         try {
-            deviceRegistrationService.register(
+            // The clientId ties the registration to the calling API client, so revoking that
+            // client also stops its push notifications, and no other client can claim the device.
+            DeviceRegistrationResult result = deviceRegistrationService.register(
                     deviceId,
                     deviceToken,
                     publicKeyBase64,
                     deviceDescriptor,
                     platform,
-                    symmetricKeyBase64
+                    symmetricKeyBase64,
+                    clientId
             );
+            if (result == DeviceRegistrationResult.DEVICE_OWNED_BY_ANOTHER_CLIENT) {
+                return buildResponse(Response.Status.FORBIDDEN, "Device is registered to another client");
+            }
+            if (result == DeviceRegistrationResult.CLIENT_REVOKED) {
+                // The client was revoked while this request was in flight. 401 rather than 403, so
+                // the app treats it as "pair again" instead of "permission missing".
+                return buildResponse(Response.Status.UNAUTHORIZED, "Client was revoked, pairing is required");
+            }
 
             log.info("Device registered: deviceId={}, platform={}", deviceId, platform);
             return buildOkResponse("Device registered successfully");
@@ -155,7 +181,8 @@ public class DevicesRestApi extends RestApiBase {
     @Path("/{deviceId}")
     @Operation(
             summary = "Unregister a mobile device from push notifications",
-            description = "Removes an existing mobile device registration.",
+            description = "Removes an existing mobile device registration. A client can only " +
+                    "remove its own registrations.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Device unregistered"),
                     @ApiResponse(responseCode = "404", description = "Device not found"),
@@ -163,15 +190,22 @@ public class DevicesRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public Response unregisterDevice(@PathParam("deviceId") String deviceId) {
+    public Response unregisterDevice(
+            @Parameter(hidden = true) @HeaderParam(Headers.CLIENT_ID) String clientId,
+            @PathParam("deviceId") String deviceId) {
         if (StringUtils.isEmpty(deviceId)) {
             return buildResponse(Response.Status.BAD_REQUEST, "deviceId is required");
         }
+        if (StringUtils.isEmpty(clientId)) {
+            return buildResponse(Response.Status.BAD_REQUEST, "clientId is required");
+        }
 
         try {
-            boolean hadValue = deviceRegistrationService.unregister(deviceId);
+            boolean hadValue = deviceRegistrationService.unregister(deviceId, clientId);
 
             if (!hadValue) {
+                // Same response for "unknown device" and "owned by another client": the caller
+                // must not learn whether a device it does not own exists.
                 return buildResponse(Response.Status.NOT_FOUND, "Device not found");
             }
 
