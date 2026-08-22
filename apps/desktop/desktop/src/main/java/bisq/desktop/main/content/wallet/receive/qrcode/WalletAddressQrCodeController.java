@@ -57,6 +57,10 @@ public class WalletAddressQrCodeController implements Controller {
         model.reset();
     }
 
+    public boolean validate() {
+        return true;
+    }
+
     @Override
     public void onActivate() {
         amountPin = EasyBind.subscribe(model.getAmount(), amount -> UIThread.run(this::updateBtcUriAndQrCode));

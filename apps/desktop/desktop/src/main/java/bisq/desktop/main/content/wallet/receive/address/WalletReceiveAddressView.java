@@ -20,32 +20,40 @@ package bisq.desktop.main.content.wallet.receive.address;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressModel, WalletReceiveAddressController> {
+public class WalletReceiveAddressView extends View<StackPane, WalletReceiveAddressModel, WalletReceiveAddressController> {
     private final AddressNoteInputBox addressNoteInputBox;
     private final Label addressDescriptionLabel, addressLabel;
     private final BisqMenuItem createAddressButton, saveNoteButton, clearNoteButton, generateQrCodeButton,
             copyAddressButton, addAddressNoteButton;
     private final ImageView chevronDownWhite, chevronDownGrey, chevronUpWhite, chevronUpGrey;
     private final HBox addressNoteHBox;
-    private Subscription isNewAddressPin, isAddressNoteValidPin, isAddressNoteEditablePin, shouldShowAddressNotePin;
+    private final VBox content;
+    private final WizardOverlay overlay;
+    private final Button closeOverlayButton, proceedOverlayButton;
+    private Subscription isNewAddressPin, isAddressNoteValidPin, isAddressNoteEditablePin,
+            shouldShowAddressNotePin, shouldShowOverlayPin;
 
     public WalletReceiveAddressView(WalletReceiveAddressModel model, WalletReceiveAddressController controller) {
-        super(new VBox(40), model, controller);
+        super(new StackPane(), model, controller);
 
         // Address
         addressLabel = new Label();
@@ -99,13 +107,29 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         addressNoteHBox.setAlignment(Pos.TOP_CENTER);
         addressNoteHBox.setMinHeight(56);
 
+        // Overlay
+        closeOverlayButton = new Button(Res.get("confirmation.no"));
+        proceedOverlayButton = new Button(Res.get("confirmation.yes"));
+        proceedOverlayButton.setDefaultButton(true);
+        overlay = new WizardOverlay(root)
+                .whiteWarning()
+                .headline(Res.get("wallet.receive.overlay.headline"))
+                .description(Res.get("wallet.receive.overlay.description"))
+                .buttons(closeOverlayButton, proceedOverlayButton)
+                .build();
+
         VBox.setMargin(addressVBox, new Insets(0, 0, 0, 40));
         VBox.setMargin(addressNoteHBox, new Insets(-30, 0, 0, 65));
-        root.getChildren().setAll(addressVBox, addAddressNoteButton, addressNoteHBox);
-        root.setPadding(new Insets(100, 70, 0, 70));
-        root.setMinHeight(276);
-        root.getStyleClass().add("wallet-receive-address");
+        content = new VBox(40);
+        content.getChildren().setAll(addressVBox, addAddressNoteButton, addressNoteHBox);
+        content.setPadding(new Insets(100, 70, 0, 70));
+        content.setAlignment(Pos.CENTER);
+        content.setMinHeight(276);
+
+        StackPane.setMargin(overlay, new Insets(-130, 0, 0, 0));
         root.setAlignment(Pos.CENTER);
+        root.getChildren().addAll(content, overlay);
+        root.getStyleClass().add("wallet-receive-address");
     }
 
     @Override
@@ -126,6 +150,9 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         shouldShowAddressNotePin = EasyBind.subscribe(model.getShouldShowAddressNote(), shouldShow -> {
             updateAddAddressNoteButtonIcon();
         });
+        shouldShowOverlayPin = EasyBind.subscribe(model.getShouldShowOverlay(), shouldShow -> {
+            overlay.updateOverlayVisibility(content, shouldShow, controller::onKeyPressedWhileShowingOverlay);
+        });
 
         generateQrCodeButton.setOnAction(e -> controller.onGenerateQrCode());
         copyAddressButton.setOnAction(e -> controller.onCopyToClipboard());
@@ -135,6 +162,8 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         addAddressNoteButton.setOnAction(e -> controller.onAddAddressNote());
         addAddressNoteButton.setOnMouseEntered(e -> updateAddAddressNoteButtonIcon());
         addAddressNoteButton.setOnMouseExited(e -> updateAddAddressNoteButtonIcon());
+        proceedOverlayButton.setOnAction(e -> controller.onProceedOverlay());
+        closeOverlayButton.setOnAction(e -> controller.onCloseOverlay());
         root.setOnMouseClicked(e -> {
             root.requestFocus();
             addressNoteInputBox.validate();
@@ -152,6 +181,7 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         isAddressNoteValidPin.unsubscribe();
         isAddressNoteEditablePin.unsubscribe();
         shouldShowAddressNotePin.unsubscribe();
+        shouldShowOverlayPin.unsubscribe();
 
         generateQrCodeButton.setOnAction(null);
         copyAddressButton.setOnAction(null);
@@ -161,6 +191,8 @@ public class WalletReceiveAddressView extends View<VBox, WalletReceiveAddressMod
         addAddressNoteButton.setOnAction(null);
         addAddressNoteButton.setOnMouseEntered(null);
         addAddressNoteButton.setOnMouseExited(null);
+        proceedOverlayButton.setOnAction(null);
+        closeOverlayButton.setOnAction(null);
         root.setOnMouseClicked(null);
 
         addressNoteInputBox.resetValidation();

@@ -41,6 +41,8 @@ public class WalletReceiveAddressModel implements Model {
     private final BooleanProperty isAddressNoteEditable = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowAddressNote = new SimpleBooleanProperty();
     private final StringProperty addressTextFieldDescription =  new SimpleStringProperty();
+    private final BooleanProperty shouldShowOverlay = new SimpleBooleanProperty();
+    private final BooleanProperty skipSavingAddressNote = new SimpleBooleanProperty();
 
     private final TextMaxLengthValidator addressNoteMaxLengthValidator =
             new TextMaxLengthValidator(
@@ -59,5 +61,7 @@ public class WalletReceiveAddressModel implements Model {
         isAddressNoteEditable.set(false);
         shouldShowAddressNote.set(false);
         addressTextFieldDescription.set(null);
+        shouldShowOverlay.set(false);
+        skipSavingAddressNote.set(false);
     }
 }

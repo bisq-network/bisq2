@@ -20,14 +20,17 @@ package bisq.desktop.main.content.wallet.receive.address;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
 import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Slf4j
 public class WalletReceiveAddressController implements Controller {
@@ -36,10 +39,14 @@ public class WalletReceiveAddressController implements Controller {
     private final WalletReceiveAddressModel model;
     private final WalletService walletService;
     private final Runnable onNextHandler;
+    private final Consumer<Boolean> navigationButtonsVisibleHandler;
 
     public WalletReceiveAddressController(ServiceProvider serviceProvider,
+                                          Consumer<Boolean> navigationButtonsVisibleHandler,
                                           Runnable onNextHandler) {
+        this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.onNextHandler = onNextHandler;
+
         model = new WalletReceiveAddressModel();
         view = new WalletReceiveAddressView(model, this);
         walletService = serviceProvider.getWalletService().orElseThrow();
@@ -65,8 +72,23 @@ public class WalletReceiveAddressController implements Controller {
         model.reset();
     }
 
+    public boolean validate() {
+        boolean isAddressNoteUnsaved = model.getIsAddressNoteEditable().get()
+                && model.getReceiveAddressNote().get() != null
+                && !model.getReceiveAddressNote().get().isBlank();
+        boolean skipSavingAddressNote = model.getSkipSavingAddressNote().get();
+        if (isAddressNoteUnsaved && !skipSavingAddressNote) {
+            navigationButtonsVisibleHandler.accept(false);
+            model.getShouldShowOverlay().set(true);
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public void onActivate() {
+        model.getSkipSavingAddressNote().set(false);
     }
 
     @Override
@@ -117,6 +139,28 @@ public class WalletReceiveAddressController implements Controller {
             boolean shouldShowAddressNote = model.getShouldShowAddressNote().get();
             model.getShouldShowAddressNote().set(!shouldShowAddressNote);
         });
+    }
+
+    void onProceedOverlay() {
+        UIThread.run(() -> {
+            model.getSkipSavingAddressNote().set(true);
+            model.getShouldShowOverlay().set(false);
+            navigationButtonsVisibleHandler.accept(true);
+            onNextHandler.run();
+        });
+    }
+
+    void onCloseOverlay() {
+        if (model.getShouldShowOverlay().get()) {
+            navigationButtonsVisibleHandler.accept(true);
+            model.getShouldShowOverlay().set(false);
+        }
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
+        });
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
     }
 
     private void updateIsNewAddress(boolean isNewAddress) {
