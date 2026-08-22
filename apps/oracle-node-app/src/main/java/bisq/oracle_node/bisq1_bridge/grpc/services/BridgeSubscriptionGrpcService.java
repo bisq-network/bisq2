@@ -82,10 +82,18 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         if (shutdownCalled) {
             return;
         }
-        if (!requestInProgress.compareAndSet(false, true)) {
-            requestPending.set(true);
+        requestPending.set(true);
+        executePendingRequest();
+    }
+
+    private void executePendingRequest() {
+        if (shutdownCalled) {
             return;
         }
+        if (!requestInProgress.compareAndSet(false, true)) {
+            return;
+        }
+        requestPending.set(false);
         boolean historicalRequestPrepared = false;
         boolean historicalRequestSuccessful = false;
         try {
@@ -106,8 +114,8 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                 }
             } finally {
                 requestInProgress.set(false);
-                if (requestPending.getAndSet(false) && !shutdownCalled) {
-                    requestAsync();
+                if (requestPending.get() && !shutdownCalled) {
+                    CompletableFuture.runAsync(this::executePendingRequest, commonForkJoinPool());
                 }
             }
         }
@@ -194,6 +202,15 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
 
     private void recoverStream(Throwable throwable) {
         if (shutdownCalled) {
+            return;
+        }
+        Status status = Status.fromThrowable(throwable);
+        if (status.getCode() == Status.Code.UNIMPLEMENTED) {
+            log.warn("Bridge version mismatch: the configured Bisq 1 bridge does not implement the " +
+                            "continuity-aware block subscription. Upgrade the bridge before starting the oracle. " +
+                            "Status: {}{}",
+                    status.getCode(),
+                    status.getDescription() == null ? "" : " (" + status.getDescription() + ")");
             return;
         }
         if (!streamRecoveryScheduled.compareAndSet(false, true)) {

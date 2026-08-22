@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -64,21 +66,65 @@ class BridgeSubscriptionGrpcServiceTest {
         assertThat(service.finishedRequestCount).hasValue(1);
     }
 
+    @Test
+    void concurrentRequestsAreCoalescedWithoutLosingThePendingRequest() throws InterruptedException {
+        TestService service = new TestService(true);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            executor.execute(service::request);
+            assertThat(service.firstRequestStarted.await(1, TimeUnit.SECONDS)).isTrue();
+
+            service.request();
+            service.releaseFirstRequest.countDown();
+
+            assertThat(service.secondRequest.await(1, TimeUnit.SECONDS)).isTrue();
+            assertThat(service.requestCount).hasValue(2);
+        } finally {
+            service.releaseFirstRequest.countDown();
+            service.shutdown();
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void unimplementedSubscriptionReportsVersionMismatchWithoutRetrying() throws InterruptedException {
+        TestService service = new TestService();
+        service.subscribeRetryInterval.set(0);
+
+        service.handleStreamObserverError(new StatusRuntimeException(Status.UNIMPLEMENTED));
+
+        assertThat(service.subscriptionAttempted.await(1, TimeUnit.SECONDS)).isFalse();
+        assertThat(service.subscribeCount).hasValue(0);
+    }
+
     private static final class TestService extends BridgeSubscriptionGrpcService<Integer> {
         private final List<String> calls = new ArrayList<>();
         private final AtomicInteger subscribeCount = new AtomicInteger();
         private final AtomicInteger requestCount = new AtomicInteger();
         private final AtomicInteger finishedRequestCount = new AtomicInteger();
+        private final CountDownLatch firstRequestStarted = new CountDownLatch(1);
+        private final CountDownLatch releaseFirstRequest = new CountDownLatch(1);
         private final CountDownLatch secondRequest = new CountDownLatch(1);
+        private final CountDownLatch subscriptionAttempted = new CountDownLatch(1);
         private final RuntimeException requestFailure;
+        private final boolean blockFirstRequest;
 
         private TestService() {
-            this(null);
+            this(null, false);
         }
 
         private TestService(RuntimeException requestFailure) {
+            this(requestFailure, false);
+        }
+
+        private TestService(boolean blockFirstRequest) {
+            this(null, blockFirstRequest);
+        }
+
+        private TestService(RuntimeException requestFailure, boolean blockFirstRequest) {
             super(false, mock(GrpcClient.class));
             this.requestFailure = requestFailure;
+            this.blockFirstRequest = blockFirstRequest;
         }
 
         @Override
@@ -87,7 +133,17 @@ class BridgeSubscriptionGrpcServiceTest {
             if (requestFailure != null) {
                 throw requestFailure;
             }
-            if (requestCount.incrementAndGet() == 2) {
+            int currentRequestCount = requestCount.incrementAndGet();
+            if (blockFirstRequest && currentRequestCount == 1) {
+                firstRequestStarted.countDown();
+                try {
+                    releaseFirstRequest.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+            }
+            if (currentRequestCount == 2) {
                 secondRequest.countDown();
             }
             return List.of(1);
@@ -112,6 +168,7 @@ class BridgeSubscriptionGrpcServiceTest {
         protected void subscribe() {
             calls.add("subscribe");
             subscribeCount.incrementAndGet();
+            subscriptionAttempted.countDown();
         }
     }
 }
