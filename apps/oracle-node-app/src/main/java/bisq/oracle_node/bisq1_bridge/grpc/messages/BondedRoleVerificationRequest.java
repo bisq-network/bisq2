@@ -51,6 +51,8 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
         this.proposalTxId = proposalTxId;
         this.lockupTxId = lockupTxId;
         this.protocolVersion = protocolVersion;
+
+        verify();
     }
 
     @Override
