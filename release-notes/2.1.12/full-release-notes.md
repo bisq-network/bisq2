@@ -7,7 +7,7 @@ Proposed release notes for the Bisq 2 branch `bind-bonded-roles-and-witness-repu
 This note set covers the range from tag `v2.1.11` (`505e4f48a46afd3bf87918aa4869acbceb965f03`) through `fd21896f66`. It contains 10 reachable commits, 9 non-merge commits, 1 merge commit, and 82 changed files.
 
 - Generated on: 2026-08-19
-- The checkout still declares version `2.1.11` in `gradle.properties`, dependency versions, and the desktop launcher metadata. Bump those declarations and regenerate release artifacts before publishing Bisq 2.1.12.
+- Bisq version is set to `2.1.12` in `gradle.properties`, dependency versions, and the desktop launcher metadata.
 
 ## Compatibility and Operator Notes
 
@@ -69,7 +69,7 @@ Regression coverage was added for ownership-proof protocol vectors, legacy conta
 
 ## Release Preparation
 
-Before publishing, bump the Bisq 2 version from `2.1.11` to `2.1.12` in all version declarations, update release artifacts and checksums, run the relevant module tests and release checks, and verify the cross-repository Bisq 1 bridge compatibility commit.
+Before publishing, regenerate release artifacts and checksums, run the relevant module tests and release checks, and verify the cross-repository Bisq 1 bridge compatibility commit.
 
 ## Commit Inventory
 
