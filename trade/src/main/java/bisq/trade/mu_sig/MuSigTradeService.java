@@ -82,6 +82,7 @@ import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -180,19 +181,16 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         executor = ExecutorFactory.boundedCachedPool("MuSigTradeService");
 
         return musigGrpcClient.initialize()
-                .thenApply(result -> {
-                    persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
-
-                    networkService.getConfidentialMessageServices().stream()
-                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                            .forEach(this::onMessage);
-                    networkService.addConfidentialMessageListener(this);
-
-                    // At startup we observe all unconfirmed deposit txs
-                    getTrades().stream()
-                            .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
-                            .forEach(this::observeDepositTxConfirmationStatus);
-
+                // thenApplyAsync on this service's own bounded executor (not thenApply): the restored-trade
+                // drainEventQueue() below re-applies queued FSM events via protocol.handle(), and every other
+                // handle() in this service is dispatched onto `executor` (see handleMuSigTradeMessage /
+                // handleMuSigTradeEvent). Running it inline here would drain on the gRPC init-completion thread,
+                // re-entering the blocking gRPC stub from a gRPC callback thread. Keep all FSM work on `executor`.
+                .thenApplyAsync(result -> {
+                    // Register the alert observer BEFORE restoring trades: addObserver() synchronously replays
+                    // the persisted authorized alert data, so the restore-drain guard in
+                    // createAndAddTradeProtocol() sees the last known halt/min-version state instead of a
+                    // vacuously-green default. Mirrors BisqEasyTradeService#initialize().
                     authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
                         @Override
                         public void onAdded(AuthorizedAlertData authorizedAlertData) {
@@ -230,12 +228,24 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                         }
                     });
 
+                    persistableStore.getTrades().forEach(trade -> createAndAddTradeProtocol(trade, true));
+
+                    networkService.getConfidentialMessageServices().stream()
+                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
+                            .forEach(this::onMessage);
+                    networkService.addConfidentialMessageListener(this);
+
+                    // At startup we observe all unconfirmed deposit txs
+                    getTrades().stream()
+                            .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
+                            .forEach(this::observeDepositTxConfirmationStatus);
+
                     numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                             .host(this)
                             .periodically(1, TimeUnit.HOURS);
                     numDaysAfterRedactingTradeDataPin = settingsService.getNumDaysAfterRedactingTradeData().addObserver(numDays -> maybeRedactDataOfCompletedTrades());
                     return true;
-                });
+                }, executor);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -624,6 +634,17 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     }
 
     private MuSigProtocol createAndAddTradeProtocol(MuSigTrade trade) {
+        return createAndAddTradeProtocol(trade, false);
+    }
+
+    // isRestoredTrade is true when the trade was just loaded from persisted data (app startup), as opposed to a
+    // trade which was just created for a brand-new offer/take-offer flow (whose event queue is always empty).
+    // For restored trades we drain the event queue once: the queue itself survives a restart (persisted on
+    // Trade), but nothing would otherwise re-attempt those pending events until some further, unrelated live
+    // transition happens to occur for that same trade - which may never happen. See bisq.common.fsm.Fsm#drainEventQueue.
+    // Package-private (rather than private) so tests can register a hand-placed trade's protocol exactly the way
+    // production code does, without duplicating this wiring.
+    MuSigProtocol createAndAddTradeProtocol(MuSigTrade trade, boolean isRestoredTrade) {
         String id = trade.getId();
         MuSigProtocol tradeProtocol;
         boolean isBuyer = trade.isBuyer();
@@ -642,6 +663,38 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
         tradeProtocolById.put(id, tradeProtocol);
+        if (isRestoredTrade) {
+            // Mirror of the BisqEasyTradeService restore-drain guard - see there for the full rationale.
+            // Queued events passed onMessage()'s guards at receipt time, but halt/min-version/ban state may
+            // have changed before the restart: defer the drain (events stay queued) while an emergency alert
+            // is active, and drop queued events whose sender got banned in the meantime.
+            if (haltTrading || isMinVersionForTradingViolated()) {
+                log.warn("Deferring the queued-event drain for restored trade {}: an emergency alert halts " +
+                        "trading or requires a min version. The events stay queued and drain on a later " +
+                        "restart once the alert is lifted.", id);
+            } else {
+                boolean removedBannedSenderEvents = trade.removeQueuedEventsIf(event ->
+                        event instanceof MuSigTradeMessage message &&
+                                bannedUserService.isUserProfileBanned(message.getSender()));
+                if (removedBannedSenderEvents) {
+                    log.warn("Removed queued event(s) from a banned sender for restored trade {} before " +
+                            "draining, mirroring the onMessage() banned-sender check.", id);
+                    persist();
+                }
+                // Isolate per trade: drainEventQueue() re-applies queued events and can raise an FsmException. The
+                // trade is already created and registered above, so we keep it regardless. Without this guard a
+                // single failing trade would escape the persistableStore.getTrades().forEach(...) loop in
+                // initialize() and block restoring every subsequent trade. A failed drain here means the trade
+                // stays stuck until it is manually looked at - there is no periodic or reconnect-triggered safety
+                // net to retry it.
+                try {
+                    tradeProtocol.drainEventQueue();
+                } catch (Exception e) {
+                    log.warn("Failed to drain the event queue for restored trade {} on load. The trade is still " +
+                            "loaded but remains stuck until manually investigated.", id, e);
+                }
+            }
+        }
         return tradeProtocol;
     }
 
@@ -651,11 +704,14 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
-        }
+        checkArgument(!isMinVersionForTradingViolated(),
+                "For trading you need to have version " + minRequiredVersionForTrading.orElse("") + " installed. " +
+                        "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+    }
+
+    private boolean isMinVersionForTradingViolated() {
+        return requireVersionForTrading && minRequiredVersionForTrading.isPresent() &&
+                !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get()));
     }
 
 
@@ -663,7 +719,8 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // Redact sensible data
     /* --------------------------------------------------------------------- */
 
-    private void maybeRedactDataOfCompletedTrades() {
+    @VisibleForTesting
+    void maybeRedactDataOfCompletedTrades() {
         int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
         long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
         // Trades which ended up with a failure or got stuck will never get the completed date set.
@@ -674,8 +731,18 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 .filter(trade -> {
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
-                    //todo
-                    return doRedaction;
+                    if (!doRedaction) {
+                        return false;
+                    }
+                    // The persisted pending-event queue can hold account-data messages
+                    // (e.g. SendAccountPayloadMessage) on a trade that never reached a final state, so it must be
+                    // scrubbed past the threshold (see FsmModel#clearEventQueue).
+                    boolean queueCleared = !trade.getEventQueue().isEmpty();
+                    if (queueCleared) {
+                        trade.clearEventQueue();
+                    }
+                    //todo redact MuSig account payload fields, mirroring BisqEasyTradeService's paymentAccountData
+                    return queueCleared;
                 })
                 .count();
         if (numChanges > 0) {
