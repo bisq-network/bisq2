@@ -21,9 +21,6 @@ import bisq.common.proto.ProtoEnum;
 import lombok.Getter;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,7 +29,7 @@ import java.util.stream.Collectors;
  * <p>
  * {@code autoGrantable} encodes the standard-vs-sensitive distinction: a grantAll grant expands
  * only to auto-grantable permissions (see {@link PermissionSet}), so already-paired clients gain
- * future NORMAL features automatically but can never silently acquire a security-sensitive
+ * future STANDARD features automatically but can never silently acquire a security-sensitive
  * capability.
  * <p>
  * SECURE BY DEFAULT: the single-argument constructor marks a permission SENSITIVE
@@ -85,22 +82,15 @@ public enum Permission implements ProtoEnum {
      * All permissions a grantAll grant expands to — the "standard" set. Sensitive permissions
      * (autoGrantable = false) are excluded by construction and must be granted explicitly.
      * <p>
-     * Ordered by {@code id} into an insertion-ordered set: this feeds the grantAll expansion
-     * serialized by {@code PermissionSet.getBuilder}, and an unspecified iteration order (as a
-     * plain immutable Set has) would make the proto's repeated field non-deterministic across
-     * runs, breaking serializeForHash stability. Set semantics are unchanged — equality stays
-     * order-independent, so promotion/folding comparisons are unaffected.
+     * Iteration order is unspecified; serialization sites sort by {@code id} themselves.
      */
     public static Set<Permission> autoGrantable() {
-        // Unmodifiable AND insertion-ordered: PermissionSet caches this in a static field and
-        // returns it directly from getPermissions(), so a mutable set would let any caller alter
-        // the grantAll expansion for every client (and, once sensitive permissions exist, add
-        // one). LinkedHashSet keeps the id order needed for serializeForHash determinism.
-        LinkedHashSet<Permission> ordered = Arrays.stream(values())
+        // Unmodifiable: PermissionSet caches this in a static field and returns it directly from
+        // getPermissions(), so a mutable set would let any caller alter the grantAll expansion
+        // for every client (and, once sensitive permissions exist, add one).
+        return Arrays.stream(values())
                 .filter(Permission::isAutoGrantable)
-                .sorted(Comparator.comparingInt(Permission::getId))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        return Collections.unmodifiableSet(ordered);
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
