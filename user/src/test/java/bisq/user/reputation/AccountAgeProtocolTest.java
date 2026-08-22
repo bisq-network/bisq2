@@ -25,6 +25,7 @@ import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import org.junit.jupiter.api.Test;
 
 import java.util.Base64;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -63,6 +64,35 @@ class AccountAgeProtocolTest {
         assertThat(roundTrip).isEqualTo(request);
         assertThat(roundTrip.getProtocolVersion()).isEqualTo(AuthorizeAccountAgeRequest.CURRENT_VERSION);
         assertThat(roundTrip.getAccountInputDataWithSalt()).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    void currentAccountAgeRequestRequiresTheHashPreimage() {
+        bisq.user.protobuf.AuthorizeAccountAgeRequest proto =
+                bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
+                        .setProfileId(PROFILE_ID)
+                        .setHashAsHex("34".repeat(20))
+                        .setPubKeyBase64("key")
+                        .setSignatureBase64("signature")
+                        .setProtocolVersion(AuthorizeAccountAgeRequest.CURRENT_VERSION)
+                        .build();
+
+        assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void legacyAccountAgeRequestRequiresItsHistoricalDate() {
+        bisq.user.protobuf.AuthorizeAccountAgeRequest proto =
+                bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
+                        .setProfileId(PROFILE_ID)
+                        .setHashAsHex("34".repeat(20))
+                        .setPubKeyBase64("key")
+                        .setSignatureBase64("signature")
+                        .build();
+
+        assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -168,6 +198,36 @@ class AccountAgeProtocolTest {
     }
 
     @Test
+    void currentSignedWitnessRequestRequiresTheHashPreimage() {
+        bisq.user.protobuf.AuthorizeSignedWitnessRequest proto =
+                bisq.user.protobuf.AuthorizeSignedWitnessRequest.newBuilder()
+                        .setProfileId(PROFILE_ID)
+                        .setHashAsHex("34".repeat(20))
+                        .setPubKeyBase64("key")
+                        .setSignatureBase64("signature")
+                        .setProtocolVersion(AuthorizeSignedWitnessRequest.CURRENT_VERSION)
+                        .build();
+
+        assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void legacySignedWitnessRequestRequiresBothHistoricalDates() {
+        bisq.user.protobuf.AuthorizeSignedWitnessRequest proto =
+                bisq.user.protobuf.AuthorizeSignedWitnessRequest.newBuilder()
+                        .setProfileId(PROFILE_ID)
+                        .setHashAsHex("34".repeat(20))
+                        .setAccountAgeWitnessDate(System.currentTimeMillis() - 1000)
+                        .setPubKeyBase64("key")
+                        .setSignatureBase64("signature")
+                        .build();
+
+        assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void currentSignedWitnessDataSignsTheUnlinkableWitnessIdentity() {
         AuthorizedSignedWitnessData data = new AuthorizedSignedWitnessData(
                 PROFILE_ID,
@@ -220,7 +280,7 @@ class AccountAgeProtocolTest {
     }
 
     private static long dateBucket() {
-        long exactDate = System.currentTimeMillis() - java.util.concurrent.TimeUnit.DAYS.toMillis(100);
+        long exactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(100);
         return Math.floorDiv(exactDate, WitnessReputationProtocol.DATE_BUCKET_SIZE_MILLIS) *
                 WitnessReputationProtocol.DATE_BUCKET_SIZE_MILLIS;
     }

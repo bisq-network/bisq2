@@ -89,12 +89,16 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
     public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateHashAsHex(hashAsHex);
-        if (date != 0) {
+        if (protocolVersion >= CURRENT_VERSION) {
+            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, 1, MAX_ACCOUNT_INPUT_LENGTH);
+        } else {
+            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, MAX_ACCOUNT_INPUT_LENGTH);
+        }
+        if (protocolVersion == LEGACY_VERSION) {
             NetworkDataValidation.validateDate(date);
         }
         NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
-        NetworkDataValidation.validateByteArray(accountInputDataWithSalt, MAX_ACCOUNT_INPUT_LENGTH);
     }
 
     @Override
