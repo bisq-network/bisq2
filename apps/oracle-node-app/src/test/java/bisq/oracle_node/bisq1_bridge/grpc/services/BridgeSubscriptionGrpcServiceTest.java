@@ -27,7 +27,9 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,6 +89,27 @@ class BridgeSubscriptionGrpcServiceTest {
     }
 
     @Test
+    void requestQueuedImmediatelyAfterExecutionAcquisitionIsDispatchedAfterCompletion() throws Exception {
+        TestService service = TestService.withBlockedRequestExecutionAcquisition();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            executor.execute(service::request);
+            assertThat(service.firstRequestExecutionAcquired.await(1, TimeUnit.SECONDS)).isTrue();
+
+            Future<?> queuedRequest = executor.submit(service::request);
+            queuedRequest.get(1, TimeUnit.SECONDS);
+            service.releaseFirstRequestExecutionAcquisition.countDown();
+
+            assertThat(service.secondRequest.await(1, TimeUnit.SECONDS)).isTrue();
+            assertThat(service.requestCount).hasValue(2);
+        } finally {
+            service.releaseFirstRequestExecutionAcquisition.countDown();
+            service.shutdown();
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
     void unimplementedSubscriptionReportsVersionMismatchWithoutRetrying() throws InterruptedException {
         TestService service = new TestService();
         service.subscribeRetryInterval.set(0);
@@ -104,27 +127,51 @@ class BridgeSubscriptionGrpcServiceTest {
         private final AtomicInteger finishedRequestCount = new AtomicInteger();
         private final CountDownLatch firstRequestStarted = new CountDownLatch(1);
         private final CountDownLatch releaseFirstRequest = new CountDownLatch(1);
+        private final CountDownLatch firstRequestExecutionAcquired = new CountDownLatch(1);
+        private final CountDownLatch releaseFirstRequestExecutionAcquisition = new CountDownLatch(1);
         private final CountDownLatch secondRequest = new CountDownLatch(1);
         private final CountDownLatch subscriptionAttempted = new CountDownLatch(1);
+        private final AtomicBoolean firstRequestExecution = new AtomicBoolean(true);
         private final RuntimeException requestFailure;
         private final boolean blockFirstRequest;
+        private final boolean blockFirstRequestExecutionAcquisition;
 
         private TestService() {
-            this(null, false);
+            this(null, false, false);
         }
 
         private TestService(RuntimeException requestFailure) {
-            this(requestFailure, false);
+            this(requestFailure, false, false);
         }
 
         private TestService(boolean blockFirstRequest) {
-            this(null, blockFirstRequest);
+            this(null, blockFirstRequest, false);
         }
 
-        private TestService(RuntimeException requestFailure, boolean blockFirstRequest) {
+        private TestService(RuntimeException requestFailure,
+                            boolean blockFirstRequest,
+                            boolean blockFirstRequestExecutionAcquisition) {
             super(false, mock(GrpcClient.class));
             this.requestFailure = requestFailure;
             this.blockFirstRequest = blockFirstRequest;
+            this.blockFirstRequestExecutionAcquisition = blockFirstRequestExecutionAcquisition;
+        }
+
+        private static TestService withBlockedRequestExecutionAcquisition() {
+            return new TestService(null, false, true);
+        }
+
+        @Override
+        void onRequestExecutionAcquired() {
+            if (blockFirstRequestExecutionAcquisition && firstRequestExecution.compareAndSet(true, false)) {
+                firstRequestExecutionAcquired.countDown();
+                try {
+                    releaseFirstRequestExecutionAcquisition.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+            }
         }
 
         @Override
