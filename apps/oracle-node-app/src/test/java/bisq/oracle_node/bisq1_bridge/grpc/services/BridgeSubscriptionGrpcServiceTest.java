@@ -25,7 +25,11 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,21 +68,101 @@ class BridgeSubscriptionGrpcServiceTest {
         assertThat(service.finishedRequestCount).hasValue(1);
     }
 
+    @Test
+    void concurrentRequestsAreCoalescedWithoutLosingThePendingRequest() throws InterruptedException {
+        TestService service = new TestService(true);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            executor.execute(service::request);
+            assertThat(service.firstRequestStarted.await(1, TimeUnit.SECONDS)).isTrue();
+
+            service.request();
+            service.releaseFirstRequest.countDown();
+
+            assertThat(service.secondRequest.await(1, TimeUnit.SECONDS)).isTrue();
+            assertThat(service.requestCount).hasValue(2);
+        } finally {
+            service.releaseFirstRequest.countDown();
+            service.shutdown();
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void requestQueuedImmediatelyAfterExecutionAcquisitionIsDispatchedAfterCompletion() throws Exception {
+        TestService service = TestService.withBlockedRequestExecutionAcquisition();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            executor.execute(service::request);
+            assertThat(service.firstRequestExecutionAcquired.await(1, TimeUnit.SECONDS)).isTrue();
+
+            Future<?> queuedRequest = executor.submit(service::request);
+            queuedRequest.get(1, TimeUnit.SECONDS);
+            service.releaseFirstRequestExecutionAcquisition.countDown();
+
+            assertThat(service.secondRequest.await(1, TimeUnit.SECONDS)).isTrue();
+            assertThat(service.requestCount).hasValue(2);
+        } finally {
+            service.releaseFirstRequestExecutionAcquisition.countDown();
+            service.shutdown();
+            executor.shutdownNow();
+        }
+    }
+
     private static final class TestService extends BridgeSubscriptionGrpcService<Integer> {
         private final List<String> calls = new ArrayList<>();
         private final AtomicInteger subscribeCount = new AtomicInteger();
         private final AtomicInteger requestCount = new AtomicInteger();
         private final AtomicInteger finishedRequestCount = new AtomicInteger();
+        private final CountDownLatch firstRequestStarted = new CountDownLatch(1);
+        private final CountDownLatch releaseFirstRequest = new CountDownLatch(1);
+        private final CountDownLatch firstRequestExecutionAcquired = new CountDownLatch(1);
+        private final CountDownLatch releaseFirstRequestExecutionAcquisition = new CountDownLatch(1);
         private final CountDownLatch secondRequest = new CountDownLatch(1);
+        private final AtomicBoolean firstRequestExecution = new AtomicBoolean(true);
         private final RuntimeException requestFailure;
+        private final boolean blockFirstRequest;
+        private final boolean blockFirstRequestExecutionAcquisition;
 
         private TestService() {
-            this(null);
+            this(null, false, false);
         }
 
         private TestService(RuntimeException requestFailure) {
+            this(requestFailure, false, false);
+        }
+
+        private TestService(boolean blockFirstRequest) {
+            this(null, blockFirstRequest, false);
+        }
+
+        private TestService(RuntimeException requestFailure,
+                            boolean blockFirstRequest,
+                            boolean blockFirstRequestExecutionAcquisition) {
             super(false, mock(GrpcClient.class));
             this.requestFailure = requestFailure;
+            this.blockFirstRequest = blockFirstRequest;
+            this.blockFirstRequestExecutionAcquisition = blockFirstRequestExecutionAcquisition;
+        }
+
+        private static TestService withBlockedRequestExecutionAcquisition() {
+            return new TestService(null, false, true);
+        }
+
+        // Runs directly after the state transition which acquires the execution, so blocking here reproduces the
+        // window in which another caller queues a trigger that must survive.
+        @Override
+        protected int prepareHistoricalRequest() {
+            if (blockFirstRequestExecutionAcquisition && firstRequestExecution.compareAndSet(true, false)) {
+                firstRequestExecutionAcquired.countDown();
+                try {
+                    releaseFirstRequestExecutionAcquisition.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+            }
+            return super.prepareHistoricalRequest();
         }
 
         @Override
@@ -87,7 +171,17 @@ class BridgeSubscriptionGrpcServiceTest {
             if (requestFailure != null) {
                 throw requestFailure;
             }
-            if (requestCount.incrementAndGet() == 2) {
+            int currentRequestCount = requestCount.incrementAndGet();
+            if (blockFirstRequest && currentRequestCount == 1) {
+                firstRequestStarted.countDown();
+                try {
+                    releaseFirstRequest.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+            }
+            if (currentRequestCount == 2) {
                 secondRequest.countDown();
             }
             return List.of(1);

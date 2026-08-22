@@ -30,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
@@ -43,8 +44,7 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     protected final AtomicLong subscribeRetryInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestAttempts = new AtomicLong(0);
-    private final AtomicBoolean requestInProgress = new AtomicBoolean();
-    private final AtomicBoolean requestPending = new AtomicBoolean();
+    private final AtomicReference<RequestState> requestState = new AtomicReference<>(RequestState.initial());
     private final AtomicBoolean streamRecoveryScheduled = new AtomicBoolean();
     protected volatile boolean shutdownCalled;
 
@@ -82,10 +82,22 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         if (shutdownCalled) {
             return;
         }
-        if (!requestInProgress.compareAndSet(false, true)) {
-            requestPending.set(true);
+        requestState.updateAndGet(RequestState::queueRequest);
+        executePendingRequest();
+    }
+
+    private void executePendingRequest() {
+        if (shutdownCalled) {
             return;
         }
+        RequestState currentState;
+        do {
+            currentState = requestState.get();
+            if (currentState.requestInProgress() || !currentState.hasPendingRequest()) {
+                return;
+            }
+        } while (!requestState.compareAndSet(currentState, currentState.startRequest()));
+
         boolean historicalRequestPrepared = false;
         boolean historicalRequestSuccessful = false;
         try {
@@ -105,9 +117,9 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                     onHistoricalRequestFinished(historicalRequestSuccessful);
                 }
             } finally {
-                requestInProgress.set(false);
-                if (requestPending.getAndSet(false) && !shutdownCalled) {
-                    requestAsync();
+                RequestState completedState = requestState.updateAndGet(RequestState::completeRequest);
+                if (completedState.hasPendingRequest() && !shutdownCalled) {
+                    CompletableFuture.runAsync(this::executePendingRequest, commonForkJoinPool());
                 }
             }
         }
@@ -212,5 +224,29 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                 .withExecutor(commonForkJoinPool())
                 .after(subscribeRetryInterval.get(), TimeUnit.SECONDS);
         subscribeRetryInterval.set(Math.min(10, subscribeRetryInterval.incrementAndGet()));
+    }
+
+    private record RequestState(boolean requestInProgress,
+                                long requestedGeneration,
+                                long startedGeneration) {
+        private static RequestState initial() {
+            return new RequestState(false, 0, 0);
+        }
+
+        private RequestState queueRequest() {
+            return new RequestState(requestInProgress, requestedGeneration + 1, startedGeneration);
+        }
+
+        private boolean hasPendingRequest() {
+            return requestedGeneration != startedGeneration;
+        }
+
+        private RequestState startRequest() {
+            return new RequestState(true, requestedGeneration, requestedGeneration);
+        }
+
+        private RequestState completeRequest() {
+            return new RequestState(false, requestedGeneration, startedGeneration);
+        }
     }
 }
