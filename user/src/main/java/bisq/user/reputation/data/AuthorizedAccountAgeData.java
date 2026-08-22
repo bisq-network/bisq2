@@ -32,7 +32,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
@@ -173,13 +175,13 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         return version == that.version &&
                 dateBucket == that.dateBucket &&
                 profileId.equals(that.profileId) &&
-                java.util.Arrays.equals(witnessNullifier, that.witnessNullifier);
+                Arrays.equals(witnessNullifier, that.witnessNullifier);
     }
 
     @Override
     public int hashCode() {
-        int result = java.util.Objects.hash(version, profileId, dateBucket);
-        return 31 * result + java.util.Arrays.hashCode(witnessNullifier);
+        int result = Objects.hash(version, profileId, dateBucket);
+        return 31 * result + Arrays.hashCode(witnessNullifier);
     }
 
     @Override
