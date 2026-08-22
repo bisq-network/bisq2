@@ -72,8 +72,10 @@ public class MockWalletService extends WalletService {
         return CompletableFuture.completedFuture(true);
     }
 
-    public CompletableFuture<String> getUnusedAddress() {
-        return CompletableFuture.completedFuture("39C7fxSzEACPjM72Z7xdPxhf7mKxJwvfMT");
+    public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {
+        String address = "1433be6e1769d40d8bcd7b7765333a4e6a";
+        return CompletableFuture.completedFuture(address)
+                .thenApply(receiveAddressService::findOrAddReceiveAddressEntry);
     }
 
     public CompletableFuture<ReadOnlyObservableSet<String>> requestWalletAddresses() {
@@ -104,11 +106,7 @@ public class MockWalletService extends WalletService {
                 + UUID.randomUUID().toString().replace("-", ""))
                 .substring(0, 33);
         return CompletableFuture.completedFuture(address)
-                .thenApply(a -> {
-                    ReceiveAddressEntry receiveAddress = new ReceiveAddressEntry(a);
-                    receiveAddressService.addReceiveAddressEntry(receiveAddress);
-                    return receiveAddress;
-                });
+                .thenApply(this::addReceiveAddress);
     }
 
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {

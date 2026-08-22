@@ -33,7 +33,7 @@ import java.util.Optional;
 public final class ReceiveAddressEntry implements PersistableProto {
     private final String address;
     private final long createdAt;
-    private final Optional<String> name;
+    private final Optional<String> note;
 
     public ReceiveAddressEntry(String address) {
         this(address,
@@ -46,7 +46,7 @@ public final class ReceiveAddressEntry implements PersistableProto {
         bisq.wallet.protobuf.ReceiveAddressEntry.Builder builder = bisq.wallet.protobuf.ReceiveAddressEntry.newBuilder()
                 .setAddress(address)
                 .setCreatedAt(createdAt);
-        name.ifPresent(builder::setName);
+        note.ifPresent(builder::setNote);
         return builder;
     }
 
@@ -58,6 +58,6 @@ public final class ReceiveAddressEntry implements PersistableProto {
     public static ReceiveAddressEntry fromProto(bisq.wallet.protobuf.ReceiveAddressEntry proto) {
         return new ReceiveAddressEntry(proto.getAddress(),
                 proto.getCreatedAt(),
-                OptionalUtils.optionalIf(proto.hasName(), proto::getName));
+                OptionalUtils.optionalIf(proto.hasNote(), proto::getNote));
     }
 }

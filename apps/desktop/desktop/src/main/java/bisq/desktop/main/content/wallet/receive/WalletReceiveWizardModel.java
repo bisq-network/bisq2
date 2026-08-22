@@ -40,6 +40,7 @@ public class WalletReceiveWizardModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = List.of(
         NavigationTarget.WALLET_RECEIVE_ADDRESS,
@@ -60,7 +61,8 @@ public class WalletReceiveWizardModel extends NavigationModel {
         titleText.set("");
         currentIndex.set(0);
         nextButtonText.set("");
-        backButtonVisible.set(false);
+        backButtonVisible.set(true);
+        nextButtonVisible.set(true);
         selectedChildTarget.set(null);
         animateRightOut = true;
     }

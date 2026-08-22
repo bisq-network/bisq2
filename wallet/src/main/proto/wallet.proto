@@ -158,7 +158,7 @@ message Utxo {
 message ReceiveAddressEntry {
   string address = 1;
   sint64 createdAt = 2;
-  optional string name = 3;
+  optional string note = 3;
 }
 
 message ReceiveAddressStore {
