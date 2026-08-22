@@ -333,10 +333,18 @@ public class OfferbookRestApi extends RestApiBase {
     }
 
     private Optional<OfferItemPresentationDto> createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        return OfferItemPresentationDtoFactory.create(userProfileService,
-                userIdentityService,
-                reputationService,
-                marketPriceService,
-                bisqEasyOfferbookMessage);
+        try {
+            return OfferItemPresentationDtoFactory.create(userProfileService,
+                    userIdentityService,
+                    reputationService,
+                    marketPriceService,
+                    bisqEasyOfferbookMessage);
+        } catch (RuntimeException e) {
+            // A single offer whose amounts cannot be converted at its price (an overflowing
+            // amount reaches longValueExact) must not abort the whole market listing with a
+            // 500. It is skipped like the WebSocket path already does for its own send.
+            log.warn("Skipping an offer that could not be mapped to a presentation dto", e);
+            return Optional.empty();
+        }
     }
 }

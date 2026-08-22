@@ -74,7 +74,7 @@ public class DashboardTopPanel {
         private final UserProfileService userProfileService;
         private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
         private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
-        private Pin selectedMarketPin, marketPricePin, getNumUserProfilesPin;
+        private Pin selectedMarketPin, marketPricePin, offerValidityRevisionPin, getNumUserProfilesPin;
         private final Set<Pin> channelsPins = new HashSet<>();
         private boolean allowUpdateOffersOnline;
 
@@ -99,6 +99,8 @@ public class DashboardTopPanel {
             channelsPins.addAll(bisqEasyOfferbookChannelService.getChannels().stream()
                     .map(channel -> channel.getChatMessages().addObserver(this::updateOffersOnline))
                     .collect(Collectors.toSet()));
+            offerValidityRevisionPin = bisqEasyOfferbookMessageService.getOfferValidityRevision()
+                    .addObserver(revision -> updateOffersOnline());
 
             // We trigger a call of updateOffersOnline for each channel when registering our observer. But we only want one call,
             // so we block execution of the code inside updateOffersOnline to only call it once.
@@ -110,9 +112,11 @@ public class DashboardTopPanel {
         public void onDeactivate() {
             selectedMarketPin.unbind();
             marketPricePin.unbind();
+            offerValidityRevisionPin.unbind();
             getNumUserProfilesPin.unbind();
             channelsPins.forEach(Pin::unbind);
             channelsPins.clear();
+            allowUpdateOffersOnline = false;
         }
 
         public void onBuildReputation() {
