@@ -118,6 +118,9 @@ public class WalletReceiveAddressController implements Controller {
             if (model.getReceiveAddressEntry().get() != null
                     && model.getReceiveAddressNote().get() != null) {
                 String addressNote = model.getReceiveAddressNote().get().trim();
+                if (addressNote.isEmpty()) {
+                    return;
+                }
                 boolean wasUpdated = walletService.updateReceiveAddress(
                         model.getReceiveAddressEntry().get(), Optional.of(addressNote));
                 if (wasUpdated) {
@@ -157,8 +160,7 @@ public class WalletReceiveAddressController implements Controller {
     }
 
     void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
-        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
-        });
+        KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::onProceedOverlay);
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
     }
 

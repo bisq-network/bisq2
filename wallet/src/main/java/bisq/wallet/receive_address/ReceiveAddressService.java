@@ -19,6 +19,7 @@ package bisq.wallet.receive_address;
 
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
+import bisq.common.util.StringUtils;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -84,6 +85,6 @@ public class ReceiveAddressService implements Service, PersistenceClient<Receive
     }
 
     private boolean isNoteValid(String note) {
-        return !note.isEmpty() && note.length() <= RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH;
+        return !StringUtils.isEmpty(note) && note.length() <= RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH;
     }
 }
