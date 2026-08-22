@@ -26,56 +26,63 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.user.reputation.WitnessReputationProtocol;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
-@EqualsAndHashCode
 @Getter
 public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
-    private static final int VERSION = 1;
+    public static final int LEGACY_VERSION = 1;
+    public static final int VERSION = 2;
     public static final long TTL = TTL_30_DAYS;
 
     // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     private transient final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName());
-    @EqualsAndHashCode.Exclude
-    @ExcludeForHash
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
     private final int version;
     private final String profileId;
-    private final long witnessSignDate;
+    private final long dateBucket;
+    @ExcludeForHash(excludeOnlyInVersions = {0, 1})
+    private final byte[] witnessNullifier;
 
     // ExcludeForHash from version 1 on to not treat data from different oracle nodes with different staticPublicKeysProvided value as duplicate data.
     // We add version 2 and 3 for extra safety...
     // Once no nodes with versions below 2.1.0  are expected anymore in the network we can remove the parameter
     // and use default `@ExcludeForHash` instead.
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-    @EqualsAndHashCode.Exclude
     private final boolean staticPublicKeysProvided;
 
     public AuthorizedSignedWitnessData(String profileId,
-                                       long witnessSignDate,
+                                       long dateBucket,
+                                       byte[] witnessNullifier,
                                        boolean staticPublicKeysProvided) {
         this(VERSION,
                 profileId,
-                witnessSignDate,
+                dateBucket,
+                witnessNullifier,
                 staticPublicKeysProvided);
     }
 
     private AuthorizedSignedWitnessData(int version,
                                         String profileId,
-                                        long witnessSignDate,
+                                        long dateBucket,
+                                        byte[] witnessNullifier,
                                         boolean staticPublicKeysProvided) {
         this.version = version;
         this.profileId = profileId;
-        this.witnessSignDate = witnessSignDate;
+        this.dateBucket = dateBucket;
+        this.witnessNullifier = witnessNullifier.clone();
         this.staticPublicKeysProvided = staticPublicKeysProvided;
 
         verify();
@@ -84,16 +91,23 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     @Override
     public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
-        NetworkDataValidation.validateDate(witnessSignDate);
+        if (version >= VERSION) {
+            WitnessReputationProtocol.validateDateBucket(dateBucket);
+            WitnessReputationProtocol.validateNullifier(witnessNullifier);
+        } else {
+            NetworkDataValidation.validateDate(dateBucket);
+            NetworkDataValidation.validateByteArray(witnessNullifier, 0);
+        }
     }
 
     @Override
     public bisq.user.protobuf.AuthorizedSignedWitnessData.Builder getBuilder(boolean serializeForHash) {
         return bisq.user.protobuf.AuthorizedSignedWitnessData.newBuilder()
                 .setProfileId(profileId)
-                .setWitnessSignDate(witnessSignDate)
+                .setDateBucket(dateBucket)
                 .setStaticPublicKeysProvided(staticPublicKeysProvided)
-                .setVersion(version);
+                .setVersion(version)
+                .setWitnessNullifier(ByteString.copyFrom(witnessNullifier));
     }
 
     @Override
@@ -105,7 +119,8 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         return new AuthorizedSignedWitnessData(
                 proto.getVersion(),
                 proto.getProfileId(),
-                proto.getWitnessSignDate(),
+                proto.getDateBucket(),
+                proto.getWitnessNullifier().toByteArray(),
                 proto.getStaticPublicKeysProvided()
         );
     }
@@ -144,11 +159,37 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
         return staticPublicKeysProvided;
     }
 
+    public boolean isCurrentVersion() {
+        return version == VERSION;
+    }
+
+    public byte[] getWitnessNullifier() {
+        return witnessNullifier.clone();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AuthorizedSignedWitnessData that)) {
+            return false;
+        }
+        return version == that.version &&
+                dateBucket == that.dateBucket &&
+                profileId.equals(that.profileId) &&
+                Arrays.equals(witnessNullifier, that.witnessNullifier);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(version, profileId, dateBucket);
+        return 31 * result + Arrays.hashCode(witnessNullifier);
+    }
+
     @Override
     public String toString() {
         return "AuthorizedSignedWitnessData{" +
                 ",\r\n                    profileId=" + profileId +
-                ",\r\n                    witnessSignAge=" + new Date(witnessSignDate) +
+                ",\r\n                    witnessNullifier=" + bisq.common.encoding.Hex.encode(witnessNullifier) +
+                ",\r\n                    dateBucket=" + new Date(dateBucket) +
                 ",\r\n                    staticPublicKeysProvided=" + staticPublicKeysProvided() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";

@@ -24,10 +24,13 @@ import bisq.common.encoding.Hex;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationResponse;
+import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRolesVerificationRequest;
+import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRolesVerificationResponse;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -49,12 +52,9 @@ public class BondedRoleGrpcService implements Service {
             String sendersProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
             checkArgument(profileId.equals(sendersProfileId), "Senders pub key is not matching the profile ID");
 
-            BondedRoleType bondedRoleType = request.getBondedRoleType();
-            String bisq1RoleTypeName = toBisq1RoleTypeName(bondedRoleType);
-            String bondUserName = request.getBondUserName();
-            String signatureBase64 = request.getSignatureBase64();
-            var protoRequest = new BondedRoleVerificationRequest(bondUserName, bisq1RoleTypeName, profileId, signatureBase64).completeProto();
-            var protoResponse = grpcClient.getBondedRoleBlockingStub().requestBondedRoleVerification(protoRequest);
+            var protoRequest = toVerificationRequest(request).completeProto();
+            var protoResponse = GrpcClient.withInteractiveRequestDeadline(grpcClient.getBondedRoleBlockingStub())
+                    .requestBondedRoleVerification(protoRequest);
             return BondedRoleVerificationResponse.fromProto(protoResponse);
         } catch (Exception e) {
             log.warn("Error at requestBondedRoleVerification", e);
@@ -62,7 +62,27 @@ public class BondedRoleGrpcService implements Service {
         }
     }
 
-    private static String toBisq1RoleTypeName(BondedRoleType bondedRoleType) {
+    public BondedRolesVerificationResponse requestBondedRoleBatchVerification(List<BondedRoleRegistrationRequest> requests) {
+        log.info("Request batch verification for {} bonded-role registrations", requests.size());
+        var request = new BondedRolesVerificationRequest(requests.stream()
+                .map(BondedRoleGrpcService::toVerificationRequest)
+                .toList());
+        var response = GrpcClient.withInteractiveRequestDeadline(grpcClient.getBondedRoleBlockingStub())
+                .requestBondedRoleBatchVerification(request.completeProto());
+        return BondedRolesVerificationResponse.fromProto(response);
+    }
+
+    static BondedRoleVerificationRequest toVerificationRequest(BondedRoleRegistrationRequest request) {
+        return new BondedRoleVerificationRequest(request.getBondUserName(),
+                toBisq1RoleTypeName(request.getBondedRoleType()),
+                request.getProfileId(),
+                request.getSignatureBase64(),
+                request.getProposalTxId(),
+                request.getLockupTxId(),
+                request.getRegistrationProtocolVersion());
+    }
+
+    static String toBisq1RoleTypeName(BondedRoleType bondedRoleType) {
         String name = bondedRoleType.name();
         return switch (name) {
             case "MEDIATOR" -> "MEDIATOR"; // 5k

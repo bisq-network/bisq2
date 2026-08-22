@@ -19,19 +19,10 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.common.application.Service;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
-import bisq.oracle_node.bisq1_bridge.grpc.messages.AccountAgeWitnessDateRequest;
-import bisq.oracle_node.bisq1_bridge.grpc.messages.AccountAgeWitnessDateResponse;
-import bisq.security.SignatureUtil;
-import bisq.security.keys.KeyGeneration;
+import bisq.oracle_node.bisq1_bridge.grpc.messages.AccountAgeWitnessOwnershipRequest;
+import bisq.oracle_node.bisq1_bridge.grpc.messages.AccountAgeWitnessOwnershipResponse;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
 import lombok.extern.slf4j.Slf4j;
-
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.PublicKey;
-import java.util.Base64;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AccountAgeWitnessGrpcService implements Service {
@@ -41,47 +32,17 @@ public class AccountAgeWitnessGrpcService implements Service {
         this.grpcClient = grpcClient;
     }
 
-    public long verifyAndRequestDate(AuthorizeAccountAgeRequest request) {
-        log.info("verifyAndRequestDate {}", request);
+    public AccountAgeWitnessOwnershipResponse verifyAndRequestAuthorization(AuthorizeAccountAgeRequest request) {
+        log.info("verifyAndRequestAuthorization {}", request);
         try {
-            verifySignature(request);
-
-            String hashAsHex = request.getHashAsHex();
-            long date = requestDate(hashAsHex);
-
-            long requestDate = request.getDate();
-            checkArgument(date == requestDate,
-                    "Date of account age for %s is not matching the date from the users request. " +
-                            "Date from bridge service call: %s; Date from users request: %s",
-                    hashAsHex, date, requestDate);
-            return date;
+            var protoRequest = new AccountAgeWitnessOwnershipRequest(request).completeProto();
+            var protoResponse = GrpcClient.withInteractiveRequestDeadline(
+                            grpcClient.getAccountAgeWitnessBlockingStub())
+                    .verifyAccountAgeWitnessOwnership(protoRequest);
+            return AccountAgeWitnessOwnershipResponse.fromProto(protoResponse);
         } catch (Exception e) {
-            log.warn("Error at verifyAndRequestDate", e);
+            log.warn("Error at verifyAndRequestAuthorization", e);
             throw new RuntimeException(e);
         }
-    }
-
-    private void verifySignature(AuthorizeAccountAgeRequest request) throws GeneralSecurityException {
-        long requestDate = request.getDate();
-        String profileId = request.getProfileId();
-        String hashAsHex = request.getHashAsHex();
-        byte[] signature = Base64.getDecoder().decode(request.getSignatureBase64());
-        String pubKeyBase64 = request.getPubKeyBase64();
-
-        String messageString = profileId + hashAsHex + requestDate;
-        byte[] message = messageString.getBytes(StandardCharsets.UTF_8);
-        PublicKey publicKey = KeyGeneration.generatePublic(Base64.getDecoder().decode(pubKeyBase64), KeyGeneration.DSA);
-        boolean isValid = SignatureUtil.verify(message,
-                signature,
-                publicKey,
-                SignatureUtil.SHA256withDSA);
-        checkArgument(isValid, "Signature verification for %s failed", request);
-    }
-
-    private long requestDate(String hashAsHex) {
-        var protoRequest = new AccountAgeWitnessDateRequest(hashAsHex).completeProto();
-        var protoResponse = grpcClient.getAccountAgeWitnessBlockingStub().requestAccountAgeWitnessDate(protoRequest);
-        AccountAgeWitnessDateResponse response = AccountAgeWitnessDateResponse.fromProto(protoResponse);
-        return response.getDate();
     }
 }

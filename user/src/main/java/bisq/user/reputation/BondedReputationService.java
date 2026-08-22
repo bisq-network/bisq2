@@ -59,17 +59,9 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
 
     @Override
     protected boolean isDataValid(AuthorizedBondedReputationData data) {
-        // We added fields in AuthorizedBondedReputationData in v2.1.0 and increased version in AuthorizedBondedReputationData to 1.
-        // We had published both version 0 and 1 data, and old version 0 had no txId and blockHeight set.
-        // Version 0 data with txId and blockHeight do not cause any conflict as the hashcode is the same as a version 1 data.
-        // Though version 0 data without txId and blockHeight would have a diff. hashcode and would cause duplication
-        // in the score calculations.
-        // With 2.1.6 we do not publish version 0 data anymore, but as they have a TTL of 100 days,
-        // they will be present still a while. From June 2025 on there should not no version 0 data anymore in the network
-        // and this check can be removed.
-        // In case we would get old protobuf data where txId and blockHeight are not present, we would get an empty string
-        // and 0 as values (default values for missing fields).
-        return data.getLockupTxId().length() == 64 && data.getBlockHeight() > 0;
+        // Version 1 did not bind unlockTxId to the oracle signature. It remains parseable for network compatibility,
+        // but accepting it would let a relay add or strip the removal signal without either signing key.
+        return data.isCurrentVersion() && data.getLockupTxId().length() == 64 && data.getBlockHeight() > 0;
     }
 
     @Override
@@ -117,7 +109,7 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
 
     @Override
     public long calculateScore(AuthorizedBondedReputationData data) {
-        if (data.getUnlockTxId().isPresent()) {
+        if (!data.isCurrentVersion() || data.getUnlockTxId().isPresent()) {
             // We store unlock bond data to be able to handle out of order cases, thus we need to handle it here.
             return 0;
         }

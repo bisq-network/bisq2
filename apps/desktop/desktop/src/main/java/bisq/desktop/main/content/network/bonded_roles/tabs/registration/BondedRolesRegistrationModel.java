@@ -33,10 +33,15 @@ import java.util.Optional;
 public abstract class BondedRolesRegistrationModel implements Model {
     protected final BondedRoleType bondedRoleType;
     protected final ObjectProperty<UserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
-    protected final StringProperty profileId = new SimpleStringProperty();
-    protected final StringProperty bondUserName = new SimpleStringProperty();
-    protected final StringProperty signature = new SimpleStringProperty();
-    protected final BooleanProperty requestButtonDisabled = new SimpleBooleanProperty();
+    protected final StringProperty profileId = new SimpleStringProperty("");
+    protected final StringProperty bondUserName = new SimpleStringProperty("");
+    protected final StringProperty signature = new SimpleStringProperty("");
+    protected final StringProperty proposalTxId = new SimpleStringProperty("");
+    protected final StringProperty lockupTxId = new SimpleStringProperty("");
+    protected final BooleanProperty proposalTxIdValid = new SimpleBooleanProperty();
+    protected final BooleanProperty lockupTxIdValid = new SimpleBooleanProperty();
+    protected final BooleanProperty requestRegistrationButtonDisabled = new SimpleBooleanProperty();
+    protected final BooleanProperty requestCancellationButtonDisabled = new SimpleBooleanProperty();
     protected final BooleanProperty requestCancellationButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty isExpanded = new SimpleBooleanProperty();
     @Setter

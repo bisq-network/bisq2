@@ -155,6 +155,14 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     protected abstract ByteArray getUserProfileKey(UserProfile userProfile);
 
+    protected void removeFromPendingDataSet(T data) {
+        ByteArray dataKey = getDataKey(data);
+        pendingDataSetByHash.computeIfPresent(dataKey, (ignored, dataSet) -> {
+            dataSet.remove(data);
+            return dataSet.isEmpty() ? null : dataSet;
+        });
+    }
+
     protected void putScore(String userProfileId, Set<T> dataSet) {
         long score = dataSet.stream().mapToLong(this::calculateScore).sum();
         scoreByUserProfileId.put(userProfileId, score);
