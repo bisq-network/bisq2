@@ -21,7 +21,6 @@ import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
 import org.junit.jupiter.api.Test;
 
-import java.util.EnumSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,7 +35,7 @@ class ApiAccessStoreTest {
         // covering permissions added later — which is what every full grant was issued to mean.
         // This is how pre-grantAll stores (always full grants) gain forward coverage.
         bisq.api.protobuf.PermissionSet fullEntry = bisq.api.protobuf.PermissionSet.newBuilder()
-                .addAllPermissions(EnumSet.allOf(Permission.class).stream().map(Permission::toProtoEnum).toList())
+                .addAllPermissions(Permission.autoGrantable().stream().map(Permission::toProtoEnum).toList())
                 .build();
         bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
                 .putPermissionsByClientId("legacy-client", fullEntry)
