@@ -88,17 +88,23 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     @Override
     public void onConnect(WebSocket socket) {
         // todo use config to check if multiple clients are permitted
+        boolean revoked;
         synchronized (revocationLock) {
             // Checked and registered as one step against disconnectClient. Authentication happened
             // during the handshake, so without this a client revoked since then would register a
             // connection the revocation scan has already passed, and onMessage would accept it as
             // a registered socket.
-            if (findClientId(socket).filter(revokedClientIds::contains).isPresent()) {
-                log.warn("Rejecting connection of a revoked client");
-                closeQuietly(socket);
-                return;
+            revoked = findClientId(socket).filter(revokedClientIds::contains).isPresent();
+            if (!revoked) {
+                super.onConnect(socket);
             }
-            super.onConnect(socket);
+        }
+        if (revoked) {
+            // Closed outside the lock, as it writes to the connection and must not hold up a
+            // concurrent revocation.
+            log.warn("Rejecting connection of a revoked client");
+            closeQuietly(socket);
+            return;
         }
         log.info("Client connected: {}", socket);
 
