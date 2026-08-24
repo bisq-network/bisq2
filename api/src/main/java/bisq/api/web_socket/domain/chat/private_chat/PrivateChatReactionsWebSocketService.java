@@ -42,6 +42,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,6 +78,13 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
      * flat map would accumulate pins for the lifetime of the process.
      */
     private final Map<String, ChannelPins> pinsByChannelId = new ConcurrentHashMap<>();
+    /**
+     * Bumped by every bulk teardown before it sweeps the map, and read by a bind before it registers
+     * anything, so that a bind straddling the sweep is refused when it publishes. Needed because a
+     * shutdown, unlike a leave, does not touch the channel collection: the bind's owner is still live,
+     * and that check alone would let it publish into a map the sweep has already emptied.
+     */
+    private final AtomicLong teardownGeneration = new AtomicLong();
 
     public PrivateChatReactionsWebSocketService(SubscriberRepository subscriberRepository,
                                                 TwoPartyPrivateChatChannelService channelService,
@@ -110,15 +119,13 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
     }
 
     private void bindChannel(TwoPartyPrivateChatChannel channel) {
-        String channelId = channel.getId();
+        long generation = teardownGeneration.get();
         ChannelPins pins = new ChannelPins(channel);
-        // Published before anything is observed, because addObserver replays the messages already on
-        // the channel and each of those replayed callbacks stores its reaction pin into this instance.
-        ChannelPins previous = pinsByChannelId.put(channelId, pins);
-        if (previous != null) {
-            previous.close();
-        }
-
+        // Registered before the map is touched, because addObserver replays the messages already on the
+        // channel and each replayed callback binds a reaction observer, which replays in turn and reaches
+        // findSubscribers and send. Doing it inside the compute that publishes the pins would hold a
+        // ConcurrentHashMap bin lock across those sends. The replayed callbacks store their reaction pins
+        // into this instance directly, so nothing needs the map yet.
         Pin messagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(TwoPartyPrivateChatMessage message) {
@@ -135,17 +142,51 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
                 // Messages cannot be cleared
             }
         });
-        if (!pins.setMessagesPin(messagesPin)) {
-            messagesPin.unbind();
-        }
+        pins.setMessagesPin(messagesPin);
 
-        // A channel is in the collection before its add is notified, so it is missing here only if it
-        // was removed while we were registering — and that removal ran past pinsByChannelId before we
-        // published to it, so nobody else will collect this.
-        if (!isLive(channel)) {
-            pinsByChannelId.remove(channelId, pins);
+        if (!install(channel.getId(), pins, generation)) {
             pins.close();
         }
+    }
+
+    /**
+     * Publishes the pins, but only while their owner is still in the channel collection.
+     * <p>
+     * The check and the write are one map update because the two can be separated by the same thing the
+     * teardown guards against: observer callbacks are synchronous per operation but nothing serializes
+     * them across threads, so this callback can be resumed after its channel was left and a successor
+     * under the same id was already bound. An unconditional put would then displace the live successor's
+     * pins and close them, and since the owner is no longer live the caller would discard its own —
+     * leaving the live channel observed by nobody, with no further event to rebuild it.
+     * <p>
+     * Asking only whether the owner is live is enough, because at most one channel per id is ever live:
+     * the collection is a set and a channel's equality is its id. A live owner means whatever is filed
+     * under the id belongs to an instance that is gone, and displacing it is right; a dead owner must
+     * not touch what is there, which is either nothing or the successor's. The generation covers the one
+     * teardown that leaves the owner live, see {@link #teardownGeneration}.
+     * <p>
+     * Both reads run under the bin lock of this key, so they must stay lock-free and must never reach
+     * back into this map: {@link #isLive} is a plain scan of the channel set, and the domain service
+     * holds its own monitor while it notifies the removal that takes this same lock in
+     * {@link #unbindChannelPins}.
+     *
+     * @return false if the owner is gone or a teardown ran meanwhile, leaving the pins for the caller
+     * to close.
+     */
+    private boolean install(String channelId, ChannelPins pins, long generation) {
+        AtomicReference<ChannelPins> displaced = new AtomicReference<>();
+        ChannelPins current = pinsByChannelId.compute(channelId, (id, present) -> {
+            if (teardownGeneration.get() != generation || !isLive(pins.owner)) {
+                return present;
+            }
+            displaced.set(present);
+            return pins;
+        });
+        ChannelPins stale = displaced.get();
+        if (stale != null) {
+            stale.close();
+        }
+        return current == pins;
     }
 
     /**
@@ -185,8 +226,12 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
         }
     }
 
-    /** Unconditional, unlike {@link #unbindChannelPins}: nothing survives a clear or a shutdown. */
+    /**
+     * Unconditional, unlike {@link #unbindChannelPins}: nothing survives a clear or a shutdown. The
+     * generation bump before the sweep is what keeps a bind from publishing after it.
+     */
     private void unbindAllChannelPins() {
+        teardownGeneration.incrementAndGet();
         new ArrayList<>(pinsByChannelId.keySet()).forEach(channelId -> {
             ChannelPins pins = pinsByChannelId.remove(channelId);
             if (pins != null) {
@@ -205,13 +250,22 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
      * a second instance under the same id and binds it — all while this callback is still pending. The
      * id would then resolve to the live channel's pins, and closing them would leave it in the collection
      * observed by nobody, with no further event to rebuild it.
+     * <p>
+     * Done as one map update, like {@link #install}, so that the two cannot cross: a bind that has read
+     * its owner as live before the channel left the set, and a teardown that has looked here before that
+     * bind published, would otherwise leave behind pins for a channel that is gone.
      */
     private void unbindChannelPins(TwoPartyPrivateChatChannel channel) {
-        String channelId = channel.getId();
-        ChannelPins pins = pinsByChannelId.get(channelId);
-        // The conditional remove closes the gap after the read: a bind that publishes its own instance in
-        // between keeps it, and we leave with nothing to close, because that bind already closed ours.
-        if (pins != null && pins.isOwnedBy(channel) && pinsByChannelId.remove(channelId, pins)) {
+        AtomicReference<ChannelPins> removed = new AtomicReference<>();
+        pinsByChannelId.computeIfPresent(channel.getId(), (id, present) -> {
+            if (!present.isOwnedBy(channel)) {
+                return present;
+            }
+            removed.set(present);
+            return null;
+        });
+        ChannelPins pins = removed.get();
+        if (pins != null) {
             pins.close();
         }
     }
@@ -301,11 +355,9 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
      * <p>
      * The reaction pins live here rather than being resolved back out of {@code pinsByChannelId},
      * because {@code addObserver} replays the collection synchronously: binding the message observer
-     * runs the reaction binding inside the enclosing call, so a lookup there would be a recursive
-     * update on the key that call is already working on — which {@code ConcurrentHashMap} does not
-     * support. For the same reason the class holds no {@code compute} at all; {@link #closed} is what
-     * makes the plain {@code put} and {@code remove} safe, since whichever of two racing binds loses is
-     * closed by the winner and cleans up after itself.
+     * runs the reaction binding inside the enclosing call, and the instance is published to the map only
+     * after all of that has returned. The callbacks store into this instance and never touch the map,
+     * which is what lets the publishing {@code compute} run while they may already be firing.
      * <p>
      * Every field is guarded by the instance monitor, but pins are always created by the caller and
      * only handed over here, so the monitor is never held across an observer callback.
@@ -330,13 +382,9 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
             return owner == candidate;
         }
 
-        /** @return false if the channel is already gone, leaving the pin for the caller to unbind. */
-        private synchronized boolean setMessagesPin(Pin pin) {
-            if (closed) {
-                return false;
-            }
+        /** Called before the instance is published, so nothing can have closed it yet. */
+        private synchronized void setMessagesPin(Pin pin) {
             messagesPin = pin;
-            return true;
         }
 
         /** @return false if the channel is already gone, leaving the pin for the caller to unbind. */

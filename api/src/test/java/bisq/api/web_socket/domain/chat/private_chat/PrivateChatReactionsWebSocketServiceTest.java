@@ -276,6 +276,79 @@ class PrivateChatReactionsWebSocketServiceTest {
     }
 
     /**
+     * The same ABA at the bind end. Observer callbacks are synchronous per operation but nothing
+     * serializes them across threads, so the callback binding a channel can be resumed after that channel
+     * was left and its same-id successor was already bound. A bind that publishes unconditionally then
+     * displaces the successor's pins and closes them, notices its own channel is gone, and discards its
+     * own — and the live channel is left observed by nobody.
+     * <p>
+     * Forced on one thread by having the older channel's message set perform the leave and the successor's
+     * arrival inside {@code addObserver}: after the older bind has registered its observer, before it has
+     * published anything.
+     */
+    @Test
+    void aChannelBoundAfterItsSuccessorLeavesTheSuccessorBound() {
+        channels.remove(channel);
+
+        ObservableSet<TwoPartyPrivateChatMessageReaction> newerReactions = new ObservableSet<>();
+        ObservableSet<TwoPartyPrivateChatMessage> newerMessages = new ObservableSet<>();
+        newerMessages.add(mockMessage("message-2", newerReactions));
+        TwoPartyPrivateChatChannel newer = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(newer.getId()).thenReturn(CHANNEL_ID);
+        when(newer.getChatMessages()).thenReturn(newerMessages);
+
+        AtomicReference<TwoPartyPrivateChatChannel> older = new AtomicReference<>();
+        ObservableSet<TwoPartyPrivateChatMessage> staleMessages = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessage> observer) {
+                Pin pin = super.addObserver(observer);
+                channels.remove(older.get());
+                channels.add(newer);
+                return pin;
+            }
+        };
+        TwoPartyPrivateChatChannel stale = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(stale.getId()).thenReturn(CHANNEL_ID);
+        when(stale.getChatMessages()).thenReturn(staleMessages);
+        older.set(stale);
+
+        channels.add(stale);
+
+        newerReactions.add(reaction("reaction-1", false));
+
+        verify(subscriber).send(anyString());
+    }
+
+    /**
+     * The channel is bound while the service shuts down. Unlike a leave, a shutdown does not touch the
+     * channel collection, so the bind still finds its owner live and publishes — after the teardown has
+     * already swept the map. Pins published after that sweep would otherwise survive it and keep pushing
+     * for a service that is gone.
+     */
+    @Test
+    void aChannelBoundWhileTheServiceShutsDownBindsNothing() {
+        ObservableSet<TwoPartyPrivateChatMessageReaction> lateReactions = new ObservableSet<>();
+        ObservableSet<TwoPartyPrivateChatMessage> lateMessages = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessage> observer) {
+                Pin pin = super.addObserver(observer);
+                service.shutdown().join();
+                return pin;
+            }
+        };
+        lateMessages.add(mockMessage("message-2", lateReactions));
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+
+        channels.add(other);
+
+        lateReactions.add(reaction("reaction-1", false));
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
      * The peer is banned after the fact, so the message that carries this reaction is already gone from
      * the message stream. Letting the reaction through would leave the client holding one against a
      * {@code chatMessageId} it never received.

@@ -43,6 +43,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,6 +69,13 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
     @Nullable
     private Pin channelsPin;
     private final Map<String, ChannelBinding> bindingsByChannelId = new ConcurrentHashMap<>();
+    /**
+     * Bumped by every bulk teardown before it sweeps the map, and read by a bind before it registers
+     * anything, so that a bind straddling the sweep is refused when it publishes. Needed because a
+     * shutdown, unlike a leave, does not touch the channel collection: the bind's owner is still live,
+     * and that check alone would let it publish into a map the sweep has already emptied.
+     */
+    private final AtomicLong teardownGeneration = new AtomicLong();
 
     public PrivateChatMessagesWebSocketService(SubscriberRepository subscriberRepository,
                                                TwoPartyPrivateChatChannelService channelService,
@@ -103,11 +112,10 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
     }
 
     private void bindChannel(TwoPartyPrivateChatChannel channel) {
-        String channelId = channel.getId();
+        long generation = teardownGeneration.get();
         // Registered before the map is touched, because addObserver replays the messages already on the
-        // channel and each replayed callback reaches findSubscribers and send. Doing it inside a compute
-        // would hold a ConcurrentHashMap bin lock across those sends for no gain: the conditional writes
-        // below are what make the interleavings safe, not the atomicity of the update.
+        // channel and each replayed callback reaches findSubscribers and send. Doing it inside the compute
+        // that publishes the binding would hold a ConcurrentHashMap bin lock across those sends.
         Pin messagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(TwoPartyPrivateChatMessage message) {
@@ -125,18 +133,49 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
             }
         });
 
-        ChannelBinding binding = new ChannelBinding(channel, messagesPin);
-        ChannelBinding previous = bindingsByChannelId.put(channelId, binding);
-        if (previous != null) {
-            previous.messagesPin().unbind();
-        }
-
-        // A channel is in the collection before its add is notified, so it is missing here only if it was
-        // removed while we were registering — and that removal ran past bindingsByChannelId before we
-        // published to it, so nobody else will collect this.
-        if (!isLive(channel) && bindingsByChannelId.remove(channelId, binding)) {
+        if (!install(channel.getId(), new ChannelBinding(channel, messagesPin), generation)) {
             messagesPin.unbind();
         }
+    }
+
+    /**
+     * Publishes the binding, but only while its owner is still in the channel collection.
+     * <p>
+     * The check and the write are one map update because the two can be separated by the same thing the
+     * teardown guards against: observer callbacks are synchronous per operation but nothing serializes
+     * them across threads, so this callback can be resumed after its channel was left and a successor
+     * under the same id was already bound. An unconditional put would then displace the live successor's
+     * binding and unbind it, and since the owner is no longer live the caller would discard its own —
+     * leaving the live channel observed by nobody, with no further event to rebuild it.
+     * <p>
+     * Asking only whether the owner is live is enough, because at most one channel per id is ever live:
+     * the collection is a set and a channel's equality is its id. A live owner means whatever is filed
+     * under the id belongs to an instance that is gone, and displacing it is right; a dead owner must
+     * not touch what is there, which is either nothing or the successor's. The generation covers the one
+     * teardown that leaves the owner live, see {@link #teardownGeneration}.
+     * <p>
+     * Both reads run under the bin lock of this key, so they must stay lock-free and must never reach
+     * back into this map: {@link #isLive} is a plain scan of the channel set, and the domain service
+     * holds its own monitor while it notifies the removal that takes this same lock in
+     * {@link #unbindChannel}.
+     *
+     * @return false if the owner is gone or a teardown ran meanwhile, leaving the pin for the caller
+     * to unbind.
+     */
+    private boolean install(String channelId, ChannelBinding binding, long generation) {
+        AtomicReference<ChannelBinding> displaced = new AtomicReference<>();
+        ChannelBinding current = bindingsByChannelId.compute(channelId, (id, present) -> {
+            if (teardownGeneration.get() != generation || !isLive(binding.owner())) {
+                return present;
+            }
+            displaced.set(present);
+            return binding;
+        });
+        ChannelBinding stale = displaced.get();
+        if (stale != null) {
+            stale.messagesPin().unbind();
+        }
+        return current == binding;
     }
 
     /**
@@ -148,21 +187,40 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
      * a second instance under the same id and binds it — all while this callback is still pending. The
      * id would then resolve to the live channel's pin, and unbinding it would leave that channel in the
      * collection observed by nobody, with no further event to rebuild it.
+     * <p>
+     * Done as one map update, like {@link #install}, so that the two cannot cross: a bind that has read
+     * its owner as live before the channel left the set, and a teardown that has looked here before that
+     * bind published, would otherwise leave behind a binding for a channel that is gone.
      */
     private void unbindChannel(TwoPartyPrivateChatChannel channel) {
-        String channelId = channel.getId();
-        ChannelBinding binding = bindingsByChannelId.get(channelId);
-        // The conditional remove closes the gap after the read: a bind that publishes its own binding in
-        // between keeps it, and we leave with nothing to unbind, because that bind already unbound ours.
-        if (binding != null && binding.isOwnedBy(channel) && bindingsByChannelId.remove(channelId, binding)) {
+        AtomicReference<ChannelBinding> removed = new AtomicReference<>();
+        bindingsByChannelId.computeIfPresent(channel.getId(), (id, present) -> {
+            if (!present.isOwnedBy(channel)) {
+                return present;
+            }
+            removed.set(present);
+            return null;
+        });
+        ChannelBinding binding = removed.get();
+        if (binding != null) {
             binding.messagesPin().unbind();
         }
     }
 
-    /** Unconditional, unlike {@link #unbindChannel}: nothing survives a clear or a shutdown. */
+    /**
+     * Unconditional, unlike {@link #unbindChannel}: nothing survives a clear or a shutdown. Swept key by
+     * key rather than snapshot-then-clear, so that an entry published between the two is never dropped
+     * with its pin still registered; the generation bump before the sweep is what keeps a bind from
+     * publishing after it.
+     */
     private void unbindAllChannels() {
-        new ArrayList<>(bindingsByChannelId.values()).forEach(binding -> binding.messagesPin().unbind());
-        bindingsByChannelId.clear();
+        teardownGeneration.incrementAndGet();
+        new ArrayList<>(bindingsByChannelId.keySet()).forEach(channelId -> {
+            ChannelBinding binding = bindingsByChannelId.remove(channelId);
+            if (binding != null) {
+                binding.messagesPin().unbind();
+            }
+        });
     }
 
     /**
@@ -177,9 +235,9 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
 
     /**
      * A channel's message observer together with the instance it was registered for. The owner is what
-     * lets {@link #unbindChannel} refuse to tear down a binding that a newer channel filed under the same
-     * id, and it is compared by reference: {@code equals} on a channel is its id, which is exactly the
-     * thing that cannot tell the two apart.
+     * lets {@link #install} and {@link #unbindChannel} tell this binding apart from one a newer channel
+     * filed under the same id, and it is compared by reference: {@code equals} on a channel is its id,
+     * which is exactly the thing that cannot tell the two apart.
      */
     private record ChannelBinding(TwoPartyPrivateChatChannel owner, Pin messagesPin) {
         private boolean isOwnedBy(TwoPartyPrivateChatChannel candidate) {

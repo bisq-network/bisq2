@@ -25,6 +25,8 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
@@ -36,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.api.web_socket.domain.chat.private_chat.PrivateChatTestMocks.mockUserProfile;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -156,6 +159,103 @@ class PrivateChatMessagesWebSocketServiceTest {
         newerMessages.add(messageFrom(banned(false)));
 
         verify(subscriber).send(anyString());
+    }
+
+    /**
+     * The same ABA at the bind end. Observer callbacks are synchronous per operation but nothing
+     * serializes them across threads, so the callback binding a channel can be resumed after that channel
+     * was left and its same-id successor was already bound. A bind that publishes unconditionally then
+     * displaces the successor's binding and unbinds it, notices its own channel is gone, and discards its
+     * own — and the live channel is left observed by nobody.
+     * <p>
+     * Forced on one thread by having the older channel's message set perform the leave and the successor's
+     * arrival inside {@code addObserver}: after the older bind has registered its observer, before it has
+     * published anything.
+     */
+    @Test
+    void aChannelBoundAfterItsSuccessorLeavesTheSuccessorBound() {
+        channels.remove(channel);
+
+        ObservableSet<TwoPartyPrivateChatMessage> newerMessages = new ObservableSet<>();
+        TwoPartyPrivateChatChannel newer = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(newer.getId()).thenReturn(CHANNEL_ID);
+        when(newer.getChatMessages()).thenReturn(newerMessages);
+
+        AtomicReference<TwoPartyPrivateChatChannel> older = new AtomicReference<>();
+        ObservableSet<TwoPartyPrivateChatMessage> staleMessages = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessage> observer) {
+                Pin pin = super.addObserver(observer);
+                channels.remove(older.get());
+                channels.add(newer);
+                return pin;
+            }
+        };
+        TwoPartyPrivateChatChannel stale = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(stale.getId()).thenReturn(CHANNEL_ID);
+        when(stale.getChatMessages()).thenReturn(staleMessages);
+        older.set(stale);
+
+        channels.add(stale);
+
+        newerMessages.add(messageFrom(banned(false)));
+
+        verify(subscriber).send(anyString());
+    }
+
+    /**
+     * The channel is left while it is still being bound, so its message pin is created after the teardown
+     * has already run and has to be discarded rather than stored. The reactions sibling has the same
+     * guard; it is repeated here because the two services publish through separate maps.
+     */
+    @Test
+    void aChannelLeftWhileItIsBeingBoundBindsNothing() {
+        AtomicReference<TwoPartyPrivateChatChannel> leftChannel = new AtomicReference<>();
+        ObservableSet<TwoPartyPrivateChatMessage> lateMessages = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessage> observer) {
+                Pin pin = super.addObserver(observer);
+                channels.remove(leftChannel.get());
+                return pin;
+            }
+        };
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+        leftChannel.set(other);
+
+        channels.add(other);
+
+        lateMessages.add(messageFrom(banned(false)));
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * The channel is bound while the service shuts down. Unlike a leave, a shutdown does not touch the
+     * channel collection, so the bind still finds its owner live and publishes — after the teardown has
+     * already swept the map. A sweep that only unbinds what it saw then leaves that observer registered
+     * with nothing holding a reference to it, still pushing for a service that is gone.
+     */
+    @Test
+    void aChannelBoundWhileTheServiceShutsDownBindsNothing() {
+        ObservableSet<TwoPartyPrivateChatMessage> lateMessages = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessage> observer) {
+                Pin pin = super.addObserver(observer);
+                service.shutdown().join();
+                return pin;
+            }
+        };
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+
+        channels.add(other);
+
+        lateMessages.add(messageFrom(banned(false)));
+
+        verify(subscriber, never()).send(anyString());
     }
 
     private UserProfile banned(boolean isBanned) {
