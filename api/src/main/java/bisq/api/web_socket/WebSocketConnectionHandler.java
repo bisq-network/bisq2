@@ -34,8 +34,11 @@ import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
@@ -48,6 +51,21 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     private final WebSocketRestApiService webSocketRestApiService;
     @Getter
     private final ObservableSet<WebSocketClient> websocketClients = new ObservableSet<>();
+    /**
+     * Serializes registering a connection against revoking a client, so a handshake in flight
+     * cannot register after the revocation has already scanned the registry.
+     */
+    private final Object revocationLock = new Object();
+    /**
+     * Clients revoked in this process. Authentication happens during the handshake, so a client
+     * revoked right after that point would otherwise register a live connection that the
+     * revocation scan could not see.
+     * <p>
+     * In memory on purpose: it only has to outlive an in-flight handshake. A later handshake of a
+     * revoked client fails authentication, and a restart leaves none in flight. Client IDs are
+     * random and never reused, so entries never turn into false rejections.
+     */
+    private final Set<String> revokedClientIds = ConcurrentHashMap.newKeySet();
 
     public WebSocketConnectionHandler(SubscriptionService subscriptionService,
                                       WebSocketRestApiService webSocketRestApiService) {
@@ -70,7 +88,18 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     @Override
     public void onConnect(WebSocket socket) {
         // todo use config to check if multiple clients are permitted
-        super.onConnect(socket);
+        synchronized (revocationLock) {
+            // Checked and registered as one step against disconnectClient. Authentication happened
+            // during the handshake, so without this a client revoked since then would register a
+            // connection the revocation scan has already passed, and onMessage would accept it as
+            // a registered socket.
+            if (findClientId(socket).filter(revokedClientIds::contains).isPresent()) {
+                log.warn("Rejecting connection of a revoked client");
+                closeQuietly(socket);
+                return;
+            }
+            super.onConnect(socket);
+        }
         log.info("Client connected: {}", socket);
 
         updateWebsocketClients();
@@ -142,35 +171,45 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
      * @param clientId The client ID whose connections should be closed
      */
     public void disconnectClient(String clientId) {
-        getWebSockets().stream()
-                .filter(webSocket -> {
-                    if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
-                        HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
-                        if (request != null) {
-                            String wsClientId = request.getHeader(Headers.CLIENT_ID);
-                            return clientId.equals(wsClientId);
-                        }
-                    }
-                    return false;
-                })
-                .forEach(webSocket -> {
-                    log.info("Disconnecting revoked client: {}", clientId);
-                    try {
-                        webSocket.close();
-                    } catch (Exception e) {
-                        log.warn("Could not close WebSocket of revoked client {}", clientId, e);
-                    } finally {
-                        // Applied regardless of whether the close succeeded. A socket whose close
-                        // failed stays connected, and subscriptions carry no permission check of
-                        // their own, so dropping the subscriptions and deregistering the socket is
-                        // what actually stops data reaching a revoked client. Deregistering also
-                        // makes onMessage reject anything the socket still sends. Both are
-                        // idempotent, so the onClose that follows a successful close is harmless.
-                        subscriptionService.onConnectionClosed(webSocket);
-                        remove(webSocket);
-                    }
-                });
+        List<WebSocket> sockets;
+        synchronized (revocationLock) {
+            // Recorded and deregistered under the same lock as onConnect, so a handshake in flight
+            // is rejected instead of registering after this scan. Closing and unsubscribing happen
+            // outside the lock, as they must not block a connection attempt.
+            revokedClientIds.add(clientId);
+            sockets = getWebSockets().stream()
+                    .filter(webSocket -> findClientId(webSocket).filter(clientId::equals).isPresent())
+                    .toList();
+            sockets.forEach(this::remove);
+        }
+        sockets.forEach(webSocket -> {
+            log.info("Disconnecting revoked client: {}", clientId);
+            try {
+                webSocket.close();
+            } catch (Exception e) {
+                log.warn("Could not close WebSocket of revoked client {}", clientId, e);
+            } finally {
+                // Applied regardless of whether the close succeeded. A socket whose close failed
+                // stays connected, and subscriptions carry no permission check of their own, so
+                // dropping the subscriptions is what actually stops data reaching a revoked
+                // client. The socket is already deregistered, which makes onMessage reject
+                // anything it still sends. Both are idempotent, so the onClose that follows a
+                // successful close is harmless.
+                subscriptionService.onConnectionClosed(webSocket);
+            }
+        });
         updateWebsocketClients();
+    }
+
+    private static Optional<String> findClientId(WebSocket webSocket) {
+        if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
+            HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
+            if (request != null) {
+                return Optional.ofNullable(request.getHeader(Headers.CLIENT_ID))
+                        .filter(StringUtils::isNotEmpty);
+            }
+        }
+        return Optional.empty();
     }
 
     private void closeQuietly(WebSocket webSocket) {
@@ -184,18 +223,12 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     private void updateWebsocketClients() {
         try {
             websocketClients.setAll(getWebSockets().stream().map(webSocket -> {
-                Optional<String> clientId = Optional.empty();
+                Optional<String> clientId = findClientId(webSocket);
                 Optional<String> clientAddress = Optional.empty();
                 Optional<String> userAgent = Optional.empty();
                 if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
                     HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
                     if (request != null) {
-                        // Get clientId from HTTP headers
-                        String clientIdHeader = request.getHeader(Headers.CLIENT_ID);
-                        if (StringUtils.isNotEmpty(clientIdHeader)) {
-                            clientId = Optional.of(clientIdHeader);
-                        }
-
                         // Get remote address directly from the request
                         String clientAddressHeader = request.getRemoteAddr();
                         if (StringUtils.isNotEmpty(clientAddressHeader)) {

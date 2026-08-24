@@ -190,6 +190,39 @@ class WebSocketConnectionHandlerTest {
     }
 
     @Test
+    void aHandshakeCompletingAfterTheRevocationDoesNotRegister() {
+        // Authentication happens during the handshake, so a client revoked right after that point
+        // reaches onConnect with the revocation scan already behind it. Reproduced exactly: the
+        // revocation runs while no socket of that client is registered yet.
+        handler.disconnectClient(REVOKED_CLIENT_ID);
+
+        DefaultWebSocket lateSocket = connect(REVOKED_CLIENT_ID);
+
+        verify(lateSocket).close();
+        assertFalse(handler.isRegistered(lateSocket));
+    }
+
+    @Test
+    void aMessageFromAConnectionRejectedAtHandshakeIsNotHandled() {
+        handler.disconnectClient(REVOKED_CLIENT_ID);
+        DefaultWebSocket lateSocket = connect(REVOKED_CLIENT_ID);
+
+        handler.onMessage(lateSocket, "{\"anything\":true}");
+
+        verify(subscriptionService, never()).onMessage(anyString(), any());
+        verify(webSocketRestApiService, never()).onMessage(anyString(), any());
+    }
+
+    @Test
+    void revokingOneClientDoesNotBlockAnotherFromConnecting() {
+        handler.disconnectClient(REVOKED_CLIENT_ID);
+
+        DefaultWebSocket webSocket = connect("other-client");
+
+        assertTrue(handler.isRegistered(webSocket));
+    }
+
+    @Test
     void aConnectedSocketStillProcessesMessages() {
         DefaultWebSocket webSocket = connect("live-client");
         when(subscriptionService.canHandle(anyString())).thenReturn(true);
