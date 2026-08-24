@@ -26,6 +26,7 @@ import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.chat.priv.SendOutcome;
 import bisq.chat.priv.SendRejection;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
@@ -176,13 +177,9 @@ public class PrivateChatRestApi extends RestApiBase {
                 return;
             }
             withChannel(channelId, asyncResponse, channel -> {
-                if (resumeIfRejected(channel, asyncResponse)) {
-                    return;
-                }
                 Optional<Citation> citation = Optional.ofNullable(request.citation())
                         .map(DtoMappings.CitationMapping::toBisq2Model);
-                channelService.sendTextMessage(request.text(), citation, channel);
-                asyncResponse.resume(buildNoContentResponse());
+                resume(channelService.trySendTextMessage(request.text(), citation, channel), asyncResponse);
             });
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
@@ -268,12 +265,11 @@ public class PrivateChatRestApi extends RestApiBase {
                 }
                 TwoPartyPrivateChatMessage message = optionalMessage.get();
                 if (isRemoveRequest || !alreadyReactedWith(message, reactionId)) {
-                    // Inside this branch on purpose: the idempotent no-op below neither sends nor stores
+                    // Only this branch can answer 409: the idempotent no-op below neither sends nor stores
                     // anything, so its 204 stays honest even when a send would have been refused.
-                    if (resumeIfRejected(channel, asyncResponse)) {
-                        return;
-                    }
-                    channelService.sendTextMessageReaction(message, channel, reaction, isRemoveRequest);
+                    resume(channelService.trySendTextMessageReaction(message, channel, reaction, isRemoveRequest),
+                            asyncResponse);
+                    return;
                 }
                 // Idempotent on the add side: re-sending a reaction the user already has is a no-op, and a
                 // no-op is a success, so it answers 204 like any other. The remove side is not guarded,
@@ -369,22 +365,18 @@ public class PrivateChatRestApi extends RestApiBase {
     }
 
     /**
-     * Asked before sending, because the send itself cannot answer it. The channel service refuses a
-     * banned sender or peer before it stores anything, but reports that by completing the future it
-     * returns exceptionally — indistinguishable, from out here, from a delivery failure that happens
-     * after the message was stored. Left to the future we would answer 204 for a message that exists
-     * nowhere.
+     * Answers from the decision the send itself took, never from a check made before it. The two would be
+     * separate decisions, and only the send's is authoritative — a ban landing in between would leave the
+     * response contradicting what the node actually did.
      * <p>
-     * Still check-then-act: the service re-checks authoritatively, so a ban landing in the gap costs us
-     * the silent 204 we would have returned anyway.
-     *
-     * @return true if a response was resumed and the caller must stop
+     * Only the local half is reported. Delivery resolves long after this returns, so a 204 means the node
+     * accepted and stored the message, not that the peer has it; that distinction is documented on both
+     * endpoints and belongs to a delivery-status topic, not to this response.
      */
-    private boolean resumeIfRejected(TwoPartyPrivateChatChannel channel, AsyncResponse asyncResponse) {
-        Optional<SendRejection> rejection = channelService.findSendRejection(channel, channel.getPeer());
-        rejection.ifPresent(reason ->
-                asyncResponse.resume(buildResponse(Response.Status.CONFLICT, describe(reason))));
-        return rejection.isPresent();
+    private void resume(SendOutcome outcome, AsyncResponse asyncResponse) {
+        asyncResponse.resume(outcome.rejection()
+                .map(reason -> buildResponse(Response.Status.CONFLICT, describe(reason)))
+                .orElseGet(this::buildNoContentResponse));
     }
 
     /**

@@ -22,7 +22,7 @@ package bisq.chat.priv;
  * an enum rather than a message so that each caller phrases it for its own audience — an HTTP status
  * and a popup are not the same sentence.
  *
- * @see PrivateChatChannelService#findSendRejection
+ * @see SendOutcome
  */
 public enum SendRejection {
     MY_PROFILE_BANNED,

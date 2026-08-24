@@ -24,6 +24,7 @@ import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.chat.priv.SendOutcome;
 import bisq.chat.priv.SendRejection;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
@@ -163,21 +164,21 @@ class PrivateChatRestApiTest {
     }
 
     /**
-     * The whole point of asking the service first. {@code sendTextMessage} refuses a banned peer before
-     * it stores anything and reports that only by completing the future it returns exceptionally, which
-     * this endpoint discards — so it used to answer 204 for a message that exists nowhere: not in the
-     * store, not on the WebSocket stream, not in the log.
+     * The send refuses a banned peer before it stores anything, and used to report that only by completing
+     * the future it returns exceptionally — which this endpoint discarded, answering 204 for a message
+     * that exists nowhere: not in the store, not on the WebSocket stream, not in the log. The outcome is
+     * read off the send itself, so no check here can disagree with what the node did.
      */
     @Test
     void aMessageRefusedLocallyIsReportedRatherThanAcknowledged() {
         TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
         when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
-        when(channelService.findSendRejection(eq(channel), any())).thenReturn(Optional.of(SendRejection.PEER_BANNED));
+        when(channelService.trySendTextMessage(any(), any(), eq(channel)))
+                .thenReturn(SendOutcome.rejected(SendRejection.PEER_BANNED));
 
         restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", null), asyncResponse);
 
         assertThat(status()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
-        verifyNoMessageSent();
     }
 
     /** The two reasons are phrased apart, so a client can tell "you are banned" from "they are". */
@@ -185,32 +186,31 @@ class PrivateChatRestApiTest {
     void aBannedOwnProfileIsReportedApartFromABannedPeer() {
         TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
         when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
-        when(channelService.findSendRejection(eq(channel), any()))
-                .thenReturn(Optional.of(SendRejection.MY_PROFILE_BANNED));
+        when(channelService.trySendTextMessage(any(), any(), eq(channel)))
+                .thenReturn(SendOutcome.rejected(SendRejection.MY_PROFILE_BANNED));
 
         restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", null), asyncResponse);
 
         assertThat(status()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
         assertThat(resumedEntity()).isEqualTo("Your user profile is banned.");
-        verifyNoMessageSent();
     }
 
     @Test
     void aReactionRefusedLocallyIsReportedRatherThanAcknowledged() {
         TwoPartyPrivateChatChannel channel = channelWithMessageCarrying(Set.of());
-        when(channelService.findSendRejection(eq(channel), any())).thenReturn(Optional.of(SendRejection.PEER_BANNED));
+        when(channelService.trySendTextMessageReaction(any(), eq(channel), any(), anyBoolean()))
+                .thenReturn(SendOutcome.rejected(SendRejection.PEER_BANNED));
 
         restApi.sendChatMessageReaction(CHANNEL_ID, MESSAGE_ID,
                 new SendChatMessageReactionRequest(0, false, null), asyncResponse);
 
         assertThat(status()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
-        verifyNoReactionSent();
     }
 
     /**
-     * Why the rejection is checked inside the branch that actually sends: a duplicate reaction neither
-     * sends nor stores anything, so its 204 stays honest even while a send would be refused. Checking
-     * earlier would turn a documented no-op into a 409.
+     * Why only the branch that actually sends can answer 409: a duplicate reaction neither sends nor
+     * stores anything, so its 204 stays honest even while a send would be refused. Reporting the refusal
+     * before reaching that branch would turn a documented no-op into a 409.
      */
     @Test
     void aDuplicateReactionStaysAcknowledgedEvenWhenASendWouldBeRefused() {
@@ -223,7 +223,8 @@ class PrivateChatRestApiTest {
         when(existing.getSenderUserProfile().getId()).thenReturn(MY_PROFILE_ID);
 
         TwoPartyPrivateChatChannel channel = channelWithMessageCarrying(Set.of(existing));
-        when(channelService.findSendRejection(eq(channel), any())).thenReturn(Optional.of(SendRejection.PEER_BANNED));
+        when(channelService.trySendTextMessageReaction(any(), eq(channel), any(), anyBoolean()))
+                .thenReturn(SendOutcome.rejected(SendRejection.PEER_BANNED));
 
         restApi.sendChatMessageReaction(CHANNEL_ID, MESSAGE_ID,
                 new SendChatMessageReactionRequest(reactionId, false, null), asyncResponse);
@@ -330,7 +331,7 @@ class PrivateChatRestApiTest {
 
         assertThat(status()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
         ArgumentCaptor<Reaction> captor = ArgumentCaptor.forClass(Reaction.class);
-        verify(channelService).sendTextMessageReaction(any(), eq(channel), captor.capture(), eq(false));
+        verify(channelService).trySendTextMessageReaction(any(), eq(channel), captor.capture(), eq(false));
         assertThat(captor.getValue()).isEqualTo(Reaction.values()[reactionId]);
     }
 
@@ -345,7 +346,7 @@ class PrivateChatRestApiTest {
                 new SendChatMessageReactionRequest(0, true, MY_PROFILE_ID), asyncResponse);
 
         assertThat(status()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
-        verify(channelService).sendTextMessageReaction(any(), eq(channel), eq(Reaction.values()[0]), eq(true));
+        verify(channelService).trySendTextMessageReaction(any(), eq(channel), eq(Reaction.values()[0]), eq(true));
     }
 
     @Test
@@ -358,7 +359,7 @@ class PrivateChatRestApiTest {
 
         assertThat(status()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
         ArgumentCaptor<Optional<Citation>> captor = citationCaptor();
-        verify(channelService).sendTextMessage(eq("hi"), captor.capture(), eq(channel));
+        verify(channelService).trySendTextMessage(eq("hi"), captor.capture(), eq(channel));
         assertThat(captor.getValue()).isPresent();
         assertThat(captor.getValue().orElseThrow().getText()).isEqualTo("quoted text");
     }
@@ -390,7 +391,7 @@ class PrivateChatRestApiTest {
 
         assertThat(status()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
         ArgumentCaptor<Optional<Citation>> captor = citationCaptor();
-        verify(channelService).sendTextMessage(eq("hi"), captor.capture(), eq(channel));
+        verify(channelService).trySendTextMessage(eq("hi"), captor.capture(), eq(channel));
         assertThat(captor.getValue()).isEmpty();
     }
 
@@ -476,10 +477,10 @@ class PrivateChatRestApiTest {
     }
 
     private void verifyNoMessageSent() {
-        verify(channelService, never()).sendTextMessage(any(), any(), any());
+        verify(channelService, never()).trySendTextMessage(any(), any(), any());
     }
 
     private void verifyNoReactionSent() {
-        verify(channelService, never()).sendTextMessageReaction(any(), any(), any(), anyBoolean());
+        verify(channelService, never()).trySendTextMessageReaction(any(), any(), any(), anyBoolean());
     }
 }
