@@ -247,6 +247,35 @@ class PrivateChatReactionsWebSocketServiceTest {
     }
 
     /**
+     * The ABA at the teardown end: leaving a channel and an inbound message from the same peer produce
+     * two channel instances under one deterministic id, because {@code ObservableCollection#remove}
+     * drops the element before it notifies — so the message finds nothing, creates a second channel and
+     * binds it while the removal callback is still pending. A teardown keyed on the id alone then closes
+     * the observers of the channel that is live, and reactions on it stop reaching the client for good.
+     * <p>
+     * Single-threaded here because the mocks make it so: Mockito leaves {@code equals} as reference
+     * identity, so both instances sit in the set at once and the leave can be issued after the newer one
+     * is already bound.
+     */
+    @Test
+    void leavingAChannelLeavesANewerBindingUnderTheSameIdAlone() {
+        ObservableSet<TwoPartyPrivateChatMessageReaction> newerReactions = new ObservableSet<>();
+        ObservableSet<TwoPartyPrivateChatMessage> newerMessages = new ObservableSet<>();
+        newerMessages.add(mockMessage("message-2", newerReactions));
+
+        TwoPartyPrivateChatChannel newer = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(newer.getId()).thenReturn(CHANNEL_ID);
+        when(newer.getChatMessages()).thenReturn(newerMessages);
+        channels.add(newer);
+
+        channels.remove(channel);
+
+        newerReactions.add(reaction("reaction-1", false));
+
+        verify(subscriber).send(anyString());
+    }
+
+    /**
      * The peer is banned after the fact, so the message that carries this reaction is already gone from
      * the message stream. Letting the reaction through would leave the client holding one against a
      * {@code chatMessageId} it never received.

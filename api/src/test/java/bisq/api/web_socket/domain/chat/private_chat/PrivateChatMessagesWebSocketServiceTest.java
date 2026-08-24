@@ -52,8 +52,11 @@ import static org.mockito.Mockito.when;
  * peer banned <i>after</i> their messages arrived — a state no other test in this package produces.
  */
 class PrivateChatMessagesWebSocketServiceTest {
+    private static final String CHANNEL_ID = "discussion.a-b";
+
     private ObservableSet<TwoPartyPrivateChatChannel> channels;
     private ObservableSet<TwoPartyPrivateChatMessage> messages;
+    private TwoPartyPrivateChatChannel channel;
     private BannedUserService bannedUserService;
     private Subscriber subscriber;
     private PrivateChatMessagesWebSocketService service;
@@ -61,8 +64,8 @@ class PrivateChatMessagesWebSocketServiceTest {
     @BeforeEach
     void setUp() {
         messages = new ObservableSet<>();
-        TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
-        when(channel.getId()).thenReturn("discussion.a-b");
+        channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(channel.getId()).thenReturn(CHANNEL_ID);
         when(channel.getChatMessages()).thenReturn(messages);
         channels = new ObservableSet<>();
         channels.add(channel);
@@ -127,6 +130,32 @@ class PrivateChatMessagesWebSocketServiceTest {
         messages.add(messageFrom(banned(false)));
 
         verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * The ABA at the teardown end: leaving a channel and an inbound message from the same peer produce
+     * two channel instances under one deterministic id, because {@code ObservableCollection#remove}
+     * drops the element before it notifies — so the message finds nothing, creates a second channel and
+     * binds it while the removal callback is still pending. A teardown keyed on the id alone then unbinds
+     * the observer of the channel that is live, and its messages stop reaching the client for good.
+     * <p>
+     * Single-threaded here because the mocks make it so: Mockito leaves {@code equals} as reference
+     * identity, so both instances sit in the set at once and the leave can be issued after the newer one
+     * is already bound.
+     */
+    @Test
+    void leavingAChannelLeavesANewerBindingUnderTheSameIdAlone() {
+        ObservableSet<TwoPartyPrivateChatMessage> newerMessages = new ObservableSet<>();
+        TwoPartyPrivateChatChannel newer = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(newer.getId()).thenReturn(CHANNEL_ID);
+        when(newer.getChatMessages()).thenReturn(newerMessages);
+        channels.add(newer);
+
+        channels.remove(channel);
+
+        newerMessages.add(messageFrom(banned(false)));
+
+        verify(subscriber).send(anyString());
     }
 
     private UserProfile banned(boolean isBanned) {

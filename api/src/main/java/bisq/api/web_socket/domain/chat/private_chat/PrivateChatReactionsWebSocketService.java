@@ -97,7 +97,7 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
             @Override
             public void onRemoved(Object element) {
                 if (element instanceof TwoPartyPrivateChatChannel channel) {
-                    unbindChannelPins(channel.getId());
+                    unbindChannelPins(channel);
                 }
             }
 
@@ -111,7 +111,7 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
 
     private void bindChannel(TwoPartyPrivateChatChannel channel) {
         String channelId = channel.getId();
-        ChannelPins pins = new ChannelPins();
+        ChannelPins pins = new ChannelPins(channel);
         // Published before anything is observed, because addObserver replays the messages already on
         // the channel and each of those replayed callbacks stores its reaction pin into this instance.
         ChannelPins previous = pinsByChannelId.put(channelId, pins);
@@ -142,10 +142,20 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
         // A channel is in the collection before its add is notified, so it is missing here only if it
         // was removed while we were registering — and that removal ran past pinsByChannelId before we
         // published to it, so nobody else will collect this.
-        if (!channelService.getChannels().contains(channel)) {
+        if (!isLive(channel)) {
             pinsByChannelId.remove(channelId, pins);
             pins.close();
         }
+    }
+
+    /**
+     * Reference identity rather than {@code contains}, which compares by {@code equals}: only the channel
+     * id is included there, and ids are deterministic
+     * ({@link TwoPartyPrivateChatChannel#createId}), so a re-created channel is equal to the one it
+     * replaced. Asking by equality would answer for the successor instead of for this instance.
+     */
+    private boolean isLive(TwoPartyPrivateChatChannel channel) {
+        return channelService.getChannels().stream().anyMatch(live -> live == channel);
     }
 
     private void bindMessageReactions(TwoPartyPrivateChatMessage message, ChannelPins pins) {
@@ -175,14 +185,33 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
         }
     }
 
+    /** Unconditional, unlike {@link #unbindChannelPins}: nothing survives a clear or a shutdown. */
     private void unbindAllChannelPins() {
-        new ArrayList<>(pinsByChannelId.keySet()).forEach(this::unbindChannelPins);
+        new ArrayList<>(pinsByChannelId.keySet()).forEach(channelId -> {
+            ChannelPins pins = pinsByChannelId.remove(channelId);
+            if (pins != null) {
+                pins.close();
+            }
+        });
     }
 
-    /** Unbinds only this channel's observers — the message pin and every reaction pin under it. */
-    private void unbindChannelPins(String channelId) {
-        ChannelPins pins = pinsByChannelId.remove(channelId);
-        if (pins != null) {
+    /**
+     * Unbinds only this channel's observers — the message pin and every reaction pin under it — and only
+     * if this exact instance still owns them.
+     * <p>
+     * Keying the teardown on the id alone would let a departing channel close its successor's observers.
+     * Channel ids are deterministic, and {@code ObservableCollection#remove} drops the element from the
+     * backing set before it notifies, so an inbound message from the same peer finds no channel, creates
+     * a second instance under the same id and binds it — all while this callback is still pending. The
+     * id would then resolve to the live channel's pins, and closing them would leave it in the collection
+     * observed by nobody, with no further event to rebuild it.
+     */
+    private void unbindChannelPins(TwoPartyPrivateChatChannel channel) {
+        String channelId = channel.getId();
+        ChannelPins pins = pinsByChannelId.get(channelId);
+        // The conditional remove closes the gap after the read: a bind that publishes its own instance in
+        // between keeps it, and we leave with nothing to close, because that bind already closed ours.
+        if (pins != null && pins.isOwnedBy(channel) && pinsByChannelId.remove(channelId, pins)) {
             pins.close();
         }
     }
@@ -282,10 +311,24 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
      * only handed over here, so the monitor is never held across an observer callback.
      */
     private static final class ChannelPins {
+        /**
+         * Which channel these pins belong to, so a teardown can tell this binding apart from a later one
+         * filed under the same id. Compared by reference and never by {@code equals}, which for channels
+         * is the id and would treat a successor as this instance.
+         */
+        private final TwoPartyPrivateChatChannel owner;
         private final Map<String, Pin> reactionPinsByMessageId = new HashMap<>();
         @Nullable
         private Pin messagesPin;
         private boolean closed;
+
+        private ChannelPins(TwoPartyPrivateChatChannel owner) {
+            this.owner = owner;
+        }
+
+        private boolean isOwnedBy(TwoPartyPrivateChatChannel candidate) {
+            return owner == candidate;
+        }
 
         /** @return false if the channel is already gone, leaving the pin for the caller to unbind. */
         private synchronized boolean setMessagesPin(Pin pin) {

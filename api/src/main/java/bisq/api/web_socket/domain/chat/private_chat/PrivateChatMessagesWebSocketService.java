@@ -66,7 +66,7 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
     private final BannedUserService bannedUserService;
     @Nullable
     private Pin channelsPin;
-    private final Map<String, Pin> messagesByChannelIdPins = new ConcurrentHashMap<>();
+    private final Map<String, ChannelBinding> bindingsByChannelId = new ConcurrentHashMap<>();
 
     public PrivateChatMessagesWebSocketService(SubscriberRepository subscriberRepository,
                                                TwoPartyPrivateChatChannelService channelService,
@@ -84,55 +84,107 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
         channelsPin = channelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(TwoPartyPrivateChatChannel channel) {
-                String channelId = channel.getId();
-                // Atomic operation
-                messagesByChannelIdPins.compute(channelId, (key, oldPin) -> {
-                    if (oldPin != null) {
-                        oldPin.unbind();
-                    }
-
-                    return channel.getChatMessages().addObserver(new CollectionObserver<>() {
-                        @Override
-                        public void onAdded(TwoPartyPrivateChatMessage message) {
-                            handleAddedMessage(message);
-                        }
-
-                        @Override
-                        public void onRemoved(Object element) {
-                            // Private chat messages cannot be removed
-                        }
-
-                        @Override
-                        public void onCleared() {
-                            // Private chat messages cannot be removed
-                        }
-                    });
-                });
+                bindChannel(channel);
             }
 
             @Override
             public void onRemoved(Object element) {
                 if (element instanceof TwoPartyPrivateChatChannel channel) {
-                    String channelId = channel.getId();
-                    // Atomic operation
-                    messagesByChannelIdPins.computeIfPresent(channelId, (key, pin) -> {
-                        pin.unbind();
-                        return null;  // returning null removes the key
-                    });
+                    unbindChannel(channel);
                 }
             }
 
             @Override
             public void onCleared() {
-                unbindAllMessagePins();
+                unbindAllChannels();
             }
         });
         return CompletableFuture.completedFuture(true);
     }
 
-    private void unbindAllMessagePins() {
-        new ArrayList<>(messagesByChannelIdPins.values()).forEach(Pin::unbind);
-        messagesByChannelIdPins.clear();
+    private void bindChannel(TwoPartyPrivateChatChannel channel) {
+        String channelId = channel.getId();
+        // Registered before the map is touched, because addObserver replays the messages already on the
+        // channel and each replayed callback reaches findSubscribers and send. Doing it inside a compute
+        // would hold a ConcurrentHashMap bin lock across those sends for no gain: the conditional writes
+        // below are what make the interleavings safe, not the atomicity of the update.
+        Pin messagesPin = channel.getChatMessages().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAdded(TwoPartyPrivateChatMessage message) {
+                handleAddedMessage(message);
+            }
+
+            @Override
+            public void onRemoved(Object element) {
+                // Private chat messages cannot be removed
+            }
+
+            @Override
+            public void onCleared() {
+                // Private chat messages cannot be removed
+            }
+        });
+
+        ChannelBinding binding = new ChannelBinding(channel, messagesPin);
+        ChannelBinding previous = bindingsByChannelId.put(channelId, binding);
+        if (previous != null) {
+            previous.messagesPin().unbind();
+        }
+
+        // A channel is in the collection before its add is notified, so it is missing here only if it was
+        // removed while we were registering — and that removal ran past bindingsByChannelId before we
+        // published to it, so nobody else will collect this.
+        if (!isLive(channel) && bindingsByChannelId.remove(channelId, binding)) {
+            messagesPin.unbind();
+        }
+    }
+
+    /**
+     * Unbinds this channel's message observer, and only if this exact instance still owns it.
+     * <p>
+     * Keying the teardown on the id alone would let a departing channel close its successor's observer.
+     * Channel ids are deterministic, and {@code ObservableCollection#remove} drops the element from the
+     * backing set before it notifies, so an inbound message from the same peer finds no channel, creates
+     * a second instance under the same id and binds it — all while this callback is still pending. The
+     * id would then resolve to the live channel's pin, and unbinding it would leave that channel in the
+     * collection observed by nobody, with no further event to rebuild it.
+     */
+    private void unbindChannel(TwoPartyPrivateChatChannel channel) {
+        String channelId = channel.getId();
+        ChannelBinding binding = bindingsByChannelId.get(channelId);
+        // The conditional remove closes the gap after the read: a bind that publishes its own binding in
+        // between keeps it, and we leave with nothing to unbind, because that bind already unbound ours.
+        if (binding != null && binding.isOwnedBy(channel) && bindingsByChannelId.remove(channelId, binding)) {
+            binding.messagesPin().unbind();
+        }
+    }
+
+    /** Unconditional, unlike {@link #unbindChannel}: nothing survives a clear or a shutdown. */
+    private void unbindAllChannels() {
+        new ArrayList<>(bindingsByChannelId.values()).forEach(binding -> binding.messagesPin().unbind());
+        bindingsByChannelId.clear();
+    }
+
+    /**
+     * Reference identity rather than {@code contains}, which compares by {@code equals}: only the channel
+     * id is included there, and ids are deterministic
+     * ({@link TwoPartyPrivateChatChannel#createId}), so a re-created channel is equal to the one it
+     * replaced. Asking by equality would answer for the successor instead of for this instance.
+     */
+    private boolean isLive(TwoPartyPrivateChatChannel channel) {
+        return channelService.getChannels().stream().anyMatch(live -> live == channel);
+    }
+
+    /**
+     * A channel's message observer together with the instance it was registered for. The owner is what
+     * lets {@link #unbindChannel} refuse to tear down a binding that a newer channel filed under the same
+     * id, and it is compared by reference: {@code equals} on a channel is its id, which is exactly the
+     * thing that cannot tell the two apart.
+     */
+    private record ChannelBinding(TwoPartyPrivateChatChannel owner, Pin messagesPin) {
+        private boolean isOwnedBy(TwoPartyPrivateChatChannel candidate) {
+            return owner == candidate;
+        }
     }
 
     @Override
@@ -141,7 +193,7 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
             channelsPin.unbind();
             channelsPin = null;
         }
-        unbindAllMessagePins();
+        unbindAllChannels();
         return CompletableFuture.completedFuture(true);
     }
 
