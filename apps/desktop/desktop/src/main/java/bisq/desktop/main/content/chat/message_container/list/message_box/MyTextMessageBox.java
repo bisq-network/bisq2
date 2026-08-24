@@ -19,7 +19,6 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
@@ -174,10 +173,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     protected void addActionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
         boolean isPublicChannel = item.isPublicChannel();
-        boolean allowEditing = isPublicChannel;
-        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-            allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
-        }
+        boolean allowEditing = item.canEditMessage();
 
         copy.setOnAction(e -> onCopyMessage(chatMessage));
         if (allowEditing) {
