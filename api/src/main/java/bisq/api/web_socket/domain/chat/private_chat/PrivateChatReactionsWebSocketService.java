@@ -79,12 +79,22 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
      */
     private final Map<String, ChannelPins> pinsByChannelId = new ConcurrentHashMap<>();
     /**
-     * Bumped by every bulk teardown before it sweeps the map, and read by a bind before it registers
-     * anything, so that a bind straddling the sweep is refused when it publishes. Needed because a
-     * shutdown, unlike a leave, does not touch the channel collection: the bind's owner is still live,
-     * and that check alone would let it publish into a map the sweep has already emptied.
+     * Bumped by every bulk teardown before it sweeps the map. A bind captures it before registering
+     * anything and takes its own entry out again if it has moved by the time it has published, because
+     * the owner check alone cannot see a bulk teardown: a shutdown does not touch the channel collection
+     * at all, and a clear empties it outside the bin lock the publishing compute holds, so either can
+     * fall between that read and the write, or entirely after it. See {@link #bindChannel}.
      */
     private final AtomicLong teardownGeneration = new AtomicLong();
+    /**
+     * Set first thing in {@link #shutdown} and never cleared. Observers are notified from a copy-on-write
+     * snapshot, so a callback that began before the shutdown unbound its pin still reaches this service
+     * afterwards. A bind starting that late captures the generation already bumped and finds its owner
+     * live, so only this flag keeps it out of the map, and for that it must be set before the bump: a
+     * bind that captured the bumped generation has to find the flag set, or its compare after publishing
+     * reads unchanged and the entry stays. The emission path checks it too.
+     */
+    private volatile boolean shutdownStarted;
 
     public PrivateChatReactionsWebSocketService(SubscriberRepository subscriberRepository,
                                                 TwoPartyPrivateChatChannelService channelService,
@@ -119,6 +129,11 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
     }
 
     private void bindChannel(TwoPartyPrivateChatChannel channel) {
+        // An optimisation, not the check that keeps this bind out of the map: install reads the flag
+        // again inside the compute. This only spares a bind that is already late the replay below.
+        if (shutdownStarted) {
+            return;
+        }
         long generation = teardownGeneration.get();
         ChannelPins pins = new ChannelPins(channel);
         // Registered before the map is touched, because addObserver replays the messages already on the
@@ -144,13 +159,23 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
         });
         pins.setMessagesPin(messagesPin);
 
-        if (!install(channel.getId(), pins, generation)) {
+        if (!install(channel.getId(), pins)) {
             pins.close();
+            return;
+        }
+        // Compared only now, after publishing, because a bulk teardown can also land after the compute
+        // and then its sweep walks a key snapshot this write may not be in. Reading the generation
+        // unchanged here means the write preceded the bump, and so the snapshot; reading it moved means
+        // only this bind can take the entry out, which is the right outcome whether the teardown ran
+        // before or after the compute.
+        if (teardownGeneration.get() != generation) {
+            unbindChannelPins(channel);
         }
     }
 
     /**
-     * Publishes the pins, but only while their owner is still in the channel collection.
+     * Publishes the pins, but only while their owner is still in the channel collection and the
+     * shutdown has not started.
      * <p>
      * The check and the write are one map update because the two can be separated by the same thing the
      * teardown guards against: observer callbacks are synchronous per operation but nothing serializes
@@ -160,23 +185,27 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
      * leaving the live channel observed by nobody, with no further event to rebuild it.
      * <p>
      * Asking only whether the owner is live is enough, because at most one channel per id is ever live:
-     * the collection is a set and a channel's equality is its id. A live owner means whatever is filed
-     * under the id belongs to an instance that is gone, and displacing it is right; a dead owner must
-     * not touch what is there, which is either nothing or the successor's. The generation covers the one
-     * teardown that leaves the owner live, see {@link #teardownGeneration}.
+     * the collection is a set and a channel's equality is its id. It also relies on an instance being
+     * added to the collection at most once, which every caller honours by constructing a new one; a
+     * re-added instance would let the self-unbind in {@link #bindChannel} remove its own fresh binding.
+     * A live owner means whatever is filed under the id belongs to an instance that is gone, and
+     * displacing it is right; a dead owner must not touch what is there, which is either nothing or the
+     * successor's. A clear landing between this read and the write is invisible here, and a shutdown
+     * never touches the collection; the caller handles the first after publishing
+     * ({@link #teardownGeneration}) and the flag covers the second ({@link #shutdownStarted}).
      * <p>
      * Both reads run under the bin lock of this key, so they must stay lock-free and must never reach
      * back into this map: {@link #isLive} is a plain scan of the channel set, and the domain service
      * holds its own monitor while it notifies the removal that takes this same lock in
      * {@link #unbindChannelPins}.
      *
-     * @return false if the owner is gone or a teardown ran meanwhile, leaving the pins for the caller
+     * @return false if the owner is gone or the shutdown has started, leaving the pins for the caller
      * to close.
      */
-    private boolean install(String channelId, ChannelPins pins, long generation) {
+    private boolean install(String channelId, ChannelPins pins) {
         AtomicReference<ChannelPins> displaced = new AtomicReference<>();
         ChannelPins current = pinsByChannelId.compute(channelId, (id, present) -> {
-            if (teardownGeneration.get() != generation || !isLive(pins.owner)) {
+            if (shutdownStarted || !isLive(pins.owner)) {
                 return present;
             }
             displaced.set(present);
@@ -227,8 +256,10 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
     }
 
     /**
-     * Unconditional, unlike {@link #unbindChannelPins}: nothing survives a clear or a shutdown. The
-     * generation bump before the sweep is what keeps a bind from publishing after it.
+     * Unconditional, unlike {@link #unbindChannelPins}: nothing survives a clear or a shutdown. Swept key
+     * by key rather than snapshot-then-clear, so that an entry published between the two is never dropped
+     * with its pins still registered; the generation bump before the sweep is what makes a bind that
+     * publishes after it take its own entry out again, see {@link #teardownGeneration}.
      */
     private void unbindAllChannelPins() {
         teardownGeneration.incrementAndGet();
@@ -272,6 +303,7 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        shutdownStarted = true;
         if (channelsPin != null) {
             channelsPin.unbind();
             channelsPin = null;
@@ -306,7 +338,11 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
     }
 
     private void handleReaction(TwoPartyPrivateChatMessageReaction reaction, ModificationType modificationType) {
-        if (!isNotFromBannedUser(reaction)) {
+        // Observer callbacks can still arrive after shutdown, see shutdownStarted: this keeps a push from
+        // starting once the shutdown has returned (one already past the check still completes). A leave
+        // gets no such guard: a callback already captured can still push one reaction for the channel,
+        // which the client sees together with the channel's own removal.
+        if (shutdownStarted || !isNotFromBannedUser(reaction)) {
             return;
         }
         TwoPartyPrivateChatMessageReactionDto dto;
@@ -359,8 +395,9 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
      * after all of that has returned. The callbacks store into this instance and never touch the map,
      * which is what lets the publishing {@code compute} run while they may already be firing.
      * <p>
-     * Every field is guarded by the instance monitor, but pins are always created by the caller and
-     * only handed over here, so the monitor is never held across an observer callback.
+     * Every mutable field is guarded by the instance monitor ({@code owner} is final), but pins are
+     * always created by the caller and only handed over here, so the monitor is never held across an
+     * observer callback.
      */
     private static final class ChannelPins {
         /**

@@ -17,6 +17,7 @@
 
 package bisq.api.web_socket.domain.chat.private_chat;
 
+import bisq.api.web_socket.domain.chat.private_chat.PrivateChatTestMocks.ObservedSet;
 import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.SubscriptionSpecifier;
@@ -34,11 +35,14 @@ import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import static bisq.api.web_socket.domain.chat.private_chat.PrivateChatTestMocks.mockUserProfile;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,18 +50,25 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Pins the one thing this service does that its trade-chat sibling does not: dropping messages whose
- * sender has been banned. Bisq 2 already rejects banned senders inbound, so the filter only covers a
- * peer banned <i>after</i> their messages arrived — a state no other test in this package produces.
+ * Pins the two things this service does that its trade-chat sibling does not. Dropping messages whose
+ * sender has been banned: Bisq 2 already rejects banned senders inbound, so the filter only covers a
+ * peer banned <i>after</i> their messages arrived — a state no other test in this package produces. And
+ * the per-channel ownership of the message observer, which is what leaving, re-creating and shutting
+ * down have to respect.
  */
 class PrivateChatMessagesWebSocketServiceTest {
     private static final String CHANNEL_ID = "discussion.a-b";
 
     private ObservableSet<TwoPartyPrivateChatChannel> channels;
+    private final AtomicReference<CollectionObserver<TwoPartyPrivateChatChannel>> channelsObserver =
+            new AtomicReference<>();
+    /** Run once by the next scan of the channel collection, the last thing install reads before its put. */
+    private final AtomicReference<Runnable> onNextChannelScan = new AtomicReference<>();
     private ObservableSet<TwoPartyPrivateChatMessage> messages;
     private TwoPartyPrivateChatChannel channel;
     private BannedUserService bannedUserService;
@@ -70,7 +81,29 @@ class PrivateChatMessagesWebSocketServiceTest {
         channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
         when(channel.getId()).thenReturn(CHANNEL_ID);
         when(channel.getChatMessages()).thenReturn(messages);
-        channels = new ObservableSet<>();
+        // Keeps hold of the service's channel observer so a test can invoke it after the pin that
+        // registered it was unbound, which is what a notification already iterating the observer
+        // snapshot does.
+        channels = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatChannel> observer) {
+                channelsObserver.set(observer);
+                return super.addObserver(observer);
+            }
+
+            @Override
+            public Stream<TwoPartyPrivateChatChannel> stream() {
+                Runnable hook = onNextChannelScan.getAndSet(null);
+                if (hook == null) {
+                    return super.stream();
+                }
+                // Scanned first, torn down second: the caller gets the answer it would have read before
+                // the teardown, and then writes on the strength of it.
+                List<TwoPartyPrivateChatChannel> scanned = super.stream().toList();
+                hook.run();
+                return scanned.stream();
+            }
+        };
         channels.add(channel);
 
         TwoPartyPrivateChatChannelService channelService =
@@ -256,6 +289,156 @@ class PrivateChatMessagesWebSocketServiceTest {
         lateMessages.add(messageFrom(banned(false)));
 
         verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * The inverse of the test above: the bind starts only after the shutdown has finished. Observers
+     * are notified from a copy-on-write snapshot, so an add that began before the pin was unbound
+     * still reaches this service afterwards, with the channel live and every teardown already done.
+     */
+    @Test
+    void aChannelBoundAfterTheServiceShutDownBindsNothing() {
+        ObservedSet<TwoPartyPrivateChatMessage> lateMessages = new ObservedSet<>();
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+
+        service.shutdown().join();
+        channels.add(other); // so that the bind finds its owner live; the real observer is unbound by now
+        channelsObserver.get().onAdded(other);
+
+        // The leak is a registered observer, not a push: the emission guard alone would keep the push
+        // from showing while the pin stays behind.
+        assertThat(lateMessages.hasObservers()).isFalse();
+        lateMessages.add(messageFrom(banned(false)));
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * Same as above, but the late channel already holds a message, which registering the observer
+     * replays. Refusing at publish time alone would push it before the refusal.
+     */
+    @Test
+    void aChannelBoundAfterTheServiceShutDownReplaysNothing() {
+        ObservedSet<TwoPartyPrivateChatMessage> lateMessages = new ObservedSet<>();
+        lateMessages.add(messageFrom(banned(false)));
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+
+        service.shutdown().join();
+        channels.add(other); // so that the bind finds its owner live; the real observer is unbound by now
+        channelsObserver.get().onAdded(other);
+
+        assertThat(lateMessages.hasObservers()).isFalse();
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * The bind starts between the generation bump and the sweep, from inside the sweep itself: it
+     * captures the bumped generation, so its compare after publishing would read unchanged, and only the
+     * flag can refuse it. Pins that the flag is set before the sweep; that it precedes the bump too is
+     * argued at the field, there being no seam between the bump and the key snapshot to hook. The sweep
+     * reaches this bind through a pin it unbinds.
+     */
+    @Test
+    void aChannelBoundWhileTheSweepIsRunningBindsNothing() {
+        ObservedSet<TwoPartyPrivateChatMessage> lateMessages = new ObservedSet<>();
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+
+        AtomicBoolean fired = new AtomicBoolean();
+        ObservableSet<TwoPartyPrivateChatMessage> sweptMessages = new ObservableSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessage> observer) {
+                Pin pin = super.addObserver(observer);
+                return () -> {
+                    pin.unbind();
+                    if (fired.compareAndSet(false, true)) {
+                        channels.add(other);
+                        channelsObserver.get().onAdded(other);
+                    }
+                };
+            }
+        };
+        TwoPartyPrivateChatChannel swept = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(swept.getId()).thenReturn("discussion.a-d");
+        when(swept.getChatMessages()).thenReturn(sweptMessages);
+        channels.add(swept);
+
+        service.shutdown().join();
+
+        assertThat(fired).as("the sweep reached the late bind").isTrue();
+        assertThat(lateMessages.hasObservers()).isFalse();
+    }
+
+    /**
+     * The shutdown lands while the bind is registering, after its early check and before the replay.
+     * Nothing at the bind site can stop that replay, so the emission path has to.
+     */
+    @Test
+    void aReplayStartedBeforeTheShutdownPushesNothingAfterIt() {
+        ObservedSet<TwoPartyPrivateChatMessage> lateMessages = new ObservedSet<>() {
+            @Override
+            public Pin addObserver(CollectionObserver<TwoPartyPrivateChatMessage> observer) {
+                service.shutdown().join();
+                return super.addObserver(observer);
+            }
+        };
+        lateMessages.add(messageFrom(banned(false)));
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+
+        channels.add(other);
+
+        assertThat(lateMessages.hasObservers()).isFalse();
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * The shutdown lands inside the publishing compute, after the generation was read and before the binding
+     * is written. The sweep then runs over a key snapshot that does not hold this channel, so only the
+     * bind itself can notice that it published into a service that is gone.
+     * <p>
+     * Relies on install scanning the collection last, which is where the hook fires: this bind must publish
+     * rather than be refused, or the re-check after publishing goes untested. The helper pins that.
+     */
+    @Test
+    void aChannelWhoseBindPublishesAfterTheSweepUnbindsItself() {
+        assertThatABindPublishingDuringATeardownUnbindsItself(() -> service.shutdown().join());
+    }
+
+    /**
+     * The clear counterpart: {@code setAll} on the channel collection, which is how the persisted store
+     * is applied, clears it and notifies {@code onCleared}. The owner check cannot see it either, since
+     * it reads the collection outside the lock the publishing compute holds.
+     */
+    @Test
+    void aChannelWhoseBindPublishesAfterAClearUnbindsItself() {
+        assertThatABindPublishingDuringATeardownUnbindsItself(() -> channels.setAll(Set.of()));
+    }
+
+    private void assertThatABindPublishingDuringATeardownUnbindsItself(Runnable teardown) {
+        // Leaves the map empty before the hook fires: the teardown runs while install holds this key's
+        // bin lock, and its sweep must not find another key to remove through the same lock.
+        channels.remove(channel);
+        ObservedSet<TwoPartyPrivateChatMessage> lateMessages = new ObservedSet<>();
+        TwoPartyPrivateChatChannel other = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(other.getId()).thenReturn("discussion.a-c");
+        when(other.getChatMessages()).thenReturn(lateMessages);
+        onNextChannelScan.set(teardown);
+
+        channels.add(other);
+
+        assertThat(lateMessages.hasObservers()).isFalse();
+        lateMessages.add(messageFrom(banned(false)));
+        verify(subscriber, never()).send(anyString());
+        // Once for the key install published under, once for the key the self-unbind took out. A single
+        // call means install refused instead, and the re-check after publishing went untested.
+        verify(other, times(2).description("install published the binding and the self-unbind took it out again"))
+                .getId();
     }
 
     private UserProfile banned(boolean isBanned) {

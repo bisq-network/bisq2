@@ -17,15 +17,23 @@
 
 package bisq.api.web_socket.domain.chat.private_chat;
 
+import bisq.common.observable.collection.ObservableSet;
 import bisq.user.profile.UserProfile;
 
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/** Mocks shared by the private-chat WebSocket service tests, all of which push mapped dtos. */
+/** Test doubles shared by the private-chat WebSocket service tests, all of which push mapped dtos. */
 final class PrivateChatTestMocks {
     private PrivateChatTestMocks() {
+    }
+
+    /** Exposes whether anything still observes the set, which is what a leaked pin is. */
+    static class ObservedSet<T> extends ObservableSet<T> {
+        boolean hasObservers() {
+            return !observers.isEmpty();
+        }
     }
 
     /**
