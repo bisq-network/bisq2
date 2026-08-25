@@ -76,6 +76,13 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # entrypoint's chown is a no-op. See entrypoint.sh.
 WORKDIR /opt/bisq2-api
 
+# Granular distribution version (e.g. 2.1.11.2) reported by the /settings/version endpoint as
+# imageVersion, alongside the unchanged core version. Paired clients key config caches on it, so
+# it must change with every image release even when the core version does not. Stamped by the
+# release workflow; empty (field omitted) for ad-hoc local builds.
+ARG IMAGE_VERSION=""
+ENV BISQ_IMAGE_VERSION=$IMAGE_VERSION
+
 # Single mount for all persistent state (identity, db, tor, pairing) so a host-level
 # backup of this one directory captures everything.
 ENV BISQ_DATA_DIR=/data
