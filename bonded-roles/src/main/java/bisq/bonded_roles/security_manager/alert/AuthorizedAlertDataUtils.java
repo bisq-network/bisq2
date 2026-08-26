@@ -34,6 +34,42 @@ public final class AuthorizedAlertDataUtils {
     }
 
     /**
+     * An alert applies to the given app type when both sides match, or when either side is
+     * {@link AppType#UNSPECIFIED} (wildcard). A security manager publishing a network-wide
+     * alert without an app type must restrict every app.
+     */
+    public static boolean appliesTo(AuthorizedAlertData alert, AppType appType) {
+        return appType == AppType.UNSPECIFIED
+                || alert.getAppType() == AppType.UNSPECIFIED
+                || alert.getAppType() == appType;
+    }
+
+    /**
+     * True while any applicable EMERGENCY alert has haltTrading set.
+     */
+    public static boolean isTradingHalted(Stream<AuthorizedAlertData> alerts, AppType appType) {
+        return alerts
+                .filter(alert -> alert.getAlertType() == AlertType.EMERGENCY)
+                .filter(alert -> appliesTo(alert, appType))
+                .anyMatch(AuthorizedAlertData::isHaltTrading);
+    }
+
+    /**
+     * The min. version required for trading from the most recent applicable EMERGENCY alert.
+     * Alerts with requireVersionForTrading but no minVersion are malformed and ignored, so they
+     * cannot shadow an older well-formed restriction.
+     */
+    public static Optional<String> findMinRequiredVersionForTrading(Stream<AuthorizedAlertData> alerts, AppType appType) {
+        return alerts
+                .filter(alert -> alert.getAlertType() == AlertType.EMERGENCY)
+                .filter(alert -> appliesTo(alert, appType))
+                .filter(AuthorizedAlertData::isRequireVersionForTrading)
+                .filter(alert -> alert.getMinVersion().isPresent())
+                .max(Comparator.comparingLong(AuthorizedAlertData::getDate))
+                .flatMap(AuthorizedAlertData::getMinVersion);
+    }
+
+    /**
      * Returns the single most important active trade-restricting alert for the given app type.
      *
      * <p>Selection policy:
@@ -49,7 +85,7 @@ public final class AuthorizedAlertDataUtils {
             Stream<AuthorizedAlertData> alerts, AppType appType) {
         List<AuthorizedAlertData> candidates = alerts
                 .filter(AuthorizedAlertData::isTradeRestrictingAlert)
-                .filter(alert -> alert.getAppType() == appType)
+                .filter(alert -> appliesTo(alert, appType))
                 .toList();
 
         Optional<AuthorizedAlertData> mostRecentHalt =

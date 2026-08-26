@@ -20,9 +20,7 @@ package bisq.api.rest_api.endpoints.trades;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.api.rest_api.error.TradingNotAllowedExceptionMapper;
 import bisq.api.web_socket.domain.ClosedTradeItemsService;
-import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
@@ -31,12 +29,13 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.support.SupportService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
+import bisq.trade.TradeRestrictedException;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
-import bisq.trade.exceptions.TradingNotAllowedException;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
@@ -45,6 +44,7 @@ import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,7 +59,33 @@ import static org.mockito.Mockito.when;
 class TradeRestApiTest {
 
     @Test
-    void processTradeEventPropagatesTradingNotAllowedExceptionAndSkipsTradeLogMessage() {
+    void haltTradingErrorEntityKeepsLegacyErrorTextAndAddsErrorCode() {
+        Map<String, String> entity = TradeRestApi.toTradeRestrictedErrorEntity(TradeRestrictedException.haltTrading());
+
+        // Released mobile clients match on the "error" text; the prefix and fragments must not change
+        assertThat(entity.get("error"))
+                .startsWith("Invalid input: ")
+                .contains("Trading is on halt");
+        assertThat(entity.get("errorCode")).isEqualTo("HALT_TRADING");
+        assertThat(entity).doesNotContainKey("minRequiredVersion");
+    }
+
+    @Test
+    void minVersionErrorEntityCarriesVersionInTextAndField() {
+        Map<String, String> entity =
+                TradeRestApi.toTradeRestrictedErrorEntity(TradeRestrictedException.minVersionRequired("2.1.12"));
+
+        assertThat(entity.get("error"))
+                .startsWith("Invalid input: ")
+                .contains("version 2.1.12 installed")
+                .contains("min. version required for trading");
+        assertThat(entity.get("errorCode")).isEqualTo("MIN_VERSION_REQUIRED");
+        assertThat(entity.get("minRequiredVersion")).isEqualTo("2.1.12");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void processTradeEventReturnsStructured400AndSkipsTradeLogMessage() {
         BisqEasyOpenTradeChannelService openTradeChannelService = mock(BisqEasyOpenTradeChannelService.class);
         BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
         TradeRestApi restApi = newTradeRestApi(openTradeChannelService, bisqEasyTradeService);
@@ -78,7 +104,7 @@ class TradeRestApiTest {
         when(paymentMethod.getPaymentRail()).thenReturn(BitcoinPaymentRail.MAIN_CHAIN);
 
         // The guarded trade action throws because a security manager alert disallows trading.
-        doThrow(new TradingNotAllowedException("For trading you need version 2.1.11 or higher"))
+        doThrow(TradeRestrictedException.minVersionRequired("2.1.12"))
                 .when(bisqEasyTradeService).buyerConfirmFiatSent(trade);
 
         AsyncResponse asyncResponse = mock(AsyncResponse.class);
@@ -86,15 +112,13 @@ class TradeRestApiTest {
 
         restApi.processTradeEvent(tradeId, event, asyncResponse);
 
-        // The exception is propagated to the async response (not swallowed into a 500), so the
-        // registered TradingNotAllowedExceptionMapper maps it to 409.
-        ArgumentCaptor<Throwable> captor = ArgumentCaptor.forClass(Throwable.class);
+        // The restriction surfaces as a structured 400 (not a generic 500) with the machine-readable code.
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
         verify(asyncResponse).resume(captor.capture());
-        assertThat(captor.getValue()).isInstanceOf(TradingNotAllowedException.class);
-
-        Response mapped = new TradingNotAllowedExceptionMapper()
-                .toResponse((TradingNotAllowedException) captor.getValue());
-        assertThat(mapped.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
+        assertThat(captor.getValue().getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        Map<String, String> entity = (Map<String, String>) captor.getValue().getEntity();
+        assertThat(entity.get("errorCode")).isEqualTo("MIN_VERSION_REQUIRED");
+        assertThat(entity.get("minRequiredVersion")).isEqualTo("2.1.12");
 
         // No trade-log message is sent because the action failed before any chat message is emitted.
         verify(openTradeChannelService, never()).sendTradeLogMessage(any(), any());
@@ -126,4 +150,5 @@ class TradeRestApiTest {
                 tradeService,
                 mock(ClosedTradeItemsService.class));
     }
+
 }

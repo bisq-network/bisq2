@@ -52,7 +52,8 @@ import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.arbitration.mu_sig.NoMuSigArbitratorAvailableException;
 import bisq.support.mediation.mu_sig.NoMuSigMediatorAvailableException;
-import bisq.trade.exceptions.TradingNotAllowedException;
+import bisq.desktop.common.utils.TradeExceptionHandler;
+import bisq.trade.TradeRestrictedException;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
 import bisq.user.banned.BannedUserService;
@@ -265,7 +266,7 @@ public class MuSigTakeOfferReviewController implements Controller {
                 }
                 model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS);
             }).after(200);
-        } catch (TradingNotAllowedException e) {
+        } catch (TradeRestrictedException e) {
             // The timeout scheduler and error observers were already set up above; release them so
             // the aborted attempt cannot fire the timeout navigation later or stack observers on retry.
             if (timeoutScheduler != null) {
@@ -279,7 +280,7 @@ public class MuSigTakeOfferReviewController implements Controller {
                 peersErrorMessagePin.unbind();
                 peersErrorMessagePin = null;
             }
-            UIThread.run(() -> new Popup().warning(e.getMessage()).show());
+            UIThread.run(() -> new Popup().warning(TradeExceptionHandler.localizedMessage(e)).show());
         } catch (UserProfileBannedException e) {
             UIThread.run(() -> {
                 if (muSigOffer.getMakersUserProfileId().equals(e.getUserProfileId())) {
