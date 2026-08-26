@@ -374,7 +374,7 @@ public class PrivateChatRestApi extends RestApiBase {
      * endpoints and belongs to a delivery-status topic, not to this response.
      */
     private void resume(SendOutcome outcome, AsyncResponse asyncResponse) {
-        asyncResponse.resume(outcome.rejection()
+        asyncResponse.resume(outcome.getRejection()
                 .map(reason -> buildResponse(Response.Status.CONFLICT, describe(reason)))
                 .orElseGet(this::buildNoContentResponse));
     }

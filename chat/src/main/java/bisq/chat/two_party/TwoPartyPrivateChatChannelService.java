@@ -120,7 +120,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     public CompletableFuture<SendMessageResult> sendTextMessage(String text,
                                                                 Optional<Citation> citation,
                                                                 TwoPartyPrivateChatChannel channel) {
-        return trySendTextMessage(text, citation, channel).delivery();
+        return trySendTextMessage(text, citation, channel).getDelivery();
     }
 
     /**
@@ -144,7 +144,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                                                                         TwoPartyPrivateChatChannel channel,
                                                                         Reaction reaction,
                                                                         boolean isRemoved) {
-        return trySendTextMessageReaction(message, channel, reaction, isRemoved).delivery();
+        return trySendTextMessageReaction(message, channel, reaction, isRemoved).getDelivery();
     }
 
     /** The reaction counterpart of {@link #trySendTextMessage}. */

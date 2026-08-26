@@ -95,7 +95,7 @@ public abstract class PrivateChatChannelService<
                                                                UserProfile receiver,
                                                                ChatMessageType chatMessageType,
                                                                long date) {
-        return trySendMessage(messageId, text, citation, channel, receiver, chatMessageType, date).delivery();
+        return trySendMessage(messageId, text, citation, channel, receiver, chatMessageType, date).getDelivery();
     }
 
     /**
@@ -194,7 +194,7 @@ public abstract class PrivateChatChannelService<
                                                                        String messageReactionId,
                                                                        boolean isRemoved) {
         return trySendMessageReaction(message, chatChannel, receiver, reaction, messageReactionId, isRemoved)
-                .delivery();
+                .getDelivery();
     }
 
     /** The reaction counterpart of {@link #trySendMessage}, refused on the same grounds. */

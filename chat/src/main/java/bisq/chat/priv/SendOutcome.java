@@ -18,6 +18,7 @@
 package bisq.chat.priv;
 
 import bisq.network.SendMessageResult;
+import lombok.Getter;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -35,9 +36,13 @@ import java.util.concurrent.CompletableFuture;
  * The future alone cannot carry both: a rejection and a delivery failure both surface as an exceptionally
  * completed future, and telling them apart is the difference between "nothing was stored, say so" and
  * "it was stored and is on its way, saying otherwise makes the client retry into a duplicate".
+ * <p>
+ * Not a record: accepted and rejected are the only two shapes, and only the factories below can build
+ * them. A public constructor would also admit a rejection paired with a live delivery, or an acceptance
+ * paired with a failed one.
  */
-public record SendOutcome(Optional<SendRejection> rejection,
-                          CompletableFuture<SendMessageResult> delivery) {
+@Getter
+public final class SendOutcome {
     public static SendOutcome rejected(SendRejection rejection) {
         // Kept as an exceptionally completed future so callers that only want the future - and there are
         // several, in desktop and the trade endpoints - see exactly what they saw before this type existed.
@@ -47,6 +52,14 @@ public record SendOutcome(Optional<SendRejection> rejection,
 
     public static SendOutcome accepted(CompletableFuture<SendMessageResult> delivery) {
         return new SendOutcome(Optional.empty(), delivery);
+    }
+
+    private final Optional<SendRejection> rejection;
+    private final CompletableFuture<SendMessageResult> delivery;
+
+    private SendOutcome(Optional<SendRejection> rejection, CompletableFuture<SendMessageResult> delivery) {
+        this.rejection = rejection;
+        this.delivery = delivery;
     }
 
     public boolean isAccepted() {
