@@ -305,8 +305,8 @@ public class PrivateChatRestApi extends RestApiBase {
         applyTimeout(asyncResponse);
         try {
             withChannel(channelId, asyncResponse, channel -> {
-                // Not channelService.leaveChannel: the manager additionally re-selects the next channel
-                // and consumes the departed channel's notifications, as desktop does.
+                // Not channelService.leaveChannel: the manager additionally consumes the departed channel's
+                // notifications and, only if this was the selected channel, moves the selection on.
                 leavePrivateChatManager.leaveChannel(channel);
                 asyncResponse.resume(buildNoContentResponse());
             });

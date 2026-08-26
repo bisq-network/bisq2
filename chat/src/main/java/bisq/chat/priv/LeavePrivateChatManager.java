@@ -17,6 +17,7 @@
 
 package bisq.chat.priv;
 
+import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatMessage;
@@ -60,16 +61,18 @@ public class LeavePrivateChatManager {
         }
         channelService.leaveChannel(chatChannel.getId());
         ChatChannelSelectionService selectionService = chatChannelSelectionServices.get(chatChannelDomain);
-        if (selectionService.getSelectedChannel().get() == null) {
-            log.warn("selectionService.selectedChannel is null at leaveChatChannel. chatChannel={}", chatChannel);
+        // Only the selected channel needs a successor. The desktop always leaves the channel it is
+        // showing, but the API leaves any channel by id, and moving the selection then would switch or
+        // clear what the desktop displays. Compared by id: the selected instance may be the persisted one.
+        ChatChannel<? extends ChatMessage> selectedChannel = selectionService.getSelectedChannel().get();
+        if (selectedChannel != null && selectedChannel.getId().equals(chatChannel.getId())) {
+            // We do not select first channel if it is a BisqEasyOpenTradeChannel as it might be that there is
+            // no matching trade for that. We leave selection to higher level domains.
+            selectionService.selectChannel(channelService.getChannels().stream()
+                    .filter(channel -> !(channel instanceof BisqEasyOpenTradeChannel))
+                    .findFirst()
+                    .orElse(null));
         }
-
-        // We do not select first channel if it is a BisqEasyOpenTradeChannel as it might be that there is no matching
-        // trade for that. We leave selection to higher level domains.
-        selectionService.selectChannel(channelService.getChannels().stream()
-                .filter(channel -> !(channel instanceof BisqEasyOpenTradeChannel))
-                .findFirst()
-                .orElse(null));
 
         chatNotificationService.consume(chatChannel);
     }
