@@ -109,8 +109,12 @@ public class TradeChatMessagesWebSocketService extends BaseWebSocketService {
 
             @Override
             public void onCleared() {
+                // Cleared as well as unbound, matching shutdown() below. A bulk clear is reachable:
+                // the channel store's applyPersisted replaces the set through setAll, and
+                // CollectionObserver#onAllSet is onCleared() followed by onAllAdded(values). Channels
+                // that are not re-added would otherwise leave a dead entry behind under their id.
                 new ArrayList<>(messagesByChannelIdPins.values()).forEach(Pin::unbind);
-
+                messagesByChannelIdPins.clear();
             }
         });
         return CompletableFuture.completedFuture(true);

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.rest_api.endpoints.chat.trade;
+package bisq.api.rest_api.endpoints.chat;
 
 import javax.annotation.Nullable;
 

@@ -38,7 +38,8 @@ import lombok.Getter;
 @Getter
 public enum ApiFeature {
     CLOSED_TRADES("closed-trades"),
-    NETWORK_INFO("network-info");
+    NETWORK_INFO("network-info"),
+    PRIVATE_CHAT("private-chat");
 
     private final String key;
 

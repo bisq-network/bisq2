@@ -21,6 +21,9 @@ package bisq.api.web_socket.subscription;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.domain.alert_notifications.AlertNotificationsWebSocketService;
+import bisq.api.web_socket.domain.chat.private_chat.PrivateChatChannelsWebSocketService;
+import bisq.api.web_socket.domain.chat.private_chat.PrivateChatMessagesWebSocketService;
+import bisq.api.web_socket.domain.chat.private_chat.PrivateChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.trade.TradeChatMessagesWebSocketService;
 import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
@@ -63,6 +66,9 @@ public class SubscriptionService implements Service {
     private final TradeRestrictingAlertWebSocketService tradeRestrictingAlertWebSocketService;
     private final AlertNotificationsWebSocketService alertNotificationsWebSocketService;
     private final NetworkInfoWebSocketService networkInfoWebSocketService;
+    private final PrivateChatChannelsWebSocketService privateChatChannelsWebSocketService;
+    private final PrivateChatMessagesWebSocketService privateChatMessagesWebSocketService;
+    private final PrivateChatReactionsWebSocketService privateChatReactionsWebSocketService;
 
     public SubscriptionService(BondedRolesService bondedRolesService,
                                AlertNotificationsService alertNotificationsService,
@@ -91,6 +97,17 @@ public class SubscriptionService implements Service {
         networkInfoWebSocketService = new NetworkInfoWebSocketService(subscriberRepository,
                 networkService,
                 bondedRolesService.getAuthorizedBondedRolesService());
+        privateChatChannelsWebSocketService = new PrivateChatChannelsWebSocketService(subscriberRepository,
+                chatService.getTwoPartyPrivateChatChannelService(),
+                chatService.getChatNotificationService(),
+                userService.getUserProfileService());
+        privateChatMessagesWebSocketService = new PrivateChatMessagesWebSocketService(subscriberRepository,
+                chatService.getTwoPartyPrivateChatChannelService(),
+                userService.getUserProfileService(),
+                userService.getBannedUserService());
+        privateChatReactionsWebSocketService = new PrivateChatReactionsWebSocketService(subscriberRepository,
+                chatService.getTwoPartyPrivateChatChannelService(),
+                userService.getBannedUserService());
     }
 
     @Override
@@ -106,7 +123,10 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> numUserProfilesWebSocketService.initialize())
                 .thenCompose(e -> tradeRestrictingAlertWebSocketService.initialize())
                 .thenCompose(e -> alertNotificationsWebSocketService.initialize())
-                .thenCompose(e -> networkInfoWebSocketService.initialize());
+                .thenCompose(e -> networkInfoWebSocketService.initialize())
+                .thenCompose(e -> privateChatChannelsWebSocketService.initialize())
+                .thenCompose(e -> privateChatMessagesWebSocketService.initialize())
+                .thenCompose(e -> privateChatReactionsWebSocketService.initialize());
     }
 
     @Override
@@ -122,7 +142,10 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> numUserProfilesWebSocketService.shutdown())
                 .thenCompose(e -> tradeRestrictingAlertWebSocketService.shutdown())
                 .thenCompose(e -> alertNotificationsWebSocketService.shutdown())
-                .thenCompose(e -> networkInfoWebSocketService.shutdown());
+                .thenCompose(e -> networkInfoWebSocketService.shutdown())
+                .thenCompose(e -> privateChatChannelsWebSocketService.shutdown())
+                .thenCompose(e -> privateChatMessagesWebSocketService.shutdown())
+                .thenCompose(e -> privateChatReactionsWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -186,7 +209,16 @@ public class SubscriptionService implements Service {
                 .toJson()
                 .ifPresent(json -> {
                     String responseType = errorMessage == null ? "" : " error";
-                    log.info("Send SubscriptionResponse{} json: {}", responseType, json);
+                    // Split by level as in BaseWebSocketService#send, and needed independently of it:
+                    // this response goes straight out through the socket below, so the per-event TRACE
+                    // there never sees it. The payload is the whole initial snapshot — for private chat
+                    // every message of every DM channel — which is also the first thing a client parses,
+                    // and so the thing most worth having at TRACE when one fails to.
+                    // errorMessage stays at INFO: it is ours, not the user's data.
+                    log.info("Send SubscriptionResponse{} for requestId {}. jsonLength={}{}",
+                            responseType, requestId, json.length(),
+                            errorMessage == null ? "" : ", errorMessage=" + errorMessage);
+                    log.trace("SubscriptionResponse payload for requestId {}: {}", requestId, json);
                     webSocket.send(json);
                 });
     }
@@ -232,6 +264,15 @@ public class SubscriptionService implements Service {
             }
             case NETWORK_INFO -> {
                 return Optional.of(networkInfoWebSocketService);
+            }
+            case PRIVATE_CHAT_CHANNELS -> {
+                return Optional.of(privateChatChannelsWebSocketService);
+            }
+            case PRIVATE_CHAT_MESSAGES -> {
+                return Optional.of(privateChatMessagesWebSocketService);
+            }
+            case PRIVATE_CHAT_REACTIONS -> {
+                return Optional.of(privateChatReactionsWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);
