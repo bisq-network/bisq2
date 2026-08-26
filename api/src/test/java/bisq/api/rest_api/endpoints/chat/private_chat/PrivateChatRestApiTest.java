@@ -21,6 +21,7 @@ import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
 import bisq.api.dto.chat.CitationDto;
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.notifications.ChatNotificationService;
@@ -122,6 +123,52 @@ class PrivateChatRestApiTest {
     @Test
     void anEmptyTextIsRejectedAsBadRequest() {
         restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("", null), asyncResponse);
+
+        assertThat(status()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        verifyNoMessageSent();
+    }
+
+    /**
+     * Desktop refuses this before sending, the message class does not check it on construction, and the
+     * domain limit is what the network expects. So the endpoint is the only place left to enforce it.
+     */
+    @Test
+    void aTextLongerThanTheDomainLimitIsRejectedAsBadRequest() {
+        TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
+        String text = "x".repeat(ChatMessage.MAX_TEXT_LENGTH + 1);
+
+        restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest(text, null), asyncResponse);
+
+        assertThat(status()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        verifyNoMessageSent();
+    }
+
+    /** The boundary itself is allowed: the domain limit is inclusive. */
+    @Test
+    void aTextOfExactlyTheDomainLimitIsForwarded() {
+        TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
+        String text = "x".repeat(ChatMessage.MAX_TEXT_LENGTH);
+
+        restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest(text, null), asyncResponse);
+
+        assertThat(status()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
+        verify(channelService).trySendTextMessage(eq(text), any(), eq(channel));
+    }
+
+    /**
+     * The citation is not checked by the endpoint on purpose: {@code Citation} verifies its own length in
+     * its constructor. This pins that, so the endpoint check is not added the day the constructor stops.
+     */
+    @Test
+    void aCitationLongerThanItsLimitIsRejectedAsBadRequest() {
+        TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
+        CitationDto citation = new CitationDto(AUTHOR_PROFILE_ID, "x".repeat(Citation.MAX_TEXT_LENGTH + 1),
+                Optional.empty());
+
+        restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", citation), asyncResponse);
 
         assertThat(status()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
         verifyNoMessageSent();
@@ -377,6 +424,34 @@ class PrivateChatRestApiTest {
         TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
         when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
         CitationDto citation = new CitationDto("too-short", "quoted text", Optional.empty());
+
+        restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", citation), asyncResponse);
+
+        assertThat(status()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        verifyNoMessageSent();
+    }
+
+    /**
+     * A citation with a field missing from the JSON is null-valued, and Citation's own validation throws
+     * NPE on it, which is not the arm the endpoint turns into a 400. So the endpoint checks first.
+     */
+    @Test
+    void aCitationWithoutTextIsRejectedAsBadRequest() {
+        TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
+        CitationDto citation = new CitationDto(AUTHOR_PROFILE_ID, null, Optional.empty());
+
+        restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", citation), asyncResponse);
+
+        assertThat(status()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        verifyNoMessageSent();
+    }
+
+    @Test
+    void aCitationWithoutAnAuthorIsRejectedAsBadRequest() {
+        TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
+        CitationDto citation = new CitationDto(null, "quoted text", Optional.empty());
 
         restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", citation), asyncResponse);
 

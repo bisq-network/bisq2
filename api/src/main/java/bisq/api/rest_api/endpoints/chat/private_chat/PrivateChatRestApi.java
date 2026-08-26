@@ -18,10 +18,12 @@
 package bisq.api.rest_api.endpoints.chat.private_chat;
 
 import bisq.api.dto.DtoMappings;
+import bisq.api.dto.chat.CitationDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.notifications.ChatNotificationService;
@@ -175,6 +177,22 @@ public class PrivateChatRestApi extends RestApiBase {
             // Jersey hands us null for an absent body, which would otherwise NPE into a 500.
             if (request == null || StringUtils.isEmpty(request.text())) {
                 asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "text must not be empty."));
+                return;
+            }
+            // Desktop enforces this before sending; the message itself does not, a TwoPartyPrivateChatMessage
+            // is never verified on construction. Without this an over-long text gets stored and sent. The
+            // citation needs no such check: Citation verifies itself in its constructor.
+            if (request.text().length() > ChatMessage.MAX_TEXT_LENGTH) {
+                asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST,
+                        "text must not be longer than " + ChatMessage.MAX_TEXT_LENGTH + " characters."));
+                return;
+            }
+            // Citation validates itself, but against a null it throws NPE, not IllegalArgumentException,
+            // and a missing field in the client's JSON would come back as a 500.
+            CitationDto citationDto = request.citation();
+            if (citationDto != null && (citationDto.authorUserProfileId() == null || citationDto.text() == null)) {
+                asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST,
+                        "citation requires authorUserProfileId and text."));
                 return;
             }
             withChannel(channelId, asyncResponse, channel -> {
