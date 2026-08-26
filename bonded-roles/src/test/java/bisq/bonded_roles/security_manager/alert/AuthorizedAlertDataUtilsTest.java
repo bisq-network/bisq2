@@ -143,6 +143,85 @@ class AuthorizedAlertDataUtilsTest {
         assertThat(result).hasValueSatisfying(alert -> assertThat(alert.getId()).isEqualTo("req-new"));
     }
 
+    @Test
+    void appliesToMatchesSameAppType() {
+        AuthorizedAlertData alert = createAlert("halt-1", AppType.DESKTOP, 10, AlertType.EMERGENCY, true, false);
+
+        assertThat(AuthorizedAlertDataUtils.appliesTo(alert, AppType.DESKTOP)).isTrue();
+        assertThat(AuthorizedAlertDataUtils.appliesTo(alert, AppType.MOBILE_CLIENT)).isFalse();
+    }
+
+    @Test
+    void appliesToTreatsUnspecifiedAlertAsWildcard() {
+        AuthorizedAlertData alert = createAlert("halt-1", AppType.UNSPECIFIED, 10, AlertType.EMERGENCY, true, false);
+
+        assertThat(AuthorizedAlertDataUtils.appliesTo(alert, AppType.DESKTOP)).isTrue();
+        assertThat(AuthorizedAlertDataUtils.appliesTo(alert, AppType.MOBILE_CLIENT)).isTrue();
+        assertThat(AuthorizedAlertDataUtils.appliesTo(alert, AppType.MOBILE_NODE)).isTrue();
+    }
+
+    @Test
+    void appliesToTreatsUnspecifiedQueryAsWildcard() {
+        AuthorizedAlertData alert = createAlert("halt-1", AppType.DESKTOP, 10, AlertType.EMERGENCY, true, false);
+
+        assertThat(AuthorizedAlertDataUtils.appliesTo(alert, AppType.UNSPECIFIED)).isTrue();
+    }
+
+    @Test
+    void findMostRecentTradeRestrictingAlertIncludesUnspecifiedAlerts() {
+        // A network-wide halt published without an app type must restrict every app
+        AuthorizedAlertData networkWideHalt = createAlert("halt-unspecified", AppType.UNSPECIFIED, 10, AlertType.EMERGENCY, true, false);
+
+        Optional<AuthorizedAlertData> result = AuthorizedAlertDataUtils.findMostRecentTradeRestrictingAlert(
+                Stream.of(networkWideHalt), AppType.MOBILE_CLIENT);
+
+        assertThat(result).contains(networkWideHalt);
+    }
+
+    @Test
+    void isTradingHaltedMatchesApplicableEmergencyHaltOnly() {
+        AuthorizedAlertData desktopHalt = createAlert("halt-desktop", AppType.DESKTOP, 10, AlertType.EMERGENCY, true, false);
+        AuthorizedAlertData mobileInfo = createAlert("info-mobile", AppType.MOBILE_CLIENT, 20, AlertType.INFO, true, false);
+
+        assertThat(AuthorizedAlertDataUtils.isTradingHalted(Stream.of(desktopHalt), AppType.DESKTOP)).isTrue();
+        assertThat(AuthorizedAlertDataUtils.isTradingHalted(Stream.of(desktopHalt), AppType.MOBILE_CLIENT)).isFalse();
+        // INFO alerts never halt trading, even with the flag set
+        assertThat(AuthorizedAlertDataUtils.isTradingHalted(Stream.of(mobileInfo), AppType.MOBILE_CLIENT)).isFalse();
+    }
+
+    @Test
+    void isTradingHaltedTreatsUnspecifiedAlertAsNetworkWide() {
+        AuthorizedAlertData networkWideHalt = createAlert("halt-unspecified", AppType.UNSPECIFIED, 10, AlertType.EMERGENCY, true, false);
+
+        assertThat(AuthorizedAlertDataUtils.isTradingHalted(Stream.of(networkWideHalt), AppType.DESKTOP)).isTrue();
+        assertThat(AuthorizedAlertDataUtils.isTradingHalted(Stream.of(networkWideHalt), AppType.MOBILE_CLIENT)).isTrue();
+    }
+
+    @Test
+    void findMinRequiredVersionForTradingPicksMostRecentApplicableAlert() {
+        AuthorizedAlertData reqOld = createAlert("req-old", AppType.DESKTOP, 10, AlertType.EMERGENCY, false, true, Optional.of("2.1.10"));
+        AuthorizedAlertData reqNew = createAlert("req-new", AppType.DESKTOP, 30, AlertType.EMERGENCY, false, true, Optional.of("2.1.12"));
+        AuthorizedAlertData otherApp = createAlert("req-mobile", AppType.MOBILE_CLIENT, 50, AlertType.EMERGENCY, false, true, Optional.of("9.9.9"));
+
+        Optional<String> result = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                Stream.of(reqOld, reqNew, otherApp), AppType.DESKTOP);
+
+        assertThat(result).contains("2.1.12");
+    }
+
+    @Test
+    void findMinRequiredVersionForTradingIgnoresMalformedAlertWithoutMinVersion() {
+        // A newer alert with requireVersionForTrading but no minVersion must not shadow
+        // the older well-formed restriction
+        AuthorizedAlertData valid = createAlert("req-valid", AppType.DESKTOP, 10, AlertType.EMERGENCY, false, true, Optional.of("2.1.10"));
+        AuthorizedAlertData malformed = createAlert("req-malformed", AppType.DESKTOP, 30, AlertType.EMERGENCY, false, true, Optional.empty());
+
+        Optional<String> result = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                Stream.of(valid, malformed), AppType.DESKTOP);
+
+        assertThat(result).contains("2.1.10");
+    }
+
     // ---- helpers ----
 
     private AuthorizedAlertData createAlert(String id, AppType appType, int relativeOffset, AlertType alertType,

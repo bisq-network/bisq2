@@ -113,9 +113,7 @@ public class AlertNotificationsService implements Service {
     }
 
     private boolean matchesAppType(AuthorizedAlertData authorizedAlertData, AppType appType) {
-        return appType == AppType.UNSPECIFIED
-                || authorizedAlertData.getAppType() == AppType.UNSPECIFIED
-                || authorizedAlertData.getAppType() == appType;
+        return AuthorizedAlertDataUtils.appliesTo(authorizedAlertData, appType);
     }
 
     private boolean shouldProcessAlert(AuthorizedAlertData authorizedAlertData) {

@@ -50,6 +50,7 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.SupportService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
+import bisq.trade.TradeRestrictedException;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
@@ -79,7 +80,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
@@ -274,11 +277,26 @@ public class TradeRestApi extends RestApiBase {
             log.warn("Thread got interrupted at takeOffer method", e);
             Thread.currentThread().interrupt(); // Restore interrupted state
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
+        } catch (TradeRestrictedException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, toTradeRestrictedErrorEntity(e)));
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
+    }
+
+    /**
+     * All values are strings so that clients decoding the error body as a flat string map keep
+     * working; the "error" text preserves the pre-structured wire format ("Invalid input: ..."),
+     * which released mobile clients match on.
+     */
+    static Map<String, String> toTradeRestrictedErrorEntity(TradeRestrictedException exception) {
+        Map<String, String> entity = new LinkedHashMap<>();
+        entity.put("error", "Invalid input: " + exception.getMessage());
+        entity.put("errorCode", exception.getRestriction().name());
+        exception.findMinRequiredVersion().ifPresent(minVersion -> entity.put("minRequiredVersion", minVersion));
+        return entity;
     }
 
     @PATCH
@@ -335,6 +353,8 @@ public class TradeRestApi extends RestApiBase {
                 case BTC_CONFIRMED -> handleBtcConfirmed(channel, trade, paymentRail, userName);
             }
             asyncResponse.resume(buildNoContentResponse());
+        } catch (TradeRestrictedException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, toTradeRestrictedErrorEntity(e)));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
