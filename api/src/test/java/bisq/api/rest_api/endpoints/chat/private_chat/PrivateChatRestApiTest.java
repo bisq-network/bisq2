@@ -20,6 +20,7 @@ package bisq.api.rest_api.endpoints.chat.private_chat;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
 import bisq.api.dto.chat.CitationDto;
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.notifications.ChatNotificationService;
@@ -35,6 +36,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.core.Response;
@@ -67,6 +69,7 @@ class PrivateChatRestApiTest {
     /** Citation validation requires exactly 40 characters, so this cannot be a readable name. */
     private static final String AUTHOR_PROFILE_ID = "0123456789012345678901234567890123456789";
 
+    private ChatService chatService;
     private TwoPartyPrivateChatChannelService channelService;
     private LeavePrivateChatManager leavePrivateChatManager;
     private ChatNotificationService chatNotificationService;
@@ -77,7 +80,7 @@ class PrivateChatRestApiTest {
 
     @BeforeEach
     void setUp() {
-        ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
+        chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
         channelService = mock(TwoPartyPrivateChatChannelService.class, RETURNS_DEEP_STUBS);
         when(chatService.getTwoPartyPrivateChatChannelService()).thenReturn(channelService);
         // Explicit rather than deep stubs: which of these two the endpoint calls is the behaviour
@@ -425,8 +428,29 @@ class PrivateChatRestApiTest {
     }
 
     /**
+     * The channel selection is shared with the desktop's Discussion page, so the selecting wrapper
+     * ({@code ChatService.createAndSelectTwoPartyPrivateChatChannel}) would swap what the desktop is
+     * showing every time a client opens a DM. The lower-level call binds the channel to the selected
+     * identity just the same, without touching the selection.
+     */
+    @Test
+    void openingAChannelDoesNotSelectIt() {
+        UserProfile peer = mock(UserProfile.class);
+        when(userProfileService.findUserProfile("peer")).thenReturn(Optional.of(peer));
+        TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(channel.getId()).thenReturn(CHANNEL_ID);
+        when(channelService.findOrCreateChannel(ChatChannelDomain.DISCUSSION, peer)).thenReturn(Optional.of(channel));
+
+        restApi.findOrCreateChannel("peer", asyncResponse);
+
+        assertThat(status()).isEqualTo(Response.Status.OK.getStatusCode());
+        assertThat(resumedEntity()).isEqualTo(new FindOrCreateChannelResponse(CHANNEL_ID));
+        verify(chatService, never()).createAndSelectTwoPartyPrivateChatChannel(any(), any());
+    }
+
+    /**
      * My own profile is published like any other, so the peer lookup would find it and Bisq 2 would
-     * happily build a channel keyed on sorted(me, me) — and select it, which surfaces it on desktop.
+     * happily build a channel keyed on sorted(me, me).
      */
     @Test
     void openingAChannelWithMyOwnProfileIsRejectedAsBadRequest() {

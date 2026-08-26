@@ -63,14 +63,17 @@ import java.util.function.Consumer;
  * by channel id, deliberately unlike {@code TradeChatMessagesRestApi}, whose channel is implied by the
  * trade: a notification has to be able to act on a channel that is not the selected one.
  * <p>
- * <b>Known limitation — the client cannot choose its identity.</b> Channel creation goes through
- * {@code ChatService.createAndSelectTwoPartyPrivateChatChannel}, which binds the new channel to
- * whichever user identity is currently selected on the node and additionally makes the new channel
- * the selected one. A multi-identity user therefore has no way to say "open this DM as identity X",
- * and the call has a side effect on node-wide selection state. Giving the client control would mean
- * taking an optional {@code myUserProfileId} here and reaching past the wrapper — deliberately not
- * done yet, since the wrapper is also what keeps the *next* DM correctly bound (see
- * {@link #findOrCreateChannel}).
+ * None of these operations move the node's channel selection. That selection is shared with the
+ * desktop's Discussion page, so selecting from here would swap what the desktop is showing. The desktop
+ * wrapper {@code ChatService.createAndSelectTwoPartyPrivateChatChannel} is therefore not used, and
+ * {@code LeavePrivateChatManager} only moves the selection when the channel being left is the selected
+ * one.
+ * <p>
+ * <b>Known limitation — the client cannot choose its identity.</b> A new channel is bound to whichever
+ * user identity is currently selected on the node
+ * ({@code TwoPartyPrivateChatChannelService.findOrCreateChannel}); later sends use the identity stored
+ * on the channel. A multi-identity user therefore has no way to say "open this DM as identity X"; that
+ * would take an optional {@code myUserProfileId} on {@link #findOrCreateChannel}.
  */
 @Slf4j
 @Path("/private-chat-channels")
@@ -80,7 +83,6 @@ import java.util.function.Consumer;
 public class PrivateChatRestApi extends RestApiBase {
     private static final int TIMEOUT_SEC = 120;
 
-    private final ChatService chatService;
     private final TwoPartyPrivateChatChannelService channelService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final ChatNotificationService chatNotificationService;
@@ -88,7 +90,6 @@ public class PrivateChatRestApi extends RestApiBase {
     private final UserIdentityService userIdentityService;
 
     public PrivateChatRestApi(ChatService chatService, UserService userService) {
-        this.chatService = chatService;
         // Bisq 2 registers exactly one two-party service, for ChatChannelDomain.DISCUSSION.
         channelService = chatService.getTwoPartyPrivateChatChannelService();
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
@@ -121,7 +122,7 @@ public class PrivateChatRestApi extends RestApiBase {
         applyTimeout(asyncResponse);
         try {
             // My own profile is published like any other, so without this the channel would be created
-            // with an id of sorted(me, me) — and selected on the node, which surfaces it on desktop.
+            // with an id of sorted(me, me).
             if (userIdentityService.findUserIdentity(peerProfileId).isPresent()) {
                 asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST,
                         "Cannot open a private chat with yourself."));
@@ -129,9 +130,9 @@ public class PrivateChatRestApi extends RestApiBase {
             }
             userProfileService.findUserProfile(peerProfileId)
                     .ifPresentOrElse(peer -> {
-                        // The ChatService wrapper, not channelService.findOrCreateChannel: selecting the
-                        // channel is what keeps the next DM bound correctly. See the class javadoc.
-                        chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, peer)
+                        // Not the ChatService wrapper, which would also select the channel. See the class
+                        // javadoc.
+                        channelService.findOrCreateChannel(ChatChannelDomain.DISCUSSION, peer)
                                 .ifPresentOrElse(channel ->
                                                 asyncResponse.resume(buildOkResponse(new FindOrCreateChannelResponse(channel.getId()))),
                                         () -> asyncResponse.resume(buildErrorResponse(
