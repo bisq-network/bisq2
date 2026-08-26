@@ -20,6 +20,7 @@ package bisq.api.rest_api.endpoints.chat.private_chat;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
 import bisq.api.dto.chat.CitationDto;
+import bisq.api.dto.chat.SendRejectionDto;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
@@ -231,7 +232,10 @@ class PrivateChatRestApiTest {
         assertThat(status()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
     }
 
-    /** The two reasons are phrased apart, so a client can tell "you are banned" from "they are". */
+    /**
+     * The reason travels as the rejection's name, so a client can tell "you are banned" from "they are"
+     * without matching the prose, which is only there for a human reading the raw response.
+     */
     @Test
     void aBannedOwnProfileIsReportedApartFromABannedPeer() {
         TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
@@ -242,7 +246,21 @@ class PrivateChatRestApiTest {
         restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", null), asyncResponse);
 
         assertThat(status()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
-        assertThat(resumedEntity()).isEqualTo("Your user profile is banned.");
+        assertThat(resumedEntity()).isEqualTo(
+                new SendRefusedResponse(SendRejectionDto.MY_PROFILE_BANNED, "Your user profile is banned."));
+    }
+
+    @Test
+    void aBannedPeerIsReportedByItsRejectionName() {
+        TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
+        when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
+        when(channelService.trySendTextMessage(any(), any(), eq(channel)))
+                .thenReturn(SendOutcome.rejected(SendRejection.PEER_BANNED));
+
+        restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", null), asyncResponse);
+
+        assertThat(resumedEntity()).isEqualTo(
+                new SendRefusedResponse(SendRejectionDto.PEER_BANNED, "The peer's user profile is banned."));
     }
 
     @Test

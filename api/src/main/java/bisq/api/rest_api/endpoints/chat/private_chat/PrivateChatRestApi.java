@@ -19,6 +19,7 @@ package bisq.api.rest_api.endpoints.chat.private_chat;
 
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.chat.CitationDto;
+import bisq.api.dto.mappings.chat.two_party.SendRejectionDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
@@ -164,7 +165,8 @@ public class PrivateChatRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "404", description = "No channel found for given channel ID"),
                     @ApiResponse(responseCode = "400", description = "Invalid input, e.g. empty text"),
                     @ApiResponse(responseCode = "409",
-                            description = "Refused locally: either my own profile or the peer is banned"),
+                            description = "Refused locally: either my own profile or the peer is banned",
+                            content = @Content(schema = @Schema(implementation = SendRefusedResponse.class))),
                     @ApiResponse(responseCode = "503", description = "Request timed out"),
                     @ApiResponse(responseCode = "500", description = "Unexpected internal error")
             }
@@ -225,7 +227,8 @@ public class PrivateChatRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "400", description = "Invalid input or missing required fields"),
                     @ApiResponse(responseCode = "404", description = "No channel or message found for the given IDs"),
                     @ApiResponse(responseCode = "409",
-                            description = "Refused locally: either my own profile or the peer is banned"),
+                            description = "Refused locally: either my own profile or the peer is banned",
+                            content = @Content(schema = @Schema(implementation = SendRefusedResponse.class))),
                     @ApiResponse(responseCode = "503", description = "Request timed out"),
                     @ApiResponse(responseCode = "500", description = "Unexpected internal error")
             }
@@ -394,7 +397,8 @@ public class PrivateChatRestApi extends RestApiBase {
      */
     private void resume(SendOutcome outcome, AsyncResponse asyncResponse) {
         asyncResponse.resume(outcome.getRejection()
-                .map(reason -> buildResponse(Response.Status.CONFLICT, describe(reason)))
+                .map(reason -> buildResponse(Response.Status.CONFLICT,
+                        new SendRefusedResponse(SendRejectionDtoMapping.fromBisq2Model(reason), describe(reason))))
                 .orElseGet(this::buildNoContentResponse));
     }
 
