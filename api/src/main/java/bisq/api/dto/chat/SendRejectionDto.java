@@ -14,13 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+package bisq.api.dto.chat;
 
-package bisq.api.rest_api.endpoints.chat.trade;
-
-
-import bisq.api.dto.chat.CitationDto;
-
-import javax.annotation.Nullable;
-
-public record SendChatMessageRequest(String text, @Nullable CitationDto citation) {
+/** Why the node refused a private chat send before storing anything. Mirrors {@code bisq.chat.priv.SendRejection}. */
+public enum SendRejectionDto {
+    MY_PROFILE_BANNED,
+    PEER_BANNED
 }

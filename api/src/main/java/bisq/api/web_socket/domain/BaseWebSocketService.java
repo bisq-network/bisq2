@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -64,6 +65,13 @@ public abstract class BaseWebSocketService implements Service {
     }
 
     public void validate(SubscriptionRequest request) {
+    }
+
+    /** The subscribers of this service's topic, flattened across subscription parameters. */
+    protected List<Subscriber> findSubscribers() {
+        return subscriberRepository.findSubscribers(topic).values().stream()
+                .flatMap(Collection::stream)
+                .toList();
     }
 
     //todo
@@ -103,14 +111,26 @@ public abstract class BaseWebSocketService implements Service {
     protected void send(String json,
                         Subscriber subscriber,
                         ModificationType modificationType) {
-        log.info("Sending json with modificationType {} to subscriber: {}. json={}", modificationType, subscriber, json);
+        // Hoisted only so the log line below can name it; the counter was already consumed here
+        // unconditionally, including when the serialisation below fails.
+        int sequenceNumber = subscriber.incrementAndGetSequenceNumber();
+        // Split by level on purpose. INFO says a send happened and what shape it had — the sequence
+        // number is what makes a gap or a reorder in the client's stream visible at all, and the size
+        // is what tells you a send went out truncated. The payload itself is TRACE rather than DEBUG:
+        // every topic's bodies pass through here, and since private chat that includes DM text and both
+        // peers' profiles. Both are on this machine in cleartext anyway, so the point is not secrecy
+        // from the host — it is that logs get pasted into bug reports and issue trackers, which data
+        // dirs do not, and DEBUG is enabled far more casually than TRACE.
+        log.info("Sending json with modificationType {} to subscriber {} on topic {}. sequenceNumber={}, jsonLength={}",
+                modificationType, subscriber.getSubscriberId(), subscriber.getTopic(), sequenceNumber, json.length());
+        log.trace("Payload sent to subscriber {}: {}", subscriber.getSubscriberId(), json);
 
         WebSocketEvent.toJson(
                         subscriber.getTopic(),
                         subscriber.getSubscriberId(),
                         json,
                         modificationType,
-                        subscriber.incrementAndGetSequenceNumber())
+                        sequenceNumber)
                 .ifPresent(subscriber::send);
     }
 }
