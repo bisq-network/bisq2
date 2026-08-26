@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 public class BitcoinAmountDisplay extends HBox {
     @Getter
     private final StringProperty btcAmount = new SimpleStringProperty("");
+    private boolean showBtcCode = true;
     private final TextFlow valueTextFlow = new TextFlow();
     @Getter
     private final Text integerPart = new Text();
@@ -55,8 +56,10 @@ public class BitcoinAmountDisplay extends HBox {
 
     public BitcoinAmountDisplay(String amount, boolean showBtcCode) {
         this(amount);
-        btcCode.setVisible(showBtcCode);
-        btcCode.setManaged(showBtcCode);
+        this.showBtcCode = showBtcCode;
+        // Re-apply so btcCode visibility follows the numeric/non-numeric render rather than being
+        // forced on for a non-numeric value (which would show e.g. "N/A BTC").
+        updateDisplay();
     }
 
     public BitcoinAmountDisplay(String amount) {
@@ -145,7 +148,24 @@ public class BitcoinAmountDisplay extends HBox {
         }
 
         valueTextFlow.setVisible(true);
-        formatBtcAmount(amount);
+        try {
+            formatBtcAmount(amount);
+            btcCode.setVisible(showBtcCode);
+            btcCode.setManaged(showBtcCode);
+        } catch (NumberFormatException e) {
+            // A non-numeric value (e.g. a localized "N/A" for a total that cannot be represented)
+            // is rendered verbatim instead of crashing the parse.
+            displayNonNumeric(amount);
+        }
+    }
+
+    private void displayNonNumeric(String amount) {
+        setExclusiveStyle(integerPart, "bitcoin-amount-display-integer-part", "bitcoin-amount-display-integer-part-dimmed");
+        integerPart.setText(amount);
+        leadingZeros.setText("");
+        significantDigits.setText("");
+        btcCode.setVisible(false);
+        btcCode.setManaged(false);
     }
 
     private void setExclusiveStyle(Text textNode, String styleToAdd, String styleToRemove) {

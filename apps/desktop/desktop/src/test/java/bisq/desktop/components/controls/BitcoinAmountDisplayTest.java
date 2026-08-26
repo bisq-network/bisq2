@@ -352,4 +352,29 @@ class BitcoinAmountDisplayTest {
             LocaleRepository.setDefaultLocale(originalLocale);
         }
     }
+
+    @Test
+    void testNonNumericAmountIsRenderedVerbatimWithoutCrashing() {
+        bitcoinAmountDisplay.setBtcAmount("N/A");
+        assertEquals("N/A", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertFalse(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
+
+    @Test
+    void testNonNumericHidesBtcCodeEvenWhenConstructedWithBtcCode() {
+        BitcoinAmountDisplay display = new BitcoinAmountDisplay("N/A", true);
+        assertEquals("N/A", display.getIntegerPart().getText());
+        assertFalse(display.getBtcCode().isVisible());
+    }
+
+    @Test
+    void testNonNumericResetsDimmedIntegerStyleFromPreviousRender() {
+        bitcoinAmountDisplay.setBtcAmount("0.0");
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        bitcoinAmountDisplay.setBtcAmount("N/A");
+        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part"));
+    }
 }

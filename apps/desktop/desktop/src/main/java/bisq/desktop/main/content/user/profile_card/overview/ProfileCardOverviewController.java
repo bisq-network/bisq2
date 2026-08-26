@@ -35,10 +35,14 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ProfileCardOverviewController implements Controller {
@@ -71,14 +75,12 @@ public class ProfileCardOverviewController implements Controller {
 
         String userProfileId = userProfile.getId();
         // TODO Need to add support for swapping base and quote currency when crypto market is used
-        long totalBaseOfferAmountToBuy = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDisplayDirection().isBuy());
-        String formattedTotalBaseOfferAmountToBuy = AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(totalBaseOfferAmountToBuy));
-        model.setTotalBaseOfferAmountToBuy(formattedTotalBaseOfferAmountToBuy);
+        model.setTotalBaseOfferAmountToBuy(formatTotalBaseOfferAmount(
+                getTotalBaseOfferAmount(userProfileId, offer -> offer.getDisplayDirection().isBuy())));
 
         // TODO Need to add support for swapping base and quote currency when crypto market is used
-        long totalBaseOfferAmountToSell = getTotalBaseOfferAmount(userProfileId, offer -> offer.getDisplayDirection().isSell());
-        String formattedTotalBaseOfferAmountToSell = AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(totalBaseOfferAmountToSell));
-        model.setTotalBaseOfferAmountToSell(formattedTotalBaseOfferAmountToSell);
+        model.setTotalBaseOfferAmountToSell(formatTotalBaseOfferAmount(
+                getTotalBaseOfferAmount(userProfileId, offer -> offer.getDisplayDirection().isSell())));
 
         model.setSellingLimit(String.valueOf(AmountFormatter.formatQuoteAmount(getSellingAmountLimitInUsd(userProfileId))));
 
@@ -120,13 +122,40 @@ public class ProfileCardOverviewController implements Controller {
         }
     }
 
-    private long getTotalBaseOfferAmount(String userProfileId, Predicate<BisqEasyOffer> predicate) {
-        return getOffers(userProfileId)
+    private Optional<Long> getTotalBaseOfferAmount(String userProfileId, Predicate<BisqEasyOffer> predicate) {
+        List<Monetary> baseAmounts = getOffers(userProfileId)
                 .map(message -> message.getBisqEasyOffer().orElseThrow())
                 .filter(predicate)
                 .flatMap(offer -> OfferAmountUtil.findBaseSideMaxOrFixedAmount(marketPriceService, offer).stream())
-                .mapToLong(Monetary::getValue)
-                .sum();
+                .collect(Collectors.toList());
+        return checkedBaseAmountSum(baseAmounts);
+    }
+
+    // Individually valid base amounts can still overflow a long in aggregate. Sum with
+    // Math.addExact and treat an overflow as a value that cannot be represented.
+    @VisibleForTesting
+    static Optional<Long> checkedBaseAmountSum(List<Monetary> baseAmounts) {
+        try {
+            long total = 0L;
+            for (Monetary baseAmount : baseAmounts) {
+                long value = baseAmount.getValue();
+                // Drop malformed non-positive per-offer amounts (e.g. a negative from a wrapped
+                // conversion) so they cannot corrupt the total.
+                if (value <= 0) {
+                    continue;
+                }
+                total = Math.addExact(total, value);
+            }
+            return Optional.of(total);
+        } catch (ArithmeticException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static String formatTotalBaseOfferAmount(Optional<Long> totalBaseOfferAmount) {
+        return totalBaseOfferAmount
+                .map(value -> AmountFormatter.formatBaseAmount(Coin.asBtcFromValue(value)))
+                .orElseGet(() -> Res.get("data.na"));
     }
 
     private Stream<BisqEasyOfferbookMessage> getOffers(String userProfileId) {
