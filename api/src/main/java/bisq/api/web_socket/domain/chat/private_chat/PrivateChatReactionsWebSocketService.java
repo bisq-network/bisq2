@@ -62,9 +62,12 @@ import static bisq.api.web_socket.subscription.Topic.PRIVATE_CHAT_REACTIONS;
  * {@link #getJsonPayload()} drops the markers rather than reproducing the pair, because the subscribe
  * snapshot has no modification type to carry the distinction.
  * <p>
- * Reactions from banned senders are dropped, matching {@code PrivateChatMessagesWebSocketService}: a peer
- * banned after the fact vanishes from the message stream, and letting their reactions through would leave
- * the client holding reactions against a {@code chatMessageId} it never received.
+ * A reaction is exposed only while both its own sender and the sender of the message it sits on are not
+ * banned, the same rule {@code PrivateChatMessagesWebSocketService} applies to the reactions it embeds
+ * in each message, so the two topics never disagree about which reactions exist. Filtering on the
+ * reaction's sender alone is not enough: a peer banned after the fact vanishes from the message stream,
+ * and my own reaction to their message would then be delivered against a {@code chatMessageId} the
+ * client never received.
  */
 @Slf4j
 public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
@@ -232,13 +235,13 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
         Pin reactionsPin = message.getChatMessageReactions().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(TwoPartyPrivateChatMessageReaction reaction) {
-                handleReaction(reaction, ModificationType.ADDED);
+                handleReaction(message, reaction, ModificationType.ADDED);
             }
 
             @Override
             public void onRemoved(Object element) {
                 if (element instanceof TwoPartyPrivateChatMessageReaction reaction) {
-                    handleReaction(reaction, ModificationType.REMOVED);
+                    handleReaction(message, reaction, ModificationType.REMOVED);
                 }
             }
 
@@ -323,7 +326,7 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
                         channel.getChatMessages().stream()
                                 .flatMap(message -> message.getChatMessageReactions().stream()
                                         .filter(reaction -> !reaction.isRemoved())
-                                        .filter(this::isNotFromBannedUser)
+                                        .filter(reaction -> isVisible(message, reaction))
                                         .map(reaction -> {
                                             try {
                                                 return toDto(reaction);
@@ -337,12 +340,14 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
         return toJson(payload);
     }
 
-    private void handleReaction(TwoPartyPrivateChatMessageReaction reaction, ModificationType modificationType) {
+    private void handleReaction(TwoPartyPrivateChatMessage message,
+                                TwoPartyPrivateChatMessageReaction reaction,
+                                ModificationType modificationType) {
         // Observer callbacks can still arrive after shutdown, see shutdownStarted: this keeps a push from
         // starting once the shutdown has returned (one already past the check still completes). A leave
         // gets no such guard: a callback already captured can still push one reaction for the channel,
         // which the client sees together with the channel's own removal.
-        if (shutdownStarted || !isNotFromBannedUser(reaction)) {
+        if (shutdownStarted || !isVisible(message, reaction)) {
             return;
         }
         TwoPartyPrivateChatMessageReactionDto dto;
@@ -370,11 +375,14 @@ public class PrivateChatReactionsWebSocketService extends BaseWebSocketService {
 
     /**
      * Bisq 2 already rejects banned senders on the inbound path, so this only covers a peer banned
-     * *after* their reactions arrived — the same window {@code PrivateChatMessagesWebSocketService}
-     * guards for messages.
+     * *after* their messages and reactions arrived — the same window {@code PrivateChatMessagesWebSocketService}
+     * guards for messages. Checked at both levels, see the class javadoc: the message's sender decides
+     * whether the reaction has a message to sit on at all, the reaction's own sender whether it is shown
+     * on one that is visible.
      */
-    private boolean isNotFromBannedUser(TwoPartyPrivateChatMessageReaction reaction) {
-        return !bannedUserService.isUserProfileBanned(reaction.getSenderUserProfile());
+    private boolean isVisible(TwoPartyPrivateChatMessage message, TwoPartyPrivateChatMessageReaction reaction) {
+        return !bannedUserService.isUserProfileBanned(message.getSenderUserProfile())
+                && !bannedUserService.isUserProfileBanned(reaction.getSenderUserProfile());
     }
 
     private TwoPartyPrivateChatMessageReactionDto toDto(TwoPartyPrivateChatMessageReaction reaction) {

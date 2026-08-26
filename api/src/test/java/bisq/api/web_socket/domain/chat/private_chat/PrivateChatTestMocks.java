@@ -17,6 +17,8 @@
 
 package bisq.api.web_socket.domain.chat.private_chat;
 
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.profile.UserProfile;
 
@@ -49,5 +51,28 @@ final class PrivateChatTestMocks {
         when(profile.getProofOfWork().getSolution()).thenReturn(new byte[0]);
         when(profile.getNetworkId().getPubKey().getPublicKey().getEncoded()).thenReturn(new byte[0]);
         return profile;
+    }
+
+    /**
+     * A reaction the dto mapping can process. Everything a deep stub cannot supply: a null enum and a null
+     * key both throw inside the mapping, which the services catch and log, so a missing stub here would
+     * look exactly like the service deciding not to push.
+     */
+    static TwoPartyPrivateChatMessageReaction mockReaction(String id,
+                                                           UserProfile sender,
+                                                           String channelId,
+                                                           String messageId,
+                                                           boolean isRemoved) {
+        TwoPartyPrivateChatMessageReaction reaction =
+                mock(TwoPartyPrivateChatMessageReaction.class, RETURNS_DEEP_STUBS);
+        when(reaction.getId()).thenReturn(id);
+        when(reaction.getSenderUserProfile()).thenReturn(sender);
+        when(reaction.getReceiverUserProfileId()).thenReturn("receiver");
+        when(reaction.getChatChannelId()).thenReturn(channelId);
+        when(reaction.getChatMessageId()).thenReturn(messageId);
+        when(reaction.isRemoved()).thenReturn(isRemoved);
+        when(reaction.getChatChannelDomain()).thenReturn(ChatChannelDomain.DISCUSSION);
+        when(reaction.getReceiverNetworkId().getPubKey().getPublicKey().getEncoded()).thenReturn(new byte[0]);
+        return reaction;
     }
 }

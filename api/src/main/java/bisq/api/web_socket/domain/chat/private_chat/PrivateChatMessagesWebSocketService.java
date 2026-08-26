@@ -25,6 +25,7 @@ import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
@@ -350,6 +351,20 @@ public class PrivateChatMessagesWebSocketService extends BaseWebSocketService {
         Optional<UserProfileDto> citationAuthorUserProfile = message.getCitation()
                 .flatMap(citation -> userProfileService.findUserProfile(citation.getAuthorUserProfileId()))
                 .map(DtoMappings.UserProfileMapping::fromBisq2Model);
-        return TwoPartyPrivateChatMessageDtoMapping.fromBisq2Model(message, citationAuthorUserProfile);
+        List<TwoPartyPrivateChatMessageReaction> visibleReactions = message.getChatMessageReactions().stream()
+                .filter(this::isVisible)
+                .toList();
+        return TwoPartyPrivateChatMessageDtoMapping.fromBisq2Model(message, citationAuthorUserProfile,
+                visibleReactions);
+    }
+
+    /**
+     * The reactions embedded in a message are filtered exactly like the subscribe snapshot of
+     * {@code PrivateChatReactionsWebSocketService}: removal markers out, banned senders out. The message's
+     * own sender has already passed {@link #isNotFromBannedUser} by the time this runs. Without this the
+     * two topics would disagree about which reactions exist.
+     */
+    private boolean isVisible(TwoPartyPrivateChatMessageReaction reaction) {
+        return !reaction.isRemoved() && !bannedUserService.isUserProfileBanned(reaction.getSenderUserProfile());
     }
 }

@@ -23,6 +23,7 @@ import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.SubscriptionSpecifier;
 import bisq.api.web_socket.subscription.Topic;
 import bisq.chat.ChatMessageType;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
@@ -34,6 +35,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
+import static bisq.api.web_socket.domain.chat.private_chat.PrivateChatTestMocks.mockReaction;
 import static bisq.api.web_socket.domain.chat.private_chat.PrivateChatTestMocks.mockUserProfile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -140,6 +143,28 @@ class PrivateChatMessagesWebSocketServiceTest {
         messages.add(messageFrom(banned(false)));
 
         verify(subscriber).send(anyString());
+    }
+
+    /**
+     * The reactions a message carries are filtered like the reactions topic's snapshot, so a client
+     * reading either topic sees the same set: no removal markers, none from a sender banned after the
+     * fact. The message itself is mine, so it is delivered; only its embedded reactions are pruned.
+     */
+    @Test
+    void theEmbeddedReactionsAreFilteredLikeTheReactionsTopic() {
+        ObservableSet<TwoPartyPrivateChatMessageReaction> reactions = new ObservableSet<>(Set.of(
+                mockReaction("reaction-visible", banned(false), CHANNEL_ID, "message-1", false),
+                mockReaction("reaction-banned", banned(true), CHANNEL_ID, "message-1", false),
+                mockReaction("reaction-removed", banned(false), CHANNEL_ID, "message-1", true)));
+
+        messages.add(messageFrom(banned(false), reactions));
+
+        ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
+        verify(subscriber).send(json.capture());
+        assertThat(json.getValue())
+                .contains("reaction-visible")
+                .doesNotContain("reaction-banned")
+                .doesNotContain("reaction-removed");
     }
 
     @Test
@@ -448,11 +473,16 @@ class PrivateChatMessagesWebSocketServiceTest {
     }
 
     private static TwoPartyPrivateChatMessage messageFrom(UserProfile sender) {
+        return messageFrom(sender, new ObservableSet<>());
+    }
+
+    private static TwoPartyPrivateChatMessage messageFrom(UserProfile sender,
+                                                          ObservableSet<TwoPartyPrivateChatMessageReaction> reactions) {
         TwoPartyPrivateChatMessage message = mock(TwoPartyPrivateChatMessage.class, RETURNS_DEEP_STUBS);
         when(message.getSenderUserProfile()).thenReturn(sender);
         when(message.getCitation()).thenReturn(Optional.empty());
         when(message.getText()).thenReturn(Optional.of("hi"));
-        when(message.getChatMessageReactions()).thenReturn(new ObservableSet<>());
+        when(message.getChatMessageReactions()).thenReturn(reactions);
         // Everything a deep stub cannot supply: a null enum and a null key both throw inside the
         // mapping, which the service catches and logs — so a missing stub here would look exactly like
         // the filter dropping the message. See mockUserProfile for the same problem on the profile side.

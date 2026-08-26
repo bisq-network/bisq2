@@ -23,8 +23,10 @@ import bisq.api.dto.DtoMappings.NetworkIdMapping;
 import bisq.api.dto.DtoMappings.UserProfileMapping;
 import bisq.api.dto.chat.two_party.TwoPartyPrivateChatMessageDto;
 import bisq.api.dto.user.profile.UserProfileDto;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -32,8 +34,14 @@ public class TwoPartyPrivateChatMessageDtoMapping {
     // toBisq2Model not provided: nothing consumes it, and the dto carries no chatChannelDomain,
     // so building the Bisq 2 model would mean inventing one.
 
-    public static TwoPartyPrivateChatMessageDto fromBisq2Model(TwoPartyPrivateChatMessage value,
-                                                               Optional<UserProfileDto> citationAuthorUserProfile) {
+    /**
+     * @param visibleReactions the message's reactions the caller wants on the wire; the caller owns the
+     *                         ban and removal rules, this only maps what it was handed.
+     */
+    public static TwoPartyPrivateChatMessageDto fromBisq2Model(
+            TwoPartyPrivateChatMessage value,
+            Optional<UserProfileDto> citationAuthorUserProfile,
+            Collection<TwoPartyPrivateChatMessageReaction> visibleReactions) {
         return new TwoPartyPrivateChatMessageDto(
                 value.getId(),
                 value.getChannelId(),
@@ -44,7 +52,9 @@ public class TwoPartyPrivateChatMessageDtoMapping {
                 value.getCitation().map(CitationMapping::fromBisq2Model),
                 value.getDate(),
                 ChatMessageTypeMapping.fromBisq2Model(value.getChatMessageType()),
-                value.getChatMessageReactions().stream().map(TwoPartyPrivateChatMessageReactionDtoMapping::fromBisq2Model).collect(Collectors.toSet()),
+                visibleReactions.stream()
+                        .map(TwoPartyPrivateChatMessageReactionDtoMapping::fromBisq2Model)
+                        .collect(Collectors.toSet()),
                 citationAuthorUserProfile
         );
     }

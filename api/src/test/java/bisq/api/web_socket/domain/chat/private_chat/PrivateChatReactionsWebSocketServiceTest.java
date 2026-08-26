@@ -23,7 +23,6 @@ import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.SubscriptionSpecifier;
 import bisq.api.web_socket.subscription.Topic;
-import bisq.chat.ChatChannelDomain;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
@@ -46,6 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
+import static bisq.api.web_socket.domain.chat.private_chat.PrivateChatTestMocks.mockReaction;
 import static bisq.api.web_socket.domain.chat.private_chat.PrivateChatTestMocks.mockUserProfile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -73,6 +73,7 @@ class PrivateChatReactionsWebSocketServiceTest {
     private final AtomicReference<Runnable> onNextChannelScan = new AtomicReference<>();
     private ObservableSet<TwoPartyPrivateChatMessage> messages;
     private ObservableSet<TwoPartyPrivateChatMessageReaction> reactions;
+    private TwoPartyPrivateChatMessage message;
     private TwoPartyPrivateChatChannel channel;
     private Subscriber subscriber;
     private BannedUserService bannedUserService;
@@ -82,7 +83,8 @@ class PrivateChatReactionsWebSocketServiceTest {
     void setUp() {
         reactions = new ObservableSet<>();
         messages = new ObservableSet<>();
-        messages.add(mockMessage(MESSAGE_ID, reactions));
+        message = mockMessage(MESSAGE_ID, reactions);
+        messages.add(message);
 
         channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
         when(channel.getId()).thenReturn(CHANNEL_ID);
@@ -560,6 +562,35 @@ class PrivateChatReactionsWebSocketServiceTest {
         assertThat(service.getJsonPayload().orElseThrow()).isEqualTo("[]");
     }
 
+    /**
+     * The parent message decides too. After the peer is banned their message leaves the message stream,
+     * and a reaction of mine on it, from a sender who is not banned, would reach the client against a
+     * {@code chatMessageId} it no longer has. The message stream drops the same reaction from the
+     * message it embeds it in, so the two topics agree.
+     */
+    @Test
+    void aReactionOnAMessageFromABannedSenderIsNotPushed() {
+        banTheSenderOf(message);
+
+        reactions.add(reaction("reaction-1", false));
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    @Test
+    void theSubscribeSnapshotDropsReactionsOnMessagesFromBannedSendersToo() {
+        reactions.add(reaction("reaction-1", false));
+        banTheSenderOf(message);
+
+        assertThat(service.getJsonPayload().orElseThrow()).isEqualTo("[]");
+    }
+
+    private void banTheSenderOf(TwoPartyPrivateChatMessage message) {
+        // Resolved out of the when(...) argument, see bannedReaction.
+        UserProfile sender = message.getSenderUserProfile();
+        when(bannedUserService.isUserProfileBanned(sender)).thenReturn(true);
+    }
+
     private TwoPartyPrivateChatMessageReaction bannedReaction(String id) {
         TwoPartyPrivateChatMessageReaction reaction = reaction(id, false);
         // Resolved out of the when(...) argument: a mock call nested there leaves Mockito with an
@@ -578,22 +609,9 @@ class PrivateChatReactionsWebSocketServiceTest {
     }
 
     private static TwoPartyPrivateChatMessageReaction reaction(String id, boolean isRemoved) {
-        // Built before the stubbing below starts: mocking inside a when(...) argument leaves Mockito
-        // with an unfinished stubbing.
+        // Built before the stubbing starts: mocking inside a when(...) argument leaves Mockito with an
+        // unfinished stubbing.
         UserProfile sender = mockUserProfile();
-        TwoPartyPrivateChatMessageReaction reaction =
-                mock(TwoPartyPrivateChatMessageReaction.class, RETURNS_DEEP_STUBS);
-        when(reaction.getId()).thenReturn(id);
-        when(reaction.getSenderUserProfile()).thenReturn(sender);
-        when(reaction.getReceiverUserProfileId()).thenReturn("receiver");
-        when(reaction.getChatChannelId()).thenReturn(CHANNEL_ID);
-        when(reaction.getChatMessageId()).thenReturn(MESSAGE_ID);
-        when(reaction.isRemoved()).thenReturn(isRemoved);
-        // Everything a deep stub cannot supply: a null enum and a null key both throw inside the
-        // mapping, which the service catches and logs — so a missing stub here would look exactly like
-        // the service deciding not to push. See mockUserProfile for the same problem on the sender side.
-        when(reaction.getChatChannelDomain()).thenReturn(ChatChannelDomain.DISCUSSION);
-        when(reaction.getReceiverNetworkId().getPubKey().getPublicKey().getEncoded()).thenReturn(new byte[0]);
-        return reaction;
+        return mockReaction(id, sender, CHANNEL_ID, MESSAGE_ID, isRemoved);
     }
 }
