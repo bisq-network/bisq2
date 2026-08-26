@@ -157,27 +157,7 @@ public class ApiService implements Service {
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-        if (apiConfig.isWebsocketEnabled()) {
-            webSocketService = Optional.of(new WebSocketService(apiConfig,
-                    tlsContextService,
-                    bondedRolesService,
-                    alertNotificationsService,
-                    chatService,
-                    tradeService,
-                    userService,
-                    bisqEasyService,
-                    networkService,
-                    openTradeItemsService,
-                    permissionService));
-        } else {
-            webSocketService = Optional.empty();
-        }
-
-        // Built before ApiAccessService because revoking a client has to end its connection, and
-        // nothing between here and where this used to sit needs the WebSocket server.
-        ApiAccessService apiAccessService = new ApiAccessService(pairingService,
-                sessionService,
-                webSocketService);
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
         AccessApi accessApi = new AccessApi(apiAccessService);
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
@@ -233,6 +213,22 @@ public class ApiService implements Service {
                     configRestApi);
         } else {
             resourceConfig = new PairingApiResourceConfig(accessApi);
+        }
+
+        if (apiConfig.isWebsocketEnabled()) {
+            webSocketService = Optional.of(new WebSocketService(apiConfig,
+                    tlsContextService,
+                    bondedRolesService,
+                    alertNotificationsService,
+                    chatService,
+                    tradeService,
+                    userService,
+                    bisqEasyService,
+                    networkService,
+                    openTradeItemsService,
+                    permissionService));
+        } else {
+            webSocketService = Optional.empty();
         }
 
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
