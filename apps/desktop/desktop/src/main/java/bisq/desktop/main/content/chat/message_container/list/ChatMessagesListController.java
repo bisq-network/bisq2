@@ -331,7 +331,7 @@ public class ChatMessagesListController implements Controller {
     public void editMyLastMessage() {
         Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> messageListItem = model.getChatMessages()
                 .stream()
-                .filter(ChatMessageListItem::isMyMessage)
+                .filter(ChatMessageListItem::canEditMessage)
                 .max(Comparator.comparing((ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item) -> item.getChatMessage().getDate()));
         messageListItem.ifPresent(item -> item.getSetAsEditing().set(true));
     }

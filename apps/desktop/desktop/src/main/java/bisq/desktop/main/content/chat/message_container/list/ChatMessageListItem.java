@@ -252,6 +252,17 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return chatMessage.isMyMessage(userIdentityService);
     }
 
+    public boolean canEditMessage() {
+        return canEditMessage(isMyMessage(), isPublicChannel(), isBisqEasyPublicChatMessageWithOffer());
+    }
+
+    @VisibleForTesting
+    static boolean canEditMessage(boolean isMyMessage,
+                                  boolean isPublicChannel,
+                                  boolean isBisqEasyPublicChatMessageWithOffer) {
+        return isMyMessage && isPublicChannel && !isBisqEasyPublicChatMessageWithOffer;
+    }
+
     public boolean isPeerMessage() {
         return !isMyMessage();
     }
