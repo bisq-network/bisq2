@@ -148,15 +148,41 @@ public class BitcoinAmountDisplay extends HBox {
         }
 
         valueTextFlow.setVisible(true);
+        // The complete localized amount must be numeric; parsing only the integer part would let
+        // values like "1.N/A" or "1.2.3" through to the numeric formatting.
+        if (!isNumericAmount(amount)) {
+            displayNonNumeric(amount);
+            return;
+        }
         try {
             formatBtcAmount(amount);
             btcCode.setVisible(showBtcCode);
             btcCode.setManaged(showBtcCode);
         } catch (NumberFormatException e) {
-            // A non-numeric value (e.g. a localized "N/A" for a total that cannot be represented)
-            // is rendered verbatim instead of crashing the parse.
             displayNonNumeric(amount);
         }
+    }
+
+    private static boolean isNumericAmount(String amount) {
+        // Digits with at most one localized decimal separator and an optional leading sign; a
+        // bare separator stays accepted as the degenerate zero it always rendered as.
+        char decimalSeparator = StringUtils.getDecimalSeparator();
+        boolean seenSeparator = false;
+        for (int i = 0; i < amount.length(); i++) {
+            char c = amount.charAt(i);
+            if (c == '-' && i == 0) {
+                continue;
+            }
+            if (c == decimalSeparator) {
+                if (seenSeparator) {
+                    return false;
+                }
+                seenSeparator = true;
+            } else if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void displayNonNumeric(String amount) {

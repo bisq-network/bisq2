@@ -377,4 +377,20 @@ class BitcoinAmountDisplayTest {
         assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
         assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part"));
     }
+
+    @Test
+    void testNonNumericFractionalPartIsRenderedVerbatim() {
+        bitcoinAmountDisplay.setBtcAmount("1.N/A");
+        assertEquals("1.N/A", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertFalse(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
+
+    @Test
+    void testMultipleDecimalSeparatorsAreRenderedVerbatim() {
+        bitcoinAmountDisplay.setBtcAmount("1.2.3");
+        assertEquals("1.2.3", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertFalse(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
 }
