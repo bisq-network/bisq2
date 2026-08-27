@@ -388,6 +388,13 @@ class BitcoinAmountDisplayTest {
     }
 
     @Test
+    void testPositiveSignedAmountIsFormattedNumerically() {
+        bitcoinAmountDisplay.setBtcAmount("+1.2");
+        assertEquals("+1.", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertTrue(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
+
+    @Test
     void testMultipleDecimalSeparatorsAreRenderedVerbatim() {
         bitcoinAmountDisplay.setBtcAmount("1.2.3");
         assertEquals("1.2.3", bitcoinAmountDisplay.getIntegerPart().getText());

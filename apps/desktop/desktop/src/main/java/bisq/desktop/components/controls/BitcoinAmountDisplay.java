@@ -170,7 +170,7 @@ public class BitcoinAmountDisplay extends HBox {
         boolean seenSeparator = false;
         for (int i = 0; i < amount.length(); i++) {
             char c = amount.charAt(i);
-            if (c == '-' && i == 0) {
+            if ((c == '-' || c == '+') && i == 0) {
                 continue;
             }
             if (c == decimalSeparator) {
