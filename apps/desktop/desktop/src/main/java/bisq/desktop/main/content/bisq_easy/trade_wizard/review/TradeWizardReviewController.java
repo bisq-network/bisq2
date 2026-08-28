@@ -71,7 +71,8 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.exceptions.TradeProtocolFailure;
-import bisq.trade.exceptions.TradingNotAllowedException;
+import bisq.desktop.common.utils.TradeExceptionHandler;
+import bisq.trade.TradeRestrictedException;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -488,8 +489,8 @@ public class TradeWizardReviewController implements Controller {
                     mediator,
                     sellersPriceSpec,
                     marketPrice);
-        } catch (TradingNotAllowedException e) {
-            new Popup().warning(e.getMessage()).show();
+        } catch (TradeRestrictedException e) {
+            new Popup().warning(TradeExceptionHandler.localizedMessage(e)).show();
             return;
         }
         BisqEasyTrade trade = bisqEasyProtocol.getModel();
@@ -551,7 +552,7 @@ public class TradeWizardReviewController implements Controller {
 
         try {
             bisqEasyTradeService.takeOffer(trade);
-        } catch (TradingNotAllowedException e) {
+        } catch (TradeRestrictedException e) {
             // The error observers were already bound above; unbind them so a retry doesn't stack them.
             if (errorMessagePin != null) {
                 errorMessagePin.unbind();
@@ -561,7 +562,7 @@ public class TradeWizardReviewController implements Controller {
                 peersErrorMessagePin.unbind();
                 peersErrorMessagePin = null;
             }
-            new Popup().warning(e.getMessage()).show();
+            new Popup().warning(TradeExceptionHandler.localizedMessage(e)).show();
             return;
         }
         model.getTakeOfferStatus().set(TradeWizardReviewModel.TakeOfferStatus.SENT);

@@ -3,7 +3,6 @@ package bisq.api.rest_api;
 import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.error.CustomExceptionMapper;
 import bisq.api.rest_api.error.RestApiException;
-import bisq.api.rest_api.error.TradingNotAllowedExceptionMapper;
 import bisq.common.json.JsonMapperProvider;
 import jakarta.ws.rs.ApplicationPath;
 import org.glassfish.jersey.inject.hk2.AbstractBinder;
@@ -18,7 +17,6 @@ public class PairingApiResourceConfig extends ResourceConfig {
                 JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
         register(CustomExceptionMapper.class)
                 .register(RestApiException.Mapper.class)
-                .register(TradingNotAllowedExceptionMapper.class)
                 .register(provider);
 
         register(AccessApi.class);

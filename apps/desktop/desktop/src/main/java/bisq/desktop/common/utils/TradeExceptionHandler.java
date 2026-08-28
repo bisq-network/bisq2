@@ -18,7 +18,8 @@
 package bisq.desktop.common.utils;
 
 import bisq.desktop.components.overlay.Popup;
-import bisq.trade.exceptions.TradingNotAllowedException;
+import bisq.i18n.Res;
+import bisq.trade.TradeRestrictedException;
 
 public final class TradeExceptionHandler {
     private TradeExceptionHandler() {
@@ -28,9 +29,20 @@ public final class TradeExceptionHandler {
         try {
             tradeAction.run();
             return true;
-        } catch (TradingNotAllowedException e) {
-            new Popup().warning(e.getMessage()).show();
+        } catch (TradeRestrictedException e) {
+            new Popup().warning(localizedMessage(e)).show();
             return false;
         }
+    }
+
+    /**
+     * The exception carries a stable English message for API clients; the desktop popup maps the
+     * structured restriction back to the user's language instead of showing that raw text.
+     */
+    public static String localizedMessage(TradeRestrictedException e) {
+        return switch (e.getRestriction()) {
+            case HALT_TRADING -> Res.get("trade.error.tradingHalted");
+            case MIN_VERSION_REQUIRED -> Res.get("trade.error.minVersionRequired", e.findMinRequiredVersion().orElse(""));
+        };
     }
 }
