@@ -1,0 +1,75 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+package bisq.api.rest_api.endpoints.chat;
+
+import bisq.api.dto.chat.CitationDto;
+import bisq.chat.ChatMessage;
+import bisq.chat.Citation;
+import bisq.chat.reactions.Reaction;
+import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class ChatRequestValidationTest {
+    private static final String AUTHOR_PROFILE_ID = "0123456789012345678901234567890123456789";
+
+    @Test
+    void anEmptyOrAbsentTextIsAnError() {
+        assertThat(ChatRequestValidation.textError("")).isPresent();
+        assertThat(ChatRequestValidation.textError(null)).isPresent();
+    }
+
+    /** The domain limit is inclusive. */
+    @Test
+    void theTextLimitIsInclusive() {
+        assertThat(ChatRequestValidation.textError("x".repeat(ChatMessage.MAX_TEXT_LENGTH))).isEmpty();
+        assertThat(ChatRequestValidation.textError("x".repeat(ChatMessage.MAX_TEXT_LENGTH + 1))).isPresent();
+    }
+
+    @Test
+    void anAbsentCitationIsFine() {
+        assertThat(ChatRequestValidation.citationError(null)).isEmpty();
+    }
+
+    @Test
+    void aCitationMissingAFieldIsAnError() {
+        assertThat(ChatRequestValidation.citationError(new CitationDto(null, "text", Optional.empty()))).isPresent();
+        assertThat(ChatRequestValidation.citationError(new CitationDto(AUTHOR_PROFILE_ID, null, Optional.empty()))).isPresent();
+    }
+
+    /** Inclusive like the text limit, and the same limit the Citation constructor enforces. */
+    @Test
+    void theCitationLimitIsInclusive() {
+        assertThat(ChatRequestValidation.citationError(citationOf("x".repeat(Citation.MAX_TEXT_LENGTH)))).isEmpty();
+        assertThat(ChatRequestValidation.citationError(citationOf("x".repeat(Citation.MAX_TEXT_LENGTH + 1)))).isPresent();
+    }
+
+    private static CitationDto citationOf(String text) {
+        return new CitationDto(AUTHOR_PROFILE_ID, text, Optional.empty());
+    }
+
+    @Test
+    void aReactionIdIsParsedOnlyWithinRange() {
+        assertThat(ChatRequestValidation.parseReaction(-1)).isEmpty();
+        assertThat(ChatRequestValidation.parseReaction(Reaction.values().length)).isEmpty();
+        assertThat(ChatRequestValidation.parseReaction(0)).contains(Reaction.values()[0]);
+    }
+}

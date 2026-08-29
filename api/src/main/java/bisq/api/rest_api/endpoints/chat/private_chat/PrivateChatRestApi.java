@@ -18,13 +18,11 @@
 package bisq.api.rest_api.endpoints.chat.private_chat;
 
 import bisq.api.dto.DtoMappings;
-import bisq.api.dto.chat.CitationDto;
 import bisq.api.dto.mappings.chat.two_party.SendRejectionDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
 import bisq.chat.ChatChannelDomain;
-import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.notifications.ChatNotificationService;
@@ -58,8 +56,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+import static bisq.api.rest_api.endpoints.chat.ChatRequestValidation.citationError;
+import static bisq.api.rest_api.endpoints.chat.ChatRequestValidation.parseReaction;
+import static bisq.api.rest_api.endpoints.chat.ChatRequestValidation.textError;
 
 /**
  * Two-party private chat (DM) with an arbitrary peer, outside of a trade. Every operation is addressed
@@ -84,8 +85,6 @@ import java.util.function.Consumer;
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Private Chat API", description = "Endpoints for two-party private chat (direct messages)")
 public class PrivateChatRestApi extends RestApiBase {
-    private static final int TIMEOUT_SEC = 120;
-
     private final TwoPartyPrivateChatChannelService channelService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final ChatNotificationService chatNotificationService;
@@ -177,24 +176,16 @@ public class PrivateChatRestApi extends RestApiBase {
         applyTimeout(asyncResponse);
         try {
             // Jersey hands us null for an absent body, which would otherwise NPE into a 500.
-            if (request == null || StringUtils.isEmpty(request.text())) {
-                asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "text must not be empty."));
+            if (request == null) {
+                asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "A request body is required."));
                 return;
             }
-            // Desktop enforces this before sending; the message itself does not, a TwoPartyPrivateChatMessage
-            // is never verified on construction. Without this an over-long text gets stored and sent. The
-            // citation needs no such check: Citation verifies itself in its constructor.
-            if (request.text().length() > ChatMessage.MAX_TEXT_LENGTH) {
-                asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST,
-                        "text must not be longer than " + ChatMessage.MAX_TEXT_LENGTH + " characters."));
-                return;
-            }
-            // Citation validates itself, but against a null it throws NPE, not IllegalArgumentException,
-            // and a missing field in the client's JSON would come back as a 500.
-            CitationDto citationDto = request.citation();
-            if (citationDto != null && (citationDto.authorUserProfileId() == null || citationDto.text() == null)) {
-                asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST,
-                        "citation requires authorUserProfileId and text."));
+            // Desktop enforces the text limit before sending; the message itself does not, a
+            // TwoPartyPrivateChatMessage is never verified on construction. See ChatRequestValidation for
+            // why the citation gets a null check only.
+            Optional<String> inputError = textError(request.text()).or(() -> citationError(request.citation()));
+            if (inputError.isPresent()) {
+                asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, inputError.get()));
                 return;
             }
             withChannel(channelId, asyncResponse, channel -> {
@@ -264,15 +255,13 @@ public class PrivateChatRestApi extends RestApiBase {
             }
 
             int reactionId = request.reactionId();
-            // Bounds-checked rather than letting values()[reactionId] throw, which would surface a client
-            // input error as a 500.
-            Reaction[] reactions = Reaction.values();
-            if (reactionId < 0 || reactionId >= reactions.length) {
+            Optional<Reaction> parsedReaction = parseReaction(reactionId);
+            if (parsedReaction.isEmpty()) {
                 asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST,
                         "Unsupported reactionId: " + reactionId));
                 return;
             }
-            Reaction reaction = reactions[reactionId];
+            Reaction reaction = parsedReaction.get();
 
             // A missing channel is reported apart from a missing message, so the caller is pointed at
             // the half of the request that is actually wrong.
@@ -360,13 +349,6 @@ public class PrivateChatRestApi extends RestApiBase {
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
-    }
-
-    private void applyTimeout(AsyncResponse asyncResponse) {
-        // Timeout for internal processing, not for the socket
-        asyncResponse.setTimeout(TIMEOUT_SEC, TimeUnit.SECONDS);
-        asyncResponse.setTimeoutHandler(response ->
-                response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out")));
     }
 
     /** Whether any of my identities already holds this reaction on the message. */
