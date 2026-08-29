@@ -120,7 +120,8 @@ scope, then:
 echo "$GITHUB_PAT" | docker login ghcr.io -u <you> --password-stdin
 
 VERSION=2.1.11.1
-docker build -f apps/api-app/docker/Dockerfile -t ghcr.io/<you>/bisq2-api:$VERSION .
+docker build -f apps/api-app/docker/Dockerfile --build-arg IMAGE_VERSION=$VERSION \
+  -t ghcr.io/<you>/bisq2-api:$VERSION .
 docker build -f apps/api-app/docker/qr-ui/Dockerfile --build-arg APP_VERSION=$VERSION \
   -t ghcr.io/<you>/bisq2-api-web-ui:$VERSION apps/api-app/docker/qr-ui
 docker push ghcr.io/<you>/bisq2-api:$VERSION
