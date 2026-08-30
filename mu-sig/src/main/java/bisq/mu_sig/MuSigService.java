@@ -238,6 +238,11 @@ public class MuSigService extends LifecycleService {
                 MuSigProtocol.VERSION);
     }
 
+    public MuSigOffer cloneOffer(MuSigOffer muSigOffer) {
+        checkArgument(isActivated());
+        return muSigOfferService.cloneOffer(muSigOffer);
+    }
+
     public CompletableFuture<BroadcastResult> publishOffer(MuSigOffer muSigOffer) throws UserProfileBannedException, RateLimitExceededException {
         checkArgument(isActivated());
         validateUserProfile(muSigOffer.getMakersUserProfileId());
