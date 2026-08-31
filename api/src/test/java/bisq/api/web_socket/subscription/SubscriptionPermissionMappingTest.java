@@ -51,7 +51,8 @@ class SubscriptionPermissionMappingTest {
             Map.entry(Topic.NETWORK_INFO, Permission.NETWORK_INFO),
             Map.entry(Topic.PRIVATE_CHAT_CHANNELS, Permission.PRIVATE_CHAT_CHANNELS),
             Map.entry(Topic.PRIVATE_CHAT_MESSAGES, Permission.PRIVATE_CHAT_CHANNELS),
-            Map.entry(Topic.PRIVATE_CHAT_REACTIONS, Permission.PRIVATE_CHAT_CHANNELS)));
+            Map.entry(Topic.PRIVATE_CHAT_REACTIONS, Permission.PRIVATE_CHAT_CHANNELS),
+            Map.entry(Topic.CONTACTS, Permission.CONTACTS)));
 
     private final SubscriptionPermissionMapping mapping = new SubscriptionPermissionMapping();
 
