@@ -3,7 +3,6 @@ package bisq.api.rest_api;
 import bisq.api.ApiConfig;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.endpoints.config.ConfigRestApi;
@@ -28,7 +27,7 @@ import org.glassfish.jersey.inject.hk2.AbstractBinder;
 @ApplicationPath("/api/v1")
 public class RestApiResourceConfig extends RestApiBaseResourceConfig {
     public RestApiResourceConfig(ApiConfig apiConfig,
-                                 PermissionService<RestPermissionMapping> permissionService,
+                                 PermissionService permissionService,
                                  SessionAuthenticationService sessionAuthenticationService,
                                  AccessApi accessApi,
                                  OfferbookRestApi offerbookRestApi,

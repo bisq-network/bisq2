@@ -52,7 +52,19 @@ public enum Permission implements ProtoEnum {
     TRADES(7, Kind.STANDARD),
     USER_IDENTITIES(8, Kind.STANDARD),
     USER_PROFILES(9, Kind.STANDARD),
-    MOBILE_DEVICES(10, Kind.STANDARD);
+    MOBILE_DEVICES(10, Kind.STANDARD),
+    // Id 11 is reserved for PRIVATE_CHAT_CHANNELS, which is declared on the for-mobile branch.
+    // Ids are wire values, so the gap stays until that work reaches main.
+    //
+    // NETWORK_INFO has no REST route of its own — the network state is served over the
+    // NETWORK_INFO subscription only. It is declared here because the permission names the data,
+    // not the transport: without it that data is the one thing in the API reachable with no grant
+    // at all, and it is not diagnostics — NetworkInfoDto carries the node's own address, its keyId
+    // and the address of every peer it is connected to.
+    //
+    // STANDARD so a grantAll pairing picks it up at read time (see PermissionSet) rather than
+    // losing the network banner until the user pairs again.
+    NETWORK_INFO(12, Kind.STANDARD);
 
     /** Grant classification. Named so a declaration reads as an explicit security decision. */
     public enum Kind {

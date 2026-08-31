@@ -24,7 +24,6 @@ import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
@@ -106,7 +105,7 @@ public class ApiService implements Service {
     @Getter
     private final PairingService pairingService;
     @Getter
-    private final PermissionService<RestPermissionMapping> permissionService;
+    private final PermissionService permissionService;
     @Getter
     private final SessionService sessionService;
     @Getter
@@ -149,7 +148,7 @@ public class ApiService implements Service {
                 apiConfig.getOnionServicePort());
 
         ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
-        permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
+        permissionService = new PermissionService(apiAccessStoreService);
         pairingService = new PairingService(apiConfig, appDataDirPath, apiAccessStoreService, permissionService);
         sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
         tlsContextService = new TlsContextService(apiConfig, appDataDirPath);
@@ -223,7 +222,8 @@ public class ApiService implements Service {
                     userService,
                     bisqEasyService,
                     networkService,
-                    openTradeItemsService));
+                    openTradeItemsService,
+                    permissionService));
         } else {
             webSocketService = Optional.empty();
         }
@@ -232,7 +232,6 @@ public class ApiService implements Service {
                 resourceConfig,
                 webSocketService,
                 sessionAuthenticationService,
-                permissionService,
                 tlsContextService);
     }
 
