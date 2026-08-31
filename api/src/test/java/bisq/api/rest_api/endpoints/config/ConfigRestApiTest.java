@@ -18,6 +18,7 @@
 package bisq.api.rest_api.endpoints.config;
 
 import bisq.api.access.AllowUnauthenticated;
+import bisq.api.access.permissions.PermissionService;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
@@ -187,7 +188,9 @@ class ConfigRestApiTest {
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
-                mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS));
+                mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS),
+                mock(PermissionService.class),
+                false);
         try {
             Method method = SubscriptionService.class.getDeclaredMethod("findWebSocketService", Topic.class);
             method.setAccessible(true);

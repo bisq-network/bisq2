@@ -19,8 +19,6 @@ package bisq.api;
 
 import bisq.api.access.filter.WebSocketFilterAddOn;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.transport.TlsContext;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.rest_api.util.StaticFileHandler;
@@ -67,7 +65,6 @@ public class HttpServerBootstrapService implements Service {
     private final ResourceConfig resourceConfig;
     private final Optional<WebSocketService> webSocketService;
     private final SessionAuthenticationService sessionAuthenticationService;
-    private final PermissionService<RestPermissionMapping> permissionService;
     private final TlsContextService tlsContextService;
 
     private Optional<HttpServer> httpServer = Optional.empty();
@@ -78,14 +75,12 @@ public class HttpServerBootstrapService implements Service {
                                       ResourceConfig resourceConfig,
                                       Optional<WebSocketService> webSocketService,
                                       SessionAuthenticationService sessionAuthenticationService,
-                                      PermissionService<RestPermissionMapping> permissionService,
                                       TlsContextService tlsContextService
     ) {
         this.apiConfig = apiConfig;
         this.resourceConfig = resourceConfig;
         this.webSocketService = webSocketService;
         this.sessionAuthenticationService = sessionAuthenticationService;
-        this.permissionService = permissionService;
         this.tlsContextService = tlsContextService;
     }
 
