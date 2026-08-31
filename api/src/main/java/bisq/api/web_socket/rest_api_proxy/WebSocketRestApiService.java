@@ -23,6 +23,7 @@ import bisq.api.access.filter.authz.AuthorizationException;
 import bisq.api.access.filter.authz.UriValidator;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.util.JsonUtil;
+import bisq.api.web_socket.util.WebSocketIdentity;
 import bisq.common.application.Service;
 import bisq.common.util.StringUtils;
 import bisq.security.tls.TlsException;
@@ -32,7 +33,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 
 import javax.net.ssl.SSLContext;
@@ -214,21 +214,11 @@ public class WebSocketRestApiService implements Service {
      * identity to pass on and the REST API asks for none.
      */
     private static void forwardAuthenticatedIdentity(WebSocket webSocket, HttpRequest.Builder requestBuilder) {
-        HttpServletRequest upgradeRequest = findUpgradeRequest(webSocket)
+        HttpServletRequest upgradeRequest = WebSocketIdentity.findUpgradeRequest(webSocket)
                 .orElseThrow(() -> new IllegalStateException(
                         "Could not resolve the upgrade request of the WebSocket connection"));
         copyHeader(upgradeRequest, requestBuilder, Headers.SESSION_ID);
         copyHeader(upgradeRequest, requestBuilder, Headers.CLIENT_ID);
-    }
-
-    /**
-     * The upgrade request is where the connection's authenticated identity lives, so it is read from
-     * the WebSocket rather than from the message.
-     */
-    private static Optional<HttpServletRequest> findUpgradeRequest(WebSocket webSocket) {
-        return webSocket instanceof DefaultWebSocket defaultWebSocket
-                ? Optional.ofNullable(defaultWebSocket.getUpgradeRequest())
-                : Optional.empty();
     }
 
     private static void copyHeader(HttpServletRequest upgradeRequest,

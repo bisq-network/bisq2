@@ -30,7 +30,7 @@ class PermissionTest {
 
     @Test
     void everyCurrentPermissionIsStandard() {
-        // The 12 current permissions are all standard. This documents that intent; the security
+        // Every permission declared so far is standard. This documents that intent; the security
         // guarantee itself comes from the SENSITIVE default (an id-only declaration is not
         // auto-grantable), so a forgotten classification fails closed rather than silently
         // joining grantAll. Whoever adds the first sensitive permission updates this test AND
@@ -42,6 +42,29 @@ class PermissionTest {
     @Test
     void autoGrantableEqualsAllValuesWhileNoSensitivePermissionExists() {
         assertEquals(EnumSet.allOf(Permission.class), Permission.autoGrantable());
+    }
+
+    @Test
+    void idsAreUnique() {
+        // fromId returns the first match, so a duplicate id resolves silently to whichever value
+        // was declared first — a permission would then be granted under another one's name. The
+        // deliberate gap at id 11, left for a permission declared in another branch, is exactly the
+        // shape that invites a duplicate the next time someone appends without reading the comment.
+        assertEquals(Permission.values().length,
+                Arrays.stream(Permission.values()).map(Permission::getId).distinct().count(),
+                "two permissions share an id");
+    }
+
+    @Test
+    void everyPermissionHasAProtoEntryOneAheadOfItsId() {
+        // The proto numbers are these ids shifted by one for UNSPECIFIED. Nothing enforces that at
+        // compile time: a value added without its proto entry throws from toProtoEnum at persist
+        // time, which is a store write failing in the field rather than a build failing here.
+        for (Permission permission : Permission.values()) {
+            assertEquals(permission.getId() + 1,
+                    permission.toProtoEnum().getNumber(),
+                    () -> permission.name() + " is out of step with its proto entry");
+        }
     }
 
     @Test

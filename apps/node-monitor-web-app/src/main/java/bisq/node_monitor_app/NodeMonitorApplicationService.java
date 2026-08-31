@@ -24,7 +24,6 @@ import bisq.api.access.ApiAccessService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
@@ -179,7 +178,7 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         if (apiConfig.isRestEnabled()) {
             ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
-            PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
+            PermissionService permissionService = new PermissionService(apiAccessStoreService);
             PairingService pairingService = new PairingService(apiConfig, config.getAppDataDirPath(), apiAccessStoreService, permissionService);
             SessionService sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
             TlsContextService tlsContextService = new TlsContextService(apiConfig, config.getAppDataDirPath());
@@ -207,7 +206,6 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     resourceConfig,
                     Optional.empty(),
                     sessionAuthenticationService,
-                    permissionService,
                     tlsContextService));
         }
     }
