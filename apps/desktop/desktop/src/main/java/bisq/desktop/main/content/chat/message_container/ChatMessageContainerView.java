@@ -27,6 +27,7 @@ import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -241,6 +242,11 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         messagesListView.visibleProperty().unbind();
         messagesListView.managedProperty().unbind();
         userProfileSelectionRoot.disableProperty().unbind();
+    }
+
+    @VisibleForTesting
+    ChatMentionPopupMenu userMentionPopup() {
+        return userMentionPopup;
     }
 
     private void processKeyPressed(KeyEvent keyEvent) {

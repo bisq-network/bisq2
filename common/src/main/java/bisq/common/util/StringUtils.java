@@ -114,20 +114,6 @@ public class StringUtils {
         return string.toLowerCase().contains(searchString.toLowerCase());
     }
 
-    /*
-     * Method used in chat message to check if we should show mention user/channel popup
-     */
-    public static String deriveWordStartingWith(String text, char indicatorSign) {
-        int index = text.lastIndexOf(indicatorSign);
-        if (index < 0 || (index > 1 && text.charAt(index - 1) != ' ')) return null;
-
-        String result = text.substring(index + 1);
-        if (result.matches("[a-zA-Z\\d]*$")) {
-            return result;
-        }
-        return null;
-    }
-
     public static String capitalize(String value, Locale locale) {
         if (value == null || value.isEmpty()) {
             return value;

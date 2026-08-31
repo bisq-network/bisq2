@@ -46,8 +46,10 @@ import bisq.settings.SettingsService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.desktop.main.content.chat.message_container.components.ChatMentionParser;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -211,10 +213,37 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
         return chatMessagesListController.scrollPageDown();
     }
 
-    void onUserProfileSelected(UserProfile user) {
-        String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getUserName() + " ");
-        model.getTextInput().set(content);
-        model.getCaretPosition().set(content.length());
+    @VisibleForTesting
+    ChatMessageContainerModel getModel() {
+        return model;
+    }
+
+    void onUserProfileSelected(UserProfile user, ChatMentionParser.MentionMatch match) {
+        String text = model.getTextInput().get();
+        if (text == null
+                || match.indicatorIndex() < 0
+                || match.caretPosition() > text.length()
+                || match.indicatorIndex() >= match.caretPosition()) {
+            // The text changed between parsing and selection; dropping the completion is safer
+            // than replacing an arbitrary range.
+            return;
+        }
+        String prefix = text.substring(0, match.indicatorIndex());
+        String suffix = text.substring(match.caretPosition());
+        String mention = "@" + user.getUserName();
+        int caretPosition = prefix.length() + mention.length();
+        String separator = "";
+        if (suffix.startsWith(" ")) {
+            // Reuse the existing space and continue typing after it.
+            caretPosition++;
+        } else if (suffix.isEmpty() || Character.isLetterOrDigit(suffix.charAt(0))) {
+            // A separating space is only needed before a word; punctuation and line breaks
+            // must stay attached to the mention.
+            separator = " ";
+            caretPosition++;
+        }
+        model.getTextInput().set(prefix + mention + separator + suffix);
+        model.getCaretPosition().set(caretPosition);
     }
 
     void onOpenProfileCard(UserProfile userProfile) {

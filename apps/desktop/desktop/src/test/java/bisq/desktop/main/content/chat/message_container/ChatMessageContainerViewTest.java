@@ -18,8 +18,10 @@
 package bisq.desktop.main.content.chat.message_container;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextInputControl;
@@ -39,6 +41,10 @@ import javafx.scene.input.KeyEvent;
 import org.testfx.util.WaitForAsyncUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,6 +84,154 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
     @AfterEach
     void tearDown() throws Exception {
         closeable.close();
+    }
+
+    @Test
+    void mentionPopupFollowsTheCaretNotTheEndOfTheText(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al hello");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("the popup must open for a mention token in front of existing text")
+                .isTrue();
+
+        robot.interact(() -> input.positionCaret(input.getText().length()));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("moving the caret out of the token must hide the popup")
+                .isFalse();
+    }
+
+    @Test
+    void enterCompletesTheMentionInsteadOfSending(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al hello");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ENTER, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verify(controller).onUserProfileSelected(eq(alice), any());
+        verify(controller, never()).onSendMessage(any());
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+    }
+
+    @Test
+    void escapeDismissesThePopupAndEnterSendsAgain(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ENTER, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+        verify(controller).onSendMessage("@al");
+        verify(controller, never()).onUserProfileSelected(any(), any());
+    }
+
+    @Test
+    void movingTheCaretIntoAnotherTokenReArmsADismissedPopup(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al x @bo");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+
+        // The caret jumps straight from the dismissed token into another one.
+        robot.interact(() -> input.positionCaret(9));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("a dismissal must not leak into another mention token")
+                .isTrue();
+    }
+
+    @Test
+    void backspaceWithinTheDismissedTokenKeepsThePopupHidden(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+
+        // Backspace produces a torn text/caret intermediate state; the dismissal must survive.
+        robot.interact(() -> input.deleteText(2, 3));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("editing the dismissed token must not reopen the popup")
+                .isFalse();
+
+        // A genuinely fresh token re-arms it.
+        robot.interact(() -> {
+            input.setText("");
+            input.positionCaret(0);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> {
+            input.setText("@a");
+            input.positionCaret(2);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("a fresh mention token after leaving the dismissed one must open the popup")
+                .isTrue();
     }
 
     @Test

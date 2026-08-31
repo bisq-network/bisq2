@@ -25,6 +25,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.main.content.chat.message_container.components.ChatMentionParser;
 import bisq.desktop.testutil.TestFxHeadlessSupport;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
@@ -90,6 +91,90 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
         assertThat(controller.publishedCitation).isEqualTo(Optional.empty());
         assertThat(controller.publishedChannel).isEqualTo(channel);
         assertThat(controller.publishedUserIdentity).isSameAs(selectedUserIdentity);
+    }
+
+    @Test
+    void mentionCompletionReplacesTheTokenAtTheCaretAndPreservesTheSuffix(FxRobot robot) {
+        closeable = MockitoAnnotations.openMocks(this);
+        Transitions.setSettingsService(settingsService);
+        when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
+        when(serviceProvider.getUserService().getUserIdentityService().getUserIdentities())
+                .thenReturn(new ObservableSet<>());
+        TestableController controller = new TestableController(serviceProvider, ChatChannelDomain.SUPPORT);
+        UserProfile mentioned = mock(UserProfile.class);
+        when(mentioned.getUserName()).thenReturn("john");
+
+        robot.interact(() -> {
+            controller.getModel().getTextInput().set("Hi @jo there");
+            controller.onUserProfileSelected(mentioned,
+                    new ChatMentionParser.MentionMatch("jo", 3, 6));
+        });
+
+        // The existing space after the token is reused, not duplicated.
+        assertThat(controller.getModel().getTextInput().get()).isEqualTo("Hi @john there");
+        assertThat(controller.getModel().getCaretPosition().get()).isEqualTo(9);
+    }
+
+    @Test
+    void mentionCompletionDoesNotDeleteTheWordAfterTheCaret(FxRobot robot) {
+        closeable = MockitoAnnotations.openMocks(this);
+        Transitions.setSettingsService(settingsService);
+        when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
+        when(serviceProvider.getUserService().getUserIdentityService().getUserIdentities())
+                .thenReturn(new ObservableSet<>());
+        TestableController controller = new TestableController(serviceProvider, ChatChannelDomain.SUPPORT);
+        UserProfile mentioned = mock(UserProfile.class);
+        when(mentioned.getUserName()).thenReturn("alice");
+
+        robot.interact(() -> {
+            // "@al" typed directly in front of the pre-existing word "world".
+            controller.getModel().getTextInput().set("@alworld");
+            controller.onUserProfileSelected(mentioned,
+                    new ChatMentionParser.MentionMatch("al", 0, 3));
+        });
+
+        assertThat(controller.getModel().getTextInput().get()).isEqualTo("@alice world");
+        assertThat(controller.getModel().getCaretPosition().get()).isEqualTo(7);
+    }
+
+    @Test
+    void mentionCompletionBeforePunctuationDoesNotInsertASpace(FxRobot robot) {
+        closeable = MockitoAnnotations.openMocks(this);
+        Transitions.setSettingsService(settingsService);
+        when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
+        when(serviceProvider.getUserService().getUserIdentityService().getUserIdentities())
+                .thenReturn(new ObservableSet<>());
+        TestableController controller = new TestableController(serviceProvider, ChatChannelDomain.SUPPORT);
+        UserProfile mentioned = mock(UserProfile.class);
+        when(mentioned.getUserName()).thenReturn("alice");
+
+        robot.interact(() -> {
+            controller.getModel().getTextInput().set("Hi @al, there");
+            controller.onUserProfileSelected(mentioned,
+                    new ChatMentionParser.MentionMatch("al", 3, 6));
+        });
+
+        assertThat(controller.getModel().getTextInput().get()).isEqualTo("Hi @alice, there");
+        assertThat(controller.getModel().getCaretPosition().get()).isEqualTo(9);
+    }
+
+    @Test
+    void mentionCompletionWithAStaleMatchIsDropped(FxRobot robot) {
+        closeable = MockitoAnnotations.openMocks(this);
+        Transitions.setSettingsService(settingsService);
+        when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
+        when(serviceProvider.getUserService().getUserIdentityService().getUserIdentities())
+                .thenReturn(new ObservableSet<>());
+        TestableController controller = new TestableController(serviceProvider, ChatChannelDomain.SUPPORT);
+        UserProfile mentioned = mock(UserProfile.class);
+
+        robot.interact(() -> {
+            controller.getModel().getTextInput().set("x");
+            controller.onUserProfileSelected(mentioned,
+                    new ChatMentionParser.MentionMatch("jo", 0, 5));
+        });
+
+        assertThat(controller.getModel().getTextInput().get()).isEqualTo("x");
     }
 
     private static final class TestableController extends ChatMessageContainerController {
