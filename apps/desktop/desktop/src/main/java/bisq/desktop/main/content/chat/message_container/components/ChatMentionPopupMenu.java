@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.chat.message_container.components;
 
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqPopup;
 import bisq.desktop.components.controls.BisqTextArea;
@@ -38,6 +39,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.IndexedCell;
 import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.input.KeyEvent;
@@ -56,6 +58,21 @@ public class ChatMentionPopupMenu extends BisqPopup {
     private final ObjectProperty<MentionMatch> mentionMatch = new SimpleObjectProperty<>();
     // Escape dismisses the popup for the current mention token; leaving the token re-arms it.
     private boolean dismissed;
+    // Indicator offset of the dismissed token. An edit that overwrites this character ends
+    // the token, and with it the dismissal; the tracker below watches for that.
+    private int dismissedIndicatorIndex = -1;
+    private final TextFormatter<String> tokenEditTracker = new TextFormatter<>(change -> {
+        if (dismissed
+                && change.isContentChange()
+                && change.getRangeStart() <= dismissedIndicatorIndex
+                && dismissedIndicatorIndex < change.getRangeEnd()) {
+            // The edit removed or replaced the dismissed token's indicator character, so
+            // whatever the edit produced at this offset is a fresh mention attempt.
+            dismissed = false;
+            reevaluateAfterEdit();
+        }
+        return change;
+    });
     // Last non-torn parse result; JavaFX updates the text before clamping the caret, and the
     // torn intermediate state must not produce a transient null that wipes the dismissal.
     private MentionMatch lastStableMatch;
@@ -100,11 +117,9 @@ public class ChatMentionPopupMenu extends BisqPopup {
             if (newValue != null) {
                 // The caret can jump from one mention token straight into another; the token
                 // identity, not a null transition, decides when the dismissal is re-armed.
-                // The indicator offset alone is not identity: replacing a dismissed token with
-                // a fresh one at the same offset must re-arm too.
-                boolean isNewToken = oldValue == null
-                        || oldValue.indicatorIndex() != newValue.indicatorIndex()
-                        || !isWithinTokenEdit(oldValue.query(), newValue.query());
+                // A same-offset replacement is caught by the edit tracker, which drops the
+                // dismissal when an edit overwrites the dismissed token's indicator.
+                boolean isNewToken = oldValue == null || oldValue.indicatorIndex() != newValue.indicatorIndex();
                 if (isNewToken) {
                     dismissed = false;
                 }
@@ -124,6 +139,7 @@ public class ChatMentionPopupMenu extends BisqPopup {
     }
 
     public void init() {
+        inputField.setTextFormatter(tokenEditTracker);
         mentionMatch.addListener(mentionMatchChangeListener);
         mentionMatch.bind(Bindings.createObjectBinding(
                 () -> {
@@ -143,11 +159,13 @@ public class ChatMentionPopupMenu extends BisqPopup {
 
     public void cleanup() {
         hide();
+        inputField.setTextFormatter(null);
         mentionMatch.removeListener(mentionMatchChangeListener);
         mentionMatch.unbind();
         mentionMatch.set(null);
         listView.getSelectionModel().clearSelection();
         dismissed = false;
+        dismissedIndicatorIndex = -1;
         lastStableMatch = null;
     }
 
@@ -204,17 +222,25 @@ public class ChatMentionPopupMenu extends BisqPopup {
     }
 
     public void dismiss() {
+        MentionMatch match = mentionMatch.get();
+        dismissedIndicatorIndex = match != null ? match.indicatorIndex() : -1;
         dismissed = true;
         hide();
     }
 
-    private static boolean isWithinTokenEdit(String oldQuery, String newQuery) {
-        if (newQuery.isEmpty()) {
-            // The token content was cleared; whatever comes next is a fresh mention attempt.
-            return oldQuery.isEmpty();
-        }
-        // Typing extends the query and Backspace truncates it; anything else replaced it.
-        return oldQuery.startsWith(newQuery) || newQuery.startsWith(oldQuery);
+    private void reevaluateAfterEdit() {
+        // A byte-identical replacement changes neither the text nor the match, so the match
+        // listener never runs; re-evaluate once the edit has been applied. The formatter
+        // check keeps a queued callback from acting after cleanup().
+        UIThread.runOnNextRenderFrame(() -> {
+            if (inputField.getTextFormatter() != tokenEditTracker) {
+                return;
+            }
+            MentionMatch match = mentionMatch.get();
+            if (match != null && !dismissed && !isShowing()) {
+                show(inputField);
+            }
+        });
     }
 
     private void handleKeyPressed(KeyEvent keyEvent) {

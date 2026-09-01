@@ -385,7 +385,7 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void atomicallyExtendingADismissedTokenStaysDismissed(FxRobot robot) {
+    void atomicallyReplacingADismissedTokenReArmsThePopup(FxRobot robot) {
         TextInputControl input = view.messageInput();
         UserProfile alice = mock(UserProfile.class);
         when(alice.getUserName()).thenReturn("alice");
@@ -404,20 +404,20 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(view.userMentionPopup().isShowing()).isFalse();
 
-        // Extending the query in one edit is the same intent as typing the rest of the name
-        // after Escape; the dismissal must hold.
+        // The edit replaces the dismissed token's indicator, so the dismissed token no
+        // longer exists; the fresh one at the same offset re-arms the popup.
         robot.interact(() -> {
             input.selectAll();
             input.replaceSelection("@alice");
         });
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(view.userMentionPopup().isShowing())
-                .as("extending a dismissed token must not reopen the popup")
-                .isFalse();
+                .as("replacing the dismissed token wholesale must reopen the popup")
+                .isTrue();
     }
 
     @Test
-    void backspacingToTheBareIndicatorStartsAFreshAttempt(FxRobot robot) {
+    void backspacingToTheBareIndicatorKeepsThePopupHidden(FxRobot robot) {
         TextInputControl input = view.messageInput();
         UserProfile alice = mock(UserProfile.class);
         when(alice.getUserName()).thenReturn("alice");
@@ -436,12 +436,43 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(view.userMentionPopup().isShowing()).isFalse();
 
-        // Clearing the token content ends the dismissed attempt: a retype at the bare
-        // indicator is indistinguishable from this transition, so both re-arm.
+        // The indicator survives the edit, so this is still the dismissed token.
         robot.interact(() -> input.deleteText(1, 2));
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(view.userMentionPopup().isShowing())
-                .as("an emptied token is a fresh mention attempt")
+                .as("backspacing within the dismissed token must not reopen the popup")
+                .isFalse();
+    }
+
+    @Test
+    void replacingADismissedTokenWithIdenticalTextReArmsThePopup(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+
+        // A byte-identical replacement changes neither the text nor the match, so only the
+        // edit itself can re-arm and re-show the popup.
+        robot.interact(() -> {
+            input.selectAll();
+            input.replaceSelection("@al");
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("replacing the dismissed token with identical text must reopen the popup")
                 .isTrue();
     }
 
