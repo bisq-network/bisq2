@@ -36,6 +36,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class NetworkDataValidation {
     public static final long TWO_HOURS = TimeUnit.HOURS.toMillis(2);
     public static final long BISQ_1_LAUNCH_DATE = DateUtils.getUTCDate(2016, GregorianCalendar.APRIL, 27).getTime();
+    /** Exposed so a caller that has to reject the id before we do can ask for the width rather than repeat it. */
+    public static final int PROFILE_ID_LENGTH = 40;
 
     public static void validateDate(long date) {
         // Date can be max 2 hours in future and cannot be older than bisq 1 launch date
@@ -77,7 +79,8 @@ public class NetworkDataValidation {
 
     // Profile ID is hash as hex
     public static void validateProfileId(String profileId) {
-        checkArgument(profileId.length() == 40, "Profile ID must be 40 characters. profileId=" + profileId);
+        checkArgument(profileId.length() == PROFILE_ID_LENGTH,
+                "Profile ID must be " + PROFILE_ID_LENGTH + " characters. profileId=" + profileId);
     }
 
     public static void validateTradeId(String tradeId) {

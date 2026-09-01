@@ -55,6 +55,23 @@ class ChatRequestValidationTest {
         assertThat(ChatRequestValidation.citationError(new CitationDto(AUTHOR_PROFILE_ID, null, Optional.empty()))).isPresent();
     }
 
+    /**
+     * Not a limit but an exact width, and the reason it is checked here is the same as for the text:
+     * the one who would otherwise catch it is {@code NetworkDataValidation.validateProfileId}, whose
+     * message appends the id it rejected. Leaving it to the {@code Citation} constructor answers a 400
+     * that hands the client back what it just sent.
+     */
+    @Test
+    void aCitationWithAMalformedAuthorIdIsAnErrorThatDoesNotEchoIt() {
+        String malformed = "x".repeat(200);
+
+        Optional<String> error = ChatRequestValidation.citationError(
+                new CitationDto(malformed, "text", Optional.empty()));
+
+        assertThat(error).isPresent();
+        assertThat(error.get()).doesNotContain(malformed);
+    }
+
     /** Inclusive like the text limit, and the same limit the Citation constructor enforces. */
     @Test
     void theCitationLimitIsInclusive() {

@@ -241,6 +241,24 @@ class PublicChatRestApiTest {
         verify(channelService, never()).publishChatMessage(anyString(), any(), any(), any());
     }
 
+    /**
+     * The other half of the same guarantee, and the one that used to leak: the author id is not a
+     * length check, so it passed {@code citationError} and was caught by the {@code Citation}
+     * constructor instead, whose message appends the id. That landed in the 400 body through the
+     * endpoint's {@code IllegalArgumentException} arm.
+     */
+    @Test
+    void aCitationWithAMalformedAuthorIdIsRejectedWithoutEchoingIt() {
+        String malformedId = "x".repeat(200);
+        CitationDto citation = new CitationDto(malformedId, "quoted", Optional.empty());
+
+        restApi.sendTextMessage(DISCUSSION_ID, new SendPublicChatMessageRequest("hi", citation, null), asyncResponse);
+
+        assertThat(status()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        assertThat(resumedEntity().toString()).doesNotContain(malformedId);
+        verify(channelService, never()).publishChatMessage(anyString(), any(), any(), any());
+    }
+
     @Test
     void sendingReturnsNotFoundForAnUnknownChannel() {
         restApi.sendTextMessage("discussion.nope", new SendPublicChatMessageRequest("hi", null, null), asyncResponse);
