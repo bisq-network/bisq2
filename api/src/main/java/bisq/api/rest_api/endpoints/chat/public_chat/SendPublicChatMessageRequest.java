@@ -15,26 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.web_socket.subscription;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES,
-    TRADE_PROPERTIES,
-    TRADE_CHAT_MESSAGES,
-    CHAT_REACTIONS,
-    REPUTATION,
-    NUM_USER_PROFILES,
-    ALERT_NOTIFICATIONS,
-    TRADE_RESTRICTING_ALERT,
-    NETWORK_INFO,
-    PRIVATE_CHAT_CHANNELS,
-    PRIVATE_CHAT_MESSAGES,
-    PRIVATE_CHAT_REACTIONS,
-    CONTACTS,
-    PUBLIC_CHAT_CHANNELS,
-    PUBLIC_CHAT_MESSAGES,
-    PUBLIC_CHAT_REACTIONS,
+package bisq.api.rest_api.endpoints.chat.public_chat;
+
+import bisq.api.dto.chat.CitationDto;
+
+import javax.annotation.Nullable;
+
+/**
+ * @param senderUserProfileId which of my identities sends; the node's selected identity when absent.
+ *                            Unlike private chat, a public channel has no identity of its own.
+ */
+public record SendPublicChatMessageRequest(String text,
+                                           @Nullable CitationDto citation,
+                                           @Nullable String senderUserProfileId) {
 }

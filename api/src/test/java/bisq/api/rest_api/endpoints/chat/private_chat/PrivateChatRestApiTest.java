@@ -19,6 +19,7 @@ package bisq.api.rest_api.endpoints.chat.private_chat;
 
 import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
+import bisq.api.rest_api.endpoints.chat.SendRefusedResponse;
 import bisq.api.dto.chat.CitationDto;
 import bisq.api.dto.chat.SendRejectionDto;
 import bisq.chat.ChatChannelDomain;

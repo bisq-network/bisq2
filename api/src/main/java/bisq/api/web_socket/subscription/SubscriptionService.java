@@ -20,12 +20,16 @@ package bisq.api.web_socket.subscription;
 
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
+import bisq.api.chat.common.PublicChatChannels;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.domain.alert_notifications.AlertNotificationsWebSocketService;
 import bisq.api.web_socket.domain.chat.private_chat.PrivateChatChannelsWebSocketService;
 import bisq.api.web_socket.domain.chat.private_chat.PrivateChatMessagesWebSocketService;
 import bisq.api.web_socket.domain.chat.private_chat.PrivateChatReactionsWebSocketService;
+import bisq.api.web_socket.domain.chat.public_chat.PublicChatChannelsWebSocketService;
+import bisq.api.web_socket.domain.chat.public_chat.PublicChatMessagesWebSocketService;
+import bisq.api.web_socket.domain.chat.public_chat.PublicChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.trade.TradeChatMessagesWebSocketService;
 import bisq.api.web_socket.domain.contacts.ContactsWebSocketService;
@@ -75,6 +79,9 @@ public class SubscriptionService implements Service {
     private final PrivateChatMessagesWebSocketService privateChatMessagesWebSocketService;
     private final PrivateChatReactionsWebSocketService privateChatReactionsWebSocketService;
     private final ContactsWebSocketService contactsWebSocketService;
+    private final PublicChatChannelsWebSocketService publicChatChannelsWebSocketService;
+    private final PublicChatMessagesWebSocketService publicChatMessagesWebSocketService;
+    private final PublicChatReactionsWebSocketService publicChatReactionsWebSocketService;
     private final PermissionService permissionService;
     // Built here rather than injected, like RestApiAuthorizationFilter builds its own: which
     // permission a topic requires is this service's question and nobody else's.
@@ -127,6 +134,18 @@ public class SubscriptionService implements Service {
                 chatService.getTwoPartyPrivateChatChannelService(),
                 userService.getBannedUserService());
         contactsWebSocketService = new ContactsWebSocketService(subscriberRepository, userService.getContactListService());
+        PublicChatChannels publicChatChannels = new PublicChatChannels(chatService);
+        publicChatChannelsWebSocketService = new PublicChatChannelsWebSocketService(subscriberRepository,
+                publicChatChannels,
+                chatService.getChatNotificationService());
+        publicChatMessagesWebSocketService = new PublicChatMessagesWebSocketService(subscriberRepository,
+                publicChatChannels,
+                userService.getUserProfileService(),
+                userService.getBannedUserService());
+        publicChatReactionsWebSocketService = new PublicChatReactionsWebSocketService(subscriberRepository,
+                publicChatChannels,
+                userService.getUserProfileService(),
+                userService.getBannedUserService());
     }
 
     @Override
@@ -146,7 +165,10 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> privateChatChannelsWebSocketService.initialize())
                 .thenCompose(e -> privateChatMessagesWebSocketService.initialize())
                 .thenCompose(e -> privateChatReactionsWebSocketService.initialize())
-                .thenCompose(e -> contactsWebSocketService.initialize());
+                .thenCompose(e -> contactsWebSocketService.initialize())
+                .thenCompose(e -> publicChatChannelsWebSocketService.initialize())
+                .thenCompose(e -> publicChatMessagesWebSocketService.initialize())
+                .thenCompose(e -> publicChatReactionsWebSocketService.initialize());
     }
 
     @Override
@@ -166,7 +188,10 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> privateChatChannelsWebSocketService.shutdown())
                 .thenCompose(e -> privateChatMessagesWebSocketService.shutdown())
                 .thenCompose(e -> privateChatReactionsWebSocketService.shutdown())
-                .thenCompose(e -> contactsWebSocketService.shutdown());
+                .thenCompose(e -> contactsWebSocketService.shutdown())
+                .thenCompose(e -> publicChatChannelsWebSocketService.shutdown())
+                .thenCompose(e -> publicChatMessagesWebSocketService.shutdown())
+                .thenCompose(e -> publicChatReactionsWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -377,6 +402,15 @@ public class SubscriptionService implements Service {
             }
             case CONTACTS -> {
                 return Optional.of(contactsWebSocketService);
+            }
+            case PUBLIC_CHAT_CHANNELS -> {
+                return Optional.of(publicChatChannelsWebSocketService);
+            }
+            case PUBLIC_CHAT_MESSAGES -> {
+                return Optional.of(publicChatMessagesWebSocketService);
+            }
+            case PUBLIC_CHAT_REACTIONS -> {
+                return Optional.of(publicChatReactionsWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);

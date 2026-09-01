@@ -22,6 +22,7 @@ import bisq.api.dto.mappings.chat.two_party.SendRejectionDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
+import bisq.api.rest_api.endpoints.chat.SendRefusedResponse;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
 import bisq.chat.Citation;
