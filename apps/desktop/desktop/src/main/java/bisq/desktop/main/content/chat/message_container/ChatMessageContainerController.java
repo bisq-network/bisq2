@@ -243,7 +243,7 @@ public class ChatMessageContainerController implements bisq.desktop.common.view.
             caretPosition++;
         }
         model.getTextInput().set(prefix + mention + separator + suffix);
-        model.getCaretPosition().set(caretPosition);
+        model.getCaretPositionRequest().set(ChatMessageContainerModel.CaretPositionRequest.of(caretPosition));
     }
 
     void onOpenProfileCard(UserProfile userProfile) {

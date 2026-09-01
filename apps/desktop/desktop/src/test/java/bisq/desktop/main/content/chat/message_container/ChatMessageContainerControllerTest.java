@@ -112,7 +112,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
 
         // The existing space after the token is reused, not duplicated.
         assertThat(controller.getModel().getTextInput().get()).isEqualTo("Hi @john there");
-        assertThat(controller.getModel().getCaretPosition().get()).isEqualTo(9);
+        assertThat(controller.getModel().getCaretPositionRequest().get().position()).isEqualTo(9);
     }
 
     @Test
@@ -134,7 +134,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
         });
 
         assertThat(controller.getModel().getTextInput().get()).isEqualTo("@alice world");
-        assertThat(controller.getModel().getCaretPosition().get()).isEqualTo(7);
+        assertThat(controller.getModel().getCaretPositionRequest().get().position()).isEqualTo(7);
     }
 
     @Test
@@ -155,7 +155,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
         });
 
         assertThat(controller.getModel().getTextInput().get()).isEqualTo("Hi @alice, there");
-        assertThat(controller.getModel().getCaretPosition().get()).isEqualTo(9);
+        assertThat(controller.getModel().getCaretPositionRequest().get().position()).isEqualTo(9);
     }
 
     @Test

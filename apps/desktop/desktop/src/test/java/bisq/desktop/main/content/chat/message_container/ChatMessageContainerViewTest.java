@@ -59,6 +59,7 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
 
     private AutoCloseable closeable;
     private Stage stage;
+    private ChatMessageContainerModel model;
     private ChatMessageContainerView view;
 
     @Start
@@ -68,7 +69,7 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
 
         when(userProfileSelection.getRoot()).thenReturn(new Pane());
 
-        ChatMessageContainerModel model = new ChatMessageContainerModel(ChatChannelDomain.SUPPORT);
+        model = new ChatMessageContainerModel(ChatChannelDomain.SUPPORT);
         view = new ChatMessageContainerView(model,
                 controller,
                 new VBox(),
@@ -232,6 +233,243 @@ class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
         assertThat(view.userMentionPopup().isShowing())
                 .as("a fresh mention token after leaving the dismissed one must open the popup")
                 .isTrue();
+    }
+
+    @Test
+    void arrowDownMovesTheSelectionAndTabCompletesIt(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile albert = mock(UserProfile.class);
+        when(albert.getUserName()).thenReturn("albert");
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(albert), new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isTrue();
+
+        // Both candidates match; they sort alphabetically, so the second ArrowDown lands on alice.
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false)));
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false)));
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.TAB, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verify(controller).onUserProfileSelected(eq(alice), any());
+        verify(controller, never()).onSendMessage(any());
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+    }
+
+    @Test
+    void arrowUpMovesTheSelectionBack(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile albert = mock(UserProfile.class);
+        when(albert.getUserName()).thenReturn("albert");
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(albert), new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false)));
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false)));
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.UP, false, false, false, false)));
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ENTER, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verify(controller).onUserProfileSelected(eq(albert), any());
+        verify(controller, never()).onSendMessage(any());
+    }
+
+    @Test
+    void shiftEnterInsertsANewLineWhileThePopupShows(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isTrue();
+
+        // The popup only claims unmodified keys; Shift+Enter keeps its line-break meaning.
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ENTER, true, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(input.getText()).isEqualTo("@al" + System.lineSeparator());
+        verify(controller, never()).onUserProfileSelected(any(), any());
+        verify(controller, never()).onSendMessage(any());
+    }
+
+    @Test
+    void enterWithoutAMatchingCandidateSendsTheMessage(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@zz");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isTrue();
+
+        // With an empty candidate list the popup lets Enter through to the input field.
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ENTER, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verify(controller).onSendMessage("@zz");
+        verify(controller, never()).onUserProfileSelected(any(), any());
+    }
+
+    @Test
+    void replacingADismissedTokenAtTheSameOffsetReArmsThePopup(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+
+        // Select-all and retype puts a fresh token at the same offset in one text change.
+        robot.interact(() -> {
+            input.selectAll();
+            input.replaceSelection("@bo");
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("a dismissal must not suppress a fresh token at the same offset")
+                .isTrue();
+    }
+
+    @Test
+    void atomicallyExtendingADismissedTokenStaysDismissed(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@al");
+            input.positionCaret(3);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+
+        // Extending the query in one edit is the same intent as typing the rest of the name
+        // after Escape; the dismissal must hold.
+        robot.interact(() -> {
+            input.selectAll();
+            input.replaceSelection("@alice");
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("extending a dismissed token must not reopen the popup")
+                .isFalse();
+    }
+
+    @Test
+    void backspacingToTheBareIndicatorStartsAFreshAttempt(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+        UserProfile alice = mock(UserProfile.class);
+        when(alice.getUserName()).thenReturn("alice");
+        robot.interact(() -> view.userMentionPopup().getObservableList()
+                .setAll(new ChatMentionPopupMenu.ListItem(alice)));
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        robot.interact(() -> {
+            input.setText("@a");
+            input.positionCaret(2);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() ->
+                input.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ESCAPE, false, false, false, false)));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing()).isFalse();
+
+        // Clearing the token content ends the dismissed attempt: a retype at the bare
+        // indicator is indistinguishable from this transition, so both re-arm.
+        robot.interact(() -> input.deleteText(1, 2));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(view.userMentionPopup().isShowing())
+                .as("an emptied token is a fresh mention attempt")
+                .isTrue();
+    }
+
+    @Test
+    void repeatedMentionCompletionsKeepMovingTheCaret(FxRobot robot) {
+        TextInputControl input = view.messageInput();
+
+        robot.targetWindow(stage);
+        robot.clickOn(input);
+        // First completion: the controller publishes the completed text and the caret target.
+        robot.interact(() -> {
+            model.getTextInput().set("@alice ");
+            model.getCaretPositionRequest().set(ChatMessageContainerModel.CaretPositionRequest.of(7));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(input.getCaretPosition()).isEqualTo(7);
+
+        // Sending clears the input; the next completion computes the same caret position.
+        robot.interact(() -> model.getTextInput().set(""));
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> {
+            model.getTextInput().set("@alice ");
+            model.getCaretPositionRequest().set(ChatMessageContainerModel.CaretPositionRequest.of(7));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(input.getCaretPosition())
+                .as("an equal caret target after a text update must still position the caret")
+                .isEqualTo(7);
     }
 
     @Test

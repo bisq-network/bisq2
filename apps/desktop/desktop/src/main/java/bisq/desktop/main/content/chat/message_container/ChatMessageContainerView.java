@@ -103,9 +103,9 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
         inputField.textProperty().bindBidirectional(model.getTextInput());
 
-        caretPositionPin = EasyBind.subscribe(model.getCaretPosition(), position -> {
-            if (position != null) {
-                inputField.positionCaret(position.intValue());
+        caretPositionPin = EasyBind.subscribe(model.getCaretPositionRequest(), request -> {
+            if (request != null) {
+                inputField.positionCaret(request.position());
             }
         });
 

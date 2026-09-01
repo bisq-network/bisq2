@@ -72,6 +72,10 @@ public class ChatMentionPopupMenu extends BisqPopup {
         this.userProfileSelectedHandler = userProfileSelectedHandler;
 
         sortedList.setComparator(ListItem::compareTo);
+        // The key filter below owns the keyboard; if the list ever became the popup's focus
+        // owner, its own key handling would swallow redirected keys (e.g. Enter) that must
+        // fall through to the input field.
+        listView.setFocusTraversable(false);
         listView.getStyleClass().add("chat-mention-list-view");
         listView.setPrefWidth(450);
         listView.setCellFactory(getCellFactory());
@@ -96,7 +100,11 @@ public class ChatMentionPopupMenu extends BisqPopup {
             if (newValue != null) {
                 // The caret can jump from one mention token straight into another; the token
                 // identity, not a null transition, decides when the dismissal is re-armed.
-                boolean isNewToken = oldValue == null || oldValue.indicatorIndex() != newValue.indicatorIndex();
+                // The indicator offset alone is not identity: replacing a dismissed token with
+                // a fresh one at the same offset must re-arm too.
+                boolean isNewToken = oldValue == null
+                        || oldValue.indicatorIndex() != newValue.indicatorIndex()
+                        || !isWithinTokenEdit(oldValue.query(), newValue.query());
                 if (isNewToken) {
                     dismissed = false;
                 }
@@ -200,6 +208,15 @@ public class ChatMentionPopupMenu extends BisqPopup {
         hide();
     }
 
+    private static boolean isWithinTokenEdit(String oldQuery, String newQuery) {
+        if (newQuery.isEmpty()) {
+            // The token content was cleared; whatever comes next is a fresh mention attempt.
+            return oldQuery.isEmpty();
+        }
+        // Typing extends the query and Backspace truncates it; anything else replaced it.
+        return oldQuery.startsWith(newQuery) || newQuery.startsWith(oldQuery);
+    }
+
     private void handleKeyPressed(KeyEvent keyEvent) {
         boolean noModifiers = !keyEvent.isShiftDown() && !keyEvent.isControlDown()
                 && !keyEvent.isAltDown() && !keyEvent.isMetaDown();
@@ -263,6 +280,7 @@ public class ChatMentionPopupMenu extends BisqPopup {
                     {
                         button.getStyleClass().add("chat-mention-list-button");
                         button.setMaxWidth(Double.MAX_VALUE);
+                        button.setFocusTraversable(false);
                     }
 
                     @Override
