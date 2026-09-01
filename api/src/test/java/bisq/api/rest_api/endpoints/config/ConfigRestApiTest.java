@@ -22,6 +22,7 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
+import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
@@ -99,6 +100,7 @@ class ConfigRestApiTest {
         assertThat(ApiFeature.CLOSED_TRADES.getKey()).isEqualTo("closed-trades");
         assertThat(ApiFeature.NETWORK_INFO.getKey()).isEqualTo("network-info");
         assertThat(ApiFeature.PRIVATE_CHAT.getKey()).isEqualTo("private-chat");
+        assertThat(ApiFeature.CONTACTS.getKey()).isEqualTo("contacts");
     }
 
     /**
@@ -116,7 +118,7 @@ class ConfigRestApiTest {
         for (ApiFeature feature : ApiFeature.values()) {
             boolean checked = switch (feature) {
                 case CLOSED_TRADES -> {
-                    assertThat(hasEndpoint(TradeRestApi.class, "/closed"))
+                    assertThat(hasEndpoint(TradeRestApi.class, "/trades", "/closed"))
                             .as("closed-trades must expose GET /trades/closed")
                             .isTrue();
                     yield true;
@@ -132,7 +134,7 @@ class ConfigRestApiTest {
                     yield true;
                 }
                 case PRIVATE_CHAT -> {
-                    assertThat(hasPostEndpoint(PrivateChatRestApi.class, "/{channelId}/messages"))
+                    assertThat(hasPostEndpoint(PrivateChatRestApi.class, "/private-chat-channels", "/{channelId}/messages"))
                             .as("private-chat must expose POST /private-chat-channels/{channelId}/messages")
                             .isTrue();
                     // Resolved through a real SubscriptionService, as the NETWORK_INFO case does. That
@@ -145,6 +147,15 @@ class ConfigRestApiTest {
                                 .as("private-chat needs %s wired to a WebSocketService", topic)
                                 .isEqualTo(topic);
                     }
+                    yield true;
+                }
+                case CONTACTS -> {
+                    assertThat(hasPostEndpoint(ContactsRestApi.class, "/contacts", "/{userProfileId}"))
+                            .as("contacts must expose POST /contacts/{userProfileId}")
+                            .isTrue();
+                    assertThat(topicOf(routeTopic(Topic.CONTACTS)))
+                            .as("contacts needs %s wired to a WebSocketService", Topic.CONTACTS)
+                            .isEqualTo(Topic.CONTACTS);
                     yield true;
                 }
             };
@@ -202,14 +213,24 @@ class ConfigRestApiTest {
         }
     }
 
-    private static boolean hasEndpoint(Class<?> resource, String path) {
-        return Arrays.stream(resource.getDeclaredMethods())
-                .anyMatch(m -> m.isAnnotationPresent(GET.class) && isPath(m, path));
+    private static boolean hasEndpoint(Class<?> resource, String classPath, String methodPath) {
+        return hasClassPath(resource, classPath) && Arrays.stream(resource.getDeclaredMethods())
+                .anyMatch(m -> m.isAnnotationPresent(GET.class) && isPath(m, methodPath));
     }
 
-    private static boolean hasPostEndpoint(Class<?> resource, String path) {
-        return Arrays.stream(resource.getDeclaredMethods())
-                .anyMatch(m -> m.isAnnotationPresent(POST.class) && isPath(m, path));
+    private static boolean hasPostEndpoint(Class<?> resource, String classPath, String methodPath) {
+        return hasClassPath(resource, classPath) && Arrays.stream(resource.getDeclaredMethods())
+                .anyMatch(m -> m.isAnnotationPresent(POST.class) && isPath(m, methodPath));
+    }
+
+    /**
+     * The class-level @Path is half of the route these assertions claim; checking only the
+     * method-level half would keep passing after the resource's base path was renamed away from
+     * what capability-gated clients call.
+     */
+    private static boolean hasClassPath(Class<?> resource, String classPath) {
+        Path annotation = resource.getAnnotation(Path.class);
+        return annotation != null && annotation.value().equals(classPath);
     }
 
     private static boolean isPath(Method method, String path) {

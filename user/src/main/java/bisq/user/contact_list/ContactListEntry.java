@@ -26,7 +26,10 @@ import lombok.ToString;
 
 import java.util.Optional;
 
-@EqualsAndHashCode
+// Identity is the contact's profile id, matching how the store dedupes and every lookup filters.
+// Including the mutable annotations would change an entry's hash in place inside the hash-backed
+// ObservableSet, leaving it unremovable until the set is rebuilt.
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 @Getter
 public final class ContactListEntry implements PersistableProto {
@@ -102,5 +105,10 @@ public final class ContactListEntry implements PersistableProto {
 
     void setNotes(String newNotes) {
         notes = Optional.ofNullable(newNotes);
+    }
+
+    @EqualsAndHashCode.Include
+    private String userProfileId() {
+        return userProfile.getId();
     }
 }
