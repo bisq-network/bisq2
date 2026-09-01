@@ -67,9 +67,33 @@ class ChatRequestValidationTest {
     }
 
     @Test
-    void aReactionIdIsParsedOnlyWithinRange() {
+    void aReactionIdOutsideTheRangeIsNotParsed() {
         assertThat(ChatRequestValidation.parseReaction(-1)).isEmpty();
         assertThat(ChatRequestValidation.parseReaction(Reaction.values().length)).isEmpty();
-        assertThat(ChatRequestValidation.parseReaction(0)).contains(Reaction.values()[0]);
+    }
+
+    /**
+     * The wire contract rather than the parser. {@code ChatMessageReaction.reactionId} is the ordinal
+     * of {@code Reaction} — it is what goes into proto and into
+     * {@code CommonPublicChatMessageReactionDto} — so reordering the enum changes the meaning of every
+     * reaction already stored and in flight, which is what {@code docs/dev/backward-compatibility.md}
+     * rules out.
+     * <p>
+     * Spelled out with literals because the obvious form, {@code contains(Reaction.values()[0])}, is
+     * the same expression {@code parseReaction} evaluates: it holds true for whatever the order
+     * happens to be. The enum is declared in the chat module, but the API is what publishes these ids,
+     * so this is where a reorder has to be caught.
+     */
+    @Test
+    void aReactionIdMeansTheSameReactionItAlwaysDid() {
+        assertThat(ChatRequestValidation.parseReaction(0)).contains(Reaction.THUMBS_UP);
+        assertThat(ChatRequestValidation.parseReaction(1)).contains(Reaction.THUMBS_DOWN);
+        assertThat(ChatRequestValidation.parseReaction(2)).contains(Reaction.HAPPY);
+        assertThat(ChatRequestValidation.parseReaction(3)).contains(Reaction.LAUGH);
+        assertThat(ChatRequestValidation.parseReaction(4)).contains(Reaction.HEART);
+        assertThat(ChatRequestValidation.parseReaction(5)).contains(Reaction.PARTY);
+        // Appending a reaction is fine and is meant to fail here first, so the id above it is chosen
+        // deliberately rather than inherited from wherever the new constant was pasted.
+        assertThat(ChatRequestValidation.parseReaction(6)).isEmpty();
     }
 }
