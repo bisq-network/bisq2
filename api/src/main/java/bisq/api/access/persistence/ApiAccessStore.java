@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,53 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
     // this field, so it cannot survive a downgrade and MUST NOT gate any security decision.
     // Promotion to grantAll is evidence-based instead; see promoteIfFullStandardGrant.
     private static final int PERMISSIONS_SCHEMA_VERSION = 1;
+
+    /**
+     * The full standard sets of released versions, so a store written by one of them is still
+     * recognised as the full grant it was issued as.
+     * <p>
+     * Kept in code and not in the store on purpose: nothing persisted survives a downgrade, which
+     * is the whole reason the promotion below reads the entry's content as evidence. Spelled out
+     * value by value rather than derived from a range or an id bound, because the deliberate hole
+     * at enum id 11 (proto 12) is exactly the shape that makes a derived set quietly stop matching
+     * what shipped.
+     * <p>
+     * One entry per shape that shipped, and these are expected to be enough for good: the first
+     * release carrying grantAll promotes every store it reads and persists the result, and a store
+     * that never meets that release still holds one of these same sets however many versions later
+     * it is opened. Every pairing on those releases granted the full set
+     * ({@code ApiConfig#grantedPermissions} was {@code Set.of(Permission.values())}), all standard,
+     * and a grant is only rewritten at pairing time, so a client that paired on v2.1.9 and never
+     * re-paired still holds the v2.1.9 shape whatever it upgraded to since.
+     * <p>
+     * Every permission listed here must stay standard: promotion replaces the explicit list with
+     * the grantAll expansion, which never covers sensitive permissions, so reclassifying a listed
+     * permission as sensitive requires pruning it from these sets first.
+     */
+    static final Set<Set<Permission>> RELEASED_FULL_STANDARD_SETS = Set.of(
+            // v2.1.9, the first release with this store: 10 permissions, up to USER_PROFILES.
+            Set.of(Permission.TRADE_CHAT_CHANNELS,
+                    Permission.EXPLORER,
+                    Permission.MARKET_PRICE,
+                    Permission.OFFERBOOK,
+                    Permission.PAYMENT_ACCOUNTS,
+                    Permission.REPUTATION,
+                    Permission.SETTINGS,
+                    Permission.TRADES,
+                    Permission.USER_IDENTITIES,
+                    Permission.USER_PROFILES),
+            // v2.1.10 to v2.1.12: the same plus MOBILE_DEVICES.
+            Set.of(Permission.TRADE_CHAT_CHANNELS,
+                    Permission.EXPLORER,
+                    Permission.MARKET_PRICE,
+                    Permission.OFFERBOOK,
+                    Permission.PAYMENT_ACCOUNTS,
+                    Permission.REPUTATION,
+                    Permission.SETTINGS,
+                    Permission.TRADES,
+                    Permission.USER_IDENTITIES,
+                    Permission.USER_PROFILES,
+                    Permission.MOBILE_DEVICES));
 
     private transient boolean promotedEntriesDuringLoad;
 
@@ -105,10 +153,15 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
 
     /**
      * Evidence-based promotion, applied on every load and deliberately NOT gated on
-     * {@code permissionsSchemaVersion}: no in-store marker survives a downgrade, because a
-     * pre-grantAll node rebuilds the proto from its own domain model on persist and thereby
-     * drops fields it does not know. Trusting a version stamp would let a downgrade/upgrade
-     * cycle silently promote a deliberately restricted entry to full access.
+     * {@code permissionsSchemaVersion} in either direction. Not to promote: no in-store marker
+     * survives a downgrade, because a pre-grantAll node rebuilds the proto from its own domain
+     * model on persist and thereby drops fields it does not know, so trusting a version stamp
+     * would let a downgrade/upgrade cycle silently promote a deliberately restricted entry to
+     * full access. Not to refuse either: the stamp only says "written by a binary that had the
+     * field", and a binary can have the field without knowing the released shapes below — the
+     * builds between grantAll and this rule stamp every persist while leaving a v2.1.9-shaped
+     * entry explicit — so refusing on the stamp would freeze exactly the grants this rule exists
+     * to rescue.
      * <p>
      * Instead the entry's own content is the evidence: only a set EXACTLY equal to the running
      * version's auto-grantable ("standard") set is promoted — at that moment promotion grants
@@ -117,29 +170,46 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
      * containsAll: a set that additionally holds a sensitive permission must stay explicit,
      * otherwise promotion would silently drop the sensitive grant from the grantAll expansion.
      * <p>
-     * Trade-off: a full grant persisted by an older version and first re-read by a binary that
-     * has since gained permissions is NOT promoted and that client keeps the old set (fails
-     * closed; re-pairing restores full access) — mitigated by the persist-after-promotion in
-     * {@code ApiAccessStoreService#onPersistedApplied}.
+     * A full grant persisted by an older version counts as the same evidence, through
+     * {@link #RELEASED_FULL_STANDARD_SETS}. The two branches differ in how long they match. The
+     * running-set branch is a one-shot as long as the standard set only grows: once the binary has
+     * grown past a set, that set never equals the running standard set again. Ids are append-only,
+     * but that is not what carries it — {@code Permission#autoGrantable} filters on {@code Kind},
+     * so reclassifying a standard permission as sensitive would shrink the set, which is what
+     * {@code PermissionTest#everyCurrentPermissionIsStandard} guards. The released-set branch is
+     * permanent: the released shapes stay in that constant and keep being promoted by every future
+     * version, because a store that skipped the first grantAll release still holds exactly one of
+     * them however much later it is opened. Leaning on the persist-after-promotion in
+     * {@code ApiAccessStoreService#onPersistedApplied} instead would be circular — it writes only
+     * when something was promoted, so it covers the second new permission onward and does nothing
+     * for the first, which is the one arriving in the same release as grantAll itself.
      * <p>
      * KNOWN RESIDUAL (not reachable today — no live path persists a genuinely restricted
      * non-grantAll grant; every pairing grants the full standard set, folded to grantAll at
-     * write time by {@code PermissionService#putPermissions}). The equality is against the
-     * RUNNING binary's autoGrantable set, so a deliberately restricted grant is indistinguishable
-     * from a full grant of an OLDER version whose standard set happened to equal it: read by that
-     * older binary it would be promoted (and persisted) as grantAll, then re-expand on upgrade —
-     * regaining a standard permission it was never granted. This becomes reachable only once a
-     * feature can persist a genuinely restricted grant (granular-permission editor / sensitive-
-     * permission per-device flow); that feature must first introduce a downgrade-durable marker
-     * distinguishing "deliberate restriction" from "legacy full grant", or accept this as a
-     * documented residual. Sensitive permissions are unaffected either way: a set containing one
-     * can never equal any version's autoGrantable set, so it is never promotable.
+     * write time by {@code PermissionService#putPermissions}). A deliberately restricted grant is
+     * indistinguishable from a full grant that happens to equal it, on either branch. Running-set
+     * branch: read by an OLDER binary whose standard set equals the restriction, it is promoted
+     * (and persisted) as grantAll, then re-expands on upgrade — regaining a standard permission it
+     * was never granted. Released-set branch, and this one does not fade with versions: a grant of
+     * exactly one of the released shapes (the v2.1.9 or the v2.1.12 set — a natural "everything
+     * except the newer permissions" choice) is widened to grantAll on the next load by every
+     * binary from here on, and persisted that way.
+     * This becomes reachable only once a feature can persist a genuinely restricted grant
+     * (granular-permission editor / sensitive-permission per-device flow); that feature must first
+     * introduce a downgrade-durable marker distinguishing "deliberate restriction" from "legacy
+     * full grant", and until it does, no code path may issue a released full set as a deliberate
+     * restriction. Sensitive permissions are unaffected on the running-set branch by construction:
+     * a set containing one can never equal any version's autoGrantable set. On the released-set
+     * branch that holds only by convention — the constant is a value list, so a permission listed
+     * there that is later reclassified as sensitive would still match and be dropped from the
+     * grantAll expansion; {@code ApiAccessStoreTest} pins that every listed permission is standard.
      */
     private static PermissionSet promoteIfFullStandardGrant(String clientId, PermissionSet permissionSet) {
         if (permissionSet.isGrantAll()) {
             return permissionSet;
         }
-        if (permissionSet.getPermissions().equals(Permission.autoGrantable())) {
+        Set<Permission> permissions = permissionSet.getPermissions();
+        if (permissions.equals(Permission.autoGrantable()) || RELEASED_FULL_STANDARD_SETS.contains(permissions)) {
             log.info("Promoting full standard permission set of client {} to grantAll", clientId);
             return PermissionSet.grantAll();
         }

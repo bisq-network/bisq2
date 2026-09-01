@@ -37,12 +37,12 @@ import static org.mockito.Mockito.when;
 
 class PermissionServiceTest {
     private ApiAccessStoreService apiAccessStoreService;
-    private PermissionService<RestPermissionMapping> permissionService;
+    private PermissionService permissionService;
 
     @BeforeEach
     void setUp() {
         apiAccessStoreService = mock(ApiAccessStoreService.class);
-        permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
+        permissionService = new PermissionService(apiAccessStoreService);
     }
 
     @Test

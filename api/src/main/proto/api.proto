@@ -34,6 +34,8 @@ enum Permission {
   PERMISSION_USER_IDENTITIES = 9;
   PERMISSION_USER_PROFILES = 10;
   PERMISSION_MOBILE_DEVICES = 11;
+  // 12 is reserved for PERMISSION_PRIVATE_CHAT_CHANNELS, declared on the for-mobile branch.
+  PERMISSION_NETWORK_INFO = 13;
 }
 
 message PermissionSet {
