@@ -15,23 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.web_socket.subscription;
+package bisq.api.rest_api.endpoints.contacts;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES,
-    TRADE_PROPERTIES,
-    TRADE_CHAT_MESSAGES,
-    CHAT_REACTIONS,
-    REPUTATION,
-    NUM_USER_PROFILES,
-    ALERT_NOTIFICATIONS,
-    TRADE_RESTRICTING_ALERT,
-    NETWORK_INFO,
-    PRIVATE_CHAT_CHANNELS,
-    PRIVATE_CHAT_MESSAGES,
-    PRIVATE_CHAT_REACTIONS,
-    CONTACTS,
+import javax.annotation.Nullable;
+
+/** Request body for updating a contact's annotations in one call; null = leave unchanged. */
+public record UpdateContactAnnotationsRequest(@Nullable String tag,
+                                              @Nullable String notes,
+                                              @Nullable Double trustScore) {
 }

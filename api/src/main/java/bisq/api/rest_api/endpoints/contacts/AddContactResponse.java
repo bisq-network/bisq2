@@ -15,23 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.web_socket.subscription;
+package bisq.api.rest_api.endpoints.contacts;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES,
-    TRADE_PROPERTIES,
-    TRADE_CHAT_MESSAGES,
-    CHAT_REACTIONS,
-    REPUTATION,
-    NUM_USER_PROFILES,
-    ALERT_NOTIFICATIONS,
-    TRADE_RESTRICTING_ALERT,
-    NETWORK_INFO,
-    PRIVATE_CHAT_CHANNELS,
-    PRIVATE_CHAT_MESSAGES,
-    PRIVATE_CHAT_REACTIONS,
-    CONTACTS,
+import bisq.api.dto.user.contact_list.ContactListEntryDto;
+
+import javax.annotation.Nullable;
+
+/**
+ * {@code entry} is the list entry as the node now holds it (also when {@code changed} is false —
+ * the contact already existed), so clients can render the add without waiting for the
+ * subscription push.
+ */
+public record AddContactResponse(boolean changed, @Nullable ContactListEntryDto entry) {
 }
