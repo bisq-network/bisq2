@@ -153,8 +153,7 @@ public class PrivateChatRestApi extends RestApiBase {
             summary = "Send a message to a private chat channel",
             description = "Sends a text message to the peer of the given channel. Optionally includes a citation "
                     + "reference. A 204 confirms the message was accepted and stored locally, not that the peer "
-                    + "received it — delivery happens asynchronously on the P2P network. A 409 means the node "
-                    + "refused it outright and stored nothing, so it will not appear on the message stream either.",
+                    + "received it — delivery happens asynchronously on the P2P network.",
             requestBody = @RequestBody(
                     description = "Message to send to the peer",
                     required = true,
@@ -165,7 +164,13 @@ public class PrivateChatRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "404", description = "No channel found for given channel ID"),
                     @ApiResponse(responseCode = "400", description = "Invalid input, e.g. empty text"),
                     @ApiResponse(responseCode = "409",
-                            description = "Refused locally: either my own profile or the peer is banned",
+                            description = "Refused locally: either my own profile or the peer is banned. The "
+                                    + "message is neither stored nor sent, and never appears on the message "
+                                    + "stream. A PEER_BANNED refusal can still add a system message to the "
+                                    + "channel saying so, and that one does appear on the stream: it is stored "
+                                    + "locally, never reaches the peer, and is added at most once until the "
+                                    + "conversation moves on. Its text is an encoded i18n key like every other "
+                                    + "PROTOCOL_LOG_MESSAGE, for the client to resolve in the user's language.",
                             content = @Content(schema = @Schema(implementation = SendRefusedResponse.class))),
                     @ApiResponse(responseCode = "503", description = "Request timed out"),
                     @ApiResponse(responseCode = "500", description = "Unexpected internal error")
@@ -214,8 +219,7 @@ public class PrivateChatRestApi extends RestApiBase {
     @Operation(
             summary = "Send or remove a private chat message reaction",
             description = "Adds or removes a reaction on a message within a private chat channel. As with sending a "
-                    + "message, a 204 confirms local acceptance rather than delivery to the peer, and a 409 means "
-                    + "the node refused it outright and stored nothing.",
+                    + "message, a 204 confirms local acceptance rather than delivery to the peer.",
             requestBody = @RequestBody(
                     description = "Request containing the reaction data to be added or removed",
                     required = true,
@@ -227,7 +231,9 @@ public class PrivateChatRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "400", description = "Invalid input or missing required fields"),
                     @ApiResponse(responseCode = "404", description = "No channel or message found for the given IDs"),
                     @ApiResponse(responseCode = "409",
-                            description = "Refused locally: either my own profile or the peer is banned",
+                            description = "Refused locally: either my own profile or the peer is banned. Nothing "
+                                    + "is stored and, unlike the message endpoint, the channel is left "
+                                    + "untouched: no system message is added on a banned peer.",
                             content = @Content(schema = @Schema(implementation = SendRefusedResponse.class))),
                     @ApiResponse(responseCode = "503", description = "Request timed out"),
                     @ApiResponse(responseCode = "500", description = "Unexpected internal error")

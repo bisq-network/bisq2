@@ -105,6 +105,12 @@ public abstract class PrivateChatChannelService<
      * Sends, and reports what it decided locally rather than only what it started. Callers that must
      * answer for the send synchronously use this; {@link #sendMessage} is the same thing for those that
      * only care about delivery.
+     * <p>
+     * A rejection means the caller's own message is neither stored nor sent, but it is not free of side
+     * effects: {@link SendRejection#PEER_BANNED} adds a system message to the channel telling the user why,
+     * de-duplicated by {@link #alreadyNotifiedAboutBannedPeer}. That message is local, never reaches the
+     * peer, and raises no notification, but it does reach anything observing the channel. A caller that
+     * reports the rejection onwards has to say so too.
      */
     protected SendOutcome trySendMessage(String messageId,
                                          @Nullable String text,
@@ -237,7 +243,11 @@ public abstract class PrivateChatChannelService<
                 .getDelivery();
     }
 
-    /** The reaction counterpart of {@link #trySendMessage}, refused on the same grounds. */
+    /**
+     * The reaction counterpart of {@link #trySendMessage}, refused on the same grounds. It adds no notice on
+     * a banned peer: a reaction is not a statement the user is waiting on an answer for, and a notice per
+     * refused emoji would bury the conversation. A rejection here leaves the channel untouched.
+     */
     protected SendOutcome trySendMessageReaction(M message,
                                                  C chatChannel,
                                                  UserProfile receiver,
