@@ -38,6 +38,9 @@ import java.util.Optional;
  * <li>Coordinate with a Connect app release: apps without the tolerant pairing-code decoder
  *     (bisq-mobile, 2026-08) reject pairing codes that carry more permissions than they know,
  *     so new permissions break pairing for older apps.</li>
+ * <li>A permission that lets a client act on OTHER clients (see {@link Permission#CLIENT_MANAGEMENT})
+ *     needs its auto-grantable classification argued explicitly on that permission, not inherited
+ *     from an existing cross-client one.</li>
  * <li>Security-sensitive permissions (e.g. anything wallet/spend related) are never covered by
  *     the grantAll expansion — declare them with {@code autoGrantable = false} on the
  *     {@link Permission} enum and the exclusion is enforced by construction (see
@@ -52,6 +55,7 @@ public final class RestPermissionMapping implements PermissionMapping {
     public RestPermissionMapping() {
         // TODO apply rules to actual endpoints and methods. Atm we only check the root path
         this.rules = List.of(
+                new PermissionRule("^/access/clients(/.*)?$", Optional.empty(), Permission.CLIENT_MANAGEMENT),
                 new PermissionRule("^/trade-chat-channels(/.*)?$", Optional.empty(), Permission.TRADE_CHAT_CHANNELS),
                 new PermissionRule("^/private-chat-channels(/.*)?$", Optional.empty(), Permission.PRIVATE_CHAT_CHANNELS),
                 new PermissionRule("^/contacts(/.*)?$", Optional.empty(), Permission.CONTACTS),

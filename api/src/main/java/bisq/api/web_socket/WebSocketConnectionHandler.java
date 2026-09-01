@@ -22,6 +22,7 @@ import bisq.api.access.filter.Headers;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.api.web_socket.util.JsonUtil;
+import bisq.api.web_socket.util.WebSocketIdentity;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
@@ -34,6 +35,7 @@ import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -86,6 +88,13 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
 
     @Override
     public void onMessage(WebSocket webSocket, String message) {
+        // A socket dropped by disconnectClient is deregistered even when its close failed, so
+        // nothing is queued for a connection the node has already given up on.
+        if (!getWebSockets().contains(webSocket)) {
+            log.warn("Ignoring message from a disconnected WebSocket");
+            closeQuietly(webSocket);
+            return;
+        }
         // Debug rather than info: this is one full message plus a redaction pass per message, which
         // production should not pay for. Redacted because a client released before the node took the
         // identity from the handshake puts its session id into the payload.
@@ -104,44 +113,62 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     }
 
     /**
-     * Closes the WebSocket connection for a specific client.
+     * Closes all WebSocket connections of a specific client.
      * Called after revoking a client profile to force immediate disconnection.
+     * <p>
+     * A client can hold more than one connection, so a failing close is caught per socket: an
+     * exception escaping here would leave the client's remaining sockets connected, and a revoked
+     * client must not keep a live connection. A close that fails cannot be forced at this level,
+     * so the socket is unsubscribed and deregistered anyway, which stops the data it had already
+     * subscribed to. New subscriptions are refused by the authorization in
+     * {@code SubscriptionService}, which reads the grant this revocation has removed.
      *
-     * @param clientId The client ID whose connection should be closed
+     * @param clientId The client ID whose connections should be closed
      */
     public void disconnectClient(String clientId) {
-        getWebSockets().stream()
-                .filter(webSocket -> {
-                    if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
-                        HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
-                        if (request != null) {
-                            String wsClientId = request.getHeader(Headers.CLIENT_ID);
-                            return clientId.equals(wsClientId);
-                        }
-                    }
-                    return false;
-                })
-                .forEach(webSocket -> {
-                    log.info("Disconnecting revoked client: {}", clientId);
-                    webSocket.close();
-                });
+        // Deregistered before closing, so a socket whose close fails is already rejected by
+        // onMessage. A handshake still in flight is not visible here and is caught by the
+        // revocation check in onConnect instead.
+        List<WebSocket> sockets = getWebSockets().stream()
+                .filter(webSocket -> WebSocketIdentity.findClientId(webSocket).filter(clientId::equals).isPresent())
+                .toList();
+        sockets.forEach(this::remove);
+        sockets.forEach(webSocket -> {
+            log.info("Disconnecting revoked client: {}", clientId);
+            try {
+                webSocket.close();
+            } catch (Exception e) {
+                log.warn("Could not close WebSocket of revoked client {}", clientId, e);
+            } finally {
+                // Applied regardless of whether the close succeeded. Existing subscriptions are
+                // authorized once, when they are taken out, so nothing re-checks them on the way
+                // out: dropping them here is what stops data reaching a revoked client whose
+                // socket stayed alive. Normally the close triggers onClose which does the same,
+                // which is exactly why a failing close would otherwise leave them streaming.
+                // Idempotent, so the onClose after a successful close is harmless.
+                subscriptionService.onConnectionClosed(webSocket);
+            }
+        });
+        updateWebsocketClients();
+    }
+
+    private void closeQuietly(WebSocket webSocket) {
+        try {
+            webSocket.close();
+        } catch (Exception e) {
+            log.debug("Repeated close of an already dropped WebSocket failed", e);
+        }
     }
 
     private void updateWebsocketClients() {
         try {
             websocketClients.setAll(getWebSockets().stream().map(webSocket -> {
-                Optional<String> clientId = Optional.empty();
+                Optional<String> clientId = WebSocketIdentity.findClientId(webSocket);
                 Optional<String> clientAddress = Optional.empty();
                 Optional<String> userAgent = Optional.empty();
                 if (webSocket instanceof DefaultWebSocket defaultWebSocket) {
                     HttpServletRequest request = defaultWebSocket.getUpgradeRequest();
                     if (request != null) {
-                        // Get clientId from HTTP headers
-                        String clientIdHeader = request.getHeader(Headers.CLIENT_ID);
-                        if (StringUtils.isNotEmpty(clientIdHeader)) {
-                            clientId = Optional.of(clientIdHeader);
-                        }
-
                         // Get remote address directly from the request
                         String clientAddressHeader = request.getRemoteAddr();
                         if (StringUtils.isNotEmpty(clientAddressHeader)) {

@@ -33,6 +33,9 @@ message MobileDeviceProfile {
   string deviceDescriptor = 4;
   MobileDevicePlatform platform = 5;
   optional string symmetricKeyBase64 = 6;
+  // The API client this registration belongs to. Absent for registrations created before the
+  // ownership link existed; those are not covered by revocation and must be removed by deviceId.
+  optional string clientId = 7;
 }
 
 message DeviceRegistrationStore {

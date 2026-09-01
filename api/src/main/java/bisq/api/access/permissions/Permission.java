@@ -67,7 +67,26 @@ public enum Permission implements ProtoEnum {
     // reference pseudonymous profiles, and PAYMENT_ACCOUNTS and PRIVATE_CHAT_CHANNELS already put
     // strictly more sensitive data behind STANDARD — so existing pairings gain contacts on node
     // upgrade without re-pairing.
-    CONTACTS(13, Kind.STANDARD);
+    CONTACTS(13, Kind.STANDARD),
+    /**
+     * Listing and revoking paired clients, including clients other than the caller.
+     * <p>
+     * STANDARD despite being cross-client and destructive, which is a deliberate decision rather
+     * than the default falling through. Under the current all-or-nothing pairing model every
+     * paired client already holds the full standard grant, so auto-granting adds no privilege
+     * a client did not have. What it does add is the ability to revoke a lost or stolen device
+     * from a device that is already paired, without first re-pairing the very client you are
+     * trying to use. The capability is availability-only and recoverable: a wrongly revoked
+     * client pairs again from the node's own UI, and revocation cannot read data, move funds or
+     * change settings.
+     * <p>
+     * Two constraints follow from that reasoning, and both hold only while the model does. A
+     * granular or guest grant must never include this permission, because the "no privilege a
+     * client did not have" argument disappears the moment a client can hold less than the full
+     * standard grant. And the next cross-client capability has to be argued on its own merits;
+     * this one is not precedent for auto-granting anything that acts on other clients.
+     */
+    CLIENT_MANAGEMENT(14, Kind.STANDARD);
 
     /** Grant classification. Named so a declaration reads as an explicit security decision. */
     public enum Kind {
