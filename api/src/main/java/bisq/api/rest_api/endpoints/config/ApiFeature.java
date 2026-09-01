@@ -39,7 +39,8 @@ import lombok.Getter;
 public enum ApiFeature {
     CLOSED_TRADES("closed-trades"),
     NETWORK_INFO("network-info"),
-    PRIVATE_CHAT("private-chat");
+    PRIVATE_CHAT("private-chat"),
+    CONTACTS("contacts");
 
     private final String key;
 

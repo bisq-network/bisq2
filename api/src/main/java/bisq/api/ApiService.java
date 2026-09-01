@@ -36,6 +36,7 @@ import bisq.api.rest_api.endpoints.alert_notifications.AlertNotificationsRestApi
 import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.endpoints.config.ConfigRestApi;
+import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
@@ -187,6 +188,7 @@ public class ApiService implements Service {
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
         DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService);
         ConfigRestApi configRestApi = new ConfigRestApi();
+        ContactsRestApi contactsRestApi = new ContactsRestApi(userService);
 
         ResourceConfig resourceConfig;
         if (apiConfig.isRestEnabled() || apiConfig.isWebsocketEnabled()) {
@@ -211,7 +213,8 @@ public class ApiService implements Service {
                     reputationRestApi,
                     userProfileRestApi,
                     devicesRestApi,
-                    configRestApi);
+                    configRestApi,
+                    contactsRestApi);
         } else {
             resourceConfig = new PairingApiResourceConfig(accessApi);
         }

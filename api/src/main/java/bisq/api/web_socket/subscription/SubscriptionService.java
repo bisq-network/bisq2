@@ -27,6 +27,7 @@ import bisq.api.web_socket.domain.chat.private_chat.PrivateChatMessagesWebSocket
 import bisq.api.web_socket.domain.chat.private_chat.PrivateChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.reactions.ChatReactionsWebSocketService;
 import bisq.api.web_socket.domain.chat.trade.TradeChatMessagesWebSocketService;
+import bisq.api.web_socket.domain.contacts.ContactsWebSocketService;
 import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.api.web_socket.domain.network.NetworkInfoWebSocketService;
 import bisq.api.web_socket.domain.offers.NumOffersWebSocketService;
@@ -70,6 +71,7 @@ public class SubscriptionService implements Service {
     private final PrivateChatChannelsWebSocketService privateChatChannelsWebSocketService;
     private final PrivateChatMessagesWebSocketService privateChatMessagesWebSocketService;
     private final PrivateChatReactionsWebSocketService privateChatReactionsWebSocketService;
+    private final ContactsWebSocketService contactsWebSocketService;
 
     public SubscriptionService(BondedRolesService bondedRolesService,
                                AlertNotificationsService alertNotificationsService,
@@ -109,6 +111,7 @@ public class SubscriptionService implements Service {
         privateChatReactionsWebSocketService = new PrivateChatReactionsWebSocketService(subscriberRepository,
                 chatService.getTwoPartyPrivateChatChannelService(),
                 userService.getBannedUserService());
+        contactsWebSocketService = new ContactsWebSocketService(subscriberRepository, userService.getContactListService());
     }
 
     @Override
@@ -127,7 +130,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> networkInfoWebSocketService.initialize())
                 .thenCompose(e -> privateChatChannelsWebSocketService.initialize())
                 .thenCompose(e -> privateChatMessagesWebSocketService.initialize())
-                .thenCompose(e -> privateChatReactionsWebSocketService.initialize());
+                .thenCompose(e -> privateChatReactionsWebSocketService.initialize())
+                .thenCompose(e -> contactsWebSocketService.initialize());
     }
 
     @Override
@@ -146,7 +150,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> networkInfoWebSocketService.shutdown())
                 .thenCompose(e -> privateChatChannelsWebSocketService.shutdown())
                 .thenCompose(e -> privateChatMessagesWebSocketService.shutdown())
-                .thenCompose(e -> privateChatReactionsWebSocketService.shutdown());
+                .thenCompose(e -> privateChatReactionsWebSocketService.shutdown())
+                .thenCompose(e -> contactsWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -274,6 +279,9 @@ public class SubscriptionService implements Service {
             }
             case PRIVATE_CHAT_REACTIONS -> {
                 return Optional.of(privateChatReactionsWebSocketService);
+            }
+            case CONTACTS -> {
+                return Optional.of(contactsWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);
