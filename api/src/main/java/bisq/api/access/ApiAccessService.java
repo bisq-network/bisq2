@@ -79,9 +79,9 @@ public class ApiAccessService {
      * revocation covers.
      *
      * @param clientId The client ID to revoke
-     * @return {@code true} if the client was found and revoked; {@code false} if not found
+     * @return the outcome; see {@link ClientRevocationResult}
      */
-    public boolean revokeClient(String clientId) {
+    public ClientRevocationResult revokeClient(String clientId) {
         return clientRevocationService.revokeClient(clientId);
     }
 

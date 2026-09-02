@@ -19,6 +19,7 @@ package bisq.desktop.main.content.settings.bisq_connect;
 
 import bisq.api.ApiService;
 import bisq.api.access.ApiAccessService;
+import bisq.api.access.ClientRevocationResult;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
@@ -132,11 +133,15 @@ public class BisqConnectController implements Controller {
                     item.getClientId().ifPresent(clientId -> {
                         // Session and connection cleanup is part of revokeClient, so the same
                         // revocation semantics apply here and on the REST endpoint.
-                        if (apiAccessService.revokeClient(clientId)) {
+                        ClientRevocationResult result = apiAccessService.revokeClient(clientId);
+                        if (result == ClientRevocationResult.CLEANUP_FAILED) {
+                            new Popup().warning(Res.get("settings.bisqConnect.clients.revoke.incomplete",
+                                    item.getClientName())).show();
+                        } else if (result == ClientRevocationResult.REVOKED) {
                             log.info("Revoked client {} ({})", item.getClientName(), clientId);
                         }
-                        // The not-found path is a no-op here (stale list entry or double click);
-                        // the service already warns and cleans up session and connection.
+                        // NOT_FOUND is a no-op here (stale list entry or double click); the service
+                        // already warns and cleans up session and connection.
                     });
                 })
                 .secondaryActionButtonText(Res.get("settings.bisqConnect.clients.expireSession"))

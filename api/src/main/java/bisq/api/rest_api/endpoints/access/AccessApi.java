@@ -19,6 +19,7 @@ package bisq.api.rest_api.endpoints.access;
 
 import bisq.api.access.AllowUnauthenticated;
 import bisq.api.access.ApiAccessService;
+import bisq.api.access.ClientRevocationResult;
 import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingResponse;
 import bisq.api.access.pairing.PairingService;
@@ -268,14 +269,20 @@ public class AccessApi extends RestApiBase {
     )
     @ApiResponse(responseCode = "204", description = "Client successfully revoked")
     @ApiResponse(responseCode = "404", description = "Client not found")
-    @ApiResponse(responseCode = "500", description = "Unexpected internal server error")
+    @ApiResponse(responseCode = "500", description = "Revocation incomplete or unexpected error")
     public Response revokeClient(
             @Parameter(description = "The client ID to revoke", required = true)
             @PathParam("clientId") String clientId
     ) {
         try {
-            boolean revoked = apiAccessService.revokeClient(clientId);
-            if (!revoked) {
+            ClientRevocationResult result = apiAccessService.revokeClient(clientId);
+            if (result == ClientRevocationResult.CLEANUP_FAILED) {
+                // Answering 204 here would report a revocation that did not fully happen: the
+                // client can still hold a connection or receive push notifications. Revocation is
+                // idempotent, so the caller can retry.
+                return buildErrorResponse("Client revocation incomplete, retry");
+            }
+            if (result == ClientRevocationResult.NOT_FOUND) {
                 return buildNotFoundResponse("Client not found: " + clientId);
             }
             return buildNoContentResponse();
