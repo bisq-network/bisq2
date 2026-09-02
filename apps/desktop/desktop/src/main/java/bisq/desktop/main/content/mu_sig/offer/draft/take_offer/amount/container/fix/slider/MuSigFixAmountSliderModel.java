@@ -29,10 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 public class MuSigFixAmountSliderModel implements Model {
     private final DoubleProperty maxAllowedValue = new SimpleDoubleProperty(1);
 
-    private final DoubleProperty getSliderValue = new SimpleDoubleProperty(0) {
-        @Override
-        public void set(double value) {
-            super.set(Math.min(value, maxAllowedValue.get()));
-        }
-    };
+    // Domain-projected only: the controller writes the domain's slider value here and the view
+    // applies it to the thumb. Nothing in the UI layer clamps this value - after a background
+    // limit drop the thumb keeps showing the still-selected, now-invalid amount; user gestures
+    // are clamped in the controller before they reach the domain.
+    private final DoubleProperty getSliderValue = new SimpleDoubleProperty(0);
 }

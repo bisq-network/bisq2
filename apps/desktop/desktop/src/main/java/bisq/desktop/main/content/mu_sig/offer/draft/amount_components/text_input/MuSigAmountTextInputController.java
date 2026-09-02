@@ -28,13 +28,16 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.scene.control.TextFormatter;
 import javafx.util.StringConverter;
+import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 @Slf4j
 public class MuSigAmountTextInputController implements Controller {
@@ -42,6 +45,8 @@ public class MuSigAmountTextInputController implements Controller {
     @Getter
     private final MuSigAmountTextInputView view;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    @Nullable
+    private Consumer<Optional<Monetary>> userEditHandler;
 
     public MuSigAmountTextInputController(boolean isFixedAmount,
                                           boolean isLeftSideRangeAmount) {
@@ -113,6 +118,15 @@ public class MuSigAmountTextInputController implements Controller {
         model.getAmount().set(value);
     }
 
+    // Origin separation: the handler fires only from the text-formatter filter path, i.e. for
+    // amount changes the user typed - never for programmatic setAmount() or the focus-loss
+    // commit through the string converter. An empty or unparsable text emits an empty Optional.
+    // It is an event, not a state property: retyping the value that is already stored emits
+    // even though the amount property does not change, and registering delivers nothing.
+    public void setUserEditHandler(@Nullable Consumer<Optional<Monetary>> handler) {
+        userEditHandler = handler;
+    }
+
     public void setSumOfNumChars(int value) {
         model.getSumOfNumChars().set(value);
     }
@@ -169,7 +183,13 @@ public class MuSigAmountTextInputController implements Controller {
             Monetary amount = parse(inputText);
             model.getInputText().set(inputText);
             model.getAmount().set(amount);
+            if (userEditHandler != null) {
+                userEditHandler.accept(Optional.of(amount));
+            }
         } catch (Exception ignore) {
+            if (userEditHandler != null) {
+                userEditHandler.accept(Optional.empty());
+            }
         }
     }
 }

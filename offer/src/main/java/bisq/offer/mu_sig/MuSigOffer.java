@@ -27,6 +27,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.options.CollateralOption;
 import bisq.offer.options.OfferOption;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
@@ -36,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
@@ -119,6 +122,21 @@ public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodS
     @Override
     public void verify() {
         super.verify();
+        // A MuSig offer carries exactly one CollateralOption with symmetric deposits; earlier
+        // consumers than the take flow (offer details, mediation and arbitration sections)
+        // resolve the single symmetric value, so the shape is enforced at deserialization.
+        // CollateralOption itself stays generic - asymmetry is rejected only per offer type.
+        List<CollateralOption> collateralOptions = getOfferOptions().stream()
+                .filter(CollateralOption.class::isInstance)
+                .map(CollateralOption.class::cast)
+                .collect(Collectors.toList());
+        checkArgument(collateralOptions.size() == 1,
+                "A MuSig offer must contain exactly one CollateralOption but contains %s", collateralOptions.size());
+        CollateralOption collateralOption = collateralOptions.get(0);
+        checkArgument(Double.compare(collateralOption.getBuyerSecurityDeposit(),
+                        collateralOption.getSellerSecurityDeposit()) == 0,
+                "A MuSig offer must have symmetric security deposits but has buyer=%s, seller=%s",
+                collateralOption.getBuyerSecurityDeposit(), collateralOption.getSellerSecurityDeposit());
     }
 
     @Override

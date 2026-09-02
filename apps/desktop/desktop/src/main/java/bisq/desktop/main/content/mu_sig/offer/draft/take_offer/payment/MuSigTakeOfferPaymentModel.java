@@ -24,8 +24,10 @@ import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
 import bisq.account.payment_method.PaymentMethodSpec;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -37,8 +39,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Getter
 public class MuSigTakeOfferPaymentModel implements Model {
@@ -65,12 +69,17 @@ public class MuSigTakeOfferPaymentModel implements Model {
     private final ObjectProperty<PaymentMethod<?>> paymentMethodWithMultipleAccounts = new SimpleObjectProperty<>();
 
     private final Map<PaymentMethod<?>, List<Account<?, ?>>> accountsByPaymentMethod = new HashMap<>();
+    // Methods whose rail limit cannot cover the offer amount; disabled with a reason in the view.
+    private final Set<PaymentMethod<?>> inadmissiblePaymentMethods = new HashSet<>();
+    // Bumped when the inadmissible set was recomputed so the view re-applies the chip states.
+    private final IntegerProperty paymentMethodAdmissibilityVersion = new SimpleIntegerProperty();
     private final ObjectProperty<Account<?, ?>> selectedAccount = new SimpleObjectProperty<>();
     private final ObservableList<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = FXCollections.observableArrayList();
     private final SortedList<Account<? extends PaymentMethod<?>, ?>> sortedAccountsForPaymentMethod = new SortedList<>(accountsForPaymentMethod);
 
     private final BooleanProperty shouldShowNoAccountOverlay = new SimpleBooleanProperty();
     private final StringProperty noAccountOverlayHeadlineText = new SimpleStringProperty();
+    private final StringProperty noAccountOverlayReasonText = new SimpleStringProperty("");
     private final BooleanProperty shouldShowMultipleAccountsOverlay = new SimpleBooleanProperty();
     private final StringProperty multipleAccountsOverlayHeadlineText = new SimpleStringProperty();
     private final BooleanProperty shouldShowNoPaymentMethodSelectedOverlay = new SimpleBooleanProperty();
@@ -92,11 +101,14 @@ public class MuSigTakeOfferPaymentModel implements Model {
         paymentMethodWithoutAccount.set(null);
         paymentMethodWithMultipleAccounts.set(null);
         accountsByPaymentMethod.clear();
+        inadmissiblePaymentMethods.clear();
+        paymentMethodAdmissibilityVersion.set(0);
         selectedAccount.set(null);
         accountsForPaymentMethod.clear();
         sortedAccountsForPaymentMethod.clear();
         shouldShowNoAccountOverlay.set(false);
         noAccountOverlayHeadlineText.set("");
+        noAccountOverlayReasonText.set("");
         shouldShowMultipleAccountsOverlay.set(false);
         multipleAccountsOverlayHeadlineText.set("");
         shouldShowNoPaymentMethodSelectedOverlay.set(false);

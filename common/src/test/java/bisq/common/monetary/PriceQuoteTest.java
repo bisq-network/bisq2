@@ -79,4 +79,28 @@ public class PriceQuoteTest {
         assertThrows(ArithmeticException.class, () ->
                 PriceQuote.from(Coin.asBtcFromValue(1), Fiat.fromValue(Long.MAX_VALUE, "USD")));
     }
+
+    @Test
+    void clampRejectsAQuoteFromADifferentMarket() {
+        // A BTC/EUR quote must not be silently clamped against BTC/USD limits, even when its
+        // numeric value falls inside them.
+        PriceQuote btcEur = PriceQuote.fromFiatPrice(50_000, "EUR");
+        PriceQuote usdMin = PriceQuote.fromFiatPrice(40_000, "USD");
+        PriceQuote usdMax = PriceQuote.fromFiatPrice(60_000, "USD");
+        assertThrows(IllegalArgumentException.class, () -> btcEur.clamp(usdMin, usdMax));
+    }
+
+    @Test
+    void clampWithinTheSameMarket() {
+        PriceQuote min = PriceQuote.fromFiatPrice(40_000, "USD");
+        PriceQuote max = PriceQuote.fromFiatPrice(60_000, "USD");
+
+        PriceQuote inRange = PriceQuote.fromFiatPrice(50_000, "USD");
+        assertSame(inRange, inRange.clamp(min, max));
+
+        assertEquals(min.getQuoteSideMonetary().getValue(),
+                PriceQuote.fromFiatPrice(30_000, "USD").clamp(min, max).getQuoteSideMonetary().getValue());
+        assertEquals(max.getQuoteSideMonetary().getValue(),
+                PriceQuote.fromFiatPrice(70_000, "USD").clamp(min, max).getQuoteSideMonetary().getValue());
+    }
 }

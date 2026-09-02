@@ -97,9 +97,10 @@ public class MuSigAmountContainerController implements Controller {
     /* --------------------------------------------------------------------- */
 
     private void applyDescription() {
-        Market market = takeOfferMarketService.getMarket();
-        String code = getCode(market);
-        model.getDescription().set(Res.get("muSig.offer.create.amount.description.fixed", code));
+        // The observer queues this through UIThread.run; an already queued call can run after
+        // disposal cleared the domain, where no market is present.
+        takeOfferMarketService.findMarket().ifPresent(market ->
+                model.getDescription().set(Res.get("muSig.offer.create.amount.description.fixed", getCode(market))));
     }
 
     private String getCode(Market market) {

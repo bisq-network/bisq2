@@ -325,7 +325,7 @@ class MuSigArbitratorServiceTest {
                 new BaseSideFixedAmountSpec(100_000L),
                 new MarketPriceSpec(),
                 List.of(paymentMethod),
-                accountOptions,
+                withCollateral(accountOptions),
                 "1.0.0"
         );
         PaymentMethodSpec<?> quoteSidePaymentMethodSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, "EUR");
@@ -375,4 +375,12 @@ class MuSigArbitratorServiceTest {
                 Optional.empty()
         );
     }
+
+    private static java.util.List<bisq.offer.options.OfferOption> withCollateral(java.util.List<? extends bisq.offer.options.OfferOption> options) {
+        java.util.List<bisq.offer.options.OfferOption> result = new java.util.ArrayList<>(options.size() + 1);
+        result.add(new bisq.offer.options.CollateralOption(0.25, 0.25));
+        result.addAll(options);
+        return result;
+    }
+
 }

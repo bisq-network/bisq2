@@ -19,12 +19,25 @@ package bisq.offer.mu_sig.use_case.take_offer.payment_method;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.common.observable.collection.ReadOnlyObservableArray;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TakeOfferPaymentMethodReadOnlyModel {
+    ReadOnlyObservableArray<PaymentMethodSpec<?>> takerSidePaymentMethodSpecsObservable();
+
+    List<PaymentMethodSpec<?>> getTakerSidePaymentMethodSpecs();
+
+    Optional<PaymentMethodSpec<?>> findTakerSidePaymentMethodSpec(PaymentMethod<?> paymentMethod);
+
+    ReadOnlyObservableMap<PaymentMethod<?>, List<AccountCompatibilityMismatch>> incompatibleAccountsByPaymentMethodObservable();
+
+    ImmutableMap<PaymentMethod<?>, List<AccountCompatibilityMismatch>> getIncompatibleAccountsByPaymentMethod();
+
 
     ReadOnlyObservableMap<PaymentMethod<?>, Account<?, ?>> selectedAccountByPaymentMethodObservable();
 

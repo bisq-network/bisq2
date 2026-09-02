@@ -80,11 +80,14 @@ public class MuSigFixAmountController implements Controller {
             UIThread.run(this::applyAllAmounts);
         }));
 
-        subscriptions.add(EasyBind.subscribe(amountTextInputController.amountProperty(),
-                amount -> {
-                    takeOfferService.setFixTradeAmountFromInputAmount(amount);
-                    applyInputAmount();
-                }));
+        // Origin separation: only user-typed edits feed the domain. The component's programmatic
+        // setAmount() (from applyInputAmount/applyAllAmounts) and EasyBind's at-registration
+        // fire never reach this handler, so a lossy display value cannot be converted back and
+        // replace the stored-side amount.
+        amountTextInputController.setUserEditHandler(userAmount -> {
+            takeOfferService.setFixTradeAmountFromInputAmount(userAmount.orElse(null));
+            applyInputAmount();
+        });
 
         // UI specific
         subscriptions.add(EasyBind.subscribe(amountTextInputController.inputTextProperty(),
@@ -109,6 +112,7 @@ public class MuSigFixAmountController implements Controller {
         pins.forEach(Pin::unbind);
         pins.clear();
         model.getIsTextInputFocused().unbind();
+        amountTextInputController.setUserEditHandler(null);
     }
 
 
@@ -143,13 +147,19 @@ public class MuSigFixAmountController implements Controller {
 
     private void applyInputAmount() {
         TradeAmount tradeAmount = takeOfferAmountService.getFixTradeAmount();
-        Monetary inputAmount = takeOfferService.toInputAmount(tradeAmount, true);
+        if (tradeAmount == null) {
+            return;
+        }
+        Monetary inputAmount = takeOfferService.toInputAmount(tradeAmount);
         amountTextInputController.setAmount(inputAmount);
     }
 
     private void applyPassiveAmount() {
         TradeAmount tradeAmount = takeOfferAmountService.getFixTradeAmount();
-        Monetary passiveAmount = takeOfferService.toPassiveAmount(tradeAmount, true);
+        if (tradeAmount == null) {
+            return;
+        }
+        Monetary passiveAmount = takeOfferService.toPassiveAmount(tradeAmount);
         passiveAmountController.setAmount(passiveAmount);
     }
 

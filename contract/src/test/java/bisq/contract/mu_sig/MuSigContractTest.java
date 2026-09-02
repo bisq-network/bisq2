@@ -63,6 +63,32 @@ class MuSigContractTest {
     }
 
     @Test
+    void usesTheSelectedSpecWhenTheNonBtcBaseSideOffersMultipleMethods() {
+        // The take wizard lets the taker pick one of several offered methods on a crypto
+        // market; the contract must carry the picked spec, not assume a single-spec offer.
+        PaymentMethodSpec<?> selectedSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(new CryptoPaymentMethod("XMR"), "XMR");
+        PaymentMethodSpec<?> quoteSpec = PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0);
+        MuSigOffer offer = createOffer(createCryptoBtcMarket(),
+                List.of(selectedSpec.getPaymentMethod(), new CryptoPaymentMethod("XMR2")),
+                List.of());
+
+        MuSigContract contract = new MuSigContract(System.currentTimeMillis(),
+                offer,
+                null,
+                111L,
+                222L,
+                selectedSpec,
+                new byte[20],
+                Optional.empty(),
+                Optional.empty(),
+                null,
+                0);
+
+        assertEquals(selectedSpec, contract.getNonBtcSidePaymentMethodSpec());
+        assertEquals(quoteSpec, contract.getBtcSidePaymentMethodSpec());
+    }
+
+    @Test
     void derivesMakerSaltedAccountPayloadHashFromNonBtcQuoteSideAccountOption() {
         FiatPaymentMethod paymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
         byte[] expectedHash = hash((byte) 1);
@@ -131,11 +157,34 @@ class MuSigContractTest {
         assertFalse(contract.getMaker().getSaltedAccountPayloadHash().isPresent());
     }
 
+    @Test
+    void storesTheMarketPriceSnapshotHandedToIt() {
+        // The take-offer handoff passes the market-price snapshot the amounts were validated
+        // against; the contract must store exactly that value (MuSigContractVerifier compares
+        // full contracts, so a divergent price is a signature mismatch).
+        PaymentMethodSpec<?> baseSpec = PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0);
+        PaymentMethodSpec<?> quoteSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER), "USD");
+        long marketPriceSnapshot = 63_847_1234L;
+        MuSigContract contract = createContract(createBtcFiatMarket(), 111L, 222L, baseSpec, quoteSpec, marketPriceSnapshot);
+
+        assertEquals(marketPriceSnapshot, contract.getMarketPrice());
+    }
+
     private MuSigContract createContract(Market market,
                                          long baseSideAmount,
                                          long quoteSideAmount,
                                          PaymentMethodSpec<?> baseSpec,
                                          PaymentMethodSpec<?> quoteSpec) {
+        return createContract(market, baseSideAmount, quoteSideAmount, baseSpec, quoteSpec, 0);
+    }
+
+    private MuSigContract createContract(Market market,
+                                         long baseSideAmount,
+                                         long quoteSideAmount,
+                                         PaymentMethodSpec<?> baseSpec,
+                                         PaymentMethodSpec<?> quoteSpec,
+                                         long marketPrice) {
         PaymentMethodSpec<?> nonBtcPaymentMethodSpec = getNonBtcPaymentMethodSpec(market, baseSpec, quoteSpec);
         MuSigOffer offer = createOffer(market,
                 List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
@@ -150,7 +199,7 @@ class MuSigContractTest {
                 Optional.empty(),
                 Optional.empty(),
                 null,
-                0);
+                marketPrice);
     }
 
     private PaymentMethodSpec<?> getNonBtcPaymentMethodSpec(Market market,
@@ -169,7 +218,7 @@ class MuSigContractTest {
                 null,
                 null,
                 paymentMethods,
-                offerOptions,
+                withCollateral(offerOptions),
                 "1.0.0");
     }
 
@@ -196,4 +245,12 @@ class MuSigContractTest {
     private Market createCryptoBtcMarket() {
         return new Market("XMR", "BTC", "Monero", "Bitcoin");
     }
+
+    private static java.util.List<bisq.offer.options.OfferOption> withCollateral(java.util.List<? extends bisq.offer.options.OfferOption> options) {
+        java.util.List<bisq.offer.options.OfferOption> result = new java.util.ArrayList<>(options.size() + 1);
+        result.add(new bisq.offer.options.CollateralOption(0.25, 0.25));
+        result.addAll(options);
+        return result;
+    }
+
 }

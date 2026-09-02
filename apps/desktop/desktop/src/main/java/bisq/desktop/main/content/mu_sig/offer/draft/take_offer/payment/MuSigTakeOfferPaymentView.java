@@ -50,7 +50,7 @@ import java.util.Optional;
 @Slf4j
 public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPaymentModel, MuSigTakeOfferPaymentController> {
     private final GridPane gridPane;
-    private final Label headlineLabel, subtitleLabel;
+    private final Label headlineLabel, subtitleLabel, noAccountOverlayReasonLabel;
     private final VBox content;
     private final Button noAccountOverlayCloseButton, createAccountButton, multipleAccountsOverlayCloseButton,
             noPaymentMethodSelectedOverlayCloseButton;
@@ -58,7 +58,8 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
     private final List<MuSigPaymentMethodChipButton> paymentMethodChipButtons = new ArrayList<>();
     private final WizardOverlay noAccountOverlay, multipleAccountsOverlay, noPaymentMethodSelectedOverlay;
     private Subscription selectedPaymentMethodPin, selectedTogglePin, shouldShowNoAccountOverlayPin,
-            shouldShowMultipleAccountsOverlayPin, shouldShowNoPaymentMethodSelectedOverlayPin;
+            shouldShowMultipleAccountsOverlayPin, shouldShowNoPaymentMethodSelectedOverlayPin,
+            paymentMethodAdmissibilityPin;
 
     public MuSigTakeOfferPaymentView(MuSigTakeOfferPaymentModel model,
                                      MuSigTakeOfferPaymentController controller) {
@@ -94,9 +95,10 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         noAccountOverlayCloseButton = new Button(Res.get("action.close"));
         createAccountButton = new Button(Res.get("muSig.offer.taker.payment.noAccountOverlay.createAccount"));
         createAccountButton.setDefaultButton(true);
+        noAccountOverlayReasonLabel = new Label();
         noAccountOverlay = new WizardOverlay(root)
                 .warning()
-                .descriptionFromI18nKey("muSig.offer.taker.payment.noAccountOverlay.subTitle")
+                .description(createAndGetNoAccountContentBox())
                 .buttons(noAccountOverlayCloseButton, createAccountButton)
                 .build();
 
@@ -126,6 +128,9 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
     @Override
     protected void onViewAttached() {
         noAccountOverlay.getHeadlineLabel().textProperty().bind(model.getNoAccountOverlayHeadlineText());
+        noAccountOverlayReasonLabel.textProperty().bind(model.getNoAccountOverlayReasonText());
+        noAccountOverlayReasonLabel.visibleProperty().bind(model.getNoAccountOverlayReasonText().isNotEmpty());
+        noAccountOverlayReasonLabel.managedProperty().bind(noAccountOverlayReasonLabel.visibleProperty());
         multipleAccountsOverlay.getHeadlineLabel().textProperty().bind(model.getMultipleAccountsOverlayHeadlineText());
 
         shouldShowNoAccountOverlayPin = EasyBind.subscribe(model.getShouldShowNoAccountOverlay(), shouldShow ->
@@ -148,6 +153,12 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
             }
         });
 
+        paymentMethodAdmissibilityPin = EasyBind.subscribe(model.getPaymentMethodAdmissibilityVersion(), version -> {
+            paymentMethodChipButtons.forEach(this::applyAdmissibility);
+            applySinglePaymentMethodComboAdmissibility();
+            reconcileSelectionVisuals();
+        });
+
         createAccountButton.setOnAction(e -> controller.onOpenCreateAccountScreen());
         noAccountOverlayCloseButton.setOnAction(e -> controller.onCloseNoAccountOverlay());
         multipleAccountsOverlayCloseButton.setOnAction(e -> controller.onCloseMultipleAccountsOverlay());
@@ -162,6 +173,8 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
             singlePaymentMethodAccountSelection.setOnChangeConfirmed(e -> {
                 Account<?, ?> account = singlePaymentMethodAccountSelection.getSelectionModel().getSelectedItem();
                 if (account != null) {
+                    // Admissibility is decided by the controller against the domain; on a
+                    // rejected pick the version signal reconciles the label and the combo.
                     findPaymentMethodChipButton(account.getPaymentMethod())
                             .ifPresent(button -> button.setAccountName(account.getAccountName()));
                     controller.onSelectAccount(account);
@@ -181,6 +194,9 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
     @Override
     protected void onViewDetached() {
         noAccountOverlay.getHeadlineLabel().textProperty().unbind();
+        noAccountOverlayReasonLabel.textProperty().unbind();
+        noAccountOverlayReasonLabel.visibleProperty().unbind();
+        noAccountOverlayReasonLabel.managedProperty().unbind();
         multipleAccountsOverlay.getHeadlineLabel().textProperty().unbind();
 
         shouldShowNoAccountOverlayPin.unsubscribe();
@@ -188,6 +204,7 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         shouldShowNoPaymentMethodSelectedOverlayPin.unsubscribe();
         selectedPaymentMethodPin.unsubscribe();
         selectedTogglePin.unsubscribe();
+        paymentMethodAdmissibilityPin.unsubscribe();
 
         paymentMethodChipButtons.forEach(MuSigPaymentMethodChipButton::dispose);
 
@@ -225,11 +242,9 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
             if (!paymentMethod.getShortDisplayString().equals(paymentMethod.getDisplayString())) {
                 button.setTooltip(new BisqTooltip(paymentMethod.getDisplayString()));
             }
-
-            boolean hasAccounts = model.getAccountsByPaymentMethod().containsKey(paymentMethod);
-            button.setActive(hasAccounts);
+            applyAdmissibility(button);
             List<Account<?, ?>> accounts = model.getAccountsByPaymentMethod().get(paymentMethod);
-            button.setNumAccounts(hasAccounts ? accounts.size() : 0);
+            button.setNumAccounts(accounts != null ? accounts.size() : 0);
 
             Account<?, ?> account = model.getSelectedAccount().get();
             if (accounts != null && account != null && accounts.size() > 1 && account.getPaymentMethod().equals(paymentMethod)) {
@@ -238,7 +253,12 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
                 button.setAccountName(null);
             }
 
-            button.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, button.isSelected()));
+            button.setOnAction(() -> {
+                // An inadmissible chip is dimmed but stays mouse-interactive so its tooltip
+                // shows; the controller rejects the toggle against the domain, and the
+                // version signal restores the toggle visuals and account labels.
+                controller.onTogglePaymentMethod(paymentMethod, button.isSelected());
+            });
 
             col = i % numColumns;
             row = i / numColumns;
@@ -251,6 +271,68 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         return paymentMethodChipButtons.stream()
                 .filter(button -> button.getPaymentMethod().equals(paymentMethod))
                 .findAny();
+    }
+
+    private void applyAdmissibility(MuSigPaymentMethodChipButton button) {
+        PaymentMethod<?> paymentMethod = button.getPaymentMethod();
+        boolean isAdmissible = !model.getInadmissiblePaymentMethods().contains(paymentMethod);
+        boolean hasAccounts = model.getAccountsByPaymentMethod().containsKey(paymentMethod);
+        button.setActive(hasAccounts && isAdmissible);
+        button.setInadmissibleReasonTooltip(isAdmissible
+                ? null
+                : new BisqTooltip(Res.get("muSig.offer.taker.payment.methodNotAdmissible",
+                        paymentMethod.getShortDisplayString())));
+    }
+
+    // Single-method offers show the account combo instead of the chip grid, so it has to
+    // mirror the chip treatment when the method is inadmissible: dimmed, reason as tooltip,
+    // still mouse-interactive (a disabled node would not show the tooltip). Picks are
+    // rejected in the change-confirmed handler and in the controller.
+    private void applySinglePaymentMethodComboAdmissibility() {
+        if (!model.isSinglePaymentMethod() || model.getOfferedPaymentMethods().isEmpty()) {
+            return;
+        }
+        PaymentMethod<?> paymentMethod = model.getOfferedPaymentMethods().get(0);
+        boolean isAdmissible = !model.getInadmissiblePaymentMethods().contains(paymentMethod);
+        singlePaymentMethodAccountSelection.setOpacity(isAdmissible ? 1 : 0.4);
+        singlePaymentMethodAccountSelection.setTooltip(isAdmissible
+                ? null
+                : new BisqTooltip(Res.get("muSig.offer.taker.payment.methodNotAdmissible",
+                        paymentMethod.getShortDisplayString())));
+    }
+
+    // The version signal also fires when the controller rejects a selection attempt that
+    // this view let through on a stale projection; the selection visuals are re-derived
+    // from the model so a rejected attempt cannot leave a toggle, account label or combo
+    // showing a selection that was never applied. Idempotent when visuals already match.
+    private void reconcileSelectionVisuals() {
+        PaymentMethodSpec<?> selectedSpec = model.getSelectedPaymentMethodSpec().get();
+        PaymentMethod<?> selectedMethod = selectedSpec != null ? selectedSpec.getPaymentMethod() : null;
+        Account<?, ?> selectedAccount = model.getSelectedAccount().get();
+        paymentMethodChipButtons.forEach(button -> {
+            PaymentMethod<?> paymentMethod = button.getPaymentMethod();
+            boolean isSelected = paymentMethod.equals(selectedMethod);
+            button.setSelected(isSelected);
+            List<Account<?, ?>> accounts = model.getAccountsByPaymentMethod().get(paymentMethod);
+            boolean showAccountName = isSelected && selectedAccount != null
+                    && accounts != null && accounts.size() > 1
+                    && selectedAccount.getPaymentMethod().equals(paymentMethod);
+            button.setAccountName(showAccountName ? selectedAccount.getAccountName() : null);
+        });
+        if (model.isSinglePaymentMethod()) {
+            // Deferred: a synchronous programmatic change inside the combo's own
+            // change-confirmed handler must be avoided. The model is read at execution
+            // time - a selection accepted between the version bump and this frame must
+            // not be overwritten by a value captured earlier.
+            UIThread.runOnNextRenderFrame(() -> {
+                Account<?, ?> currentAccount = model.getSelectedAccount().get();
+                if (currentAccount != null) {
+                    singlePaymentMethodAccountSelection.getSelectionModel().select(currentAccount);
+                } else {
+                    singlePaymentMethodAccountSelection.getSelectionModel().clearSelection();
+                }
+            });
+        }
     }
 
     private void updateSelectionsState() {
@@ -280,6 +362,21 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         return comboBox;
     }
 
+    private VBox createAndGetNoAccountContentBox() {
+        Label subtitleLabel = new Label(Res.get("muSig.offer.taker.payment.noAccountOverlay.subTitle"));
+        subtitleLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
+        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
+        subtitleLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+
+        noAccountOverlayReasonLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
+        noAccountOverlayReasonLabel.setMaxWidth(noAccountOverlayReasonLabel.getMinWidth());
+        noAccountOverlayReasonLabel.getStyleClass().addAll("normal-text", "wrap-text", "text-fill-grey-dimmed");
+
+        VBox vBox = new VBox(15, subtitleLabel, noAccountOverlayReasonLabel);
+        vBox.setPadding(WizardOverlay.TEXT_CONTENT_PADDING);
+        return vBox;
+    }
+
     private VBox createAndGetContentBox() {
         Label subtitleLabel = new Label(Res.get("muSig.offer.taker.payment.multipleAccountOverlay.subTitle"));
         subtitleLabel.setMinWidth(WizardOverlay.OVERLAY_WIDTH - 100);
@@ -296,6 +393,9 @@ public class MuSigTakeOfferPaymentView extends View<StackPane, MuSigTakeOfferPay
         PaymentMethod<?> paymentMethod = model.getPaymentMethodWithMultipleAccounts().get();
         Account<?, ?> account = accountSelection.getSelectionModel().getSelectedItem();
         if (paymentMethod != null && account != null) {
+            // Admissibility is decided by the controller against the domain. On a rejected
+            // pick the controller leaves the overlay open and the version signal reconciles
+            // the chip label the optimistic set below applied.
             findPaymentMethodChipButton(paymentMethod)
                     .ifPresent(button -> button.setAccountName(account.getAccountName()));
             controller.onSelectAccount(account);

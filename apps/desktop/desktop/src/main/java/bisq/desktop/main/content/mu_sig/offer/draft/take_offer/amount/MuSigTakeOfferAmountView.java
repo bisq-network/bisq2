@@ -113,9 +113,6 @@ public class MuSigTakeOfferAmountView extends View<StackPane, MuSigTakeOfferAmou
 
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 40, 0));
         content.getChildren().addAll(Spacer.fillVBox(), headlineLabel, amountBox, amountLimitInfoHBox, Spacer.fillVBox());
-       // root.setAlignment(Pos.TOP_CENTER);
-       // root.setAlignment(Pos.CENTER);
-       // root.getStyleClass().add("bisq-easy-trade-wizard-amount-step");
 
         root.getChildren().addAll(content, overlay);
     }

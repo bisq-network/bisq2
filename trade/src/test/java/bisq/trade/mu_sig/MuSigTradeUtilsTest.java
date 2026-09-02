@@ -33,6 +33,7 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
+import bisq.offer.options.CollateralOption;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.security.keys.I2PKeyGeneration;
 import bisq.security.keys.KeyBundle;
@@ -124,7 +125,7 @@ class MuSigTradeUtilsTest {
                 null,
                 null,
                 List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new CollateralOption(0.25, 0.25)),
                 "1.0.0");
         return new MuSigContract(System.currentTimeMillis(),
                 offer,
@@ -148,7 +149,8 @@ class MuSigTradeUtilsTest {
                 null,
                 null,
                 List.of(paymentMethod),
-                List.of(new bisq.offer.options.AccountOption(
+                List.of(new CollateralOption(0.25, 0.25),
+                        new bisq.offer.options.AccountOption(
                         paymentMethod,
                         "0123456789abcdef0123456789abcdef01234567",
                         Optional.empty(),

@@ -26,6 +26,7 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.market.Market;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.offer.Direction;
+import bisq.offer.options.CollateralOption;
 import bisq.offer.mu_sig.MuSigOffer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -124,7 +125,7 @@ class MuSigTradeFormatterTest {
                 null,
                 null,
                 List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new CollateralOption(0.25, 0.25)),
                 "1.0.0");
         return new MuSigContract(System.currentTimeMillis(),
                 offer,

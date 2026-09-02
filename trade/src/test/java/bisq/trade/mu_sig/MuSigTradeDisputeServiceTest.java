@@ -38,6 +38,8 @@ import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
+import bisq.offer.options.CollateralOption;
+import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -375,15 +377,17 @@ class MuSigTradeDisputeServiceTest {
                                          AccountPayload<?> makerPayloadForHash) {
         Market market = new Market("BTC", "EUR", "Bitcoin", "Euro");
         PaymentMethod<?> paymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK);
-        List<AccountOption> accountOptions = List.of(new AccountOption(
-                paymentMethod,
-                "0123456789abcdef0123456789abcdef01234567",
-                Optional.empty(),
-                List.of(),
-                Optional.empty(),
-                List.of(),
-                OfferOptionUtil.createSaltedAccountPayloadHash(makerPayloadForHash, offerId)
-        ));
+        List<OfferOption> accountOptions = List.of(
+                new CollateralOption(0.25, 0.25),
+                new AccountOption(
+                        paymentMethod,
+                        "0123456789abcdef0123456789abcdef01234567",
+                        Optional.empty(),
+                        List.of(),
+                        Optional.empty(),
+                        List.of(),
+                        OfferOptionUtil.createSaltedAccountPayloadHash(makerPayloadForHash, offerId)
+                ));
         MuSigOffer offer = new MuSigOffer(
                 offerId,
                 maker.getNetworkId(),

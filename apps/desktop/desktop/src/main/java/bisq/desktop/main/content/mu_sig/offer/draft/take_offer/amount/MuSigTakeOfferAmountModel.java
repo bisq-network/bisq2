@@ -42,4 +42,19 @@ public class MuSigTakeOfferAmountModel implements Model {
     private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
     private final StringProperty priceTooltip = new SimpleStringProperty();
     private final StringProperty errorMessage = new SimpleStringProperty();
+
+    void reset() {
+        headline = null;
+        amountLimitInfo.set(null);
+        amountLimitInfoOverlayInfo.set(null);
+        shouldShowAmountLimitInfo.set(false);
+        shouldShowHowToBuildReputationButton.set(false);
+        shouldShowWarningIcon.set(false);
+        learnMoreVisible.set(false);
+        amountLimitInfoLink = null;
+        linkToWikiText = null;
+        isOverlayVisible.set(false);
+        priceTooltip.set(null);
+        errorMessage.set(null);
+    }
 }

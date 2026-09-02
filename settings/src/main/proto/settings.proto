@@ -89,4 +89,5 @@ message SettingsStore {
   common.Market selectedWalletMarket = 35;
   repeated TacAcceptance tacAcceptances = 36;
   bool showLatestTxs = 37;
+  double priceDeviationWarningThreshold = 38;
 }

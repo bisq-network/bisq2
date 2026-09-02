@@ -40,18 +40,6 @@ public class TradeAmountRange extends Range<TradeAmount> {
                 min.getQuoteSideAmount().getCode(), max.getQuoteSideAmount().getCode());
     }
 
-    public String printRelevantStringa(Market market) {
-        String min, max;
-        if (market.getRelevantCurrencyCode().equals(getMin().getQuoteSideAmount().getCode())) {
-            min = getMin().getQuoteSideAmount().asDouble() + " " + getMin().getQuoteSideAmount().getCode();
-            max = getMax().getQuoteSideAmount().asDouble() + " " + getMax().getQuoteSideAmount().getCode();
-        } else {
-            min = getMin().getBaseSideAmount().asDouble() + " " + getMin().getBaseSideAmount().getCode();
-            max = getMax().getBaseSideAmount().asDouble() + " " + getMax().getBaseSideAmount().getCode();
-        }
-        return min + " - " + max;
-    }
-
     public String printRelevantString(Market market) {
         TradeAmount minAmount = getMin();
         TradeAmount maxAmount = getMax();
