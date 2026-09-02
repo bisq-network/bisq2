@@ -165,6 +165,20 @@ public class AmountSelection extends LifecycleScope {
     private void applyPotentialTradeAmountLimits(TradeAmountRange potentialTradeAmountLimits) {
         MonetaryRange inputAmountRange = toInputSideMonetaryRange(potentialTradeAmountLimits);
         model.setInputAmountRange(inputAmountRange);
+        // All slider values are fractions of the input amount range. When the range changes but the
+        // corresponding amount values stay equal, their observers do not fire, so we recompute them here.
+        // The user-specific limit must be emitted first: UI slider controllers clamp incoming amount
+        // slider values against the last emitted limit and feed the result back into this class.
+        handleUserSpecificAmountLimitChange(getUserSpecificTradeAmountLimit());
+        if (model.getFixTradeAmount() != null) {
+            applyFixAmountAndSliderValue(model.getFixTradeAmount());
+        }
+        if (model.getMinTradeAmount() != null) {
+            applyMinAmountAndSliderValue(model.getMinTradeAmount());
+        }
+        if (model.getMaxTradeAmount() != null) {
+            applyMaxAmountAndSliderValue(model.getMaxTradeAmount());
+        }
     }
 
 
