@@ -69,7 +69,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * Pins the two-level ban filter and the one thing neither trade nor private chat needs: when a message
- * leaves the channel, its reaction observer goes with it.
+ * leaves the channel, its reaction observer goes with it. Also what a reaction binding is filed under,
+ * from both sides — the channel and the message id are each load-bearing, and dropping either lets one
+ * message unbind another's observer.
  */
 class PublicChatReactionsWebSocketServiceTest {
     private static final String AUTHOR = "author";
@@ -219,6 +221,53 @@ class PublicChatReactionsWebSocketServiceTest {
 
         // sentJson verifies a single send, so the support reaction never reached this subscriber.
         assertThat(sentJson(scoped)).contains(reactionId("d"));
+    }
+
+    /**
+     * Message ids are not unique across channels. {@code ChatMessage.verify} bounds the id's length and
+     * nothing else, so a peer publishing to Support picks any id it likes, including one already in use
+     * on Discussions. Keying the reaction bindings by message id alone lets that message evict the
+     * observer of an unrelated one, and the reactions on the evicted message stop reaching subscribers
+     * for the life of the process — a peer choosing the id it wants silenced.
+     */
+    @Test
+    void aMessageInAnotherChannelReusingAnIdDoesNotUnbindTheOriginalsObserver() {
+        supportMessages.add(messageInChannel(SUPPORT_ID, "m", AUTHOR, 2));
+
+        reactions.add(mockReaction("r", REACTOR, "m", 0));
+
+        assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(reactionId("r"));
+    }
+
+    /**
+     * The other side of the same key. Widening it to the channel is only half the answer: a channel
+     * holds thousands of messages, so the id has to stay in it or every message in a channel files
+     * under the same entry and each arrival unbinds the one before it. Found by mutation — keying on
+     * the channel alone left the rest of this class green.
+     */
+    @Test
+    void aSecondMessageInTheSameChannelDoesNotUnbindTheFirstsObserver() {
+        messages.add(mockMessage("m2", AUTHOR, 2));
+
+        reactions.add(mockReaction("r", REACTOR, "m", 0));
+
+        assertThat(sentJson(subscriber)).contains(reactionId("r"));
+    }
+
+    /**
+     * The other half: the id collides only while the second message is in its channel, so the teardown
+     * has to leave the first one's binding alone as well. Under a map keyed by the id, the second
+     * message's removal takes out the single entry that is left and nothing rebinds the first.
+     */
+    @Test
+    void removingThatMessageDoesNotLeaveTheOriginalUnobserved() {
+        CommonPublicChatMessage sameId = messageInChannel(SUPPORT_ID, "m", AUTHOR, 2);
+        supportMessages.add(sameId);
+
+        supportMessages.remove(sameId);
+
+        reactions.add(mockReaction("r", REACTOR, "m", 0));
+        assertThat(sentJson(subscriber)).contains(reactionId("r"));
     }
 
     @Test

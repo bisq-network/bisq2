@@ -62,7 +62,7 @@ import static bisq.api.web_socket.subscription.Topic.PUBLIC_CHAT_REACTIONS;
  */
 public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketService {
     private final List<Pin> messagesPins = new ArrayList<>();
-    private final Map<String, MessageBinding> bindingsByMessageId = new ConcurrentHashMap<>();
+    private final Map<BindingKey, MessageBinding> bindingsByMessage = new ConcurrentHashMap<>();
     private volatile boolean shutdownStarted;
 
     public PublicChatReactionsWebSocketService(SubscriberRepository subscriberRepository,
@@ -131,23 +131,25 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
             // Not through unbindMessage: the message is still live in its channel — it is the service
             // that is going — so this keys on the exact binding, and whichever of sweep and this wins
             // the entry is the one that unbinds the pin.
-            if (bindingsByMessageId.remove(message.getId(), binding)) {
+            if (bindingsByMessage.remove(keyOf(message), binding)) {
                 reactionsPin.unbind();
             }
         }
     }
 
     /**
-     * Publishes the binding, but only while its message is still the live one under that id, and the
+     * Publishes the binding, but only while its message is still the live one under that key, and the
      * check runs inside the map update so that it cannot go stale between the two. Whatever it displaces
-     * belongs to an instance that is gone, so its observer is unbound.
+     * is a message of the same channel with the same id, so it is an instance that is gone and its
+     * observer is unbound — see {@link BindingKey} for why the channel has to be in the key for that to
+     * hold.
      *
      * @return false if the message is gone or the shutdown has started, leaving the pin for the caller
      * to unbind
      */
     private boolean install(MessageBinding binding) {
         AtomicReference<MessageBinding> displaced = new AtomicReference<>();
-        MessageBinding current = bindingsByMessageId.compute(binding.owner().getId(), (id, present) -> {
+        MessageBinding current = bindingsByMessage.compute(keyOf(binding.owner()), (key, present) -> {
             if (shutdownStarted || !isLive(binding.owner())) {
                 return present;
             }
@@ -165,14 +167,14 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
      * Unbinds this message's reaction observer, unless the binding's owner is still live. The teardown
      * cannot key on the notified instance: {@code ObservableCollection#remove} drops the stored element
      * by {@code equals} but notifies with the argument, and on a restarted node the removal path always
-     * delivers the network store's copy rather than the channel store's instance that was bound. Nor can
-     * it key on the id alone: the P2P store re-delivers a message as a fresh instance that is equal to
-     * the one it replaced, and a successor can be bound under this id while this callback is still
-     * pending — a live owner is that successor's, and its observer must stay.
+     * delivers the network store's copy rather than the channel store's instance that was bound. Nor is
+     * the entry's key enough on its own: the P2P store re-delivers a message as a fresh instance that is
+     * equal to the one it replaced, so a successor can be bound under the same channel and id while this
+     * callback is still pending — a live owner is that successor's, and its observer must stay.
      */
     private void unbindMessage(CommonPublicChatMessage message) {
         AtomicReference<MessageBinding> removed = new AtomicReference<>();
-        bindingsByMessageId.computeIfPresent(message.getId(), (id, present) -> {
+        bindingsByMessage.computeIfPresent(keyOf(message), (key, present) -> {
             if (isLive(present.owner())) {
                 return present;
             }
@@ -204,6 +206,22 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
     private record MessageBinding(CommonPublicChatMessage owner, Pin reactionsPin) {
     }
 
+    /**
+     * What a binding is filed under. The channel belongs in the key because a message id is not unique
+     * across channels: {@code ChatMessage.verify} bounds its length and nothing else, so a peer
+     * publishing to one channel can carry an id that is already in use in another. Under the id alone
+     * that message installs over the other channel's binding, and since {@link #install} unbinds
+     * whatever it displaces, the reactions on a message a peer never touched stop being observed for
+     * the life of the process. The private chat sibling keeps the same separation by nesting its
+     * reaction pins inside a per-channel entry.
+     */
+    private record BindingKey(String channelId, String messageId) {
+    }
+
+    private static BindingKey keyOf(CommonPublicChatMessage message) {
+        return new BindingKey(message.getChannelId(), message.getId());
+    }
+
     @Override
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
@@ -211,8 +229,8 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
         messagesPins.clear();
         // Swept key by key rather than snapshot-then-clear, so an entry published between the two is
         // never dropped with its observer still registered.
-        new ArrayList<>(bindingsByMessageId.keySet()).forEach(messageId -> {
-            MessageBinding binding = bindingsByMessageId.remove(messageId);
+        new ArrayList<>(bindingsByMessage.keySet()).forEach(key -> {
+            MessageBinding binding = bindingsByMessage.remove(key);
             if (binding != null) {
                 binding.reactionsPin().unbind();
             }
