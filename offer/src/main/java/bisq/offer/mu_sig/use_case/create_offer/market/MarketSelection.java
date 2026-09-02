@@ -34,8 +34,10 @@ public class MarketSelection extends LifecycleScope {
     @Delegate
     private final CreateOfferMarketModel model;
     private final Set<Consumer<Market>> listeners = new CopyOnWriteArraySet<>();
+    private final Object draftLock;
 
-    public MarketSelection() {
+    public MarketSelection(Object draftLock) {
+        this.draftLock = checkNotNull(draftLock, "draftLock must not be null");
         this.model = new CreateOfferMarketModel();
     }
 
@@ -54,7 +56,9 @@ public class MarketSelection extends LifecycleScope {
 
     public void onSetMarket(Market market) {
         checkNotNull(market, "market must not be null");
-        applyMarket(market, true);
+        synchronized (draftLock) {
+            applyMarket(market, true);
+        }
     }
 
 

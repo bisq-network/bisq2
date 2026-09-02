@@ -58,16 +58,23 @@ public class MuSigAmountTextInputController implements Controller {
                 return formatted;
             }
 
+            // The commit on focus loss or Enter. The typed text already reached the domain
+            // through the filter, so the value to render is the amount the domain settled on,
+            // which may have been clamped while the field was still being edited.
             @Override
             public Monetary fromString(String inputText) {
                 model.getInputText().set(inputText);
-                return parseOrFallback(inputText);
+                return model.getAmount().get();
             }
         };
 
         TextFormatter<Monetary> textFormatter = new TextFormatter<>(stringConverter,
                 null,
                 change -> {
+                    // Caret moves and selections also pass through the filter; only text edits are input.
+                    if (!change.isContentChange()) {
+                        return change;
+                    }
                     // Check if added string is valid. Can be a number or the local specific decimal separator.
                     // change.getText() is freshly added string
                     String changeText = change.getText();
@@ -91,14 +98,31 @@ public class MuSigAmountTextInputController implements Controller {
 
     @Override
     public void onActivate() {
+        subscriptions.add(EasyBind.subscribe(model.getFocusedProperty(), focused -> {
+            if (!focused) {
+                renderAuthoritativeAmount();
+            }
+        }));
         subscriptions.add(EasyBind.subscribe(model.getAmount(), amount -> {
             if (amount != null) {
                 String code = amount.getCode();
                 model.getCode().set(code);
 
-                if (!model.getFocusedProperty().get()) {
+                boolean wasEditable = model.getEditable().get();
+                model.getEditable().set(true);
+                // The focus guard protects an in-progress edit; a field that was not editable
+                // has none, and skipping the render there would leave it empty after seeding.
+                if (!model.getFocusedProperty().get() || !wasEditable) {
                     model.getTextFormatter().setValue(amount);
                 }
+            } else {
+                // An empty domain state (e.g. the selected market has no price yet) clears and
+                // disables the field; keeping the previous market's values would display them
+                // as if they belonged to the new market, and text typed without a currency code
+                // cannot be parsed, so a buffered edit would diverge from the domain.
+                model.getCode().set("");
+                model.getEditable().set(false);
+                model.getTextFormatter().setValue(null);
             }
         }));
     }
@@ -156,6 +180,18 @@ public class MuSigAmountTextInputController implements Controller {
     // Private
     /* --------------------------------------------------------------------- */
 
+    // The commit on focus loss hands the formatter the authoritative amount, but the formatter
+    // only re-renders when its value changes: the same instance handed back after a clamp leaves
+    // the typed text standing. Re-render through the formatter, which never reaches the
+    // user-edit path.
+    private void renderAuthoritativeAmount() {
+        Monetary amount = model.getAmount().get();
+        if (amount != null && !formatAmount(amount).equals(model.getInputText().get())) {
+            model.getTextFormatter().setValue(null);
+            model.getTextFormatter().setValue(amount);
+        }
+    }
+
     private String formatAmount(Monetary amount) {
         if (amount != null) {
             // XMR has precision of 12, but we only show 8 decimal places
@@ -168,14 +204,6 @@ public class MuSigAmountTextInputController implements Controller {
 
     private Monetary parse(String inputText) {
         return AmountParser.parse(inputText, model.getCode().get());
-    }
-
-    private Monetary parseOrFallback(String inputText) {
-        try {
-            return parse(inputText);
-        } catch (Exception e) {
-            return model.getAmount().get();
-        }
     }
 
     private void parseAndApplyAmount(String inputText) {

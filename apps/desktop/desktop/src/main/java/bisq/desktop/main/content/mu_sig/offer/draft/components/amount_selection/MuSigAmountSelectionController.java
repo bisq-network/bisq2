@@ -90,7 +90,7 @@ public class MuSigAmountSelectionController implements Controller {
         invertedMinQuoteSideAmountDisplay = new MuSigSmallAmountNumberBox(false, false);
         invertedMinBaseSideAmountInput = new MuSigBigAmountNumberBox(true, false);
 
-        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService(), draftOfferService);
+        priceInput = new MuSigPriceInput(draftOfferService);
 
         model = new MuSigAmountSelectionModel(getWidthByNumCharsMap());
         view = new MuSigAmountSelectionView(model,

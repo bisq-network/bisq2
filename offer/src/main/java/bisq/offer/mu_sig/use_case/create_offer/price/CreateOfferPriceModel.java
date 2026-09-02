@@ -33,7 +33,7 @@ public class CreateOfferPriceModel {
     // priceQuote
     /* --------------------------------------------------------------------- */
 
-    void onSetPriceQuote(PriceQuote priceQuote) {
+    void setPriceQuote(PriceQuote priceQuote) {
         this.priceQuote.set(priceQuote);
     }
 

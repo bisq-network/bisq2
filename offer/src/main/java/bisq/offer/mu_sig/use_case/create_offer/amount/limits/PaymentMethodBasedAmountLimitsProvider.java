@@ -32,12 +32,13 @@ import bisq.common.observable.ReadOnlyObservable;
 import bisq.offer.mu_sig.use_case.create_offer.market.MarketSelection;
 import bisq.offer.mu_sig.use_case.create_offer.payment_method.PaymentMethodSelection;
 import bisq.offer.mu_sig.use_case.create_offer.price.PriceSelection;
+
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 
-import static bisq.offer.mu_sig.use_case.create_offer.amount.limits.TradeAmountLimitUtils.toTradeAmountLimit;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PaymentMethodBasedAmountLimitsProvider extends LifecycleScope {
@@ -59,6 +60,14 @@ public class PaymentMethodBasedAmountLimitsProvider extends LifecycleScope {
         this.priceSelection = priceSelection;
     }
 
+    // The market the current output was computed for; retention across markets is refused.
+    private Market outputMarket;
+    private final RatesCache ratesCache = new RatesCache();
+
+    private Optional<TradeAmountLimitUtils.Rates> resolveRates(Market market) {
+        return ratesCache.resolve(marketPriceService, market);
+    }
+
     @Override
     public void initialize() {
         addDisposable(marketSelection.addMarketListener(market ->
@@ -73,6 +82,18 @@ public class PaymentMethodBasedAmountLimitsProvider extends LifecycleScope {
                 update(marketSelection.getMarket(),
                         priceQuote,
                         paymentMethodSelection.getAccountByPaymentMethod())));
+
+        // The market context can change (e.g. the BTC/USD leg) without the offer quote changing.
+        addDisposable(priceSelection.addMarketContextListener(() ->
+                update(marketSelection.getMarket(),
+                        priceSelection.getPriceQuote(),
+                        paymentMethodSelection.getAccountByPaymentMethod())));
+
+        // The market and price listeners above do not replay their current value; compute now from
+        // the current state (the account observer already replays at registration).
+        update(marketSelection.getMarket(),
+                priceSelection.getPriceQuote(),
+                paymentMethodSelection.getAccountByPaymentMethod());
     }
 
 
@@ -83,12 +104,28 @@ public class PaymentMethodBasedAmountLimitsProvider extends LifecycleScope {
     private void update(Market market,
                         PriceQuote priceQuote,
                         ImmutableMap<PaymentMethod<?>, Account<?, ?>> accountByPaymentMethod) {
-        if (dependenciesValid(market, priceQuote, accountByPaymentMethod)) {
+        clearOutputOnMarketChange(market);
+        if (!dependenciesValid(market, priceQuote, accountByPaymentMethod)) {
+            return;
+        }
+        // A missing rate retains the previous output instead of throwing inside a map observer.
+        resolveRates(market).ifPresent(rates -> {
             Fiat limitInUsd = evaluateLimitInUsd(accountByPaymentMethod);
             amountLimitInUsd.set(limitInUsd);
 
-            TradeAmount limit = toTradeAmountLimit(marketPriceService, market, priceQuote, limitInUsd);
+            TradeAmount limit = TradeAmountLimitUtils.toTradeAmountLimit(rates, market, priceQuote, limitInUsd);
             tradeAmountLimit.set(limit);
+            outputMarket = market;
+        });
+    }
+
+    private void clearOutputOnMarketChange(Market market) {
+        // Fail-soft retention only spans rate gaps within one market; another market's
+        // converted output must not survive a market change.
+        if (market != null && outputMarket != null && !market.equals(outputMarket)) {
+            tradeAmountLimit.set(null);
+            amountLimitInUsd.set(null);
+            outputMarket = null;
         }
     }
 

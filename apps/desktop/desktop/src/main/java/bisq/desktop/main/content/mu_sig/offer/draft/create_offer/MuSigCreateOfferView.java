@@ -246,4 +246,16 @@ public class MuSigCreateOfferView extends NavigationView<VBox, MuSigCreateOfferM
             }
         }
     }
+
+    Button nextAction() {
+        return nextButton;
+    }
+
+    Button backAction() {
+        return backButton;
+    }
+
+    Button closeAction() {
+        return closeButton;
+    }
 }

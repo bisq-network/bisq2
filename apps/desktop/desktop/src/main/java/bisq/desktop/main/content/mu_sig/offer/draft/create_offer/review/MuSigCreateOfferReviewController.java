@@ -24,8 +24,6 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.bonded_roles.market_price.MarketPrice;
-import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -35,7 +33,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.main.content.mu_sig.offer.draft.components.MuSigPriceInput;
 import bisq.desktop.main.content.mu_sig.offer.draft.components.MuSigReviewDataDisplay;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -47,16 +44,11 @@ import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.mu_sig.use_case.create_offer.CreateOfferUseCase;
-import bisq.offer.mu_sig.use_case.create_offer.amount.AmountSelection;
-import bisq.offer.mu_sig.use_case.create_offer.direction.DirectionSelection;
-import bisq.offer.mu_sig.use_case.create_offer.market.MarketSelection;
-import bisq.offer.mu_sig.use_case.create_offer.payment_method.PaymentMethodSelection;
-import bisq.offer.mu_sig.use_case.create_offer.price.PriceSelection;
+import bisq.offer.mu_sig.use_case.create_offer.DraftSnapshot;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.CollateralOption;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
-import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -85,33 +77,20 @@ public class MuSigCreateOfferReviewController implements Controller {
     private final MuSigCreateOfferReviewView view;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
-    private final MuSigPriceInput priceInput;
-    private final MarketPriceService marketPriceService;
     private final MuSigReviewDataDisplay muSigReviewDataDisplay;
     private final MuSigService muSigService;
-    private final MarketSelection marketSelection;
-    private final DirectionSelection directionSelection;
-    private final PaymentMethodSelection paymentMethodSelection;
-    private final PriceSelection priceSelection;
-    private final AmountSelection amountSelection;
+    private final CreateOfferUseCase createOfferUseCase;
 
     public MuSigCreateOfferReviewController(ServiceProvider serviceProvider,
                                             CreateOfferUseCase createOfferUseCase,
                                             Consumer<Boolean> mainButtonsVisibleHandler,
                                             Consumer<NavigationTarget> closeAndNavigateToHandler) {
-        marketSelection = createOfferUseCase.getMarketSelection();
-        directionSelection = createOfferUseCase.getDirectionSelection();
-        paymentMethodSelection = createOfferUseCase.getPaymentMethodSelection();
-        priceSelection = createOfferUseCase.getPriceSelection();
-        amountSelection = createOfferUseCase.getAmountSelection();
+        this.createOfferUseCase = createOfferUseCase;
 
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
-
-        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         muSigService = serviceProvider.getMuSigService();
 
-        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService(), createOfferUseCase);
         muSigReviewDataDisplay = new MuSigReviewDataDisplay();
 
         model = new MuSigCreateOfferReviewModel();
@@ -119,12 +98,15 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     public void initialize() {
-        Market market = marketSelection.getMarket();
-        Direction displayDirection = directionSelection.getDisplayDirection();
-        AmountSpec amountSpec = amountSelection.createAndGetAmountSpec(market);
-        PriceSpec priceSpec = priceSelection.createAndGetPriceSpec();
+        // One synchronized capture: a concurrent market-price update cannot produce mixed
+        // review values or an offer inconsistent with what is displayed.
+        DraftSnapshot snapshot = createOfferUseCase.captureDraftSnapshot();
+        Market market = snapshot.market();
+        Direction displayDirection = snapshot.displayDirection();
+        AmountSpec amountSpec = snapshot.amountSpec();
+        PriceSpec priceSpec = snapshot.priceSpec();
 
-        Map<PaymentMethod<?>, Account<?, ?>> accountByPaymentMethod = paymentMethodSelection.getAccountByPaymentMethod();
+        Map<PaymentMethod<?>, Account<?, ?>> accountByPaymentMethod = snapshot.accountByPaymentMethod();
         List<PaymentMethod<?>> paymentMethods = accountByPaymentMethod.keySet().stream()
                 .sorted(Comparator.comparing(PaymentMethod::getPaymentRailName))
                 .toList();
@@ -145,7 +127,7 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         model.setPaymentMethodsDisplayString(PaymentMethodSpecFormatter.fromPaymentMethods(paymentMethods));
 
-        applyData(displayDirection, amountSpec, priceSpec);
+        applyData(snapshot);
 
         String offerId = StringUtils.createUid();
         List<OfferOption> offerOptions = accountByPaymentMethod.values().stream()
@@ -221,19 +203,17 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     // direction is from user perspective not offer direction
-    private void applyData(Direction displayDirection,
-                           AmountSpec amountSpec,
-                           PriceSpec priceSpec) {
-        Market market = marketSelection.getMarket();
-        String marketCodes = market.getMarketCodes();
+    private void applyData(DraftSnapshot snapshot) {
+        Direction displayDirection = snapshot.displayDirection();
+        AmountSpec amountSpec = snapshot.amountSpec();
+        PriceSpec priceSpec = snapshot.priceSpec();
+        Market market = snapshot.market();
 
         model.setCrypto(market.isCrypto());
 
         model.setPriceSpec(priceSpec);
-        priceInput.setDescription(Res.get("muSig.offer.create.review.priceDescription.taker", marketCodes));
 
-        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, priceSpec, market);
-        priceQuote.ifPresent(priceInput::setQuote);
+        Optional<PriceQuote> priceQuote = snapshot.resolvedPriceQuote();
         String formattedPrice = priceQuote
                 .map(PriceFormatter::format)
                 .orElse("");
@@ -242,7 +222,7 @@ public class MuSigCreateOfferReviewController implements Controller {
         model.setPrice(formattedPrice);
         model.setPriceCode(codes);
 
-        applyPriceDetails(model.getPriceSpec(), market);
+        applyPriceDetails(snapshot);
 
         // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
         double securityDeposit = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
@@ -254,15 +234,16 @@ public class MuSigCreateOfferReviewController implements Controller {
         String currentToSendMinAmount = null, currentToReceiveMinAmount = null,
                 currentToReceiveMaxOrFixedAmount, currentToSendMaxOrFixedAmount,
                 toSendAmountDescription, toSendCode, toReceiveAmountDescription, toReceiveCode;
+        PriceQuote resolvedQuote = priceQuote.orElseThrow();
         if (model.isRangeAmount()) {
-            Monetary minBaseSideAmount = OfferAmountUtil.findBaseSideMinAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
+            Monetary minBaseSideAmount = OfferAmountUtil.findBaseSideMinAmount(resolvedQuote, amountSpec, market).orElseThrow();
             model.setMinBaseSideAmount(minBaseSideAmount);
-            Monetary maxBaseSideAmount = OfferAmountUtil.findBaseSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
+            Monetary maxBaseSideAmount = OfferAmountUtil.findBaseSideMaxAmount(resolvedQuote, amountSpec, market).orElseThrow();
             model.setMaxBaseSideAmount(maxBaseSideAmount);
 
-            Monetary minQuoteSideAmount = OfferAmountUtil.findQuoteSideMinAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
+            Monetary minQuoteSideAmount = OfferAmountUtil.findQuoteSideMinAmount(resolvedQuote, amountSpec, market).orElseThrow();
             model.setMinQuoteSideAmount(minQuoteSideAmount);
-            Monetary maxQuoteSideAmount = OfferAmountUtil.findQuoteSideMaxAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
+            Monetary maxQuoteSideAmount = OfferAmountUtil.findQuoteSideMaxAmount(resolvedQuote, amountSpec, market).orElseThrow();
             model.setMaxQuoteSideAmount(maxQuoteSideAmount);
 
             String formattedMinQuoteAmount = AmountFormatter.formatQuoteAmount(minQuoteSideAmount);
@@ -290,11 +271,11 @@ public class MuSigCreateOfferReviewController implements Controller {
             model.setSecurityDepositAsBtc(calculateSecurityDeposit(market, minBaseSideAmount, minQuoteSideAmount) + " - " +
                     calculateSecurityDeposit(market, maxBaseSideAmount, maxQuoteSideAmount));
         } else {
-            Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
+            Monetary fixBaseSideAmount = OfferAmountUtil.findBaseSideFixedAmount(resolvedQuote, amountSpec, market).orElseThrow();
             model.setFixBaseSideAmount(fixBaseSideAmount);
             String formattedBaseAmount = AmountFormatter.formatBaseAmount(fixBaseSideAmount);
 
-            Monetary fixQuoteSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, amountSpec, priceSpec, market).orElseThrow();
+            Monetary fixQuoteSideAmount = OfferAmountUtil.findQuoteSideFixedAmount(resolvedQuote, amountSpec, market).orElseThrow();
             model.setFixQuoteSideAmount(fixQuoteSideAmount);
             String formattedQuoteAmount = AmountFormatter.formatQuoteAmount(fixQuoteSideAmount);
 
@@ -377,13 +358,15 @@ public class MuSigCreateOfferReviewController implements Controller {
         muSigReviewDataDisplay.setPaymentMethod(bitcoinPaymentMethodsString);
     }
 
-    private void applyPriceDetails(PriceSpec priceSpec, Market market) {
-        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
-        marketPrice.ifPresent(price -> model.setMarketPrice(price.getPriceQuote().getValue()));
-        Optional<PriceQuote> marketPriceQuote = marketPriceService.findMarketPrice(market).map(MarketPrice::getPriceQuote);
+    private void applyPriceDetails(DraftSnapshot snapshot) {
+        PriceSpec priceSpec = snapshot.priceSpec();
+        Optional<PriceQuote> marketPriceQuote = snapshot.marketPriceQuote();
+        marketPriceQuote.ifPresent(quote -> model.setMarketPrice(quote.getValue()));
         String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElseGet(() -> Res.get("data.na"));
-        Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
-        double percent = percentFromMarketPrice.orElse(0d);
+        // The domain keeps the percentage as the authoritative floating value or the fixed
+        // price's display deviation; both are what the review should show.
+        Optional<Double> percentFromMarketPrice = Optional.of(snapshot.pricePercentage());
+        double percent = snapshot.pricePercentage();
         if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
             model.setPriceDetails(Res.get("muSig.offer.wizard.review.priceDetails"));
         } else {

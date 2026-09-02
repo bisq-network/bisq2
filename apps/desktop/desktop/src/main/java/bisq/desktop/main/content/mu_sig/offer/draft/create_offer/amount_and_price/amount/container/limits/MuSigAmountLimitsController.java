@@ -59,6 +59,14 @@ public class MuSigAmountLimitsController implements Controller {
                     model.getMax().set(formatAmountByMonetaryType(inputAmountLimits.getMax()));
                     model.getCode().set(inputAmountLimits.getMax().getCode());
                 });
+            } else {
+                // An empty domain state (the selected market has no price yet) clears the
+                // labels instead of retaining the previous market's range.
+                UIThread.run(() -> {
+                    model.getMin().set("");
+                    model.getMax().set("");
+                    model.getCode().set("");
+                });
             }
         }));
     }

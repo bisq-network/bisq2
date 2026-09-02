@@ -75,6 +75,8 @@ public class MuSigTakeOfferController extends NavigationController implements In
     private final TakeOfferUseCase takeOfferService;
     private final SettingsService settingsService;
     private Pin priceDeviationPin;
+    // Set before the observer is registered: addObserver fires inline, before the pin is assigned.
+    private boolean priceDeviationObserverActive;
     private Pin amountLimitsPin;
     private boolean warnedAboutPriceDeviation;
     private long activationGeneration;
@@ -179,6 +181,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
             return;
         }
 
+        priceDeviationObserverActive = true;
         priceDeviationPin = takeOfferService.getPriceService().priceDeviationObservable().addObserver(deviation ->
                 UIThread.run(this::maybeShowPriceDeviationWarning));
 
@@ -254,6 +257,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
     @Override
     public void onDeactivate() {
+        priceDeviationObserverActive = false;
         if (priceDeviationPin != null) {
             priceDeviationPin.unbind();
             priceDeviationPin = null;
@@ -359,7 +363,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
     private void maybeShowPriceDeviationWarning() {
         // The observer queues this through UIThread.run; unbinding does not cancel an already
         // queued call, which can therefore run after onDeactivate disposed the domain.
-        if (priceDeviationPin == null) {
+        if (!priceDeviationObserverActive) {
             return;
         }
         Double deviation = takeOfferService.getPriceService().getPriceDeviation();
@@ -374,7 +378,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
                 overlayController.runOnShown(() -> {
                     // A deferred handler can outlive the wizard session that stored it; only the
                     // registering activation may show its warning.
-                    if (generation != activationGeneration || priceDeviationPin == null) {
+                    if (generation != activationGeneration || !priceDeviationObserverActive) {
                         return;
                     }
                     Double currentDeviation = takeOfferService.getPriceService().getPriceDeviation();

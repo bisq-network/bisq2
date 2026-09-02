@@ -32,7 +32,6 @@ import bisq.offer.mu_sig.use_case.create_offer.price.PriceSelection;
 
 import java.util.Optional;
 
-import static bisq.offer.mu_sig.use_case.create_offer.amount.limits.TradeAmountLimitUtils.toTradeAmountLimit;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class UserSpecificAmountLimitsProvider extends LifecycleScope {
@@ -54,6 +53,14 @@ public class UserSpecificAmountLimitsProvider extends LifecycleScope {
         this.priceSelection = priceSelection;
     }
 
+    // The market the current output was computed for; retention across markets is refused.
+    private Market outputMarket;
+    private final RatesCache ratesCache = new RatesCache();
+
+    private Optional<TradeAmountLimitUtils.Rates> resolveRates(Market market) {
+        return ratesCache.resolve(marketPriceService, market);
+    }
+
     @Override
     public void initialize() {
         addDisposable(marketSelection.addMarketListener(market ->
@@ -68,6 +75,17 @@ public class UserSpecificAmountLimitsProvider extends LifecycleScope {
                 update(marketSelection.getMarket(),
                         directionSelection.getDisplayDirection(),
                         priceQuote)));
+
+        // The market context can change (e.g. the BTC/USD leg) without the offer quote changing.
+        addDisposable(priceSelection.addMarketContextListener(() ->
+                update(marketSelection.getMarket(),
+                        directionSelection.getDisplayDirection(),
+                        priceSelection.getPriceQuote())));
+
+        // The listeners above do not replay their current value; compute from the current state now.
+        update(marketSelection.getMarket(),
+                directionSelection.getDisplayDirection(),
+                priceSelection.getPriceQuote());
     }
 
     //todo
@@ -83,14 +101,36 @@ public class UserSpecificAmountLimitsProvider extends LifecycleScope {
     private void update(Market market,
                         Direction displayDirection,
                         PriceQuote priceQuote) {
-        if (dependenciesValid(market, displayDirection, priceQuote)) {
-            if (market.isBtcFiatMarket() && displayDirection.isBuy()) {
-                Fiat userSpecificLimitInUsd = getUserSpecificLimitInUsd();
-                TradeAmount limit = toTradeAmountLimit(marketPriceService, market, priceQuote, userSpecificLimitInUsd);
-                tradeAmountLimit.set(Optional.of(limit));
-            } else {
-                tradeAmountLimit.set(Optional.empty());
-            }
+        clearOutputOnMarketChange(market);
+        if (!dependenciesValid(market, displayDirection, priceQuote)) {
+            return;
+        }
+        // The rates cache refreshes on every valid update so a later applicability flip can
+        // still compute the cap while the live rate is temporarily missing.
+        Optional<TradeAmountLimitUtils.Rates> resolvedRates = resolveRates(market);
+        // Applicability is decided independently of rate availability: when the cap does not
+        // apply it must be cleared even while a rate is unavailable, otherwise a stale cap from
+        // an earlier buy-side state would survive a direction or market change.
+        if (!(market.isBtcFiatMarket() && displayDirection.isBuy())) {
+            tradeAmountLimit.set(Optional.empty());
+            return;
+        }
+        // A missing rate retains the previous converted output instead of throwing inside a map
+        // observer.
+        resolvedRates.ifPresent(rates -> {
+            Fiat userSpecificLimitInUsd = getUserSpecificLimitInUsd();
+            TradeAmount limit = TradeAmountLimitUtils.toTradeAmountLimit(rates, market, priceQuote, userSpecificLimitInUsd);
+            tradeAmountLimit.set(Optional.of(limit));
+            outputMarket = market;
+        });
+    }
+
+    private void clearOutputOnMarketChange(Market market) {
+        // Fail-soft retention only spans rate gaps within one market; another market's
+        // converted output must not survive a market change.
+        if (market != null && outputMarket != null && !market.equals(outputMarket)) {
+            tradeAmountLimit.set(Optional.empty());
+            outputMarket = null;
         }
     }
 
