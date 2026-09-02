@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.offer.draft.components;
 
-import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
@@ -40,6 +39,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -57,8 +57,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class MuSigPriceInput {
     private final Controller controller;
 
-    public MuSigPriceInput(MarketPriceService marketPriceService, DraftOfferUseCase draftOfferService) {
-        controller = new Controller(marketPriceService, draftOfferService);
+    public MuSigPriceInput(DraftOfferUseCase draftOfferService) {
+        controller = new Controller(draftOfferService);
     }
 
     public ReadOnlyObjectProperty<PriceQuote> priceQuoteProperty() {
@@ -78,19 +78,16 @@ public class MuSigPriceInput {
     }
 
     public void setQuote(PriceQuote priceQuote) {
-        controller.setQuote(priceQuote);
-    }
-
-    public void setPriceString(String priceString) {
-        controller.model.priceString.set(priceString);
+        // Display only: the component projects domain state, it never writes it.
+        controller.renderQuote(priceQuote);
     }
 
     public void setPercentage(String percentage) {
         controller.setPercentage(percentage);
     }
 
-    public void setIsTakeOffer() {
-        controller.model.isEditable = false;
+    public TextInputControl getTextInputControl() {
+        return controller.view.textInput.getTextInputControl();
     }
 
     public Pane getRoot() {
@@ -102,6 +99,10 @@ public class MuSigPriceInput {
     }
 
     public void activate(boolean shouldRequestFocus) {
+        // Activation starts from the authoritative domain state: an aborted invalid edit from a
+        // previous activation must not survive, and the quote observer does not re-fire when the
+        // stored quote is unchanged.
+        controller.renderAuthoritativeQuote();
         controller.view.textInput.setEditable(true);
         if (shouldRequestFocus) {
             controller.view.textInput.requestFocusWithCursor();
@@ -111,9 +112,10 @@ public class MuSigPriceInput {
     public void deactivate() {
         controller.view.textInput.deselect();
         controller.view.textInput.setEditable(false);
-        // Reset validation
+        // Reset validation; an inactive field is not invalid and must not block navigation.
         controller.model.doResetValidation.set(true);
         controller.model.doResetValidation.set(false);
+        controller.model.isPriceValid.set(true);
     }
 
     public ReadOnlyBooleanProperty isPriceValid() {
@@ -129,75 +131,66 @@ public class MuSigPriceInput {
         @Getter
         private final View view;
         private final DraftOfferUseCase draftOfferUseCase;
-        private final Optional<CreateOfferUseCase> createOfferUseCase;
         private final Optional<PriceSelection> priceUseCase;
-        private final MarketPriceService marketPriceService;
         private final NumberValidator validator = new NumberValidator(Res.get("muSig.offer.create.price.warn.invalidPrice.numberFormatException"));
-        private Pin marketPricePin;
         private final Set<Subscription> subscriptions = new HashSet<>();
+        private boolean applyingDomainValue;
         private final Set<Pin> pins = new HashSet<>();
 
-        private Controller(MarketPriceService marketPriceService, DraftOfferUseCase draftOfferUseCase) {
-            this.marketPriceService = marketPriceService;
+        private Controller(DraftOfferUseCase draftOfferUseCase) {
             this.draftOfferUseCase = draftOfferUseCase;
             if (draftOfferUseCase instanceof CreateOfferUseCase useCase) {
-                this.createOfferUseCase = Optional.of(useCase);
                 priceUseCase = Optional.of(useCase.getPriceSelection());
             } else {
-                createOfferUseCase = Optional.empty();
                 priceUseCase = Optional.empty();
             }
             model = new Model();
             view = new View(model, this, validator);
         }
 
-        public void setQuote(PriceQuote priceQuote) {
-            model.priceString.set(priceQuote == null ? "" : PriceFormatter.format(priceQuote));
-            //  model.priceQuote.set(priceQuote);
-            priceUseCase.ifPresent(priceUseCase -> priceUseCase.onSetPriceQuote(priceQuote));
+        private void renderQuote(PriceQuote priceQuote) {
+            if (model.isFocused) {
+                return;
+            }
+            // Guarded so the priceString subscription cannot mistake this projection for input.
+            applyingDomainValue = true;
+            try {
+                model.priceString.set(priceQuote == null ? "" : PriceFormatter.format(priceQuote));
+            } finally {
+                applyingDomainValue = false;
+            }
         }
 
         public void setPercentage(String percentage) {
             model.percentagePriceString.set(percentage);
         }
 
-        private void updateFromMarketPrice() {
+        private void updateDescription() {
             Market market = draftOfferUseCase.getMarket();
             if (market != null && model.description.get() == null) {
                 model.description.set(Res.get("component.priceInput.description", market.getMarketCodes()));
                 model.textInputCurrencyCodes.set(market.getMarketCodes());
-            }
-            if (model.isEditable) {
-                setQuoteFromMarketPrice();
             }
         }
 
         @Override
         public void onActivate() {
             model.reset();
-            updateFromMarketPrice();
+            updateDescription();
             model.isPriceValid.set(true);
-            updateFromMarketPrice();
-
-            marketPricePin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() -> {
-                // We only set it initially
-               /* if (model.priceQuote.get() != null) {
-                    return;
-                }*/
-                UIThread.run(this::setQuoteFromMarketPrice);
-            });
 
             subscriptions.add(EasyBind.subscribe(model.priceString, this::onPriceInput));
-            // quotePin = EasyBind.subscribe(model.priceQuote, this::onQuoteChanged);
 
+            // Domain quote updates can originate on the market data thread; marshal and re-read
+            // the current value so a queued callback never renders a stale captured quote.
             priceUseCase.map(useCase ->
-                            useCase.priceQuoteObservable().addObserver(this::onPriceQuoteChanged))
+                            useCase.priceQuoteObservable().addObserver(quote ->
+                                    UIThread.run(() -> renderQuote(useCase.getPriceQuote()))))
                     .ifPresent(pins::add);
         }
 
         @Override
         public void onDeactivate() {
-            marketPricePin.unbind();
             subscriptions.forEach(Subscription::unsubscribe);
             subscriptions.clear();
             pins.forEach(Pin::unbind);
@@ -206,7 +199,9 @@ public class MuSigPriceInput {
         }
 
         private void onPriceInput(String price) {
-            if (model.isFocused || price == null || price.isEmpty()) {
+            // Origin separation: only a genuine user commit reaches the domain. Programmatic
+            // projections run under the guard and must not be converted back into input.
+            if (applyingDomainValue || model.isFocused || price == null || price.isEmpty()) {
                 return;
             }
 
@@ -219,20 +214,17 @@ public class MuSigPriceInput {
             try {
                 PriceQuote priceQuote = PriceParser.parse(price, draftOfferUseCase.getMarket());
                 checkArgument(priceQuote.getValue() > 0);
-                // model.priceQuote.set(priceQuote);
-                priceUseCase.ifPresent(priceUseCase -> priceUseCase.onSetPriceQuote(priceQuote));
+                priceUseCase.ifPresent(priceSelection -> priceSelection.onSetFixedPriceQuote(priceQuote));
             } catch (Throwable ignore) {
-                priceUseCase.map(PriceSelection::getPriceQuote)
-                        .ifPresent(this::onPriceQuoteChanged);
-                // onQuoteChanged(model.priceQuote.get());
+                // Unparseable input falls through to the authoritative re-render below.
             }
+            // Re-render the authoritative domain value: a clamped or ignored input can leave the
+            // stored quote unchanged, in which case no observable event repaints the field.
+            renderAuthoritativeQuote();
         }
 
-        private void onPriceQuoteChanged(PriceQuote priceQuote) {
-            if (model.isFocused) {
-                return;
-            }
-            model.priceString.set(priceQuote == null ? "" : PriceFormatter.format(priceQuote));
+        private void renderAuthoritativeQuote() {
+            priceUseCase.ifPresent(priceSelection -> renderQuote(priceSelection.getPriceQuote()));
         }
 
         private void onFocusedChanged(boolean isFocused) {
@@ -242,14 +234,6 @@ public class MuSigPriceInput {
             }
         }
 
-        private void setQuoteFromMarketPrice() {
-            marketPriceService.findMarketPrice(draftOfferUseCase.getMarket())
-                    .ifPresent(marketPrice -> {
-                        PriceQuote priceQuote = marketPrice.getPriceQuote();
-                        // model.priceQuote.set(priceQuote);
-                        priceUseCase.ifPresent(priceUseCase -> priceUseCase.onSetPriceQuote(priceQuote));
-                    });
-        }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
@@ -262,7 +246,6 @@ public class MuSigPriceInput {
         private final StringProperty description = new SimpleStringProperty();
         private final StringProperty textInputCurrencyCodes = new SimpleStringProperty();
         private final StringProperty percentagePriceString = new SimpleStringProperty();
-        private boolean isEditable = true;
         private final BooleanProperty isPriceValid = new SimpleBooleanProperty();
         private final BooleanProperty doResetValidation = new SimpleBooleanProperty();
 
@@ -276,7 +259,6 @@ public class MuSigPriceInput {
             description.set(null);
             textInputCurrencyCodes.set(null);
             percentagePriceString.set(null);
-            isEditable = true;
         }
     }
 
@@ -311,7 +293,6 @@ public class MuSigPriceInput {
                     textInput.resetValidation();
                 }
             });
-            textInput.setMouseTransparent(!model.isEditable);
         }
 
         @Override

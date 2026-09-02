@@ -89,6 +89,7 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
     @Override
     protected void onViewAttached() {
         code.textProperty().bind(model.getCode());
+        textField.editableProperty().bind(model.getEditable());
         model.getFocusedProperty().bind(textField.focusedProperty());
         subscriptions.add(EasyBind.subscribe(model.getSumOfNumChars(), sumOfNumChars -> {
             if (sumOfNumChars != null) {
@@ -123,6 +124,7 @@ public class MuSigAmountTextInputView extends View<HBox, MuSigAmountTextInputMod
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
         code.textProperty().unbind();
+        textField.editableProperty().unbind();
         model.getFocusedProperty().unbind();
         textField.prefWidthProperty().unbind();
         dash.prefWidthProperty().unbind();

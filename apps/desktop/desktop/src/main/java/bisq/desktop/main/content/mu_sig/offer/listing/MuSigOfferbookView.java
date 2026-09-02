@@ -1013,4 +1013,8 @@ public final class MuSigOfferbookView extends View<VBox, MuSigOfferbookModel, Mu
         }
     }
 
+
+    Button createOfferAction() {
+        return createOfferButton;
+    }
 }

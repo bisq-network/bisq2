@@ -43,6 +43,10 @@ public class MuSigAmountTextInputModel implements Model {
 
     private final StringProperty code = new SimpleStringProperty();
     private final BooleanProperty focusedProperty = new SimpleBooleanProperty();
+    // Editable only while a domain amount is projected: an unseeded field must not accept text
+    // it cannot parse (no currency code) - a buffered edit would silently diverge from the
+    // domain amount that gets reviewed and published.
+    private final BooleanProperty editable = new SimpleBooleanProperty(true);
 
     private final IntegerProperty sumOfNumChars = new SimpleIntegerProperty();
     private final DoubleProperty amountFieldWidth = new SimpleDoubleProperty();

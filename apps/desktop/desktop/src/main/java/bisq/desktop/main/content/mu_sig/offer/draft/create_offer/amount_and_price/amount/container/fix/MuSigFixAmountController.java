@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offer.draft.create_offer.amount_and_price.amount.container.fix;
 
-import bisq.common.monetary.Monetary;
+import bisq.common.monetary.TradeAmount;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -77,11 +77,13 @@ public class MuSigFixAmountController implements Controller {
             UIThread.run(this::applyAllAmounts);
         }));
 
-        subscriptions.add(EasyBind.subscribe(amountTextInputController.amountProperty(),
-                amount -> {
-                    amountSelection.onSetFixTradeAmountFromInputAmount(amount);
-                    applyInputAmount();
-                }));
+        // Origin separation: only user-typed edits feed the domain. The component's programmatic
+        // setAmount() (from applyAllAmounts, e.g. on an input-side switch) must not be converted
+        // back and replace the stored amount against a stale range.
+        amountTextInputController.setUserEditHandler(userAmount -> {
+            userAmount.ifPresent(amountSelection::onSetFixTradeAmountFromInputAmount);
+            applyInputAmount();
+        });
 
         // UI specific
         subscriptions.add(EasyBind.subscribe(amountTextInputController.inputTextProperty(),
@@ -106,6 +108,7 @@ public class MuSigFixAmountController implements Controller {
         pins.forEach(Pin::unbind);
         pins.clear();
         model.getIsTextInputFocused().unbind();
+        amountTextInputController.setUserEditHandler(null);
     }
 
 
@@ -137,14 +140,16 @@ public class MuSigFixAmountController implements Controller {
         applyPassiveAmount();
     }
 
+    // The unseeded state (no market price yet) projects as null and clears the component, both
+    // from the at-registration observer fire and after an ignored user edit.
     private void applyInputAmount() {
-        Monetary inputAmount = amountSelection.getFixInputAmount();
-        amountTextInputController.setAmount(inputAmount);
+        TradeAmount fixTradeAmount = amountSelection.getFixTradeAmount();
+        amountTextInputController.setAmount(fixTradeAmount == null ? null : amountSelection.toInputAmount(fixTradeAmount));
     }
 
     private void applyPassiveAmount() {
-        Monetary passiveAmount = amountSelection.getFixPassiveAmount();
-        passiveAmountController.setAmount(passiveAmount);
+        TradeAmount fixTradeAmount = amountSelection.getFixTradeAmount();
+        passiveAmountController.setAmount(fixTradeAmount == null ? null : amountSelection.toPassiveAmount(fixTradeAmount));
     }
 
     private void applySumNumChars() {

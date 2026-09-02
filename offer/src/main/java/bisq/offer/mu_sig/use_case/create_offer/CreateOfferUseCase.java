@@ -33,6 +33,8 @@ import bisq.offer.mu_sig.use_case.dependencies.CreateOfferDraftCookieStore;
 import bisq.offer.mu_sig.use_case.dependencies.DefaultAccountsProvider;
 import bisq.offer.mu_sig.use_case.dependencies.DefaultCreateOfferDraftCookieStore;
 import bisq.settings.SettingsService;
+
+import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,6 +45,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CreateOfferUseCase extends DraftOfferUseCase {
     public static final Fiat DEFAULT_TRADE_AMOUNT_IN_USD = Fiat.fromFaceValue(500, "USD");
 
+    // Serializes every draft state transition: market-price updates arrive on the market data
+    // thread while user input arrives on the UI thread, and amount state is recomputed
+    // synchronously inside price and market transitions.
+    private final Object draftLock = new Object();
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
     private final PaymentMethodSelection paymentMethodSelection;
@@ -67,17 +73,17 @@ public class CreateOfferUseCase extends DraftOfferUseCase {
     CreateOfferUseCase(MarketPriceService marketPriceService,
                        CreateOfferDraftCookieStore cookieStore,
                        AccountsProvider accountsProvider) {
-
-        marketSelection = new MarketSelection();
-        directionSelection = new DirectionSelection(cookieStore);
-        paymentMethodSelection = new PaymentMethodSelection(marketSelection, accountsProvider);
-        priceSelection = new PriceSelection(marketPriceService, marketSelection, cookieStore);
+        marketSelection = new MarketSelection(draftLock);
+        directionSelection = new DirectionSelection(cookieStore, draftLock);
+        paymentMethodSelection = new PaymentMethodSelection(marketSelection, accountsProvider, draftLock);
+        priceSelection = new PriceSelection(marketPriceService, marketSelection, cookieStore, draftLock);
         amountSelection = new AmountSelection(marketPriceService,
                 marketSelection,
                 directionSelection,
                 paymentMethodSelection,
                 priceSelection,
-                cookieStore);
+                cookieStore,
+                draftLock);
     }
 
 
@@ -87,34 +93,64 @@ public class CreateOfferUseCase extends DraftOfferUseCase {
 
     @Override
     public void initialize() {
-        marketSelection.initialize();
-        directionSelection.initialize();
-        paymentMethodSelection.initialize();
-        priceSelection.initialize();
-        amountSelection.initialize();
+        synchronized (draftLock) {
+            marketSelection.initialize();
+            directionSelection.initialize();
+            paymentMethodSelection.initialize();
+            priceSelection.initialize();
+            amountSelection.initialize();
 
-        addDisposable(amountSelection.initializedObservable().addObserver(initialized -> {
-            if (initialized != null) {
-                extracted();
-            }
-        }));
-    }
-
-    private void extracted() {
-        if (amountSelection.isInitialized()) {
-            setInitialized(true);
+            addDisposable(amountSelection.initializedObservable().addObserver(initialized -> {
+                if (amountSelection.isInitialized()) {
+                    setInitialized(true);
+                }
+            }));
         }
     }
 
     @Override
     public void dispose() {
-        super.dispose();
+        synchronized (draftLock) {
+            super.dispose();
 
-        marketSelection.dispose();
-        directionSelection.dispose();
-        paymentMethodSelection.dispose();
-        priceSelection.dispose();
-        amountSelection.dispose();
+            marketSelection.dispose();
+            directionSelection.dispose();
+            paymentMethodSelection.dispose();
+            priceSelection.dispose();
+            amountSelection.dispose();
+        }
+    }
+
+    /**
+     * With the market price arriving late the fail-soft selections leave the amounts and the
+     * price quote unset instead of failing. Such a draft cannot be materialized into a
+     * snapshot; callers must not enter the review step until this lifts.
+     */
+    public boolean isDraftReadyForReview() {
+        synchronized (draftLock) {
+            return marketSelection.getMarket() != null
+                    && directionSelection.getDisplayDirection() != null
+                    && amountSelection.getFixTradeAmount() != null
+                    && priceSelection.getPriceQuote() != null;
+        }
+    }
+
+    /**
+     * Captures the whole draft in one synchronized read so the review step works from mutually
+     * consistent values.
+     */
+    public DraftSnapshot captureDraftSnapshot() {
+        synchronized (draftLock) {
+            Market market = checkNotNull(marketSelection.getMarket(), "market must not be null");
+            return new DraftSnapshot(market,
+                    directionSelection.getDisplayDirection(),
+                    amountSelection.createAndGetAmountSpec(market),
+                    priceSelection.createAndGetPriceSpec(),
+                    paymentMethodSelection.getAccountByPaymentMethod(),
+                    Optional.ofNullable(priceSelection.getPriceQuote()),
+                    priceSelection.getObservedMarketPriceQuote(),
+                    priceSelection.getPricePercentage());
+        }
     }
 
 

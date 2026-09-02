@@ -501,7 +501,7 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
         } catch (TakeOfferValidationException e) {
             throw e;
         } catch (ArithmeticException e) {
-            // Exact conversions fail instead of wrapping when an offer amount or a limit
+            // The conversions fail instead of wrapping when an offer amount or a limit
             // overflows a long at the resolved price; nothing derived from a wrapped value may
             // be compared or published, so the take fails closed.
             throw new TakeOfferValidationException(Reason.INVALID_OFFER,
@@ -681,7 +681,7 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
             // re-derivation (a different conversion path than a limit endpoint's own) could flip
             // a boundary amount invalid without any change.
             TradeAmount basis = quoteChanged
-                    ? refreshPassiveSideExact(current, resolvedQuote, amountService.getUseBaseCurrencyForAmountInput())
+                    ? refreshPassiveSide(current, resolvedQuote, amountService.getUseBaseCurrencyForAmountInput())
                     : current;
             TradeAmount refreshed = alignToRangeEndpoints(basis, effectiveRange, isQuoteSideStored(offer));
             boolean published = publishFixTradeAmount(refreshed);
@@ -689,15 +689,15 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
         }
     }
 
-    private static TradeAmount refreshPassiveSideExact(TradeAmount current,
-                                                       PriceQuote resolvedQuote,
-                                                       boolean useBaseCurrencyForAmountInput) {
+    private static TradeAmount refreshPassiveSide(TradeAmount current,
+                                                  PriceQuote resolvedQuote,
+                                                  boolean useBaseCurrencyForAmountInput) {
         if (useBaseCurrencyForAmountInput) {
             Monetary baseSideAmount = current.getBaseSideAmount();
-            return new TradeAmount(baseSideAmount, resolvedQuote.toQuoteSideMonetaryExact(baseSideAmount));
+            return new TradeAmount(baseSideAmount, resolvedQuote.toQuoteSideMonetary(baseSideAmount));
         }
         Monetary quoteSideAmount = current.getQuoteSideAmount();
-        return new TradeAmount(resolvedQuote.toBaseSideMonetaryExact(quoteSideAmount), quoteSideAmount);
+        return new TradeAmount(resolvedQuote.toBaseSideMonetary(quoteSideAmount), quoteSideAmount);
     }
 
     private AmountConstraints computeAmountConstraints(MuSigOffer offer, PriceQuote resolvedQuote) {
@@ -717,22 +717,27 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
         boolean quoteSideStored = isQuoteSideStored(offer);
         TradeAmountRange offerRange = resolveOfferRange(offer, resolvedQuote, quoteSideStored);
         // The USD-defined limits convert to the market's stable side via the market price; the
-        // Bitcoin side follows the resolved quote (same split as the create-offer limits).
-        TradeAmount absoluteMin = TradeAmountLimitUtils.toTradeAmountLimitExact(marketPriceService, market, resolvedQuote,
+        // Bitcoin side follows the resolved quote (same split as the create-offer limits). One
+        // captured rate snapshot serves every limit of this computation, so no limit mixes two
+        // reads of a map the poller writes concurrently.
+        TradeAmountLimitUtils.Rates rates = TradeAmountLimitUtils.findRates(marketPriceService, market)
+                .orElseThrow(() -> new IllegalStateException("The market prices needed for the amount limits of "
+                        + market.getMarketCodes() + " are missing"));
+        TradeAmount absoluteMin = TradeAmountLimitUtils.toTradeAmountLimit(rates, market, resolvedQuote,
                 AbsoluteAmountLimitsProvider.MIN_TRADE_AMOUNT_IN_USD);
-        TradeAmount absoluteMax = TradeAmountLimitUtils.toTradeAmountLimitExact(marketPriceService, market, resolvedQuote,
+        TradeAmount absoluteMax = TradeAmountLimitUtils.toTradeAmountLimit(rates, market, resolvedQuote,
                 AbsoluteAmountLimitsProvider.MAX_TRADE_AMOUNT_IN_USD);
         TradeAmount minEndpoint = maxOnStoredSide(quoteSideStored, offerRange.getMin(), absoluteMin);
         TradeAmount maxEndpoint = minOnStoredSide(quoteSideStored, offerRange.getMax(), absoluteMax);
         if (selectedRail != null) {
-            TradeAmount methodLimit = TradeAmountLimitUtils.toTradeAmountLimitExact(marketPriceService, market, resolvedQuote,
+            TradeAmount methodLimit = TradeAmountLimitUtils.toTradeAmountLimit(rates, market, resolvedQuote,
                     PaymentMethodBasedAmountLimitsProvider.evaluateLimitInUsd(selectedRail));
             maxEndpoint = minOnStoredSide(quoteSideStored, maxEndpoint, methodLimit);
         }
         // The user-specific cap applies when the taker is the Bitcoin buyer in a Bitcoin-Fiat
         // market (taken offer direction SELL). A seller-side cap is deliberately absent.
         Optional<TradeAmount> userSpecificLimit = market.isBtcFiatMarket() && offer.getDirection().isSell()
-                ? Optional.of(TradeAmountLimitUtils.toTradeAmountLimitExact(marketPriceService, market, resolvedQuote,
+                ? Optional.of(TradeAmountLimitUtils.toTradeAmountLimit(rates, market, resolvedQuote,
                 UserSpecificAmountLimitsProvider.getUserSpecificLimitInUsd()))
                 : Optional.empty();
         if (storedSideValue(quoteSideStored, minEndpoint) > storedSideValue(quoteSideStored, maxEndpoint)) {
@@ -827,16 +832,16 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
             Monetary maxQuote = AmountSpecUtil.findQuoteSideMaxOrFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
                     .orElseThrow(() -> new IllegalStateException("Unsupported amount spec: " + amountSpec));
             return new TradeAmountRange(
-                    new TradeAmount(resolvedQuote.toBaseSideMonetaryExact(minQuote), minQuote),
-                    new TradeAmount(resolvedQuote.toBaseSideMonetaryExact(maxQuote), maxQuote));
+                    new TradeAmount(resolvedQuote.toBaseSideMonetary(minQuote), minQuote),
+                    new TradeAmount(resolvedQuote.toBaseSideMonetary(maxQuote), maxQuote));
         }
         Monetary minBase = AmountSpecUtil.findBaseSideMinOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                 .orElseThrow(() -> new IllegalStateException("Unsupported amount spec: " + amountSpec));
         Monetary maxBase = AmountSpecUtil.findBaseSideMaxOrFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
                 .orElseThrow(() -> new IllegalStateException("Unsupported amount spec: " + amountSpec));
         return new TradeAmountRange(
-                new TradeAmount(minBase, resolvedQuote.toQuoteSideMonetaryExact(minBase)),
-                new TradeAmount(maxBase, resolvedQuote.toQuoteSideMonetaryExact(maxBase)));
+                new TradeAmount(minBase, resolvedQuote.toQuoteSideMonetary(minBase)),
+                new TradeAmount(maxBase, resolvedQuote.toQuoteSideMonetary(maxBase)));
     }
 
     private static long storedSideValue(boolean quoteSideStored, TradeAmount amount) {
@@ -920,7 +925,7 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
         Monetary fixedAmount = AmountSpecUtil.findQuoteSideFixedAmountFromSpec(offer.getAmountSpec(), market.getQuoteCurrencyCode())
                 .or(() -> AmountSpecUtil.findBaseSideFixedAmountFromSpec(offer.getAmountSpec(), market.getBaseCurrencyCode()))
                 .orElseThrow(() -> new IllegalStateException("Fixed amount spec expected but was " + offer.getAmountSpec()));
-        return TradeAmountConversion.toTradeAmountExact(market, resolvedQuote, fixedAmount);
+        return TradeAmountConversion.toTradeAmount(market, resolvedQuote, fixedAmount);
     }
 
     private static TradeAmount midpointOf(MuSigOffer offer, TradeAmountRange effectiveRange, PriceQuote resolvedQuote) {
@@ -943,7 +948,7 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
             midpoint = Monetary.from(min, min.getValue() + (max.getValue() - min.getValue()) / 2);
         }
         return clampToRangeOnStoredSide(quoteSideStored,
-                TradeAmountConversion.toTradeAmountExact(market, resolvedQuote, midpoint), effectiveRange);
+                TradeAmountConversion.toTradeAmount(market, resolvedQuote, midpoint), effectiveRange);
     }
 
     // Publish order: ranges, then the user marker, then amount and slider value
@@ -1019,7 +1024,7 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
         }
         TradeAmount tradeAmount;
         try {
-            tradeAmount = TradeAmountConversion.toTradeAmountExact(getMarket(), resolvedQuote, amount);
+            tradeAmount = TradeAmountConversion.toTradeAmount(getMarket(), resolvedQuote, amount);
         } catch (ArithmeticException e) {
             // A wrapped conversion followed by the clamp would publish a base and quote side
             // that no longer belong to the same price.
@@ -1049,7 +1054,7 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
         Monetary inputAmount = Monetary.from(inputAmountLimits.getMin(), amountValue);
         TradeAmount tradeAmount;
         try {
-            tradeAmount = TradeAmountConversion.toTradeAmountExact(getMarket(), resolvedQuote, inputAmount);
+            tradeAmount = TradeAmountConversion.toTradeAmount(getMarket(), resolvedQuote, inputAmount);
         } catch (ArithmeticException e) {
             // The slider spans the published input limits, but the resolved quote may have moved
             // since they were published; a wrapping conversion must not reach the clamp.

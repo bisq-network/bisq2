@@ -113,6 +113,13 @@ public class AmountLimitsProvider extends LifecycleScope {
             }
 
             initialized.set(true);
+        } else if (Boolean.TRUE.equals(initialized.get())) {
+            // A provider cleared its output on a market change; the combined limits must not
+            // retain the previous market's ranges either. Consumers treat null as the
+            // unseeded state.
+            potentialTradeAmountLimits.set(null);
+            effectiveTradeAmountLimits.set(null);
+            this.userSpecificAmountLimit.set(Optional.empty());
         }
     }
 

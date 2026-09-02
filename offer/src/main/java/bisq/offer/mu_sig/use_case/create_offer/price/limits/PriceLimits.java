@@ -17,79 +17,41 @@
 
 package bisq.offer.mu_sig.use_case.create_offer.price.limits;
 
-import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.application.LifecycleScope;
-import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.PriceQuoteRange;
-import bisq.common.observable.Observable;
-import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.MathUtils;
-import bisq.offer.mu_sig.use_case.create_offer.market.MarketSelection;
 import bisq.offer.price.PriceUtil;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class PriceLimits extends LifecycleScope {
+/**
+ * Stateless price-limit policy for the allowed floating range relative to a market price. Every
+ * method derives its result from the explicitly supplied market price quote, so a limit can never
+ * be stale relative to the price it is applied together with.
+ */
+public class PriceLimits {
     public static final double MIN_PERCENTAGE_FROM_MARKET_PRICE = -0.1;
     public static final double MAX_PERCENTAGE_FROM_MARKET_PRICE = 0.5;
 
-    protected final Observable<PriceQuoteRange> tradeAmountLimits = new Observable<>();
-
-    private final MarketPriceService marketPriceService;
-    private final MarketSelection marketSelection;
-
-    public PriceLimits(MarketPriceService marketPriceService, MarketSelection marketSelection) {
-        checkNotNull(marketPriceService, "marketPriceService must not be null");
-        checkNotNull(marketSelection, "marketService must not be null");
-        this.marketSelection = marketSelection;
-        this.marketPriceService = marketPriceService;
+    private PriceLimits() {
     }
 
-    @Override
-    public void initialize() {
-        addDisposable(marketSelection.marketObservable().addObserver(market -> {
-            if (market != null) {
-                PriceQuote minTradeAmount = percentageToPriceQuote(marketPriceService,
-                        market,
-                        MIN_PERCENTAGE_FROM_MARKET_PRICE);
-                PriceQuote maxTradeAmount = percentageToPriceQuote(marketPriceService,
-                        market,
-                        MAX_PERCENTAGE_FROM_MARKET_PRICE);
-                tradeAmountLimits.set(new PriceQuoteRange(minTradeAmount, maxTradeAmount));
-            }
-        }));
-    }
-
-
-    public PriceQuote clamp(PriceQuote priceQuote) {
-        checkNotNull(priceQuote, "priceQuote must not be null");
-        return priceQuote.clamp(getAmountLimits());
-    }
-
-    public double clamp(double pricePercentage) {
+    public static double clamp(double pricePercentage) {
         checkArgument(Double.isFinite(pricePercentage), "pricePercentage must be finite");
         return MathUtils.bounded(MIN_PERCENTAGE_FROM_MARKET_PRICE, MAX_PERCENTAGE_FROM_MARKET_PRICE, pricePercentage);
     }
 
-
-    /* --------------------------------------------------------------------- */
-    // Getters
-    /* --------------------------------------------------------------------- */
-
-    public ReadOnlyObservable<PriceQuoteRange> amountLimitsObservable() {
-        return tradeAmountLimits;
+    public static PriceQuoteRange rangeFor(PriceQuote marketPriceQuote) {
+        checkNotNull(marketPriceQuote, "marketPriceQuote must not be null");
+        return new PriceQuoteRange(
+                PriceUtil.fromMarketPriceMarkup(marketPriceQuote, MIN_PERCENTAGE_FROM_MARKET_PRICE),
+                PriceUtil.fromMarketPriceMarkup(marketPriceQuote, MAX_PERCENTAGE_FROM_MARKET_PRICE));
     }
 
-    public PriceQuoteRange getAmountLimits() {
-        return tradeAmountLimits.get();
-    }
-
-    private static PriceQuote percentageToPriceQuote(MarketPriceService marketPriceService,
-                                                     Market market,
-                                                     double pricePercentage) {
-        PriceQuote marketPriceQuote = marketPriceService.getMarketPriceQuoteOrThrow(market);
-        return PriceUtil.fromMarketPriceMarkup(marketPriceQuote, pricePercentage);
+    public static PriceQuote clamp(PriceQuote priceQuote, PriceQuoteRange range) {
+        checkNotNull(priceQuote, "priceQuote must not be null");
+        checkNotNull(range, "range must not be null");
+        return priceQuote.clamp(range);
     }
 }

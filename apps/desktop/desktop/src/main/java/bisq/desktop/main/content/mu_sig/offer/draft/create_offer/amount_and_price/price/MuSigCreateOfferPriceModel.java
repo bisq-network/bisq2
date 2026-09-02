@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.mu_sig.offer.draft.create_offer.amount_and_price.price;
 
-import bisq.common.monetary.PriceQuote;
 import bisq.desktop.common.view.Model;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -32,7 +31,6 @@ import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
 
 @Getter
 public class MuSigCreateOfferPriceModel implements Model {
@@ -42,16 +40,12 @@ public class MuSigCreateOfferPriceModel implements Model {
     private final double sliderMax = 1;
     @Setter
     private boolean shouldFocusPriceComponent = false;
-    private final DoubleProperty percentage = new SimpleDoubleProperty();
     private final StringProperty percentageInput = new SimpleStringProperty();
     private final StringProperty priceAsString = new SimpleStringProperty();
     private final BooleanProperty useFixPrice = new SimpleBooleanProperty();
     private final ObjectProperty<PriceSpec> priceSpec = new SimpleObjectProperty<>(new MarketPriceSpec());
     private final StringProperty errorMessage = new SimpleStringProperty();
     private final StringProperty marketCodes = new SimpleStringProperty();
-    @Nullable
-    @Setter
-    private PriceQuote lastValidPriceQuote;
     private final StringProperty feedbackSentence = new SimpleStringProperty();
     private final BooleanProperty isOverlayVisible = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowFeedback = new SimpleBooleanProperty();
@@ -63,13 +57,11 @@ public class MuSigCreateOfferPriceModel implements Model {
 
     public void reset() {
         shouldFocusPriceComponent = false;
-        percentage.set(0d);
         percentageInput.set(null);
         priceAsString.set(null);
         useFixPrice.set(false);
         priceSpec.set(null);
         errorMessage.set(null);
-        lastValidPriceQuote = null;
         feedbackSentence.set(null);
         isOverlayVisible.set(false);
         shouldShowFeedback.set(false);

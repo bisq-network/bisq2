@@ -20,6 +20,10 @@ package bisq.desktop_ui_harness_app;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLifecycleObserver;
 import bisq.desktop.main.content.chat.message_container.ChatMessageContainerAutomationBinder;
+import bisq.desktop.main.content.mu_sig.offer.draft.create_offer.MuSigCreateOfferAutomationBinder;
+import bisq.desktop.main.content.mu_sig.offer.draft.create_offer.amount_and_price.price.MuSigCreateOfferPriceAutomationBinder;
+import bisq.desktop.main.content.mu_sig.offer.draft.create_offer.direction_and_market.MuSigCreateOfferDirectionAndMarketAutomationBinder;
+import bisq.desktop.main.content.mu_sig.offer.listing.MuSigOfferbookAutomationBinder;
 import bisq.desktop.main.left.LeftNavAutomationBinder;
 import bisq.desktop.overlay.onboarding.create_profile.CreateProfileAutomationBinder;
 import bisq.desktop.overlay.onboarding.welcome.WelcomeAutomationBinder;
@@ -37,6 +41,10 @@ final class DesktopAutomationViewObserver implements ViewLifecycleObserver {
         this(List.of(
                 new ChatMessageContainerAutomationBinder(),
                 new LeftNavAutomationBinder(),
+                new MuSigOfferbookAutomationBinder(),
+                new MuSigCreateOfferAutomationBinder(),
+                new MuSigCreateOfferDirectionAndMarketAutomationBinder(),
+                new MuSigCreateOfferPriceAutomationBinder(),
                 new SplashAutomationBinder(),
                 new TacAutomationBinder(),
                 new TacRiskAckAutomationBinder(),

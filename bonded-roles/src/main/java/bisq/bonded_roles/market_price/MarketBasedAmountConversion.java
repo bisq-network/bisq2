@@ -21,6 +21,7 @@ import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.TradeAmount;
 
 import java.util.Optional;
@@ -34,14 +35,14 @@ public class MarketBasedAmountConversion {
     public static Optional<Monetary> fiatToBtc(MarketPriceService marketPriceService,
                                                Market btcFiatMarket,
                                                Monetary fiatAmount) {
-        return marketPriceService.findMarketPriceQuote(btcFiatMarket)
+        return findPositiveMarketPriceQuote(marketPriceService, btcFiatMarket)
                 .map(priceQuote -> priceQuote.toBaseSideMonetary(fiatAmount));
     }
 
     public static Optional<Monetary> btcToFiat(MarketPriceService marketPriceService,
                                                Market btcFiatMarket,
                                                Monetary btcAmount) {
-        return marketPriceService.findMarketPriceQuote(btcFiatMarket)
+        return findPositiveMarketPriceQuote(marketPriceService, btcFiatMarket)
                 .map(priceQuote -> priceQuote.toQuoteSideMonetary(btcAmount));
     }
 
@@ -88,14 +89,14 @@ public class MarketBasedAmountConversion {
     public static Optional<Monetary> btcToOtherCrypto(MarketPriceService marketPriceService,
                                                       Market otherCryptoBtcMarket,
                                                       Monetary btcAmount) {
-        return marketPriceService.findMarketPriceQuote(otherCryptoBtcMarket)
+        return findPositiveMarketPriceQuote(marketPriceService, otherCryptoBtcMarket)
                 .map(priceQuote -> priceQuote.toBaseSideMonetary(btcAmount));
     }
 
     public static Optional<Monetary> otherCryptoToBtc(MarketPriceService marketPriceService,
                                                       Market otherCryptoBtcMarket,
                                                       Monetary otherCryptoAmount) {
-        return marketPriceService.findMarketPriceQuote(otherCryptoBtcMarket)
+        return findPositiveMarketPriceQuote(marketPriceService, otherCryptoBtcMarket)
                 .map(priceQuote -> priceQuote.toQuoteSideMonetary(otherCryptoAmount));
     }
 
@@ -128,16 +129,25 @@ public class MarketBasedAmountConversion {
     public static TradeAmount tradeAmountFromUsdAmount(MarketPriceService marketPriceService,
                                                        Market market,
                                                        Fiat amountInUsd) {
-        Monetary amountInBtc = MarketBasedAmountConversion.usdToBtc(marketPriceService, amountInUsd)
-                .orElseThrow();
-        if (market.isBtcFiatMarket()) {
-            Monetary amountInFiat = MarketBasedAmountConversion.btcToFiat(marketPriceService, market, amountInBtc)
-                    .orElseThrow();
-            return new TradeAmount(amountInBtc, amountInFiat);
-        } else {
-            Monetary amountInOtherCrypto = MarketBasedAmountConversion.btcToOtherCrypto(marketPriceService, market, amountInBtc)
-                    .orElseThrow();
-            return new TradeAmount(amountInOtherCrypto, amountInBtc);
-        }
+        return findTradeAmountFromUsdAmount(marketPriceService, market, amountInUsd).orElseThrow();
+    }
+
+    public static Optional<TradeAmount> findTradeAmountFromUsdAmount(MarketPriceService marketPriceService,
+                                                                     Market market,
+                                                                     Fiat amountInUsd) {
+        return usdToBtc(marketPriceService, amountInUsd)
+                .flatMap(amountInBtc -> market.isBtcFiatMarket()
+                        ? btcToFiat(marketPriceService, market, amountInBtc)
+                                .map(amountInFiat -> new TradeAmount(amountInBtc, amountInFiat))
+                        : btcToOtherCrypto(marketPriceService, market, amountInBtc)
+                                .map(amountInOtherCrypto -> new TradeAmount(amountInOtherCrypto, amountInBtc)));
+    }
+
+    // A non-positive quote passes MarketPrice.verify (it validates only the timestamp) but is
+    // not a usable rate: converting with it would produce negative or zero amounts.
+    private static Optional<PriceQuote> findPositiveMarketPriceQuote(MarketPriceService marketPriceService,
+                                                                     Market market) {
+        return marketPriceService.findMarketPriceQuote(market)
+                .filter(priceQuote -> priceQuote.getValue() > 0);
     }
 }
