@@ -17,6 +17,7 @@
 
 package bisq.offer.amount.spec;
 
+import bisq.common.monetary.Monetary;
 import bisq.common.monetary.TradeAmount;
 
 /**
@@ -48,6 +49,15 @@ public class AmountSpecFactory {
                                                               TradeAmount maxTradeAmount,
                                                               TradeAmount fixTradeAmount) {
         if (useRangeAmount) {
+            // The base side (sats) of two quote side amounts that are equal once rounded to the
+            // fiat display precision can still differ by a few units due to price conversion
+            // rounding, which would create a spurious range offer. Decide range vs fixed on the
+            // rounded quote side value so a range only remains when the fiat amounts actually differ.
+            Monetary minQuoteSideAmount = minTradeAmount.getQuoteSideAmount();
+            Monetary maxQuoteSideAmount = maxTradeAmount.getQuoteSideAmount();
+            if (minQuoteSideAmount.isEqual(maxQuoteSideAmount, minQuoteSideAmount.getLowPrecision())) {
+                return new BaseSideFixedAmountSpec(maxTradeAmount.getBaseSideAmount().getValue());
+            }
             long minAmount = minTradeAmount.getBaseSideAmount().getValue();
             long maxAmount = maxTradeAmount.getBaseSideAmount().getValue();
             return createBaseSideAmountSpec(minAmount, maxAmount);
