@@ -56,6 +56,11 @@ public class MuSigPassiveAmountController implements bisq.desktop.common.view.Co
                 int precision = amount instanceof Fiat ? amount.getLowPrecision() : 8;
                 model.getFormattedAmount().set(AmountFormatter.formatAmount(amount, precision));
                 model.getTooltip().set(Res.get("muSig.offer.wizard.amount.display.tooltip.conversionInfo", model.getCode().get()));
+            } else {
+                // An empty domain state clears the display instead of retaining the previous
+                // market's amount and code.
+                model.getCode().set("");
+                model.getFormattedAmount().set("");
             }
         }));
     }

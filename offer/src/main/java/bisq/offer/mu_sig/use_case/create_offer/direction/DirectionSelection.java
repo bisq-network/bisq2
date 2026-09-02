@@ -34,8 +34,10 @@ public class DirectionSelection extends LifecycleScope {
     private final CreateOfferDirectionModel model;
     private final CreateOfferDraftCookieStore cookieStore;
     private final Set<Consumer<Direction>> listeners = new CopyOnWriteArraySet<>();
+    private final Object draftLock;
 
-    public DirectionSelection(CreateOfferDraftCookieStore cookieStore) {
+    public DirectionSelection(CreateOfferDraftCookieStore cookieStore, Object draftLock) {
+        this.draftLock = checkNotNull(draftLock, "draftLock must not be null");
         this.cookieStore = checkNotNull(cookieStore, "cookieStore must not be null");
         this.model = new CreateOfferDirectionModel();
     }
@@ -54,6 +56,12 @@ public class DirectionSelection extends LifecycleScope {
     /* --------------------------------------------------------------------- */
 
     public void onSetDisplayDirection(Direction displayDirection) {
+        synchronized (draftLock) {
+            doSetDisplayDirection(displayDirection);
+        }
+    }
+
+    private void doSetDisplayDirection(Direction displayDirection) {
         checkNotNull(displayDirection, "displayDirection must not be null");
         applyDisplayDirection(displayDirection, true);
     }

@@ -25,6 +25,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.main.content.mu_sig.offer.draft.create_offer.amount_and_price.MuSigCreateOfferAmountAndPriceController;
 import bisq.desktop.main.content.mu_sig.offer.draft.create_offer.direction_and_market.MuSigCreateOfferDirectionAndMarketController;
@@ -195,6 +196,13 @@ public class MuSigCreateOfferController extends NavigationController implements 
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
             if (!validate(true)) {
+                return;
+            }
+            if (model.getChildTargets().get(nextIndex) == NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER
+                    && !createOfferUseCase.isDraftReadyForReview()) {
+                // Without market data the draft has no amounts or price quote to review; the
+                // gate lifts on its own once prices arrive.
+                new Popup().warning(Res.get("muSig.offer.create.validation.noMarketPrice")).show();
                 return;
             }
             performNavigation(nextIndex, false);

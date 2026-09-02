@@ -96,9 +96,21 @@ public class MuSigAmountTextInputController implements Controller {
                 String code = amount.getCode();
                 model.getCode().set(code);
 
-                if (!model.getFocusedProperty().get()) {
+                boolean wasEditable = model.getEditable().get();
+                model.getEditable().set(true);
+                // The focus guard protects an in-progress edit; a field that was not editable
+                // has none, and skipping the render there would leave it empty after seeding.
+                if (!model.getFocusedProperty().get() || !wasEditable) {
                     model.getTextFormatter().setValue(amount);
                 }
+            } else {
+                // An empty domain state (e.g. the selected market has no price yet) clears and
+                // disables the field; keeping the previous market's values would display them
+                // as if they belonged to the new market, and text typed without a currency code
+                // cannot be parsed, so a buffered edit would diverge from the domain.
+                model.getCode().set("");
+                model.getEditable().set(false);
+                model.getTextFormatter().setValue(null);
             }
         }));
     }

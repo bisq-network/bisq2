@@ -58,6 +58,7 @@ public class AmountSelection extends LifecycleScope {
     private final MarketSelection marketSelection;
     private final PriceSelection priceSelection;
     private final CreateOfferDraftCookieStore cookieStore;
+    private final Object draftLock;
     @Getter
     private final AmountLimitsProvider amountLimits;
 
@@ -66,7 +67,9 @@ public class AmountSelection extends LifecycleScope {
                            DirectionSelection directionSelection,
                            PaymentMethodSelection paymentMethodService,
                            PriceSelection priceSelection,
-                           CreateOfferDraftCookieStore cookieStore) {
+                           CreateOfferDraftCookieStore cookieStore,
+                           Object draftLock) {
+        this.draftLock = checkNotNull(draftLock, "draftLock must not be null");
         this.marketPriceService = checkNotNull(marketPriceService, "marketPriceService must not be null");
         this.marketSelection = checkNotNull(marketSelection, "marketUseCase must not be null");
         this.priceSelection = checkNotNull(priceSelection, "priceUseCase must not be null");
@@ -94,8 +97,7 @@ public class AmountSelection extends LifecycleScope {
             model.setUseBaseCurrencyForAmountInput(useBaseCurrencyForAmountInput);
 
             // Not clamped yet as we do not have established the trade amount limits
-            TradeAmount defaultTradeAmount = getDefaultTradeAmountForMarket(market);
-            applyDefaultAmountAndSliderValue(defaultTradeAmount);
+            findDefaultTradeAmountForMarket(market).ifPresent(this::seedDefaultAmounts);
         }
 
         addDisposable(amountLimits.initializedObservable().addObserver(initialized -> {
@@ -124,13 +126,39 @@ public class AmountSelection extends LifecycleScope {
 
     private void handleMarketChange(Market market) {
         if (market != null) {
-            TradeAmount defaultTradeAmount = getDefaultTradeAmountForMarket(market);
-            applyDefaultAmountAndSliderValue(defaultTradeAmount);
+            Optional<TradeAmount> defaultTradeAmount = findDefaultTradeAmountForMarket(market);
+            if (defaultTradeAmount.isPresent()) {
+                seedDefaultAmounts(defaultTradeAmount.get());
+            } else {
+                // The new market cannot be seeded yet; the previous market's amounts must not
+                // survive, or the late-arriving quote would be applied to foreign-currency
+                // values. The null amounts also hold the review gate closed until the reseed.
+                clearAmountsAndSliderValues();
+            }
         }
     }
 
+    private void clearAmountsAndSliderValues() {
+        model.setFixTradeAmount(null);
+        model.setMinTradeAmount(null);
+        model.setMaxTradeAmount(null);
+        model.setFixAmountSliderValue(0);
+        model.setMinAmountSliderValue(0);
+        model.setMaxAmountSliderValue(0);
+        // The derived projections belong to the cleared amounts: the limit providers retain
+        // their previous outputs while the new market's rates are unavailable, so without this
+        // the labels and the slider marker would keep showing the previous market's range.
+        model.setInputAmountRange(null);
+        model.setUserSpecificTradeAmountLimitAsSliderValue(Optional.empty());
+    }
+
     private void handlePriceQuoteChange(PriceQuote priceQuote) {
-        if (priceQuote != null) {
+        // While the amounts are unseeded there is nothing to convert; the limits observer
+        // reseeds them from the new quote. On a market switch this fires before the market
+        // listener reseeds, so amounts of another market are skipped rather than combined
+        // with a foreign quote.
+        if (priceQuote != null && getFixTradeAmount() != null
+                && belongsToMarket(getFixTradeAmount(), priceQuote.getMarket())) {
             applyPriceQuoteToFixTradeAmount(priceQuote);
             applyPriceQuoteToMinTradeAmount(priceQuote);
             applyPriceQuoteToMaxTradeAmount(priceQuote);
@@ -157,28 +185,71 @@ public class AmountSelection extends LifecycleScope {
 
 
     private void handlePotentialTradeAmountLimitsChange(TradeAmountRange potentialTradeAmountLimits) {
-        if (potentialTradeAmountLimits != null) {
-            applyPotentialTradeAmountLimits(potentialTradeAmountLimits);
+        reconcileFromLimits();
+    }
+
+    // Reconciliation needs BOTH published limit ranges: the aggregator publishes the potential
+    // range before the effective one, so whichever callback fires second completes the work.
+    // Acting on the first callback alone would clamp against a null effective range.
+    private void reconcileFromLimits() {
+        TradeAmountRange potentialTradeAmountLimits = amountLimits.getPotentialTradeAmountLimits();
+        TradeAmountRange effectiveTradeAmountLimits = amountLimits.getEffectiveAmountLimits();
+        if (potentialTradeAmountLimits == null || effectiveTradeAmountLimits == null) {
+            return;
         }
+        if (model.getFixTradeAmount() == null) {
+            // The default seed was skipped because the market price arrived late; the limits
+            // initializing means the rates are available now.
+            Market market = marketSelection.getMarket();
+            if (market != null) {
+                findDefaultTradeAmountForMarket(market).ifPresent(this::seedDefaultAmounts);
+            }
+        }
+        applyPotentialTradeAmountLimits(potentialTradeAmountLimits);
+    }
+
+    private void seedDefaultAmounts(TradeAmount defaultTradeAmount) {
+        applyDefaultAmountAndSliderValue(defaultTradeAmount);
+        // The default pair is derived from the raw market price, but the offer quote can carry
+        // a restored offset and the published offer converts with the offer quote. No later
+        // quote event reprices a seed that happens during the at-registration replay.
+        handlePriceQuoteChange(priceSelection.getPriceQuote());
     }
 
     private void applyPotentialTradeAmountLimits(TradeAmountRange potentialTradeAmountLimits) {
         MonetaryRange inputAmountRange = toInputSideMonetaryRange(potentialTradeAmountLimits);
         model.setInputAmountRange(inputAmountRange);
+        // On a market switch the limit providers recompute before the market listener reseeds
+        // the amounts; clamping another market's amounts against these limits would throw.
+        // The reseed that follows re-runs this apply with matching values.
+        boolean amountsBelongToLimitsMarket = model.getFixTradeAmount() == null
+                || codesMatch(model.getFixTradeAmount(), potentialTradeAmountLimits.getMax());
         // All slider values are fractions of the input amount range. When the range changes but the
         // corresponding amount values stay equal, their observers do not fire, so we recompute them here.
-        // The user-specific limit must be emitted first: UI slider controllers clamp incoming amount
-        // slider values against the last emitted limit and feed the result back into this class.
+        // The user-specific limit must be emitted first: the slider controllers clamp the displayed
+        // thumb against the last emitted limit (display-only; origin separation prevents any writeback).
         handleUserSpecificAmountLimitChange(getUserSpecificTradeAmountLimit());
-        if (model.getFixTradeAmount() != null) {
-            applyFixAmountAndSliderValue(model.getFixTradeAmount());
+        if (amountsBelongToLimitsMarket) {
+            if (model.getFixTradeAmount() != null) {
+                applyFixAmountAndSliderValue(model.getFixTradeAmount());
+            }
+            if (model.getMinTradeAmount() != null) {
+                applyMinAmountAndSliderValue(model.getMinTradeAmount());
+            }
+            if (model.getMaxTradeAmount() != null) {
+                applyMaxAmountAndSliderValue(model.getMaxTradeAmount());
+            }
         }
-        if (model.getMinTradeAmount() != null) {
-            applyMinAmountAndSliderValue(model.getMinTradeAmount());
-        }
-        if (model.getMaxTradeAmount() != null) {
-            applyMaxAmountAndSliderValue(model.getMaxTradeAmount());
-        }
+    }
+
+    private static boolean codesMatch(TradeAmount left, TradeAmount right) {
+        return left.getBaseSideAmount().getCode().equals(right.getBaseSideAmount().getCode()) &&
+                left.getQuoteSideAmount().getCode().equals(right.getQuoteSideAmount().getCode());
+    }
+
+    private static boolean belongsToMarket(TradeAmount tradeAmount, Market market) {
+        return tradeAmount.getBaseSideAmount().getCode().equals(market.getBaseCurrencyCode()) &&
+                tradeAmount.getQuoteSideAmount().getCode().equals(market.getQuoteCurrencyCode());
     }
 
 
@@ -197,11 +268,7 @@ public class AmountSelection extends LifecycleScope {
     }
 
     private void handleEffectiveTradeAmountLimitsChange(TradeAmountRange effectiveTradeAmountLimits) {
-        if (effectiveTradeAmountLimits != null) {
-            applyFixAmountAndSliderValue(model.getFixTradeAmount());
-            applyMinAmountAndSliderValue(model.getMinTradeAmount());
-            applyMaxAmountAndSliderValue(model.getMaxTradeAmount());
-        }
+        reconcileFromLimits();
     }
 
 
@@ -210,16 +277,29 @@ public class AmountSelection extends LifecycleScope {
     /* --------------------------------------------------------------------- */
 
     public void onSetUseBaseCurrencyForAmountInput(boolean value) {
-        model.setUseBaseCurrencyForAmountInput(value);
-        Market market = marketSelection.getMarket();
-        if (market != null) {
-            cookieStore.persistUseBaseCurrencyForAmountInput(market, value);
+        synchronized (draftLock) {
+            if (model.getUseBaseCurrencyForAmountInput() == value) {
+                return;
+            }
+            model.setUseBaseCurrencyForAmountInput(value);
+            Market market = marketSelection.getMarket();
+            if (market != null) {
+                cookieStore.persistUseBaseCurrencyForAmountInput(market, value);
+            }
+            // An input-side switch changes how the range, the user-specific marker and the slider values
+            // are denominated and mapped. Recompute them on the new side; the amount itself is unchanged.
+            TradeAmountRange potentialTradeAmountLimits = amountLimits.potentialTradeAmountLimitsObservable().get();
+            if (potentialTradeAmountLimits != null) {
+                applyPotentialTradeAmountLimits(potentialTradeAmountLimits);
+            }
         }
     }
 
     public void onSetUseRangeAmount(boolean value) {
-        model.setUseRangeAmount(value);
-        cookieStore.persistUseRangeAmount(value);
+        synchronized (draftLock) {
+            model.setUseRangeAmount(value);
+            cookieStore.persistUseRangeAmount(value);
+        }
     }
 
 
@@ -227,33 +307,49 @@ public class AmountSelection extends LifecycleScope {
     // Amount as input
     /* --------------------------------------------------------------------- */
 
+    // The initialized latch stays true after the limits are cleared on a market switch, so
+    // input guards check the ranges the mutators actually consume: the effective range for the
+    // clamp and the input range for the slider mapping. Input while they are unavailable is
+    // refused softly; the reconcile reseeds when the limits recover.
+    private boolean areLimitsAvailable() {
+        return amountLimits.getEffectiveAmountLimits() != null
+                && amountLimits.getPotentialTradeAmountLimits() != null
+                && model.getInputAmountRange() != null;
+    }
+
     public void onSetFixTradeAmountFromInputAmount(Monetary inputAmount) {
-        checkNotNull(inputAmount, "inputAmount must not be null");
-        Market market = marketSelection.getMarket();
-        PriceQuote priceQuote = priceSelection.getPriceQuote();
-        if (amountLimits.isInitialized() && market != null && priceQuote != null) {
-            TradeAmount tradeAmount = TradeAmountConversion.toTradeAmount(market, priceQuote, inputAmount);
-            applyFixAmountAndSliderValue(tradeAmount);
+        synchronized (draftLock) {
+            checkNotNull(inputAmount, "inputAmount must not be null");
+            Market market = marketSelection.getMarket();
+            PriceQuote priceQuote = priceSelection.getPriceQuote();
+            if (areLimitsAvailable() && market != null && priceQuote != null) {
+                TradeAmount tradeAmount = TradeAmountConversion.toTradeAmount(market, priceQuote, inputAmount);
+                applyFixAmountAndSliderValue(tradeAmount);
+            }
         }
     }
 
     public void onSetMinTradeAmountFromInputAmount(Monetary inputAmount) {
-        checkNotNull(inputAmount, "inputAmount must not be null");
-        Market market = marketSelection.getMarket();
-        PriceQuote priceQuote = priceSelection.getPriceQuote();
-        if (amountLimits.isInitialized() && market != null && priceQuote != null) {
-            TradeAmount tradeAmount = TradeAmountConversion.toTradeAmount(market, priceQuote, inputAmount);
-            applyMinAmountAndSliderValue(tradeAmount);
+        synchronized (draftLock) {
+            checkNotNull(inputAmount, "inputAmount must not be null");
+            Market market = marketSelection.getMarket();
+            PriceQuote priceQuote = priceSelection.getPriceQuote();
+            if (areLimitsAvailable() && market != null && priceQuote != null) {
+                TradeAmount tradeAmount = TradeAmountConversion.toTradeAmount(market, priceQuote, inputAmount);
+                applyMinAmountAndSliderValue(tradeAmount);
+            }
         }
     }
 
     public void onSetMaxTradeAmountFromInputAmount(Monetary inputAmount) {
-        checkNotNull(inputAmount, "inputAmount must not be null");
-        Market market = marketSelection.getMarket();
-        PriceQuote priceQuote = priceSelection.getPriceQuote();
-        if (amountLimits.isInitialized() && market != null && priceQuote != null) {
-            TradeAmount tradeAmount = TradeAmountConversion.toTradeAmount(market, priceQuote, inputAmount);
-            applyMaxAmountAndSliderValue(tradeAmount);
+        synchronized (draftLock) {
+            checkNotNull(inputAmount, "inputAmount must not be null");
+            Market market = marketSelection.getMarket();
+            PriceQuote priceQuote = priceSelection.getPriceQuote();
+            if (areLimitsAvailable() && market != null && priceQuote != null) {
+                TradeAmount tradeAmount = TradeAmountConversion.toTradeAmount(market, priceQuote, inputAmount);
+                applyMaxAmountAndSliderValue(tradeAmount);
+            }
         }
     }
 
@@ -264,46 +360,52 @@ public class AmountSelection extends LifecycleScope {
     /* --------------------------------------------------------------------- */
 
     public void onSetFixTradeAmountFromSliderValue(double sliderValue) {
-        checkArgument(sliderValue >= 0 && sliderValue <= 1, "sliderValue must be between 0 and 1");
-        TradeAmount fixTradeAmount = model.getFixTradeAmount();
-        Market market = marketSelection.getMarket();
-        PriceQuote priceQuote = priceSelection.getPriceQuote();
-        if (amountLimits.isInitialized() && fixTradeAmount != null && market != null && priceQuote != null) {
-            TradeAmount newTradeAmount = toTradeAmountFromSliderValue(market, priceQuote, fixTradeAmount, sliderValue);
-            model.setFixTradeAmount(newTradeAmount);
+        synchronized (draftLock) {
+            checkArgument(sliderValue >= 0 && sliderValue <= 1, "sliderValue must be between 0 and 1");
+            TradeAmount fixTradeAmount = model.getFixTradeAmount();
+            Market market = marketSelection.getMarket();
+            PriceQuote priceQuote = priceSelection.getPriceQuote();
+            if (areLimitsAvailable() && fixTradeAmount != null && market != null && priceQuote != null) {
+                TradeAmount newTradeAmount = toTradeAmountFromSliderValue(market, priceQuote, fixTradeAmount, sliderValue);
+                model.setFixTradeAmount(newTradeAmount);
 
-            double newSliderValue = toSliderValueFromTradeAmount(newTradeAmount); // We might have got clamped
-            model.setFixAmountSliderValue(newSliderValue);
+                double newSliderValue = toSliderValueFromTradeAmount(newTradeAmount); // We might have got clamped
+                model.setFixAmountSliderValue(newSliderValue);
+            }
         }
     }
 
     public void onSetMinTradeAmountFromSliderValue(double sliderValue) {
-        checkArgument(sliderValue >= 0 && sliderValue <= 1, "sliderValue must be between 0 and 1");
+        synchronized (draftLock) {
+            checkArgument(sliderValue >= 0 && sliderValue <= 1, "sliderValue must be between 0 and 1");
 
-        TradeAmount minTradeAmount = model.getMinTradeAmount();
-        Market market = marketSelection.getMarket();
-        PriceQuote priceQuote = priceSelection.getPriceQuote();
-        if (amountLimits.isInitialized() && minTradeAmount != null && market != null && priceQuote != null) {
-            TradeAmount newTradeAmount = toTradeAmountFromSliderValue(market, priceQuote, minTradeAmount, sliderValue);
-            model.setMinTradeAmount(newTradeAmount);
+            TradeAmount minTradeAmount = model.getMinTradeAmount();
+            Market market = marketSelection.getMarket();
+            PriceQuote priceQuote = priceSelection.getPriceQuote();
+            if (areLimitsAvailable() && minTradeAmount != null && market != null && priceQuote != null) {
+                TradeAmount newTradeAmount = toTradeAmountFromSliderValue(market, priceQuote, minTradeAmount, sliderValue);
+                model.setMinTradeAmount(newTradeAmount);
 
-            double newSliderValue = toSliderValueFromTradeAmount(newTradeAmount); // We might have got clamped
-            model.setMinAmountSliderValue(newSliderValue);
+                double newSliderValue = toSliderValueFromTradeAmount(newTradeAmount); // We might have got clamped
+                model.setMinAmountSliderValue(newSliderValue);
+            }
         }
     }
 
     public void onSetMaxTradeAmountFromSliderValue(double sliderValue) {
-        checkArgument(sliderValue >= 0 && sliderValue <= 1, "sliderValue must be between 0 and 1");
+        synchronized (draftLock) {
+            checkArgument(sliderValue >= 0 && sliderValue <= 1, "sliderValue must be between 0 and 1");
 
-        TradeAmount maxTradeAmount = model.getMaxTradeAmount();
-        Market market = marketSelection.getMarket();
-        PriceQuote priceQuote = priceSelection.getPriceQuote();
-        if (amountLimits.isInitialized() && maxTradeAmount != null && market != null && priceQuote != null) {
-            TradeAmount newTradeAmount = toTradeAmountFromSliderValue(market, priceQuote, maxTradeAmount, sliderValue);
-            model.setMaxTradeAmount(newTradeAmount);
+            TradeAmount maxTradeAmount = model.getMaxTradeAmount();
+            Market market = marketSelection.getMarket();
+            PriceQuote priceQuote = priceSelection.getPriceQuote();
+            if (areLimitsAvailable() && maxTradeAmount != null && market != null && priceQuote != null) {
+                TradeAmount newTradeAmount = toTradeAmountFromSliderValue(market, priceQuote, maxTradeAmount, sliderValue);
+                model.setMaxTradeAmount(newTradeAmount);
 
-            double newSliderValue = toSliderValueFromTradeAmount(newTradeAmount); // We might have got clamped
-            model.setMaxAmountSliderValue(newSliderValue);
+                double newSliderValue = toSliderValueFromTradeAmount(newTradeAmount); // We might have got clamped
+                model.setMaxAmountSliderValue(newSliderValue);
+            }
         }
     }
 
@@ -311,18 +413,6 @@ public class AmountSelection extends LifecycleScope {
     /* --------------------------------------------------------------------- */
     // API for input amount
     /* --------------------------------------------------------------------- */
-
-    public Monetary getFixInputAmount() {
-        return toInputAmount(getFixTradeAmount());
-    }
-
-    public Monetary getMinInputAmount() {
-        return toInputAmount(getMinTradeAmount());
-    }
-
-    public Monetary getMaxInputAmount() {
-        return toInputAmount(getMaxTradeAmount());
-    }
 
     public Monetary toInputAmount(TradeAmount tradeAmount) {
         checkNotNull(tradeAmount, "tradeAmount must not be null");
@@ -334,32 +424,22 @@ public class AmountSelection extends LifecycleScope {
     // API for passive amount
     /* --------------------------------------------------------------------- */
 
-    public Monetary getFixPassiveAmount() {
-        return toPassiveAmount(getFixTradeAmount());
-    }
-
-    public Monetary getMinPassiveAmount() {
-        return toPassiveAmount(getMinTradeAmount());
-    }
-
-    public Monetary getMaxPassiveAmount() {
-        return toPassiveAmount(getMaxTradeAmount());
-    }
-
 
     /* --------------------------------------------------------------------- */
     // AmountSpec
     /* --------------------------------------------------------------------- */
 
     public AmountSpec createAndGetAmountSpec(Market market) {
-        checkNotNull(market, "market must not be null");
-        boolean isBtcFiatMarket = market.isBtcFiatMarket();
-        boolean useRangeAmount = getUseRangeAmount();
-        return AmountSpecFactory.createAmountSpec(isBtcFiatMarket,
-                useRangeAmount,
-                getMinTradeAmount(),
-                getMaxTradeAmount(),
-                getFixTradeAmount());
+        synchronized (draftLock) {
+            checkNotNull(market, "market must not be null");
+            boolean isBtcFiatMarket = market.isBtcFiatMarket();
+            boolean useRangeAmount = getUseRangeAmount();
+            return AmountSpecFactory.createAmountSpec(isBtcFiatMarket,
+                    useRangeAmount,
+                    getMinTradeAmount(),
+                    getMaxTradeAmount(),
+                    getFixTradeAmount());
+        }
     }
 
 
@@ -384,14 +464,11 @@ public class AmountSelection extends LifecycleScope {
     // Apply default amount and slider value
     /* --------------------------------------------------------------------- */
 
-    private TradeAmount getDefaultTradeAmountForMarket(Market market) {
-        return getTradeAmountFromUsd(marketPriceService, market, DEFAULT_TRADE_AMOUNT_IN_USD);
-    }
-
-    private static TradeAmount getTradeAmountFromUsd(MarketPriceService marketPriceService,
-                                                     Market market,
-                                                     Fiat usdAmount) {
-        return MarketBasedAmountConversion.tradeAmountFromUsdAmount(marketPriceService, market, usdAmount);
+    private Optional<TradeAmount> findDefaultTradeAmountForMarket(Market market) {
+        // Empty when a required market price is missing or not positive (e.g. the draft started
+        // before the first price arrived): the default seed is applied when the limits first
+        // initialize.
+        return MarketBasedAmountConversion.findTradeAmountFromUsdAmount(marketPriceService, market, DEFAULT_TRADE_AMOUNT_IN_USD);
     }
 
     private void applyDefaultAmountAndSliderValue(TradeAmount defaultTradeAmount) {
@@ -526,7 +603,7 @@ public class AmountSelection extends LifecycleScope {
     // Utils for selecting passive (non-input) side
     /* --------------------------------------------------------------------- */
 
-    private Monetary toPassiveAmount(TradeAmount tradeAmount) {
+    public Monetary toPassiveAmount(TradeAmount tradeAmount) {
         return toPassiveAmount(tradeAmount, getUseBaseCurrencyForAmountInput());
     }
 

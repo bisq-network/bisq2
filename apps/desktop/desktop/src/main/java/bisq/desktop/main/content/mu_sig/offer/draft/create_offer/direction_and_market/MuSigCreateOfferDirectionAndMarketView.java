@@ -311,4 +311,12 @@ public class MuSigCreateOfferDirectionAndMarketView extends View<StackPane, MuSi
         stackPane.setMaxHeight(TABLE_HEIGHT);
         return stackPane;
     }
+
+    Button buyAction() {
+        return buyButton;
+    }
+
+    Button sellAction() {
+        return sellButton;
+    }
 }

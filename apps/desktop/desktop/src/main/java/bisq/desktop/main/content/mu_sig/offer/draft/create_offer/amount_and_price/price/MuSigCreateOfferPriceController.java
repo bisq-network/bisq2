@@ -34,14 +34,10 @@ import bisq.offer.mu_sig.use_case.create_offer.direction.DirectionSelection;
 import bisq.offer.mu_sig.use_case.create_offer.market.MarketSelection;
 import bisq.offer.mu_sig.use_case.create_offer.price.PriceSelection;
 import bisq.offer.price.PriceUtil;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
-import bisq.offer.price.spec.PriceSpecUtil;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
-import bisq.settings.SettingsService;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.input.KeyEvent;
@@ -54,6 +50,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import static bisq.presentation.parser.PercentageParser.parse;
@@ -67,9 +64,9 @@ public class MuSigCreateOfferPriceController implements Controller {
     private final Region owner;
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final MarketPriceService marketPriceService;
-    private final SettingsService settingsService;
     private final Set<Pin> pins = new HashSet<>();
     private final Set<Subscription> subscriptions = new HashSet<>();
+    private boolean applyingDomainValue;
     private final DirectionSelection directionSelection;
     private final PriceSelection priceSelection;
     private final MarketSelection marketSelection;
@@ -79,16 +76,15 @@ public class MuSigCreateOfferPriceController implements Controller {
                                            Region owner,
                                            Consumer<Boolean> navigationButtonsVisibleHandler) {
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-        settingsService = serviceProvider.getSettingsService();
         marketSelection = createOfferUseCase.getMarketSelection();
         directionSelection = createOfferUseCase.getDirectionSelection();
         priceSelection = createOfferUseCase.getPriceSelection();
 
-        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService(), createOfferUseCase);
+        priceInput = new MuSigPriceInput(createOfferUseCase);
         this.owner = owner;
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         model = new MuSigCreateOfferPriceModel();
-        view = new MuSigCreateOfferPriceView(model, this, priceInput.getRoot());
+        view = new MuSigCreateOfferPriceView(model, this, priceInput.getRoot(), priceInput.getTextInputControl());
     }
 
     public ReadOnlyObjectProperty<PriceSpec> getPriceSpec() {
@@ -121,75 +117,59 @@ public class MuSigCreateOfferPriceController implements Controller {
         String marketCodes = market.getMarketCodes();
         model.getMarketCodes().set(marketCodes);
 
-        model.getUseFixPrice().set(priceSelection.getUseFixPrice());
-
-        //todo
-        applyPriceSliderValue(0d);
-       /*
-        settingsService.getCookie().asString(CookieKey.CREATE_OFFER_PRICE)
-                .ifPresentOrElse(
-                        this::applyPriceFromCookie,
-                        () -> applyPriceSliderValue(0d)
-                );*/
-
         if (model.getPriceSpec().get() == null) {
             model.getPriceSpec().set(new MarketPriceSpec());
         }
 
-        pins.add(priceSelection.useFixPriceObservable().addObserver(useFixPrice -> {
-            UIThread.run(() -> {
-                // In case of in invalid inputs we apply the value from the flip side before switching,
-                // so that the then inactive field has a valid value again.
-                if (!useFixPrice && !priceInput.isPriceValid().get()) {
-                    applyPercentageString(model.getPercentageInput().get());
-                } else if (useFixPrice && model.getErrorMessage().get() != null) {
-                    onQuoteInput(priceSelection.getPriceQuote());
-                }
-                model.getUseFixPrice().set(useFixPrice);
-                applyPriceSpec();
-            });
-        }));
-        pins.add(priceSelection.pricePercentageObservable().addObserver(pricePercentage -> {
-            UIThread.run(() -> {
-                if (pricePercentage != null) {
-                    model.getPercentage().set(pricePercentage);
-                    model.getPercentageInput().set(PercentageFormatter.formatToPercent(pricePercentage));
-                }
-            });
-        }));
-
-
-        pins.add(priceSelection.priceQuoteObservable().addObserver(priceQuote ->
-                UIThread.run(() -> onQuoteInput(priceQuote))));
+        // The three domain observers are display-only projections. They re-read the current
+        // domain state when executed and never write back: the domain already keeps quote and
+        // percentage consistent on its authoritative side, and converting a projection back into
+        // input is what used to drift the floating percentage and rewrite fixed prices.
+        pins.add(priceSelection.useFixPriceObservable().addObserver(ignored ->
+                UIThread.run(() -> {
+                    model.getUseFixPrice().set(priceSelection.getUseFixPrice());
+                    // The newly inactive field's validation state must not keep blocking
+                    // navigation while the field is hidden.
+                    model.getErrorMessage().set(null);
+                    applyPriceSpecFromDomain();
+                })));
+        pins.add(priceSelection.pricePercentageObservable().addObserver(ignored ->
+                UIThread.run(() -> renderPercentage(priceSelection.getPricePercentage()))));
+        pins.add(priceSelection.priceQuoteObservable().addObserver(ignored ->
+                UIThread.run(() -> {
+                    PriceQuote quote = priceSelection.getPriceQuote();
+                    model.getPriceAsString().set(quote == null ? "" : PriceFormatter.format(quote, true));
+                    applyPriceSpecFromDomain();
+                })));
 
         subscriptions.add(EasyBind.subscribe(priceInput.isPriceValid(), isPriceValid -> {
             if (isPriceValid != null && !isPriceValid) {
                 model.getErrorMessage().set(priceInput.getErrorMessage());
-                model.setLastValidPriceQuote(null);
             } else {
                 model.getErrorMessage().set(null);
             }
         }));
         subscriptions.add(EasyBind.subscribe(model.getPriceSpec(), this::updateFeedback));
-        subscriptions.add(EasyBind.subscribe(model.getPercentageInput(), percentageInput -> {
-            if (percentageInput != null) {
-                onPercentageInput(percentageInput);
-                priceInput.setPercentage(percentageInput);
+        // EasyBind fires each subscription once at registration with the retained model value.
+        // That fire is a projection, not user input, and must not be committed to the domain.
+        subscriptions.add(EasyBind.subscribe(model.getPercentageInput(), skipInitialFire(percentageInput -> {
+            if (applyingDomainValue || percentageInput == null) {
+                return;
             }
-        }));
-        subscriptions.add(EasyBind.subscribe(model.getPriceSliderValue(), priceSliderValue -> {
-            if (priceSliderValue != null) {
-                double value = priceSliderValue.doubleValue() * (model.getMaxPercentage() - model.getMinPercentage()) + model.getMinPercentage();
-                String percentageAsString = PercentageFormatter.formatToPercent(value);
-                onPercentageInput(percentageAsString);
-                priceInput.setPercentage(percentageAsString);
+            onPercentageInput(percentageInput);
+            priceInput.setPercentage(percentageInput);
+        })));
+        subscriptions.add(EasyBind.subscribe(model.getPriceSliderValue(), skipInitialFire(priceSliderValue -> {
+            if (applyingDomainValue || priceSliderValue == null) {
+                return;
             }
-        }));
-        subscriptions.add(EasyBind.subscribe(model.getPercentage(), percentage -> {
-            if (percentage != null) {
-                applyPriceSliderValue(percentage.doubleValue());
+            if (priceSelection.getUseFixPrice()) {
+                // The slider is disabled while the fixed price is authoritative; ignore residual events.
+                return;
             }
-        }));
+            double value = priceSliderValue.doubleValue() * (model.getMaxPercentage() - model.getMinPercentage()) + model.getMinPercentage();
+            commitPercentage(value);
+        })));
 
         priceInput.setDescription(Res.get("muSig.offer.create.price.tradePrice.inputBoxText", marketCodes));
 
@@ -197,7 +177,7 @@ public class MuSigCreateOfferPriceController implements Controller {
         // If not, we can remove all related code. Currently, it's just a copy of Bisq Easy...
         model.getShouldShowFeedback().set(false);
 
-        applyPriceSpec();
+        applyPriceSpecFromDomain();
     }
 
     @Override
@@ -215,16 +195,7 @@ public class MuSigCreateOfferPriceController implements Controller {
     void onPercentageFocused(boolean focused) {
         model.setFocused(focused);
         if (!focused) {
-            try {
-                double percentage = parse(model.getPercentageInput().get());
-                String percentageAsString = PercentageFormatter.formatToPercent(percentage);
-                // Need to change the value first otherwise it does not trigger an update
-                model.getPercentageInput().set("");
-                model.getPercentageInput().set(percentageAsString);
-                onPercentageInput(percentageAsString);
-            } catch (Exception e) {
-                model.getErrorMessage().set(Res.get("muSig.offer.create.price.warn.invalidPrice.numberFormatException"));
-            }
+            onPercentageInput(model.getPercentageInput().get());
         }
     }
 
@@ -247,37 +218,64 @@ public class MuSigCreateOfferPriceController implements Controller {
         if (model.isFocused()) {
             return;
         }
-        applyPercentageString(percentageAsString);
-    }
-
-    private void applyPercentageString(String percentageAsString) {
         if (StringUtils.isEmpty(percentageAsString)) {
+            // A cleared field is an aborted edit; the display returns to the authoritative value
+            // and an error from a previous malformed entry must not keep blocking navigation.
+            model.getErrorMessage().set(null);
+            renderPercentage(priceSelection.getPricePercentage());
             return;
         }
-
-        model.getErrorMessage().set(null);
         try {
-            double percentage = parse(percentageAsString);
-            if (!validatePercentage(percentage)) {
-                return;
-            }
-            Optional<PriceQuote> marketPriceQuote = findMarketPriceQuote();
-            if (marketPriceQuote.isPresent()) {
-                PriceQuote priceQuote = PriceUtil.fromMarketPriceMarkup(marketPriceQuote.get(), percentage);
-                if (validateQuote(priceQuote)) {
-                    priceInput.setQuote(priceQuote);
-                } else {
-                    return;
-                }
-            } else {
-                log.error("marketPriceQuote is not present");
-            }
-            applyPriceSpec();
+            commitPercentage(parse(percentageAsString));
         } catch (NumberFormatException e) {
             model.getErrorMessage().set(Res.get("muSig.offer.create.price.warn.invalidPrice.numberFormatException"));
         } catch (Exception e) {
             model.getErrorMessage().set(Res.get("muSig.offer.create.price.warn.invalidPrice.exception", e.getMessage()));
         }
+    }
+
+    private void commitPercentage(double percentage) {
+        if (!Double.isFinite(percentage)) {
+            model.getErrorMessage().set(Res.get("muSig.offer.create.price.warn.invalidPrice.numberFormatException"));
+            return;
+        }
+        model.getErrorMessage().set(null);
+        // The domain clamps to the allowed range; finite out-of-range input is a successful
+        // clamped edit, not an error.
+        priceSelection.onSetPricePercentage(percentage);
+        // Re-render the authoritative value: clamping onto an already-stored bound emits no
+        // observable event.
+        renderPercentage(priceSelection.getPricePercentage());
+        applyPriceSpecFromDomain();
+    }
+
+    private static <T> Consumer<T> skipInitialFire(Consumer<T> delegate) {
+        AtomicBoolean first = new AtomicBoolean(true);
+        return value -> {
+            if (first.getAndSet(false)) {
+                return;
+            }
+            delegate.accept(value);
+        };
+    }
+
+    private void renderPercentage(double pricePercentage) {
+        applyingDomainValue = true;
+        try {
+            String percentageAsString = PercentageFormatter.formatToPercent(pricePercentage);
+            model.getPercentageInput().set(percentageAsString);
+            priceInput.setPercentage(percentageAsString);
+            applyPriceSliderValue(pricePercentage);
+        } finally {
+            applyingDomainValue = false;
+        }
+    }
+
+    private void applyPriceSpecFromDomain() {
+        if (priceSelection.getUseFixPrice() && priceSelection.getPriceQuote() == null) {
+            return;
+        }
+        model.getPriceSpec().set(priceSelection.createAndGetPriceSpec());
     }
 
     void onToggleUseFixPrice() {
@@ -317,39 +315,6 @@ public class MuSigCreateOfferPriceController implements Controller {
         }
     }
 
-    private void applyPriceSpec() {
-        if (model.getUseFixPrice().get()) {
-            model.getPriceSpec().set(new FixPriceSpec(priceSelection.getPriceQuote()));
-            // settingsService.setCookie(CookieKey.CREATE_OFFER_PRICE, priceInput.getPriceString().get());
-        } else {
-            double percentage = model.getPercentage().get();
-            if (percentage == 0) {
-                model.getPriceSpec().set(new MarketPriceSpec());
-            } else {
-                model.getPriceSpec().set(new FloatPriceSpec(percentage));
-            }
-            // settingsService.setCookie(CookieKey.CREATE_OFFER_PRICE, model.getPercentageInput().get());
-        }
-    }
-
-    private void onQuoteInput(PriceQuote priceQuote) {
-        if (priceQuote == null) {
-            model.getPercentage().set(0);
-            model.getPercentageInput().set("");
-            return;
-        }
-        if (validateQuote(priceQuote)) {
-            model.getPriceAsString().set(PriceFormatter.format(priceQuote, true));
-            applyPercentageFromQuote(priceQuote);
-            applyPriceSpec();
-            model.setLastValidPriceQuote(priceQuote);
-        }
-    }
-
-    private void applyPercentageFromQuote(PriceQuote priceQuote) {
-        double pricePercentage = getPercentageFromPriceQuote(priceQuote);
-        priceSelection.onSetPricePercentage(pricePercentage);
-    }
 
     private void applyPriceSliderValue(double percentage) {
         // Only apply value from component to slider if we have no focus on slider (not used)
@@ -359,40 +324,6 @@ public class MuSigCreateOfferPriceController implements Controller {
         }
     }
 
-    private boolean validateQuote(PriceQuote priceQuote) {
-        return validatePercentage(getPercentageFromPriceQuote(priceQuote));
-    }
-
-    private boolean validatePercentage(double percentage) {
-        if (percentage >= model.getMinPercentage() && percentage <= model.getMaxPercentage()) {
-            model.getErrorMessage().set(null);
-            return true;
-        } else {
-            model.getErrorMessage().set(Res.get("muSig.offer.create.price.warn.invalidPrice.outOfRange"));
-            return false;
-        }
-    }
-
-    private double getPercentageFromPriceQuote(PriceQuote priceQuote) {
-        try {
-            Optional<Double> optionalPercentage = PriceSpecUtil.createFloatPriceAsPercentage(marketPriceService, priceQuote);
-            if (optionalPercentage.isEmpty()) {
-                log.error("optionalPercentage not present");
-            }
-            return optionalPercentage.orElse(0d);
-        } catch (Exception e) {
-            model.getErrorMessage().set(Res.get("muSig.offer.create.price.warn.invalidPrice.outOfRange"));
-            return 0;
-        }
-    }
-
-    private Optional<PriceQuote> findMarketPriceQuote() {
-        return marketPriceService.findMarketPriceQuote(marketSelection.getMarket());
-    }
-
-    private String getCookieSubKey() {
-        return marketSelection.getMarket().getMarketCodes();
-    }
 
     private void updateFeedback(PriceSpec priceSpec) {
         // TODO: We should show the recommended % price based on the selected amount: e.g.
@@ -429,21 +360,5 @@ public class MuSigCreateOfferPriceController implements Controller {
     }
 
     //todo
-    private void applyPriceFromCookie(String price) {
-        if (model.getUseFixPrice().get()) {
-            priceInput.setPriceString(price);
-            applyPercentageFromQuote(priceSelection.getPriceQuote());
-            applyPriceSliderValue(model.getPercentage().get());
-        } else {
-            try {
-                double percentage = parse(price);
-                if (!validatePercentage(percentage)) {
-                    return;
-                }
-                applyPriceSliderValue(percentage);
-            } catch (Exception e) {
-                log.error("Unable to apply price in cookie.", e);
-            }
-        }
-    }
+
 }

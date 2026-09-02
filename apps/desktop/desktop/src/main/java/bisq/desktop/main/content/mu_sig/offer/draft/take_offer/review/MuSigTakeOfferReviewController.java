@@ -104,7 +104,7 @@ public class MuSigTakeOfferReviewController implements Controller {
         dontShowAgainService = serviceProvider.getDontShowAgainService();
 
         this.takeOfferService = takeOfferService;
-        priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService(), takeOfferService);
+        priceInput = new MuSigPriceInput(takeOfferService);
         muSigReviewDataDisplay = new MuSigReviewDataDisplay();
 
         model = new MuSigTakeOfferReviewModel();

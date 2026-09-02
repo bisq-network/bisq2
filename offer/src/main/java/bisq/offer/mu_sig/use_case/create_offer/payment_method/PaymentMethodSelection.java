@@ -57,8 +57,10 @@ public class PaymentMethodSelection extends LifecycleScope {
     private final Set<Consumer<Map.Entry<PaymentMethod<?>, Account<?, ?>>>> methodAccountEntryListeners = new CopyOnWriteArraySet<>();
     private final MarketSelection marketSelection;
     private final AccountsProvider accountsProvider;
+    private final Object draftLock;
 
-    public PaymentMethodSelection(MarketSelection marketSelection, AccountsProvider accountsProvider) {
+    public PaymentMethodSelection(MarketSelection marketSelection, AccountsProvider accountsProvider, Object draftLock) {
+        this.draftLock = checkNotNull(draftLock, "draftLock must not be null");
         this.marketSelection = checkNotNull(marketSelection, "marketUseCase must not be null");
         this.accountsProvider = checkNotNull(accountsProvider, "accountsProvider must not be null");
         this.model = new CreateOfferPaymentMethodModel();
@@ -131,6 +133,12 @@ public class PaymentMethodSelection extends LifecycleScope {
 
     public void onAddAccountByPaymentMethodEntry(Map.Entry<PaymentMethod<?>, Account<?, ?>> accountByPaymentMethodEntry) {
         checkNotNull(accountByPaymentMethodEntry, "accountByPaymentMethodEntry must not be null");
+        synchronized (draftLock) {
+            doAddAccountByPaymentMethodEntry(accountByPaymentMethodEntry);
+        }
+    }
+
+    private void doAddAccountByPaymentMethodEntry(Map.Entry<PaymentMethod<?>, Account<?, ?>> accountByPaymentMethodEntry) {
         PaymentMethod<?> paymentMethod = checkNotNull(accountByPaymentMethodEntry.getKey(), "paymentMethod must not be null");
         Account<?, ?> account = checkNotNull(accountByPaymentMethodEntry.getValue(), "account must not be null");
         checkArgument(account.getPaymentMethod().equals(paymentMethod),
@@ -143,7 +151,9 @@ public class PaymentMethodSelection extends LifecycleScope {
 
     public void onDeselectPaymentMethod(PaymentMethod<?> paymentMethod) {
         checkNotNull(paymentMethod, "paymentMethod must not be null");
-        model.removeAccountByPaymentMethod(paymentMethod);
+        synchronized (draftLock) {
+            model.removeAccountByPaymentMethod(paymentMethod);
+        }
     }
 
 

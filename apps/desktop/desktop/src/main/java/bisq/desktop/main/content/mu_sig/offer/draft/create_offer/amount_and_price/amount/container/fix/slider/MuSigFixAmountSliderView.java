@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.offer.draft.create_offer.amount_and_pri
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.content.mu_sig.offer.draft.amount_components.MuSigAmountLayoutConstants;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ import static bisq.desktop.main.content.mu_sig.offer.draft.amount_components.Sli
 public class MuSigFixAmountSliderView extends View<VBox, MuSigFixAmountSliderModel, MuSigFixAmountSliderController> {
     private final Slider slider;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    private boolean applyingModelValue;
 
     public MuSigFixAmountSliderView(MuSigFixAmountSliderModel model,
                                     MuSigFixAmountSliderController controller) {
@@ -49,29 +51,45 @@ public class MuSigFixAmountSliderView extends View<VBox, MuSigFixAmountSliderMod
 
     @Override
     protected void onViewAttached() {
-        slider.valueProperty().bindBidirectional(model.getGetSliderValue());
-        subscriptions.add(EasyBind.subscribe(slider.valueProperty(), value -> {
-            updateSliderValueAndStyle();
+        // Origin separation instead of a bidirectional binding: the model carries the domain
+        // value and is applied to the thumb under a guard; every unguarded thumb change (mouse,
+        // keyboard, accessibility) is by construction a user gesture and is forwarded to the
+        // controller. The registration fire of the model subscription applies the initial value
+        // under the same guard.
+        subscriptions.add(EasyBind.subscribe(model.getGetSliderValue(), value -> {
+            if (value != null) {
+                applySliderValueFromModel(value.doubleValue());
+            }
         }));
-        subscriptions.add(EasyBind.subscribe(model.getMaxAllowedValue(), maxAllowedValue -> {
-            updateSliderValueAndStyle();
-        }));
+        slider.valueProperty().addListener(userGestureListener);
+        subscriptions.add(EasyBind.subscribe(model.getMaxAllowedValue(), maxAllowedValue ->
+                slider.setStyle(getSliderTrackStyle(maxAllowedValue.doubleValue()))));
     }
 
     @Override
     protected void onViewDetached() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
-        slider.valueProperty().unbindBidirectional(model.getGetSliderValue());
+        slider.valueProperty().removeListener(userGestureListener);
     }
 
-    private void updateSliderValueAndStyle() {
-        double maxAllowedValue = model.getMaxAllowedValue().get();
-        if (slider.getValue() > maxAllowedValue) {
-            slider.setValue(maxAllowedValue);
+    private final ChangeListener<Number> userGestureListener = (observable, oldValue, newValue) -> {
+        if (applyingModelValue) {
+            return;
         }
+        controller.onSliderValueChangedByUser(newValue.doubleValue());
+        // The domain suppresses equal republications, so a gesture whose clamped result equals
+        // the current selection produces no model change; the thumb is restored to the
+        // authoritative model value explicitly.
+        applySliderValueFromModel(model.getGetSliderValue().get());
+    };
 
-        String style = getSliderTrackStyle(maxAllowedValue);
-        slider.setStyle(style);
+    private void applySliderValueFromModel(double value) {
+        applyingModelValue = true;
+        try {
+            slider.setValue(value);
+        } finally {
+            applyingModelValue = false;
+        }
     }
 }

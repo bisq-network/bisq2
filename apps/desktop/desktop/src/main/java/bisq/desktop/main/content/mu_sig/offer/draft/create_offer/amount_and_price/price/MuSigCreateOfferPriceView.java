@@ -36,6 +36,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -58,6 +59,7 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
     @Getter
     private final VBox overlay;
     private final Pane priceInputBox;
+    private final TextInputControl fixedPriceTextInputControl;
     private final Button percentagePriceButton, fixedPriceButton, closeOverlayButton;
     private final Label warningIcon, feedbackSentence, minSliderValue, maxSliderValue;
     private final HBox feedbackBox;
@@ -68,10 +70,12 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
 
     public MuSigCreateOfferPriceView(MuSigCreateOfferPriceModel model,
                                      MuSigCreateOfferPriceController controller,
-                                     Pane priceInputBox) {
+                                     Pane priceInputBox,
+                                     TextInputControl fixedPriceTextInputControl) {
         super(new VBox(10), model, controller);
 
         this.priceInputBox = priceInputBox;
+        this.fixedPriceTextInputControl = fixedPriceTextInputControl;
 
         // Pricing model selection
         percentagePriceButton = new Button(Res.get("muSig.offer.create.price.percentage.title"));
@@ -180,6 +184,9 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         feedbackBox.visibleProperty().bind(model.getShouldShowFeedback());
         feedbackBox.managedProperty().bind(model.getShouldShowFeedback());
         slider.valueProperty().bindBidirectional(model.getPriceSliderValue());
+        // The percentage slider expresses a floating deviation; while the fixed price is
+        // authoritative it is disabled.
+        slider.disableProperty().bind(model.getUseFixPrice());
         model.getSliderFocus().bind(slider.focusedProperty());
 
         subscriptions.add(EasyBind.subscribe(percentageInputBox.textInputFocusedProperty(), controller::onPercentageFocused));
@@ -227,6 +234,7 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         warningIcon.visibleProperty().unbind();
         warningIcon.managedProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getPriceSliderValue());
+        slider.disableProperty().unbind();
         model.getSliderFocus().unbind();
 
         percentagePriceButton.setOnAction(null);
@@ -271,5 +279,25 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
             percentagePriceButton.setGraphic(percentagePriceIconGreen);
             fixedPriceButton.setGraphic(fixedPriceIconGrey);
         }
+    }
+
+    TextInputControl percentageInput() {
+        return percentageInputBox.getTextInputControl();
+    }
+
+    Button percentagePriceModeAction() {
+        return percentagePriceButton;
+    }
+
+    Button fixedPriceModeAction() {
+        return fixedPriceButton;
+    }
+
+    Slider priceSlider() {
+        return slider;
+    }
+
+    TextInputControl fixedPriceInput() {
+        return fixedPriceTextInputControl;
     }
 }

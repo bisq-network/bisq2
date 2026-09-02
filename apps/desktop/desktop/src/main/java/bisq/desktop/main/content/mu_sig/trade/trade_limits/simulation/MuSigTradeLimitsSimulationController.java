@@ -99,7 +99,7 @@ public class MuSigTradeLimitsSimulationController implements Controller {
 
     private void applySelectFiatPaymentRail(FiatPaymentRail paymentRail) {
         model.getSelectedFiatPaymentRail().set(paymentRail);
-        
+
         Fiat maxTradeLimitInUsd = PaymentMethodBasedAmountLimitsProvider.evaluateLimitInUsd(paymentRail);
         String maxTradeLimit = AmountFormatter.formatQuoteAmount(maxTradeLimitInUsd);
         model.getFiatPaymentRailMaxLimit().set(Res.get("muSig.trade.limits.simulation.fiatRail.maxLimit", maxTradeLimit));
