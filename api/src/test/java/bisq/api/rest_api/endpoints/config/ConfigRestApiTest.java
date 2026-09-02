@@ -22,6 +22,7 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
+import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.chat.public_chat.PublicChatRestApi;
 import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
@@ -38,6 +39,7 @@ import bisq.chat.ChatService;
 import bisq.network.NetworkService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -103,6 +105,7 @@ class ConfigRestApiTest {
         assertThat(ApiFeature.PRIVATE_CHAT.getKey()).isEqualTo("private-chat");
         assertThat(ApiFeature.CONTACTS.getKey()).isEqualTo("contacts");
         assertThat(ApiFeature.PUBLIC_CHAT.getKey()).isEqualTo("public-chat");
+        assertThat(ApiFeature.CLIENT_MANAGEMENT.getKey()).isEqualTo("client-management");
     }
 
     /**
@@ -149,6 +152,15 @@ class ConfigRestApiTest {
                                 .as("private-chat needs %s wired to a WebSocketService", topic)
                                 .isEqualTo(topic);
                     }
+                    yield true;
+                }
+                case CLIENT_MANAGEMENT -> {
+                    assertThat(hasEndpoint(AccessApi.class, "/access", "/clients"))
+                            .as("client-management must expose GET /access/clients")
+                            .isTrue();
+                    assertThat(hasDeleteEndpoint(AccessApi.class, "/access", "/clients/{clientId}"))
+                            .as("client-management must expose DELETE /access/clients/{clientId}")
+                            .isTrue();
                     yield true;
                 }
                 case CONTACTS -> {
@@ -231,6 +243,11 @@ class ConfigRestApiTest {
     private static boolean hasEndpoint(Class<?> resource, String classPath, String methodPath) {
         return hasClassPath(resource, classPath) && Arrays.stream(resource.getDeclaredMethods())
                 .anyMatch(m -> m.isAnnotationPresent(GET.class) && isPath(m, methodPath));
+    }
+
+    private static boolean hasDeleteEndpoint(Class<?> resource, String classPath, String methodPath) {
+        return hasClassPath(resource, classPath) && Arrays.stream(resource.getDeclaredMethods())
+                .anyMatch(m -> m.isAnnotationPresent(DELETE.class) && isPath(m, methodPath));
     }
 
     private static boolean hasPostEndpoint(Class<?> resource, String classPath, String methodPath) {
