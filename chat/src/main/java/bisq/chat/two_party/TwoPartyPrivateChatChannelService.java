@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatChannelService;
+import bisq.chat.priv.SendOutcome;
 import bisq.chat.reactions.Reaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
@@ -119,7 +120,18 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     public CompletableFuture<SendMessageResult> sendTextMessage(String text,
                                                                 Optional<Citation> citation,
                                                                 TwoPartyPrivateChatChannel channel) {
-        return sendMessage(StringUtils.createUid(),
+        return trySendTextMessage(text, citation, channel).getDelivery();
+    }
+
+    /**
+     * Sends, and reports whether the node accepted it locally. Use this wherever that answer has to be
+     * passed on to someone — {@link #sendTextMessage} discards it, which is only right for a caller with
+     * nobody to tell.
+     */
+    public SendOutcome trySendTextMessage(String text,
+                                          Optional<Citation> citation,
+                                          TwoPartyPrivateChatChannel channel) {
+        return trySendMessage(StringUtils.createUid(),
                 text,
                 citation,
                 channel,
@@ -132,7 +144,16 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                                                                         TwoPartyPrivateChatChannel channel,
                                                                         Reaction reaction,
                                                                         boolean isRemoved) {
-        return sendMessageReaction(message, channel, channel.getPeer(), reaction, StringUtils.createUid(), isRemoved);
+        return trySendTextMessageReaction(message, channel, reaction, isRemoved).getDelivery();
+    }
+
+    /** The reaction counterpart of {@link #trySendTextMessage}. */
+    public SendOutcome trySendTextMessageReaction(TwoPartyPrivateChatMessage message,
+                                                  TwoPartyPrivateChatChannel channel,
+                                                  Reaction reaction,
+                                                  boolean isRemoved) {
+        return trySendMessageReaction(message, channel, channel.getPeer(), reaction, StringUtils.createUid(),
+                isRemoved);
     }
 
 

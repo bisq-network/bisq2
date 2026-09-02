@@ -98,13 +98,34 @@ public abstract class PrivateChatChannelService<
                                                                UserProfile receiver,
                                                                ChatMessageType chatMessageType,
                                                                long date) {
+        return trySendMessage(messageId, text, citation, channel, receiver, chatMessageType, date).getDelivery();
+    }
+
+    /**
+     * Sends, and reports what it decided locally rather than only what it started. Callers that must
+     * answer for the send synchronously use this; {@link #sendMessage} is the same thing for those that
+     * only care about delivery.
+     * <p>
+     * A rejection means the caller's own message is neither stored nor sent, but it is not free of side
+     * effects: {@link SendRejection#PEER_BANNED} adds a system message to the channel telling the user why,
+     * de-duplicated by {@link #alreadyNotifiedAboutBannedPeer}. That message is local, never reaches the
+     * peer, and raises no notification, but it does reach anything observing the channel. A caller that
+     * reports the rejection onwards has to say so too.
+     */
+    protected SendOutcome trySendMessage(String messageId,
+                                         @Nullable String text,
+                                         Optional<Citation> citation,
+                                         C channel,
+                                         UserProfile receiver,
+                                         ChatMessageType chatMessageType,
+                                         long date) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
-        if (isPeerBanned(receiver)) {
-            addPeerBannedSystemMessage(channel, myUserIdentity, receiver, date);
-            return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
+        Optional<SendRejection> rejection = findSendRejection(channel, receiver);
+        if (rejection.isPresent()) {
+            if (rejection.get() == SendRejection.PEER_BANNED) {
+                addPeerBannedSystemMessage(channel, myUserIdentity, receiver, date);
+            }
+            return SendOutcome.rejected(rejection.get());
         }
 
         M chatMessage = createAndGetNewPrivateChatMessage(messageId,
@@ -119,7 +140,24 @@ public abstract class PrivateChatChannelService<
         addMessage(chatMessage, channel);
         NetworkId receiverNetworkId = receiver.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
-        return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
+        return SendOutcome.accepted(
+                networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair));
+    }
+
+    /**
+     * Why a send to this receiver would be refused before anything is stored, if it would. Private on
+     * purpose: asking it from outside and then sending is two decisions where there should be one, and
+     * only the send's own answer is authoritative. Callers that need that answer read it off the
+     * {@link SendOutcome} the send returns.
+     */
+    private Optional<SendRejection> findSendRejection(C channel, UserProfile receiver) {
+        if (bannedUserService.isUserProfileBanned(channel.getMyUserIdentity().getUserProfile())) {
+            return Optional.of(SendRejection.MY_PROFILE_BANNED);
+        }
+        if (isPeerBanned(receiver)) {
+            return Optional.of(SendRejection.PEER_BANNED);
+        }
+        return Optional.empty();
     }
 
     protected boolean isPeerBanned(UserProfile userProfile) {
@@ -201,12 +239,25 @@ public abstract class PrivateChatChannelService<
                                                                        Reaction reaction,
                                                                        String messageReactionId,
                                                                        boolean isRemoved) {
+        return trySendMessageReaction(message, chatChannel, receiver, reaction, messageReactionId, isRemoved)
+                .getDelivery();
+    }
+
+    /**
+     * The reaction counterpart of {@link #trySendMessage}, refused on the same grounds. It adds no notice on
+     * a banned peer: a reaction is not a statement the user is waiting on an answer for, and a notice per
+     * refused emoji would bury the conversation. A rejection here leaves the channel untouched.
+     */
+    protected SendOutcome trySendMessageReaction(M message,
+                                                 C chatChannel,
+                                                 UserProfile receiver,
+                                                 Reaction reaction,
+                                                 String messageReactionId,
+                                                 boolean isRemoved) {
         UserIdentity myUserIdentity = chatChannel.getMyUserIdentity();
-        if (bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile())) {
-            return CompletableFuture.failedFuture(new RuntimeException());
-        }
-        if (isPeerBanned(receiver)) {
-            return CompletableFuture.failedFuture(new RuntimeException("Peer is banned"));
+        Optional<SendRejection> rejection = findSendRejection(chatChannel, receiver);
+        if (rejection.isPresent()) {
+            return SendOutcome.rejected(rejection.get());
         }
 
         R chatMessageReaction = createAndGetNewPrivateChatMessageReaction(message, myUserIdentity.getUserProfile(),
@@ -216,7 +267,8 @@ public abstract class PrivateChatChannelService<
 
         NetworkId receiverNetworkId = receiver.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
-        return networkService.confidentialSend(chatMessageReaction, receiverNetworkId, senderNetworkIdWithKeyPair);
+        return SendOutcome.accepted(
+                networkService.confidentialSend(chatMessageReaction, receiverNetworkId, senderNetworkIdWithKeyPair));
     }
 
 

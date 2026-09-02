@@ -15,22 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.web_socket.subscription;
+package bisq.chat.priv;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES,
-    TRADE_PROPERTIES,
-    TRADE_CHAT_MESSAGES,
-    CHAT_REACTIONS,
-    REPUTATION,
-    NUM_USER_PROFILES,
-    ALERT_NOTIFICATIONS,
-    TRADE_RESTRICTING_ALERT,
-    NETWORK_INFO,
-    PRIVATE_CHAT_CHANNELS,
-    PRIVATE_CHAT_MESSAGES,
-    PRIVATE_CHAT_REACTIONS,
+/**
+ * Why a private chat send is refused locally, before anything is stored or put on the wire. Carried as
+ * an enum rather than a message so that each caller phrases it for its own audience — an HTTP status
+ * and a popup are not the same sentence.
+ *
+ * @see SendOutcome
+ */
+public enum SendRejection {
+    MY_PROFILE_BANNED,
+    PEER_BANNED
 }

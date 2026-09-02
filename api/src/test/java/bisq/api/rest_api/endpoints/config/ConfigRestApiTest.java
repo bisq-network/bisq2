@@ -20,6 +20,7 @@ package bisq.api.rest_api.endpoints.config;
 import bisq.api.access.AllowUnauthenticated;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
+import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
@@ -35,6 +36,7 @@ import bisq.network.NetworkService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,6 +97,7 @@ class ConfigRestApiTest {
     void featureKeysAreStableWireIdentifiers() {
         assertThat(ApiFeature.CLOSED_TRADES.getKey()).isEqualTo("closed-trades");
         assertThat(ApiFeature.NETWORK_INFO.getKey()).isEqualTo("network-info");
+        assertThat(ApiFeature.PRIVATE_CHAT.getKey()).isEqualTo("private-chat");
     }
 
     /**
@@ -124,6 +128,22 @@ class ConfigRestApiTest {
                     assertThat(topicOf(service))
                             .as("network-info must be backed by a service bound to Topic.NETWORK_INFO")
                             .isEqualTo(Topic.NETWORK_INFO);
+                    yield true;
+                }
+                case PRIVATE_CHAT -> {
+                    assertThat(hasPostEndpoint(PrivateChatRestApi.class, "/{channelId}/messages"))
+                            .as("private-chat must expose POST /private-chat-channels/{channelId}/messages")
+                            .isTrue();
+                    // Resolved through a real SubscriptionService, as the NETWORK_INFO case does. That
+                    // the constants exist is compile-checked by referencing them, so routing is the only
+                    // part worth asserting.
+                    for (Topic topic : List.of(Topic.PRIVATE_CHAT_CHANNELS,
+                            Topic.PRIVATE_CHAT_MESSAGES,
+                            Topic.PRIVATE_CHAT_REACTIONS)) {
+                        assertThat(topicOf(routeTopic(topic)))
+                                .as("private-chat needs %s wired to a WebSocketService", topic)
+                                .isEqualTo(topic);
+                    }
                     yield true;
                 }
             };
@@ -182,6 +202,11 @@ class ConfigRestApiTest {
     private static boolean hasEndpoint(Class<?> resource, String path) {
         return Arrays.stream(resource.getDeclaredMethods())
                 .anyMatch(m -> m.isAnnotationPresent(GET.class) && isPath(m, path));
+    }
+
+    private static boolean hasPostEndpoint(Class<?> resource, String path) {
+        return Arrays.stream(resource.getDeclaredMethods())
+                .anyMatch(m -> m.isAnnotationPresent(POST.class) && isPath(m, path));
     }
 
     private static boolean isPath(Method method, String path) {

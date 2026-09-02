@@ -30,7 +30,7 @@ class PermissionTest {
 
     @Test
     void everyCurrentPermissionIsStandard() {
-        // The 11 current permissions are all standard. This documents that intent; the security
+        // The 12 current permissions are all standard. This documents that intent; the security
         // guarantee itself comes from the SENSITIVE default (an id-only declaration is not
         // auto-grantable), so a forgotten classification fails closed rather than silently
         // joining grantAll. Whoever adds the first sensitive permission updates this test AND

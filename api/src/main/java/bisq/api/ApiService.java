@@ -33,6 +33,7 @@ import bisq.api.rest_api.PairingApiResourceConfig;
 import bisq.api.rest_api.RestApiResourceConfig;
 import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.alert_notifications.AlertNotificationsRestApi;
+import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.endpoints.config.ConfigRestApi;
 import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
@@ -170,6 +171,7 @@ public class ApiService implements Service {
                 tradeService,
                 closedTradeItemsService);
         TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
+        PrivateChatRestApi privateChatRestApi = new PrivateChatRestApi(chatService, userService);
         UserIdentityRestApi userIdentityRestApi = new UserIdentityRestApi(securityService, userService.getUserIdentityService(), bisqEasyService);
         MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
         SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
@@ -197,6 +199,7 @@ public class ApiService implements Service {
                     offerbookRestApi,
                     tradeRestApi,
                     tradeChatMessagesRestApi,
+                    privateChatRestApi,
                     userIdentityRestApi,
                     marketPriceRestApi,
                     settingsRestApi,
