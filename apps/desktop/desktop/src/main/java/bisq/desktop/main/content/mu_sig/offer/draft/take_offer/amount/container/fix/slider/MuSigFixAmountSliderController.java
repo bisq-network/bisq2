@@ -18,15 +18,12 @@
 package bisq.desktop.main.content.mu_sig.offer.draft.take_offer.amount.container.fix.slider;
 
 import bisq.common.observable.Pin;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.offer.mu_sig.use_case.take_offer.TakeOfferUseCase;
 import bisq.offer.mu_sig.use_case.take_offer.amount.TakeOfferAmountService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -38,7 +35,6 @@ public class MuSigFixAmountSliderController implements Controller {
     private final MuSigFixAmountSliderView view;
     private final TakeOfferUseCase takeOfferService;
     private final TakeOfferAmountService takeOfferAmountService;
-    private final Set<Subscription> subscriptions = new HashSet<>();
     private final Set<Pin> pins = new HashSet<>();
 
     public MuSigFixAmountSliderController(TakeOfferUseCase takeOfferService) {
@@ -50,31 +46,33 @@ public class MuSigFixAmountSliderController implements Controller {
 
     @Override
     public void onActivate() {
-        subscriptions.add(EasyBind.subscribe(model.getGetSliderValue(),
-                value -> {
-                    if (value != null) {
-                        takeOfferService.setFixTradeAmountFromSliderValue(clamp(value.doubleValue()));
-                    }
-                }));
-        pins.add(takeOfferAmountService.userSpecificTradeAmountLimitAsSliderValueObservable().addObserver(value -> {
-            UIThread.run(() -> {
-                model.getMaxAllowedValue().set(value.orElse(1d));
-            });
-        }));
+        // Direct observers re-read the domain at execution time: a queued projection carrying
+        // a captured value could overwrite the model with a stale snapshot after concurrent
+        // user input.
+        pins.add(takeOfferAmountService.userSpecificTradeAmountLimitAsSliderValueObservable().addObserver(ignored ->
+                UIThread.run(() -> model.getMaxAllowedValue().set(
+                        takeOfferAmountService.getUserSpecificTradeAmountLimitAsSliderValue().orElse(1d)))));
 
-        pins.add(FxBindings.bind(model.getGetSliderValue())
-                .to(takeOfferAmountService.fixAmountSliderValueObservable()));
+        pins.add(takeOfferAmountService.fixAmountSliderValueObservable().addObserver(ignored ->
+                UIThread.run(() -> {
+                    Double domainValue = takeOfferAmountService.getFixAmountSliderValue();
+                    if (domainValue != null) {
+                        model.getGetSliderValue().set(domainValue);
+                    }
+                })));
     }
 
     @Override
     public void onDeactivate() {
-        subscriptions.forEach(Subscription::unsubscribe);
-        subscriptions.clear();
         pins.forEach(Pin::unbind);
         pins.clear();
     }
 
-    private double clamp(double doubleValue) {
-        return Math.min(doubleValue, model.getMaxAllowedValue().get());
+    // Origin separation: only genuine slider gestures reach this method (the view marks its
+    // own programmatic thumb writes); the user's value is clamped at the marker before the
+    // domain write - user-initiated clamping is allowed and visible, and the domain's
+    // published value flows back to the thumb through the projection above.
+    void onSliderValueChangedByUser(double value) {
+        takeOfferService.setFixTradeAmountFromSliderValue(Math.min(value, model.getMaxAllowedValue().get()));
     }
 }

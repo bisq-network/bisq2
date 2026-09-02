@@ -249,7 +249,9 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
     }
 
     public boolean isBitcoin() {
-        return code.endsWith("BTC");
+        // Exact match only: L-BTC and LN-BTC are distinct assets whose units must not be
+        // treated as satoshis.
+        return "BTC".equals(code);
     }
 
     private enum ComparisonOperator {

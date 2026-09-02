@@ -23,6 +23,8 @@ import bisq.common.observable.ReadOnlyObservable;
 
 public class TakeOfferPriceModel implements TakeOfferPriceReadOnlyModel {
     protected final Observable<PriceQuote> priceQuote = new Observable<>();
+    protected final Observable<Double> priceDeviation = new Observable<>();
+    protected final Observable<PriceQuote> marketPriceQuote = new Observable<>();
 
     public TakeOfferPriceModel() {
     }
@@ -43,5 +45,41 @@ public class TakeOfferPriceModel implements TakeOfferPriceReadOnlyModel {
     @Override
     public PriceQuote getPriceQuote() {
         return priceQuote.get();
+    }
+
+    /* --------------------------------------------------------------------- */
+    // priceDeviation
+    /* --------------------------------------------------------------------- */
+
+    void setPriceDeviation(Double priceDeviation) {
+        this.priceDeviation.set(priceDeviation);
+    }
+
+    @Override
+    public ReadOnlyObservable<Double> priceDeviationObservable() {
+        return priceDeviation;
+    }
+
+    @Override
+    public Double getPriceDeviation() {
+        return priceDeviation.get();
+    }
+
+    /* --------------------------------------------------------------------- */
+    // marketPriceQuote
+    /* --------------------------------------------------------------------- */
+
+    void setMarketPriceQuote(PriceQuote marketPriceQuote) {
+        this.marketPriceQuote.set(marketPriceQuote);
+    }
+
+    @Override
+    public ReadOnlyObservable<PriceQuote> marketPriceQuoteObservable() {
+        return marketPriceQuote;
+    }
+
+    @Override
+    public PriceQuote getMarketPriceQuote() {
+        return marketPriceQuote.get();
     }
 }

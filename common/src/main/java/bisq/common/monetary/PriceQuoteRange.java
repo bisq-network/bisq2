@@ -40,18 +40,6 @@ public class PriceQuoteRange extends Range<PriceQuote> {
                 min.getQuoteSideMonetary().getCode(), max.getQuoteSideMonetary().getCode());
     }
 
-    public String printRelevantStringa(Market market) {
-        String min, max;
-        if (market.getRelevantCurrencyCode().equals(getMin().getQuoteSideMonetary().getCode())) {
-            min = getMin().getQuoteSideMonetary().asDouble() + " " + getMin().getQuoteSideMonetary().getCode();
-            max = getMax().getQuoteSideMonetary().asDouble() + " " + getMax().getQuoteSideMonetary().getCode();
-        } else {
-            min = getMin().getBaseSideMonetary().asDouble() + " " + getMin().getBaseSideMonetary().getCode();
-            max = getMax().getBaseSideMonetary().asDouble() + " " + getMax().getBaseSideMonetary().getCode();
-        }
-        return min + " - " + max;
-    }
-
     public String printRelevantString(Market market) {
         PriceQuote minMonetary = getMin();
         PriceQuote maxMonetary = getMax();

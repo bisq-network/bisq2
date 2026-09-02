@@ -22,13 +22,17 @@ import bisq.desktop.navigation.NavigationTarget;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import bisq.offer.mu_sig.use_case.take_offer.TakeOfferValidationException;
 import lombok.Getter;
 import lombok.Setter;
+
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -38,9 +42,31 @@ import java.util.List;
 @Getter
 public class MuSigTakeOfferModel extends NavigationModel {
     @Setter
-    private boolean amountVisible;
+    @Nullable
+    private TakeOfferValidationException.Reason takeOfferValidationFailure;
+
+    // Prevents onActivateInternal from queueing the deferred default-child navigation,
+    // which could re-enter the closed wizard when a rejected offer aborts the flow.
+    void suppressChildNavigation() {
+        navigationTarget = NavigationTarget.NONE;
+    }
+    // A property: a payment method selection can collapse or un-collapse the amount range while
+    // the wizard is open, and the progress strip must follow (view rebuilds on change).
+    private final BooleanProperty amountVisible = new SimpleBooleanProperty();
     @Setter
     private boolean paymentMethodVisible;
+
+    public boolean isAmountVisible() {
+        return amountVisible.get();
+    }
+
+    public void setAmountVisible(boolean value) {
+        amountVisible.set(value);
+    }
+
+    public ReadOnlyBooleanProperty amountVisibleProperty() {
+        return amountVisible;
+    }
     @Setter
     private boolean animateRightOut = true;
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
@@ -51,7 +77,6 @@ public class MuSigTakeOfferModel extends NavigationModel {
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty takeOfferButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty showProgressBox = new SimpleBooleanProperty();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     @Setter
@@ -66,7 +91,7 @@ public class MuSigTakeOfferModel extends NavigationModel {
     }
 
     void reset() {
-        amountVisible = false;
+        amountVisible.set(false);
         paymentMethodVisible = false;
         animateRightOut = true;
         currentIndex.set(0);
@@ -77,7 +102,6 @@ public class MuSigTakeOfferModel extends NavigationModel {
         nextButtonVisible.set(false);
         takeOfferButtonVisible.set(false);
         backButtonVisible.set(false);
-        showProgressBox.set(false);
         selectedChildTarget.set(null);
         childTargets.clear();
         paymentMethodProgressLabel = null;

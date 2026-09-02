@@ -103,6 +103,10 @@ public class MuSigTakeOfferAmountController implements Controller {
         return model.getIsOverlayVisible();
     }
 
+    public void reset() {
+        model.reset();
+    }
+
 
     /* --------------------------------------------------------------------- */
     // UI handlers
@@ -136,7 +140,7 @@ public class MuSigTakeOfferAmountController implements Controller {
         Optional<TradeAmount> userSpecificTradeAmountLimit = takeOfferAmountService.getUserSpecificTradeAmountLimit();
         model.getShouldShowAmountLimitInfo().set(userSpecificTradeAmountLimit.isPresent());
         model.getAmountLimitInfo().set(userSpecificTradeAmountLimit
-                .map(tradeAmount -> takeOfferService.toInputAmount(tradeAmount, true))
+                .map(takeOfferService::toInputAmount)
                 .map(monetary -> AmountFormatter.formatAmountWithCode(monetary, true))
                 .map(formatted -> Res.get("muSig.offer.create.amount.limitInfo.buyer", formatted))
                 .orElse(""));

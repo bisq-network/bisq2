@@ -22,8 +22,7 @@ The taken `MuSigOffer` is the root input of the take-offer process. It fixes:
   (currently static 25%/25%, not maker-editable). The take wizard reads both kinds:
   the `CollateralOption` (security deposit display on the review step) and the
   `AccountOption` compatibility data (taker account eligibility filtering, see Payment
-  method; the current take code does not evaluate the compatibility data and must be
-  extended).
+  method).
   `AccountOption` is additionally consumed at handoff: contract creation embeds the
   maker's salted account payload hash for the selected payment method from it — one
   reason the shape validation below requires one `AccountOption` per selectable
@@ -68,8 +67,9 @@ initialization:
 * if the user has already taken this offer before, taking is still allowed but requires
   an extra confirmation (mirrors Bisq Easy's already-taken dialog; each take creates a
   distinct trade since the trade id includes the take date). "Already taken" means any
-  persisted trade of this user for this offer id, regardless of trade state — open,
-  closed, or failed attempts all count
+  currently persisted trade of this user for this offer id, regardless of trade state —
+  open and failed attempts both count; a trade the user has closed is removed from the
+  trade store and deliberately no longer triggers the confirmation
 
 The offer's amounts are deliberately not validated against the absolute limits at
 initialization. The absolute limits are USD-defined and converted at the current market
@@ -420,23 +420,17 @@ The review step summarizes the trade before confirmation:
 * the resolved price and its details
 * the taker's payment method and account
 * the security deposit derived from the offer's collateral option
-* the fee description: the trade fee and the mining-fee facts (the seller pays the
-  mining fee); which is shown as headline vs detail depends on the taker direction
-  (the taker's own cost first)
+* the trade-fee status and the mining-fee payer (the Bitcoin seller pays the mining
+  fee)
 
-MuSig trades carry a trade fee; the `noTradeFees` i18n values in the create and take
-review screens are a Bisq Easy leftover (literal TODO placeholders in the English
-source, while translations still carry older "no trade fees" copy). The fee amount
-comes from a dedicated trade-fee domain service (to be introduced; mocked until the
-fee schedule is decided). The mocked service takes the maximum trade amount as input;
-whether the final schedule keys the fee off that maximum or off the actual trade
-amount (relevant for range offers) is settled together with the schedule. The service
-is the single source for both the review display and the protocol's fee amount (today
-a hard-coded placeholder in the nonce-shares setup; receiver selection stays a
-protocol concern), so review shows the same fee the protocol will request from it;
-whether the fee is persisted in the contract and how the peers agree on it are
-trade-protocol concerns outside this use case. The fee
-schedule itself and the final fee wording remain open.
+MuSig trades carry a trade fee, but the review does not show a numeric amount until
+the review and protocol consume the same authoritative fee policy. The protocol
+currently uses a hard-coded placeholder during nonce-shares setup; presenting either
+that placeholder or a separate UI estimate as the user-facing fee would be
+misleading. The review therefore shows `N/A` for the fee and still identifies the
+mining-fee payer. Defining the shared fee schedule, deciding whether it keys off the
+maximum or actual trade amount for range offers, and agreeing or persisting the fee
+are trade-protocol follow-ups outside this use case.
 
 The confirm action starts the trade. The review step owns the take-offer outcome
 handling: send timeout, success state, error and peer-error reporting, and the expected
@@ -468,10 +462,10 @@ validated input set:
   converted into a different price specification. The market price handed off must be
   the same snapshot against which the amounts were last validated at confirmation;
   fetching a fresh price inside the handoff can store a price inconsistent with the
-  contract's own amounts (the current implementation does this and must be aligned)
+  contract's own amounts
 
 These guarantees are established at the use-case boundary; the trade protocol and the
 musigd backend are outside the scope of the take-offer process and must not need to
 re-derive or correct any of these values. The trade fee is not part of the handoff
-data; the protocol obtains it from the same trade-fee domain service that feeds the
-review display (see Review).
+data. Defining and wiring the shared fee policy across the review and protocol is
+outside this use case (see Review).

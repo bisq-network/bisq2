@@ -19,12 +19,11 @@ package bisq.desktop.main.content.mu_sig.offer.draft.take_offer.review;
 
 import bisq.account.accounts.Account;
 import bisq.account.payment_method.PaymentMethodSpec;
-import bisq.bonded_roles.market_price.MarketPrice;
-import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.bonded_roles.market_price.NoMarketPriceAvailableException;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.network.identity.NetworkId;
+import bisq.common.monetary.TradeAmount;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
@@ -40,7 +39,6 @@ import bisq.mu_sig.MuSigService;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.OfferAmountUtil;
-import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.mu_sig.use_case.take_offer.TakeOfferUseCase;
 import bisq.offer.options.OfferOptionUtil;
@@ -49,6 +47,8 @@ import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.settings.DontShowAgainKey;
+import bisq.settings.DontShowAgainService;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.arbitration.mu_sig.NoMuSigArbitratorAvailableException;
@@ -70,7 +70,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MuSigTakeOfferReviewController implements Controller {
@@ -80,11 +79,15 @@ public class MuSigTakeOfferReviewController implements Controller {
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final Consumer<Boolean> mainButtonsVisibleHandler;
     private final MuSigPriceInput priceInput;
-    private final MarketPriceService marketPriceService;
+    private final TakeOfferUseCase takeOfferService;
+    private Pin priceQuotePin;
+    private Pin priceDeviationPin;
+    private Pin fixTradeAmountPin;
     private final UserIdentityService userIdentityService;
     private final BannedUserService bannedUserService;
     private final MuSigReviewDataDisplay muSigReviewDataDisplay;
     private final MuSigService muSigService;
+    private final DontShowAgainService dontShowAgainService;
     private Pin errorMessagePin, peersErrorMessagePin;
     private UIScheduler timeoutScheduler;
     private UIScheduler delayedSuccessScheduler;
@@ -96,10 +99,11 @@ public class MuSigTakeOfferReviewController implements Controller {
         this.mainButtonsVisibleHandler = mainButtonsVisibleHandler;
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
-        marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         muSigService = serviceProvider.getMuSigService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
+        dontShowAgainService = serviceProvider.getDontShowAgainService();
 
+        this.takeOfferService = takeOfferService;
         priceInput = new MuSigPriceInput(serviceProvider.getBondedRolesService().getMarketPriceService(), takeOfferService);
         muSigReviewDataDisplay = new MuSigReviewDataDisplay();
 
@@ -114,14 +118,11 @@ public class MuSigTakeOfferReviewController implements Controller {
         String marketCodes = market.getMarketCodes();
         priceInput.setDescription(Res.get("muSig.offer.taker.review.price.price", marketCodes));
 
-        if (muSigOffer.getAmountSpec() instanceof FixedAmountSpec) {
-            OfferAmountUtil.findBaseSideFixedAmount(marketPriceService, muSigOffer)
-                    .ifPresent(model::setTakersBaseSideAmount);
-            OfferAmountUtil.findQuoteSideFixedAmount(marketPriceService, muSigOffer)
-                    .ifPresent(model::setTakersQuoteSideAmount);
-        }
+        // The domain amount concern holds the taker's trade amount for fixed offers, collapsed
+        // ranges and range selections alike; the observer registered in onActivate keeps it live.
+        applyTakersAmountsFromDomain();
 
-        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService, muSigOffer);
+        Optional<PriceQuote> priceQuote = Optional.ofNullable(takeOfferService.getPriceService().getPriceQuote());
         priceQuote.ifPresent(priceInput::setQuote);
 
         applyPriceQuote(priceQuote);
@@ -134,20 +135,6 @@ public class MuSigTakeOfferReviewController implements Controller {
         model.setFormattedSecurityDepositAsPercent(PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0));
 
         applySecurityDepositAsBtc();
-    }
-
-    public void setTakersBaseSideAmount(Monetary amount) {
-        if (amount != null) {
-            model.setTakersBaseSideAmount(amount);
-            applySecurityDepositAsBtc();
-        }
-    }
-
-    public void setTakersQuoteSideAmount(Monetary amount) {
-        if (amount != null) {
-            model.setTakersQuoteSideAmount(amount);
-            applySecurityDepositAsBtc();
-        }
     }
 
     public void setTakersPaymentMethodSpec(PaymentMethodSpec<?> paymentMethodSpec) {
@@ -167,11 +154,93 @@ public class MuSigTakeOfferReviewController implements Controller {
     }
 
     public void takeOffer() {
+        if (!confirmationAllowed()) {
+            return;
+        }
         MuSigOffer muSigOffer = model.getMuSigOffer();
-        Monetary takersBaseSideAmount = model.getTakersBaseSideAmount();
-        Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
-        PaymentMethodSpec<?> paymentMethodSpec = model.getTakersPaymentMethodSpec();
-        checkArgument(muSigOffer.getBaseSidePaymentMethodSpecs().size() == 1);
+        UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
+        // Already-taken is a soft confirm: the taker may retake (the trade id includes the take
+        // date, so a retake gets a fresh id). Shown once unless muted (take-offer.md, Review).
+        NetworkId takerNetworkId = takerIdentity.getUserProfile().getNetworkId();
+        if (muSigService.wasOfferAlreadyTaken(muSigOffer, takerNetworkId)
+                && dontShowAgainService.showAgain(DontShowAgainKey.OFFER_ALREADY_TAKEN_WARN)) {
+            new Popup().information(Res.get("muSig.offer.taker.offerAlreadyTaken.info"))
+                    .actionButtonText(Res.get("confirmation.yes"))
+                    .onAction(() -> doTakeOffer(false))
+                    .closeButtonText(Res.get("confirmation.no"))
+                    .dontShowAgainId(DontShowAgainKey.OFFER_ALREADY_TAKEN_WARN)
+                    .owner(view.getRoot())
+                    .show();
+            return;
+        }
+        doTakeOffer(false);
+    }
+
+    // Re-checked at every entry, including after the async already-taken popup: a market price
+    // update between opening the popup and confirming can remove the price or invalidate the
+    // amount (take-offer.md, "Amount limits", background changes).
+    private boolean confirmationAllowed() {
+        // A submission is already in flight or has succeeded. Hiding the buttons does not
+        // disable the parent's Enter-key handler, so repeated input could otherwise create a
+        // second trade for the same offer (the trade id contains the take date, so a resend is
+        // a new trade, not a duplicate message). The failure path resets the status, which
+        // re-opens the gate for a legitimate retry.
+        if (model.getTakeOfferStatus().get() != MuSigTakeOfferReviewModel.TakeOfferStatus.NOT_STARTED) {
+            return false;
+        }
+        // Runtime invalidation gate: without a current market price the take cannot proceed
+        // (take-offer.md, Price). The block lifts as soon as a price arrives again.
+        if (takeOfferService.getPriceService().getMarketPriceQuote() == null) {
+            new Popup().warning(Res.get("muSig.takeOffer.validation.noMarketPrice"))
+                    .owner(view.getRoot())
+                    .show();
+            return false;
+        }
+        // Background invalidation gate: a market price update (or a payment method change on a
+        // fixed offer) can push the amount outside the effective limits; the amount is never
+        // clamped, confirmation is blocked instead and the block lifts on recovery.
+        if (!takeOfferService.getAmountService().isAmountValid()) {
+            new Popup().warning(Res.get("muSig.takeOffer.validation.amountOutsideLimits"))
+                    .owner(view.getRoot())
+                    .show();
+            return false;
+        }
+        // The take can only proceed with the use case's validated account and payment method
+        // spec, which come from the same selection entry and are therefore mutually consistent.
+        // A deep navigation to the review step could otherwise bypass the payment step's own
+        // validation and reach here with no (or a stale) selection.
+        if (takeOfferService.getSelectedAccount().isEmpty()
+                || takeOfferService.getSelectedPaymentMethodSpec().isEmpty()) {
+            new Popup().warning(Res.get("muSig.takeOffer.validation.noPaymentAccount"))
+                    .owner(view.getRoot())
+                    .show();
+            return false;
+        }
+        return true;
+    }
+
+    private void doTakeOffer(boolean proceedWithoutMediator) {
+        if (!confirmationAllowed()) {
+            return;
+        }
+        MuSigOffer muSigOffer = model.getMuSigOffer();
+        // Source the account and spec from the use case (validated, mutually consistent) rather
+        // than the review model, whose display fields can lag a payment method switch.
+        PaymentMethodSpec<?> paymentMethodSpec = takeOfferService.getSelectedPaymentMethodSpec().orElseThrow();
+        Account<?, ?> takersAccount = takeOfferService.getSelectedAccount().orElseThrow();
+        // The amounts and the market price they were validated against are captured as one
+        // atomic snapshot: a market-price update on another thread mutates them in several steps,
+        // so reading them separately could hand off a torn pair (take-offer.md, "Handoff").
+        TakeOfferUseCase.Handoff handoff = takeOfferService.getHandoff().orElse(null);
+        if (handoff == null) {
+            new Popup().warning(Res.get("muSig.takeOffer.validation.amountOutsideLimits"))
+                    .owner(view.getRoot())
+                    .show();
+            return;
+        }
+        Monetary takersBaseSideAmount = handoff.baseSideAmount();
+        Monetary takersQuoteSideAmount = handoff.quoteSideAmount();
+        long marketPrice = handoff.marketPrice();
 
         try {
             UserIdentity takerIdentity = userIdentityService.getSelectedUserIdentity();
@@ -180,7 +249,9 @@ public class MuSigTakeOfferReviewController implements Controller {
                     takersBaseSideAmount,
                     takersQuoteSideAmount,
                     paymentMethodSpec,
-                    model.getTakersAccount());
+                    takersAccount,
+                    marketPrice,
+                    proceedWithoutMediator);
             MuSigTrade trade = muSigProtocol.getTrade();
             model.setMuSigTrade(trade);
             muSigService.createMuSigOpenTradeChannel(trade, takerIdentity);
@@ -189,6 +260,9 @@ public class MuSigTakeOfferReviewController implements Controller {
                 timeoutScheduler.stop();
             }
             timeoutScheduler = UIScheduler.run(() -> {
+                        if (model.getMuSigTrade() != trade) {
+                            return;
+                        }
                         closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG);
                         new Popup().warning(Res.get("muSig.offer.taker.timeout.warning", 150)).show();
                     })
@@ -196,7 +270,11 @@ public class MuSigTakeOfferReviewController implements Controller {
             // We have 120 seconds socket timeout, so we should never
             // get triggered here, as the message will be sent as mailbox message
 
-            // A previous attempt's observers must not survive into this attempt (retry case).
+            // A previous attempt's callbacks must not act on this attempt (retry case): the
+            // unbind below stops future notifications, but a runnable the old observer already
+            // queued on the JavaFX thread still runs afterwards - every deferred callback
+            // therefore re-checks that its trade is still the current attempt before touching
+            // the shared schedulers, status or popups.
             if (errorMessagePin != null) {
                 errorMessagePin.unbind();
             }
@@ -206,6 +284,9 @@ public class MuSigTakeOfferReviewController implements Controller {
             errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
                         if (errorMessage != null) {
                             UIThread.run(() -> {
+                                if (model.getMuSigTrade() != trade) {
+                                    return;
+                                }
                                 resetTakeOfferStatusOnFailure();
                                 if (trade.getTradeProtocolFailure() == null || trade.getTradeProtocolFailure().isUnexpected()) {
                                     String errorStackTrace = trade.getErrorStackTrace() != null ? StringUtils.truncate(trade.getErrorStackTrace(), 2000) : "";
@@ -227,6 +308,9 @@ public class MuSigTakeOfferReviewController implements Controller {
             peersErrorMessagePin = trade.peersErrorMessageObservable().addObserver(peersErrorMessage -> {
                         if (peersErrorMessage != null) {
                             UIThread.run(() -> {
+                                if (model.getMuSigTrade() != trade) {
+                                    return;
+                                }
                                 resetTakeOfferStatusOnFailure();
                                 if (trade.getPeersTradeProtocolFailure() == null || trade.getPeersTradeProtocolFailure().isUnexpected()) {
                                     String errorStackTrace = trade.getPeersErrorStackTrace() != null ? StringUtils.truncate(trade.getPeersErrorStackTrace(), 2000) : "";
@@ -261,9 +345,17 @@ public class MuSigTakeOfferReviewController implements Controller {
                 delayedSuccessScheduler.stop();
             }
             delayedSuccessScheduler = UIScheduler.run(() -> {
+                if (model.getMuSigTrade() != trade) {
+                    return;
+                }
                 if (trade.getErrorMessage() != null || trade.getPeersErrorMessage() != null) {
                     // The maker rejected the take offer; the error observer already informed the user.
                     return;
+                }
+                // The attempt succeeded; the timeout must not navigate away from the success
+                // screen later with a warning about this same attempt.
+                if (timeoutScheduler != null) {
+                    timeoutScheduler.stop();
                 }
                 model.getTakeOfferStatus().set(MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS);
             }).after(200);
@@ -303,27 +395,33 @@ public class MuSigTakeOfferReviewController implements Controller {
                 }
             });
         } catch (NoMuSigMediatorAvailableException e) {
+            // Proceeding unmediated needs explicit consent; the retry re-enters through the
+            // confirmation gates and takes a fresh handoff snapshot.
             UIThread.run(() -> new Popup().warning(Res.get("muSig.offer.taker.noMediatorAvailable.warning"))
                     .closeButtonText(Res.get("action.cancel"))
-                    .actionButtonText(Res.get("confirmation.ok"))
-                    .onAction(() -> {
-                        try {
-                            //todo
-                           /* muSigService.takeOffer(muSigOffer,
-                                    takersBaseSideAmount,
-                                    takersQuoteSideAmount,
-                                    bitcoinPaymentMethodSpec,
-                                    paymentMethodSpec,
-                                    false
-                            );*/
-                        } catch (Exception ignore) {
-                        }
-                    })
+                    .actionButtonText(Res.get("muSig.offer.taker.noMediatorAvailable.proceed"))
+                    .onAction(() -> doTakeOffer(true))
                     .show());
         } catch (NoMuSigArbitratorAvailableException e) {
             UIThread.run(() -> new Popup().warning(Res.get("muSig.offer.taker.noArbitratorAvailable.warning")).show());
-        } catch (NoMarketPriceAvailableException e) {
-            UIThread.run(() -> new Popup().warning(e.getMessage()).show());
+        } catch (RuntimeException e) {
+            // Any other synchronous failure (e.g. channel creation failing because the maker
+            // profile is gone) must release this attempt like the named business exceptions do,
+            // so the aborted attempt cannot fire the timeout later or stack observers on retry.
+            // The trade may already be persisted at this point; that residue is protocol-level
+            // and surfaces like any other failed take attempt.
+            if (timeoutScheduler != null) {
+                timeoutScheduler.stop();
+            }
+            if (errorMessagePin != null) {
+                errorMessagePin.unbind();
+                errorMessagePin = null;
+            }
+            if (peersErrorMessagePin != null) {
+                peersErrorMessagePin.unbind();
+                peersErrorMessagePin = null;
+            }
+            throw e;
         }
     }
 
@@ -344,6 +442,21 @@ public class MuSigTakeOfferReviewController implements Controller {
 
     @Override
     public void onActivate() {
+        priceQuotePin = takeOfferService.getPriceService().priceQuoteObservable().addObserver(quote ->
+                UIThread.run(this::refreshPriceDisplay));
+        // Fixed-price offers keep their quote when the market price moves, so the equal-value
+        // suppression of the quote observable would starve the detail refresh; the deviation
+        // changes on every relevant market update.
+        priceDeviationPin = takeOfferService.getPriceService().priceDeviationObservable().addObserver(deviation ->
+                UIThread.run(this::refreshPriceDisplay));
+        // Covers range selections made in the amount step, clamps after a payment method change
+        // and background passive-side refreshes; fires at registration for the initial state.
+        fixTradeAmountPin = takeOfferService.getAmountService().fixTradeAmountObservable().addObserver(tradeAmount ->
+                UIThread.run(this::applyTakersAmountsFromDomain));
+        applyAmountsAndDisplay();
+    }
+
+    private void applyAmountsAndDisplay() {
         String toSendAmountDescription, toSendAmount, toSendCode, toReceiveAmountDescription, toReceiveAmount, toReceiveCode;
         Monetary fixBaseSideAmount = model.getTakersBaseSideAmount();
         Monetary fixQuoteSideAmount = model.getTakersQuoteSideAmount();
@@ -357,9 +470,6 @@ public class MuSigTakeOfferReviewController implements Controller {
             toSendCode = fixBaseSideAmount.getCode();
             toReceiveAmount = formattedQuoteAmount;
             toReceiveCode = fixQuoteSideAmount.getCode();
-
-            model.setFee(Res.get("muSig.offer.taker.review.sellerPaysMinerFee"));
-            model.setFeeDetails(Res.get("muSig.offer.taker.review.noTradeFeesLong"));
         } else {
             toSendAmountDescription = Res.get("muSig.offer.wizard.review.toPay");
             toReceiveAmountDescription = Res.get("muSig.offer.wizard.review.toReceive");
@@ -367,10 +477,18 @@ public class MuSigTakeOfferReviewController implements Controller {
             toSendCode = fixQuoteSideAmount.getCode();
             toReceiveAmount = formattedBaseAmount;
             toReceiveCode = fixBaseSideAmount.getCode();
-
-            model.setFee(Res.get("muSig.offer.taker.review.noTradeFees"));
-            model.setFeeDetails(Res.get("muSig.offer.taker.review.sellerPaysMinerFeeLong"));
         }
+
+        // The review deliberately omits a numeric trade fee until the UI and protocol share an
+        // authoritative fee policy. Showing the protocol placeholder or a separate UI estimate
+        // would present a value that the trade does not consistently enforce.
+        model.setFee(Res.get("data.na"));
+        // The mining fee is charged to the Bitcoin seller. The display direction is
+        // altcoin-denominated in Altcoin-Bitcoin markets, so the fee note keys on the
+        // Bitcoin-side taker direction (the mirror of the Bitcoin-side offer direction).
+        model.setFeeDetails(model.getMuSigOffer().getTakersDirection().isSell()
+                ? Res.get("muSig.offer.taker.review.takerPaysMinerFee")
+                : Res.get("muSig.offer.taker.review.sellerPaysMinerFeeLong"));
 
         String directionString = String.format("%s %s",
                 Res.get(takersDirection.isSell() ? "offer.sell" : "offer.buy").toUpperCase(),
@@ -391,6 +509,18 @@ public class MuSigTakeOfferReviewController implements Controller {
 
     @Override
     public void onDeactivate() {
+        if (priceQuotePin != null) {
+            priceQuotePin.unbind();
+            priceQuotePin = null;
+        }
+        if (priceDeviationPin != null) {
+            priceDeviationPin.unbind();
+            priceDeviationPin = null;
+        }
+        if (fixTradeAmountPin != null) {
+            fixTradeAmountPin.unbind();
+            fixTradeAmountPin = null;
+        }
         if (errorMessagePin != null) {
             errorMessagePin.unbind();
         }
@@ -409,13 +539,49 @@ public class MuSigTakeOfferReviewController implements Controller {
         closeAndNavigateToHandler.accept(NavigationTarget.MU_SIG_OPEN_TRADES);
     }
 
+    private void refreshPriceDisplay() {
+        PriceQuote quote = takeOfferService.getPriceService().getPriceQuote();
+        if (quote == null || model.getMuSigOffer() == null) {
+            return;
+        }
+        priceInput.setQuote(quote);
+        applyPriceQuote(Optional.of(quote));
+        applyPriceDetails(model.getMuSigOffer().getPriceSpec(), model.getMuSigOffer().getMarket());
+        applySecurityDepositAsBtc();
+        applyAmountsAndDisplay();
+    }
+
+    private void applyTakersAmountsFromDomain() {
+        // The observer queues this through UIThread.run; unbinding does not cancel an already
+        // queued call, which can therefore run after reset() cleared the model.
+        if (model.getMuSigOffer() == null) {
+            return;
+        }
+        TradeAmount fixTradeAmount = takeOfferService.getAmountService().getFixTradeAmount();
+        if (fixTradeAmount == null) {
+            return;
+        }
+        model.setTakersBaseSideAmount(fixTradeAmount.getBaseSideAmount());
+        model.setTakersQuoteSideAmount(fixTradeAmount.getQuoteSideAmount());
+        applySecurityDepositAsBtc();
+        applyAmountsAndDisplay();
+    }
+
     private void applyPriceDetails(PriceSpec priceSpec, Market market) {
-        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
-        marketPrice.ifPresent(price -> model.setMarketPrice(price.getPriceQuote().getValue()));
-        Optional<PriceQuote> marketPriceQuote = marketPrice.map(MarketPrice::getPriceQuote);
+        // Market price and deviation come from the take offer use case so the displayed details
+        // always match the snapshot behind the resolved quote and the warning state.
+        Optional<PriceQuote> marketPriceQuote = Optional.ofNullable(takeOfferService.getPriceService().getMarketPriceQuote());
+        marketPriceQuote.ifPresent(quote -> model.setMarketPrice(quote.getValue()));
         String marketPriceAsString = marketPriceQuote.map(PriceFormatter::formatWithCode).orElseGet(() -> Res.get("data.na"));
-        Optional<Double> percentFromMarketPrice = PriceUtil.findPercentFromMarketPrice(marketPriceService, priceSpec, market);
-        double percent = percentFromMarketPrice.orElse(0d);
+        Optional<Double> percentFromMarketPrice = Optional.ofNullable(takeOfferService.getPriceService().getPriceDeviation());
+        if (percentFromMarketPrice.isEmpty()) {
+            // The market price vanished mid-flow (deviation and market quote are cleared
+            // together): no relation to the market price can be claimed, in particular not
+            // "same as market price". Confirmation is blocked separately.
+            model.setPriceDetails(Res.get("data.na"));
+            return;
+        }
+        double percent = percentFromMarketPrice.get();
         if ((priceSpec instanceof FloatPriceSpec || priceSpec instanceof MarketPriceSpec) && percent == 0) {
             model.setPriceDetails(Res.get("muSig.offer.wizard.review.priceDetails", marketPriceAsString));
         } else {

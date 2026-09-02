@@ -28,8 +28,8 @@ import bisq.common.monetary.TradeAmount;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-class TradeAmountLimitUtils {
-    static TradeAmount toTradeAmountLimit(MarketPriceService marketPriceService,
+public class TradeAmountLimitUtils {
+    public static TradeAmount toTradeAmountLimit(MarketPriceService marketPriceService,
                                           Market market,
                                           PriceQuote priceQuote,
                                           Fiat usdAmount) {
@@ -54,6 +54,34 @@ class TradeAmountLimitUtils {
             quoteSideAmount = AmountConversion.usdToBtc(btcUsdPriceQuote, usdAmount);
         }
         Monetary baseSideAmount = priceQuote.toBaseSideMonetary(quoteSideAmount);
+        return new TradeAmount(baseSideAmount, quoteSideAmount);
+    }
+
+    /**
+     * Like {@link #toTradeAmountLimit}, but fails with an ArithmeticException when the base
+     * side does not fit into a long instead of silently wrapping. The take flow compares and
+     * publishes limit pairs on either side, so a wrapped base side would corrupt the
+     * comparison; failing closed refuses the take when the limit cannot be represented.
+     */
+    public static TradeAmount toTradeAmountLimitExact(MarketPriceService marketPriceService,
+                                                      Market market,
+                                                      PriceQuote priceQuote,
+                                                      Fiat usdAmount) {
+        checkNotNull(marketPriceService, "marketPriceService must not be null");
+        checkNotNull(market, "market must not be null");
+        checkNotNull(priceQuote, "priceQuote must not be null");
+        checkNotNull(usdAmount, "usdAmount must not be null");
+
+        Market usdBitcoinMarket = MarketRepository.getUSDBitcoinMarket();
+        PriceQuote btcUsdPriceQuote = marketPriceService.getMarketPriceQuoteOrThrow(usdBitcoinMarket);
+        Monetary quoteSideAmount;
+        if (market.isBtcFiatMarket()) {
+            PriceQuote btcFiatPriceQuote = marketPriceService.getMarketPriceQuoteOrThrow(market);
+            quoteSideAmount = AmountConversion.usdToFiat(btcUsdPriceQuote, btcFiatPriceQuote, usdAmount);
+        } else {
+            quoteSideAmount = AmountConversion.usdToBtc(btcUsdPriceQuote, usdAmount);
+        }
+        Monetary baseSideAmount = priceQuote.toBaseSideMonetaryExact(quoteSideAmount);
         return new TradeAmount(baseSideAmount, quoteSideAmount);
     }
 }

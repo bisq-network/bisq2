@@ -57,6 +57,7 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
     private final TextFlow price;
     private final MuSigProtocolWaitingAnimation takeOfferSendMessageWaitingAnimation;
     private Subscription takeOfferStatusPin;
+    private Subscription priceWithCodeSubscription, priceDetailsSubscription;
     private boolean minWaitingTimePassed = false;
     private UIScheduler minWaitingTimeScheduler;
 
@@ -190,13 +191,18 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
     @Override
     protected void onViewAttached() {
-        TextFlowUtils.updateTextFlow(price, model.getPriceWithCode());
-        priceDetails.setText(model.getPriceDetails());
+        priceWithCodeSubscription = EasyBind.subscribe(model.getPriceWithCode(), value ->
+                TextFlowUtils.updateTextFlow(price, value == null ? "" : value));
+        priceDetailsSubscription = EasyBind.subscribe(model.getPriceDetails(), value ->
+                priceDetails.setText(value == null ? "" : value));
 
         paymentMethod.setText(model.getPaymentMethodDisplayString());
+        // Null until a payment selection was applied: the review target is reachable by direct
+        // navigation before the payment step ran; the confirmation gate rejects such a take,
+        // but the view must still attach.
         String paymentMethodDetailsValue = model.getPaymentMethodDetails();
         paymentMethodDetails.setText(paymentMethodDetailsValue);
-        if (paymentMethodDetailsValue.length() > 50) {
+        if (paymentMethodDetailsValue != null && paymentMethodDetailsValue.length() > 50) {
             paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
         }
 
@@ -205,8 +211,8 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
         securityDeposit.setText(model.getFormattedSecurityDepositAsPercent());
         securityDepositDetails.setText(model.getSecurityDepositAsBtc());
 
-        fee.setText(model.getFee());
-        feeDetails.setText(model.getFeeDetails());
+        fee.textProperty().bind(model.getFee());
+        feeDetails.textProperty().bind(model.getFeeDetails());
 
         takeOfferSuccessButton.setOnAction(e -> controller.onShowOpenTrades());
 
@@ -215,6 +221,16 @@ class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel
 
     @Override
     protected void onViewDetached() {
+        if (priceWithCodeSubscription != null) {
+            priceWithCodeSubscription.unsubscribe();
+            priceWithCodeSubscription = null;
+        }
+        if (priceDetailsSubscription != null) {
+            priceDetailsSubscription.unsubscribe();
+            priceDetailsSubscription = null;
+        }
+        fee.textProperty().unbind();
+        feeDetails.textProperty().unbind();
         paymentMethodDetails.setTooltip(null);
         takeOfferSuccessButton.setOnAction(null);
         takeOfferStatusPin.unsubscribe();

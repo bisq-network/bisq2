@@ -20,6 +20,8 @@ package bisq.offer.mu_sig.use_case.take_offer.market;
 import bisq.common.market.Market;
 import bisq.offer.mu_sig.MuSigOffer;
 
+import java.util.Optional;
+
 public class TakeOfferMarketService {
     private MuSigOffer muSigOffer;
 
@@ -29,5 +31,11 @@ public class TakeOfferMarketService {
 
     public Market getMarket() {
         return muSigOffer.getMarket();
+    }
+
+    // Empty outside a take session: initialization sets the offer, disposal clears it. Queued
+    // UI callbacks that can run after disposal must use this instead of getMarket.
+    public Optional<Market> findMarket() {
+        return Optional.ofNullable(muSigOffer).map(MuSigOffer::getMarket);
     }
 }

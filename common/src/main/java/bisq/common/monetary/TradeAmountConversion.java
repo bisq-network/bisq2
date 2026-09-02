@@ -38,6 +38,24 @@ public class TradeAmountConversion {
         }
     }
 
+    /**
+     * Like {@link #toTradeAmount(Market, PriceQuote, Monetary)}, but fails with an
+     * ArithmeticException when the converted side does not fit into a long.
+     */
+    public static TradeAmount toTradeAmountExact(Market market, PriceQuote priceQuote, Monetary amount) {
+        checkNotNull(market, "Market must not be null");
+        checkNotNull(priceQuote, "priceQuote must not be null");
+        checkNotNull(amount, "amount must not be null");
+
+        if (isBaseSideAmount(market, amount)) {
+            return new TradeAmount(amount, priceQuote.toQuoteSideMonetaryExact(amount));
+        } else if (isQuoteSideAmount(market, amount)) {
+            return new TradeAmount(priceQuote.toBaseSideMonetaryExact(amount), amount);
+        } else {
+            throw new IllegalArgumentException("Amount is neither base nor quote side for market: " + market + ". amount=" + amount);
+        }
+    }
+
     @VisibleForTesting
     static boolean isBaseSideAmount(Market market, Monetary amount) {
         return isBaseSideAmount(market.getBaseCurrencyCode(), amount);
