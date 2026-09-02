@@ -83,6 +83,40 @@ class ChatRequestValidationTest {
         return new CitationDto(AUTHOR_PROFILE_ID, text, Optional.empty());
     }
 
+    /**
+     * The cited id has the same shape of problem as the author id above, and needs the check for the
+     * same reason: {@code NetworkDataValidation.validateId} is the one that would otherwise catch it,
+     * from inside the {@code Citation} constructor, and its message appends the id it rejected. The
+     * bound itself lives in {@code Citation.verify} — this is the copy that keeps the client's own
+     * input out of the answer.
+     */
+    @Test
+    void aCitationWithAnOverlongChatMessageIdIsAnErrorThatDoesNotEchoIt() {
+        String overlong = "x".repeat(51);
+
+        Optional<String> error = ChatRequestValidation.citationError(citationCiting(overlong));
+
+        assertThat(error).isPresent();
+        assertThat(error.get()).doesNotContain(overlong);
+    }
+
+    /** Inclusive, and the same limit {@code Citation.verify} enforces, so neither can 400 what the other accepts. */
+    @Test
+    void theCitationChatMessageIdLimitIsInclusive() {
+        assertThat(ChatRequestValidation.citationError(citationCiting("x".repeat(50)))).isEmpty();
+        assertThat(ChatRequestValidation.citationError(citationCiting("x".repeat(51)))).isPresent();
+    }
+
+    /** Citing a message is optional; the check must not turn the absent case into a 400. */
+    @Test
+    void aCitationWithoutAChatMessageIdIsFine() {
+        assertThat(ChatRequestValidation.citationError(citationOf("text"))).isEmpty();
+    }
+
+    private static CitationDto citationCiting(String chatMessageId) {
+        return new CitationDto(AUTHOR_PROFILE_ID, "text", Optional.of(chatMessageId));
+    }
+
     @Test
     void aReactionIdOutsideTheRangeIsNotParsed() {
         assertThat(ChatRequestValidation.parseReaction(-1)).isEmpty();
