@@ -137,6 +137,9 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
         return this.getMarketCodes().compareTo(o.getMarketCodes());
     }
 
+    // todo rename to 'Relevant' to 'NonBitcoin'
+    // add Bitcoin side methods
+
     // Use the relevant side, which is the non-Bitcoin side.
     // For Fiat markets the quote side, for cytpo market the base side.
     public String getRelevantCurrencyCode() {

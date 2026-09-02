@@ -18,6 +18,7 @@
 package bisq.common.monetary;
 
 import bisq.common.asset.Asset;
+import bisq.common.market.Market;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -52,5 +53,55 @@ public class TradeAmount {
         Monetary clampedBaseSideAmount = baseSideAmount.clamp(baseSideLimits);
         Monetary clampedQuoteSideAmount = quoteSideAmount.clamp(quoteSideLimits);
         return new TradeAmount(clampedBaseSideAmount, clampedQuoteSideAmount);
+    }
+
+    public Monetary getBitcoinSideAmount() {
+        if (isBaseSideAmountBitcoin()) {
+            return getBaseSideAmount();
+        } else {
+            return getQuoteSideAmount();
+        }
+    }
+    public Monetary getNonBitcoinSideAmount() {
+        if (isQuoteSideAmountBitcoin()) {
+            return getBaseSideAmount();
+        } else {
+            return getQuoteSideAmount();
+        }
+    }
+
+    public boolean isBaseSideAmountBitcoin() {
+        return getBaseSideAmount().isBitcoin();
+    }
+
+    public boolean isQuoteSideAmountBitcoin() {
+        return getQuoteSideAmount().isBitcoin();
+    }
+
+    public int compareToRange(TradeAmountRange limits) {
+        return compareToRange(limits.getMin(), limits.getMax());
+    }
+
+    public int compareToRange(TradeAmount min, TradeAmount max) {
+        MonetaryRange baseSideLimits = new MonetaryRange(min.getBaseSideAmount(), max.getBaseSideAmount());
+        MonetaryRange quoteSideLimits = new MonetaryRange(min.getQuoteSideAmount(), max.getQuoteSideAmount());
+        int clampedBaseSideAmount = baseSideAmount.compareToRange(baseSideLimits);
+        if (clampedBaseSideAmount != 0) {
+            return clampedBaseSideAmount;
+        }
+        return quoteSideAmount.compareToRange(quoteSideLimits);
+    }
+    //
+
+    public String printRelevantString(Market market, boolean includeCode) {
+        if (market.getRelevantCurrencyCode().equals(quoteSideAmount.getCode())) {
+            return quoteSideAmount.printAsDouble(includeCode);
+        } else {
+            return baseSideAmount.printAsDouble(includeCode);
+        }
+    }
+
+    public String printRelevantString(Market market) {
+        return printRelevantString(market, true);
     }
 }

@@ -15,6 +15,7 @@ Some older docs may still exist for historical context, but new work should foll
 - [Architecture](architecture.md)
 - [MVC Pattern](mvc-pattern.md)
 - [Observable Framework](observable-framework.md)
+- [Input validation policy](input_validation_policy.md)
 - [Testing](testing.md)
 
 

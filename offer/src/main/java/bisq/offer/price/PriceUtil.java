@@ -28,6 +28,7 @@ import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -106,6 +107,13 @@ public class PriceUtil {
         } else {
             throw new IllegalStateException("Not supported priceSpec. priceSpec=" + priceSpec);
         }
+    }
+
+    public static PriceQuote getQuoteOrThrow(MarketPriceService marketPriceService,
+                                             PriceSpec priceSpec,
+                                             Market market) {
+        return findQuote(marketPriceService, priceSpec, market)
+                .orElseThrow(() -> new NoSuchElementException("No price quote found for market " + market + " and priceSpec " + priceSpec));
     }
 
     public static PriceQuote getFixPriceQuote(FixPriceSpec fixPriceSpec) {

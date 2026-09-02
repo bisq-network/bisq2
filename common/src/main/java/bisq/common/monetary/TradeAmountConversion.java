@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeAmountConversion {
+    //todo move to TradeAmountFactory
     public static TradeAmount toTradeAmount(Market market, PriceQuote priceQuote, Monetary amount) {
         checkNotNull(market, "Market must not be null");
         checkNotNull(priceQuote, "priceQuote must not be null");
