@@ -57,28 +57,37 @@ public class ClientRevocationService {
      * <p>
      * All cleanup runs even when no profile was found, as the profile may have been removed
      * already while a session, connection or push registration is still alive. A failing handler
-     * is logged and does not stop the remaining ones, so one broken collaborator cannot leave a
-     * revoked client half connected.
+     * does not stop the remaining ones, so one broken collaborator cannot leave a revoked client
+     * half connected, but the failure is reported rather than only logged: the caller would
+     * otherwise be told the client was revoked while it still holds a connection or keeps
+     * receiving push notifications.
      *
      * @param clientId The client ID to revoke
-     * @return {@code true} if the client was found and revoked; {@code false} if not found
+     * @return the outcome; see {@link ClientRevocationResult}
      */
-    public boolean revokeClient(String clientId) {
+    public ClientRevocationResult revokeClient(String clientId) {
         boolean removed = pairingService.revokeClientProfile(clientId);
         sessionService.removeSessionByClientId(clientId);
-        revocationHandlers.forEach(handler -> {
+        boolean cleanupFailed = false;
+        for (ClientRevocationHandler handler : revocationHandlers) {
             try {
                 handler.onClientRevoked(clientId);
             } catch (Exception e) {
+                cleanupFailed = true;
                 log.error("Revocation handler failed for client {}", clientId, e);
             }
-        });
+        }
+        if (cleanupFailed) {
+            log.error("Revocation of client {} is incomplete, it may still be connected or receive " +
+                    "push notifications", clientId);
+            return ClientRevocationResult.CLEANUP_FAILED;
+        }
         if (removed) {
             log.info("Revoked client {}", clientId);
-        } else {
-            log.warn("Client profile not found for {}, but session, connection and push registration " +
-                    "cleanup were still applied", clientId);
+            return ClientRevocationResult.REVOKED;
         }
-        return removed;
+        log.warn("Client profile not found for {}, but session, connection and push registration " +
+                "cleanup were still applied", clientId);
+        return ClientRevocationResult.NOT_FOUND;
     }
 }

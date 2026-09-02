@@ -23,8 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -43,7 +42,7 @@ class ClientRevocationServiceTest {
         ClientRevocationHandler pushHandler = mock(ClientRevocationHandler.class);
         when(pairingService.revokeClientProfile(CLIENT_ID)).thenReturn(true);
 
-        assertTrue(new ClientRevocationService(pairingService,
+        assertEquals(ClientRevocationResult.REVOKED, new ClientRevocationService(pairingService,
                 sessionService,
                 List.of(disconnectHandler, pushHandler)).revokeClient(CLIENT_ID));
 
@@ -60,26 +59,41 @@ class ClientRevocationServiceTest {
         ClientRevocationHandler handler = mock(ClientRevocationHandler.class);
         when(pairingService.revokeClientProfile(CLIENT_ID)).thenReturn(false);
 
-        assertFalse(new ClientRevocationService(pairingService, sessionService, List.of(handler))
-                .revokeClient(CLIENT_ID));
+        assertEquals(ClientRevocationResult.NOT_FOUND,
+                new ClientRevocationService(pairingService, sessionService, List.of(handler))
+                        .revokeClient(CLIENT_ID));
 
         verify(sessionService).removeSessionByClientId(CLIENT_ID);
         verify(handler).onClientRevoked(CLIENT_ID);
     }
 
     @Test
-    void aFailingHandlerDoesNotStopTheRemainingOnes() {
-        // A revoked client must never stay half connected because one collaborator threw.
+    void aFailingHandlerDoesNotStopTheRemainingOnesAndIsReported() {
+        // A revoked client must never stay half connected because one collaborator threw, and the
+        // caller must not be told the client was revoked while it can still be connected or
+        // receive push notifications.
         PairingService pairingService = mock(PairingService.class);
         ClientRevocationHandler failingHandler = mock(ClientRevocationHandler.class);
         ClientRevocationHandler handler = mock(ClientRevocationHandler.class);
         doThrow(new RuntimeException("boom")).when(failingHandler).onClientRevoked(CLIENT_ID);
         when(pairingService.revokeClientProfile(CLIENT_ID)).thenReturn(true);
 
-        assertTrue(new ClientRevocationService(pairingService,
+        assertEquals(ClientRevocationResult.CLEANUP_FAILED, new ClientRevocationService(pairingService,
                 mock(SessionService.class),
                 List.of(failingHandler, handler)).revokeClient(CLIENT_ID));
 
         verify(handler).onClientRevoked(CLIENT_ID);
+    }
+
+    @Test
+    void aFailingHandlerIsReportedEvenWhenNoProfileExisted() {
+        PairingService pairingService = mock(PairingService.class);
+        ClientRevocationHandler failingHandler = mock(ClientRevocationHandler.class);
+        doThrow(new RuntimeException("boom")).when(failingHandler).onClientRevoked(CLIENT_ID);
+        when(pairingService.revokeClientProfile(CLIENT_ID)).thenReturn(false);
+
+        assertEquals(ClientRevocationResult.CLEANUP_FAILED, new ClientRevocationService(pairingService,
+                mock(SessionService.class),
+                List.of(failingHandler)).revokeClient(CLIENT_ID));
     }
 }

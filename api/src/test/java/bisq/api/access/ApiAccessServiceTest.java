@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,9 +34,9 @@ class ApiAccessServiceTest {
     void revokeClientDelegatesToTheRevocationService() {
         // The facade is the only entry point, so this delegation is what every caller reaches.
         ClientRevocationService clientRevocationService = mock(ClientRevocationService.class);
-        when(clientRevocationService.revokeClient("client-1")).thenReturn(true);
+        when(clientRevocationService.revokeClient("client-1")).thenReturn(ClientRevocationResult.REVOKED);
 
-        assertTrue(new ApiAccessService(mock(PairingService.class),
+        assertEquals(ClientRevocationResult.REVOKED, new ApiAccessService(mock(PairingService.class),
                 mock(SessionService.class),
                 clientRevocationService).revokeClient("client-1"));
 
