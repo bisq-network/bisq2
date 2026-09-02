@@ -37,11 +37,11 @@ import java.util.Optional;
  * field.
  * <p>
  * The size checks on the citation are not here because the domain would miss them, but because of what
- * the domain says when it catches them: {@code NetworkDataValidation.validateText} and
- * {@code validateProfileId} both append the offending input to their message, so leaving the citation to
- * the {@code Citation} constructor answers a 400 that hands the client back what it just sent — the
- * thousand characters of quoted text, or an author id of any length at all, since nothing bounds that
- * one before it is echoed. Emptiness is a different case — no message class rejects it,
+ * the domain says when it catches them: {@code NetworkDataValidation.validateText},
+ * {@code validateProfileId} and {@code validateId} all append the offending input to their message, so
+ * leaving the citation to the {@code Citation} constructor answers a 400 that hands the client back
+ * what it just sent — the thousand characters of quoted text, the author id, or the id of the cited
+ * message. Emptiness is a different case — no message class rejects it,
  * {@code ChatMessage.verify} only bounds the length — so that check is the only one there is. The
  * text's maximum is likewise the only one for private chat, whose message class does not verify on
  * construction; {@code CommonPublicChatMessage} does, and checking it here anyway keeps the two
@@ -74,6 +74,11 @@ public final class ChatRequestValidation {
         }
         if (citation.text().length() > Citation.MAX_TEXT_LENGTH) {
             return Optional.of("citation text must not be longer than " + Citation.MAX_TEXT_LENGTH + " characters.");
+        }
+        if (citation.chatMessageId().isPresent()
+                && citation.chatMessageId().get().length() > NetworkDataValidation.MAX_ID_LENGTH) {
+            return Optional.of("citation chatMessageId must not be longer than "
+                    + NetworkDataValidation.MAX_ID_LENGTH + " characters.");
         }
         return Optional.empty();
     }

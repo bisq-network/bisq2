@@ -36,8 +36,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class NetworkDataValidation {
     public static final long TWO_HOURS = TimeUnit.HOURS.toMillis(2);
     public static final long BISQ_1_LAUNCH_DATE = DateUtils.getUTCDate(2016, GregorianCalendar.APRIL, 27).getTime();
-    /** Exposed so a caller that has to reject the id before we do can ask for the width rather than repeat it. */
+    /**
+     * Exposed so a caller that has to reject the id before we do can ask for the width rather than
+     * repeat it. Both messages below append the input they rejected, which is what makes a caller
+     * facing untrusted input check first instead of catching.
+     */
     public static final int PROFILE_ID_LENGTH = 40;
+    public static final int MAX_ID_LENGTH = 50;
 
     public static void validateDate(long date) {
         // Date can be max 2 hours in future and cannot be older than bisq 1 launch date
@@ -70,7 +75,8 @@ public class NetworkDataValidation {
     // IDs are created with StringUtils.createUid() which generates 36 chars. We allow upt to 50 for more flexibility.
     // Can be short id as well or custom IDs...
     public static void validateId(String id) {
-        checkArgument(id.length() <= 50, "ID must not be longer than 50 characters. id=" + id);
+        checkArgument(id.length() <= MAX_ID_LENGTH,
+                "ID must not be longer than " + MAX_ID_LENGTH + " characters. id=" + id);
     }
 
     public static void validateId(Optional<String> id) {
