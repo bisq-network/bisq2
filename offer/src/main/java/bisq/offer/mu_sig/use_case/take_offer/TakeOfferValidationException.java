@@ -15,31 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.offer.mu_sig.use_case.take_offer.price;
+package bisq.offer.mu_sig.use_case.take_offer;
 
-import bisq.common.monetary.PriceQuote;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 
-public class TakeOfferPriceService {
-    @Getter(AccessLevel.PACKAGE)
-    @Delegate
-    private final TakeOfferPriceModel model;
-
-    public TakeOfferPriceService() {
-        this.model = new TakeOfferPriceModel();
+/**
+ * Thrown when an offer fails the take-offer trust-boundary validation
+ * (take-offer.md, "Offer as root input").
+ */
+@Getter
+public class TakeOfferValidationException extends RuntimeException {
+    public enum Reason {
+        OWN_OFFER,
+        PROTOCOL_TYPE_NOT_SUPPORTED,
+        NO_MARKET_PRICE,
+        FLOAT_PRICE_OUT_OF_BOUNDS,
+        FIXED_PRICE_MARKET_MISMATCH,
+        INVALID_OFFER,
+        INVALID_PAYMENT_METHOD_SPECS,
+        INVALID_OFFER_OPTIONS,
+        AMOUNT_OUTSIDE_LIMITS
     }
 
-    public void setPriceQuote(PriceQuote priceQuote) {
-        model.setPriceQuote(priceQuote);
-    }
+    private final Reason reason;
 
-    public void setPriceDeviation(Double priceDeviation) {
-        model.setPriceDeviation(priceDeviation);
-    }
-
-    public void setMarketPriceQuote(PriceQuote marketPriceQuote) {
-        model.setMarketPriceQuote(marketPriceQuote);
+    public TakeOfferValidationException(Reason reason, String message) {
+        super(message);
+        this.reason = reason;
     }
 }

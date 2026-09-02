@@ -50,6 +50,10 @@ public class TakeOfferAmountService {
         model.setFixTradeAmount(fixTradeAmount);
     }
 
+    public void markConstraintsRecomputed() {
+        model.markConstraintsRecomputed();
+    }
+
     public void setUserSpecificTradeAmountLimit(Optional<TradeAmount> userSpecificTradeAmountLimit) {
         model.setUserSpecificTradeAmountLimit(userSpecificTradeAmountLimit);
     }
@@ -68,5 +72,13 @@ public class TakeOfferAmountService {
 
     public void setFixAmountSliderValue(double sliderValue) {
         model.setFixAmountSliderValue(sliderValue);
+    }
+
+    public void setAmountValid(boolean amountValid) {
+        model.setAmountValid(amountValid);
+    }
+
+    public void reset() {
+        model.reset();
     }
 }

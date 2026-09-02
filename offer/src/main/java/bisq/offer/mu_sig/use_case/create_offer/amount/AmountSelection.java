@@ -468,7 +468,7 @@ public class AmountSelection extends LifecycleScope {
 
 
     // todo add tests
-    static long getAmountValueFromSliderValue(MonetaryRange amountRange, double sliderValue) {
+    public static long getAmountValueFromSliderValue(MonetaryRange amountRange, double sliderValue) {
         long min = amountRange.getMin().getValue();
         long max = amountRange.getMax().getValue();
         long range = max - min;
@@ -495,7 +495,7 @@ public class AmountSelection extends LifecycleScope {
     }
 
     // todo add tests
-    static double toSliderValueFromAmount(Monetary amount, MonetaryRange amountRange) {
+    public static double toSliderValueFromAmount(Monetary amount, MonetaryRange amountRange) {
         long min = amountRange.getMin().getValue();
         long max = amountRange.getMax().getValue();
         double range = max - min;
@@ -543,7 +543,7 @@ public class AmountSelection extends LifecycleScope {
     }
 
     // TODO add tests
-    static TradeAmount applyPriceQuoteToPassiveSide(TradeAmount tradeAmount,
+    public static TradeAmount applyPriceQuoteToPassiveSide(TradeAmount tradeAmount,
                                                     PriceQuote priceQuote,
                                                     boolean useBaseCurrencyForAmountInput) {
         Monetary baseSideMonetary, quoteSideMonetary;

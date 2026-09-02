@@ -25,4 +25,12 @@ public interface TakeOfferPriceReadOnlyModel {
     ReadOnlyObservable<PriceQuote> priceQuoteObservable();
 
     PriceQuote getPriceQuote();
+
+    ReadOnlyObservable<Double> priceDeviationObservable();
+
+    Double getPriceDeviation();
+
+    ReadOnlyObservable<PriceQuote> marketPriceQuoteObservable();
+
+    PriceQuote getMarketPriceQuote();
 }

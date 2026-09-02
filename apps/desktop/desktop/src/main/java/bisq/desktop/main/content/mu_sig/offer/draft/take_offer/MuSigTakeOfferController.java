@@ -23,6 +23,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.utils.KeyHandlerUtil;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
@@ -32,7 +33,12 @@ import bisq.desktop.main.content.mu_sig.offer.draft.take_offer.payment.MuSigTake
 import bisq.desktop.main.content.mu_sig.offer.draft.take_offer.review.MuSigTakeOfferReviewController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
+import bisq.desktop.components.overlay.Popup;
+import bisq.common.observable.Pin;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.PercentageFormatter;
+import bisq.settings.SettingsService;
+import bisq.offer.mu_sig.use_case.take_offer.TakeOfferValidationException;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.mu_sig.use_case.take_offer.TakeOfferUseCase;
 import javafx.event.EventHandler;
@@ -67,6 +73,11 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
     private final AccountService accountService;
     private final TakeOfferUseCase takeOfferService;
+    private final SettingsService settingsService;
+    private Pin priceDeviationPin;
+    private Pin amountLimitsPin;
+    private boolean warnedAboutPriceDeviation;
+    private long activationGeneration;
     private final OverlayController overlayController;
     @Getter
     private final MuSigTakeOfferModel model;
@@ -76,15 +87,17 @@ public class MuSigTakeOfferController extends NavigationController implements In
     private final MuSigTakeOfferPaymentController muSigTakeOfferPaymentController;
     private final MuSigTakeOfferReviewController muSigTakeOfferReviewController;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
-    private Subscription takersBaseSideAmountPin, takersQuoteSideAmountPin, selectedAccountPin, paymentMethodSpecPin;
+    private Subscription selectedAccountPin, paymentMethodSpecPin;
 
     public MuSigTakeOfferController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_TAKE_OFFER);
 
         accountService = serviceProvider.getAccountService();
+        settingsService = serviceProvider.getSettingsService();
         overlayController = OverlayController.getInstance();
 
         takeOfferService = new TakeOfferUseCase(serviceProvider.getBondedRolesService().getMarketPriceService(),
+                serviceProvider.getIdentityService(),
                 serviceProvider.getSettingsService(),
                 serviceProvider.getAccountService());
 
@@ -111,7 +124,16 @@ public class MuSigTakeOfferController extends NavigationController implements In
     public void initWithData(InitData initData) {
         MuSigOffer muSigOffer = initData.getMuSigOffer();
 
-        takeOfferService.initialize(muSigOffer);
+        try {
+            takeOfferService.initialize(muSigOffer);
+        } catch (TakeOfferValidationException e) {
+            log.warn("Offer {} failed take-offer validation: {}", muSigOffer.getId(), e.getMessage());
+            // The overlay is still being constructed at this point; the rejection is surfaced
+            // in onActivate once the view is attached.
+            model.setTakeOfferValidationFailure(e.getReason());
+            model.suppressChildNavigation();
+            return;
+        }
 
         muSigTakeOfferAmountController.init(muSigOffer);
         muSigTakeOfferPaymentController.init(muSigOffer);
@@ -122,44 +144,15 @@ public class MuSigTakeOfferController extends NavigationController implements In
                 ? Res.get("muSig.offer.wizard.progress.account.fiat")
                 : Res.get("muSig.offer.wizard.progress.account.crypto"));
 
-        model.setAmountVisible(muSigOffer.hasAmountRange());
-        List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = muSigOffer.getBaseSidePaymentMethodSpecs();
-        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = muSigOffer.getQuoteSidePaymentMethodSpecs();
-
-        boolean isSingleAccountForSinglePaymentMethod = false;
-        boolean isSinglePaymentMethod = baseSidePaymentMethodSpecs.size() == 1 && quoteSidePaymentMethodSpecs.size() == 1;
-        Set<Account<? extends PaymentMethod<?>, ?>> accountsForPaymentMethod = null;
-        if (isSinglePaymentMethod) {
-
-            PaymentMethodSpec<?> takersPaymentMethodSpec = isBaseCurrencyBitcoin
-                    ? quoteSidePaymentMethodSpecs.get(0)
-                    : baseSidePaymentMethodSpecs.get(0);
-            PaymentMethod<?> paymentMethod = takersPaymentMethodSpec.getPaymentMethod();
-            String paymentMethodCurrencyCode = isBaseCurrencyBitcoin
-                    ? muSigOffer.getMarket().getQuoteCurrencyCode()
-                    : muSigOffer.getMarket().getBaseCurrencyCode();
-            accountsForPaymentMethod = accountService.getAccounts(paymentMethod).stream()
-                    .filter(account -> account.getAccountPayload().getSelectedCurrencyCodes().contains(paymentMethodCurrencyCode))
-                    .collect(Collectors.toSet());
-            isSingleAccountForSinglePaymentMethod = accountsForPaymentMethod.size() == 1;
-        }
-        model.setPaymentMethodVisible(!isSingleAccountForSinglePaymentMethod);
+        model.setAmountVisible(takeOfferService.shouldShowAmountStep());
+        model.setPaymentMethodVisible(takeOfferService.shouldShowPaymentStep());
 
         model.getChildTargets().clear();
         if (model.isPaymentMethodVisible()) {
             model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_PAYMENT);
         } else {
-            checkArgument(baseSidePaymentMethodSpecs.size() == 1);
-            checkArgument(quoteSidePaymentMethodSpecs.size() == 1);
-            checkNotNull(accountsForPaymentMethod);
-            checkArgument(accountsForPaymentMethod.size() == 1,
-                    "In case we have not displayed the payment method screen we expect that there exist " +
-                            "only one account for that single payment method.");
-            PaymentMethodSpec<?> takersPaymentMethodSpec = isBaseCurrencyBitcoin
-                    ? quoteSidePaymentMethodSpecs.get(0)
-                    : baseSidePaymentMethodSpecs.get(0);
-            muSigTakeOfferReviewController.setTakersAccount(accountsForPaymentMethod.iterator().next());
-            muSigTakeOfferReviewController.setTakersPaymentMethodSpec(takersPaymentMethodSpec);
+            muSigTakeOfferReviewController.setTakersAccount(takeOfferService.getSelectedAccount().orElseThrow());
+            muSigTakeOfferReviewController.setTakersPaymentMethodSpec(takeOfferService.getSelectedPaymentMethodSpec().orElseThrow());
         }
         if (model.isAmountVisible()) {
             model.getChildTargets().add(NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT);
@@ -173,36 +166,113 @@ public class MuSigTakeOfferController extends NavigationController implements In
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
+        // The controller instance is cached across wizard sessions: the latch must start fresh,
+        // and bumping the generation invalidates any deferred warning a previous session left in
+        // OverlayController.runOnShown.
+        warnedAboutPriceDeviation = false;
+        activationGeneration++;
+
+        TakeOfferValidationException.Reason validationFailure = model.getTakeOfferValidationFailure();
+        if (validationFailure != null) {
+            new Popup().warning(getValidationWarning(validationFailure)).show();
+            onClose();
+            return;
+        }
+
+        priceDeviationPin = takeOfferService.getPriceService().priceDeviationObservable().addObserver(deviation ->
+                UIThread.run(this::maybeShowPriceDeviationWarning));
+
         NavigationTarget first = model.getChildTargets().getFirst();
         model.getSelectedChildTarget().set(first);
         model.getBackButtonText().set(Res.get("action.back"));
         model.getNextButtonVisible().set(true);
-       /* takersBaseSideAmountPin = EasyBind.subscribe(muSigTakeOfferAmountController.getTakersBaseSideAmount(),
-                muSigTakeOfferReviewController::setTakersBaseSideAmount);
-        takersQuoteSideAmountPin = EasyBind.subscribe(muSigTakeOfferAmountController.getTakersQuoteSideAmount(),
-                muSigTakeOfferReviewController::setTakersQuoteSideAmount);*/
 
+        // The review step reads the taker's amounts from the domain amount observables directly.
         selectedAccountPin = EasyBind.subscribe(muSigTakeOfferPaymentController.getSelectedAccount(),
                 muSigTakeOfferReviewController::setTakersAccount);
         paymentMethodSpecPin = EasyBind.subscribe(muSigTakeOfferPaymentController.getPaymentMethodSpec(),
                 muSigTakeOfferReviewController::setTakersPaymentMethodSpec);
-        paymentMethodSpecPin = EasyBind.subscribe(muSigTakeOfferPaymentController.getPaymentMethodSpec(),
-                paymentMethodSpec -> {
-                    //  muSigTakeOfferAmountController.setTakersPaymentMethodSpec(paymentMethodSpec);
-                    muSigTakeOfferReviewController.setTakersPaymentMethodSpec(paymentMethodSpec);
+        // The domain publishes the limits AFTER updating the collapse state, so observing the
+        // limits (not the UI selection properties) reads a consistent shouldShowAmountStep.
+        amountLimitsPin = takeOfferService.getAmountService().tradeAmountLimitsObservable().addObserver(limits ->
+                UIThread.run(this::updateAmountStepVisibility));
+    }
 
-                });
+    // A user-initiated recomputation can collapse or un-collapse the effective amount range
+    // (take-offer.md, "Amount", collapse rule). It can originate from the payment step (method
+    // selection) or from the amount step itself (input-side switch), so the rebuilt target list
+    // must be reconciled with the step the user is currently on.
+    private void updateAmountStepVisibility() {
+        if (model.getTakeOfferValidationFailure() != null) {
+            return;
+        }
+        // The limits observer queues this through UIThread.run; an already queued call can run
+        // after onDeactivate disposed the domain, where shouldShowAmountStep must not be asked.
+        if (takeOfferService.getAmountService().getTradeAmountLimits() == null) {
+            return;
+        }
+        boolean amountVisible = takeOfferService.shouldShowAmountStep();
+        if (amountVisible == model.isAmountVisible()) {
+            return;
+        }
+        model.setAmountVisible(amountVisible);
+        if (amountVisible) {
+            int reviewIndex = model.getChildTargets().indexOf(NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
+            if (reviewIndex >= 0 && !model.getChildTargets().contains(NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT)) {
+                model.getChildTargets().add(reviewIndex, NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT);
+            }
+        } else {
+            model.getChildTargets().remove(NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT);
+        }
+        reconcileCurrentStep();
+    }
+
+    // The child target list just changed. The current index must follow the selected target's
+    // new position, else Next and Back would address neighbours of a stale index. An input-side
+    // switch happens ON the amount step, so the recomputation it triggers can remove the very
+    // step the user is standing on; the flow then moves to the review step (the collapsed
+    // amount has already been published as fixed by the domain).
+    private void reconcileCurrentStep() {
+        NavigationTarget selected = model.getSelectedChildTarget().get();
+        if (selected == null) {
+            return;
+        }
+        int index = model.getChildTargets().indexOf(selected);
+        if (index >= 0) {
+            model.getCurrentIndex().set(index);
+            return;
+        }
+        int reviewIndex = model.getChildTargets().indexOf(NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
+        if (reviewIndex < 0) {
+            return;
+        }
+        model.setAnimateRightOut(false);
+        model.getCurrentIndex().set(reviewIndex);
+        model.getSelectedChildTarget().set(NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
+        Navigation.navigateTo(NavigationTarget.MU_SIG_TAKE_OFFER_REVIEW);
     }
 
     @Override
     public void onDeactivate() {
+        if (priceDeviationPin != null) {
+            priceDeviationPin.unbind();
+            priceDeviationPin = null;
+        }
+        if (amountLimitsPin != null) {
+            amountLimitsPin.unbind();
+            amountLimitsPin = null;
+        }
         takeOfferService.dispose();
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
-     /*   takersBaseSideAmountPin.unsubscribe();
-        takersQuoteSideAmountPin.unsubscribe();
-        selectedAccountPin.unsubscribe();
-        paymentMethodSpecPin.unsubscribe();*/
+        if (selectedAccountPin != null) {
+            selectedAccountPin.unsubscribe();
+            selectedAccountPin = null;
+        }
+        if (paymentMethodSpecPin != null) {
+            paymentMethodSpecPin.unsubscribe();
+            paymentMethodSpecPin = null;
+        }
         reset();
     }
 
@@ -213,7 +283,6 @@ public class MuSigTakeOfferController extends NavigationController implements In
         model.getNextButtonText().set(isTakeOfferReview ?
                 Res.get("muSig.offer.taker.review.takeOffer") :
                 Res.get("action.next"));
-        model.getShowProgressBox().set(!isTakeOfferReview);
         setMainButtonsVisibleState(true);
         model.getTakeOfferButtonVisible().set(isTakeOfferReview);
         model.getNextButtonVisible().set(!isTakeOfferReview);
@@ -250,6 +319,16 @@ public class MuSigTakeOfferController extends NavigationController implements In
                     return;
                 }
             }
+            if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_TAKE_OFFER_AMOUNT
+                    && !takeOfferService.getAmountService().isAmountValid()) {
+                // A cleared or unapplicable amount input blocks advancing, not only final
+                // confirmation; this also covers Enter, which the parent key handler routes
+                // here regardless of which control owns the focus.
+                new Popup().warning(Res.get("muSig.takeOffer.validation.invalidAmountInput"))
+                        .owner(view.getRoot())
+                        .show();
+                return;
+            }
             model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
@@ -274,6 +353,56 @@ public class MuSigTakeOfferController extends NavigationController implements In
         OverlayController.hide();
     }
 
+    // Re-reads deviation and threshold at display time: the popup is deferred until the overlay
+    // display animation completed (else the overlay stage ends up above it), and the deviation may
+    // have changed meanwhile.
+    private void maybeShowPriceDeviationWarning() {
+        // The observer queues this through UIThread.run; unbinding does not cancel an already
+        // queued call, which can therefore run after onDeactivate disposed the domain.
+        if (priceDeviationPin == null) {
+            return;
+        }
+        Double deviation = takeOfferService.getPriceService().getPriceDeviation();
+        if (deviation == null) {
+            return;
+        }
+        double threshold = settingsService.getPriceDeviationWarningThreshold().get();
+        if (Math.abs(deviation) > threshold) {
+            if (!warnedAboutPriceDeviation) {
+                warnedAboutPriceDeviation = true;
+                long generation = activationGeneration;
+                overlayController.runOnShown(() -> {
+                    // A deferred handler can outlive the wizard session that stored it; only the
+                    // registering activation may show its warning.
+                    if (generation != activationGeneration || priceDeviationPin == null) {
+                        return;
+                    }
+                    Double currentDeviation = takeOfferService.getPriceService().getPriceDeviation();
+                    double currentThreshold = settingsService.getPriceDeviationWarningThreshold().get();
+                    if (currentDeviation == null || Math.abs(currentDeviation) <= currentThreshold) {
+                        warnedAboutPriceDeviation = false;
+                        return;
+                    }
+                    new Popup().warning(Res.get("muSig.takeOffer.priceDeviationWarning",
+                                    PercentageFormatter.formatToPercentWithSymbol(Math.abs(currentDeviation))))
+                            .owner(view.getRoot())
+                            .show();
+                });
+            }
+        } else {
+            warnedAboutPriceDeviation = false;
+        }
+    }
+
+    private static String getValidationWarning(TakeOfferValidationException.Reason reason) {
+        return switch (reason) {
+            case OWN_OFFER -> Res.get("muSig.takeOffer.validation.ownOffer");
+            case NO_MARKET_PRICE -> Res.get("muSig.takeOffer.validation.noMarketPrice");
+            case AMOUNT_OUTSIDE_LIMITS -> Res.get("muSig.takeOffer.validation.amountOutsideLimits");
+            default -> Res.get("muSig.takeOffer.validation.invalidOffer");
+        };
+    }
+
     void onTakeOffer() {
         muSigTakeOfferReviewController.takeOffer();
     }
@@ -291,7 +420,7 @@ public class MuSigTakeOfferController extends NavigationController implements In
 
     private void reset() {
         resetSelectedChildTarget();
-        //  muSigTakeOfferAmountController.reset();
+        muSigTakeOfferAmountController.reset();
         muSigTakeOfferPaymentController.reset();
         muSigTakeOfferReviewController.reset();
 

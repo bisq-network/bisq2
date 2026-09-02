@@ -53,6 +53,10 @@ public class MuSigAmountLimitsController implements Controller {
     @Override
     public void onActivate() {
         pins.add(takeOfferAmountService.inputAmountLimitsObservable().addObserver(inputAmountLimits -> {
+            // Disposal clears the limits; the null fire carries nothing to display.
+            if (inputAmountLimits == null) {
+                return;
+            }
             UIThread.run(() -> {
                 model.getMin().set(formatAmountByMonetaryType(inputAmountLimits.getMin()));
                 model.getMax().set(formatAmountByMonetaryType(inputAmountLimits.getMax()));

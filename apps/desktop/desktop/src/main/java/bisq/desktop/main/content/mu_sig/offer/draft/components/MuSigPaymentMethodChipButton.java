@@ -43,7 +43,10 @@ public class MuSigPaymentMethodChipButton extends StackPane {
     private int numAccounts;
     @Nullable
     private String accountName;
-    private boolean explicitTooltipSet;
+    @Nullable
+    private Tooltip explicitTooltip;
+    @Nullable
+    private Tooltip inadmissibleReasonTooltip;
 
     public MuSigPaymentMethodChipButton(PaymentMethod<?> paymentMethod) {
         this.paymentMethod = paymentMethod;
@@ -73,30 +76,43 @@ public class MuSigPaymentMethodChipButton extends StackPane {
     }
 
     private void updateText() {
+        Tooltip derivedTooltip = null;
         if (accountName != null) {
             String text = accountName + " (" + paymentMethodDisplayString + ")";
             chipButton.setText(StringUtils.truncate(text, TRUNCATION_LENGTH));
-            chipButton.setTooltip(new BisqTooltip(text));
+            derivedTooltip = new BisqTooltip(text);
         } else if (numAccounts > 1) {
             String text = StringUtils.truncate(paymentMethodDisplayString, TRUNCATION_LENGTH) + " (" + numAccounts + ")";
             chipButton.setText(text);
-            chipButton.setTooltip(new BisqTooltip(paymentMethodDisplayString + " (" + numAccounts + ")"));
+            derivedTooltip = new BisqTooltip(paymentMethodDisplayString + " (" + numAccounts + ")");
         } else {
             chipButton.setText(paymentMethodDisplayString);
-            if (!explicitTooltipSet) {
-                chipButton.setTooltip(null);
-            }
+        }
+        // Priority: the inadmissibility reason always wins, then the tooltip derived from the
+        // account name or count (whose full text the truncated chip label cannot show), then an
+        // explicitly set one (e.g. a long payment method display name).
+        if (inadmissibleReasonTooltip != null) {
+            chipButton.setTooltip(inadmissibleReasonTooltip);
+        } else if (derivedTooltip != null) {
+            chipButton.setTooltip(derivedTooltip);
+        } else {
+            chipButton.setTooltip(explicitTooltip);
         }
     }
 
+    public void setInadmissibleReasonTooltip(@Nullable Tooltip tooltip) {
+        inadmissibleReasonTooltip = tooltip;
+        updateText();
+    }
+
     public void setTooltip(BisqTooltip bisqTooltip) {
-        explicitTooltipSet = bisqTooltip != null;
-        chipButton.setTooltip(bisqTooltip);
+        explicitTooltip = bisqTooltip;
+        updateText();
     }
 
     public void setTooltip(Tooltip tooltip) {
-        explicitTooltipSet = tooltip != null;
-        chipButton.setTooltip(tooltip);
+        explicitTooltip = tooltip;
+        updateText();
     }
 
     public void setLeftIcon(Node icon) {
