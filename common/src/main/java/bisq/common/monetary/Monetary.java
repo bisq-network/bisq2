@@ -220,9 +220,36 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         return clamp(limits.getMin(), limits.getMax());
     }
 
+    // -1 if below min, 0 if within [min, max], 1 if above max
+    public int compareToRange(Monetary min, Monetary max) {
+        checkNotNull(min, "min must not be null");
+        checkNotNull(max, "max must not be null");
+        checkArgument(code.equals(min.getCode()),
+                "min must use same code as this monetary. this.code=%s; min.code=%s", code, min.getCode());
+        checkArgument(code.equals(max.getCode()),
+                "max must use same code as this monetary. this.code=%s; max.code=%s", code, max.getCode());
+        if (value < min.getValue()) {
+            return -1;
+        } else if (value > max.getValue()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    // -1 if below min, 0 if within [min, max], 1 if above max
+    public int compareToRange(MonetaryRange limits) {
+        checkNotNull(limits, "limits must not be null");
+        return compareToRange(limits.getMin(), limits.getMax());
+    }
+
     public Monetary multiply(double factor) {
         long newValue = MathUtils.roundDoubleToLong(value * factor);
         return from(this, newValue);
+    }
+
+    public boolean isBitcoin() {
+        return code.endsWith("BTC");
     }
 
     private enum ComparisonOperator {
@@ -231,5 +258,17 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         IS_GREATER_THAN,
         IS_GREATER_THAN_OR_EQUAL,
         IS_EQUAL
+    }
+
+    public String printAsDouble(boolean includeCode) {
+        if (includeCode) {
+            return asDouble() + " " + code;
+        } else {
+            return String.valueOf(asDouble());
+        }
+    }
+
+    public String printAsDouble() {
+        return printAsDouble(true);
     }
 }

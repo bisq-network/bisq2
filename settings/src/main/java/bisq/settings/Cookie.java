@@ -118,6 +118,28 @@ public final class Cookie implements PersistableProto {
                 }).stream().findAny();
     }
 
+    public Optional<Long> asLong(CookieKey key) {
+        return asString(key)
+                .flatMap(stringValue -> {
+                    try {
+                        return Optional.of(Long.parseLong(stringValue));
+                    } catch (Throwable t) {
+                        return Optional.empty();
+                    }
+                }).stream().findAny();
+    }
+
+    public Optional<Long> asLong(CookieKey key, String subKey) {
+        return asString(key, subKey)
+                .flatMap(stringValue -> {
+                    try {
+                        return Optional.of(Long.parseLong(stringValue));
+                    } catch (Throwable t) {
+                        return Optional.empty();
+                    }
+                }).stream().findAny();
+    }
+
     public Optional<Boolean> asBoolean(CookieKey key) {
         return asString(key).map(stringValue -> stringValue.equals("1"));
     }
@@ -148,6 +170,14 @@ public final class Cookie implements PersistableProto {
     }
 
     void putAsDouble(CookieKey key, @Nullable String subKey, double value) {
+        putAsString(key, subKey, String.valueOf(value));
+    }
+
+    void putAsLong(CookieKey key, long value) {
+        putAsLong(key, null, value);
+    }
+
+    void putAsLong(CookieKey key, @Nullable String subKey, long value) {
         putAsString(key, subKey, String.valueOf(value));
     }
 

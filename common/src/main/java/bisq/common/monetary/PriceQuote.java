@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A price quote is using the concept of base currency and quote currency. Base currency is left and quote currency
@@ -197,6 +198,34 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
 
     public double asDouble(int precision) {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
+    }
+
+    public PriceQuote clamp(PriceQuoteRange limits) {
+        checkNotNull(limits, "limits must not be null");
+        return clamp(limits.getMin(), limits.getMax());
+    }
+
+    public PriceQuote clamp(PriceQuote min, PriceQuote max) {
+        checkNotNull(min, "min must not be null");
+        checkNotNull(max, "max must not be null");
+
+        checkArgument(this.getBaseSideMonetary().getCode().equals(max.getBaseSideMonetary().getCode()),
+                "this and max base side codes must match. this.base=%s; max.base=%s",
+                this.getBaseSideMonetary().getCode(), max.getBaseSideMonetary().getCode());
+        checkArgument(min.getBaseSideMonetary().getCode().equals(max.getBaseSideMonetary().getCode()),
+                "this and max base side codes must match. this.base=%s; max.base=%s",
+                min.getBaseSideMonetary().getCode(), max.getBaseSideMonetary().getCode());
+        checkArgument(min.getQuoteSideMonetary().getCode().equals(max.getQuoteSideMonetary().getCode()),
+                "min and max quote side codes must match. min.quote=%s; max.quote=%s",
+                min.getQuoteSideMonetary().getCode(), max.getQuoteSideMonetary().getCode());
+
+        if (value < min.getValue()) {
+            return PriceQuote.from(min.getBaseSideMonetary(), min.getQuoteSideMonetary());
+        } else if (value > max.getValue()) {
+            return PriceQuote.from(max.getBaseSideMonetary(), max.getQuoteSideMonetary());
+        } else {
+            return this;
+        }
     }
 
     @Override

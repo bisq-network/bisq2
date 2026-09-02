@@ -65,7 +65,7 @@ public class BondedRolesService implements Service {
 
     private final BondedRoleRegistrationService bondedRoleRegistrationService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    private final MarketPriceService marketPriceService;
+    private final DefaultMarketPriceService marketPriceService;
     private final ExplorerService explorerService;
     private final AlertService alertService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
