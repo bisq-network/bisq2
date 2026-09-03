@@ -38,6 +38,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 
 @Slf4j
 public class WebSocketService implements Service {
@@ -70,7 +71,8 @@ public class WebSocketService implements Service {
                             BisqEasyService bisqEasyService,
                             NetworkService networkService,
                             OpenTradeItemsService openTradeItemsService,
-                            PermissionService permissionService) {
+                            PermissionService permissionService,
+                            Predicate<String> clientPairedCheck) {
         this.apiConfig = apiConfig;
         subscriptionService = new SubscriptionService(bondedRolesService,
                 alertNotificationsService,
@@ -83,7 +85,9 @@ public class WebSocketService implements Service {
                 permissionService,
                 apiConfig.isAuthorizationRequired());
         webSocketRestApiService = new WebSocketRestApiService(apiConfig, tlsContextService);
-        webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
+        webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService,
+                webSocketRestApiService,
+                clientPairedCheck);
     }
 
     @Override

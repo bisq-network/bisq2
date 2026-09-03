@@ -25,6 +25,10 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,8 +47,10 @@ class WebSocketConnectionHandlerTest {
 
     /** Exposes the framework's socket registry, which is protected on WebSocketApplication. */
     private static class TestableHandler extends WebSocketConnectionHandler {
-        TestableHandler(SubscriptionService subscriptionService, WebSocketRestApiService restApiService) {
-            super(subscriptionService, restApiService);
+        TestableHandler(SubscriptionService subscriptionService,
+                        WebSocketRestApiService restApiService,
+                        Predicate<String> clientPairedCheck) {
+            super(subscriptionService, restApiService, clientPairedCheck);
         }
 
         boolean isRegistered(DefaultWebSocket webSocket) {
@@ -52,6 +58,7 @@ class WebSocketConnectionHandlerTest {
         }
     }
 
+    private Set<String> pairedClientIds;
     private SubscriptionService subscriptionService;
     private WebSocketRestApiService webSocketRestApiService;
     private TestableHandler handler;
@@ -60,7 +67,17 @@ class WebSocketConnectionHandlerTest {
     void setUp() {
         subscriptionService = mock(SubscriptionService.class);
         webSocketRestApiService = mock(WebSocketRestApiService.class);
-        handler = new TestableHandler(subscriptionService, webSocketRestApiService);
+        pairedClientIds = ConcurrentHashMap.newKeySet();
+        pairedClientIds.add(REVOKED_CLIENT_ID);
+        pairedClientIds.add("other-client");
+        pairedClientIds.add("live-client");
+        handler = new TestableHandler(subscriptionService, webSocketRestApiService, pairedClientIds::contains);
+    }
+
+    /** Mirrors a real revocation: the profile goes first, then the live sockets are dropped. */
+    private void revoke(String clientId) {
+        pairedClientIds.remove(clientId);
+        handler.disconnectClient(clientId);
     }
 
     private DefaultWebSocket connect(String clientId) {
@@ -127,5 +144,37 @@ class WebSocketConnectionHandlerTest {
         handler.onMessage(webSocket, "{\"anything\":true}");
 
         verify(subscriptionService, timeout(5000)).onMessage(anyString(), any());
+    }
+
+    @Test
+    void aHandshakeCompletingAfterTheRevocationDoesNotStayRegistered() {
+        // The revocation runs while no socket of that client is registered yet, so its scan cannot
+        // see the connection that is still completing its handshake.
+        revoke(REVOKED_CLIENT_ID);
+
+        DefaultWebSocket lateSocket = connect(REVOKED_CLIENT_ID);
+
+        verify(lateSocket).close();
+        assertFalse(handler.isRegistered(lateSocket));
+    }
+
+    @Test
+    void aMessageFromAConnectionRejectedAtHandshakeIsNotHandled() {
+        revoke(REVOKED_CLIENT_ID);
+        DefaultWebSocket lateSocket = connect(REVOKED_CLIENT_ID);
+
+        handler.onMessage(lateSocket, "{\"anything\":true}");
+
+        verify(subscriptionService, never()).onMessage(anyString(), any());
+        verify(webSocketRestApiService, never()).onMessage(anyString(), any());
+    }
+
+    @Test
+    void revokingOneClientDoesNotBlockAnotherFromConnecting() {
+        revoke(REVOKED_CLIENT_ID);
+
+        DefaultWebSocket webSocket = connect("other-client");
+
+        assertTrue(handler.isRegistered(webSocket));
     }
 }
