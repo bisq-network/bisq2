@@ -34,7 +34,6 @@ import lombok.Getter;
 import java.util.regex.Pattern;
 
 public class BitcoinAmountDisplay extends HBox {
-    @Getter
     private final StringProperty btcAmount = new SimpleStringProperty("");
     private boolean showBtcCode = true;
     private final TextFlow valueTextFlow = new TextFlow();
@@ -82,6 +81,10 @@ public class BitcoinAmountDisplay extends HBox {
         getStyleClass().add("bitcoin-amount-display-text");
 
         updateDisplay();
+    }
+
+    public StringProperty btcAmountProperty() {
+        return btcAmount;
     }
 
     public void setBaselineAlignment() {

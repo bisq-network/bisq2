@@ -32,7 +32,7 @@ public class TradeSettingsController implements Controller {
     private final TradeSettingsModel model;
     private final SettingsService settingsService;
 
-    private Pin closeMyOfferWhenTakenPin, maxTradePriceDeviationPin, tradeAgeForRedactingDataPin;
+    private Pin closeMyOfferWhenTakenPin, maxTradePriceDeviationPin, priceDeviationWarningThresholdPin, tradeAgeForRedactingDataPin;
 
     public TradeSettingsController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -46,6 +46,8 @@ public class TradeSettingsController implements Controller {
                 .to(settingsService.getCloseMyOfferWhenTaken(), settingsService::setCloseMyOfferWhenTaken);
         maxTradePriceDeviationPin = FxBindings.bindBiDir(model.getMaxTradePriceDeviation())
                 .to(settingsService.getMaxTradePriceDeviation(), settingsService::setMaxTradePriceDeviation);
+        priceDeviationWarningThresholdPin = FxBindings.bindBiDir(model.getPriceDeviationWarningThreshold())
+                .to(settingsService.getPriceDeviationWarningThreshold(), settingsService::setPriceDeviationWarningThreshold);
         tradeAgeForRedactingDataPin = FxBindings.bindBiDir(model.getNumDaysAfterRedactingTradeData())
                 .to(settingsService.getNumDaysAfterRedactingTradeData(), settingsService::setNumDaysAfterRedactingTradeData);
     }
@@ -54,6 +56,7 @@ public class TradeSettingsController implements Controller {
     public void onDeactivate() {
         closeMyOfferWhenTakenPin.unbind();
         maxTradePriceDeviationPin.unbind();
+        priceDeviationWarningThresholdPin.unbind();
         tradeAgeForRedactingDataPin.unbind();
     }
 }

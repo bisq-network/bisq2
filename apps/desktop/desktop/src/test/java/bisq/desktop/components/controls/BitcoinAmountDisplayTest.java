@@ -363,6 +363,17 @@ class BitcoinAmountDisplayTest {
     }
 
     @Test
+    void testMalformedAmountAfterValidAmountDoesNotLeaveStaleDigitsVisible() {
+        bitcoinAmountDisplay.setBtcAmount("1.5");
+        assertEquals("50 000 000", bitcoinAmountDisplay.getSignificantDigits().getText());
+        bitcoinAmountDisplay.setBtcAmount("1.5x");
+        assertEquals("1.5x", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertFalse(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
+
+    @Test
     void testNonNumericHidesBtcCodeEvenWhenConstructedWithBtcCode() {
         BitcoinAmountDisplay display = new BitcoinAmountDisplay("N/A", true);
         assertEquals("N/A", display.getIntegerPart().getText());

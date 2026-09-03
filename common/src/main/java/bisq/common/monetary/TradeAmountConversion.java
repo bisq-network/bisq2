@@ -20,13 +20,16 @@ package bisq.common.monetary;
 import bisq.common.market.Market;
 import com.google.common.annotations.VisibleForTesting;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeAmountConversion {
+    //todo move to TradeAmountFactory
     public static TradeAmount toTradeAmount(Market market, PriceQuote priceQuote, Monetary amount) {
         checkNotNull(market, "Market must not be null");
         checkNotNull(priceQuote, "priceQuote must not be null");
         checkNotNull(amount, "amount must not be null");
+        verifyPriceQuoteMarket(market, priceQuote);
 
         if (isBaseSideAmount(market, amount)) {
             return new TradeAmount(amount, priceQuote.toQuoteSideMonetary(amount));
@@ -35,6 +38,30 @@ public class TradeAmountConversion {
         } else {
             throw new IllegalArgumentException("Amount is neither base nor quote side for market: " + market + ". amount=" + amount);
         }
+    }
+
+    /**
+     * Like {@link #toTradeAmount(Market, PriceQuote, Monetary)}, but fails with an
+     * ArithmeticException when the converted side does not fit into a long.
+     */
+    public static TradeAmount toTradeAmountExact(Market market, PriceQuote priceQuote, Monetary amount) {
+        checkNotNull(market, "Market must not be null");
+        checkNotNull(priceQuote, "priceQuote must not be null");
+        checkNotNull(amount, "amount must not be null");
+        verifyPriceQuoteMarket(market, priceQuote);
+
+        if (isBaseSideAmount(market, amount)) {
+            return new TradeAmount(amount, priceQuote.toQuoteSideMonetaryExact(amount));
+        } else if (isQuoteSideAmount(market, amount)) {
+            return new TradeAmount(priceQuote.toBaseSideMonetaryExact(amount), amount);
+        } else {
+            throw new IllegalArgumentException("Amount is neither base nor quote side for market: " + market + ". amount=" + amount);
+        }
+    }
+
+    private static void verifyPriceQuoteMarket(Market market, PriceQuote priceQuote) {
+        checkArgument(market.equals(priceQuote.getMarket()),
+                "The price quote's market %s must match the market %s", priceQuote.getMarket(), market);
     }
 
     @VisibleForTesting

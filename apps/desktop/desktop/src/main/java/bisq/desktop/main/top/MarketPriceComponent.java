@@ -18,6 +18,7 @@
 package bisq.desktop.main.top;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.market_price.DefaultMarketPriceService;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceRequestService;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -386,19 +387,27 @@ public class MarketPriceComponent {
         }
 
         public String getProviderUrl() {
-            return marketPriceService.getMarketPriceRequestService()
-                    .flatMap(MarketPriceRequestService::getMostRecentProvider)
-                    .map(HttpRequestUrlProvider::getBaseUrl)
-                    .orElseGet(() -> Res.get("data.na"));
+            if (marketPriceService instanceof DefaultMarketPriceService defaultMarketPriceService) {
+                return defaultMarketPriceService.getMarketPriceRequestService()
+                        .flatMap(MarketPriceRequestService::getMostRecentProvider)
+                        .map(HttpRequestUrlProvider::getBaseUrl)
+                        .orElseGet(() -> Res.get("data.na"));
+            } else {
+                return Res.get("data.na");
+            }
         }
 
         public String getMarketPriceProvidingOracle() {
-            return marketPriceService.getMarketPriceProvidingOracle()
-                    .map(AuthorizedBondedRole::getNetworkId)
-                    .map(NetworkId::getAddressByTransportTypeMap)
-                    .flatMap(map -> map.values().stream().findAny())
-                    .map(Address::getFullAddress)
-                    .orElseGet(() -> Res.get("data.na"));
+            if (marketPriceService instanceof DefaultMarketPriceService defaultMarketPriceService) {
+                return defaultMarketPriceService.getMarketPriceProvidingOracle()
+                        .map(AuthorizedBondedRole::getNetworkId)
+                        .map(NetworkId::getAddressByTransportTypeMap)
+                        .flatMap(map -> map.values().stream().findAny())
+                        .map(Address::getFullAddress)
+                        .orElseGet(() -> Res.get("data.na"));
+            } else {
+                return Res.get("data.na");
+            }
         }
 
         public String getSource() {

@@ -31,6 +31,7 @@ import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
+import bisq.offer.options.CollateralOption;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.price.spec.FixPriceSpec;
@@ -154,7 +155,7 @@ class MuSigContractVerifierTest {
                 new BaseSideFixedAmountSpec(baseSideAmount),
                 new FixPriceSpec(PriceQuote.fromFiatPrice(50_000, "USD")),
                 List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new CollateralOption(0.25, 0.25)),
                 "1.0.0");
         return new MuSigContract(1_700_000_000_000L,
                 offer,

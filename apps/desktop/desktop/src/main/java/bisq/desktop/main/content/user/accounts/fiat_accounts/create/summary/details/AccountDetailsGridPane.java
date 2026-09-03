@@ -19,11 +19,13 @@ package bisq.desktop.main.content.user.accounts.fiat_accounts.create.summary.det
 
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentRail;
+import bisq.common.monetary.Fiat;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
-import bisq.mu_sig.MuSigTradeAmountLimits;
+import bisq.offer.mu_sig.use_case.create_offer.amount.limits.PaymentMethodBasedAmountLimitsProvider;
+import bisq.presentation.formatters.AmountFormatter;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -58,10 +60,11 @@ public abstract class AccountDetailsGridPane<A extends AccountPayload<?>, R exte
 
     protected abstract void addDetails(A accountPayload);
 
-    protected void addRestrictions(R fiatPaymentRail) {
-        String maxTradeLimit = MuSigTradeAmountLimits.getFormattedMaxTradeLimitInUsd(fiatPaymentRail);
+    protected void addRestrictions(R paymentRail) {
+        Fiat maxTradeLimitInUsd = PaymentMethodBasedAmountLimitsProvider.evaluateLimitInUsd(paymentRail);
+        String maxTradeLimit = AmountFormatter.formatQuoteAmount(maxTradeLimitInUsd);
         String restrictions = Res.get("paymentAccounts.summary.tradeLimit", maxTradeLimit) + " / " +
-                Res.get("paymentAccounts.summary.tradeDuration", fiatPaymentRail.getTradeDuration().getDisplayString());
+                Res.get("paymentAccounts.summary.tradeDuration", paymentRail.getTradeDuration().getDisplayString());
         addDescriptionAndValue(Res.get("paymentAccounts.restrictions"), restrictions);
     }
 

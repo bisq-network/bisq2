@@ -154,7 +154,7 @@ class MuSigDisputeContractIdentityChecksTest {
                 new BaseSideFixedAmountSpec(100_000L),
                 new MarketPriceSpec(),
                 List.of(paymentMethod),
-                List.of(),
+                List.of(new bisq.offer.options.CollateralOption(0.25, 0.25)),
                 "1.0.0"
         );
         PaymentMethodSpec<?> quoteSidePaymentMethodSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, "EUR");

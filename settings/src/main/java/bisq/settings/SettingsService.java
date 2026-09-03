@@ -55,6 +55,9 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     public final static double DEFAULT_MAX_TRADE_PRICE_DEVIATION = 0.05; // 5%
     public final static double MIN_TRADE_PRICE_DEVIATION = 0.01; // 1%
     public final static double MAX_TRADE_PRICE_DEVIATION = 0.1; // 10%
+    public final static double DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD = 0.1; // 10%
+    public final static double MIN_PRICE_DEVIATION_WARNING_THRESHOLD = 0.01; // 1%
+    public final static double MAX_PRICE_DEVIATION_WARNING_THRESHOLD = 0.5; // 50%
 
     public final static int DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 90;
     public final static int MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 30;
@@ -116,6 +119,7 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         pins.add(getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist()));
         pins.add(getFavouriteMarkets().addObserver(this::persist));
         pins.add(getMaxTradePriceDeviation().addObserver(value -> persist()));
+        pins.add(getPriceDeviationWarningThreshold().addObserver(value -> persist()));
         pins.add(getShowBuyOffers().addObserver(value -> persist()));
         pins.add(getShowOfferListExpanded().addObserver(value -> persist()));
         pins.add(getShowMarketSelectionListCollapsed().addObserver(value -> persist()));
@@ -222,6 +226,10 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
 
     public ReadOnlyObservable<Double> getMaxTradePriceDeviation() {
         return persistableStore.maxTradePriceDeviation;
+    }
+
+    public ReadOnlyObservable<Double> getPriceDeviationWarningThreshold() {
+        return persistableStore.priceDeviationWarningThreshold;
     }
 
     public ReadOnlyObservable<ChatNotificationType> getChatNotificationType() {
@@ -360,6 +368,12 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     public void setMaxTradePriceDeviation(double value) {
         if (value >= MIN_TRADE_PRICE_DEVIATION && value <= MAX_TRADE_PRICE_DEVIATION) {
             persistableStore.maxTradePriceDeviation.set(value);
+        }
+    }
+
+    public void setPriceDeviationWarningThreshold(double value) {
+        if (value >= MIN_PRICE_DEVIATION_WARNING_THRESHOLD && value <= MAX_PRICE_DEVIATION_WARNING_THRESHOLD) {
+            persistableStore.priceDeviationWarningThreshold.set(value);
         }
     }
 

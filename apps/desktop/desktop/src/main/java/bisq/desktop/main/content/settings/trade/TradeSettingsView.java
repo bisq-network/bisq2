@@ -34,7 +34,7 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
     private static final double TEXT_FIELD_WIDTH = 500;
 
     private final Switch closeMyOfferWhenTaken;
-    private final MaterialTextField maxTradePriceDeviation, numDaysAfterRedactingTradeData;
+    private final MaterialTextField maxTradePriceDeviation, priceDeviationWarningThreshold, numDaysAfterRedactingTradeData;
 
     public TradeSettingsView(TradeSettingsModel model, TradeSettingsController controller) {
         super(new VBox(), model, controller);
@@ -52,6 +52,12 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         maxTradePriceDeviation.setMaxWidth(TEXT_FIELD_WIDTH);
         maxTradePriceDeviation.setStringConverter(model.getMaxTradePriceDeviationConverter());
 
+        priceDeviationWarningThreshold = new MaterialTextField(Res.get("settings.trade.priceDeviationWarningThreshold"),
+                null, Res.get("settings.trade.priceDeviationWarningThreshold.help"));
+        priceDeviationWarningThreshold.setValidators(model.getPriceDeviationWarningThresholdValidator());
+        priceDeviationWarningThreshold.setMaxWidth(TEXT_FIELD_WIDTH);
+        priceDeviationWarningThreshold.setStringConverter(model.getPriceDeviationWarningThresholdConverter());
+
         numDaysAfterRedactingTradeData = new MaterialTextField(Res.get("settings.trade.numDaysAfterRedactingTradeData"),
                 null, Res.get("settings.trade.numDaysAfterRedactingTradeData.help"));
         numDaysAfterRedactingTradeData.setValidators(model.getNumDaysAfterRedactingTradeDataValidator());
@@ -59,7 +65,7 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         numDaysAfterRedactingTradeData.setStringConverter(model.getNumDaysAfterRedactingTradeDataConverter());
 
         VBox.setMargin(maxTradePriceDeviation, new Insets(15, 0, 15, 0));
-        VBox tradeVBox = new VBox(10, closeMyOfferWhenTaken, maxTradePriceDeviation, numDaysAfterRedactingTradeData);
+        VBox tradeVBox = new VBox(10, closeMyOfferWhenTaken, maxTradePriceDeviation, priceDeviationWarningThreshold, numDaysAfterRedactingTradeData);
 
         VBox.setMargin(tradeVBox, new Insets(0, 5, 0, 5));
         VBox contentBox = new VBox(50);
@@ -76,6 +82,9 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         Bindings.bindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation(),
                 model.getMaxTradePriceDeviationConverter());
         maxTradePriceDeviation.validate(); // Needed to show help field as its shown only if input is valid
+        Bindings.bindBidirectional(priceDeviationWarningThreshold.textProperty(), model.getPriceDeviationWarningThreshold(),
+                model.getPriceDeviationWarningThresholdConverter());
+        priceDeviationWarningThreshold.validate();
 
         Bindings.bindBidirectional(numDaysAfterRedactingTradeData.textProperty(), model.getNumDaysAfterRedactingTradeData(),
                 model.getNumDaysAfterRedactingTradeDataConverter());
@@ -87,7 +96,9 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
         Bindings.unbindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation());
+        Bindings.unbindBidirectional(priceDeviationWarningThreshold.textProperty(), model.getPriceDeviationWarningThreshold());
         maxTradePriceDeviation.resetValidation();
+        priceDeviationWarningThreshold.resetValidation();
 
         Bindings.unbindBidirectional(numDaysAfterRedactingTradeData.textProperty(), model.getNumDaysAfterRedactingTradeData());
         numDaysAfterRedactingTradeData.resetValidation();

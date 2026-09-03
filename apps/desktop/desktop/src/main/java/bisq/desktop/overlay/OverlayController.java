@@ -37,10 +37,10 @@ import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardController;
 import bisq.desktop.main.content.bisq_easy.wallet_guide.WalletGuideController;
 import bisq.desktop.main.content.components.AddToContactsListWindow;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.MuSigCreateOfferController;
+import bisq.desktop.main.content.mu_sig.offer.draft.create_offer.MuSigCreateOfferController;
 import bisq.desktop.main.content.mu_sig.offer.offer_details.MuSigOfferDetailsController;
-import bisq.desktop.main.content.mu_sig.offer.take_offer.MuSigTakeOfferController;
 import bisq.desktop.main.content.mu_sig.trade.pending.trade_details.MuSigTradeDetailsController;
+import bisq.desktop.main.content.mu_sig.offer.draft.take_offer.MuSigTakeOfferController;
 import bisq.desktop.main.content.mu_sig.trade.trade_guide.MuSigGuideController;
 import bisq.desktop.main.content.mu_sig.trade.trade_limits.TradeLimitsController;
 import bisq.desktop.main.content.reputation.build_reputation.accountAge.AccountAgeController;
@@ -106,6 +106,10 @@ public class OverlayController extends NavigationController {
     private final ServiceProvider serviceProvider;
     @Nullable
     private Runnable onHiddenHandler;
+    @Nullable
+    private Runnable onShownHandler;
+    @Getter
+    private boolean shown;
     @Setter
     private boolean useEscapeKeyHandler;
     @Setter
@@ -212,9 +216,27 @@ public class OverlayController extends NavigationController {
     }
 
     void onShown() {
+        shown = true;
+        if (onShownHandler != null) {
+            onShownHandler.run();
+            onShownHandler = null;
+        }
+    }
+
+    // Runs the handler once the overlay display animation has completed; runs immediately when
+    // the overlay is already shown. Popups shown from within the overlay must wait for this,
+    // else the overlay stage ends up above them.
+    public void runOnShown(Runnable handler) {
+        if (shown) {
+            handler.run();
+        } else {
+            onShownHandler = handler;
+        }
     }
 
     void onHidden() {
+        shown = false;
+        onShownHandler = null;
         resetSelectedChildTarget();
         if (onHiddenHandler != null) {
             onHiddenHandler.run();

@@ -96,6 +96,32 @@ public class TradeAmountConversionTest {
     }
 
     @Test
+    void testToTradeAmountThrowsIfPriceQuoteMarketDoesNotMatchMarket() {
+        // A BTC/USD quote converts a EUR amount at the USD rate unless the markets are compared:
+        // PriceQuote only checks the Fiat/Coin runtime types of the amounts it converts.
+        Market market = new Market("BTC", "EUR", "Bitcoin", "Euro");
+        PriceQuote usdPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
+        Monetary eurAmount = Fiat.fromFaceValue(100, "EUR");
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountConversion.toTradeAmount(market, usdPriceQuote, eurAmount));
+
+        assertTrue(exception.getMessage().contains("must match the market"));
+    }
+
+    @Test
+    void testToTradeAmountExactThrowsIfPriceQuoteMarketDoesNotMatchMarket() {
+        Market market = new Market("BTC", "EUR", "Bitcoin", "Euro");
+        PriceQuote usdPriceQuote = PriceQuote.fromFiatPrice(50000, "USD");
+        Monetary eurAmount = Fiat.fromFaceValue(100, "EUR");
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountConversion.toTradeAmountExact(market, usdPriceQuote, eurAmount));
+
+        assertTrue(exception.getMessage().contains("must match the market"));
+    }
+
+    @Test
     void testIsBaseAndQuoteSideAmountHelpers() {
         Market market = new Market("BTC", "USD", "Bitcoin", "US Dollar");
         Monetary btcAmount = Coin.asBtcFromFaceValue(0.5);

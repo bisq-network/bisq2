@@ -45,6 +45,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import static bisq.settings.SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+import static bisq.settings.SettingsService.DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD;
+import static bisq.settings.SettingsService.MAX_PRICE_DEVIATION_WARNING_THRESHOLD;
+import static bisq.settings.SettingsService.MIN_PRICE_DEVIATION_WARNING_THRESHOLD;
 import static bisq.settings.SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE;
 import static bisq.settings.SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
 import static bisq.settings.SettingsService.DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
@@ -96,10 +99,12 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
     final Observable<Boolean> muSigActivated = new Observable<>();
     final Observable<Boolean> autoAddToContactsList = new Observable<>();
+    //todo should be done with cookies
     final Observable<Market> muSigLastSelectedFiatMarket = new Observable<>();
     final Observable<Market> muSigLastSelectedOtherMarket = new Observable<>();
     final Observable<Market> selectedWalletMarket = new Observable<>();
     final Observable<Boolean> showLatestTxs = new Observable<>();
+    final Observable<Double> priceDeviationWarningThreshold = new Observable<>();
 
     SettingsStore() {
         this(new Cookie(),
@@ -138,7 +143,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 MarketRepository.getDefaultBtcFiatMarket(),
                 MarketRepository.getDefaultCryptoBtcMarket(),
                 MarketRepository.getDefaultBtcFiatMarket(),
-                true);
+                true,
+                DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD);
     }
 
     SettingsStore(Cookie cookie,
@@ -177,7 +183,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                   Market muSigLastSelectedFiatMarket,
                   Market muSigLastSelectedOtherMarket,
                   Market selectedWalletMarket,
-                  boolean showLatestTxs) {
+                  boolean showLatestTxs,
+                  double priceDeviationWarningThreshold) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -215,6 +222,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.muSigLastSelectedOtherMarket.set(muSigLastSelectedOtherMarket);
         this.selectedWalletMarket.set(selectedWalletMarket);
         this.showLatestTxs.set(showLatestTxs);
+        this.priceDeviationWarningThreshold.set(priceDeviationWarningThreshold);
     }
 
     @SuppressWarnings("deprecation")
@@ -259,7 +267,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setMuSigLastSelectedFiatMarket(muSigLastSelectedFiatMarket.get().toProto(serializeForHash))
                 .setMuSigLastSelectedOtherMarket(muSigLastSelectedOtherMarket.get().toProto(serializeForHash))
                 .setSelectedWalletMarket(selectedWalletMarket.get().toProto(serializeForHash))
-                .setShowLatestTxs(showLatestTxs.get());
+                .setShowLatestTxs(showLatestTxs.get())
+                .setPriceDeviationWarningThreshold(priceDeviationWarningThreshold.get());
     }
 
     @Override
@@ -273,6 +282,14 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||
                 maxTradePriceDeviation > MAX_TRADE_PRICE_DEVIATION) {
             maxTradePriceDeviation = DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+        }
+
+        // Absent proto3 doubles deserialize as 0; normalize to the default like maxTradePriceDeviation.
+        double priceDeviationWarningThreshold = proto.getPriceDeviationWarningThreshold();
+        // Negated inclusive-range form so NaN also normalizes to the default.
+        if (!(priceDeviationWarningThreshold >= MIN_PRICE_DEVIATION_WARNING_THRESHOLD &&
+                priceDeviationWarningThreshold <= MAX_PRICE_DEVIATION_WARNING_THRESHOLD)) {
+            priceDeviationWarningThreshold = DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD;
         }
 
         double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
@@ -344,7 +361,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.hasSelectedWalletMarket()
                         ? Market.fromProto(proto.getSelectedWalletMarket())
                         : MarketRepository.getDefaultBtcFiatMarket(),
-                proto.getShowLatestTxs());
+                proto.getShowLatestTxs(),
+                priceDeviationWarningThreshold);
     }
 
     @Override
@@ -396,7 +414,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 muSigLastSelectedFiatMarket.get(),
                 muSigLastSelectedOtherMarket.get(),
                 selectedWalletMarket.get(),
-                showLatestTxs.get());
+                showLatestTxs.get(),
+                priceDeviationWarningThreshold.get());
     }
 
     @Override
@@ -440,6 +459,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             muSigLastSelectedOtherMarket.set(persisted.muSigLastSelectedOtherMarket.get());
             selectedWalletMarket.set(persisted.selectedWalletMarket.get());
             showLatestTxs.set(persisted.showLatestTxs.get());
+            priceDeviationWarningThreshold.set(persisted.priceDeviationWarningThreshold.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

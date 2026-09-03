@@ -156,6 +156,27 @@ public class MonetaryTest {
     }
 
     @Test
+    void testIsBitcoinMatchesOnlyTheExactCode() {
+        assertTrue(Coin.fromFaceValue(1, "BTC").isBitcoin());
+        // L-BTC and LN-BTC are distinct assets whose units must never be treated as
+        // satoshis (e.g. by TradeAmount.getBitcoinSideAmount).
+        assertFalse(Coin.fromFaceValue(1, "L-BTC").isBitcoin());
+        assertFalse(Coin.fromFaceValue(1, "LN-BTC").isBitcoin());
+        assertFalse(Fiat.fromFaceValue(1, "USD").isBitcoin());
+    }
+
+    @Test
+    void testBitcoinSideOfLiquidBitcoinMarketTradeAmount() {
+        // 40 L-BTC at 0.0025 BTC/L-BTC: the Bitcoin side is the 0.1 BTC quote amount,
+        // not the 40 * 10^8 L-BTC base units.
+        Monetary lbtcAmount = Coin.fromFaceValue(40, "L-BTC");
+        Monetary btcAmount = Coin.fromFaceValue(0.1, "BTC");
+        TradeAmount tradeAmount = new TradeAmount(lbtcAmount, btcAmount);
+        assertEquals(btcAmount.getValue(), tradeAmount.getBitcoinSideAmount().getValue());
+        assertEquals(lbtcAmount.getValue(), tradeAmount.getNonBitcoinSideAmount().getValue());
+    }
+
+    @Test
     void testQuotes() {
         Coin btc = Coin.asBtcFromFaceValue(1.0);
         Fiat usd = Fiat.fromFaceValue(50000d, "USD");
