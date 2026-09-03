@@ -45,6 +45,32 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
     }
 
     /**
+     * Drops registrations persisted before they carried an owner.
+     * <p>
+     * They cannot be attributed to a client, so revoking one would report success while that device
+     * kept receiving notifications, and nothing later could ever remove them by client. Dropping
+     * them is recoverable and self-healing: the owning app registers again on its next start and
+     * gets a registration that revocation can find, whereas keeping them would leave revocation
+     * permanently unsound for exactly the devices most likely to be revoked, the old ones.
+     */
+    @Override
+    public void onPersistedApplied(DeviceRegistrationStore persisted) {
+        synchronized (persistableStore) {
+            Set<String> unowned = persistableStore.getDeviceByDeviceId().values().stream()
+                    .filter(profile -> profile.getClientId().isEmpty())
+                    .map(MobileDeviceProfile::getDeviceId)
+                    .collect(Collectors.toSet());
+            if (unowned.isEmpty()) {
+                return;
+            }
+            unowned.forEach(persistableStore.getDeviceByDeviceId()::remove);
+            persist();
+            log.info("Dropped {} device registration(s) persisted without an owner; those devices " +
+                    "register again on next start", unowned.size());
+        }
+    }
+
+    /**
      * Creates or updates the registration of a device on behalf of the given API client.
      * <p>
      * A device ID is chosen by the client, so without an owner check any client could register

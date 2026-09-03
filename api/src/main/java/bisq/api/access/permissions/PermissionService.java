@@ -41,16 +41,23 @@ public class PermissionService {
         return granted.contains(required);
     }
 
+    /**
+     * Folds a grant the way {@link #putPermissions(String, Set)} does, for callers that have to
+     * store it together with something else.
+     */
+    public PermissionSet toPermissionSet(Set<Permission> permissions) {
+        return permissions.equals(Permission.autoGrantable())
+                ? PermissionSet.grantAll()
+                : new PermissionSet(permissions);
+    }
+
     public void putPermissions(String clientId, Set<Permission> permissions) {
         // A grant EXACTLY equal to this version's auto-grantable ("standard") set is stored as
         // grantAll so it keeps covering standard permissions added by future versions. Strict
         // equality on purpose: a grant that additionally carries a sensitive permission must
         // stay explicit — folding it into grantAll would drop the sensitive permission from the
         // expansion (grantAll never covers sensitive ones; see PermissionSet).
-        PermissionSet permissionSet = permissions.equals(Permission.autoGrantable())
-                ? PermissionSet.grantAll()
-                : new PermissionSet(permissions);
-        apiAccessStoreService.putPermissions(clientId, permissionSet);
+        apiAccessStoreService.putPermissions(clientId, toPermissionSet(permissions));
     }
 
     public Optional<Set<Permission>> findPermissions(String clientId) {

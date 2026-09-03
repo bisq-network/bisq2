@@ -127,9 +127,11 @@ public class PairingService {
         ClientProfile clientProfile = new ClientProfile(clientId,
                 clientSecret,
                 cappedClientName);
-        apiAccessStoreService.putClientProfile(clientId, clientProfile);
-
-        permissionService.putPermissions(clientId, pairingCode.getGrantedPermissions());
+        // Profile and grant in one step: written separately, a revocation could land between them
+        // and leave a grant behind that authorizes the client it had just revoked.
+        apiAccessStoreService.putClientProfileAndPermissions(clientId,
+                clientProfile,
+                permissionService.toPermissionSet(pairingCode.getGrantedPermissions()));
 
         return clientProfile;
     }

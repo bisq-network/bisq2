@@ -62,9 +62,24 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
         }
     }
 
-    public void putClientProfile(String clientId, ClientProfile clientProfile) {
-        persistableStore.getClientProfileByIdMap().put(clientId, clientProfile);
-        persist();
+    /**
+     * Stores a client's profile and its permissions as one step, persisted once.
+     * <p>
+     * Written under the same monitor as {@link #removeClientProfile(String)} because the two are
+     * otherwise interleavable: a revocation landing between separate writes removes a profile and a
+     * grant that does not exist yet, and the grant is then written afterwards. That orphan grant is
+     * not inert — the authorization filter reads permissions, not profiles, so with session
+     * handling off (as every shipped config runs) it is by itself enough to authorize the client
+     * that was just revoked.
+     */
+    public void putClientProfileAndPermissions(String clientId,
+                                               ClientProfile clientProfile,
+                                               PermissionSet permissionSet) {
+        synchronized (persistableStore) {
+            persistableStore.getClientProfileByIdMap().put(clientId, clientProfile);
+            persistableStore.getPermissionsByClientId().put(clientId, permissionSet);
+            persist();
+        }
     }
 
     public void putPermissions(String clientId, PermissionSet permissionSet) {

@@ -191,6 +191,26 @@ class DeviceRegistrationServiceTest {
         }
     }
 
+    @Test
+    void registrationsWithoutAnOwnerAreDroppedOnLoad() {
+        // They cannot be attributed to a client, so revoking that client would report success
+        // while the device kept receiving notifications.
+        registerWithoutOwner("legacy-device");
+        register("owned-device", CLIENT_ID);
 
+        service.onPersistedApplied(service.getPersistableStore());
 
+        assertEquals(Set.of("owned-device"), service.getMobileDeviceProfiles().stream()
+                .map(MobileDeviceProfile::getDeviceId)
+                .collect(Collectors.toSet()));
+    }
+
+    @Test
+    void loadKeepsAStoreThatHasNoUnownedRegistrations() {
+        register("owned-device", CLIENT_ID);
+
+        service.onPersistedApplied(service.getPersistableStore());
+
+        assertEquals(1, service.getMobileDeviceProfiles().size());
+    }
 }

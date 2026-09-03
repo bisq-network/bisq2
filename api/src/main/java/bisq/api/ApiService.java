@@ -172,7 +172,10 @@ public class ApiService implements Service {
                     bisqEasyService,
                     networkService,
                     openTradeItemsService,
-                    permissionService));
+                    permissionService,
+                    // A handshake that authenticated before a revocation must not leave a live
+                    // connection behind, so registration revalidates against the store.
+                    clientId -> pairingService.findClientProfile(clientId).isPresent()));
         } else {
             webSocketService = Optional.empty();
         }

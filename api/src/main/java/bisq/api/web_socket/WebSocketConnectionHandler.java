@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,10 +52,15 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     @Getter
     private final ObservableSet<WebSocketClient> websocketClients = new ObservableSet<>();
 
+    /** Whether a client is still paired, read from the authoritative store at connection time. */
+    private final Predicate<String> clientPairedCheck;
+
     public WebSocketConnectionHandler(SubscriptionService subscriptionService,
-                                      WebSocketRestApiService webSocketRestApiService) {
+                                      WebSocketRestApiService webSocketRestApiService,
+                                      Predicate<String> clientPairedCheck) {
         this.subscriptionService = subscriptionService;
         this.webSocketRestApiService = webSocketRestApiService;
+        this.clientPairedCheck = clientPairedCheck;
     }
 
     @Override
@@ -73,6 +79,19 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     public void onConnect(WebSocket socket) {
         // todo use config to check if multiple clients are permitted
         super.onConnect(socket);
+        // The handshake authenticated the client, and it can have been revoked since. Checked
+        // after registering rather than before, because a check before would leave the window it
+        // closes: the revocation scan could pass between the check and the registration, and the
+        // connection would survive a revocation that had already reported success. Registering
+        // first means either that scan finds this socket or this check finds the client gone.
+        if (WebSocketIdentity.findClientId(socket)
+                .filter(clientId -> !clientPairedCheck.test(clientId))
+                .isPresent()) {
+            log.warn("Rejecting connection of a client revoked during the handshake");
+            remove(socket);
+            closeQuietly(socket);
+            return;
+        }
         log.info("Client connected: {}", socket);
 
         updateWebsocketClients();
@@ -127,8 +146,8 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
      */
     public void disconnectClient(String clientId) {
         // Deregistered before closing, so a socket whose close fails is already rejected by
-        // onMessage. A handshake still in flight is not visible here and is caught by the
-        // revocation check in onConnect instead.
+        // onMessage. A handshake still in flight is not in this snapshot; onConnect revalidates
+        // against the store after registering, which is what covers that ordering.
         List<WebSocket> sockets = getWebSockets().stream()
                 .filter(webSocket -> WebSocketIdentity.findClientId(webSocket).filter(clientId::equals).isPresent())
                 .toList();
