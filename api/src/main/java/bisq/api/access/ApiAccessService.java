@@ -29,18 +29,29 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.List;
 
+/**
+ * The single entry point of the access layer. Callers outside this package depend on this class
+ * only, never on the services behind it, so there is exactly one way to perform each operation.
+ * <p>
+ * Logic belongs in a dedicated service and reaches callers as a delegation here, as
+ * {@link ClientRevocationService} does for revocation.
+ */
 @Slf4j
 
 public class ApiAccessService {
 
     private final PairingService pairingService;
     private final SessionService sessionService;
+    private final ClientRevocationService clientRevocationService;
 
     public ApiAccessService(PairingService pairingService,
-                            SessionService sessionService) {
+                            SessionService sessionService,
+                            ClientRevocationService clientRevocationService) {
         this.pairingService = pairingService;
         this.sessionService = sessionService;
+        this.clientRevocationService = clientRevocationService;
     }
 
     public PairingResponse requestPairing(byte version,
@@ -52,6 +63,26 @@ public class ApiAccessService {
         SessionToken sessionToken = sessionService.createSession(clientId);
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
         return new PairingResponse(clientId, clientSecret, sessionToken.getSessionId(), expiresAt);
+    }
+
+    /**
+     * All paired clients, as full domain objects including {@code clientSecret}. Callers must map
+     * to a representation without the secret before it leaves the process; the REST layer does so
+     * via {@code ClientProfileDto}.
+     */
+    public List<ClientProfile> getClientProfiles() {
+        return pairingService.getClientProfiles();
+    }
+
+    /**
+     * Revokes a paired client. See {@link ClientRevocationService#revokeClient(String)} for what
+     * revocation covers.
+     *
+     * @param clientId The client ID to revoke
+     * @return the outcome; see {@link ClientRevocationResult}
+     */
+    public ClientRevocationResult revokeClient(String clientId) {
+        return clientRevocationService.revokeClient(clientId);
     }
 
     public SessionResponse requestSession(String clientId, String clientSecret) throws InvalidSessionRequestException {
