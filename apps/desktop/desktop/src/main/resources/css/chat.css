@@ -386,6 +386,12 @@
     -fx-background-radius: 8;
 }
 
+/* The opaque button covers the cell, so the keyboard selection highlight must target it. */
+.chat-mention-list-view .list-cell:selected .chat-mention-list-button {
+    -fx-background-color: -bisq-dark-grey-50;
+    -fx-text-fill: -bisq2-green;
+}
+
 .chat-mention-placeholder-label {
     -fx-padding: 5 0;
 }
