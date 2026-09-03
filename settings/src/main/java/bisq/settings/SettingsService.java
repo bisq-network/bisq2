@@ -519,12 +519,6 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         updateCookieChangedFlag();
     }
 
-    public void setCookie(CookieKey key, String subKey, long value) {
-        getCookie().putAsLong(key, subKey, value);
-        persist();
-        updateCookieChangedFlag();
-    }
-
     public void setCookie(CookieKey key, String value) {
         setCookie(key, null, value);
     }
