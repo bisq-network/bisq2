@@ -26,10 +26,12 @@ import bisq.support.arbitration.ArbitrationCaseState;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationResult;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationResultService;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
-import bisq.support.mediation.MediationCaseState;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
+import bisq.support.mediation.MediationCaseState;
+import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
+import bisq.support.mediation.mu_sig.MuSigMediationResultRejectionMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationResultService;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.trade.MuSigDisputeState;
@@ -92,7 +94,21 @@ final class MuSigTradeDisputeService {
     }
 
     public void rejectMediationResult(MuSigTrade trade) {
-        applyMediationResultAcceptance(trade, false);
+        Optional<MuSigMediationResult> optionalMediationResult =
+                trade.getTradeDispute().getMuSigMediationResult();
+        checkArgument(optionalMediationResult.isPresent());
+        MuSigMediationResult mediationResult = optionalMediationResult.orElseThrow();
+        if (mediationResult.getMediationPayoutDistributionType() == MediationPayoutDistributionType.NO_PAYOUT) {
+            log.warn("Cannot reject mediation result for trade {} because the result has no payout.", trade.getId());
+            return;
+        }
+        MuSigOpenTradeChannel channel = findChannelByTradeId(trade.getId()).orElseThrow();
+        byte[] mediationResultHash = MuSigMediationResultService.getMediationResultHash(mediationResult);
+        if (trade.getMyself().setMediationResultRejected()) {
+            persist.run();
+            muSigTraderMediationService.sendMediationResultRejectionMessage(
+                    trade.getId(), trade.getMyIdentity(), trade.getPeer(), mediationResultHash, channel);
+        }
     }
 
     public void requestArbitration(MuSigTrade trade) {
@@ -131,6 +147,10 @@ final class MuSigTradeDisputeService {
             findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
                     .flatMap(tradeAndChannel -> verifyMediationResultAcceptanceMessage(message, tradeAndChannel, bannedUserService))
                     .ifPresent(tradeAndChannel -> processMediationResultAcceptanceMessage(message, tradeAndChannel));
+        } else if (envelopePayloadMessage instanceof MuSigMediationResultRejectionMessage message) {
+            findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
+                    .flatMap(tradeAndChannel -> verifyMediationResultRejectionMessage(message, tradeAndChannel, bannedUserService))
+                    .ifPresent(tradeAndChannel -> processMediationResultRejectionMessage(message, tradeAndChannel));
         } else if (envelopePayloadMessage instanceof MuSigDisputeCasePaymentDetailsRequest message) {
             findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
                     .flatMap(tradeAndChannel -> verifyDisputeCasePaymentDetailsRequest(message, tradeAndChannel, bannedUserService))
@@ -309,6 +329,60 @@ final class MuSigTradeDisputeService {
         }
 
         if (trade.getPeer().setMediationResultAccepted(message.isMediationResultAccepted())) {
+            persist.run();
+        }
+    }
+
+    private static Optional<MuSigTradeAndChannel> verifyMediationResultRejectionMessage(
+            MuSigMediationResultRejectionMessage message,
+            MuSigTradeAndChannel tradeAndChannel,
+            BannedUserService bannedUserService) {
+        if (!tradeAndChannel.trade().getPeer().getNetworkId().getId().equals(message.getSenderNetworkId().getId())) {
+            log.warn("Ignoring MuSigMediationResultRejectionMessage with unexpected senderNetworkId {} for trade {}.",
+                    message.getSenderNetworkId(), message.getTradeId());
+            return Optional.empty();
+        }
+
+        if (bannedUserService.isUserProfileBanned(message.getSenderNetworkId())) {
+            log.warn("Ignoring MuSigMediationResultRejectionMessage as sender is banned");
+            return Optional.empty();
+        }
+        return Optional.of(tradeAndChannel);
+    }
+
+    private void processMediationResultRejectionMessage(MuSigMediationResultRejectionMessage message,
+                                                        MuSigTradeAndChannel tradeAndChannel) {
+        MuSigTrade trade = tradeAndChannel.trade();
+        Optional<MuSigMediationResult> mediationResult = trade.getTradeDispute().getMuSigMediationResult();
+        if (mediationResult.isEmpty()) {
+            addPendingDisputeMessage(trade.getId(), message);
+            return;
+        }
+
+        MuSigMediationResult result = mediationResult.orElseThrow();
+        if (result.getMediationPayoutDistributionType() == MediationPayoutDistributionType.NO_PAYOUT) {
+            log.warn("Ignoring MuSigMediationResultRejectionMessage for trade {} because the result has no payout.",
+                    message.getTradeId());
+            return;
+        }
+
+        byte[] expectedHash = MuSigMediationResultService.getMediationResultHash(result);
+        if (!Arrays.equals(expectedHash, message.getMediationResultHash())) {
+            log.warn("Ignoring MuSigMediationResultRejectionMessage for trade {} because the result hash does not match.",
+                    message.getTradeId());
+            return;
+        }
+
+        MuSigTradeParty peer = trade.getPeer();
+        if (peer.isMediationResultRejected()) {
+            return;
+        }
+        if (peer.getCustomPayoutData().isPresent()) {
+            log.warn("Ignoring MuSigMediationResultRejectionMessage for trade {} because peer custom payout data is already stored.",
+                    message.getTradeId());
+            return;
+        }
+        if (peer.setMediationResultRejected()) {
             persist.run();
         }
     }
