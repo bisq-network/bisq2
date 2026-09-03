@@ -84,28 +84,29 @@ public class TradeAmountLimitUtils {
     }
 
     /**
-     * Like {@link #toTradeAmountLimit}, but fails with an ArithmeticException when the base
-     * side does not fit into a long instead of silently wrapping. The take flow compares and
-     * publishes limit pairs on either side, so a wrapped base side would corrupt the
-     * comparison; failing closed refuses the take when the limit cannot be represented.
+     * Like {@link #toTradeAmountLimit}, but every conversion leg fails with an
+     * ArithmeticException when a converted amount does not fit into a long instead of silently
+     * wrapping. The take flow compares and publishes limit pairs on either side, so a wrapped
+     * value (which can stay positive) would corrupt the comparison or bypass a cap; failing
+     * closed refuses the take when the limit cannot be represented. The caller captures one
+     * {@link Rates} snapshot for a whole limit set so its limits never mix market prices.
      */
-    public static TradeAmount toTradeAmountLimitExact(MarketPriceService marketPriceService,
+    public static TradeAmount toTradeAmountLimitExact(Rates rates,
                                                       Market market,
                                                       PriceQuote priceQuote,
                                                       Fiat usdAmount) {
-        checkNotNull(marketPriceService, "marketPriceService must not be null");
+        checkNotNull(rates, "rates must not be null");
         checkNotNull(market, "market must not be null");
         checkNotNull(priceQuote, "priceQuote must not be null");
         checkNotNull(usdAmount, "usdAmount must not be null");
 
-        Market usdBitcoinMarket = MarketRepository.getUSDBitcoinMarket();
-        PriceQuote btcUsdPriceQuote = marketPriceService.getMarketPriceQuoteOrThrow(usdBitcoinMarket);
         Monetary quoteSideAmount;
         if (market.isBtcFiatMarket()) {
-            PriceQuote btcFiatPriceQuote = marketPriceService.getMarketPriceQuoteOrThrow(market);
-            quoteSideAmount = AmountConversion.usdToFiat(btcUsdPriceQuote, btcFiatPriceQuote, usdAmount);
+            quoteSideAmount = AmountConversion.usdToFiatExact(rates.btcUsdPriceQuote(),
+                    rates.btcFiatPriceQuote().orElseThrow(),
+                    usdAmount);
         } else {
-            quoteSideAmount = AmountConversion.usdToBtc(btcUsdPriceQuote, usdAmount);
+            quoteSideAmount = AmountConversion.usdToBtcExact(rates.btcUsdPriceQuote(), usdAmount);
         }
         Monetary baseSideAmount = priceQuote.toBaseSideMonetaryExact(quoteSideAmount);
         return new TradeAmount(baseSideAmount, quoteSideAmount);

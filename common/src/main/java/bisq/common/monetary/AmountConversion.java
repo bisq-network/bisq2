@@ -59,6 +59,18 @@ public class AmountConversion {
         return fiatToBtc(btcUsdPriceQuote, usdAmount);
     }
 
+    /**
+     * Like {@link #usdToBtc}, but fails with an ArithmeticException when the Bitcoin amount does
+     * not fit into a long instead of silently wrapping.
+     */
+    public static Monetary usdToBtcExact(PriceQuote btcUsdPriceQuote, Monetary usdAmount) {
+        checkNotNull(btcUsdPriceQuote, "btcUsdPriceQuote must not be null");
+        checkNotNull(usdAmount, "usdAmount must not be null");
+        checkPriceQuoteCodes(btcUsdPriceQuote, "BTC", "USD", "usdToBtcExact");
+        checkAmountCode(usdAmount, "USD", "usdAmount", "usdToBtcExact");
+        return btcUsdPriceQuote.toBaseSideMonetaryExact(usdAmount);
+    }
+
     public static Monetary btcToUsd(PriceQuote btcUsdPriceQuote, Monetary btcAmount) {
         checkNotNull(btcUsdPriceQuote, "btcUsdPriceQuote must not be null");
         checkNotNull(btcAmount, "btcAmount must not be null");
@@ -80,6 +92,19 @@ public class AmountConversion {
         checkPriceQuoteCodes(btcFiatPriceQuote, "BTC", btcFiatPriceQuote.getQuoteSideMonetary().getCode(), "usdToFiat");
         Monetary btc = usdToBtc(btcUsdPriceQuote, usdAmount);
         return btcToFiat(btcFiatPriceQuote, btc);
+    }
+
+    /**
+     * Like {@link #usdToFiat}, but both legs fail with an ArithmeticException when a converted
+     * amount does not fit into a long instead of silently wrapping.
+     */
+    public static Monetary usdToFiatExact(PriceQuote btcUsdPriceQuote,
+                                          PriceQuote btcFiatPriceQuote,
+                                          Monetary usdAmount) {
+        checkNotNull(btcFiatPriceQuote, "btcFiatPriceQuote must not be null");
+        checkPriceQuoteCodes(btcFiatPriceQuote, "BTC", btcFiatPriceQuote.getQuoteSideMonetary().getCode(), "usdToFiatExact");
+        Monetary btc = usdToBtcExact(btcUsdPriceQuote, usdAmount);
+        return btcFiatPriceQuote.toQuoteSideMonetaryExact(btc);
     }
 
     public static Monetary fiatToUsd(PriceQuote btcUsdPriceQuote,

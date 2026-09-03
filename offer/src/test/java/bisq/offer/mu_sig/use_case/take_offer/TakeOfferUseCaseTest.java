@@ -47,6 +47,8 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -57,8 +59,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -80,10 +80,9 @@ public class TakeOfferUseCaseTest {
         MarketPrice marketPrice = mock(MarketPrice.class);
         when(marketPrice.getPriceQuote()).thenReturn(quote);
         when(marketPriceService.findMarketPrice(market)).thenReturn(Optional.of(marketPrice));
-        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.of(quote));
         // The USD-defined amount limits convert through the market price of the offer market and
         // the USD market (the same market in this harness).
-        when(marketPriceService.getMarketPriceQuoteOrThrow(market)).thenReturn(quote);
+        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.of(quote));
     }
 
     private void fireMarketPriceUpdate(PriceQuote quote) {
@@ -91,6 +90,20 @@ public class TakeOfferUseCaseTest {
         MarketPrice marketPrice = mock(MarketPrice.class);
         when(marketPrice.getPriceQuote()).thenReturn(quote);
         marketPriceByCurrencyMap.put(market, marketPrice);
+    }
+
+    private void stubUsdMarketPriceDriftingOnEveryRead() {
+        // Each price divides 10^9, so a whole-USD amount converts to satoshis exactly at any of them.
+        long[] prices = {100_000, 200_000, 400_000, 500_000, 1_000_000, 2_000_000, 4_000_000, 5_000_000,
+                10_000_000, 20_000_000, 40_000_000, 50_000_000, 100_000_000, 200_000_000, 400_000_000,
+                500_000_000, 1_000_000_000};
+        AtomicInteger reads = new AtomicInteger();
+        Supplier<PriceQuote> nextQuote = () -> {
+            int read = reads.getAndIncrement();
+            assertTrue(read < prices.length, "drift sequence exhausted, the test can no longer detect mixed reads");
+            return PriceQuote.fromFiatPrice(prices[read], "USD");
+        };
+        when(marketPriceService.findMarketPriceQuote(market)).thenAnswer(invocation -> Optional.of(nextQuote.get()));
     }
 
     // Altcoin regime: XMR precision is 12 and the unit price (251,234 sats per XMR) is far
@@ -714,7 +727,7 @@ public class TakeOfferUseCaseTest {
         // HALF_UP base; an offer maximum stored at exactly that base value derives DOWN to
         // 19_999 sats. The sides disagree by one rounding unit, so the intersection is empty.
         PriceQuote fiftyThousand = PriceQuote.fromFiatPrice(50_000, "USD");
-        when(marketPriceService.getMarketPriceQuoteOrThrow(market)).thenReturn(fiftyThousand);
+        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.of(fiftyThousand));
         MuSigOffer offer = validXmrOffer();
         long absoluteMinBase = xmrPriceQuote.toBaseSideMonetary(Coin.fromValue(20_000, "BTC", 8)).getValue();
         when(offer.getAmountSpec()).thenReturn(new BaseSideRangeAmountSpec(20_000_000_000L, absoluteMinBase));
@@ -731,7 +744,7 @@ public class TakeOfferUseCaseTest {
         // stored side must select the limit endpoint, which makes the pair inversion visible
         // and the intersection empty - never a published amount below the floor.
         PriceQuote fiftyThousand = PriceQuote.fromFiatPrice(50_000, "USD");
-        when(marketPriceService.getMarketPriceQuoteOrThrow(market)).thenReturn(fiftyThousand);
+        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.of(fiftyThousand));
         MuSigOffer offer = validXmrOffer();
         long absoluteMinBase = xmrPriceQuote.toBaseSideMonetary(Coin.fromValue(20_000, "BTC", 8)).getValue();
         when(offer.getAmountSpec()).thenReturn(new BaseSideFixedAmountSpec(absoluteMinBase));
@@ -744,7 +757,7 @@ public class TakeOfferUseCaseTest {
     public void rangeMinTiedWithAbsoluteMinimumBaseGetsTheLimitPair() {
         TakeOfferUseCase useCase = createUseCase();
         PriceQuote fiftyThousand = PriceQuote.fromFiatPrice(50_000, "USD");
-        when(marketPriceService.getMarketPriceQuoteOrThrow(market)).thenReturn(fiftyThousand);
+        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.of(fiftyThousand));
         MuSigOffer offer = validXmrOffer();
         long absoluteMinBase = xmrPriceQuote.toBaseSideMonetary(Coin.fromValue(20_000, "BTC", 8)).getValue();
         when(offer.getAmountSpec()).thenReturn(new BaseSideRangeAmountSpec(absoluteMinBase, 1_100_000_000_000L));
@@ -765,7 +778,7 @@ public class TakeOfferUseCaseTest {
         // publishing a wrapped limit (which would falsely empty the intersection of this
         // 800-900 USD offer).
         PriceQuote tenThousand = PriceQuote.fromFiatPrice(10_000, "USD");
-        when(marketPriceService.getMarketPriceQuoteOrThrow(market)).thenReturn(tenThousand);
+        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.of(tenThousand));
         MuSigOffer offer = validXmrOffer();
         PriceQuote oneSatPerXmr = PriceQuote.fromPrice(0.00000001, "XMR", "BTC");
         stubXmrMarketPrice(oneSatPerXmr);
@@ -1282,6 +1295,34 @@ public class TakeOfferUseCaseTest {
     }
 
     @Test
+    public void limitsOfOneComputationShareOneMarketPriceSnapshot() {
+        Account<?, ?> wiseAccount = accountFor(wiseMethod);
+        TakeOfferUseCase eurUseCase = createUseCase(market -> List.of(wiseAccount));
+        Market eurMarket = new Market("BTC", "EUR", "Bitcoin", "Euro");
+        stubEurMarketPrice(eurMarket, PriceQuote.fromFiatPrice(90_000, "EUR"));
+        MuSigOffer offer = offerWithMethods(Direction.SELL, wiseMethod);
+        when(offer.getMarket()).thenReturn(eurMarket);
+        // The offer's own range binds nowhere: 0.0001 EUR sits below the floor at every price
+        // of the drift sequence, 20,000 EUR above every cap.
+        when(offer.getAmountSpec()).thenReturn(new QuoteSideRangeAmountSpec(1L, Fiat.fromFaceValue(20_000, "EUR").getValue()));
+        when(offer.hasAmountRange()).thenReturn(true);
+        // Every read of the BTC/USD price sees a newer price, as when the poller writes between
+        // two reads. The USD-defined limits (10 USD floor, 5000 USD Wise cap, 4000 USD user cap)
+        // keep their 1 : 500 : 400 proportions in EUR only when every limit, and both legs of
+        // each limit, convert at the same BTC/USD rate.
+        stubUsdMarketPriceDriftingOnEveryRead();
+
+        eurUseCase.initialize(offer);
+
+        long minimum = eurUseCase.getAmountService().getTradeAmountLimits().getMin().getQuoteSideAmount().getValue();
+        long preUserMaximum = eurUseCase.getAmountService().getInputAmountLimits().getMax().getValue();
+        long userCap = eurUseCase.getAmountService().getUserSpecificTradeAmountLimit().orElseThrow().getQuoteSideAmount().getValue();
+        assertEquals(500 * minimum, preUserMaximum);
+        assertEquals(400 * minimum, userCap);
+        assertEquals(userCap, eurUseCase.getAmountService().getTradeAmountLimits().getMax().getQuoteSideAmount().getValue());
+    }
+
+    @Test
     public void inputAmountEntryClampsToEffectiveRange() {
         Account<?, ?> wiseAccount = accountFor(wiseMethod);
         TakeOfferUseCase useCase = createUseCase(market -> List.of(wiseAccount));
@@ -1442,13 +1483,12 @@ public class TakeOfferUseCaseTest {
 
         // The BTC/USD price needed for the USD-defined limits vanishes while the offer market's
         // price is still present: the limits are not computable, confirmation must be blocked.
-        doThrow(new IllegalStateException("No BTC/USD market price"))
-                .when(marketPriceService).getMarketPriceQuoteOrThrow(market);
+        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.empty());
         fireEurMarketPriceUpdate(eurMarket, PriceQuote.fromFiatPrice(99_000, "EUR"));
         assertFalse(eurUseCase.getAmountService().isAmountValid());
 
         // Recovery lifts the block with the next successful recomputation.
-        doReturn(marketPriceQuote).when(marketPriceService).getMarketPriceQuoteOrThrow(market);
+        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.of(marketPriceQuote));
         fireEurMarketPriceUpdate(eurMarket, PriceQuote.fromFiatPrice(100_000, "EUR"));
         assertTrue(eurUseCase.getAmountService().isAmountValid());
     }
@@ -1575,8 +1615,7 @@ public class TakeOfferUseCaseTest {
         when(offer.hasAmountRange()).thenReturn(false);
         // The BTC/USD price needed for the USD-defined limits is missing while the offer
         // market's price exists: a clean rejection, not an uncaught runtime exception.
-        doThrow(new IllegalStateException("No BTC/USD market price"))
-                .when(marketPriceService).getMarketPriceQuoteOrThrow(market);
+        when(marketPriceService.findMarketPriceQuote(market)).thenReturn(Optional.empty());
 
         assertRejected(eurUseCase, offer, Reason.NO_MARKET_PRICE);
         assertNull(eurUseCase.getAmountService().getAmountSpec());
@@ -1611,7 +1650,6 @@ public class TakeOfferUseCaseTest {
         when(marketPrice.getPriceQuote()).thenReturn(quote);
         when(marketPriceService.findMarketPrice(eurMarket)).thenReturn(Optional.of(marketPrice));
         when(marketPriceService.findMarketPriceQuote(eurMarket)).thenReturn(Optional.of(quote));
-        when(marketPriceService.getMarketPriceQuoteOrThrow(eurMarket)).thenReturn(quote);
     }
 
     private void fireEurMarketPriceUpdate(Market eurMarket, PriceQuote quote) {

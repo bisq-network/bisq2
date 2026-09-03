@@ -91,7 +91,6 @@ public class TradeAmount {
         }
         return quoteSideAmount.compareToRange(quoteSideLimits);
     }
-    //
 
     public String printRelevantString(Market market, boolean includeCode) {
         if (market.getRelevantCurrencyCode().equals(quoteSideAmount.getCode())) {

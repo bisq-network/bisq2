@@ -717,22 +717,27 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
         boolean quoteSideStored = isQuoteSideStored(offer);
         TradeAmountRange offerRange = resolveOfferRange(offer, resolvedQuote, quoteSideStored);
         // The USD-defined limits convert to the market's stable side via the market price; the
-        // Bitcoin side follows the resolved quote (same split as the create-offer limits).
-        TradeAmount absoluteMin = TradeAmountLimitUtils.toTradeAmountLimitExact(marketPriceService, market, resolvedQuote,
+        // Bitcoin side follows the resolved quote (same split as the create-offer limits). One
+        // captured rate snapshot serves every limit of this computation, so no limit mixes two
+        // reads of a map the poller writes concurrently.
+        TradeAmountLimitUtils.Rates rates = TradeAmountLimitUtils.findRates(marketPriceService, market)
+                .orElseThrow(() -> new IllegalStateException("The market prices needed for the amount limits of "
+                        + market.getMarketCodes() + " are missing"));
+        TradeAmount absoluteMin = TradeAmountLimitUtils.toTradeAmountLimitExact(rates, market, resolvedQuote,
                 AbsoluteAmountLimitsProvider.MIN_TRADE_AMOUNT_IN_USD);
-        TradeAmount absoluteMax = TradeAmountLimitUtils.toTradeAmountLimitExact(marketPriceService, market, resolvedQuote,
+        TradeAmount absoluteMax = TradeAmountLimitUtils.toTradeAmountLimitExact(rates, market, resolvedQuote,
                 AbsoluteAmountLimitsProvider.MAX_TRADE_AMOUNT_IN_USD);
         TradeAmount minEndpoint = maxOnStoredSide(quoteSideStored, offerRange.getMin(), absoluteMin);
         TradeAmount maxEndpoint = minOnStoredSide(quoteSideStored, offerRange.getMax(), absoluteMax);
         if (selectedRail != null) {
-            TradeAmount methodLimit = TradeAmountLimitUtils.toTradeAmountLimitExact(marketPriceService, market, resolvedQuote,
+            TradeAmount methodLimit = TradeAmountLimitUtils.toTradeAmountLimitExact(rates, market, resolvedQuote,
                     PaymentMethodBasedAmountLimitsProvider.evaluateLimitInUsd(selectedRail));
             maxEndpoint = minOnStoredSide(quoteSideStored, maxEndpoint, methodLimit);
         }
         // The user-specific cap applies when the taker is the Bitcoin buyer in a Bitcoin-Fiat
         // market (taken offer direction SELL). A seller-side cap is deliberately absent.
         Optional<TradeAmount> userSpecificLimit = market.isBtcFiatMarket() && offer.getDirection().isSell()
-                ? Optional.of(TradeAmountLimitUtils.toTradeAmountLimitExact(marketPriceService, market, resolvedQuote,
+                ? Optional.of(TradeAmountLimitUtils.toTradeAmountLimitExact(rates, market, resolvedQuote,
                 UserSpecificAmountLimitsProvider.getUserSpecificLimitInUsd()))
                 : Optional.empty();
         if (storedSideValue(quoteSideStored, minEndpoint) > storedSideValue(quoteSideStored, maxEndpoint)) {

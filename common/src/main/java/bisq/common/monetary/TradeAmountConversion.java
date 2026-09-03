@@ -20,6 +20,7 @@ package bisq.common.monetary;
 import bisq.common.market.Market;
 import com.google.common.annotations.VisibleForTesting;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeAmountConversion {
@@ -28,6 +29,7 @@ public class TradeAmountConversion {
         checkNotNull(market, "Market must not be null");
         checkNotNull(priceQuote, "priceQuote must not be null");
         checkNotNull(amount, "amount must not be null");
+        verifyPriceQuoteMarket(market, priceQuote);
 
         if (isBaseSideAmount(market, amount)) {
             return new TradeAmount(amount, priceQuote.toQuoteSideMonetary(amount));
@@ -46,6 +48,7 @@ public class TradeAmountConversion {
         checkNotNull(market, "Market must not be null");
         checkNotNull(priceQuote, "priceQuote must not be null");
         checkNotNull(amount, "amount must not be null");
+        verifyPriceQuoteMarket(market, priceQuote);
 
         if (isBaseSideAmount(market, amount)) {
             return new TradeAmount(amount, priceQuote.toQuoteSideMonetaryExact(amount));
@@ -54,6 +57,11 @@ public class TradeAmountConversion {
         } else {
             throw new IllegalArgumentException("Amount is neither base nor quote side for market: " + market + ". amount=" + amount);
         }
+    }
+
+    private static void verifyPriceQuoteMarket(Market market, PriceQuote priceQuote) {
+        checkArgument(market.equals(priceQuote.getMarket()),
+                "The price quote's market %s must match the market %s", priceQuote.getMarket(), market);
     }
 
     @VisibleForTesting
