@@ -28,6 +28,7 @@ import bisq.common.monetary.TradeAmount;
 
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeAmountLimitUtils {
@@ -70,6 +71,7 @@ public class TradeAmountLimitUtils {
         checkNotNull(market, "market must not be null");
         checkNotNull(priceQuote, "priceQuote must not be null");
         checkNotNull(usdAmount, "usdAmount must not be null");
+        verifyCoherent(rates, market, priceQuote);
 
         Monetary quoteSideAmount;
         if (market.isBtcFiatMarket()) {
@@ -99,6 +101,7 @@ public class TradeAmountLimitUtils {
         checkNotNull(market, "market must not be null");
         checkNotNull(priceQuote, "priceQuote must not be null");
         checkNotNull(usdAmount, "usdAmount must not be null");
+        verifyCoherent(rates, market, priceQuote);
 
         Monetary quoteSideAmount;
         if (market.isBtcFiatMarket()) {
@@ -110,5 +113,19 @@ public class TradeAmountLimitUtils {
         }
         Monetary baseSideAmount = priceQuote.toBaseSideMonetaryExact(quoteSideAmount);
         return new TradeAmount(baseSideAmount, quoteSideAmount);
+    }
+
+    // The conversions only check the monetary classes, so a quote or fiat rate of another
+    // market would produce a numerically valid but wrong limit.
+    private static void verifyCoherent(Rates rates, Market market, PriceQuote priceQuote) {
+        checkArgument(market.equals(priceQuote.getMarket()),
+                "The price quote's market %s must match the market %s", priceQuote.getMarket(), market);
+        if (market.isBtcFiatMarket()) {
+            Market fiatRateMarket = rates.btcFiatPriceQuote()
+                    .orElseThrow(() -> new IllegalArgumentException("A Bitcoin-Fiat market needs a fiat rate: " + market))
+                    .getMarket();
+            checkArgument(market.equals(fiatRateMarket),
+                    "The fiat rate's market %s must match the market %s", fiatRateMarket, market);
+        }
     }
 }

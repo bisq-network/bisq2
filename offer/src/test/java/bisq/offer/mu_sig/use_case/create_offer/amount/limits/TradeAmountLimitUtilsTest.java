@@ -44,4 +44,41 @@ public class TradeAmountLimitUtilsTest {
         assertThrows(ArithmeticException.class,
                 () -> TradeAmountLimitUtils.toTradeAmountLimitExact(rates, eurMarket, resolvedQuote, tenThousandUsd));
     }
+
+    @Test
+    void limitConversionsRejectAPriceQuoteOfAnotherMarket() {
+        // PriceQuote conversions check only the monetary classes: a BTC/GBP quote would price a
+        // BTC/EUR limit's Bitcoin side at the GBP rate.
+        Rates rates = new Rates(PriceQuote.fromFiatPrice(100_000, "USD"),
+                Optional.of(PriceQuote.fromFiatPrice(90_000, "EUR")));
+        PriceQuote gbpQuote = PriceQuote.fromFiatPrice(80_000, "GBP");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountLimitUtils.toTradeAmountLimit(rates, eurMarket, gbpQuote, tenThousandUsd));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountLimitUtils.toTradeAmountLimitExact(rates, eurMarket, gbpQuote, tenThousandUsd));
+    }
+
+    @Test
+    void limitConversionsRejectAFiatRateOfAnotherMarket() {
+        Rates rates = new Rates(PriceQuote.fromFiatPrice(100_000, "USD"),
+                Optional.of(PriceQuote.fromFiatPrice(80_000, "GBP")));
+        PriceQuote eurQuote = PriceQuote.fromFiatPrice(90_000, "EUR");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountLimitUtils.toTradeAmountLimit(rates, eurMarket, eurQuote, tenThousandUsd));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountLimitUtils.toTradeAmountLimitExact(rates, eurMarket, eurQuote, tenThousandUsd));
+    }
+
+    @Test
+    void limitConversionsRejectAMissingFiatRateForAFiatMarket() {
+        Rates rates = new Rates(PriceQuote.fromFiatPrice(100_000, "USD"), Optional.empty());
+        PriceQuote eurQuote = PriceQuote.fromFiatPrice(90_000, "EUR");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountLimitUtils.toTradeAmountLimit(rates, eurMarket, eurQuote, tenThousandUsd));
+        assertThrows(IllegalArgumentException.class,
+                () -> TradeAmountLimitUtils.toTradeAmountLimitExact(rates, eurMarket, eurQuote, tenThousandUsd));
+    }
 }
