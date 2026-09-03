@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -44,20 +43,6 @@ public class StringUtilsTest {
         assertEquals("SEPA INSTANT", textWithStyleAndRest.get(5).getFirst());
         assertEquals("text-color-mid", textWithStyleAndRest.get(5).getSecond().get(0));
         assertEquals("text-underline", textWithStyleAndRest.get(5).getSecond().get(1));
-    }
-
-    @Test
-    public void deriveWordStartingWith() {
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Hello jo", '@'), null);
-        assert Objects.equals(StringUtils.deriveWordStartingWith("@jo x", '@'), null);
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Hello@jo", '@'), null);
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Hello @jo!", '@'), null);
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Go to#chan", '@'), null);
-
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Hello @jo", '@'), "jo");
-        assert Objects.equals(StringUtils.deriveWordStartingWith("@john", '@'), "john");
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Go to #chann", '#'), "chann");
-        assert Objects.equals(StringUtils.deriveWordStartingWith("#chann", '#'), "chann");
     }
 
     @Test

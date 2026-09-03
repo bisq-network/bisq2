@@ -26,6 +26,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 @Getter
 public class ChatMessageContainerModel implements bisq.desktop.common.view.Model {
     private final ChatChannelDomain chatChannelDomain;
@@ -37,9 +39,20 @@ public class ChatMessageContainerModel implements bisq.desktop.common.view.Model
     private final ObjectProperty<Boolean> focusInputTextField = new SimpleObjectProperty<>();
     private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
     private final BooleanProperty chatDialogEnabled = new SimpleBooleanProperty(true);
-    private final IntegerProperty caretPosition = new SimpleIntegerProperty();
+    private final ObjectProperty<CaretPositionRequest> caretPositionRequest = new SimpleObjectProperty<>();
 
     public ChatMessageContainerModel(ChatChannelDomain chatChannelDomain) {
         this.chatChannelDomain = chatChannelDomain;
+    }
+
+    // Positioning the caret is a request, not a state: consecutive requests for the same
+    // position must each reach the view, so every request carries a fresh sequence number
+    // to defeat the change listener's equality check.
+    public record CaretPositionRequest(int position, long sequence) {
+        private static final AtomicLong SEQUENCES = new AtomicLong();
+
+        public static CaretPositionRequest of(int position) {
+            return new CaretPositionRequest(position, SEQUENCES.incrementAndGet());
+        }
     }
 }
