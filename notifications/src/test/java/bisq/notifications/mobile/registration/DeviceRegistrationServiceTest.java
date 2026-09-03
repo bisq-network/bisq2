@@ -152,15 +152,6 @@ class DeviceRegistrationServiceTest {
         assertFalse(service.unregister("unknown-device", CLIENT_ID));
     }
 
-    @Test
-    void registrationsWithoutOwnerAreNotMatched() {
-        // Registrations persisted before the ownership link existed carry no client ID and can
-        // only be removed by device ID.
-        registerWithoutOwner("legacy-device");
-
-        assertTrue(service.unregisterByClientId(CLIENT_ID).isEmpty());
-        assertEquals(1, service.getMobileDeviceProfiles().size());
-    }
 
     @Test
     void concurrentRegistrationsOfANewDeviceIdProduceExactlyOneOwner() throws Exception {
@@ -191,26 +182,19 @@ class DeviceRegistrationServiceTest {
         }
     }
 
+
+
     @Test
-    void registrationsWithoutAnOwnerAreDroppedOnLoad() {
-        // They cannot be attributed to a client, so revoking that client would report success
-        // while the device kept receiving notifications.
+    void revocationAlsoDropsRegistrationsItCannotAttribute() {
+        // An ownerless record cannot be excluded from being the revoked client's, so leaving it
+        // would make revocation report a completeness it does not have.
+        register("device-1", CLIENT_ID);
         registerWithoutOwner("legacy-device");
-        register("owned-device", CLIENT_ID);
+        register("device-2", "other-client");
 
-        service.onPersistedApplied(service.getPersistableStore());
-
-        assertEquals(Set.of("owned-device"), service.getMobileDeviceProfiles().stream()
+        assertEquals(Set.of("device-1", "legacy-device"), service.unregisterByClientId(CLIENT_ID));
+        assertEquals(Set.of("device-2"), service.getMobileDeviceProfiles().stream()
                 .map(MobileDeviceProfile::getDeviceId)
                 .collect(Collectors.toSet()));
-    }
-
-    @Test
-    void loadKeepsAStoreThatHasNoUnownedRegistrations() {
-        register("owned-device", CLIENT_ID);
-
-        service.onPersistedApplied(service.getPersistableStore());
-
-        assertEquals(1, service.getMobileDeviceProfiles().size());
     }
 }

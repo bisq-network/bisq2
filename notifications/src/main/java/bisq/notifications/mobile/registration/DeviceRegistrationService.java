@@ -45,32 +45,6 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
     }
 
     /**
-     * Drops registrations persisted before they carried an owner.
-     * <p>
-     * They cannot be attributed to a client, so revoking one would report success while that device
-     * kept receiving notifications, and nothing later could ever remove them by client. Dropping
-     * them is recoverable and self-healing: the owning app registers again on its next start and
-     * gets a registration that revocation can find, whereas keeping them would leave revocation
-     * permanently unsound for exactly the devices most likely to be revoked, the old ones.
-     */
-    @Override
-    public void onPersistedApplied(DeviceRegistrationStore persisted) {
-        synchronized (persistableStore) {
-            Set<String> unowned = persistableStore.getDeviceByDeviceId().values().stream()
-                    .filter(profile -> profile.getClientId().isEmpty())
-                    .map(MobileDeviceProfile::getDeviceId)
-                    .collect(Collectors.toSet());
-            if (unowned.isEmpty()) {
-                return;
-            }
-            unowned.forEach(persistableStore.getDeviceByDeviceId()::remove);
-            persist();
-            log.info("Dropped {} device registration(s) persisted without an owner; those devices " +
-                    "register again on next start", unowned.size());
-        }
-    }
-
-    /**
      * Creates or updates the registration of a device on behalf of the given API client.
      * <p>
      * A device ID is chosen by the client, so without an owner check any client could register
@@ -161,11 +135,20 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
     }
 
     /**
-     * Removes all registrations owned by the given API client. Called when the client is revoked:
-     * a revoked client must stop receiving push notifications, not just lose API access.
+     * Removes all registrations owned by the given API client, and any registration that cannot be
+     * attributed to a client at all. Called when the client is revoked: a revoked client must stop
+     * receiving push notifications, not just lose API access.
      * <p>
-     * Registrations persisted before the ownership link existed carry no client ID and are not
-     * matched here; they have to be removed by device ID.
+     * Registrations persisted before the ownership link existed carry no client ID, so it cannot be
+     * ruled out that they are the revoked client's, and leaving them would make revocation report a
+     * completeness it does not have. Their owner cannot be recovered either: revocation removes a
+     * client without trace, so the clients paired today are not the clients that could have written
+     * these records.
+     * <p>
+     * They are dropped here rather than at startup on purpose. Deleting them on load would clear
+     * the store of every upgraded node and depend on each app registering again to recover, which
+     * is not guaranteed. Here it costs another client's legacy record only when someone
+     * deliberately revokes, and that device registers again on its next start.
      *
      * @param clientId The API client whose registrations should be removed
      * @return The device IDs that were removed
@@ -175,7 +158,10 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
 
         synchronized (persistableStore) {
             Set<String> deviceIds = persistableStore.getDeviceByDeviceId().values().stream()
-                    .filter(profile -> profile.getClientId().filter(clientId::equals).isPresent())
+                    .filter(profile -> profile.getClientId()
+                            .map(clientId::equals)
+                            // Unattributable: cannot be excluded from being the revoked client's.
+                            .orElse(true))
                     .map(MobileDeviceProfile::getDeviceId)
                     .collect(Collectors.toSet());
             if (deviceIds.isEmpty()) {

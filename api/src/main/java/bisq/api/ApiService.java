@@ -113,6 +113,7 @@ public class ApiService implements Service {
     private final SessionService sessionService;
     @Getter
     private final ApiAccessService apiAccessService;
+    private final DeviceRegistrationService deviceRegistrationService;
     @Getter
     private final HttpServerBootstrapService httpServerBootstrapService;
     @Getter
@@ -142,6 +143,7 @@ public class ApiService implements Service {
                       ReputationService reputationService,
                       DeviceRegistrationService deviceRegistrationService) {
         this.apiConfig = apiConfig;
+        this.deviceRegistrationService = deviceRegistrationService;
 
         int bindPort = apiConfig.getBindPort();
 
