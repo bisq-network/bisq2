@@ -579,10 +579,20 @@ public class PublicChatRestApi extends RestApiBase {
                              String messageId,
                              AsyncResponse asyncResponse,
                              BiConsumer<CommonPublicChatChannel, CommonPublicChatMessage> handler) {
-        withChannel(channelId, asyncResponse, channel -> channel.getChatMessages().stream()
-                .filter(message -> message.getId().equals(messageId))
-                .findFirst()
-                .ifPresentOrElse(message -> handler.accept(channel, message), () -> asyncResponse.resume(
-                        buildNotFoundResponse("No message found for message ID: " + messageId))));
+        withChannel(channelId, asyncResponse, channel -> {
+            // Ids are not unique within a channel, so a peer can park a decoy under the id of the
+            // caller's own message; resolved by iteration order, the decoy would shadow it and turn
+            // its edit or delete into a spurious 403. Among colliders the caller's own message wins;
+            // with none of them the caller's — the whole reacting case — this is findFirst as before.
+            List<CommonPublicChatMessage> matches = channel.getChatMessages().stream()
+                    .filter(message -> message.getId().equals(messageId))
+                    .toList();
+            matches.stream()
+                    .filter(message -> userIdentityService.findUserIdentity(message.getAuthorUserProfileId()).isPresent())
+                    .findFirst()
+                    .or(() -> matches.stream().findFirst())
+                    .ifPresentOrElse(message -> handler.accept(channel, message), () -> asyncResponse.resume(
+                            buildNotFoundResponse("No message found for message ID: " + messageId)));
+        });
     }
 }

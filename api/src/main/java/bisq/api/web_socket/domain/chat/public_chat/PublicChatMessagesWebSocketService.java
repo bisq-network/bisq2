@@ -27,14 +27,21 @@ import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.user.banned.BannedUserService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.api.web_socket.subscription.Topic.PUBLIC_CHAT_MESSAGES;
 
@@ -50,7 +57,20 @@ import static bisq.api.web_socket.subscription.Topic.PUBLIC_CHAT_MESSAGES;
  * channel ownership machinery private chat needs applies here.
  */
 public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketService {
+    private final UserProfileService userProfileService;
     private final List<Pin> messagesPins = new ArrayList<>();
+    private Pin profilesPin;
+    /**
+     * The additions that could not be pushed because the author's profile had not arrived yet, keyed by
+     * the profile id they wait for. On a fresh node the P2P store routinely delivers a channel's
+     * messages before their authors' profiles, so without this every such message would be invisible to
+     * a live subscriber until it reconnected for a new snapshot. No extra retention on either axis:
+     * every parked message is still held by its channel and {@link #handleRemovedMessage} drops the
+     * parked entry when the channel lets go of it, and an emptied set's key is unlinked right where it
+     * is drained ({@link #pruneIfEmpty}), so fabricated author ids cannot accumulate as garbage keys.
+     * Sets claimed exclusively — see {@link #park}.
+     */
+    private final Map<String, Set<CommonPublicChatMessage>> awaitingAuthor = new ConcurrentHashMap<>();
     /**
      * Observers are notified from a copy-on-write snapshot, so a callback that began before the shutdown
      * unbound its pin still reaches this service afterwards; this keeps it from pushing.
@@ -62,6 +82,7 @@ public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketSe
                                              UserProfileService userProfileService,
                                              BannedUserService bannedUserService) {
         super(subscriberRepository, PUBLIC_CHAT_MESSAGES, channels, userProfileService, bannedUserService);
+        this.userProfileService = userProfileService;
     }
 
     /**
@@ -71,6 +92,15 @@ public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketSe
      */
     @Override
     public CompletableFuture<Boolean> initialize() {
+        // Registered before the channel observers, whose registration replays the persisted history:
+        // this way the profile observer's own registration replay of the profile store meets an empty
+        // pending map and costs nothing, and every message parked from then on has its put to wake it.
+        profilesPin = userProfileService.getUserProfileById().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(String profileId, UserProfile profile) {
+                replayFor(profileId);
+            }
+        });
         channels.getChannels().forEach(channel ->
                 messagesPins.add(channel.getChatMessages().addObserver(new CollectionObserver<>() {
                     @Override
@@ -99,6 +129,11 @@ public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketSe
         shutdownStarted = true;
         messagesPins.forEach(Pin::unbind);
         messagesPins.clear();
+        if (profilesPin != null) {
+            profilesPin.unbind();
+            profilesPin = null;
+        }
+        awaitingAuthor.clear();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -116,10 +151,92 @@ public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketSe
     }
 
     private void handleAddedMessage(CommonPublicChatMessage message) {
-        if (shutdownStarted || !dtoFactory.isVisible(message)) {
+        if (shutdownStarted) {
             return;
         }
-        push(message, ModificationType.ADDED);
+        if (dtoFactory.isVisible(message)) {
+            push(message, ModificationType.ADDED);
+        } else if (dtoFactory.awaitsAuthorProfile(message)) {
+            park(message);
+        }
+    }
+
+    /**
+     * Parks the message until its author's profile arrives, then double-checks: the profile can land
+     * between the visibility check that sent us here and the entry being parked, and the put that
+     * carried it may have found the pending map empty. Whoever takes the entry out of its set pushes —
+     * set removal is atomic, so however this races {@link #replayFor} the message is pushed once.
+     * <p>
+     * The add runs inside the map update on purpose: {@link #pruneIfEmpty} decides under the same
+     * per-key lock whether a set is empty, so an add can never land on a set that a prune is about to
+     * unlink — outside the lock, a message parked into such an orphan whose profile never arrives
+     * would be lost. The claim stays on the set instance rather than going back through the map: a
+     * concurrent {@link #replayFor} detaches the whole set, and a map lookup would then miss an entry
+     * its weakly consistent iteration can still be about to claim.
+     */
+    private void park(CommonPublicChatMessage message) {
+        String authorId = message.getAuthorUserProfileId();
+        AtomicReference<Set<CommonPublicChatMessage>> ref = new AtomicReference<>();
+        awaitingAuthor.compute(authorId, (id, present) -> {
+            Set<CommonPublicChatMessage> set = present != null ? present : ConcurrentHashMap.newKeySet();
+            set.add(message);
+            ref.set(set);
+            return set;
+        });
+        Set<CommonPublicChatMessage> parked = ref.get();
+        if (dtoFactory.isVisible(message) && parked.remove(message)) {
+            pruneIfEmpty(authorId, parked);
+            push(message, ModificationType.ADDED);
+        }
+    }
+
+    /**
+     * Takes an emptied set's key out of the map, so that the map's growth is bounded by the authors
+     * currently waited for rather than by every unresolvable author id ever seen — those are free for a
+     * peer to fabricate ({@code ChatMessage.verify} checks the id's length and nothing else), so a key
+     * left behind per fabricated author would be an unbounded leak. Guarded by identity as well as
+     * emptiness, both read under the key's lock: only the set the caller drained may be unlinked, and
+     * only while no parker has refilled it — adds run under the same lock, see {@link #park}.
+     */
+    private void pruneIfEmpty(String profileId, Set<CommonPublicChatMessage> parked) {
+        if (parked.isEmpty()) {
+            awaitingAuthor.computeIfPresent(profileId, (id, present) ->
+                    present == parked && present.isEmpty() ? null : present);
+        }
+    }
+
+    /**
+     * Replays the additions that waited for this profile. Claiming the whole set under the profile id
+     * races a concurrent {@link #park}, which may then be adding to a set no longer reachable from the
+     * map — that is fine, because a parker only reaches that state after this profile was already
+     * stored, so its own double-check sees the profile and claims its entry out of the orphaned set.
+     * Each claimed message is re-checked in full: it may have left its channel or lost its visibility
+     * again while it waited.
+     */
+    private void replayFor(String profileId) {
+        Set<CommonPublicChatMessage> parked = awaitingAuthor.remove(profileId);
+        if (parked == null) {
+            return;
+        }
+        parked.forEach(message -> {
+            if (!shutdownStarted
+                    && parked.remove(message)
+                    && isStillInChannel(message)
+                    && dtoFactory.isVisible(message)) {
+                push(message, ModificationType.ADDED);
+            }
+        });
+    }
+
+    /**
+     * By {@code equals}, deliberately: the parked instance and the copy a removal notifies with are
+     * equal but distinct (see {@code PublicChatReactionsWebSocketService#unbindMessage}), and here the
+     * content being live is what matters, not which instance carries it.
+     */
+    private boolean isStillInChannel(CommonPublicChatMessage message) {
+        return channels.findChannel(message.getChannelId())
+                .map(channel -> channel.getChatMessages().contains(message))
+                .orElse(false);
     }
 
     /**
@@ -146,7 +263,48 @@ public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketSe
         if (shutdownStarted) {
             return;
         }
+        dropParked(message);
+        // An invisible survivor falls through to REMOVED on purpose: the snapshot would not show it
+        // either, and if it is merely waiting for its author it gets its ADDED from the replay.
+        Optional<CommonPublicChatMessage> survivor = survivorSharingId(message).filter(dtoFactory::isVisible);
+        if (survivor.isPresent()) {
+            push(survivor.get(), ModificationType.ADDED);
+            return;
+        }
         push(message, ModificationType.REMOVED);
+    }
+
+    /**
+     * A message still live in the channel under the removed one's id. The wire keys messages by their
+     * id, and a client can only interpret {@code REMOVED} as delete-by-id — so when the id is still
+     * live, a {@code REMOVED} would take down what the client shows under it with nothing to bring it
+     * back until a reconnect. That happens two ways: the P2P store re-delivering a message as a fresh
+     * equal instance whose predecessor's removal is still in flight, and a peer deliberately publishing
+     * a different message under a live id (nothing prevents that, see
+     * {@code PublicChatReactionsWebSocketService.BindingKey}). Re-pushing the survivor as {@code ADDED}
+     * instead converges the client on what a fresh snapshot would show; for the equal re-delivery it is
+     * an idempotent upsert. The newest survivor is chosen so several colliders converge the same way
+     * the snapshot's ordering would resolve them.
+     */
+    private Optional<CommonPublicChatMessage> survivorSharingId(CommonPublicChatMessage removed) {
+        return channels.findChannel(removed.getChannelId())
+                .stream()
+                .flatMap(channel -> channel.getChatMessages().stream())
+                .filter(live -> live.getId().equals(removed.getId()))
+                .max(Comparator.comparingLong(CommonPublicChatMessage::getDate));
+    }
+
+    /** A message that leaves its channel while parked is not coming back; equality drops the parked copy. */
+    private void dropParked(CommonPublicChatMessage message) {
+        awaitingAuthor.computeIfPresent(message.getAuthorUserProfileId(), (id, present) -> {
+            present.remove(message);
+            return present.isEmpty() ? null : present;
+        });
+    }
+
+    /** Test seam: the no-leak claim on {@link #awaitingAuthor} is about its keys, so the tests count them. */
+    int parkedAuthorKeys() {
+        return awaitingAuthor.size();
     }
 
     private void push(CommonPublicChatMessage message, ModificationType modificationType) {

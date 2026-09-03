@@ -110,6 +110,31 @@ public class PublicChatDtoFactory {
     }
 
     /**
+     * Whether the one thing keeping {@link #isVisible(CommonPublicChatMessage)} false is that the
+     * author's profile has not arrived yet. That is the state worth waiting out: on a fresh node the
+     * P2P store routinely delivers a channel's messages before the profiles of their authors, and a
+     * profile that is merely late will land. A banned author or an expired message will not come back,
+     * so neither is worth parking for.
+     */
+    public boolean awaitsAuthorProfile(CommonPublicChatMessage message) {
+        return !message.isExpired()
+                && !bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())
+                && userProfileService.findUserProfile(message.getAuthorUserProfileId()).isEmpty();
+    }
+
+    /**
+     * The reaction counterpart of {@link #awaitsAuthorProfile}: the message itself is visible and only
+     * the reaction sender's profile is missing. A reaction skipped because the <em>message author</em>
+     * is missing needs no parking here — when that author arrives, the messages topic replays the
+     * message and {@link #toDto(CommonPublicChatMessage)} embeds every reaction that is visible by then.
+     */
+    public boolean awaitsSenderProfile(CommonPublicChatMessage message, CommonPublicChatMessageReaction reaction) {
+        return isVisible(message)
+                && !bannedUserService.isUserProfileBanned(reaction.getUserProfileId())
+                && userProfileService.findUserProfile(reaction.getUserProfileId()).isEmpty();
+    }
+
+    /**
      * The embedded reactions are filtered like the reactions topic, so the two never disagree.
      *
      * @throws NoSuchElementException if the author cannot be resolved; callers check {@link #isVisible}

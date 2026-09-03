@@ -29,16 +29,22 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.user.banned.BannedUserService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.api.web_socket.subscription.Topic.PUBLIC_CHAT_REACTIONS;
@@ -60,9 +66,33 @@ import static bisq.api.web_socket.subscription.Topic.PUBLIC_CHAT_REACTIONS;
  * channel and its binding here, for the life of the process. Bounded by how many authors are in that
  * state, not by the message count, so it is a stale entry rather than the leak the unbind exists for.
  */
+@Slf4j
 public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketService {
+    /**
+     * Upper bound on the parked reactions, see {@link #awaitingSender}. Far above anything the honest
+     * case produces — parking needs a visible message whose reaction sender has no profile yet, which
+     * is a startup-window state — so hitting it means something is flooding reactions from unresolvable
+     * senders, and degrading those to the snapshot-only behavior is the right answer.
+     */
+    private static final int MAX_PARKED_REACTIONS = 10_000;
+
+    private final UserProfileService userProfileService;
     private final List<Pin> messagesPins = new ArrayList<>();
-    private final Map<BindingKey, MessageBinding> bindingsByMessage = new ConcurrentHashMap<>();
+    private Pin profilesPin;
+    private final Map<BindingKey, List<MessageBinding>> bindingsByMessage = new ConcurrentHashMap<>();
+    /**
+     * The reaction additions that could not be pushed because the sender's profile had not arrived yet,
+     * keyed by the profile id they wait for — the counterpart of
+     * {@code PublicChatMessagesWebSocketService#awaitingAuthor}, with one difference in retention: a
+     * message that leaves its channel takes no per-reaction removals with it, so parked entries are
+     * also dropped when {@link #unbindMessage} sees their message go, {@link #MAX_PARKED_REACTIONS}
+     * bounds what a flood of unresolvable senders can pile up, and a drained key is unlinked where it
+     * empties ({@link #pruneIfEmpty}). Sets claimed exclusively, see
+     * {@code PublicChatMessagesWebSocketService#park}.
+     */
+    private final Map<String, Set<PendingReaction>> awaitingSender = new ConcurrentHashMap<>();
+    private final AtomicInteger parkedCount = new AtomicInteger();
+    private final AtomicBoolean parkedCapWarned = new AtomicBoolean();
     private volatile boolean shutdownStarted;
 
     public PublicChatReactionsWebSocketService(SubscriberRepository subscriberRepository,
@@ -70,11 +100,20 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
                                               UserProfileService userProfileService,
                                               BannedUserService bannedUserService) {
         super(subscriberRepository, PUBLIC_CHAT_REACTIONS, channels, userProfileService, bannedUserService);
+        this.userProfileService = userProfileService;
     }
 
     /** The channel set is fixed before this service starts, see PublicChatMessagesWebSocketService. */
     @Override
     public CompletableFuture<Boolean> initialize() {
+        // Before the channel observers, whose registration replays the history — see
+        // PublicChatMessagesWebSocketService#initialize.
+        profilesPin = userProfileService.getUserProfileById().addObserver(new HashMapObserver<>() {
+            @Override
+            public void put(String profileId, UserProfile profile) {
+                replayFor(profileId);
+            }
+        });
         channels.getChannels().forEach(channel ->
                 messagesPins.add(channel.getChatMessages().addObserver(new CollectionObserver<>() {
                     @Override
@@ -129,62 +168,79 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
             // leave it behind: the sweep runs after shutdownStarted is set, so either this read sees the
             // flag and takes the entry out here, or the entry was already there for the sweep to find.
             // Not through unbindMessage: the message is still live in its channel — it is the service
-            // that is going — so this keys on the exact binding, and whichever of sweep and this wins
-            // the entry is the one that unbinds the pin.
-            if (bindingsByMessage.remove(keyOf(message), binding)) {
+            // that is going — so this takes out the exact binding, and whichever of sweep and this wins
+            // the claim is the one that unbinds the pin.
+            if (claim(binding)) {
                 reactionsPin.unbind();
             }
         }
     }
 
     /**
-     * Publishes the binding, but only while its message is still the live one under that key, and the
-     * check runs inside the map update so that it cannot go stale between the two. Whatever it displaces
-     * is a message of the same channel with the same id, so it is an instance that is gone and its
-     * observer is unbound — see {@link BindingKey} for why the channel has to be in the key for that to
-     * hold.
+     * Publishes the binding, but only while its message is still the live one, and the check runs
+     * inside the map update so that it cannot go stale between the two. The entry holds a list, not a
+     * single binding: {@code ChatMessage.verify} bounds the id's length and nothing else, so a peer can
+     * publish a <em>different</em> message under an id that is live in the same channel, and both stay
+     * in the channel side by side — displacing one binding with the other would unbind the observer of
+     * a message a peer never touched, for the life of the process. What can be swept here is any
+     * co-keyed binding whose owner is no longer live, which is how the entry of a re-delivered message
+     * — a fresh instance equal to the one it replaced — gets taken out.
      *
      * @return false if the message is gone or the shutdown has started, leaving the pin for the caller
      * to unbind
      */
     private boolean install(MessageBinding binding) {
-        AtomicReference<MessageBinding> displaced = new AtomicReference<>();
-        MessageBinding current = bindingsByMessage.compute(keyOf(binding.owner()), (key, present) -> {
-            if (shutdownStarted || !isLive(binding.owner())) {
-                return present;
+        List<MessageBinding> dead = new ArrayList<>();
+        AtomicBoolean installed = new AtomicBoolean();
+        bindingsByMessage.compute(keyOf(binding.owner()), (key, present) -> {
+            List<MessageBinding> live = new ArrayList<>();
+            if (present != null) {
+                present.forEach(each -> (isLive(each.owner()) ? live : dead).add(each));
             }
-            displaced.set(present);
-            return binding;
+            if (!shutdownStarted && isLive(binding.owner())) {
+                live.add(binding);
+                installed.set(true);
+            }
+            return live.isEmpty() ? null : List.copyOf(live);
         });
-        MessageBinding stale = displaced.get();
-        if (stale != null) {
-            stale.reactionsPin().unbind();
-        }
-        return current == binding;
+        dead.forEach(each -> each.reactionsPin().unbind());
+        return installed.get();
+    }
+
+    /** Takes this exact binding out of its entry, by identity: its pin exists once. */
+    private boolean claim(MessageBinding binding) {
+        AtomicBoolean claimed = new AtomicBoolean();
+        bindingsByMessage.computeIfPresent(keyOf(binding.owner()), (key, present) -> {
+            List<MessageBinding> rest = new ArrayList<>(present);
+            if (rest.removeIf(each -> each == binding)) {
+                claimed.set(true);
+            }
+            return rest.isEmpty() ? null : List.copyOf(rest);
+        });
+        return claimed.get();
     }
 
     /**
-     * Unbinds this message's reaction observer, unless the binding's owner is still live. The teardown
-     * cannot key on the notified instance: {@code ObservableCollection#remove} drops the stored element
-     * by {@code equals} but notifies with the argument, and on a restarted node the removal path always
-     * delivers the network store's copy rather than the channel store's instance that was bound. Nor is
-     * the entry's key enough on its own: the P2P store re-delivers a message as a fresh instance that is
-     * equal to the one it replaced, so a successor can be bound under the same channel and id while this
-     * callback is still pending — a live owner is that successor's, and its observer must stay.
+     * Unbinds the reaction observers of the bindings under this message's key whose owner is no longer
+     * live. The teardown cannot key on the notified instance: {@code ObservableCollection#remove} drops
+     * the stored element by {@code equals} but notifies with the argument, and on a restarted node the
+     * removal path always delivers the network store's copy rather than the channel store's instance
+     * that was bound. Nor can it take the whole entry: the P2P store re-delivers a message as a fresh
+     * instance that is equal to the one it replaced, so a successor can be bound under the same channel
+     * and id while this callback is still pending, and a colliding message that shares the id keeps its
+     * own live binding in the same entry — only the bindings whose owner is gone go.
      */
     private void unbindMessage(CommonPublicChatMessage message) {
-        AtomicReference<MessageBinding> removed = new AtomicReference<>();
+        List<MessageBinding> dead = new ArrayList<>();
         bindingsByMessage.computeIfPresent(keyOf(message), (key, present) -> {
-            if (isLive(present.owner())) {
-                return present;
-            }
-            removed.set(present);
-            return null;
+            List<MessageBinding> live = new ArrayList<>();
+            present.forEach(each -> (isLive(each.owner()) ? live : dead).add(each));
+            return live.isEmpty() ? null : List.copyOf(live);
         });
-        MessageBinding binding = removed.get();
-        if (binding != null) {
-            binding.reactionsPin().unbind();
-        }
+        dead.forEach(each -> {
+            each.reactionsPin().unbind();
+            dropParkedFor(each.owner());
+        });
     }
 
     /**
@@ -209,11 +265,10 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
     /**
      * What a binding is filed under. The channel belongs in the key because a message id is not unique
      * across channels: {@code ChatMessage.verify} bounds its length and nothing else, so a peer
-     * publishing to one channel can carry an id that is already in use in another. Under the id alone
-     * that message installs over the other channel's binding, and since {@link #install} unbinds
-     * whatever it displaces, the reactions on a message a peer never touched stop being observed for
-     * the life of the process. The private chat sibling keeps the same separation by nesting its
-     * reaction pins inside a per-channel entry.
+     * publishing to one channel can carry an id that is already in use in another. Within a channel the
+     * id is not unique either — that is what the entry being a list is for, see {@link #install}. The
+     * private chat sibling keeps the same separation by nesting its reaction pins inside a per-channel
+     * entry.
      */
     private record BindingKey(String channelId, String messageId) {
     }
@@ -227,12 +282,17 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
         shutdownStarted = true;
         messagesPins.forEach(Pin::unbind);
         messagesPins.clear();
+        if (profilesPin != null) {
+            profilesPin.unbind();
+            profilesPin = null;
+        }
+        awaitingSender.clear();
         // Swept key by key rather than snapshot-then-clear, so an entry published between the two is
         // never dropped with its observer still registered.
         new ArrayList<>(bindingsByMessage.keySet()).forEach(key -> {
-            MessageBinding binding = bindingsByMessage.remove(key);
-            if (binding != null) {
-                binding.reactionsPin().unbind();
+            List<MessageBinding> bindings = bindingsByMessage.remove(key);
+            if (bindings != null) {
+                bindings.forEach(binding -> binding.reactionsPin().unbind());
             }
         });
         return CompletableFuture.completedFuture(true);
@@ -256,10 +316,105 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
     }
 
     private void handleAddedReaction(CommonPublicChatMessage message, CommonPublicChatMessageReaction reaction) {
-        if (shutdownStarted || !dtoFactory.isVisible(message, reaction)) {
+        if (shutdownStarted) {
             return;
         }
-        push(reaction, ModificationType.ADDED);
+        if (dtoFactory.isVisible(message, reaction)) {
+            push(reaction, ModificationType.ADDED);
+        } else if (dtoFactory.awaitsSenderProfile(message, reaction)) {
+            park(message, reaction);
+        }
+    }
+
+    /**
+     * The claim-after-parking double check, as in {@code PublicChatMessagesWebSocketService#park} —
+     * including the add running inside the map update so it serializes with {@link #pruneIfEmpty}, and
+     * the claim staying on the set instance; the reasons live on that method.
+     */
+    private void park(CommonPublicChatMessage message, CommonPublicChatMessageReaction reaction) {
+        if (parkedCount.get() >= MAX_PARKED_REACTIONS) {
+            if (parkedCapWarned.compareAndSet(false, true)) {
+                log.warn("Parked reaction cap of {} reached; further reactions from unresolvable senders " +
+                        "will only be delivered in snapshots", MAX_PARKED_REACTIONS);
+            }
+            return;
+        }
+        PendingReaction pending = new PendingReaction(message, reaction);
+        String senderId = reaction.getUserProfileId();
+        AtomicReference<Set<PendingReaction>> ref = new AtomicReference<>();
+        awaitingSender.compute(senderId, (id, present) -> {
+            Set<PendingReaction> set = present != null ? present : ConcurrentHashMap.newKeySet();
+            if (set.add(pending)) {
+                parkedCount.incrementAndGet();
+            }
+            ref.set(set);
+            return set;
+        });
+        Set<PendingReaction> parked = ref.get();
+        if (dtoFactory.isVisible(message, reaction) && claim(parked, pending)) {
+            pruneIfEmpty(senderId, parked);
+            push(reaction, ModificationType.ADDED);
+        }
+    }
+
+    /**
+     * Takes an emptied set's key out of the map — sender ids are as free to fabricate as author ids, so
+     * without this every drained key would be a leak the {@link #MAX_PARKED_REACTIONS} cap does not see
+     * (it counts entries, not keys). Same locking argument as
+     * {@code PublicChatMessagesWebSocketService#pruneIfEmpty}.
+     */
+    private void pruneIfEmpty(String senderId, Set<PendingReaction> parked) {
+        if (parked.isEmpty()) {
+            awaitingSender.computeIfPresent(senderId, (id, present) ->
+                    present == parked && present.isEmpty() ? null : present);
+        }
+    }
+
+    /** See {@code PublicChatMessagesWebSocketService#replayFor} for why racing an orphaned set is fine. */
+    private void replayFor(String profileId) {
+        Set<PendingReaction> parked = awaitingSender.remove(profileId);
+        if (parked == null) {
+            return;
+        }
+        parked.forEach(pending -> {
+            if (!shutdownStarted
+                    && claim(parked, pending)
+                    && isStillInChannel(pending.message())
+                    && dtoFactory.isVisible(pending.message(), pending.reaction())) {
+                push(pending.reaction(), ModificationType.ADDED);
+            }
+        });
+    }
+
+    private boolean claim(Set<PendingReaction> parked, PendingReaction pending) {
+        if (parked.remove(pending)) {
+            parkedCount.decrementAndGet();
+            return true;
+        }
+        return false;
+    }
+
+    /** By {@code equals} on purpose, see {@code PublicChatMessagesWebSocketService#isStillInChannel}. */
+    private boolean isStillInChannel(CommonPublicChatMessage message) {
+        return channels.findChannel(message.getChannelId())
+                .map(channel -> channel.getChatMessages().contains(message))
+                .orElse(false);
+    }
+
+    /** A parked reaction whose message left its channel is not coming back; the sweep keeps the map honest. */
+    private void dropParkedFor(CommonPublicChatMessage message) {
+        awaitingSender.forEach((senderId, parked) -> {
+            parked.forEach(pending -> {
+                if (pending.message().equals(message)) {
+                    claim(parked, pending);
+                }
+            });
+            pruneIfEmpty(senderId, parked);
+        });
+    }
+
+    /** An addition waiting for its sender's profile, with the message it sits on for the re-checks at replay. */
+    private record PendingReaction(CommonPublicChatMessage message, CommonPublicChatMessageReaction reaction) {
     }
 
     /**
@@ -281,7 +436,27 @@ public class PublicChatReactionsWebSocketService extends ChannelScopedWebSocketS
         if (shutdownStarted) {
             return;
         }
+        dropParked(reaction);
         push(reaction, ModificationType.REMOVED);
+    }
+
+    /** A reaction removed while parked was never pushed, so there is nothing left to wait for. */
+    private void dropParked(CommonPublicChatMessageReaction reaction) {
+        String senderId = reaction.getUserProfileId();
+        Set<PendingReaction> parked = awaitingSender.get(senderId);
+        if (parked != null) {
+            parked.forEach(pending -> {
+                if (pending.reaction().equals(reaction)) {
+                    claim(parked, pending);
+                }
+            });
+            pruneIfEmpty(senderId, parked);
+        }
+    }
+
+    /** Test seam: the no-leak claim on {@link #awaitingSender} is about its keys, so the tests count them. */
+    int parkedSenderKeys() {
+        return awaitingSender.size();
     }
 
     private void push(CommonPublicChatMessageReaction reaction, ModificationType modificationType) {

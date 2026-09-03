@@ -32,6 +32,7 @@ import bisq.chat.common.SubDomain;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import org.mockito.ArgumentCaptor;
@@ -91,6 +92,27 @@ public final class PublicChatTestMocks {
     public static UserProfile knownProfile(UserProfileService userProfileService, String id) {
         UserProfile profile = mockUserProfile(id);
         when(userProfileService.findUserProfile(id)).thenReturn(Optional.of(profile));
+        return profile;
+    }
+
+    /**
+     * The observable half of the profile store, which the messages and reactions services observe to
+     * replay additions that waited for a profile. A real map rather than a stub: the services register
+     * a real observer on it, and a test drives a "profile arrives" event by putting into it — see
+     * {@link #profileArrives}.
+     */
+    public static ObservableHashMap<String, UserProfile> observedProfiles(UserProfileService userProfileService) {
+        ObservableHashMap<String, UserProfile> profiles = new ObservableHashMap<>();
+        when(userProfileService.getUserProfileById()).thenReturn(profiles);
+        return profiles;
+    }
+
+    /** A profile landing from the network: resolvable from now on, and its arrival event fires. */
+    public static UserProfile profileArrives(UserProfileService userProfileService,
+                                             ObservableHashMap<String, UserProfile> profiles,
+                                             String id) {
+        UserProfile profile = knownProfile(userProfileService, id);
+        profiles.put(id, profile);
         return profile;
     }
 

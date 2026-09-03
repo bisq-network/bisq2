@@ -32,7 +32,9 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.user.banned.BannedUserService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +56,8 @@ import static bisq.api.chat.common.PublicChatTestMocks.mockChannel;
 import static bisq.api.chat.common.PublicChatTestMocks.mockMessage;
 import static bisq.api.chat.common.PublicChatTestMocks.mockReaction;
 import static bisq.api.chat.common.PublicChatTestMocks.mockSubscriber;
+import static bisq.api.chat.common.PublicChatTestMocks.observedProfiles;
+import static bisq.api.chat.common.PublicChatTestMocks.profileArrives;
 import static bisq.api.chat.common.PublicChatTestMocks.publicChatChannels;
 import static bisq.api.chat.common.PublicChatTestMocks.reactionInChannel;
 import static bisq.api.chat.common.PublicChatTestMocks.sentJson;
@@ -86,6 +90,7 @@ class PublicChatReactionsWebSocketServiceTest {
     private ObservedSet<ChatMessageReaction> reactions;
     private ObservedSet<ChatMessageReaction> supportReactions;
     private CommonPublicChatMessage message;
+    private ObservableHashMap<String, UserProfile> profiles;
     private UserProfileService userProfileService;
     private BannedUserService bannedUserService;
     private SubscriberRepository subscriberRepository;
@@ -103,6 +108,7 @@ class PublicChatReactionsWebSocketServiceTest {
                 mockChannel(SubDomain.SUPPORT_SUPPORT, supportMessages));
 
         userProfileService = mock(UserProfileService.class);
+        profiles = observedProfiles(userProfileService);
         knownProfile(userProfileService, AUTHOR);
         knownProfile(userProfileService, REACTOR);
         knownProfile(userProfileService, REDELIVERED_AUTHOR);
@@ -268,6 +274,116 @@ class PublicChatReactionsWebSocketServiceTest {
 
         reactions.add(mockReaction("r", REACTOR, "m", 0));
         assertThat(sentJson(subscriber)).contains(reactionId("r"));
+    }
+
+    /**
+     * The id is not unique within a channel either: {@code ChatMessage.verify} bounds its length and
+     * nothing else, and the channel set stores by full-object equality, so a peer can publish a
+     * <em>different</em> message under an id that is live in the same channel and both stay side by
+     * side. A single binding per key would let the imposter displace and unbind the original's
+     * observer — the same silencing as across channels, through the front door.
+     */
+    @Test
+    void aSameChannelMessageReusingALiveIdDoesNotUnbindTheOriginalsObserver() {
+        messages.add(mockMessage("m", AUTHOR, 2, new ObservedSet<>()));
+
+        reactions.add(mockReaction("r", REACTOR, "m", 0));
+
+        assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(reactionId("r"));
+    }
+
+    /** The teardown half: the imposter leaving must take its own binding and nobody else's. */
+    @Test
+    void removingTheImposterLeavesTheOriginalObservedAndItselfNot() {
+        ObservedSet<ChatMessageReaction> imposterReactions = new ObservedSet<>();
+        CommonPublicChatMessage imposter = mockMessage("m", AUTHOR, 2, imposterReactions);
+        messages.add(imposter);
+
+        messages.remove(imposter);
+
+        assertThat(imposterReactions.hasObservers()).isFalse();
+        reactions.add(mockReaction("r", REACTOR, "m", 0));
+        assertThat(sentJson(subscriber)).contains(reactionId("r"));
+    }
+
+    /**
+     * The reaction counterpart of the messages topic's replay: a reaction whose sender's profile has
+     * not arrived yet is parked and pushed when it does — see
+     * {@code aMessageWaitingForItsAuthorIsPushedWhenTheProfileArrives}.
+     */
+    @Test
+    void aReactionWaitingForItsSenderIsPushedWhenTheProfileArrives() {
+        reactions.add(mockReaction("r", "late-reactor", "m", 0));
+
+        profileArrives(userProfileService, profiles, "late-reactor");
+
+        assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(reactionId("r"));
+    }
+
+    /**
+     * A reaction skipped because the <em>message author</em> is missing is not parked here: when that
+     * author arrives, the messages topic replays the message and the dto embeds the reactions visible
+     * by then, so a second delivery from this topic would only duplicate it.
+     */
+    @Test
+    void aReactionOnAMessageAwaitingItsAuthorIsNotReplayedByThisTopic() {
+        ObservedSet<ChatMessageReaction> orphanReactions = new ObservedSet<>();
+        messages.add(mockMessage("orphan", "late-author", 2, orphanReactions));
+        orphanReactions.add(mockReaction("r", REACTOR, "orphan", 0));
+
+        profileArrives(userProfileService, profiles, "late-author");
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    @Test
+    void aWaitingReactionRemovedBeforeTheProfileArrivesIsNotReplayed() {
+        CommonPublicChatMessageReaction reaction = mockReaction("r", "late-reactor", "m", 0);
+        reactions.add(reaction);
+        reactions.remove(reaction);
+
+        profileArrives(userProfileService, profiles, "late-reactor");
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /** See {@code PublicChatMessagesWebSocketServiceTest#aDrainedAuthorLeavesNoKeyBehind}. */
+    @Test
+    void aDrainedSenderLeavesNoKeyBehind() {
+        CommonPublicChatMessageReaction reaction = mockReaction("r", "late-reactor", "m", 0);
+        reactions.add(reaction);
+
+        reactions.remove(reaction);
+
+        assertThat(service.parkedSenderKeys()).isZero();
+    }
+
+    @Test
+    void aRemovedMessageDropsItsWaitingReactionsKey() {
+        reactions.add(mockReaction("r", "late-reactor", "m", 0));
+
+        messages.remove(message);
+
+        assertThat(service.parkedSenderKeys()).isZero();
+    }
+
+    @Test
+    void aReplayedSenderLeavesNoKeyBehind() {
+        reactions.add(mockReaction("r", "late-reactor", "m", 0));
+
+        profileArrives(userProfileService, profiles, "late-reactor");
+
+        assertThat(service.parkedSenderKeys()).isZero();
+    }
+
+    @Test
+    void aWaitingReactionWhoseMessageLeftTheChannelIsNotReplayed() {
+        reactions.add(mockReaction("r", "late-reactor", "m", 0));
+        messages.remove(message);
+
+        profileArrives(userProfileService, profiles, "late-reactor");
+
+        verify(subscriber, never()).send(anyString());
     }
 
     @Test

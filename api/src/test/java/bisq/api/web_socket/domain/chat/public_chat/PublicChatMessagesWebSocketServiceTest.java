@@ -23,11 +23,15 @@ import bisq.api.chat.common.PublicChatTestMocks.ObservedSet;
 import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.Topic;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatMessageType;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.common.SubDomain;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
 import bisq.user.banned.BannedUserService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +51,8 @@ import static bisq.api.chat.common.PublicChatTestMocks.messageInChannel;
 import static bisq.api.chat.common.PublicChatTestMocks.mockChannel;
 import static bisq.api.chat.common.PublicChatTestMocks.mockMessage;
 import static bisq.api.chat.common.PublicChatTestMocks.mockSubscriber;
+import static bisq.api.chat.common.PublicChatTestMocks.observedProfiles;
+import static bisq.api.chat.common.PublicChatTestMocks.profileArrives;
 import static bisq.api.chat.common.PublicChatTestMocks.publicChatChannels;
 import static bisq.api.chat.common.PublicChatTestMocks.sentJson;
 import static bisq.api.chat.common.PublicChatTestMocks.subscribed;
@@ -70,9 +76,14 @@ import static org.mockito.Mockito.when;
  */
 class PublicChatMessagesWebSocketServiceTest {
     private static final String AUTHOR = "author";
+    /** Real messages go through {@code verify()}, which wants a 40 character profile id. */
+    private static final String REDELIVERED_AUTHOR = "a".repeat(40);
+    private static final String REDELIVERED_ID = "redelivered";
+    private static final long REDELIVERED_DATE = System.currentTimeMillis();
 
     private ObservedSet<CommonPublicChatMessage> messages;
     private ObservedSet<CommonPublicChatMessage> supportMessages;
+    private ObservableHashMap<String, UserProfile> profiles;
     private UserProfileService userProfileService;
     private BannedUserService bannedUserService;
     private SubscriberRepository subscriberRepository;
@@ -87,6 +98,7 @@ class PublicChatMessagesWebSocketServiceTest {
                 mockChannel(SubDomain.SUPPORT_SUPPORT, supportMessages));
 
         userProfileService = mock(UserProfileService.class);
+        profiles = observedProfiles(userProfileService);
         knownProfile(userProfileService, AUTHOR);
         bannedUserService = mock(BannedUserService.class);
 
@@ -118,6 +130,145 @@ class PublicChatMessagesWebSocketServiceTest {
     @Test
     void aMessageWhoseAuthorCannotBeResolvedDoesNotReachTheClient() {
         messages.add(mockMessage("m", "unknown", 1));
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * The normal shape of a fresh node's inventory sync: a channel's messages land before the profiles
+     * of their authors. Without the replay every such message would stay invisible to a live subscriber
+     * for the life of its subscription, silently disagreeing with REST and the next snapshot.
+     */
+    @Test
+    void aMessageWaitingForItsAuthorIsPushedWhenTheProfileArrives() {
+        messages.add(mockMessage("m", "late-author", 1));
+
+        profileArrives(userProfileService, profiles, "late-author");
+
+        assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(messageId("m"));
+    }
+
+    @Test
+    void anUnrelatedProfileArrivalReplaysNothing() {
+        messages.add(mockMessage("m", "late-author", 1));
+
+        profileArrives(userProfileService, profiles, "someone-else");
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /** The replay re-checks visibility in full: a profile can arrive for an author banned meanwhile. */
+    @Test
+    void aWaitingMessageWhoseAuthorArrivesBannedStaysBack() {
+        messages.add(mockMessage("m", "late-author", 1));
+        when(bannedUserService.isUserProfileBanned("late-author")).thenReturn(true);
+
+        profileArrives(userProfileService, profiles, "late-author");
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /** A banned author is not worth waiting for: an unban event does not exist to wake the entry. */
+    @Test
+    void aMessageFromABannedUnresolvedAuthorIsNotParked() {
+        when(bannedUserService.isUserProfileBanned("late-author")).thenReturn(true);
+        messages.add(mockMessage("m", "late-author", 1));
+        when(bannedUserService.isUserProfileBanned("late-author")).thenReturn(false);
+
+        profileArrives(userProfileService, profiles, "late-author");
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    @Test
+    void aWaitingMessageThatLeftItsChannelIsNotReplayed() {
+        CommonPublicChatMessage message = mockMessage("m", "late-author", 1);
+        messages.add(message);
+        messages.remove(message);
+
+        profileArrives(userProfileService, profiles, "late-author");
+
+        verify(subscriber, never()).send(anyString());
+    }
+
+    /**
+     * The waiting map's keys are attacker-supplied author ids that may never resolve, so a drained
+     * entry has to take its key with it — left behind, one garbage key per fabricated author would be
+     * an unbounded leak an adversary grows for free.
+     */
+    @Test
+    void aDrainedAuthorLeavesNoKeyBehind() {
+        CommonPublicChatMessage message = mockMessage("m", "late-author", 1);
+        messages.add(message);
+
+        messages.remove(message);
+
+        assertThat(service.parkedAuthorKeys()).isZero();
+        verify(subscriber, never()).send(anyString());
+    }
+
+    @Test
+    void aReplayedAuthorLeavesNoKeyBehind() {
+        messages.add(mockMessage("m", "late-author", 1));
+
+        profileArrives(userProfileService, profiles, "late-author");
+
+        assertThat(service.parkedAuthorKeys()).isZero();
+    }
+
+    /**
+     * Message ids are not unique within a channel, and the wire keys messages by id: a {@code REMOVED}
+     * while another message is live under the same id would make the client delete what a fresh
+     * snapshot still shows, with nothing to ever bring it back. The removal of one collider therefore
+     * re-pushes the survivor instead of removing the id.
+     */
+    @Test
+    void removingOneOfTwoMessagesSharingAnIdConvergesOnTheSurvivor() {
+        CommonPublicChatMessage original = mockMessage("m", AUTHOR, 1);
+        CommonPublicChatMessage imposter = mockMessage("m", AUTHOR, 2);
+        messages.add(original);
+        messages.add(imposter);
+
+        messages.remove(imposter);
+
+        List<String> sent = allSentJson(subscriber);
+        assertThat(sent).hasSize(3);
+        assertThat(sent.getLast()).contains(event("ADDED")).contains(messageId("m"));
+    }
+
+    /**
+     * The honest-traffic shape of the same hazard: the P2P store re-delivers a message as a fresh
+     * equal instance, and the predecessor's removal can be processed after the successor's add. Real
+     * instances rather than mocks, which are only equal by identity — see the reactions test of the
+     * same scenario.
+     */
+    @Test
+    void aDepartingMessageWithALiveSuccessorIsNotTakenBackFromClients() {
+        ObservableSet<CommonPublicChatMessage> channelMessages = new ObservableSet<>();
+        CommonPublicChatMessage departing = redeliveredMessage();
+        CommonPublicChatMessage successor = redeliveredMessage();
+        knownProfile(userProfileService, REDELIVERED_AUTHOR);
+        hookOnRemoved(channelMessages, removed -> {
+            if (removed == departing) {
+                channelMessages.add(successor);
+            }
+        });
+        serviceOver(channelMessages);
+        channelMessages.add(departing);
+
+        channelMessages.remove(departing);
+
+        List<String> sent = allSentJson(subscriber);
+        assertThat(sent).isNotEmpty().noneMatch(json -> json.contains(event("REMOVED")));
+        assertThat(sent.getLast()).contains(event("ADDED")).contains(messageId(REDELIVERED_ID));
+    }
+
+    @Test
+    void aProfileArrivingAfterTheShutdownReplaysNothing() {
+        messages.add(mockMessage("m", "late-author", 1));
+        service.shutdown().join();
+
+        profileArrives(userProfileService, profiles, "late-author");
 
         verify(subscriber, never()).send(anyString());
     }
@@ -363,6 +514,19 @@ class PublicChatMessagesWebSocketServiceTest {
             public void onCleared() {
             }
         });
+    }
+
+    /** Two calls give equal but distinct instances, which is what a re-delivery looks like. */
+    private static CommonPublicChatMessage redeliveredMessage() {
+        return new CommonPublicChatMessage(REDELIVERED_ID,
+                ChatChannelDomain.DISCUSSION,
+                DISCUSSION_ID,
+                REDELIVERED_AUTHOR,
+                Optional.of("hi"),
+                Optional.empty(),
+                REDELIVERED_DATE,
+                false,
+                ChatMessageType.TEXT);
     }
 
     /** The event carries the payload as an escaped JSON string, hence the escaped quotes. */
