@@ -15,14 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.rest_api.endpoints.chat.private_chat;
 
-import bisq.api.dto.chat.SendRejectionDto;
+package bisq.api.rest_api.endpoints.chat.public_chat;
 
-/**
- * Body of a 409 from the send endpoints. {@code rejection} says why the send was refused, so a client
- * can act on the reason — say which side is banned — without matching the prose in {@code message},
- * which is free to change.
- */
-public record SendRefusedResponse(SendRejectionDto rejection, String message) {
+/** No sender: an edit is always made by the message's author. */
+public record EditPublicChatMessageRequest(String text) {
 }
