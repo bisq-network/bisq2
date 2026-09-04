@@ -98,7 +98,18 @@ public class PublicChatDtoFactory {
      * which says the client filters those against {@code GET /user-profiles/ignored}.
      */
     public boolean isVisible(CommonPublicChatMessage message) {
-        return !message.isExpired() && isVisibleAuthor(message.getAuthorUserProfileId());
+        return isVisible(message, findProfile(message.getAuthorUserProfileId()));
+    }
+
+    /**
+     * {@link #isVisible(CommonPublicChatMessage)} against an author the caller already looked up. The
+     * push-or-park decision has to classify from a single read of the profile store: with the
+     * visibility check and the parking check each reading it again, a profile landing between the two
+     * slips past both — the first read saw it absent, the replay found nothing parked yet, the second
+     * read sees it present — and the addition is neither pushed nor parked until reconnect.
+     */
+    public boolean isVisible(CommonPublicChatMessage message, Optional<UserProfile> author) {
+        return !message.isExpired() && isVisibleAuthor(message.getAuthorUserProfileId(), author);
     }
 
     /**
@@ -106,32 +117,72 @@ public class PublicChatDtoFactory {
      * at all, the reaction's own sender whether it is shown on one that is visible.
      */
     public boolean isVisible(CommonPublicChatMessage message, CommonPublicChatMessageReaction reaction) {
-        return isVisible(message) && isVisibleAuthor(reaction.getUserProfileId());
+        return isVisible(message, reaction,
+                findProfile(message.getAuthorUserProfileId()),
+                findProfile(reaction.getUserProfileId()));
+    }
+
+    /** The two-profile form of {@link #isVisible(CommonPublicChatMessage, Optional)}, same reason. */
+    public boolean isVisible(CommonPublicChatMessage message,
+                             CommonPublicChatMessageReaction reaction,
+                             Optional<UserProfile> author,
+                             Optional<UserProfile> sender) {
+        return isVisible(message, author) && isVisibleAuthor(reaction.getUserProfileId(), sender);
     }
 
     /**
-     * Whether the one thing keeping {@link #isVisible(CommonPublicChatMessage)} false is that the
-     * author's profile has not arrived yet. That is the state worth waiting out: on a fresh node the
-     * P2P store routinely delivers a channel's messages before the profiles of their authors, and a
+     * Whether the one thing keeping {@link #isVisible(CommonPublicChatMessage, Optional)} false is that
+     * the author's profile has not arrived yet. That is the state worth waiting out: on a fresh node
+     * the P2P store routinely delivers a channel's messages before the profiles of their authors, and a
      * profile that is merely late will land. A banned author or an expired message will not come back,
-     * so neither is worth parking for.
+     * so neither is worth parking for. Takes the author the caller classified visibility with, never a
+     * second lookup — see {@link #isVisible(CommonPublicChatMessage, Optional)}.
      */
-    public boolean awaitsAuthorProfile(CommonPublicChatMessage message) {
+    public boolean awaitsAuthorProfile(CommonPublicChatMessage message, Optional<UserProfile> author) {
         return !message.isExpired()
                 && !bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())
-                && userProfileService.findUserProfile(message.getAuthorUserProfileId()).isEmpty();
+                && author.isEmpty();
     }
 
     /**
-     * The reaction counterpart of {@link #awaitsAuthorProfile}: the message itself is visible and only
-     * the reaction sender's profile is missing. A reaction skipped because the <em>message author</em>
-     * is missing needs no parking here — when that author arrives, the messages topic replays the
-     * message and {@link #toDto(CommonPublicChatMessage)} embeds every reaction that is visible by then.
+     * The profile whose arrival is the one thing keeping
+     * {@link #isVisible(CommonPublicChatMessage, CommonPublicChatMessageReaction)} false: the message
+     * author's, or with that one present the reaction sender's; empty when the reaction is visible or
+     * hidden for a reason no profile arrival cures. The reactions topic parks for a missing message
+     * author as well as a missing sender because the client consumes reactions from this topic alone —
+     * the copy embedded in the replayed message dto is a snapshot it deliberately ignores, so a
+     * reaction this topic never delivers is missing until reconnect. When both profiles are missing the
+     * author wins, and the replay of the author re-parks on the sender.
      */
-    public boolean awaitsSenderProfile(CommonPublicChatMessage message, CommonPublicChatMessageReaction reaction) {
-        return isVisible(message)
-                && !bannedUserService.isUserProfileBanned(reaction.getUserProfileId())
-                && userProfileService.findUserProfile(reaction.getUserProfileId()).isEmpty();
+    public Optional<String> awaitedProfileId(CommonPublicChatMessage message,
+                                             CommonPublicChatMessageReaction reaction) {
+        return awaitedProfileId(message, reaction,
+                findProfile(message.getAuthorUserProfileId()),
+                findProfile(reaction.getUserProfileId()));
+    }
+
+    /** The pre-resolved form of {@link #awaitedProfileId(CommonPublicChatMessage, CommonPublicChatMessageReaction)}. */
+    public Optional<String> awaitedProfileId(CommonPublicChatMessage message,
+                                             CommonPublicChatMessageReaction reaction,
+                                             Optional<UserProfile> author,
+                                             Optional<UserProfile> sender) {
+        if (message.isExpired()
+                || bannedUserService.isUserProfileBanned(message.getAuthorUserProfileId())
+                || bannedUserService.isUserProfileBanned(reaction.getUserProfileId())) {
+            return Optional.empty();
+        }
+        if (author.isEmpty()) {
+            return Optional.of(message.getAuthorUserProfileId());
+        }
+        if (sender.isEmpty()) {
+            return Optional.of(reaction.getUserProfileId());
+        }
+        return Optional.empty();
+    }
+
+    /** The profile-store read the classifying callers share, see {@link #isVisible(CommonPublicChatMessage, Optional)}. */
+    public Optional<UserProfile> findProfile(String userProfileId) {
+        return userProfileService.findUserProfile(userProfileId);
     }
 
     /**
@@ -193,8 +244,11 @@ public class PublicChatDtoFactory {
     }
 
     private boolean isVisibleAuthor(String userProfileId) {
-        return !bannedUserService.isUserProfileBanned(userProfileId)
-                && userProfileService.findUserProfile(userProfileId).isPresent();
+        return isVisibleAuthor(userProfileId, findProfile(userProfileId));
+    }
+
+    private boolean isVisibleAuthor(String userProfileId, Optional<UserProfile> profile) {
+        return !bannedUserService.isUserProfileBanned(userProfileId) && profile.isPresent();
     }
 
     private UserProfile resolve(String userProfileId) {

@@ -154,9 +154,13 @@ public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketSe
         if (shutdownStarted) {
             return;
         }
-        if (dtoFactory.isVisible(message)) {
+        // One profile-store read classifies push against park, see PublicChatDtoFactory#isVisible:
+        // with each predicate reading the store again, a profile landing between the two reads is a
+        // lost wakeup — not visible yet, nothing parked for the replay to find, not awaited anymore.
+        Optional<UserProfile> author = dtoFactory.findProfile(message.getAuthorUserProfileId());
+        if (dtoFactory.isVisible(message, author)) {
             push(message, ModificationType.ADDED);
-        } else if (dtoFactory.awaitsAuthorProfile(message)) {
+        } else if (dtoFactory.awaitsAuthorProfile(message, author)) {
             park(message);
         }
     }
@@ -264,9 +268,9 @@ public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketSe
             return;
         }
         dropParked(message);
-        // An invisible survivor falls through to REMOVED on purpose: the snapshot would not show it
-        // either, and if it is merely waiting for its author it gets its ADDED from the replay.
-        Optional<CommonPublicChatMessage> survivor = survivorSharingId(message).filter(dtoFactory::isVisible);
+        // No visible survivor falls through to REMOVED on purpose: the snapshot would not show the id
+        // either, and a survivor merely waiting for its author gets its ADDED from the replay.
+        Optional<CommonPublicChatMessage> survivor = survivorSharingId(message);
         if (survivor.isPresent()) {
             push(survivor.get(), ModificationType.ADDED);
             return;
@@ -283,18 +287,29 @@ public class PublicChatMessagesWebSocketService extends ChannelScopedWebSocketSe
      * a different message under a live id (nothing prevents that, see
      * {@code PublicChatReactionsWebSocketService.BindingKey}). Re-pushing the survivor as {@code ADDED}
      * instead converges the client on what a fresh snapshot would show; for the equal re-delivery it is
-     * an idempotent upsert. The newest survivor is chosen so several colliders converge the same way
-     * the snapshot's ordering would resolve them.
+     * an idempotent upsert. The newest visible survivor is chosen so several colliders converge the
+     * same way the snapshot's ordering would resolve them — and visibility filters the candidates
+     * before newest wins, as {@link PublicChatDtoFactory#visibleMessagesNewestFirst} filters before it
+     * sorts. The other order hands the id to whoever plants the newest collider: an invisible one
+     * (unresolvable author, far-future date) would win the max, fail the visibility check and turn
+     * every removal under that id into a {@code REMOVED} that takes down the visible message a fresh
+     * snapshot still shows.
      */
     private Optional<CommonPublicChatMessage> survivorSharingId(CommonPublicChatMessage removed) {
         return channels.findChannel(removed.getChannelId())
                 .stream()
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(live -> live.getId().equals(removed.getId()))
+                .filter(dtoFactory::isVisible)
                 .max(Comparator.comparingLong(CommonPublicChatMessage::getDate));
     }
 
-    /** A message that leaves its channel while parked is not coming back; equality drops the parked copy. */
+    /**
+     * A message that leaves its channel while parked is not coming back; equality drops the parked
+     * copy. Equality is enough because {@code ChatChannelService} serializes every add and remove —
+     * observer callbacks included — under the store monitor: a re-delivered equal successor's park
+     * cannot interleave with this drop, so the dropped entry is never a live successor's.
+     */
     private void dropParked(CommonPublicChatMessage message) {
         awaitingAuthor.computeIfPresent(message.getAuthorUserProfileId(), (id, present) -> {
             present.remove(message);

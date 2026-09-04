@@ -30,6 +30,7 @@ import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.common.SubDomain;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
@@ -56,6 +57,7 @@ import static bisq.api.chat.common.PublicChatTestMocks.mockChannel;
 import static bisq.api.chat.common.PublicChatTestMocks.mockMessage;
 import static bisq.api.chat.common.PublicChatTestMocks.mockReaction;
 import static bisq.api.chat.common.PublicChatTestMocks.mockSubscriber;
+import static bisq.api.chat.common.PublicChatTestMocks.mockUserProfile;
 import static bisq.api.chat.common.PublicChatTestMocks.observedProfiles;
 import static bisq.api.chat.common.PublicChatTestMocks.profileArrives;
 import static bisq.api.chat.common.PublicChatTestMocks.publicChatChannels;
@@ -181,6 +183,43 @@ class PublicChatReactionsWebSocketServiceTest {
         assertThat(sent.getLast()).contains(event("REMOVED")).contains(reactionId("r"));
     }
 
+    /**
+     * Reaction ids are the peer's to choose, as message ids are, and the client deletes reactions by
+     * id within a message: a REMOVED while a distinct reaction is live under the same id would hide
+     * the survivor until reconnect. The removal of one collider re-pushes the survivor instead — the
+     * reaction counterpart of the messages topic's
+     * {@code removingOneOfTwoMessagesSharingAnIdConvergesOnTheSurvivor}.
+     */
+    @Test
+    void removingOneOfTwoReactionsSharingAnIdConvergesOnTheSurvivor() {
+        knownProfile(userProfileService, "other-reactor");
+        CommonPublicChatMessageReaction removedOne = mockReaction("r", REACTOR, "m", 0);
+        CommonPublicChatMessageReaction survivor = mockReaction("r", "other-reactor", "m", 1);
+        reactions.add(removedOne);
+        reactions.add(survivor);
+
+        reactions.remove(removedOne);
+
+        List<String> sent = allSentJson(subscriber);
+        assertThat(sent).hasSize(3);
+        assertThat(sent.getLast()).contains(event("ADDED")).contains(reactionId("r"));
+    }
+
+    /** No visible survivor falls through to REMOVED: a parked one gets its ADDED from the replay. */
+    @Test
+    void anInvisibleSurvivorDoesNotSuppressTheRemoval() {
+        CommonPublicChatMessageReaction removedOne = mockReaction("r", REACTOR, "m", 0);
+        CommonPublicChatMessageReaction parked = mockReaction("r", "late-reactor", "m", 1);
+        reactions.add(removedOne);
+        reactions.add(parked);
+
+        reactions.remove(removedOne);
+
+        List<String> sent = allSentJson(subscriber);
+        assertThat(sent).hasSize(2);
+        assertThat(sent.getLast()).contains(event("REMOVED")).contains(reactionId("r"));
+    }
+
     @Test
     void theSnapshotAppliesTheSameFilter() {
         reactions.add(mockReaction("visible", REACTOR, "m", 0));
@@ -292,6 +331,25 @@ class PublicChatReactionsWebSocketServiceTest {
         assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(reactionId("r"));
     }
 
+    /**
+     * {@code ObservableCollection#addObserver} registers the observer before it replays the
+     * collection, so an addition racing the registration in {@code initialize} arrives through both
+     * the live callback and the replay. Keeping both bindings would push every later reaction of that
+     * message twice for the life of the process; the second binding is dropped instead.
+     */
+    @Test
+    void aMessageDeliveredThroughBothTheRegistrationReplayAndTheLiveCallbackIsBoundOnce() {
+        RegistrationRacingSet channelMessages = new RegistrationRacingSet();
+        ObservedSet<ChatMessageReaction> racingReactions = new ObservedSet<>();
+        CommonPublicChatMessage racing = mockMessage("racing", AUTHOR, 2, racingReactions);
+        channelMessages.race(racing);
+        serviceOver(channelMessages);
+
+        racingReactions.add(mockReaction("r", REACTOR, "racing", 0));
+
+        assertThat(allSentJson(subscriber)).hasSize(1);
+    }
+
     /** The teardown half: the imposter leaving must take its own binding and nobody else's. */
     @Test
     void removingTheImposterLeavesTheOriginalObservedAndItselfNot() {
@@ -321,19 +379,52 @@ class PublicChatReactionsWebSocketServiceTest {
     }
 
     /**
-     * A reaction skipped because the <em>message author</em> is missing is not parked here: when that
-     * author arrives, the messages topic replays the message and the dto embeds the reactions visible
-     * by then, so a second delivery from this topic would only duplicate it.
+     * A reaction skipped because the <em>message author</em> is missing is parked like one whose
+     * sender is. The messages topic does replay the message with the reactions embedded, but the
+     * client consumes reactions from this topic alone — the embedded set is a snapshot it ignores —
+     * so a reaction this topic never delivers is missing until reconnect.
      */
     @Test
-    void aReactionOnAMessageAwaitingItsAuthorIsNotReplayedByThisTopic() {
+    void aReactionOnAMessageAwaitingItsAuthorIsReplayedWhenTheAuthorArrives() {
         ObservedSet<ChatMessageReaction> orphanReactions = new ObservedSet<>();
         messages.add(mockMessage("orphan", "late-author", 2, orphanReactions));
         orphanReactions.add(mockReaction("r", REACTOR, "orphan", 0));
 
         profileArrives(userProfileService, profiles, "late-author");
 
+        assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(reactionId("r"));
+    }
+
+    /** Both profiles missing: parked for the author, re-parked for the sender when the author lands. */
+    @Test
+    void aReactionMissingBothProfilesIsPushedWhenTheSecondOneArrives() {
+        ObservedSet<ChatMessageReaction> orphanReactions = new ObservedSet<>();
+        messages.add(mockMessage("orphan", "late-author", 2, orphanReactions));
+        orphanReactions.add(mockReaction("r", "late-reactor", "orphan", 0));
+
+        profileArrives(userProfileService, profiles, "late-author");
         verify(subscriber, never()).send(anyString());
+
+        profileArrives(userProfileService, profiles, "late-reactor");
+        assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(reactionId("r"));
+        assertThat(service.parkedProfileKeys()).isZero();
+    }
+
+    /**
+     * The deterministic form of the lost wakeup: the sender's profile lands between the visibility
+     * read and what used to be the parking predicate's own read, after the replay already found
+     * nothing parked. One classifying read per profile plus park's double-check turns this into a
+     * push instead of a dropped reaction.
+     */
+    @Test
+    void aProfileArrivingDuringClassificationDoesNotLoseTheReaction() {
+        UserProfile racing = mockUserProfile("racing-reactor");
+        when(userProfileService.findUserProfile("racing-reactor"))
+                .thenReturn(Optional.empty(), Optional.of(racing));
+
+        reactions.add(mockReaction("r", "racing-reactor", "m", 0));
+
+        assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(reactionId("r"));
     }
 
     @Test
@@ -355,7 +446,7 @@ class PublicChatReactionsWebSocketServiceTest {
 
         reactions.remove(reaction);
 
-        assertThat(service.parkedSenderKeys()).isZero();
+        assertThat(service.parkedProfileKeys()).isZero();
     }
 
     @Test
@@ -364,7 +455,7 @@ class PublicChatReactionsWebSocketServiceTest {
 
         messages.remove(message);
 
-        assertThat(service.parkedSenderKeys()).isZero();
+        assertThat(service.parkedProfileKeys()).isZero();
     }
 
     @Test
@@ -373,7 +464,7 @@ class PublicChatReactionsWebSocketServiceTest {
 
         profileArrives(userProfileService, profiles, "late-reactor");
 
-        assertThat(service.parkedSenderKeys()).isZero();
+        assertThat(service.parkedProfileKeys()).isZero();
     }
 
     @Test
@@ -635,6 +726,32 @@ class PublicChatReactionsWebSocketServiceTest {
             public void onCleared() {
             }
         });
+    }
+
+    /**
+     * Replays {@code ObservableCollection#addObserver}'s registration race deterministically: the
+     * armed message is added right after the observer registers — reaching it through the live
+     * callback — and then handed to it again through the replay the real interleaving includes it in.
+     */
+    private static class RegistrationRacingSet extends ObservableSet<CommonPublicChatMessage> {
+        private CommonPublicChatMessage racing;
+
+        void race(CommonPublicChatMessage message) {
+            racing = message;
+        }
+
+        @Override
+        public Pin addObserver(CollectionObserver<CommonPublicChatMessage> observer) {
+            if (racing == null) {
+                return super.addObserver(observer);
+            }
+            CommonPublicChatMessage message = racing;
+            racing = null;
+            Pin pin = super.addObserver(observer);
+            add(message);
+            observer.onAllAdded(List.of(message));
+            return pin;
+        }
     }
 
     /** Two calls give equal but distinct instances, which is what a re-delivery looks like. */

@@ -51,6 +51,7 @@ import static bisq.api.chat.common.PublicChatTestMocks.messageInChannel;
 import static bisq.api.chat.common.PublicChatTestMocks.mockChannel;
 import static bisq.api.chat.common.PublicChatTestMocks.mockMessage;
 import static bisq.api.chat.common.PublicChatTestMocks.mockSubscriber;
+import static bisq.api.chat.common.PublicChatTestMocks.mockUserProfile;
 import static bisq.api.chat.common.PublicChatTestMocks.observedProfiles;
 import static bisq.api.chat.common.PublicChatTestMocks.profileArrives;
 import static bisq.api.chat.common.PublicChatTestMocks.publicChatChannels;
@@ -148,6 +149,23 @@ class PublicChatMessagesWebSocketServiceTest {
         assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(messageId("m"));
     }
 
+    /**
+     * The deterministic form of the lost wakeup: the author's profile lands between the visibility
+     * read and what used to be the parking predicate's own read, after the replay already found
+     * nothing parked — the message was neither pushed nor parked. Classifying from a single profile
+     * read plus park's double-check turns this into a push instead of a dropped message.
+     */
+    @Test
+    void aProfileArrivingDuringClassificationDoesNotLoseTheMessage() {
+        UserProfile racing = mockUserProfile("racing-author");
+        when(userProfileService.findUserProfile("racing-author"))
+                .thenReturn(Optional.empty(), Optional.of(racing));
+
+        messages.add(mockMessage("m", "racing-author", 1));
+
+        assertThat(sentJson(subscriber)).contains(event("ADDED")).contains(messageId("m"));
+    }
+
     @Test
     void anUnrelatedProfileArrivalReplaysNothing() {
         messages.add(mockMessage("m", "late-author", 1));
@@ -233,6 +251,28 @@ class PublicChatMessagesWebSocketServiceTest {
 
         List<String> sent = allSentJson(subscriber);
         assertThat(sent).hasSize(3);
+        assertThat(sent.getLast()).contains(event("ADDED")).contains(messageId("m"));
+    }
+
+    /**
+     * Visibility filters the collider candidates before newest wins. The other order is a griefing
+     * lever: a planted collider with an unresolvable author and a far-future date wins the max, fails
+     * the visibility filter, and every removal under that id then pushes a {@code REMOVED} that takes
+     * the visible message down on every live subscriber even though a fresh snapshot still shows it.
+     */
+    @Test
+    void anInvisibleNewerColliderDoesNotTurnTheRemovalIntoATakedown() {
+        CommonPublicChatMessage victim = mockMessage("m", AUTHOR, 1);
+        CommonPublicChatMessage ghost = mockMessage("m", "unresolvable-ghost", Long.MAX_VALUE);
+        CommonPublicChatMessage disposable = mockMessage("m", AUTHOR, 2);
+        messages.add(victim);
+        messages.add(ghost);
+        messages.add(disposable);
+
+        messages.remove(disposable);
+
+        List<String> sent = allSentJson(subscriber);
+        assertThat(sent).noneMatch(json -> json.contains(event("REMOVED")));
         assertThat(sent.getLast()).contains(event("ADDED")).contains(messageId("m"));
     }
 

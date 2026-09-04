@@ -85,8 +85,9 @@ import static bisq.api.rest_api.endpoints.chat.ChatRequestValidation.textError;
  * <p>
  * A 204 means the node applied the change locally and started broadcasting it, never that peers have
  * it. Where the local change happens asynchronously (edit, delete, un-react all go through the P2P
- * store's remove), the response waits for it, so that the 204 never arrives before the matching
- * websocket event.
+ * store's remove), the response waits for it, so the matching websocket event has been emitted before
+ * the 204 goes out. Emitted, not delivered: the frame is written by a per-subscriber executor the
+ * response does not wait for, so a client must tolerate the 204 and the event in either order.
  */
 @Slf4j
 @Path("/public-chat-channels")
