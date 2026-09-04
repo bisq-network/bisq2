@@ -18,7 +18,6 @@
 package bisq.persistence;
 
 import bisq.common.file.FileMutatorUtils;
-import bisq.common.proto.ProtoResolver;
 import bisq.persistence.backup.MaxBackupSize;
 import bisq.persistence.backup.RestoreService;
 import org.junit.jupiter.api.Test;
@@ -52,8 +51,7 @@ public class PersistableStoreReaderWriterTests {
         timestampsByProfileId.put("B", 2L);
         timestampsByProfileId.put("C", 3L);
 
-        ProtoResolver<PersistableStore<?>> resolver = timestampStore.getResolver();
-        PersistableStoreResolver.addResolver(resolver);
+        PersistableStoreResolver.addResolver(timestampStore);
 
         Path storageFilePath = tempDirPath.resolve("protoFile");
         var storeFileManager = new PersistableStoreFileManager(storageFilePath);
@@ -88,8 +86,7 @@ public class PersistableStoreReaderWriterTests {
         modifiedMap.put("C", 30L);
 
         // register resolver
-        ProtoResolver<PersistableStore<?>> resolver = originalStore.getResolver();
-        PersistableStoreResolver.addResolver(resolver);
+        PersistableStoreResolver.addResolver(originalStore);
 
         Path storageFilePath = tempDirPath.resolve("alice").resolve("db").resolve("test-protofile-store.protobuf");
         var storeFileManager = new PersistableStoreFileManager(storageFilePath, MaxBackupSize.TEN_MB);
