@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyOfferbookChannelStore> {
+public final class BisqEasyOfferbookChannelStore implements PersistableStore<BisqEasyOfferbookChannelStore> {
     private final ObservableSet<BisqEasyOfferbookChannel> channels = new ObservableSet<>();
 
     private BisqEasyOfferbookChannelStore(List<BisqEasyOfferbookChannel> channels) {

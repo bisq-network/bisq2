@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class MuSigOpenTradeChannelStore implements PersistableStore<MuSigOpenTradeChannelStore> {
+public final class MuSigOpenTradeChannelStore implements PersistableStore<MuSigOpenTradeChannelStore> {
     private final ObservableSet<MuSigOpenTradeChannel> channels = new ObservableSet<>();
 
     private MuSigOpenTradeChannelStore(Set<MuSigOpenTradeChannel> privateTradeChannels) {

@@ -24,8 +24,8 @@ import com.google.protobuf.Any;
 public class PersistableStoreResolver {
     private static final PersistableProtoResolverMap<PersistableStore<?>> protoResolverMap = new PersistableProtoResolverMap<>();
 
-    public static void addResolver(ProtoResolver<PersistableStore<?>> resolver) {
-        protoResolverMap.addProtoResolver(ProtoResolver.getProtoType(resolver), resolver);
+    public static void addResolver(PersistableStore<?> store) {
+        protoResolverMap.addProtoResolver(ProtoResolver.getProtoType(store.getClass()), store.getResolver());
     }
 
     static PersistableStore<?> fromAny(Any anyProto) {

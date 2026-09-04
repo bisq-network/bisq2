@@ -96,17 +96,23 @@ the persistence framework is handling also the registration of the resolvers int
 resolver registration.
 
 For the `NetworkMessage` and `DistributedData` implementations we need to register the resolvers at startup before any
-protobuf code gets executed. We do that in the constructor of the `ServiceProvider`
-implementations (`DefaultApplicationService` and `NetworkApplicationService`).
+protobuf code gets executed. We do that in `ResolverConfig`, called from `ApplicationService`.
 
 ```
 // Register resolvers for distributedData 
-DistributedDataResolver.addResolver("social.ChatMessage", PublicChatMessage.getResolver());
-DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
+DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.class, ChatMessage.getDistributedDataResolver());
+DistributedDataResolver.addResolver("user.UserProfile", UserProfile.class, UserProfile.getResolver());
 
 // Register resolvers for networkMessages 
-NetworkMessageResolver.addResolver("social.ChatMessage", PrivateChatMessage.getResolver());
+NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.class, TradeMessage.getNetworkMessageResolver());
 ```
+
+The proto type name and the class are passed separately because they can differ. The proto type name is the wire
+contract and must never change, while the class may be renamed, which is why for example the message class
+`BisqEasyMediationRequest` is still registered under the proto type name `support.MediationRequest`. The class argument
+is what registers the type in `NetworkStorageWhiteList`, which the P2P storage checks before accepting a payload, so a
+type registered with the wrong class is silently rejected by every node. If the registered class is not final, its
+subclasses must be added to `NetworkStorageWhiteList` explicitly.
 
 This solution is not really great but so far I have not found a better way. To do it in the domain services might be an
 option but the seedNode application does not use those domains, so it would be weird to instantiate a `OfferService` if
