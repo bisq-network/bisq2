@@ -17,14 +17,17 @@
 
 package bisq.network.p2p.message;
 
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.NetworkProtoResolverMap;
+import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.proto.ProtoResolver;
 import com.google.protobuf.Any;
 
 public class NetworkMessageResolver {
     private static final NetworkProtoResolverMap<ExternalNetworkMessage> protoResolverMap = new NetworkProtoResolverMap<>();
 
-    public static void addResolver(String protoTypeName, ProtoResolver<ExternalNetworkMessage> resolver) {
+    public static void addResolver(String protoTypeName, Class<? extends NetworkProto> clazz, ProtoResolver<ExternalNetworkMessage> resolver) {
+        NetworkStorageWhiteList.add(clazz);
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 
