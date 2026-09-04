@@ -40,11 +40,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Requiring every store to be final keeps the two classes the same by construction.
  * <p>
  * This scans sources rather than the classpath because the stores are spread over 16 modules and no module depends on
- * all of them.
+ * all of them. It reads the same files the test task declares as inputs, so a store in another module cannot change
+ * without rerunning this.
  */
 class PersistableStoreFinalityTest {
+    // Matched against the whole file, not line by line, so a declaration wrapped over several lines is still found.
+    // [^{] cannot cross into a class body, so the match cannot run from one declaration into the next.
     private static final Pattern STORE_DECLARATION = Pattern.compile(
-            "^\\s*(?:public\\s+)?(final\\s+)?(?:abstract\\s+)?class\\s+(\\w+)[^{]*\\bimplements\\b[^{]*\\bPersistableStore<");
+            "^[ \\t]*(?:public\\s+)?(final\\s+)?(?:abstract\\s+)?class\\s+(\\w+)[^{]*\\bimplements\\b[^{]*\\bPersistableStore<",
+            Pattern.MULTILINE);
+    private static final String MAIN_JAVA = File.separator + "src" + File.separator + "main" + File.separator
+            + "java" + File.separator;
     private static final String BUILD_DIR = File.separator + "build" + File.separator;
 
     @Test
@@ -55,6 +61,7 @@ class PersistableStoreFinalityTest {
 
         try (Stream<Path> paths = Files.walk(repoRoot)) {
             paths.filter(path -> path.toString().endsWith(".java"))
+                    .filter(path -> path.toString().contains(MAIN_JAVA))
                     .filter(path -> !path.toString().contains(BUILD_DIR))
                     .forEach(path -> collectStores(path, stores, notFinal));
         }
@@ -67,13 +74,11 @@ class PersistableStoreFinalityTest {
 
     private static void collectStores(Path path, List<String> stores, List<String> notFinal) {
         try {
-            for (String line : Files.readAllLines(path)) {
-                Matcher matcher = STORE_DECLARATION.matcher(line);
-                if (matcher.find()) {
-                    stores.add(matcher.group(2));
-                    if (matcher.group(1) == null) {
-                        notFinal.add(matcher.group(2));
-                    }
+            Matcher matcher = STORE_DECLARATION.matcher(Files.readString(path));
+            while (matcher.find()) {
+                stores.add(matcher.group(2));
+                if (matcher.group(1) == null) {
+                    notFinal.add(matcher.group(2));
                 }
             }
         } catch (IOException e) {
