@@ -18,47 +18,20 @@
 package bisq.common.proto;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Contains the classNames of all objects which might get persisted by the StorageService. Those files are inside
- * the `network` directory.
+ * the `network` directory. The className is the store key, matching {@code MetaData.className}, so it must never
+ * be obfuscated.
  */
-@Slf4j
 public class NetworkStorageWhiteList {
     @Getter
     private static final Set<String> classNames = new HashSet<>();
 
-    public static void add(Class<?> clazz) {
+    public static void add(Class<? extends NetworkProto> clazz) {
         classNames.add(clazz.getSimpleName());
-    }
-
-    public static <T extends NetworkProto> void add(String protoTypeName, ProtoResolver<T> resolver) {
-        try {
-            String[] resolverTokens = resolver.getClass().getSimpleName().split("\\$\\$");
-            String[] protoTypeNameTokens = protoTypeName.split("\\.");
-            String className = resolverTokens[0];
-            if (className.equals(protoTypeNameTokens[1])) {
-                classNames.add(className);
-            } else {
-                if ((protoTypeName.equals("support.MediationRequest") &&
-                        resolver.getClass().getSimpleName().startsWith("BisqEasyMediationRequest")) ||
-                        (protoTypeName.equals("support.MediatorsResponse") &&
-                                resolver.getClass().getSimpleName().startsWith("BisqEasyMediatorsResponse"))) {
-                    classNames.add(className);
-                    log.debug("resolver and protoTypeName do not match because of backwards compatibility. protoTypeName={} resolver={}",
-                            protoTypeName, resolver.getClass().getSimpleName());
-                } else {
-                    log.warn("resolver and protoTypeName seems to not match. protoTypeName={} resolver={}",
-                            protoTypeName, resolver.getClass().getSimpleName());
-                }
-            }
-        } catch (Exception e) {
-            log.error("Error at checking if resolver and protoTypeName match. protoTypeName={} resolver={}",
-                    protoTypeName, resolver.getClass().getSimpleName());
-        }
     }
 }

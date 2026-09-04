@@ -100,7 +100,7 @@ public class PersistenceService {
                                                                                  String fileName,
                                                                                  PersistableStore<T> persistableStore,
                                                                                  MaxBackupSize maxBackupSize) {
-        PersistableStoreResolver.addResolver(persistableStore.getResolver());
+        PersistableStoreResolver.addResolver(persistableStore);
         clients.add(client);
         Path normalizedPath = subDirPath.normalize();
         if (normalizedPath.isAbsolute()) {
