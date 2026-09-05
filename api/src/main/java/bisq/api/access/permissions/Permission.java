@@ -53,7 +53,14 @@ public enum Permission implements ProtoEnum {
     USER_IDENTITIES(8, Kind.STANDARD),
     USER_PROFILES(9, Kind.STANDARD),
     MOBILE_DEVICES(10, Kind.STANDARD),
-    PRIVATE_CHAT_CHANNELS(11, Kind.STANDARD);
+    PRIVATE_CHAT_CHANNELS(11, Kind.STANDARD),
+    // Id 12 (NETWORK_INFO) is assigned on for-mobile-based-on-2.1.12 and arrives with its own
+    // sync; ids are wire contract, so CONTACTS keeps 13 here.
+    // The node owner's contact list (My Contacts). STANDARD by taxonomy consistency: the entries
+    // reference pseudonymous profiles, and PAYMENT_ACCOUNTS and PRIVATE_CHAT_CHANNELS already put
+    // strictly more sensitive data behind STANDARD — so existing pairings gain contacts on node
+    // upgrade without re-pairing.
+    CONTACTS(13, Kind.STANDARD);
 
     /** Grant classification. Named so a declaration reads as an explicit security decision. */
     public enum Kind {

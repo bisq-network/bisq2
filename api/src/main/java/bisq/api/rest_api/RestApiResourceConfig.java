@@ -8,6 +8,7 @@ import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
 import bisq.api.rest_api.endpoints.chat.trade.TradeChatMessagesRestApi;
 import bisq.api.rest_api.endpoints.config.ConfigRestApi;
+import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
@@ -47,7 +48,8 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                                  ReputationRestApi reputationRestApi,
                                  UserProfileRestApi userProfileRestApi,
                                  DevicesRestApi devicesRestApi,
-                                 ConfigRestApi configRestApi) {
+                                 ConfigRestApi configRestApi,
+                                 ContactsRestApi contactsRestApi) {
         super(apiConfig, accessApi, permissionService, sessionAuthenticationService);
 
         // Swagger/OpenApi does not work when using instances at register instead of classes.
@@ -70,6 +72,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
         register(UserProfileRestApi.class);
         register(DevicesRestApi.class);
         register(ConfigRestApi.class);
+        register(ContactsRestApi.class);
 
         register(new AbstractBinder() {
             @Override
@@ -90,6 +93,7 @@ public class RestApiResourceConfig extends RestApiBaseResourceConfig {
                 bind(userProfileRestApi).to(UserProfileRestApi.class);
                 bind(devicesRestApi).to(DevicesRestApi.class);
                 bind(configRestApi).to(ConfigRestApi.class);
+                bind(contactsRestApi).to(ContactsRestApi.class);
             }
         });
     }

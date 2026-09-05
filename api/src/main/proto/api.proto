@@ -35,6 +35,9 @@ enum Permission {
   PERMISSION_USER_PROFILES = 10;
   PERMISSION_MOBILE_DEVICES = 11;
   PERMISSION_PRIVATE_CHAT_CHANNELS = 12;
+  // 13 (NETWORK_INFO) is assigned on for-mobile-based-on-2.1.12 and arrives with its own sync;
+  // numbers are wire contract.
+  PERMISSION_CONTACTS = 14;
 }
 
 message PermissionSet {
