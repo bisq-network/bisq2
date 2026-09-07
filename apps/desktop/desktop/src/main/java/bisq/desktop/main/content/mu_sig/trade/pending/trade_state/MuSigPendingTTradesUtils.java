@@ -71,12 +71,7 @@ public class MuSigPendingTTradesUtils {
             new Popup().headline(Res.get("muSig.mediation.request.confirm.headline"))
                     .information(Res.get("muSig.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("muSig.mediation.request.confirm.openMediation"))
-                    .onAction(() -> {
-                        tradeService.requestMediation(trade);
-                        new Popup().headline(Res.get("muSig.mediation.request.feedback.headline"))
-                                .feedback(Res.get("muSig.mediation.request.feedback.msg"))
-                                .show();
-                    })
+                    .onAction(() -> tradeService.requestMediation(trade))
                     .closeButtonText(Res.get("action.cancel"))
                     .show();
         } else {
@@ -84,19 +79,14 @@ public class MuSigPendingTTradesUtils {
         }
     }
 
-    public static void rejectMediationResultAndRequestArbitration(MuSigTrade trade, MuSigTradeService tradeService) {
+    public static void rejectMediationResultAndRequestArbitration(MuSigTrade trade,
+                                                                MuSigTradeService tradeService) {
         Optional<UserProfile> arbitrator = trade.getContract().getArbitrator();
         if (arbitrator.isPresent()) {
             new Popup().headline(Res.get("muSig.arbitration.request.confirm.headline"))
                     .information(Res.get("muSig.arbitration.request.confirm.msg"))
                     .actionButtonText(Res.get("muSig.arbitration.request.confirm.openArbitration"))
-                    .onAction(() -> {
-                        tradeService.rejectMediationResult(trade);
-                        tradeService.requestArbitration(trade);
-                        new Popup().headline(Res.get("muSig.arbitration.request.feedback.headline"))
-                                .feedback(Res.get("muSig.arbitration.request.feedback.msg"))
-                                .show();
-                    })
+                    .onAction(() -> tradeService.rejectMediationResultAndRequestArbitration(trade))
                     .closeButtonText(Res.get("action.cancel"))
                     .show();
         } else {
