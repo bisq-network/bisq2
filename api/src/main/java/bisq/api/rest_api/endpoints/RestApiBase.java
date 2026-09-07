@@ -19,13 +19,27 @@ package bisq.api.rest_api.endpoints;
 
 import bisq.api.rest_api.pagination.PaginatedResponse;
 import bisq.api.rest_api.pagination.PaginationParams;
+import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public abstract class RestApiBase {
+    private static final int ASYNC_TIMEOUT_SEC = 120;
+
+    /**
+     * Answers 503 if the async endpoint has not resumed the response within 120 seconds. A timeout for
+     * internal processing, not for the socket.
+     */
+    protected void applyTimeout(AsyncResponse asyncResponse) {
+        asyncResponse.setTimeout(ASYNC_TIMEOUT_SEC, TimeUnit.SECONDS);
+        asyncResponse.setTimeoutHandler(response ->
+                response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out")));
+    }
+
     protected Response buildResponse(Response.Status status, Object entity) {
         return Response.status(status).entity(entity).build();
     }
