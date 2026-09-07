@@ -18,19 +18,23 @@
 package bisq.api.access.permissions;
 
 import bisq.api.access.persistence.ApiAccessStoreService;
-import lombok.Getter;
 
 import java.util.Optional;
 import java.util.Set;
 
-public class PermissionService<T extends PermissionMapping> {
+/**
+ * Reads and writes the permissions granted to a paired client.
+ * <p>
+ * It holds no mapping: which permission a given access requires is the business of the surface
+ * that serves it — REST paths for {@link RestPermissionMapping}, subscription topics for
+ * {@code SubscriptionPermissionMapping} — and those two questions have no common shape. Keeping a
+ * single path-shaped mapping here is what made the subscription surface easy to overlook.
+ */
+public class PermissionService {
     private final ApiAccessStoreService apiAccessStoreService;
-    @Getter
-    private final T permissionMapping;
 
-    public PermissionService(ApiAccessStoreService apiAccessStoreService, T permissionMapping) {
+    public PermissionService(ApiAccessStoreService apiAccessStoreService) {
         this.apiAccessStoreService = apiAccessStoreService;
-        this.permissionMapping = permissionMapping;
     }
 
     public boolean hasPermission(Set<Permission> granted, Permission required) {

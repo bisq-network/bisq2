@@ -20,7 +20,6 @@ package bisq.api.access.filter.authz;
 import bisq.api.access.filter.Headers;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -42,12 +41,10 @@ import static org.mockito.Mockito.when;
 
 class RestApiAuthorizationFilterTest {
 
-    @SuppressWarnings("unchecked")
-    private static PermissionService<RestPermissionMapping> permissionService(Set<Permission> granted) {
-        RestPermissionMapping mapping = mock(RestPermissionMapping.class);
-        when(mapping.getRequiredPermission("/api/v1/offerbook/markets", "GET")).thenReturn(Permission.OFFERBOOK);
-        PermissionService<RestPermissionMapping> permissionService = mock(PermissionService.class);
-        when(permissionService.getPermissionMapping()).thenReturn(mapping);
+    // No mapping stub: the filter owns a real RestPermissionMapping, so the request URI below
+    // resolves through the same rules production uses.
+    private static PermissionService permissionService(Set<Permission> granted) {
+        PermissionService permissionService = mock(PermissionService.class);
         when(permissionService.findPermissions("client-1")).thenReturn(Optional.of(granted));
         when(permissionService.hasPermission(granted, Permission.OFFERBOOK))
                 .thenReturn(granted.contains(Permission.OFFERBOOK));
@@ -96,8 +93,7 @@ class RestApiAuthorizationFilterTest {
     void unknownClientAborts403WithoutTheStructuredBody() {
         // Revoked/unknown clients keep the bare 403: the session-path handling in the client
         // already routes that case to re-pairing, and the body must not aid probing.
-        @SuppressWarnings("unchecked")
-        PermissionService<RestPermissionMapping> permissionService = mock(PermissionService.class, RETURNS_DEEP_STUBS);
+        PermissionService permissionService = mock(PermissionService.class);
         when(permissionService.findPermissions("client-1")).thenReturn(Optional.empty());
         RestApiAuthorizationFilter filter = new RestApiAuthorizationFilter(permissionService);
         ContainerRequestContext context = requestContext();

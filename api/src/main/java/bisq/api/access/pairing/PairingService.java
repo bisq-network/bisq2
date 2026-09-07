@@ -22,7 +22,6 @@ import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.qr.PairingQrCodeGenerator;
 import bisq.api.access.pairing.qr.TextQrCodeRenderer;
 import bisq.api.access.permissions.Permission;
-import bisq.api.access.permissions.PermissionMapping;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.transport.TlsContext;
@@ -53,7 +52,7 @@ public class PairingService {
     private final ApiConfig apiConfig;
     private final Path appDataDirPath;
     private final ApiAccessStoreService apiAccessStoreService;
-    private final PermissionService<? extends PermissionMapping> permissionService;
+    private final PermissionService permissionService;
     @Getter
     private final int pairingCodeTtlInSeconds;
     private final Map<String, PairingCode> pairingCodeByIdMap = new ConcurrentHashMap<>();
@@ -65,7 +64,7 @@ public class PairingService {
     public PairingService(ApiConfig apiConfig,
                           Path appDataDirPath,
                           ApiAccessStoreService apiAccessStoreService,
-                          PermissionService<? extends PermissionMapping> permissionService) {
+                          PermissionService permissionService) {
         this.apiConfig = apiConfig;
         this.appDataDirPath = appDataDirPath;
         this.apiAccessStoreService = apiAccessStoreService;

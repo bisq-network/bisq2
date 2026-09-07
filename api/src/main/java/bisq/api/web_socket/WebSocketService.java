@@ -18,6 +18,7 @@
 package bisq.api.web_socket;
 
 import bisq.api.ApiConfig;
+import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
@@ -68,7 +69,8 @@ public class WebSocketService implements Service {
                             UserService userService,
                             BisqEasyService bisqEasyService,
                             NetworkService networkService,
-                            OpenTradeItemsService openTradeItemsService) {
+                            OpenTradeItemsService openTradeItemsService,
+                            PermissionService permissionService) {
         this.apiConfig = apiConfig;
         subscriptionService = new SubscriptionService(bondedRolesService,
                 alertNotificationsService,
@@ -77,7 +79,9 @@ public class WebSocketService implements Service {
                 userService,
                 bisqEasyService,
                 networkService,
-                openTradeItemsService);
+                openTradeItemsService,
+                permissionService,
+                apiConfig.isAuthorizationRequired());
         webSocketRestApiService = new WebSocketRestApiService(apiConfig, tlsContextService);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
     }

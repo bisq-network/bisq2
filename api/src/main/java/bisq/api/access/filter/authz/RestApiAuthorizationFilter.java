@@ -25,11 +25,16 @@ import java.util.Set;
 @Priority(Priorities.AUTHORIZATION)
 public class RestApiAuthorizationFilter extends RestApiFilter {
     private final UriValidator uriValidator;
-    private final PermissionService<RestPermissionMapping> permissionService;
+    private final PermissionService permissionService;
+    // Owned here rather than reached through PermissionService: the mapping answers what a REST
+    // path requires, which is this filter's question and nobody else's. Built like uriValidator
+    // above, for the same reason.
+    private final RestPermissionMapping permissionMapping;
 
-    public RestApiAuthorizationFilter(PermissionService<RestPermissionMapping> permissionService) {
+    public RestApiAuthorizationFilter(PermissionService permissionService) {
         this.permissionService = permissionService;
         this.uriValidator = new UriValidator();
+        this.permissionMapping = new RestPermissionMapping();
     }
 
     @Override
@@ -47,7 +52,7 @@ public class RestApiAuthorizationFilter extends RestApiFilter {
                 throw new AuthorizationException("No permissions found for client " + clientId);
             }
             Set<Permission> granted = optionalPermissionSet.get();
-            Permission required = permissionService.getPermissionMapping().getRequiredPermission(requestUri.getPath(), context.getMethod());
+            Permission required = permissionMapping.getRequiredPermission(requestUri.getPath(), context.getMethod());
             if (!permissionService.hasPermission(granted, required)) {
                 // Structured body so clients can distinguish "this grant lacks one permission"
                 // (e.g. paired before the node gained a feature — fixable by re-pairing) from a
