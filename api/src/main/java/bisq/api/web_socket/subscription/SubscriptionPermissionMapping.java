@@ -47,6 +47,7 @@ public final class SubscriptionPermissionMapping {
             case NETWORK_INFO -> Permission.NETWORK_INFO;
             case PRIVATE_CHAT_CHANNELS, PRIVATE_CHAT_MESSAGES, PRIVATE_CHAT_REACTIONS -> Permission.PRIVATE_CHAT_CHANNELS;
             case CONTACTS -> Permission.CONTACTS;
+            case PUBLIC_CHAT_CHANNELS, PUBLIC_CHAT_MESSAGES, PUBLIC_CHAT_REACTIONS -> Permission.PUBLIC_CHAT_CHANNELS;
         };
     }
 }

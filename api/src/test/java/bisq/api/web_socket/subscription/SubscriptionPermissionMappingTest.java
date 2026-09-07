@@ -52,7 +52,10 @@ class SubscriptionPermissionMappingTest {
             Map.entry(Topic.PRIVATE_CHAT_CHANNELS, Permission.PRIVATE_CHAT_CHANNELS),
             Map.entry(Topic.PRIVATE_CHAT_MESSAGES, Permission.PRIVATE_CHAT_CHANNELS),
             Map.entry(Topic.PRIVATE_CHAT_REACTIONS, Permission.PRIVATE_CHAT_CHANNELS),
-            Map.entry(Topic.CONTACTS, Permission.CONTACTS)));
+            Map.entry(Topic.CONTACTS, Permission.CONTACTS),
+            Map.entry(Topic.PUBLIC_CHAT_CHANNELS, Permission.PUBLIC_CHAT_CHANNELS),
+            Map.entry(Topic.PUBLIC_CHAT_MESSAGES, Permission.PUBLIC_CHAT_CHANNELS),
+            Map.entry(Topic.PUBLIC_CHAT_REACTIONS, Permission.PUBLIC_CHAT_CHANNELS)));
 
     private final SubscriptionPermissionMapping mapping = new SubscriptionPermissionMapping();
 

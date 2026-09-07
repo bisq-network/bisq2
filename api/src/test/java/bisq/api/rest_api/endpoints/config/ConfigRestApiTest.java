@@ -22,6 +22,7 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
+import bisq.api.rest_api.endpoints.chat.public_chat.PublicChatRestApi;
 import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.web_socket.domain.BaseWebSocketService;
@@ -101,6 +102,7 @@ class ConfigRestApiTest {
         assertThat(ApiFeature.NETWORK_INFO.getKey()).isEqualTo("network-info");
         assertThat(ApiFeature.PRIVATE_CHAT.getKey()).isEqualTo("private-chat");
         assertThat(ApiFeature.CONTACTS.getKey()).isEqualTo("contacts");
+        assertThat(ApiFeature.PUBLIC_CHAT.getKey()).isEqualTo("public-chat");
     }
 
     /**
@@ -156,6 +158,19 @@ class ConfigRestApiTest {
                     assertThat(topicOf(routeTopic(Topic.CONTACTS)))
                             .as("contacts needs %s wired to a WebSocketService", Topic.CONTACTS)
                             .isEqualTo(Topic.CONTACTS);
+                    yield true;
+                }
+                case PUBLIC_CHAT -> {
+                    assertThat(hasPostEndpoint(PublicChatRestApi.class, "/public-chat-channels", "/{channelId}/messages"))
+                            .as("public-chat must expose POST /public-chat-channels/{channelId}/messages")
+                            .isTrue();
+                    for (Topic topic : List.of(Topic.PUBLIC_CHAT_CHANNELS,
+                            Topic.PUBLIC_CHAT_MESSAGES,
+                            Topic.PUBLIC_CHAT_REACTIONS)) {
+                        assertThat(topicOf(routeTopic(topic)))
+                                .as("public-chat needs %s wired to a WebSocketService", topic)
+                                .isEqualTo(topic);
+                    }
                     yield true;
                 }
             };
