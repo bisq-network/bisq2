@@ -21,6 +21,10 @@ import bisq.common.facades.JdkFacade;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class AndroidJdkFacade implements JdkFacade {
@@ -69,5 +73,47 @@ public class AndroidJdkFacade implements JdkFacade {
     @Override
     public <T> T getFirst(List<T> list) {
         return list.get(0);
+    }
+
+    @Override
+    public <T> CompletableFuture<T> exceptionallyCompose(CompletableFuture<T> future,
+                                                         Function<Throwable, ? extends CompletionStage<T>> fn) {
+        // CompletableFuture.exceptionallyCompose crashes Android below API 34.
+        // An explicit result future rather than handle().thenCompose(): cancelling the returned
+        // future must suppress the recovery function, as the native method does. With the chained
+        // form only the last stage gets cancelled, so fn would still run when the source fails
+        // later — in HttpRequestService that would continue the provider failover of a cancelled
+        // request. Like the native method, cancelling the result does not cancel the source, and a
+        // recovery already in flight is not interrupted.
+        CompletableFuture<T> result = new CompletableFuture<>();
+        future.whenComplete((value, throwable) -> {
+            if (result.isDone()) {
+                return;
+            }
+            if (throwable == null) {
+                result.complete(value);
+            } else {
+                try {
+                    fn.apply(throwable).whenComplete((recovered, recoveryThrowable) -> {
+                        if (recoveryThrowable == null) {
+                            result.complete(recovered);
+                        } else {
+                            // Wrapped like the native relay: observers see CompletionException, and a
+                            // cancelled recovery stage does not report the result as cancelled.
+                            result.completeExceptionally(asCompletionException(recoveryThrowable));
+                        }
+                    });
+                } catch (Throwable t) {
+                    result.completeExceptionally(asCompletionException(t));
+                }
+            }
+        });
+        return result;
+    }
+
+    private static CompletionException asCompletionException(Throwable throwable) {
+        return throwable instanceof CompletionException completionException
+                ? completionException
+                : new CompletionException(throwable);
     }
 }

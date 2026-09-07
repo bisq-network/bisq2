@@ -18,6 +18,9 @@
 package bisq.common.facades;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -46,4 +49,10 @@ public interface JdkFacade {
     <T> void addFirst(List<T> list, T element);
 
     <T> T getFirst(List<T> list);
+
+    // CompletableFuture.exceptionallyCompose is JDK 12+; on Android it only exists from API 34
+    // and crashes older devices with NoSuchMethodError.
+
+    <T> CompletableFuture<T> exceptionallyCompose(CompletableFuture<T> future,
+                                                  Function<Throwable, ? extends CompletionStage<T>> fn);
 }
