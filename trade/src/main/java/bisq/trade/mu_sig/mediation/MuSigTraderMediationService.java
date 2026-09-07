@@ -36,7 +36,6 @@ import bisq.support.dispute.ChatMessagePruning;
 import bisq.support.dispute.mu_sig.MuSigDisputeCaseDataMessage;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsResponse;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
-import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.trade.MuSigDisputeState;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.user.UserService;
@@ -161,24 +160,6 @@ public class MuSigTraderMediationService {
         networkService.confidentialSend(message,
                 mediator.getNetworkId(),
                 myIdentity.getNetworkIdWithKeyPair());
-    }
-
-    public void sendMediationResultAcceptanceMessage(String tradeId,
-                                                     Identity myIdentity,
-                                                     MuSigTradeParty peer,
-                                                     boolean mediationResultAccepted,
-                                                     MuSigOpenTradeChannel channel) {
-        networkService.confidentialSend(new MuSigMediationResultAcceptanceMessage(tradeId,
-                        myIdentity.getNetworkId(),
-                        mediationResultAccepted),
-                peer.getNetworkId(),
-                myIdentity.getNetworkIdWithKeyPair());
-
-        String key = mediationResultAccepted
-                ? "muSig.mediation.result.accepted.tradeLogMessage"
-                : "muSig.mediation.result.rejected.tradeLogMessage";
-        String encoded = Res.encode(key, channel.getMyUserIdentity().getUserName());
-        muSigOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
     }
 
     public void sendDisputeCasePaymentDetailsResponse(String tradeId,

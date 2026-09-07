@@ -49,6 +49,9 @@ public enum MuSigTradeState implements State {
     SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE,
     SELLER_CONFIRMED_PAYMENT_RECEIPT,
 
+    // Custom payout path
+    CUSTOM_PAYOUT_SIGNED,
+
     // Cooperative path
     BUYER_CLOSED_TRADE(true),
     SELLER_CLOSED_TRADE(true),
@@ -56,6 +59,8 @@ public enum MuSigTradeState implements State {
     // Uncooperative path
     BUYER_FORCE_CLOSED_TRADE(true),
     SELLER_FORCE_CLOSED_TRADE(true),
+
+    CUSTOM_PAYOUT_CLOSED_TRADE(true),
 
     FAILED(true),
     FAILED_AT_PEER(true);
