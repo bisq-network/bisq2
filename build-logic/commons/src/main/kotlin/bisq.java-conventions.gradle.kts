@@ -28,6 +28,10 @@ tasks {
     withType<Jar> {
         isPreserveFileTimestamps = false
         isReproducibleFileOrder = true
+        // Pinned so the entry modes don't follow the umask of the machine that compiled the classes
+        // and checked out the resources.
+        dirPermissions { unix("0755") }
+        filePermissions { unix("0644") }
     }
 }
 
