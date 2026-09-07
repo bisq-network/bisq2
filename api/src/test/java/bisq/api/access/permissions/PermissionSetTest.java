@@ -19,7 +19,10 @@ package bisq.api.access.permissions;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,6 +98,26 @@ class PermissionSetTest {
 
         assertFalse(fromProto.isGrantAll());
         assertEquals(explicit, fromProto.getPermissions());
+    }
+
+    @Test
+    void protoPermissionListIsSortedById() {
+        // Set iteration order is unspecified (Set.copyOf salts it per JVM run), so an unsorted
+        // repeated field would make serializeForHash non-deterministic across runs. Using all
+        // permissions makes an accidentally id-ordered iteration practically impossible.
+        List<bisq.api.protobuf.Permission> expectedIdOrder = Arrays.stream(Permission.values())
+                .sorted(Comparator.comparingInt(Permission::getId))
+                .map(Permission::toProtoEnum)
+                .toList();
+
+        PermissionSet explicit = new PermissionSet(EnumSet.allOf(Permission.class));
+        assertEquals(expectedIdOrder, explicit.toProto(true).getPermissionsList());
+
+        List<bisq.api.protobuf.Permission> expectedGrantAllOrder = Permission.autoGrantable().stream()
+                .sorted(Comparator.comparingInt(Permission::getId))
+                .map(Permission::toProtoEnum)
+                .toList();
+        assertEquals(expectedGrantAllOrder, PermissionSet.grantAll().toProto(true).getPermissionsList());
     }
 
     @Test
