@@ -20,7 +20,8 @@ package bisq.desktop.main.content.wallet.receive.qrcode;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
-import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.main.content.wallet.receive.WalletInputBox;
+import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -31,13 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletAddressQrCodeView extends View<VBox, WalletAddressQrCodeModel, WalletAddressQrCodeController> {
-    private final MaterialTextField amount, label;
+    private final WalletInputBox amount, label;
     private final BisqMenuItem copyBtcUri;
     private final ImageView qrImageView;
     private final Label btcUri;
 
     public WalletAddressQrCodeView(WalletAddressQrCodeModel model, WalletAddressQrCodeController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(25), model, controller);
 
         // Qr Code
         qrImageView = new ImageView();
@@ -50,21 +51,26 @@ public class WalletAddressQrCodeView extends View<VBox, WalletAddressQrCodeModel
         HBox btcUriHBox = new HBox(10, Spacer.fillHBox(), btcUri, copyBtcUri, Spacer.fillHBox());
         VBox qrCodeVBox = new VBox(10, qrImageView,  btcUriHBox);
         qrCodeVBox.setAlignment(Pos.CENTER);
+        qrCodeVBox.setMaxWidth(OverlayModel.WIDTH - 200);
 
         // Amount
-        amount = new MaterialTextField(Res.get("wallet.receive.amountInBtc"));
+        amount = new WalletInputBox();
         amount.setEditable(true);
         amount.setPrefWidth(230);
+        amount.setPromptText(Res.get("wallet.receive.amountInBtc"));
         amount.setValidator(model.getBitcoinUriAmountValidator());
 
         // Label
-        label = new MaterialTextField(Res.get("wallet.receive.label"));
+        label = new WalletInputBox();
         label.setEditable(true);
         label.setPrefWidth(230);
+        label.setPromptText(Res.get("wallet.receive.label"));
         label.setValidators(model.getLabelMaxLengthValidator());
 
         HBox optionsHBox = new HBox(30, amount, label);
         optionsHBox.setAlignment(Pos.TOP_CENTER);
+        optionsHBox.setMinHeight(51);
+        optionsHBox.setMaxHeight(51);
 
         root.getChildren().setAll(qrCodeVBox, optionsHBox);
         root.setAlignment(Pos.CENTER);
