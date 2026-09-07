@@ -23,10 +23,9 @@ import bisq.api.web_socket.subscription.Topic;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.chat.ChatService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.user.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +44,7 @@ public class NumOffersWebSocketService extends SimpleObservableWebSocketService<
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private final Set<Pin> pins = new CopyOnWriteArraySet<>();
     @Nullable
-    private Pin channelsPin;
+    private Pin channelsPin, offerValidityRevisionPin;
 
     public NumOffersWebSocketService(SubscriberRepository subscriberRepository,
                                      ChatService chatService,
@@ -66,17 +65,11 @@ public class NumOffersWebSocketService extends SimpleObservableWebSocketService<
                     channelsPin = bisqEasyOfferbookChannelService.getChannels().addObserver(() -> {
                         pins.forEach(Pin::unbind);
                         pins.clear();
-                        bisqEasyOfferbookChannelService.getChannels().forEach(
-                                channel -> {
-                                    var code = channel.getMarket().getQuoteCurrencyCode();
-                                    ObservableSet<BisqEasyOfferbookMessage> chatMessages = channel.getChatMessages();
-                                    pins.add(chatMessages.addObserver(() -> {
-                                        var numOffers = (int) bisqEasyOfferbookMessageService.getOffers(channel).count();
-                                        numOffersByCurrencyCode.put(code, numOffers);
-                                    }));
-                                }
-                        );
+                        bisqEasyOfferbookChannelService.getChannels().forEach(channel ->
+                                pins.add(channel.getChatMessages().addObserver(() -> updateNumOffers(channel))));
                     });
+                    offerValidityRevisionPin = bisqEasyOfferbookMessageService.getOfferValidityRevision()
+                            .addObserver(revision -> bisqEasyOfferbookChannelService.getChannels().forEach(this::updateNumOffers));
                     return true;
                 });
     }
@@ -89,10 +82,22 @@ public class NumOffersWebSocketService extends SimpleObservableWebSocketService<
                         channelsPin.unbind();
                         channelsPin = null;
                     }
+                    if (offerValidityRevisionPin != null) {
+                        offerValidityRevisionPin.unbind();
+                        offerValidityRevisionPin = null;
+                    }
                     pins.forEach(Pin::unbind);
                     pins.clear();
                     return result;
                 });
+    }
+
+    private synchronized void updateNumOffers(BisqEasyOfferbookChannel channel) {
+        String code = channel.getMarket().getQuoteCurrencyCode();
+        int numOffers = (int) bisqEasyOfferbookMessageService.getOffers(channel).count();
+        if (!Integer.valueOf(numOffers).equals(numOffersByCurrencyCode.get(code))) {
+            numOffersByCurrencyCode.put(code, numOffers);
+        }
     }
 
     @Override
