@@ -128,6 +128,13 @@ public class ApiAccessService {
         }
 
         SessionToken sessionToken = sessionService.createSession(clientId);
+        // Re-read rather than hold a lock across both services: a revocation running between the
+        // check and this creates the session it has already swept. Revocation removes permissions
+        // before sessions, so either it swept this one, or this read finds the grant gone.
+        if (!pairingService.hasPermissions(clientId)) {
+            sessionService.remove(sessionToken.getSessionId());
+            throw new InvalidSessionRequestException("No client profile found for Client ID");
+        }
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
         return new SessionResponse(sessionToken.getSessionId(), expiresAt);
     }

@@ -132,4 +132,25 @@ class ApiAccessServiceTest {
 
         verify(sessionService).createSession("client-1");
     }
+
+    @Test
+    void aSessionCreatedWhileTheClientIsBeingRevokedIsWithdrawn() {
+        // The revocation lands between the check and the creation, so it sweeps sessions before
+        // this one exists. Deterministic rather than threaded: the grant is present for the check
+        // and gone for the re-read, which is exactly that interleaving.
+        PairingService pairingService = mock(PairingService.class);
+        SessionService sessionService = mock(SessionService.class);
+        when(pairingService.findClientProfile("client-1"))
+                .thenReturn(Optional.of(new ClientProfile("client-1", "secret", "Pixel 8")));
+        when(pairingService.hasPermissions("client-1")).thenReturn(true, false);
+        when(sessionService.createSession("client-1")).thenReturn(new SessionToken(60, "client-1"));
+
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService,
+                sessionService,
+                mock(ClientRevocationService.class));
+
+        assertThrows(InvalidSessionRequestException.class,
+                () -> apiAccessService.requestSession("client-1", "secret"));
+        verify(sessionService).remove(anyString());
+    }
 }
