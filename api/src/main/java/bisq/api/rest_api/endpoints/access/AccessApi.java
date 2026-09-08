@@ -20,12 +20,13 @@ package bisq.api.rest_api.endpoints.access;
 import bisq.api.access.AllowUnauthenticated;
 import bisq.api.access.ApiAccessService;
 import bisq.api.access.ClientRevocationResult;
+import bisq.api.access.identity.ClientManagementId;
 import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingResponse;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.InvalidSessionRequestException;
 import bisq.api.access.session.SessionResponse;
-import bisq.api.dto.access.identity.ClientProfileDto;
+import bisq.api.dto.access.identity.PairedClientDto;
 import bisq.api.dto.access.pairing.PairingRequestDto;
 import bisq.api.dto.access.pairing.PairingResponseDto;
 import bisq.api.dto.access.session.SessionRequestDto;
@@ -215,13 +216,15 @@ public class AccessApi extends RestApiBase {
                     Paginated. Query params: 'page' (1-indexed, default 1), 'pageSize'
                     (default 20, max 100).
 
-                    Only the client ID and the client name supplied at pairing time are returned.
+                    Clients are named by a management ID, which identifies a client for this
+                    endpoint and cannot be used to authenticate. Neither the client ID nor the
+                    client secret is returned.
                     """
     )
     @ApiResponse(
             responseCode = "200",
             description = "Paired clients retrieved successfully. PaginatedResponse whose 'items' are " +
-                    "ClientProfileDto (generic binding not expressible in the schema annotation since " +
+                    "PairedClientDto (generic binding not expressible in the schema annotation since " +
                     "PaginatedResponse is a record).",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON,
@@ -233,16 +236,18 @@ public class AccessApi extends RestApiBase {
     public Response getClients(@QueryParam("page") Integer page,
                                @QueryParam("pageSize") Integer pageSize) {
         try {
-            // Mapped to the secret-free DTO before paging, not via the mapping overload of
+            // Mapped to the DTO before paging, not via the mapping overload of
             // buildPaginatedResponse: nothing that reaches the response body is then a
-            // ClientProfile, so no later edit can serialize the client secret by accident.
+            // ClientProfile, so no later edit can serialize a client secret or a client ID by
+            // accident. Clients are named by their management ID, which carries no credential
+            // value; see ClientManagementId.
             // Sorted because the profiles come from a map, and paging an unspecified order
             // would let one client appear on two pages and another on none.
-            List<ClientProfileDto> clients = apiAccessService.getClientProfiles().stream()
-                    .map(clientProfile -> new ClientProfileDto(clientProfile.getClientId(),
+            List<PairedClientDto> clients = apiAccessService.getClientProfiles().stream()
+                    .map(clientProfile -> new PairedClientDto(ClientManagementId.of(clientProfile),
                             clientProfile.getClientName()))
-                    .sorted(Comparator.comparing(ClientProfileDto::getClientName)
-                            .thenComparing(ClientProfileDto::getClientId))
+                    .sorted(Comparator.comparing(PairedClientDto::getClientName)
+                            .thenComparing(PairedClientDto::getManagementId))
                     .toList();
             return buildPaginatedResponse(clients,
                     PaginationParams.of(Optional.ofNullable(page), Optional.ofNullable(pageSize)));
@@ -255,11 +260,14 @@ public class AccessApi extends RestApiBase {
     }
 
     @DELETE
-    @Path("/clients/{clientId}")
+    @Path("/clients/{managementId}")
     @Operation(
             summary = "Revoke a paired client",
             description = """
                     Revokes a previously paired API client.
+
+                    The client is named by the management ID returned by the listing endpoint,
+                    not by its client ID.
 
                     The client profile and its permissions are removed from persistent storage,
                     all active sessions are invalidated, any live WebSocket connection is closed
@@ -271,11 +279,11 @@ public class AccessApi extends RestApiBase {
     @ApiResponse(responseCode = "404", description = "Client not found")
     @ApiResponse(responseCode = "500", description = "Revocation incomplete or unexpected error")
     public Response revokeClient(
-            @Parameter(description = "The client ID to revoke", required = true)
-            @PathParam("clientId") String clientId
+            @Parameter(description = "The management ID of the client to revoke", required = true)
+            @PathParam("managementId") String managementId
     ) {
         try {
-            ClientRevocationResult result = apiAccessService.revokeClient(clientId);
+            ClientRevocationResult result = apiAccessService.revokeClientByManagementId(managementId);
             if (result == ClientRevocationResult.CLEANUP_FAILED) {
                 // Answering 204 here would report a revocation that did not fully happen: the
                 // client can still hold a connection or receive push notifications. Revocation is
@@ -283,11 +291,11 @@ public class AccessApi extends RestApiBase {
                 return buildErrorResponse("Client revocation incomplete, retry");
             }
             if (result == ClientRevocationResult.NOT_FOUND) {
-                return buildNotFoundResponse("Client not found: " + clientId);
+                return buildNotFoundResponse("Client not found: " + managementId);
             }
             return buildNoContentResponse();
         } catch (Exception e) {
-            log.error("Unexpected error during client revocation for clientId={}", clientId, e);
+            log.error("Unexpected error during client revocation for management id={}", managementId, e);
             return buildErrorResponse("Client revocation failed");
         }
     }

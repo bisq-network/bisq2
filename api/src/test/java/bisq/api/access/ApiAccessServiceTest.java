@@ -17,6 +17,7 @@
 
 package bisq.api.access;
 
+import bisq.api.access.identity.ClientManagementId;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
@@ -25,7 +26,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,5 +58,40 @@ class ApiAccessServiceTest {
                         mock(ClientRevocationService.class)).getClientProfiles();
 
         assertEquals(List.of(clientProfile), clientProfiles);
+    }
+
+    @Test
+    void revokeByManagementIdResolvesTheClientItNames() {
+        PairingService pairingService = mock(PairingService.class);
+        ClientProfile clientProfile = new ClientProfile("client-1", "secret", "Pixel 8");
+        ClientProfile otherProfile = new ClientProfile("client-2", "other-secret", "iPhone");
+        ClientRevocationService clientRevocationService = mock(ClientRevocationService.class);
+        when(pairingService.getClientProfiles()).thenReturn(List.of(otherProfile, clientProfile));
+        when(clientRevocationService.revokeClient("client-1")).thenReturn(ClientRevocationResult.REVOKED);
+
+        ClientRevocationResult result = new ApiAccessService(pairingService,
+                mock(SessionService.class),
+                clientRevocationService).revokeClientByManagementId(ClientManagementId.of(clientProfile));
+
+        assertEquals(ClientRevocationResult.REVOKED, result);
+        verify(clientRevocationService).revokeClient("client-1");
+    }
+
+    @Test
+    void revokeByManagementIdReportsNotFoundForAnUnknownHandle() {
+        // A handle nothing resolves to must not fall through to any client, and a client ID is not
+        // a handle: passing one resolves to nothing.
+        PairingService pairingService = mock(PairingService.class);
+        ClientProfile clientProfile = new ClientProfile("client-1", "secret", "Pixel 8");
+        ClientRevocationService clientRevocationService = mock(ClientRevocationService.class);
+        when(pairingService.getClientProfiles()).thenReturn(List.of(clientProfile));
+
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService,
+                mock(SessionService.class),
+                clientRevocationService);
+
+        assertEquals(ClientRevocationResult.NOT_FOUND, apiAccessService.revokeClientByManagementId("unknown"));
+        assertEquals(ClientRevocationResult.NOT_FOUND, apiAccessService.revokeClientByManagementId("client-1"));
+        verify(clientRevocationService, never()).revokeClient(anyString());
     }
 }

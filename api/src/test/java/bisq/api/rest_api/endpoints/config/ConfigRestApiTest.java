@@ -158,8 +158,8 @@ class ConfigRestApiTest {
                     assertThat(hasEndpoint(AccessApi.class, "/access", "/clients"))
                             .as("client-management must expose GET /access/clients")
                             .isTrue();
-                    assertThat(hasDeleteEndpoint(AccessApi.class, "/access", "/clients/{clientId}"))
-                            .as("client-management must expose DELETE /access/clients/{clientId}")
+                    assertThat(hasDeleteEndpoint(AccessApi.class, "/access", "/clients/{managementId}"))
+                            .as("client-management must expose DELETE /access/clients/{managementId}")
                             .isTrue();
                     yield true;
                 }

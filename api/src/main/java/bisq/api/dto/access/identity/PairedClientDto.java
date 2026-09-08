@@ -23,17 +23,19 @@ import lombok.Getter;
 /**
  * A paired client as exposed by the list endpoint.
  * <p>
- * Deliberately carries no client secret: the secret is stored in plaintext and is handed to the
- * client once at pairing time only. Do not add it here.
+ * Carries neither the client secret nor the client id, as both are part of what a client
+ * authenticates with. {@code managementId} is the derived handle instead (see
+ * {@code ClientManagementId}), named so it cannot be mistaken for the client id. Do not add either
+ * of the real values here.
  */
 @Getter
 @EqualsAndHashCode
-public final class ClientProfileDto {
-    private final String clientId;
+public final class PairedClientDto {
+    private final String managementId;
     private final String clientName;
 
-    public ClientProfileDto(String clientId, String clientName) {
-        this.clientId = clientId;
+    public PairedClientDto(String managementId, String clientName) {
+        this.managementId = managementId;
         this.clientName = clientName;
     }
 }

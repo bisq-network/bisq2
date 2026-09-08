@@ -17,6 +17,7 @@
 
 package bisq.api.access;
 
+import bisq.api.access.identity.ClientManagementId;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingResponse;
@@ -66,9 +67,9 @@ public class ApiAccessService {
     }
 
     /**
-     * All paired clients, as full domain objects including {@code clientSecret}. Callers must map
-     * to a representation without the secret before it leaves the process; the REST layer does so
-     * via {@code ClientProfileDto}.
+     * All paired clients, as full domain objects carrying their credentials. Callers must map to a
+     * representation without the client secret and without the client ID before anything leaves the
+     * process; the REST layer does so via {@code PairedClientDto} and {@link ClientManagementId}.
      */
     public List<ClientProfile> getClientProfiles() {
         return pairingService.getClientProfiles();
@@ -83,6 +84,25 @@ public class ApiAccessService {
      */
     public ClientRevocationResult revokeClient(String clientId) {
         return clientRevocationService.revokeClient(clientId);
+    }
+
+    /**
+     * Revokes the client a management ID names, for callers that must not be given client IDs. See
+     * {@link ClientManagementId}.
+     * <p>
+     * A handle that resolves to nothing is reported as not found, which also means a caller can no
+     * longer trigger cleanup for a client whose profile is already gone: the handle is derived from
+     * that profile. Nothing is lost, as whatever removed the profile ran that cleanup.
+     *
+     * @param managementId The management ID of the client to revoke
+     * @return the outcome; see {@link ClientRevocationResult}
+     */
+    public ClientRevocationResult revokeClientByManagementId(String managementId) {
+        return pairingService.getClientProfiles().stream()
+                .filter(clientProfile -> ClientManagementId.matches(clientProfile, managementId))
+                .findFirst()
+                .map(clientProfile -> revokeClient(clientProfile.getClientId()))
+                .orElse(ClientRevocationResult.NOT_FOUND);
     }
 
     public SessionResponse requestSession(String clientId, String clientSecret) throws InvalidSessionRequestException {
