@@ -72,7 +72,7 @@ public class WebSocketService implements Service {
                             NetworkService networkService,
                             OpenTradeItemsService openTradeItemsService,
                             PermissionService permissionService,
-                            Predicate<String> clientPairedCheck) {
+                            Predicate<String> clientAuthorizedCheck) {
         this.apiConfig = apiConfig;
         subscriptionService = new SubscriptionService(bondedRolesService,
                 alertNotificationsService,
@@ -87,7 +87,7 @@ public class WebSocketService implements Service {
         webSocketRestApiService = new WebSocketRestApiService(apiConfig, tlsContextService);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService,
                 webSocketRestApiService,
-                clientPairedCheck);
+                clientAuthorizedCheck);
     }
 
     @Override

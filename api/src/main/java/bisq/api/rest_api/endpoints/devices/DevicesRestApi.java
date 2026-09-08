@@ -60,13 +60,13 @@ public class DevicesRestApi extends RestApiBase {
     private static final String APNS_HEX_REGEX = "^[0-9a-fA-F]+$";
 
     private final DeviceRegistrationService deviceRegistrationService;
-    /** Whether a client is still paired, read from the authoritative store. */
-    private final Predicate<String> clientPairedCheck;
+    /** Whether a client still has access, read from the authoritative store. */
+    private final Predicate<String> clientAuthorizedCheck;
 
     public DevicesRestApi(DeviceRegistrationService deviceRegistrationService,
-                          Predicate<String> clientPairedCheck) {
+                          Predicate<String> clientAuthorizedCheck) {
         this.deviceRegistrationService = deviceRegistrationService;
-        this.clientPairedCheck = clientPairedCheck;
+        this.clientAuthorizedCheck = clientAuthorizedCheck;
     }
 
     @POST
@@ -167,13 +167,13 @@ public class DevicesRestApi extends RestApiBase {
             if (result == DeviceRegistrationResult.DEVICE_OWNED_BY_ANOTHER_CLIENT) {
                 return buildResponse(Response.Status.FORBIDDEN, "Device is registered to another client");
             }
-            if (!clientPairedCheck.test(clientId)) {
+            if (!clientAuthorizedCheck.test(clientId)) {
                 // Authorization ran before this request stored anything, so the client can have
                 // been revoked in between and the revocation's cleanup would have missed this
-                // registration, leaving one owned by a client that no longer exists. Checked
-                // afterwards rather than before, since a check before would leave that same
-                // window. 401 rather than 403, so the app treats it as "pair again" instead of
-                // "permission missing".
+                // registration. Checked afterwards rather than before, since a check before would
+                // leave that same window, and asked of the grant rather than the profile, which a
+                // revocation keeps until its cleanup succeeds. 401 rather than 403, so the app
+                // treats it as "pair again" instead of "permission missing".
                 deviceRegistrationService.unregister(deviceId, clientId);
                 log.warn("Removed a device registration of a client revoked during the request");
                 return buildResponse(Response.Status.UNAUTHORIZED, "Client was revoked, pairing is required");

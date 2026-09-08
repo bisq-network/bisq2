@@ -52,15 +52,15 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     @Getter
     private final ObservableSet<WebSocketClient> websocketClients = new ObservableSet<>();
 
-    /** Whether a client is still paired, read from the authoritative store at connection time. */
-    private final Predicate<String> clientPairedCheck;
+    /** Whether a client still has access, read from the authoritative store at connection time. */
+    private final Predicate<String> clientAuthorizedCheck;
 
     public WebSocketConnectionHandler(SubscriptionService subscriptionService,
                                       WebSocketRestApiService webSocketRestApiService,
-                                      Predicate<String> clientPairedCheck) {
+                                      Predicate<String> clientAuthorizedCheck) {
         this.subscriptionService = subscriptionService;
         this.webSocketRestApiService = webSocketRestApiService;
-        this.clientPairedCheck = clientPairedCheck;
+        this.clientAuthorizedCheck = clientAuthorizedCheck;
     }
 
     @Override
@@ -83,9 +83,10 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
         // after registering rather than before, because a check before would leave the window it
         // closes: the revocation scan could pass between the check and the registration, and the
         // connection would survive a revocation that had already reported success. Registering
-        // first means either that scan finds this socket or this check finds the client gone.
+        // first means either that scan finds this socket or this check finds the grant gone. The
+        // grant, not the profile, which a revocation keeps until its cleanup succeeds.
         if (WebSocketIdentity.findClientId(socket)
-                .filter(clientId -> !clientPairedCheck.test(clientId))
+                .filter(clientId -> !clientAuthorizedCheck.test(clientId))
                 .isPresent()) {
             log.warn("Rejecting connection of a client revoked during the handshake");
             remove(socket);

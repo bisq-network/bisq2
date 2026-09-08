@@ -177,8 +177,10 @@ public class ApiService implements Service {
                     openTradeItemsService,
                     permissionService,
                     // A handshake that authenticated before a revocation must not leave a live
-                    // connection behind, so registration revalidates against the store.
-                    clientId -> pairingService.findClientProfile(clientId).isPresent()));
+                    // connection behind, so registration revalidates against the store. The grant
+                    // is what answers that: a revocation withdraws it first and keeps the profile
+                    // until its cleanup succeeds.
+                    pairingService::hasPermissions));
         } else {
             webSocketService = Optional.empty();
         }
@@ -222,7 +224,7 @@ public class ApiService implements Service {
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
         DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService,
-                clientId -> pairingService.findClientProfile(clientId).isPresent());
+                pairingService::hasPermissions);
         ConfigRestApi configRestApi = new ConfigRestApi();
         ContactsRestApi contactsRestApi = new ContactsRestApi(userService);
 

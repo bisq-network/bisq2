@@ -49,8 +49,8 @@ class WebSocketConnectionHandlerTest {
     private static class TestableHandler extends WebSocketConnectionHandler {
         TestableHandler(SubscriptionService subscriptionService,
                         WebSocketRestApiService restApiService,
-                        Predicate<String> clientPairedCheck) {
-            super(subscriptionService, restApiService, clientPairedCheck);
+                        Predicate<String> clientAuthorizedCheck) {
+            super(subscriptionService, restApiService, clientAuthorizedCheck);
         }
 
         boolean isRegistered(DefaultWebSocket webSocket) {
@@ -58,7 +58,7 @@ class WebSocketConnectionHandlerTest {
         }
     }
 
-    private Set<String> pairedClientIds;
+    private Set<String> authorizedClientIds;
     private SubscriptionService subscriptionService;
     private WebSocketRestApiService webSocketRestApiService;
     private TestableHandler handler;
@@ -67,16 +67,16 @@ class WebSocketConnectionHandlerTest {
     void setUp() {
         subscriptionService = mock(SubscriptionService.class);
         webSocketRestApiService = mock(WebSocketRestApiService.class);
-        pairedClientIds = ConcurrentHashMap.newKeySet();
-        pairedClientIds.add(REVOKED_CLIENT_ID);
-        pairedClientIds.add("other-client");
-        pairedClientIds.add("live-client");
-        handler = new TestableHandler(subscriptionService, webSocketRestApiService, pairedClientIds::contains);
+        authorizedClientIds = ConcurrentHashMap.newKeySet();
+        authorizedClientIds.add(REVOKED_CLIENT_ID);
+        authorizedClientIds.add("other-client");
+        authorizedClientIds.add("live-client");
+        handler = new TestableHandler(subscriptionService, webSocketRestApiService, authorizedClientIds::contains);
     }
 
-    /** Mirrors a real revocation: the profile goes first, then the live sockets are dropped. */
+    /** Mirrors a real revocation: the grant goes first, then the live sockets are dropped. */
     private void revoke(String clientId) {
-        pairedClientIds.remove(clientId);
+        authorizedClientIds.remove(clientId);
         handler.disconnectClient(clientId);
     }
 

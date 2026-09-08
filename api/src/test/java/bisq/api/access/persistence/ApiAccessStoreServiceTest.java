@@ -17,6 +17,7 @@
 
 package bisq.api.access.persistence;
 
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
 import bisq.persistence.Persistence;
@@ -28,6 +29,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -44,6 +46,8 @@ import static org.mockito.Mockito.when;
  * (the exact v1 -> v2 -> v3 rollout gap from the PR review).
  */
 class ApiAccessStoreServiceTest {
+    private static final String CLIENT_ID = "client-1";
+
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static ApiAccessStoreService serviceWith(Persistence persistence) {
@@ -105,5 +109,36 @@ class ApiAccessStoreServiceTest {
         service.readPersisted();
 
         verify(persistence, never()).persistAsync(any());
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void removingPermissionsEndsAccessWhileTheClientStaysAddressable() {
+        // What the revocation ordering rests on: the grant answers whether a client still has
+        // access, and the profile only keeps it addressable until the cleanup has succeeded.
+        Persistence persistence = mock(Persistence.class);
+        ApiAccessStoreService service = serviceWith(persistence);
+        service.putClientProfileAndPermissions(CLIENT_ID,
+                new ClientProfile(CLIENT_ID, "secret", "Pixel 8"),
+                PermissionSet.grantAll());
+
+        service.removePermissions(CLIENT_ID);
+
+        assertFalse(service.getPermissionsByClientId().containsKey(CLIENT_ID));
+        assertTrue(service.getClientProfileByIdMap().containsKey(CLIENT_ID));
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void removingTheProfileEndsTheRevocation() {
+        Persistence persistence = mock(Persistence.class);
+        ApiAccessStoreService service = serviceWith(persistence);
+        service.putClientProfileAndPermissions(CLIENT_ID,
+                new ClientProfile(CLIENT_ID, "secret", "Pixel 8"),
+                PermissionSet.grantAll());
+        service.removePermissions(CLIENT_ID);
+
+        assertTrue(service.removeClientProfile(CLIENT_ID));
+        assertFalse(service.getClientProfileByIdMap().containsKey(CLIENT_ID));
     }
 }
