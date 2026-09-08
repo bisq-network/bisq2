@@ -88,6 +88,18 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
     }
 
     /**
+     * Removes only the permissions, leaving the profile. Used to end a client's access at the start
+     * of a revocation, before the steps that can fail.
+     */
+    public void removePermissions(String clientId) {
+        synchronized (persistableStore) {
+            if (persistableStore.getPermissionsByClientId().remove(clientId) != null) {
+                persist();
+            }
+        }
+    }
+
+    /**
      * Removes the client profile and associated permissions for the given client ID.
      * Both removals are applied atomically under a lock and persisted in a single
      * {@link #persist()} call.

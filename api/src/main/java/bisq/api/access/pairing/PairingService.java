@@ -158,6 +158,15 @@ public class PairingService {
         return apiAccessStoreService.removeClientProfile(clientId);
     }
 
+    /** Ends a client's access without forgetting it, so a revocation can still address it. */
+    public void revokePermissions(String clientId) {
+        apiAccessStoreService.removePermissions(clientId);
+    }
+
+    public boolean hasPermissions(String clientId) {
+        return permissionService.findPermissions(clientId).isPresent();
+    }
+
     /**
      * Caps the name at {@link #MAX_CLIENT_NAME_LENGTH} chars without splitting a surrogate pair,
      * so a name ending in an emoji is shortened rather than corrupted into a lone surrogate.

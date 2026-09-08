@@ -17,14 +17,20 @@
 
 package bisq.api.access;
 
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
 import java.util.List;
 
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -65,6 +71,75 @@ class ClientRevocationServiceTest {
 
         verify(sessionService).removeSessionByClientId(CLIENT_ID);
         verify(handler).onClientRevoked(CLIENT_ID);
+    }
+
+    @Test
+    void accessIsWithdrawnBeforeAnythingThatCanFail() {
+        // A subscription re-reading the grant while this runs must be refused, and a failure later
+        // on must not leave the client with access.
+        PairingService pairingService = mock(PairingService.class);
+        ClientRevocationHandler handler = mock(ClientRevocationHandler.class);
+        doThrow(new RuntimeException("boom")).when(handler).onClientRevoked(CLIENT_ID);
+
+        new ClientRevocationService(pairingService, mock(SessionService.class), List.of(handler))
+                .revokeClient(CLIENT_ID);
+
+        InOrder inOrder = inOrder(pairingService, handler);
+        inOrder.verify(pairingService).revokePermissions(CLIENT_ID);
+        inOrder.verify(handler).onClientRevoked(CLIENT_ID);
+    }
+
+    @Test
+    void aFailedCleanupKeepsTheClientAddressableSoTheRetryReachesIt() {
+        // The management ID resolves against the profile, so dropping it here would make the retry
+        // this reports impossible and the failed cleanup would never run again.
+        PairingService pairingService = mock(PairingService.class);
+        ClientRevocationHandler handler = mock(ClientRevocationHandler.class);
+        doThrow(new RuntimeException("boom")).when(handler).onClientRevoked(CLIENT_ID);
+
+        ClientRevocationResult result = new ClientRevocationService(pairingService,
+                mock(SessionService.class),
+                List.of(handler)).revokeClient(CLIENT_ID);
+
+        assertEquals(ClientRevocationResult.CLEANUP_FAILED, result);
+        verify(pairingService, never()).revokeClientProfile(CLIENT_ID);
+    }
+
+    @Test
+    void aRetryAfterAFailedCleanupCompletesTheRevocation() {
+        PairingService pairingService = mock(PairingService.class);
+        ClientRevocationHandler handler = mock(ClientRevocationHandler.class);
+        doThrow(new RuntimeException("boom")).doNothing().when(handler).onClientRevoked(CLIENT_ID);
+        when(pairingService.revokeClientProfile(CLIENT_ID)).thenReturn(true);
+        ClientRevocationService service = new ClientRevocationService(pairingService,
+                mock(SessionService.class),
+                List.of(handler));
+
+        assertEquals(ClientRevocationResult.CLEANUP_FAILED, service.revokeClient(CLIENT_ID));
+        assertEquals(ClientRevocationResult.REVOKED, service.revokeClient(CLIENT_ID));
+
+        verify(handler, times(2)).onClientRevoked(CLIENT_ID);
+        verify(pairingService).revokeClientProfile(CLIENT_ID);
+    }
+
+    @Test
+    void interruptedRevocationsAreFinishedForProfilesLeftWithoutPermissions() {
+        // Push registrations survive a restart, so a cleanup that failed and was never retried
+        // would otherwise keep feeding a revoked client for good.
+        PairingService pairingService = mock(PairingService.class);
+        ClientRevocationHandler handler = mock(ClientRevocationHandler.class);
+        ClientProfile interrupted = new ClientProfile(CLIENT_ID, "secret", "Pixel 8");
+        ClientProfile paired = new ClientProfile("client-2", "other-secret", "iPhone");
+        when(pairingService.getClientProfiles()).thenReturn(List.of(interrupted, paired));
+        when(pairingService.hasPermissions(CLIENT_ID)).thenReturn(false);
+        when(pairingService.hasPermissions("client-2")).thenReturn(true);
+
+        new ClientRevocationService(pairingService, mock(SessionService.class), List.of(handler))
+                .completeInterruptedRevocations();
+
+        verify(handler).onClientRevoked(CLIENT_ID);
+        verify(pairingService).revokeClientProfile(CLIENT_ID);
+        verify(handler, never()).onClientRevoked("client-2");
     }
 
     @Test

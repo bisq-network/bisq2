@@ -86,13 +86,18 @@ public class ApiAccessService {
         return clientRevocationService.revokeClient(clientId);
     }
 
+    /** See {@link ClientRevocationService#completeInterruptedRevocations()}. */
+    public void completeInterruptedRevocations() {
+        clientRevocationService.completeInterruptedRevocations();
+    }
+
     /**
      * Revokes the client a management ID names, for callers that must not be given client IDs. See
      * {@link ClientManagementId}.
      * <p>
-     * A handle that resolves to nothing is reported as not found, which also means a caller can no
-     * longer trigger cleanup for a client whose profile is already gone: the handle is derived from
-     * that profile. Nothing is lost, as whatever removed the profile ran that cleanup.
+     * A handle that resolves to nothing is reported as not found. A client whose cleanup failed
+     * still resolves, as its profile is kept until the revocation completes, so the retry the
+     * endpoint asks for reaches the same client.
      *
      * @param managementId The management ID of the client to revoke
      * @return the outcome; see {@link ClientRevocationResult}

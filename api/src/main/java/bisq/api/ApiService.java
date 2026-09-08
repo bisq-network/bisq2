@@ -271,6 +271,7 @@ public class ApiService implements Service {
         }
 
         setState(State.STARTING);
+        apiAccessService.completeInterruptedRevocations();
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
 
         // REST API and Websocket are handled inside httpServerBootstrapService

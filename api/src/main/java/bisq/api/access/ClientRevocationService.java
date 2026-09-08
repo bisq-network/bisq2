@@ -17,6 +17,7 @@
 
 package bisq.api.access;
 
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
 import lombok.extern.slf4j.Slf4j;
@@ -46,28 +47,29 @@ public class ClientRevocationService {
     }
 
     /**
-     * Revokes a paired client: its stored profile and permissions are removed, all its sessions
-     * are invalidated and every {@link ClientRevocationHandler} runs, which closes its live
-     * WebSocket connections and drops its push notification registrations. After revocation the
-     * client can no longer authenticate and must go through the pairing flow again.
+     * Revokes a paired client: its access is withdrawn, its sessions are invalidated and every
+     * {@link ClientRevocationHandler} runs, which closes its live WebSocket connections and drops
+     * its push notification registrations. The profile is removed once that cleanup has succeeded,
+     * after which the client must pair again.
      * <p>
-     * Session removal alone is not sufficient: an established WebSocket is authenticated at the
-     * handshake only, so without the disconnect the revoked client keeps receiving data until its
-     * socket dies, and push registrations are keyed by device rather than by session.
+     * The order is load-bearing. Permissions go first, so an in-flight subscription re-reading the
+     * grant is refused rather than served, and so a client has no access for the rest of this
+     * regardless of what follows. The profile goes last, because it is what the management ID
+     * resolves against: dropping it before the cleanup succeeded would make the retry this reports
+     * impossible, leaving the failed cleanup to never run again.
      * <p>
-     * All cleanup runs even when no profile was found, as the profile may have been removed
-     * already while a session, connection or push registration is still alive. A failing handler
-     * does not stop the remaining ones, so one broken collaborator cannot leave a revoked client
-     * half connected, but the failure is reported rather than only logged: the caller would
-     * otherwise be told the client was revoked while it still holds a connection or keeps
-     * receiving push notifications.
+     * A failing handler does not stop the remaining ones, so one broken collaborator cannot leave a
+     * client half revoked, and the failure is reported rather than only logged: the caller would
+     * otherwise be told the client was revoked while it can still be connected or receive push
+     * notifications.
      *
      * @param clientId The client ID to revoke
      * @return the outcome; see {@link ClientRevocationResult}
      */
     public ClientRevocationResult revokeClient(String clientId) {
-        boolean removed = pairingService.revokeClientProfile(clientId);
+        pairingService.revokePermissions(clientId);
         sessionService.removeSessionByClientId(clientId);
+
         boolean cleanupFailed = false;
         for (ClientRevocationHandler handler : revocationHandlers) {
             try {
@@ -79,15 +81,36 @@ public class ClientRevocationService {
         }
         if (cleanupFailed) {
             log.error("Revocation of client {} is incomplete, it may still be connected or receive " +
-                    "push notifications", clientId);
+                    "push notifications. Its access is withdrawn and it stays listed so the " +
+                    "revocation can be retried", clientId);
             return ClientRevocationResult.CLEANUP_FAILED;
         }
-        if (removed) {
+
+        if (pairingService.revokeClientProfile(clientId)) {
             log.info("Revoked client {}", clientId);
             return ClientRevocationResult.REVOKED;
         }
         log.warn("Client profile not found for {}, but session, connection and push registration " +
                 "cleanup were still applied", clientId);
         return ClientRevocationResult.NOT_FOUND;
+    }
+
+    /**
+     * Finishes revocations whose cleanup never succeeded, identified by a profile that has no
+     * permissions: pairing writes both together, so that combination only exists between the two
+     * halves of a revocation.
+     * <p>
+     * Run at startup because the state a failed cleanup leaves behind is not all transient. Live
+     * connections do not survive a restart, but push registrations do, so without this a client
+     * whose cleanup failed and was never retried would keep receiving notifications indefinitely.
+     */
+    public void completeInterruptedRevocations() {
+        pairingService.getClientProfiles().stream()
+                .map(ClientProfile::getClientId)
+                .filter(clientId -> !pairingService.hasPermissions(clientId))
+                .forEach(clientId -> {
+                    log.warn("Completing the interrupted revocation of client {}", clientId);
+                    revokeClient(clientId);
+                });
     }
 }
