@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -131,7 +132,9 @@ class WebSocketConnectionHandlerTest {
 
         handler.onMessage(failing, "{\"anything\":true}");
 
-        verify(subscriptionService, never()).canHandle(anyString());
+        // Verified over a window: the dispatch this guards is asynchronous, so asserting never()
+        // straight away passes whether or not the guard is there.
+        verify(subscriptionService, after(500).never()).canHandle(anyString());
         verify(subscriptionService, never()).onMessage(anyString(), any());
         verify(webSocketRestApiService, never()).onMessage(anyString(), any());
     }
@@ -165,6 +168,7 @@ class WebSocketConnectionHandlerTest {
 
         handler.onMessage(lateSocket, "{\"anything\":true}");
 
+        verify(subscriptionService, after(500).never()).canHandle(anyString());
         verify(subscriptionService, never()).onMessage(anyString(), any());
         verify(webSocketRestApiService, never()).onMessage(anyString(), any());
     }

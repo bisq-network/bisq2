@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -42,6 +43,21 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
 
     public DeviceRegistrationService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
+    }
+
+    /**
+     * Submits every change instead of dropping the ones the base class would rate limit, which are
+     * those following another within a second or arriving while a write is in flight.
+     * <p>
+     * Dropping one here is not recoverable: a revocation removes a device's registration and then
+     * removes the client, so nothing afterwards knows the registration should be gone, and the
+     * device keeps receiving notifications if the write never reached disk. A registration refused
+     * for a revoked client writes twice in a row, which is precisely what gets dropped.
+     */
+    @Override
+    public CompletableFuture<Boolean> persist() {
+        return getPersistence().persistAsync(getPersistableStore().getClone())
+                .handle((nil, throwable) -> throwable == null);
     }
 
     /**

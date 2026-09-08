@@ -147,7 +147,7 @@ class PairingServiceTest {
     }
 
     @Test
-    void aNameThatIsOnlyWhitespaceBeyondTheCapIsRejectedRatherThanStoredBlank(@TempDir Path tempDir) {
+    void aNameWhoseFirstCharactersAreWhitespaceIsStrippedRatherThanStoredBlank(@TempDir Path tempDir) {
         // Capping a name whose first characters are all whitespace would store a blank one for an
         // input that passed the blank check.
         PairingService service = pairingService(tempDir, 60);

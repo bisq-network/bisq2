@@ -19,7 +19,11 @@ package bisq.api.access;
 
 public enum ClientRevocationResult {
     REVOKED,
-    /** No profile existed. Sessions, connections and push registrations were still cleaned up. */
+    /**
+     * No client was revoked. Reached either because nothing matched, in which case no cleanup ran,
+     * or because a caller passed a client ID no profile held, in which case the sessions,
+     * connections and push registrations of that ID were cleaned up anyway.
+     */
     NOT_FOUND,
     /**
      * At least one cleanup step failed, so the client may still hold a connection or receive push

@@ -27,6 +27,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAccessStore> {
@@ -82,22 +83,20 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
         }
     }
 
-    public void putPermissions(String clientId, PermissionSet permissionSet) {
-        persistableStore.getPermissionsByClientId().put(clientId, permissionSet);
-        persist();
-    }
-
     /**
-     * Writes every change instead of dropping those that follow another within the default window.
+     * Submits every change instead of dropping the ones the base class would rate limit, which are
+     * those following another within a second or arriving while a write is in flight.
      * <p>
-     * This store is written only when a client pairs or is revoked, so there is no write frequency
-     * to limit, and a revocation writes twice in a row: the permission removal would be dropped and
-     * live only in memory. It still relies on the shutdown hook of the base class, so a hard kill
-     * can lose the last change, as it can for every store here.
+     * A revocation writes twice in quick succession, so the permission removal is exactly what the
+     * rate limiter drops, leaving it in memory only. This store is written when a client pairs or
+     * is revoked, so there is no write frequency worth limiting. Writes are still asynchronous and
+     * ordered, as {@code Persistence} runs them on a single thread, so a hard kill can lose the
+     * last one, as it can for every store here.
      */
     @Override
-    protected long getMaxWriteRateInMs() {
-        return 0;
+    public CompletableFuture<Boolean> persist() {
+        return getPersistence().persistAsync(getPersistableStore().getClone())
+                .handle((nil, throwable) -> throwable == null);
     }
 
     /**

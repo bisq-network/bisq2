@@ -86,6 +86,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 /**
  * Swagger docs at: http://localhost:8090/doc/v1/index.html if rest is enabled
@@ -164,6 +165,12 @@ public class ApiService implements Service {
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
+        // Nothing holds a grant when authorization is off, so asking for one would refuse every
+        // client. SubscriptionService short-circuits on the same flag.
+        Predicate<String> clientAuthorizedCheck = apiConfig.isAuthorizationRequired()
+                ? pairingService::hasPermissions
+                : clientId -> true;
+
         if (apiConfig.isWebsocketEnabled()) {
             webSocketService = Optional.of(new WebSocketService(apiConfig,
                     tlsContextService,
@@ -180,7 +187,7 @@ public class ApiService implements Service {
                     // connection behind, so registration revalidates against the store. The grant
                     // is what answers that: a revocation withdraws it first and keeps the profile
                     // until its cleanup succeeds.
-                    pairingService::hasPermissions));
+                    clientAuthorizedCheck));
         } else {
             webSocketService = Optional.empty();
         }
@@ -223,8 +230,7 @@ public class ApiService implements Service {
                 userService.getRepublishUserProfileService());
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
-        DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService,
-                pairingService::hasPermissions);
+        DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService, clientAuthorizedCheck);
         ConfigRestApi configRestApi = new ConfigRestApi();
         ContactsRestApi contactsRestApi = new ContactsRestApi(userService);
 
