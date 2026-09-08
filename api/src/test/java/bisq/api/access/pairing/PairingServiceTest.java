@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -143,6 +144,21 @@ class PairingServiceTest {
         String cappedClientName = clientProfile.getClientName();
         assertEquals(PairingService.MAX_CLIENT_NAME_LENGTH - 1, cappedClientName.length());
         assertFalse(Character.isHighSurrogate(cappedClientName.charAt(cappedClientName.length() - 1)));
+    }
+
+    @Test
+    void aNameThatIsOnlyWhitespaceBeyondTheCapIsRejectedRatherThanStoredBlank(@TempDir Path tempDir) {
+        // Capping a name whose first characters are all whitespace would store a blank one for an
+        // input that passed the blank check.
+        PairingService service = pairingService(tempDir, 60);
+        PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
+        String clientName = " ".repeat(PairingService.MAX_CLIENT_NAME_LENGTH + 10) + "Pixel";
+
+        assertDoesNotThrow(() -> {
+            ClientProfile clientProfile =
+                    service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName);
+            assertEquals("Pixel", clientProfile.getClientName());
+        });
     }
 
     @Test

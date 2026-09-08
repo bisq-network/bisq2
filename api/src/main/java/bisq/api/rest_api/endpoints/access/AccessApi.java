@@ -269,10 +269,13 @@ public class AccessApi extends RestApiBase {
                     The client is named by the management ID returned by the listing endpoint,
                     not by its client ID.
 
-                    The client profile and its permissions are removed from persistent storage,
-                    all active sessions are invalidated, any live WebSocket connection is closed
-                    and any push notification registration of the client is dropped. The client
-                    can no longer authenticate and must pair again via QR code to regain access.
+                    The client's access is withdrawn at once: its permissions are removed, its
+                    sessions are invalidated, it can no longer obtain a new one, any live WebSocket
+                    connection is closed and any push notification registration is dropped. The
+                    client must pair again via QR code to regain access.
+
+                    A 500 means the cleanup did not complete. The client has no access either way,
+                    and it stays listed so the request can be retried.
                     """
     )
     @ApiResponse(responseCode = "204", description = "Client successfully revoked")

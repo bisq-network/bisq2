@@ -20,12 +20,16 @@ package bisq.api.access;
 import bisq.api.access.identity.ClientManagementId;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.PairingService;
+import bisq.api.access.session.InvalidSessionRequestException;
 import bisq.api.access.session.SessionService;
+import bisq.api.access.session.SessionToken;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -93,5 +97,39 @@ class ApiAccessServiceTest {
         assertEquals(ClientRevocationResult.NOT_FOUND, apiAccessService.revokeClientByManagementId("unknown"));
         assertEquals(ClientRevocationResult.NOT_FOUND, apiAccessService.revokeClientByManagementId("client-1"));
         verify(clientRevocationService, never()).revokeClient(anyString());
+    }
+
+    @Test
+    void aSessionIsRefusedWhileARevocationWaitsForItsCleanup() {
+        // The profile outlives its permissions until the cleanup succeeds. A session issued in that
+        // window is a credential for an access that is already gone.
+        PairingService pairingService = mock(PairingService.class);
+        SessionService sessionService = mock(SessionService.class);
+        when(pairingService.findClientProfile("client-1"))
+                .thenReturn(Optional.of(new ClientProfile("client-1", "secret", "Pixel 8")));
+        when(pairingService.hasPermissions("client-1")).thenReturn(false);
+
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService,
+                sessionService,
+                mock(ClientRevocationService.class));
+
+        assertThrows(InvalidSessionRequestException.class,
+                () -> apiAccessService.requestSession("client-1", "secret"));
+        verify(sessionService, never()).createSession(anyString());
+    }
+
+    @Test
+    void aPairedClientStillGetsASession() throws InvalidSessionRequestException {
+        PairingService pairingService = mock(PairingService.class);
+        SessionService sessionService = mock(SessionService.class);
+        when(pairingService.findClientProfile("client-1"))
+                .thenReturn(Optional.of(new ClientProfile("client-1", "secret", "Pixel 8")));
+        when(pairingService.hasPermissions("client-1")).thenReturn(true);
+        when(sessionService.createSession("client-1")).thenReturn(new SessionToken(60, "client-1"));
+
+        new ApiAccessService(pairingService, sessionService, mock(ClientRevocationService.class))
+                .requestSession("client-1", "secret");
+
+        verify(sessionService).createSession("client-1");
     }
 }

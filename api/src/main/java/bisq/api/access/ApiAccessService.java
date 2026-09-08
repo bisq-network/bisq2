@@ -120,6 +120,13 @@ public class ApiAccessService {
             throw new InvalidSessionRequestException("Client secret is not matching");
         }
 
+        // Checked after the secret, so only the holder learns anything, and checked at all because
+        // a profile outlives its permissions while a revocation waits for its cleanup to succeed.
+        // Handing that client a session would mint a credential for an access that is already gone.
+        if (!pairingService.hasPermissions(clientId)) {
+            throw new InvalidSessionRequestException("No client profile found for Client ID");
+        }
+
         SessionToken sessionToken = sessionService.createSession(clientId);
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
         return new SessionResponse(sessionToken.getSessionId(), expiresAt);

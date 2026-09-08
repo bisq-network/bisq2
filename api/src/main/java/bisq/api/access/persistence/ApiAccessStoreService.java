@@ -88,6 +88,19 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
     }
 
     /**
+     * Writes every change instead of dropping those that follow another within the default window.
+     * <p>
+     * This store is written only when a client pairs or is revoked, so there is no write frequency
+     * to limit, and a revocation writes twice in a row: the permission removal would be dropped and
+     * live only in memory. It still relies on the shutdown hook of the base class, so a hard kill
+     * can lose the last change, as it can for every store here.
+     */
+    @Override
+    protected long getMaxWriteRateInMs() {
+        return 0;
+    }
+
+    /**
      * Removes only the permissions, leaving the profile. Used to end a client's access at the start
      * of a revocation, before the steps that can fail.
      */

@@ -102,10 +102,13 @@ public class PairingService {
         }
 
         // Validated before the pairing code is consumed so a rejected request does not burn it.
-        if (clientName == null || clientName.isBlank()) {
+        // Stripped first: the cap would otherwise be spent on leading whitespace and store a blank
+        // name for an input that passed the check.
+        String strippedClientName = clientName == null ? "" : clientName.strip();
+        if (strippedClientName.isEmpty()) {
             throw new InvalidPairingRequestException("Client name must not be blank");
         }
-        String cappedClientName = capClientName(clientName);
+        String cappedClientName = capClientName(strippedClientName);
 
         // Atomic remove to prevent race conditions - ensures only one request can use the code
         PairingCode pairingCode = pairingCodeByIdMap.remove(pairingCodeId);
