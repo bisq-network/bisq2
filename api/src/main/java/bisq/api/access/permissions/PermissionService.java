@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Reads and writes the permissions granted to a paired client.
+ * Reads the permissions granted to a paired client, and folds a grant into how it is stored.
  * <p>
  * It holds no mapping: which permission a given access requires is the business of the surface
  * that serves it — REST paths for {@link RestPermissionMapping}, subscription topics for

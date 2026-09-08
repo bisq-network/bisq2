@@ -22,20 +22,26 @@ import bisq.common.util.StringUtils;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.persistence.PersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class DeviceRegistrationService extends RateLimitedPersistenceClient<DeviceRegistrationStore> implements Service {
+/**
+ * Not rate limited on purpose: dropping a write here is not recoverable. A revocation removes a
+ * device's registration and then removes the client, so nothing afterwards knows the registration
+ * should be gone, and the device keeps receiving notifications if the write never reached disk. A
+ * registration refused for a revoked client writes twice in a row, which is what a rate limiter
+ * drops.
+ */
+public class DeviceRegistrationService implements PersistenceClient<DeviceRegistrationStore>, Service {
     @Getter
     private final DeviceRegistrationStore persistableStore = new DeviceRegistrationStore();
     @Getter
@@ -43,21 +49,6 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
 
     public DeviceRegistrationService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
-    }
-
-    /**
-     * Submits every change instead of dropping the ones the base class would rate limit, which are
-     * those following another within a second or arriving while a write is in flight.
-     * <p>
-     * Dropping one here is not recoverable: a revocation removes a device's registration and then
-     * removes the client, so nothing afterwards knows the registration should be gone, and the
-     * device keeps receiving notifications if the write never reached disk. A registration refused
-     * for a revoked client writes twice in a row, which is precisely what gets dropped.
-     */
-    @Override
-    public CompletableFuture<Boolean> persist() {
-        return getPersistence().persistAsync(getPersistableStore().getClone())
-                .handle((nil, throwable) -> throwable == null);
     }
 
     /**

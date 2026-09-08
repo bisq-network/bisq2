@@ -35,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,8 +55,6 @@ class ApiAccessStoreServiceTest {
         PersistenceService persistenceService = mock(PersistenceService.class, RETURNS_DEEP_STUBS);
         when(persistenceService.getOrCreatePersistence(any(), any(), any())).thenReturn(persistence);
         when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
-        // Stubbed so the RateLimitedPersistenceClient shutdown hook doesn't NPE on getStorePath().
-        when(persistence.getStorePath()).thenReturn(Path.of("test-store"));
         return new ApiAccessStoreService(persistenceService);
     }
 
@@ -140,5 +139,22 @@ class ApiAccessStoreServiceTest {
 
         assertTrue(service.removeClientProfile(CLIENT_ID));
         assertFalse(service.getClientProfileByIdMap().containsKey(CLIENT_ID));
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void bothWritesOfARevocationReachPersistence() {
+        // A revocation writes twice in quick succession. Under a write rate limit the second is
+        // dropped and lives in memory only, so a hard kill brings the client back.
+        Persistence persistence = mock(Persistence.class);
+        ApiAccessStoreService service = serviceWith(persistence);
+        service.putClientProfileAndPermissions(CLIENT_ID,
+                new ClientProfile(CLIENT_ID, "secret", "Pixel 8"),
+                PermissionSet.grantAll());
+
+        service.removePermissions(CLIENT_ID);
+        service.removeClientProfile(CLIENT_ID);
+
+        verify(persistence, times(3)).persistAsync(any());
     }
 }

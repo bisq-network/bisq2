@@ -20,6 +20,7 @@ package bisq.api.access.pairing;
 import bisq.api.ApiConfig;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
+import bisq.api.access.permissions.PermissionSet;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.common.file.FileReaderUtils;
@@ -42,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -52,12 +54,17 @@ class PairingServiceTest {
     }
 
     private PairingService pairingService(Path appDataDir, int pairingCodeTtlInSeconds) {
+        return pairingService(appDataDir, pairingCodeTtlInSeconds, mock(ApiAccessStoreService.class), mock(PermissionService.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    private PairingService pairingService(Path appDataDir,
+                                          int pairingCodeTtlInSeconds,
+                                          ApiAccessStoreService apiAccessStoreService,
+                                          PermissionService permissionService) {
         ApiConfig apiConfig = mock(ApiConfig.class);
         when(apiConfig.getPairingCodeTtlInSeconds()).thenReturn(pairingCodeTtlInSeconds);
-        return new PairingService(apiConfig,
-                appDataDir,
-                mock(ApiAccessStoreService.class),
-                mock(PermissionService.class));
+        return new PairingService(apiConfig, appDataDir, apiAccessStoreService, permissionService);
     }
 
     @Test
@@ -170,5 +177,25 @@ class PairingServiceTest {
                 () -> service.requestPairing(PairingService.VERSION, pairingCode.getId(), "  "));
 
         assertTrue(service.findPairingCode(pairingCode.getId()).isPresent());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairingStoresTheProfileAndItsFoldedGrantTogether(@TempDir Path tempDir) throws InvalidPairingRequestException {
+        // One write, so a revocation landing mid-pairing cannot leave a grant behind for a profile
+        // it has already removed. The grant is stored as PermissionService folds it, not raw.
+        ApiAccessStoreService apiAccessStoreService = mock(ApiAccessStoreService.class);
+        PermissionService permissionService = mock(PermissionService.class);
+        PermissionSet grantAll = PermissionSet.grantAll();
+        when(permissionService.toPermissionSet(any())).thenReturn(grantAll);
+        PairingService service = pairingService(tempDir, 60, apiAccessStoreService, permissionService);
+        PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
+
+        ClientProfile clientProfile =
+                service.requestPairing(PairingService.VERSION, pairingCode.getId(), "Pixel 8");
+
+        verify(apiAccessStoreService).putClientProfileAndPermissions(clientProfile.getClientId(),
+                clientProfile,
+                grantAll);
     }
 }

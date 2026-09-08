@@ -22,15 +22,14 @@ import bisq.api.access.permissions.PermissionSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.persistence.PersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAccessStore> {
+public class ApiAccessStoreService implements PersistenceClient<ApiAccessStore> {
     @Getter(onMethod_ = {@Override})
     private final ApiAccessStore persistableStore = new ApiAccessStore();
     @Getter(onMethod_ = {@Override})
@@ -81,22 +80,6 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
             persistableStore.getPermissionsByClientId().put(clientId, permissionSet);
             persist();
         }
-    }
-
-    /**
-     * Submits every change instead of dropping the ones the base class would rate limit, which are
-     * those following another within a second or arriving while a write is in flight.
-     * <p>
-     * A revocation writes twice in quick succession, so the permission removal is exactly what the
-     * rate limiter drops, leaving it in memory only. This store is written when a client pairs or
-     * is revoked, so there is no write frequency worth limiting. Writes are still asynchronous and
-     * ordered, as {@code Persistence} runs them on a single thread, so a hard kill can lose the
-     * last one, as it can for every store here.
-     */
-    @Override
-    public CompletableFuture<Boolean> persist() {
-        return getPersistence().persistAsync(getPersistableStore().getClone())
-                .handle((nil, throwable) -> throwable == null);
     }
 
     /**

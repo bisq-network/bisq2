@@ -165,11 +165,15 @@ public class ApiService implements Service {
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-        // Nothing holds a grant when authorization is off, so asking for one would refuse every
-        // client. SubscriptionService short-circuits on the same flag.
-        Predicate<String> clientAuthorizedCheck = apiConfig.isAuthorizationRequired()
-                ? pairingService::hasPermissions
-                : clientId -> true;
+        // Asked of the grant wherever a caller is identified at all. With both flags off a client
+        // never has to pair, so it holds no grant and requiring one would refuse everyone. Session
+        // handling alone is enough to make the check safe and worth keeping: every caller past that
+        // filter is paired, so the grant is the only thing that still separates a live client from
+        // one whose revocation is in flight.
+        Predicate<String> clientAuthorizedCheck =
+                apiConfig.isAuthorizationRequired() || apiConfig.isSupportSessionHandling()
+                        ? pairingService::hasPermissions
+                        : clientId -> true;
 
         if (apiConfig.isWebsocketEnabled()) {
             webSocketService = Optional.of(new WebSocketService(apiConfig,

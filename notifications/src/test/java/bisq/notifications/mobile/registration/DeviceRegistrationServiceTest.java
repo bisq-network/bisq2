@@ -17,12 +17,14 @@
 
 package bisq.notifications.mobile.registration;
 
+import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -35,17 +37,28 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
 class DeviceRegistrationServiceTest {
     private static final String CLIENT_ID = "client-1";
 
+    @SuppressWarnings("rawtypes")
+    private Persistence persistence;
     private DeviceRegistrationService service;
 
     @BeforeEach
+    @SuppressWarnings({"unchecked", "rawtypes"})
     void setUp() {
-        service = new DeviceRegistrationService(mock(PersistenceService.class, RETURNS_DEEP_STUBS));
+        persistence = mock(Persistence.class);
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+        PersistenceService persistenceService = mock(PersistenceService.class, RETURNS_DEEP_STUBS);
+        when(persistenceService.getOrCreatePersistence(any(), any(), any())).thenReturn(persistence);
+        service = new DeviceRegistrationService(persistenceService);
     }
 
     private boolean register(String deviceId, String clientId) {
@@ -196,5 +209,17 @@ class DeviceRegistrationServiceTest {
         assertEquals(Set.of("device-2"), service.getMobileDeviceProfiles().stream()
                 .map(MobileDeviceProfile::getDeviceId)
                 .collect(Collectors.toSet()));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void refusingARegistrationOfARevokedClientReachesPersistenceTwice() {
+        // Store then remove, microseconds apart, which is what a write rate limit drops. Losing
+        // the removal is unrecoverable: the revocation has moved on and nothing revisits it.
+        register("device-1", CLIENT_ID);
+
+        service.unregister("device-1", CLIENT_ID);
+
+        verify(persistence, times(2)).persistAsync(any());
     }
 }
