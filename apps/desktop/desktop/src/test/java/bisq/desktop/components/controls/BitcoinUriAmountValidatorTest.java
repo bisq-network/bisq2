@@ -150,4 +150,95 @@ class BitcoinUriAmountValidatorTest {
 
         assertTrue(textField.validate());
     }
+
+    @Test
+    void shouldAcceptIntegerWithMultipleDigits() {
+        textField.setText("123456");
+
+        assertTrue(textField.validate());
+    }
+
+    @Test
+    void shouldAcceptDecimalWithOneDecimalPlace() {
+        textField.setText("1.0");
+
+        assertTrue(textField.validate());
+    }
+
+    @Test
+    void shouldRejectTrailingDecimalSeparator() {
+        textField.setText("1.");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectLeadingDecimalSeparator() {
+        textField.setText(".1");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectDecimalSeparatorOnly() {
+        textField.setText(".");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectLeadingPlusSign() {
+        textField.setText("+1");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectLeadingZero() {
+        textField.setText("01");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectLeadingZerosBeforeDecimal() {
+        textField.setText("01.23");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectWhitespaceOnly() {
+        textField.setText("   ");
+
+        assertTrue(textField.validate());
+    }
+
+    @Test
+    void shouldRejectNegativeDecimalAmount() {
+        textField.setText("-0.001");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectScientificNotationWithPositiveExponent() {
+        textField.setText("1e3");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectScientificNotationWithPlusSign() {
+        textField.setText("1E+3");
+
+        assertFalse(textField.validate());
+    }
+
+    @Test
+    void shouldRejectNullInput() {
+        textField.setText(null);
+
+        assertTrue(textField.validate());
+    }
 }
