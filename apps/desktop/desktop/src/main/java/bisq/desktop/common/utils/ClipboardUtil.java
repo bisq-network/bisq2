@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.utils;
 
+import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import lombok.extern.slf4j.Slf4j;
@@ -26,16 +27,18 @@ import java.util.Optional;
 @Slf4j
 public class ClipboardUtil {
     public static void copyToClipboard(String content) {
-        try {
-            if (content != null && !content.isEmpty()) {
-                Clipboard clipboard = Clipboard.getSystemClipboard();
-                ClipboardContent clipboardContent = new ClipboardContent();
-                clipboardContent.putString(content);
-                clipboard.setContent(clipboardContent);
-            }
-        } catch (Throwable e) {
-            log.error("copyToClipboard failed ", e);
-            e.printStackTrace();
+        if (content != null && !content.isEmpty()) {
+            ClipboardContent clipboardContent = new ClipboardContent();
+            clipboardContent.putString(content);
+            setClipboardContent(clipboardContent);
+        }
+    }
+
+    public static void copyToClipboard(Image image) {
+        if (image != null) {
+            ClipboardContent clipboardContent = new ClipboardContent();
+            clipboardContent.putImage(image);
+            setClipboardContent(clipboardContent);
         }
     }
 
@@ -45,6 +48,14 @@ public class ClipboardUtil {
         } catch (Throwable e) {
             log.error("getClipboardString failed ", e);
             return Optional.empty();
+        }
+    }
+
+    private static void setClipboardContent(ClipboardContent content) {
+        try {
+            Clipboard.getSystemClipboard().setContent(content);
+        } catch (Exception e) {
+            log.error("Failed to set clipboard content", e);
         }
     }
 }
