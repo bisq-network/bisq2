@@ -71,4 +71,11 @@ public enum MuSigTradeState implements State {
         this.isFinalState = isFinalState;
         ordinal = ordinal();
     }
+
+    // The maker states published before SetupTradeMessage_C completes. C signs the deposit
+    // transaction while the state still reads MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES,
+    // so this identifies the last completed setup step, not proof that nothing was signed.
+    public boolean isMakerSetupPhase() {
+        return this == INIT || this == MAKER_INITIALIZED_TRADE_AND_CREATED_NONCE_SHARES;
+    }
 }
