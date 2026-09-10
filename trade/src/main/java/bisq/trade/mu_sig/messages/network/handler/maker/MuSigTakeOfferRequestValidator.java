@@ -344,28 +344,30 @@ public final class MuSigTakeOfferRequestValidator {
             // the absolute and rail limits, so require a fresh one before enforcing them.
             throw reject("No fresh BTC/USD price is available to validate the absolute trade limits");
         }
-        // Exact BigDecimal (PriceQuote's longValue would wrap at an extreme price); the result is
-        // a USD Fiat atomic value comparable to the policy limits.
-        BigDecimal usdAtomic = BigDecimal.valueOf(btcAmount.getValue())
+        // Exact BigDecimal; the result is a USD Fiat atomic value comparable to the policy limits.
+        BigDecimal btcValueUsd = BigDecimal.valueOf(btcAmount.getValue())
                 .multiply(BigDecimal.valueOf(btcUsdMarketPrice.get().getPriceQuote().getValue()))
                 .movePointLeft(btcAmount.getPrecision());
-        if (usdAtomic.compareTo(BigDecimal.valueOf(MuSigTradeAmountLimitsPolicy.MIN_USD_TRADE_AMOUNT.getValue())) < 0) {
-            throw reject("The trade amount lies below the absolute minimum. usd=" + usdAtomic.toPlainString());
+        // The limits bound the fiat obligation. For a USD quote that is the quote amount itself;
+        // the Bitcoin-side value only stands in for it otherwise (non-USD fiat needs a fiat/USD
+        // conversion - a disclosed follow-up). Judging the minimum on the Bitcoin side rejects a
+        // take at exactly the minimum, whose satoshi rounding lands a fraction below it; that
+        // remains the case for non-USD fiat until the conversion exists.
+        BigDecimal obligationUsd = market.isBaseCurrencyBitcoin() && "USD".equals(market.getQuoteCurrencyCode())
+                ? BigDecimal.valueOf(quoteSideAmount)
+                : btcValueUsd;
+        if (obligationUsd.compareTo(BigDecimal.valueOf(MuSigTradeAmountLimitsPolicy.MIN_USD_TRADE_AMOUNT.getValue())) < 0) {
+            throw reject("The trade amount lies below the absolute minimum. usd=" + obligationUsd.toPlainString());
         }
-        // The rail cap must bound the actual fiat obligation, which the tolerance lets sit above
-        // the Bitcoin value. For a USD quote that obligation is directly comparable, so cap on the
-        // larger of the two. (Non-USD fiat needs a fiat/USD conversion - a disclosed follow-up.)
-        BigDecimal obligationUsd = usdAtomic;
-        if (market.isBaseCurrencyBitcoin() && "USD".equals(market.getQuoteCurrencyCode())) {
-            obligationUsd = obligationUsd.max(BigDecimal.valueOf(quoteSideAmount));
-        }
+        // The tolerance lets the Bitcoin value sit above the obligation, so cap on the larger of the two.
+        BigDecimal cappedUsd = obligationUsd.max(btcValueUsd);
         PaymentMethodSpec<?> nonBtcSideSpec = market.isBaseCurrencyBitcoin()
                 ? contract.getQuoteSidePaymentMethodSpec()
                 : contract.getBaseSidePaymentMethodSpec();
         Fiat railLimit = MuSigTradeAmountLimitsPolicy.getMaxTradeLimitInUsd(
                 nonBtcSideSpec.getPaymentMethod().getPaymentRail());
-        if (obligationUsd.compareTo(BigDecimal.valueOf(railLimit.getValue())) > 0) {
-            throw reject("The trade amount exceeds the payment rail's limit. usd=" + obligationUsd.toPlainString()
+        if (cappedUsd.compareTo(BigDecimal.valueOf(railLimit.getValue())) > 0) {
+            throw reject("The trade amount exceeds the payment rail's limit. usd=" + cappedUsd.toPlainString()
                     + ", limit=" + railLimit.getValue());
         }
     }
