@@ -115,9 +115,10 @@ public class ProfileCardOfferListItem {
         offerAgeTooltipText = Res.get("user.profileCard.offers.table.columns.offerAge.tooltip",
                 DateFormatter.formatDateTime(bisqEasyOffer.getDate()));
 
+        // Compute before registering the observer: if this throws, no observer stays behind.
+        updatePriceSpecAsPercent();
         marketPriceByCurrencyMapPin = marketPriceService.getMarketPriceByCurrencyMap().addObserver(() ->
                 UIThread.run(this::updatePriceSpecAsPercent));
-        updatePriceSpecAsPercent();
     }
 
     void dispose() {

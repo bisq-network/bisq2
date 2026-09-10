@@ -786,54 +786,72 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private boolean isValidAmountRange(BisqEasyOffer peersOffer) {
-        Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
-        Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
-        if (myQuoteSideMinOrFixedAmount.isEmpty() || peersQuoteSideMaxOrFixedAmount.isEmpty()) {
-            return false;
-        }
-        if (myQuoteSideMinOrFixedAmount.get().round(0).getValue() > peersQuoteSideMaxOrFixedAmount.get().round(0).getValue()) {
-            return false;
-        }
+        // A peer offer whose amounts overflow at current prices cannot match; it must not
+        // propagate the conversion failure into the FX thread.
+        try {
+            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
+            Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
+            if (myQuoteSideMinOrFixedAmount.isEmpty() || peersQuoteSideMaxOrFixedAmount.isEmpty()) {
+                return false;
+            }
+            if (myQuoteSideMinOrFixedAmount.get().round(0).getValue() > peersQuoteSideMaxOrFixedAmount.get().round(0).getValue()) {
+                return false;
+            }
 
-        Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
-        Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
-        if (myQuoteSideMaxOrFixedAmount.isEmpty() || peersQuoteSideMinOrFixedAmount.isEmpty()) {
-            return false;
-        }
-        if (myQuoteSideMaxOrFixedAmount.get().round(0).getValue() < peersQuoteSideMinOrFixedAmount.get().round(0).getValue()) {
-            return false;
-        }
+            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
+            Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
+            if (myQuoteSideMaxOrFixedAmount.isEmpty() || peersQuoteSideMinOrFixedAmount.isEmpty()) {
+                return false;
+            }
+            if (myQuoteSideMaxOrFixedAmount.get().round(0).getValue() < peersQuoteSideMinOrFixedAmount.get().round(0).getValue()) {
+                return false;
+            }
 
-        return true;
+            return true;
+        } catch (ArithmeticException e) {
+            return false;
+        }
     }
 
     private boolean isValidAmountLimit(BisqEasyOffer peersOffer, Monetary quoteSideAmount) {
-        Optional<Result> result = BisqEasyTradeAmountLimits.checkOfferAmountLimitForGivenAmount(reputationService,
-                userIdentityService,
-                userProfileService,
-                marketPriceService,
-                model.getMarket(),
-                quoteSideAmount,
-                peersOffer);
-        if (!result.map(Result::isValid).orElse(false)) {
+        // A peer offer whose amounts overflow at current prices cannot match; it must not
+        // propagate the conversion failure into the FX thread.
+        try {
+            Optional<Result> result = BisqEasyTradeAmountLimits.checkOfferAmountLimitForGivenAmount(reputationService,
+                    userIdentityService,
+                    userProfileService,
+                    marketPriceService,
+                    model.getMarket(),
+                    quoteSideAmount,
+                    peersOffer);
+            if (!result.map(Result::isValid).orElse(false)) {
+                return false;
+            }
+            return true;
+        } catch (ArithmeticException e) {
             return false;
         }
-        return true;
     }
 
 
     private boolean isValidAmountLimit(BisqEasyOffer peersOffer) {
-        if (!BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
-                        userIdentityService,
-                        userProfileService,
-                        marketPriceService,
-                        peersOffer)
-                .map(BisqEasyTradeAmountLimits.Result::isValid)
-                .orElse(false)) {
+        // A peer offer whose amounts overflow at current prices cannot match; it must not
+        // propagate the conversion failure into the FX thread.
+        try {
+            if (!BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
+                            userIdentityService,
+                            userProfileService,
+                            marketPriceService,
+                            peersOffer)
+                    .map(BisqEasyTradeAmountLimits.Result::isValid)
+                    .orElse(false)) {
+                return false;
+            }
+
+            return true;
+        } catch (ArithmeticException e) {
             return false;
         }
-
-        return true;
     }
 
     // Used for finding best price quote of available matching offers

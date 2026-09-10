@@ -129,7 +129,10 @@ public class BisqEasyService implements Service {
         bisqEasySellersReputationBasedTradeAmountService = new BisqEasySellersReputationBasedTradeAmountService(userService.getUserProfileService(),
                 userService.getReputationService(),
                 marketPriceService);
-        bisqEasyOfferbookMessageService = new BisqEasyOfferbookMessageService(chatService, userService, bisqEasySellersReputationBasedTradeAmountService);
+        bisqEasyOfferbookMessageService = new BisqEasyOfferbookMessageService(chatService,
+                userService,
+                bisqEasySellersReputationBasedTradeAmountService,
+                marketPriceService);
 
         // Mobile push notifications for Bisq Easy trade-state transitions, mirroring the
         // proven Android nodeApp OpenTradesNotificationService whitelist. Dispatch is

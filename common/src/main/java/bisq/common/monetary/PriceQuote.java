@@ -139,10 +139,12 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
      */
     public static PriceQuote from(Monetary baseSideMonetary, Monetary quoteSideMonetary) {
         checkArgument(baseSideMonetary.value != 0, "baseSideMonetary.value must not be 0");
+        // longValueExact: a price value that does not fit into a long must fail instead of
+        // silently wrapping into a plausible-looking wrong price.
         long value = BigDecimal.valueOf(quoteSideMonetary.value)
                 .movePointRight(baseSideMonetary.precision)
                 .divide(BigDecimal.valueOf(baseSideMonetary.value), RoundingMode.HALF_UP)
-                .longValue();
+                .longValueExact();
         return new PriceQuote(value, baseSideMonetary, quoteSideMonetary);
     }
 
@@ -157,9 +159,12 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
                 "baseSideMonetary must be the same type as the quote.baseSideMonetary.\n" +
                         "parameter baseSideMonetary=" + baseSideMonetary + "\n" +
                         "this.baseSideMonetary" + this.baseSideMonetary);
+        // setScale(DOWN) preserves the truncation toward zero longValue() applied;
+        // longValueExact makes an overflowing conversion fail instead of silently wrapping.
         long value = BigDecimal.valueOf(baseSideMonetary.value).multiply(BigDecimal.valueOf(this.value))
                 .movePointLeft(baseSideMonetary.precision)
-                .longValue();
+                .setScale(0, RoundingMode.DOWN)
+                .longValueExact();
         if (quoteSideMonetary instanceof Fiat) {
             return new Fiat(value,
                     quoteSideMonetary.code,
@@ -176,10 +181,12 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
                 "quoteSideMonetary must be the same type as the quote.quoteSideMonetary.\n" +
                         "parameter quoteSideMonetary=" + quoteSideMonetary + "\n" +
                         "this.quoteSideMonetary" + this.quoteSideMonetary);
+        // Explicit scale 0 keeps the HALF_UP rounding the plain divide applied;
+        // longValueExact makes an overflowing conversion fail instead of silently wrapping.
         long value = BigDecimal.valueOf(quoteSideMonetary.value)
                 .movePointRight(baseSideMonetary.precision)
-                .divide(BigDecimal.valueOf(this.value), RoundingMode.HALF_UP)
-                .longValue();
+                .divide(BigDecimal.valueOf(this.value), 0, RoundingMode.HALF_UP)
+                .longValueExact();
         if (baseSideMonetary instanceof Fiat) {
             return new Fiat(value,
                     baseSideMonetary.code,

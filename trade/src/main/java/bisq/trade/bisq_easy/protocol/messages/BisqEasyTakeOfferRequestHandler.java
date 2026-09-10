@@ -199,8 +199,17 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 takersContract.getPriceSpec(), market);
         checkArgument(priceQuote.isPresent(),
                 "PriceQuote is empty. Might be that no market price is available. marketPrice=" + marketPrice);
-        Optional<Monetary> amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
-                market.getQuoteCurrencyCode())));
+        Optional<Monetary> amount;
+        try {
+            amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
+                    market.getQuoteCurrencyCode())));
+        } catch (ArithmeticException e) {
+            // The contract amounts and, for a fixed price spec, the price quote come from the
+            // peer's request: a conversion that overflows or divides by zero marks a malformed
+            // request, rejected like any other failed amount validation.
+            throw new IllegalArgumentException("Converting the take offer request's quote side amount " +
+                    takersContract.getQuoteSideAmount() + " at the contract price failed: " + e.getMessage());
+        }
 
         long takersAmount = takersContract.getBaseSideAmount();
         long myAmount = amount.get().getValue(); // I am maker

@@ -241,12 +241,17 @@ public class MuSigTradeAmountLimits {
                         return false;
                     }
 
-                    Optional<Result> result = checkOfferAmountLimitForMinAmount(reputationService,
-                            userIdentityService,
-                            userProfileService,
-                            marketPriceService,
-                            offer);
-                    if (!result.map(Result::isValid).orElse(false)) {
+                    try {
+                        Optional<Result> result = checkOfferAmountLimitForMinAmount(reputationService,
+                                userIdentityService,
+                                userProfileService,
+                                marketPriceService,
+                                offer);
+                        if (!result.map(Result::isValid).orElse(false)) {
+                            return false;
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to evaluate min amount limit for offer {}: {}", offer.getId(), e.getMessage(), e);
                         return false;
                     }
 
@@ -254,7 +259,14 @@ public class MuSigTradeAmountLimits {
                 })
                 .toList();
         Optional<Monetary> lowest = filteredOffers.stream()
-                .map(offer -> OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, offer))
+                .map(offer -> {
+                    try {
+                        return OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, offer);
+                    } catch (Exception e) {
+                        log.warn("Failed to evaluate lowest amount for offer {}: {}", offer.getId(), e.getMessage(), e);
+                        return Optional.<Monetary>empty();
+                    }
+                })
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .min(Monetary::compareTo);
