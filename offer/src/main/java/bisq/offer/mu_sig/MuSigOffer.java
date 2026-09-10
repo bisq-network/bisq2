@@ -77,6 +77,27 @@ public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodS
         );
     }
 
+    /**
+     * Creates a copy of the given offer with a new id and a current date, reusing all other terms.
+     * Used by the copy-offer feature to publish a similar offer.
+     */
+    public static MuSigOffer cloneWithNewId(MuSigOffer offer, String newId) {
+        return new MuSigOffer(newId,
+                System.currentTimeMillis(),
+                offer.getMakerNetworkId(),
+                offer.getDirection(),
+                offer.getMarket(),
+                offer.getAmountSpec(),
+                offer.getPriceSpec(),
+                offer.getProtocolTypes(),
+                offer.getBaseSidePaymentMethodSpecs(),
+                offer.getQuoteSidePaymentMethodSpecs(),
+                offer.getOfferOptions(),
+                VERSION,
+                offer.getTradeProtocolVersion(),
+                BuildVersion.VERSION);
+    }
+
     private MuSigOffer(String id,
                        long date,
                        NetworkId makerNetworkId,
