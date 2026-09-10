@@ -149,6 +149,12 @@ public class MuSigMyOffersController implements Controller {
         Market market = model.getMuSigMarket() != null
                 ? model.getMuSigMarket()
                 : MarketRepository.getDefaultBtcFiatMarket();
+
+        if (!marketPriceService.hasMarketPrice(market)) {
+            new Popup().warning(Res.get("muSig.offer.listing.createOffer.noPricedMarketItem", market)).show();
+            return;
+        }
+
         Navigation.navigateTo(NavigationTarget.MU_SIG_CREATE_OFFER,
                 new MuSigCreateOfferController.InitData(market));
     }
