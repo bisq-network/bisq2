@@ -21,16 +21,20 @@ import bisq.desktop.CssConfig;
 import bisq.desktop.common.Layout;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -46,7 +50,8 @@ public class BisqEasyMediatorView extends View<ScrollPane, BisqEasyMediatorModel
     private final VBox centerVBox, chatVBox;
     private final Button toggleChatWindowButton;
     private final BisqEasyMediationTableView bisqEasyMediationTableView;
-    private Subscription noOpenCasesPin, chatWindowPin;
+    private final EventHandler<KeyEvent> escapeKeyHandler = this::onKeyPressed;
+    private Subscription selectedItemPin, chatWindowPin;
     private Stage detachedChatWindow;
 
     public BisqEasyMediatorView(BisqEasyMediatorModel model,
@@ -89,20 +94,38 @@ public class BisqEasyMediatorView extends View<ScrollPane, BisqEasyMediatorModel
     @Override
     protected void onViewAttached() {
         bisqEasyMediationTableView.initialize();
-        noOpenCasesPin = EasyBind.subscribe(model.getNoOpenCases(), noOpenCases -> {
-            chatVBox.setVisible(!noOpenCases);
-            chatVBox.setManaged(!noOpenCases);
+        selectedItemPin = EasyBind.subscribe(model.getSelectedItem(), selectedItem -> {
+            boolean caseSelected = selectedItem != null;
+            chatVBox.setVisible(caseSelected);
+            chatVBox.setManaged(caseSelected);
         });
         chatWindowPin = EasyBind.subscribe(model.getChatWindow(), this::chatWindowChanged);
         toggleChatWindowButton.setOnAction(e -> controller.onToggleChatWindow());
+        root.addEventHandler(KeyEvent.KEY_PRESSED, escapeKeyHandler);
     }
 
     @Override
     protected void onViewDetached() {
         bisqEasyMediationTableView.dispose();
-        noOpenCasesPin.unsubscribe();
+        selectedItemPin.unsubscribe();
         chatWindowPin.unsubscribe();
         toggleChatWindowButton.setOnAction(null);
+        root.removeEventHandler(KeyEvent.KEY_PRESSED, escapeKeyHandler);
+    }
+
+    private void onKeyPressed(KeyEvent keyEvent) {
+        if (isTextInputFocused()) {
+            return;
+        }
+        KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::deFocusSelectedCase);
+    }
+
+    private boolean isTextInputFocused() {
+        return root.getScene() != null && root.getScene().getFocusOwner() instanceof TextInputControl;
+    }
+
+    private void deFocusSelectedCase() {
+        controller.onSelectItem(null);
     }
 
     private void chatWindowChanged(Stage chatWindow) {
