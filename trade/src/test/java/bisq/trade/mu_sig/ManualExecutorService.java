@@ -99,6 +99,7 @@ class ManualExecutorService extends AbstractExecutorService {
     @Override
     public synchronized void shutdown() {
         shutdown = true;
+        notifyAll();
     }
 
     @Override
@@ -106,6 +107,7 @@ class ManualExecutorService extends AbstractExecutorService {
         shutdown = true;
         List<Runnable> remaining = List.copyOf(queue);
         queue.clear();
+        notifyAll();
         return remaining;
     }
 
