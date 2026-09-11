@@ -120,6 +120,32 @@ class TorTransportConfigTorrcOverridesTest {
         assertThat(torTransportConfig.getTorrcOverrides()).isEmpty();
     }
 
+    @Test
+    void fractionalNumberOverrideIsNotNarrowedToInt(@TempDir Path tempDir) {
+        // HOCON unwraps this to a Double, which must not be cast to int
+        String configStr = MINIMAL_CONFIG_TEMPLATE +
+                "torrcOverrides { CircuitPriorityHalflife = 1.5 }\n";
+
+        var config = ConfigFactory.parseString(configStr);
+        TorTransportConfig torTransportConfig = TorTransportConfig.from(tempDir, config);
+
+        assertThat(torTransportConfig.getTorrcOverrides().get("CircuitPriorityHalflife"))
+                .containsExactly("1.5");
+    }
+
+    @Test
+    void numberOverrideExceedingIntRangeIsNotNarrowedToInt(@TempDir Path tempDir) {
+        // HOCON unwraps this to a Long, which must not be cast to int
+        String configStr = MINIMAL_CONFIG_TEMPLATE +
+                "torrcOverrides { MaxMemInQueues = 4294967296 }\n";
+
+        var config = ConfigFactory.parseString(configStr);
+        TorTransportConfig torTransportConfig = TorTransportConfig.from(tempDir, config);
+
+        assertThat(torTransportConfig.getTorrcOverrides().get("MaxMemInQueues"))
+                .containsExactly("4294967296");
+    }
+
     // ── torrcOverrideFilePath ──────────────────────────────────────────────────
 
     @Test
@@ -223,5 +249,49 @@ class TorTransportConfigTorrcOverridesTest {
         var result = TorrcFileParser.parseTorrcOverrideFile(file);
 
         assertThat(result.get("Bridge")).containsExactly("obfs4 1.2.3.4:1234 ABCDEF fingerprint");
+    }
+
+    @Test
+    void parseTorrcOverrideFileStripsInlineComments(@TempDir Path tempDir) throws IOException {
+        Path file = tempDir.resolve("overrides.torrc");
+        Files.writeString(file, "SocksPort 9050 # the default SOCKS port\n");
+
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
+
+        assertThat(result.get("SocksPort")).containsExactly("9050");
+    }
+
+    @Test
+    void parseTorrcOverrideFileKeepsHashInsideQuotedValue(@TempDir Path tempDir) throws IOException {
+        Path file = tempDir.resolve("overrides.torrc");
+        Files.writeString(file, "CookieAuthFile \"/run/tor/co#ntrol.authcookie\" # trailing comment\n");
+
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
+
+        assertThat(result.get("CookieAuthFile")).containsExactly("\"/run/tor/co#ntrol.authcookie\"");
+    }
+
+    @Test
+    void parseTorrcOverrideFileCollapsesRepeatedSeparatorWhitespace(@TempDir Path tempDir) throws IOException {
+        Path file = tempDir.resolve("overrides.torrc");
+        Files.writeString(file, "SocksPort   9050  \n");
+
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
+
+        assertThat(result.get("SocksPort")).containsExactly("9050");
+    }
+
+    @Test
+    void parseTorrcOverrideFileSkipsKeyWithoutValue(@TempDir Path tempDir) throws IOException {
+        Path file = tempDir.resolve("overrides.torrc");
+        Files.writeString(file,
+                "UseBridges\n" +
+                        "SocksPort # only a comment\n" +
+                        "UseBridges 1\n");
+
+        var result = TorrcFileParser.parseTorrcOverrideFile(file);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get("UseBridges")).containsExactly("1");
     }
 }

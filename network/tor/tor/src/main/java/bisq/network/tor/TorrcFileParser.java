@@ -17,6 +17,9 @@
 
 package bisq.network.tor;
 
+import bisq.common.data.Pair;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,36 +27,66 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+@Slf4j
 public class TorrcFileParser {
 
     /**
      * Parses a torrc-style override file into a map of key → list of values.
-     * Each non-blank, non-comment line is expected to have the form {@code Key Value}.
      * Repeated keys (e.g. multiple {@code Bridge} lines) accumulate into a list so that
      * all entries appear in the generated torrc.
      */
     public static Map<String, List<String>> parseTorrcOverrideFile(Path filePath) throws IOException {
         Map<String, List<String>> result = new LinkedHashMap<>();
         for (String line : Files.readAllLines(filePath)) {
-            String trimmed = line.strip();
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
-                continue;
-            }
-            int spaceIndex = -1;
-            for (int i = 0; i < trimmed.length(); i++) {
-                if (Character.isWhitespace(trimmed.charAt(i))) {
-                    spaceIndex = i;
-                    break;
-                }
-            }
-            if (spaceIndex < 0) {
-                continue; // bare key with no value — skip
-            }
-            String key = trimmed.substring(0, spaceIndex);
-            String value = trimmed.substring(spaceIndex + 1).strip();
-            result.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+            parseDirective(line).ifPresent(directive ->
+                    result.computeIfAbsent(directive.getFirst(), key -> new ArrayList<>()).add(directive.getSecond()));
         }
         return result;
+    }
+
+    /**
+     * Parses a single torrc line into its key and value. Blank lines, comment lines and keys
+     * without a value yield an empty result. Key and value may be separated by any whitespace,
+     * and a trailing {@code #} comment is removed unless it appears inside a quoted value.
+     */
+    static Optional<Pair<String, String>> parseDirective(String line) {
+        String directive = stripComment(line).strip();
+        if (directive.isEmpty()) {
+            return Optional.empty();
+        }
+
+        int separatorIndex = indexOfFirstWhitespace(directive);
+        String value = separatorIndex < 0 ? "" : directive.substring(separatorIndex + 1).strip();
+        if (value.isEmpty()) {
+            log.warn("Ignoring torrc line without a value: '{}'", directive);
+            return Optional.empty();
+        }
+        return Optional.of(new Pair<>(directive.substring(0, separatorIndex), value));
+    }
+
+    private static String stripComment(String line) {
+        boolean isInQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char current = line.charAt(i);
+            if (isInQuotes && current == '\\') {
+                i++; // Skip the escaped character so an escaped quote does not end the value
+            } else if (current == '"') {
+                isInQuotes = !isInQuotes;
+            } else if (current == '#' && !isInQuotes) {
+                return line.substring(0, i);
+            }
+        }
+        return line;
+    }
+
+    private static int indexOfFirstWhitespace(String value) {
+        for (int i = 0; i < value.length(); i++) {
+            if (Character.isWhitespace(value.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

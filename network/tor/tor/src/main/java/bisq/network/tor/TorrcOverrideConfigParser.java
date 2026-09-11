@@ -93,8 +93,10 @@ public class TorrcOverrideConfigParser {
 
     private static Optional<String> tryToParseNumber(ConfigValue configValue) {
         if (configValue.valueType() == ConfigValueType.NUMBER) {
-            int value = (int) configValue.unwrapped();
-            return Optional.of(String.valueOf(value));
+            // HOCON unwraps a NUMBER to Integer, Long or Double depending on the literal
+            // (e.g. CircuitPriorityHalflife=1.5 or MaxMemInQueues=4294967296), so it must not
+            // be cast to int. String.valueOf renders all three in the form torrc expects.
+            return Optional.of(String.valueOf(configValue.unwrapped()));
         }
         return Optional.empty();
     }
