@@ -59,10 +59,39 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
             return getPersistence()
                     .persistAsync(getPersistableStore().getClone())
                     .handle((nil, throwable) -> {
+                        if (throwable != null) {
+                            // The write failed (e.g. SnapshotLockTimeoutException while serializing - see
+                            // PersistableStoreReaderWriter#write): the on-disk snapshot is stale, so keep the
+                            // retry state. The next persist() call writes the then-current store, and
+                            // persistOnShutdown() covers the case where no further persist() ever comes.
+                            dropped = true;
+                        }
                         writeInProgress = false;
                         return throwable == null;
                     });
         }
+    }
+
+    /**
+     * Unthrottled write path: bypasses the max-write-rate gate and any in-progress write, for the rare writes
+     * that must not be silently dropped - e.g. a trade protocol reaching a final state, whose in-memory wipe of
+     * sensitive queued messages has to reach disk promptly (see {@code bisq.common.fsm.Fsm#persistOnFinalState}).
+     * Safe to submit while a throttled write is in flight: the single Persistence executor thread serializes
+     * writes, and this call clones the store at submission time, so it captures state at least as new as any
+     * write already queued ahead of it.
+     */
+    public CompletableFuture<Boolean> persistNow() {
+        lastWrite = System.currentTimeMillis();
+        dropped = false;
+        return getPersistence()
+                .persistAsync(getPersistableStore().getClone())
+                .handle((nil, throwable) -> {
+                    if (throwable != null) {
+                        // Same contract as the throttled path above: a failed write must leave a retry pending.
+                        dropped = true;
+                    }
+                    return throwable == null;
+                });
     }
 
     protected long getMaxWriteRateInMs() {
@@ -72,7 +101,14 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     private void persistOnShutdown() {
         if (dropped) {
             dropped = false;
-            getPersistence().persist(getPersistableStore().getClone());
+            try {
+                getPersistence().persist(getPersistableStore().getClone());
+            } catch (Exception e) {
+                // Runs on a JVM shutdown-hook thread: an escaping exception (e.g. SnapshotLockTimeoutException,
+                // which the write path deliberately rethrows) would die unlogged there, and nothing can retry
+                // after this point anyway. The previous store file on disk remains intact.
+                log.error("Persisting {} at shutdown failed.", getPersistence().getStorePath(), e);
+            }
         }
     }
 }
