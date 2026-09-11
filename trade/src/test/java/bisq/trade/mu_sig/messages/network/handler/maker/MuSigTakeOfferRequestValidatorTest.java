@@ -705,9 +705,59 @@ class MuSigTakeOfferRequestValidatorTest {
 
     @Test
     void amountBelowTheAbsoluteMinimumIsRejected() {
-        // 0.0001 BTC at $50,000 is $5, below the $10 absolute minimum.
+        // $5 on the quote side (and 0.0001 BTC at $50,000 is $5 as well), below the $10 absolute minimum.
         assertEconomicsRejected(fiatContract(10_000L, 50_000L, new BaseSideFixedAmountSpec(10_000L)),
                 TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+    }
+
+    @Test
+    void usdAmountAtTheAbsoluteMinimumIsAcceptedDespiteBitcoinSideRounding() {
+        // 10 USD at 111,393.92375 USD/BTC is 8,977.16 sats; the taker rounds to 8,977 sats, which
+        // converts back to 9.9998 USD. The 10 USD obligation is what the minimum bounds.
+        PriceQuote price = PriceQuote.fromFiatPrice(111_393.92375, "USD");
+        stubFreshBtcUsdPrice(price);
+        MuSigOffer offer = createOffer(new bisq.offer.amount.spec.QuoteSideFixedAmountSpec(100_000L), price);
+        long derivedBase = price.toBaseSideMonetary(Fiat.fromValue(100_000L, "USD")).getValue();
+
+        assertThat(derivedBase).isEqualTo(8_977L);
+        assertThat(price.toQuoteSideMonetary(Coin.asBtcFromValue(derivedBase)).getValue()).isLessThan(100_000L);
+        assertEconomicsAccepted(createContract(offer, derivedBase, 100_000L, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile)));
+    }
+
+    @Test
+    void usdObligationBelowTheAbsoluteMinimumIsRejected() {
+        // 9.99 USD is below the minimum on the quote side. The Bitcoin side is 9,000 sats, worth
+        // 10.03 USD and within the price tolerance, so a Bitcoin-side basis would have accepted it.
+        PriceQuote price = PriceQuote.fromFiatPrice(111_393.92375, "USD");
+        stubFreshBtcUsdPrice(price);
+        MuSigOffer offer = createOffer(new bisq.offer.amount.spec.QuoteSideFixedAmountSpec(99_900L), price);
+
+        assertThat(price.toQuoteSideMonetary(Coin.asBtcFromValue(9_000L)).getValue()).isGreaterThan(100_000L);
+        assertEconomicsRejected(createContract(offer, 9_000L, 99_900L, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile)), TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+    }
+
+    @Test
+    void nonPositiveBtcUsdPriceIsRejectedInsteadOfDisablingTheBitcoinSideCap() {
+        // A fresh BTC/USD quote of zero values the Bitcoin side at 0 USD. The rail cap must not
+        // then fall back to the fiat obligation alone: 10 BTC against a 5,000 USD ACH obligation
+        // would pass. Such a quote is not a usable rate and is rejected outright.
+        PriceQuote offerPrice = PriceQuote.fromFiatPrice(500, "USD");
+        stubFreshBtcUsdPrice(PriceQuote.fromFiatPrice(0, "USD"));
+        MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(1_000_000_000L), offerPrice);
+
+        assertEconomicsRejected(createContract(offer, 1_000_000_000L, 50_000_000L, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile)), TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+    }
+
+    private void stubFreshBtcUsdPrice(PriceQuote price) {
+        bisq.bonded_roles.market_price.MarketPrice freshPrice =
+                org.mockito.Mockito.mock(bisq.bonded_roles.market_price.MarketPrice.class);
+        org.mockito.Mockito.when(freshPrice.isValidDate()).thenReturn(true);
+        org.mockito.Mockito.when(freshPrice.getPriceQuote()).thenReturn(price);
+        org.mockito.Mockito.when(marketPriceService.findMarketPrice(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(Optional.of(freshPrice));
     }
 
     @Test
