@@ -14,6 +14,10 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import kotlin.io.path.notExists
 
 abstract class JPackageTask : DefaultTask() {
 
@@ -44,6 +48,10 @@ abstract class JPackageTask : DefaultTask() {
     @get:InputDirectory
     abstract val packageResourcesDir: DirectoryProperty
 
+    @get:Optional
+    @get:InputDirectory
+    abstract val onionGraterDir: DirectoryProperty
+
     @get:InputDirectory
     abstract val runtimeImageDirectory: DirectoryProperty
 
@@ -55,20 +63,20 @@ abstract class JPackageTask : DefaultTask() {
         val jPackagePath = jdkDirectory.asFile.get().toPath().resolve("bin").resolve("jpackage")
 
         val jPackageConfig = JPackageConfig(
-                inputDirPath = distDirFile.get().toPath().resolve("lib"),
-                outputDirPath = outputDirectory.asFile.get().toPath(),
-                runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
+            inputDirPath = distDirFile.get().toPath().resolve("lib"),
+            outputDirPath = outputDirectory.asFile.get().toPath(),
+            runtimeImageDirPath = runtimeImageDirectory.asFile.get().toPath(),
 
-                appConfig = JPackageAppConfig(
-                    name = appName.get(),
-                    appVersion = appVersion.get(),
-                    mainJarFileName = mainJarFile.asFile.get().name,
-                    mainClassName = mainClassName.get(),
-                    jvmArgs = jvmArgs.get(),
-                    licenceFilePath = licenseFile.get().absolutePath
-                ),
+            appConfig = JPackageAppConfig(
+                name = appName.get(),
+                appVersion = appVersion.get(),
+                mainJarFileName = mainJarFile.asFile.get().name,
+                mainClassName = mainClassName.get(),
+                jvmArgs = jvmArgs.get(),
+                licenceFilePath = licenseFile.get().absolutePath
+            ),
 
-                packageFormatConfigs = getPackageFormatConfigs()
+            packageFormatConfigs = getPackageFormatConfigs()
         )
 
         val packageFactory = PackageFactory(jPackagePath, jPackageConfig)
@@ -90,8 +98,47 @@ abstract class JPackageTask : DefaultTask() {
 
             OS.LINUX -> {
                 val resourcesPath = packagePath.resolve("linux")
-                LinuxPackages(resourcesPath, appName.get())
+                val appContentPaths = stageLinuxAppContent(resourcesPath)
+                LinuxPackages(resourcesPath, appName.get(), appContentPaths)
             }
         }
+    }
+
+    private fun stageLinuxAppContent(linuxResourcesPath: Path): List<Path> {
+        val stagingDir = project.layout.buildDirectory.get().asFile.toPath()
+            .resolve("packaging").resolve("app-content")
+        if (stagingDir.notExists()) {
+            Files.createDirectories(stagingDir)
+        }
+
+        val contentPaths = mutableListOf<Path>()
+
+        // Stage prepare_tails.sh as a standalone file in lib/prepare_tails.sh
+        val prepareTailsSrc = linuxResourcesPath.resolve("prepare_tails.sh")
+        if (Files.exists(prepareTailsSrc)) {
+            val dest = stagingDir.resolve("prepare_tails.sh")
+            Files.copy(prepareTailsSrc, dest, StandardCopyOption.REPLACE_EXISTING)
+            dest.toFile().setExecutable(true)
+            contentPaths.add(dest)
+        }
+
+        // Stage the Tails onion-grater profile into lib/onion-grater/. Only the Tails profile is
+        // shipped: the deb postinst enables it on Tails, while Whonix gets the Bisq profile from the
+        // OS (onion-grater upstream), so the Whonix variant would be dead weight in the package.
+        if (onionGraterDir.isPresent) {
+            val onionGraterStageDir = stagingDir.resolve("onion-grater")
+            Files.createDirectories(onionGraterStageDir)
+            val srcDir = onionGraterDir.asFile.get().toPath()
+            Files.list(srcDir).use { paths ->
+                paths
+                    .filter { it.fileName.toString().endsWith("_tails.yml") }
+                    .forEach { src ->
+                        Files.copy(src, onionGraterStageDir.resolve(src.fileName), StandardCopyOption.REPLACE_EXISTING)
+                    }
+            }
+            contentPaths.add(stagingDir.resolve("onion-grater"))
+        }
+
+        return contentPaths
     }
 }
