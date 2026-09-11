@@ -21,6 +21,7 @@ import bisq.common.proto.PersistableProto;
 import bisq.common.proto.ProtobufUtils;
 import lombok.Getter;
 
+import java.util.Comparator;
 import java.util.Set;
 
 /**
@@ -70,8 +71,13 @@ public final class PermissionSet implements PersistableProto {
     public bisq.api.protobuf.PermissionSet.Builder getBuilder(boolean serializeForHash) {
         // For grantAll we serialize the current expansion as well, so a node downgraded to a
         // version without the grantAll field still reads a full grant from the explicit list.
+        // Sorted by id: set iteration order is unspecified, and an order-unstable repeated
+        // field would break serializeForHash determinism.
         return bisq.api.protobuf.PermissionSet.newBuilder()
-                .addAllPermissions(getPermissions().stream().map(Permission::toProtoEnum).toList())
+                .addAllPermissions(getPermissions().stream()
+                        .sorted(Comparator.comparingInt(Permission::getId))
+                        .map(Permission::toProtoEnum)
+                        .toList())
                 .setGrantAll(grantAll);
     }
 
