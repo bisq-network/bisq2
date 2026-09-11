@@ -126,8 +126,11 @@ class ResolverConfigTest {
             "support.MediationRequest", "BisqEasyMediationRequest",
             "support.MediatorsResponse", "BisqEasyMediatorsResponse");
 
+    // Matched against the whole file, not line by line, so a call whose arguments are wrapped is still read. \s*
+    // spans the newline, and [^"] cannot leave the string literal, so a match cannot run into the next call.
     private static final Pattern REGISTRATION = Pattern.compile("addResolver\\(\"([^\"]+)\",\\s*(\\w+)\\.class");
-    private static final Pattern IMPORT = Pattern.compile("^import\\s+([\\w.]+)\\.(\\w+);");
+    private static final Pattern REGISTRATION_CALL = Pattern.compile("Resolver\\.addResolver\\(");
+    private static final Pattern IMPORT = Pattern.compile("^import\\s+([\\w.]+)\\.(\\w+);", Pattern.MULTILINE);
 
     @Test
     void whiteListMatchesResolverRegistrations() {
@@ -138,22 +141,17 @@ class ResolverConfigTest {
 
     @Test
     void protoTypeNamesMatchRegisteredClasses() throws Exception {
-        List<String> source = Files.readAllLines(resolverConfigSource());
+        String source = Files.readString(resolverConfigSource());
         Map<String, String> packageBySimpleName = new HashMap<>();
-        for (String line : source) {
-            Matcher matcher = IMPORT.matcher(line);
-            if (matcher.find()) {
-                packageBySimpleName.put(matcher.group(2), matcher.group(1));
-            }
+        Matcher importMatcher = IMPORT.matcher(source);
+        while (importMatcher.find()) {
+            packageBySimpleName.put(importMatcher.group(2), importMatcher.group(1));
         }
 
         List<String> registrations = new ArrayList<>();
         List<String> mismatches = new ArrayList<>();
-        for (String line : source) {
-            Matcher matcher = REGISTRATION.matcher(line);
-            if (!matcher.find()) {
-                continue;
-            }
+        Matcher matcher = REGISTRATION.matcher(source);
+        while (matcher.find()) {
             String protoTypeName = matcher.group(1);
             String simpleName = matcher.group(2);
             registrations.add(protoTypeName);
@@ -174,12 +172,25 @@ class ResolverConfigTest {
             }
         }
 
-        // Guards against a scan which found nothing, which would let the assertion below pass for the wrong reason.
+        // Guards against a scan which found nothing, which would let the assertions below pass for the wrong reason.
         assertTrue(registrations.contains("user.UserProfile") && registrations.contains("support.MediationRequest"),
                 "Source scan did not reach the known registrations, found " + registrations);
+        // A call the pattern cannot read would drop out of the check without failing anything, so an unparsed call is
+        // a failure in itself rather than a silent loss of coverage.
+        assertEquals(countRegistrationCalls(source), registrations.size(),
+                "Not every addResolver call was parsed, so some are unchecked. Parsed " + registrations);
         assertEquals(List.of(), mismatches,
                 "Proto type name and class disagree. Fix whichever is wrong, or if the name is frozen on the wire, "
                         + "add it to LEGACY_PROTO_TYPE_NAMES with a comment saying why");
+    }
+
+    private static int countRegistrationCalls(String source) {
+        Matcher matcher = REGISTRATION_CALL.matcher(source);
+        int count = 0;
+        while (matcher.find()) {
+            count++;
+        }
+        return count;
     }
 
     private static Path resolverConfigSource() {
