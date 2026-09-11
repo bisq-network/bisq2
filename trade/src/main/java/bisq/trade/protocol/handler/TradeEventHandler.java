@@ -32,8 +32,12 @@ public abstract class TradeEventHandler<T extends Trade<?, ?, ?>, E extends Even
     }
 
     public void handle(E event) {
+        verifyIntegrity(event);
         process(event);
         commit();
+    }
+
+    protected void verifyIntegrity(E event) {
     }
 
     protected abstract void process(E event);

@@ -18,11 +18,15 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.validation.BitcoinTransactionValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Getter
 public final class CustomPayoutPsbt implements Proto {
@@ -39,6 +43,17 @@ public final class CustomPayoutPsbt implements Proto {
         this.txId = txId;
         this.buyersPayoutAmountIncludingFee = buyersPayoutAmountIncludingFee;
         this.sellersPayoutAmountIncludingFee = sellersPayoutAmountIncludingFee;
+
+        verify();
+    }
+
+    public void verify() {
+        checkNotNull(psbt, "Custom payout PSBT must not be null");
+        checkArgument(psbt.length > 0, "Custom payout PSBT must not be empty");
+        checkNotNull(txId, "Custom payout transaction ID must not be null");
+        checkArgument(BitcoinTransactionValidation.isValid(txId), "Invalid custom payout transaction ID");
+        checkArgument(buyersPayoutAmountIncludingFee >= 0, "Buyer payout must not be negative");
+        checkArgument(sellersPayoutAmountIncludingFee >= 0, "Seller payout must not be negative");
     }
 
     @Override

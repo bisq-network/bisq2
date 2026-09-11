@@ -19,20 +19,11 @@ package bisq.desktop.main.content.mu_sig.trade.pending.trade_state;
 
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.Layout;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
-import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
-import bisq.common.monetary.Coin;
-import bisq.common.observable.Pin;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.support.mediation.MediationPayoutDistributionType;
-import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.trade.MuSigDisputeState;
-import bisq.trade.mu_sig.MuSigTrade;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -54,9 +45,7 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
     private final Label errorMessage, mediationBannerLabel, arbitrationBannerLabel;
     private final VBox tradePhaseBox, tradeDataHeaderBox;
     private final BisqMenuItem tryAgainMenuItem;
-    private Pin disputeStatePin;
-    private Subscription stateInfoVBoxPin, requestMediationDeliveryStatusPin, requestArbitrationDeliveryStatusPin,
-            shouldShowTryRequestMediationAgainPin, tradePin, mediationResultAcceptedPin;
+    private Subscription stateInfoVBoxPin, shouldShowTryRequestMediationAgainPin;
 
     public MuSigTradeStateView(MuSigTradeStateModel model,
                                MuSigTradeStateController controller,
@@ -177,8 +166,18 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         errorHBox.managedProperty().bind(model.getError());
         phaseAndInfoHBox.visibleProperty().bind(model.getPhaseAndInfoVisible());
         phaseAndInfoHBox.managedProperty().bind(model.getPhaseAndInfoVisible());
+        acceptMediationResultButton.disableProperty().bind(
+                model.getMediationResultAcceptanceAvailable().not());
+        rejectMediationResultButton.disableProperty().bind(
+                model.getIsTradeCompleted());
+        acceptMediationResultButton.visibleProperty().bind(model.getShowMediationResultDecisionButtons());
+        acceptMediationResultButton.managedProperty().bind(model.getShowMediationResultDecisionButtons());
+        rejectMediationResultButton.visibleProperty().bind(model.getShowMediationResultDecisionButtons());
+        rejectMediationResultButton.managedProperty().bind(model.getShowMediationResultDecisionButtons());
 
         errorMessage.textProperty().bind(model.getErrorMessage());
+        mediationBannerLabel.textProperty().bind(model.getMediationBannerText());
+        arbitrationBannerLabel.textProperty().bind(model.getArbitrationBannerText());
 
         stateInfoVBoxPin = EasyBind.subscribe(model.getStateInfoVBox(), stateInfoVBox -> {
             if (phaseAndInfoHBox.getChildren().size() == 2) {
@@ -196,29 +195,6 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
                     tryAgainMenuItem.setVisible(showTryAgain);
                     tryAgainMenuItem.setManaged(showTryAgain);
                 });
-
-        requestMediationDeliveryStatusPin = EasyBind.subscribe(model.getRequestMediationDeliveryStatus(),
-                this::updateMediationBannerLabel);
-        requestArbitrationDeliveryStatusPin = EasyBind.subscribe(model.getRequestArbitrationDeliveryStatus(),
-                this::updateArbitrationBannerLabel);
-        mediationResultAcceptedPin = EasyBind.subscribe(model.getMyMediationResultAccepted(),
-                update -> updateMediationBannerLabel(model.getRequestMediationDeliveryStatus().get()));
-        tradePin = EasyBind.subscribe(model.getTrade(), trade -> {
-            if (disputeStatePin != null) {
-                disputeStatePin.unbind();
-                disputeStatePin = null;
-            }
-            if (trade != null) {
-                disputeStatePin = trade.getTradeDispute().disputeStateObservable().addObserver(
-                        disputeState -> UIThread.run(() -> {
-                            updateMediationBannerLabel(model.getRequestMediationDeliveryStatus().get());
-                            updateArbitrationBannerLabel(model.getRequestArbitrationDeliveryStatus().get());
-                        }));
-            } else {
-                updateMediationBannerLabel(model.getRequestMediationDeliveryStatus().get());
-                updateArbitrationBannerLabel(model.getRequestArbitrationDeliveryStatus().get());
-            }
-        });
 
         tradeDetailsButton.setOnAction(e -> controller.onShowTradeDetails());
         closeTradeButton.setOnAction(e -> controller.onCloseTrade());
@@ -245,19 +221,19 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         errorHBox.managedProperty().unbind();
         phaseAndInfoHBox.visibleProperty().unbind();
         phaseAndInfoHBox.managedProperty().unbind();
+        acceptMediationResultButton.disableProperty().unbind();
+        rejectMediationResultButton.disableProperty().unbind();
+        acceptMediationResultButton.visibleProperty().unbind();
+        acceptMediationResultButton.managedProperty().unbind();
+        rejectMediationResultButton.visibleProperty().unbind();
+        rejectMediationResultButton.managedProperty().unbind();
 
         errorMessage.textProperty().unbind();
+        mediationBannerLabel.textProperty().unbind();
+        arbitrationBannerLabel.textProperty().unbind();
 
         stateInfoVBoxPin.unsubscribe();
-        requestMediationDeliveryStatusPin.unsubscribe();
-        requestArbitrationDeliveryStatusPin.unsubscribe();
         shouldShowTryRequestMediationAgainPin.unsubscribe();
-        tradePin.unsubscribe();
-        mediationResultAcceptedPin.unsubscribe();
-        if (disputeStatePin != null) {
-            disputeStatePin.unbind();
-            disputeStatePin = null;
-        }
 
         tradeDetailsButton.setOnAction(null);
         closeTradeButton.setOnAction(null);
@@ -270,125 +246,5 @@ public class MuSigTradeStateView extends View<VBox, MuSigTradeStateModel, MuSigT
         if (phaseAndInfoHBox.getChildren().size() == 2) {
             phaseAndInfoHBox.getChildren().remove(1);
         }
-    }
-
-    private static String getMessageDeliveryStatusDisplayString(MessageDeliveryStatus status) {
-        return switch (status) {
-            case CONNECTING -> Res.get("muSig.trade.requestMediation.deliveryState.CONNECTING");
-            case SENT -> Res.get("muSig.trade.requestMediation.deliveryState.SENT");
-            case ACK_RECEIVED -> Res.get("muSig.trade.requestMediation.deliveryState.ACK_RECEIVED");
-            case TRY_ADD_TO_MAILBOX -> Res.get("muSig.trade.requestMediation.deliveryState.TRY_ADD_TO_MAILBOX");
-            case ADDED_TO_MAILBOX -> Res.get("muSig.trade.requestMediation.deliveryState.ADDED_TO_MAILBOX");
-            case MAILBOX_MSG_RECEIVED -> Res.get("muSig.trade.requestMediation.deliveryState.MAILBOX_MSG_RECEIVED");
-            case FAILED -> Res.get("muSig.trade.requestMediation.deliveryState.FAILED");
-        };
-    }
-
-    private void updateMediationBannerLabel(MessageDeliveryStatus status) {
-        MuSigTrade trade = model.getTrade().get();
-        updateMediationResultDecisionControls(trade);
-        if (trade != null) {
-            MuSigDisputeState disputeState = trade.getTradeDispute().getDisputeState();
-            if (disputeState == MuSigDisputeState.MEDIATION_CLOSED) {
-                String details = trade.getTradeDispute().getMuSigMediationResult()
-                        .map(result -> getMediationResultDetailsText(trade, result))
-                        .orElse(Res.get("data.na"));
-                String text = Res.get("muSig.trade.pending.inMediation.closed", details);
-                mediationBannerLabel.setText(text);
-                return;
-            } else if (disputeState == MuSigDisputeState.MEDIATION_RE_OPENED) {
-                String details = trade.getTradeDispute().getMuSigMediationResult()
-                        .map(result -> getMediationResultDetailsText(trade, result))
-                        .orElse(Res.get("data.na"));
-                String text = Res.get("muSig.trade.pending.inMediation.reOpened", details);
-                mediationBannerLabel.setText(text);
-                return;
-            } else if (disputeState == MuSigDisputeState.MEDIATION_OPEN) {
-                mediationBannerLabel.setText(Res.get("muSig.trade.pending.inMediation.info"));
-                return;
-            } else if (disputeState != MuSigDisputeState.MEDIATION_REQUESTED) {
-                mediationBannerLabel.setText(Res.get("muSig.trade.pending.inMediation.info"));
-                return;
-            }
-        }
-
-        // In MEDIATION_REQUESTED we reflect transport status of the request message.
-        // If the peer had sent the request we do not get any requestMediationDeliveryStatus; status is null.
-        if (status == null || status == MessageDeliveryStatus.ACK_RECEIVED || status == MessageDeliveryStatus.MAILBOX_MSG_RECEIVED) {
-            mediationBannerLabel.setText(Res.get("muSig.trade.pending.inMediation.requested"));
-        } else {
-            String deliveryStatus = getMessageDeliveryStatusDisplayString(status);
-            if (status == MessageDeliveryStatus.FAILED) {
-                String resendRequest = model.getShouldShowTryRequestMediationAgain().get()
-                        ? " " + Res.get("muSig.trade.requestMediation.resendRequest")
-                        : "";
-                mediationBannerLabel.setText(deliveryStatus + resendRequest);
-            } else {
-                mediationBannerLabel.setText(Res.get("muSig.trade.pending.inMediation.requestSent", deliveryStatus));
-            }
-        }
-    }
-
-    private void updateArbitrationBannerLabel(MessageDeliveryStatus status) {
-        MuSigTrade trade = model.getTrade().get();
-        if (trade == null) {
-            arbitrationBannerLabel.setText("");
-            return;
-        }
-
-        MuSigDisputeState disputeState = trade.getTradeDispute().getDisputeState();
-        if (disputeState == MuSigDisputeState.ARBITRATION_OPEN) {
-            arbitrationBannerLabel.setText(Res.get("muSig.trade.pending.inArbitration.open"));
-            return;
-        } else if (disputeState == MuSigDisputeState.ARBITRATION_CLOSED) {
-            arbitrationBannerLabel.setText(Res.get("muSig.trade.pending.inArbitration.closed"));
-            return;
-        } else if (disputeState != MuSigDisputeState.ARBITRATION_REQUESTED) {
-            arbitrationBannerLabel.setText("");
-            return;
-        }
-
-        if (status == null || status == MessageDeliveryStatus.ACK_RECEIVED || status == MessageDeliveryStatus.MAILBOX_MSG_RECEIVED) {
-            arbitrationBannerLabel.setText(Res.get("muSig.trade.pending.inArbitration.requested"));
-        } else {
-            String deliveryStatus = getMessageDeliveryStatusDisplayString(status);
-            arbitrationBannerLabel.setText(Res.get("muSig.trade.pending.inArbitration.requestSent", deliveryStatus));
-        }
-    }
-
-    private void updateMediationResultDecisionControls(MuSigTrade trade) {
-        boolean showDecisionControls = false;
-        if (trade != null) {
-            MuSigDisputeState disputeState = trade.getTradeDispute().getDisputeState();
-            showDecisionControls = disputeState == MuSigDisputeState.MEDIATION_CLOSED;
-        }
-        boolean myDecisionKnown = model.getMyMediationResultAccepted().get().isPresent();
-
-        boolean showDecisionButtons = showDecisionControls && !myDecisionKnown;
-        acceptMediationResultButton.setVisible(showDecisionButtons);
-        acceptMediationResultButton.setManaged(showDecisionButtons);
-        rejectMediationResultButton.setVisible(showDecisionButtons);
-        rejectMediationResultButton.setManaged(showDecisionButtons);
-        acceptMediationResultButton.setDisable(false);
-        rejectMediationResultButton.setDisable(false);
-    }
-
-    private static String getMediationResultDetailsText(MuSigTrade trade, MuSigMediationResult result) {
-        if (result.getProposedBuyerPayoutAmount().isEmpty() || result.getProposedSellerPayoutAmount().isEmpty()) {
-            if (result.getMediationPayoutDistributionType() == MediationPayoutDistributionType.NO_PAYOUT) {
-                return Res.get("muSig.trade.pending.inMediation.resultDetails.noPayout");
-            }
-            return Res.get("muSig.trade.pending.inMediation.resultDetails", Res.get("data.na"), Res.get("data.na"));
-        }
-
-        String myPayoutAmount = trade.isBuyer()
-                ? AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedBuyerPayoutAmount().orElseThrow()))
-                : AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedSellerPayoutAmount().orElseThrow()));
-        String peerPayoutAmount = trade.isBuyer()
-                ? AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedSellerPayoutAmount().orElseThrow()))
-                : AmountFormatter.formatBaseAmountWithCode(Coin.asBtcFromValue(result.getProposedBuyerPayoutAmount().orElseThrow()));
-        return Res.get("muSig.trade.pending.inMediation.resultDetails",
-                myPayoutAmount,
-                peerPayoutAmount);
     }
 }

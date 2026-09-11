@@ -2,7 +2,10 @@
 
 ### Scope
 
-This document describes the mediation process from the perspective of a trader.
+This document describes the current mediation implementation from the perspective of a trader.
+
+The current custom-payout behavior and the remaining completion contract are documented in the
+[canonical MuSig mediation specifications](../../../../../../../../docs/specs/trade/mu_sig/mediation/README.md).
 
 In scope:
 
@@ -28,7 +31,8 @@ Out of scope:
 * `MuSigMediationRequest` is the message used by a trader to request mediation.
 * `MuSigMediationStateChangeMessage` is the mediator message that informs traders about mediation state changes.
 * `MuSigMediationResult` is the mediator's proposed resolution for the trade.
-* `MuSigMediationResultAcceptanceMessage` is the peer-to-peer message used by traders to communicate whether they accept the mediation result.
+* `MuSigCustomPayoutPsbtMessage` shares a trader's signed custom-payout PSBT with the peer and thereby communicates acceptance of the mediation result.
+* `MuSigMediationResultRejectionMessage` communicates rejection of a specific mediation result to the peer.
 * `MuSigDisputeCaseDataMessage` is the message sent by the non-requesting peer after mediation is opened.
 * `MuSigDisputeCasePaymentDetailsRequest` is the mediator request for trader payment details.
 * `MuSigDisputeCasePaymentDetailsResponse` is the trader response containing payment details.
@@ -96,6 +100,8 @@ Rules:
 * The trade contract must define a mediator.
 * The current dispute state must be `NO_DISPUTE`.
 * The MuSig open trade channel must exist.
+* No `MuSigTradeState`, fully signed DepositTx, or DepositTx-confirmation prerequisite is currently checked when mediation
+  is requested.
 * The local dispute state is set to `MEDIATION_REQUESTED`.
 * The trade is persisted before the mediation request is sent.
 * The trade channel is marked as using the mediator as dispute agent.
@@ -208,24 +214,78 @@ Rules:
 
 ### Accepting or rejecting the mediation result
 
-After a mediation result is stored, each trader can accept or reject it.
+After a signed mediation result is stored, each trader can accept or reject it if the result proposes a payout.
 
-Rules:
+Rules for accepting:
 
-* A trader can accept or reject only after a mediation result is present.
-* The trader's own acceptance value is stored only once.
-* A `MuSigMediationResultAcceptanceMessage` is sent confidentially to the peer only when the trader's acceptance value is recorded for the first time.
-* A trade log message records whether the trader accepted or rejected the mediation result only when the trader's acceptance value is recorded for the first time.
+* Acceptance is handled by the trade protocol as a `MediationResultAcceptedEvent`.
+* The dispute must be `MEDIATION_CLOSED`, and the result and mediator signature must both be present.
+* The mediator signature, contract binding, payout distribution, and mediator assigned in the contract are revalidated.
+* The result must not be `NO_PAYOUT`, neither trader may have a stored rejection, and the local party must not already
+  have custom-payout data.
+* The local trade state must be `DEPOSIT_TX_CONFIRMED`, `BUYER_INITIATED_PAYMENT`, or
+  `SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE`.
+* Automatic DepositTx confirmation observation is currently disabled; development runs use the existing skip action to
+  reach `DEPOSIT_TX_CONFIRMED`.
+* The handler calls `SignCustomPayoutTx` with the mediator's seller gross payout and
+  `MuSigFeeRateProvider.getPreparedTxFeeRate()`, whose current default is 2,500 sat/kwu.
+* The response must contain a non-empty PSBT of at most 4,096 bytes, a valid transaction ID, and non-negative buyer and
+  seller output amounts.
+* The checks that returned output amounts do not exceed the mediation proposal are temporarily disabled because trade
+  setup passes fixed 30,000-sat security deposits to the MuSig service while mediation uses the contract collateral.
+* A successful response is stored before a `MuSigCustomPayoutPsbtMessage` is sent to the peer, and the trade transitions
+  to `CUSTOM_PAYOUT_SIGNED`.
+* There is no separate acceptance message or persisted acceptance Boolean.
+* A valid peer custom-payout PSBT for the same mediation result is evidence that the peer accepted that result.
 
-Rules for receiving peer acceptance:
+Rules for receiving a peer custom-payout PSBT:
 
-* The message must reference an existing trade and channel.
-* The sender must be the peer from the trade.
-* The sender must not be banned.
-* Messages from other senders are ignored.
-* Messages from banned senders are ignored.
-* If no mediation result is stored yet, the message is kept pending.
-* The peer acceptance value is stored only once.
+* The message contains the mediation-result hash, the service-returned transaction ID, and the serialized partial PSBT.
+* The sender must not be banned, and the trade ID, protocol version, sender, and receiver must match the local trade.
+* The result must be present, signed, closed, not `NO_PAYOUT`, and match the message hash.
+* The transaction ID must be syntactically valid and the PSBT must contain between 1 and 4,096 bytes.
+* If a peer rejection was stored first, the PSBT is ignored; otherwise the first valid peer PSBT is persisted and cannot
+  be replaced by conflicting data.
+* If the local PSBT already exists, the peer transaction ID must match it. If the peer PSBT was stored first and local
+  signing later returns a different transaction ID, the local PSBT is stored and sent after logging the mismatch. This
+  does not establish which transaction ID is correct and must not trigger completion.
+* Receiving the peer PSBT does not trigger local signing. If a matching local PSBT already exists, Java automatically
+  triggers `CustomCloseTrade` after the peer message has been handled.
+
+Rules for rejecting:
+
+* A local rejection is handled as an internal `MediationResultRejectedEvent` trade-protocol transition.
+* Local and peer rejection transitions become available once the fully signed DepositTx is known locally; unlike acceptance and signing, rejection does not require DepositTx confirmation.
+* Rejection is stored once and sends a `MuSigMediationResultRejectionMessage` containing the mediation-result hash.
+* An incoming rejection is handled as an internal trade-protocol message transition.
+* A received rejection is applied only if its hash matches the stored mediation result.
+* Custom-payout data and rejection are mutually exclusive for each trader.
+* Once a peer rejection or peer custom-payout PSBT has been validated and stored, a later contradictory artifact is ignored.
+* A rejection or custom-payout PSBT received before the signed mediation result is available is kept pending and replayed once it can be validated.
+* If both artifacts were buffered before the mediation result made validation possible, their arrival order does not decide between them. The rejection is processed first as a fail-closed tie-breaker.
+* A `NO_PAYOUT` result cannot be accepted or rejected through this flow.
+
+Settlement messages waiting for a protocol or signed-result context are held only in a live-process per-trade queue. If
+the validation context exists but the current FSM state is too early, the non-persisted FSM event queue may replay the
+message after a later state transition. Neither queue is persisted; any replay after restart depends on the separate
+network delivery layer.
+
+---
+
+### Current custom-payout completion status
+
+The normal production flow enters the non-final `CUSTOM_PAYOUT_SIGNED` state after local signing. A peer PSBT can be
+stored before or after local acceptance. After either operation, Java checks whether both matching partial PSBTs are
+available and emits the internal finalization event when they are.
+
+The finalization event handler requires both PSBTs and matching claimed transaction IDs, calls `CustomCloseTrade`, checks
+that the returned transaction is non-empty, stores the response in `MuSigCustomPayoutPartyData`, and transitions to the
+final `CUSTOM_PAYOUT_CLOSED_TRADE` state. Service-side broadcast is not yet connected.
+
+A thrown `SignCustomPayoutTx` error follows normal FSM error handling and moves the trade to `FAILED`. If the blocking
+RPC never returns, the handler remains blocked. There is no automatic retry, requested-or-unknown checkpoint, or restart
+reconciliation. Because the start of the call is not persisted, a restart before its response can permit another
+acceptance attempt without Java knowing whether the first call changed service-side state.
 
 ---
 
@@ -255,6 +315,10 @@ Rules:
 * A stored mediation result cannot be changed.
 * A stored mediation result signature cannot be changed.
 * A mediation result must verify against the mediator public key from the contract.
-* Peer acceptance is stored only after a mediation result exists.
-* A trader's own acceptance and peer acceptance are each recorded only once.
+* Custom-payout signing and rejection require a stored mediation result.
+* A trader's signed custom-payout PSBT is the durable record of that trader's acceptance.
+* Custom-payout data and rejection are mutually exclusive for each trader.
+* A buffered rejection takes precedence over a buffered peer PSBT when both wait for the mediation result.
+* The current implementation must not be used to finalize a custom payout until the security-deposit mismatch and
+  returned-payout validation gap are corrected.
 * Mediation state changes do not override arbitration state.
