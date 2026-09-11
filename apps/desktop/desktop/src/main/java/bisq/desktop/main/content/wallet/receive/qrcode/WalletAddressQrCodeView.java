@@ -20,8 +20,10 @@ package bisq.desktop.main.content.wallet.receive.qrcode;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
-import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.main.content.wallet.receive.WalletInputBox;
+import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -31,40 +33,56 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletAddressQrCodeView extends View<VBox, WalletAddressQrCodeModel, WalletAddressQrCodeController> {
-    private final MaterialTextField amount, label;
-    private final BisqMenuItem copyBtcUri;
+    private static final double QR_IMAGE_HBOX_SPACING = 25;
+
+    private final WalletInputBox amount, label;
+    private final BisqMenuItem copyQrImage, copyBtcUri;
     private final ImageView qrImageView;
     private final Label btcUri;
 
     public WalletAddressQrCodeView(WalletAddressQrCodeModel model, WalletAddressQrCodeController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(25), model, controller);
 
         // Qr Code
         qrImageView = new ImageView();
         qrImageView.setFitHeight(model.getQrCodeSize());
         qrImageView.setFitWidth(model.getQrCodeSize());
         qrImageView.setPreserveRatio(true);
+        copyQrImage = new BisqMenuItem("copy-green", "copy-white");
+        copyQrImage.setTooltip(Res.get("wallet.receive.copyQrImage"));
+        double margin = QR_IMAGE_HBOX_SPACING + 25; // 25 for the copy icon
+        HBox.setMargin(qrImageView, new Insets(0, 0, 0, margin));
+        HBox qrImageHBox = new HBox(QR_IMAGE_HBOX_SPACING, Spacer.fillHBox(), qrImageView, copyQrImage, Spacer.fillHBox());
+        qrImageHBox.setAlignment(Pos.CENTER);
+
         btcUri = new Label();
         copyBtcUri = new BisqMenuItem("copy-green", "copy-white");
         copyBtcUri.setTooltip(Res.get("wallet.receive.copyBtcUri"));
         HBox btcUriHBox = new HBox(10, Spacer.fillHBox(), btcUri, copyBtcUri, Spacer.fillHBox());
-        VBox qrCodeVBox = new VBox(10, qrImageView,  btcUriHBox);
+
+        VBox qrCodeVBox = new VBox(10, qrImageHBox,  btcUriHBox);
         qrCodeVBox.setAlignment(Pos.CENTER);
+        qrCodeVBox.setMinWidth(OverlayModel.WIDTH - 200);
+        qrCodeVBox.setMaxWidth(OverlayModel.WIDTH - 200);
 
         // Amount
-        amount = new MaterialTextField(Res.get("wallet.receive.amountInBtc"));
+        amount = new WalletInputBox();
         amount.setEditable(true);
         amount.setPrefWidth(230);
+        amount.setPromptText(Res.get("wallet.receive.amountInBtc"));
         amount.setValidator(model.getBitcoinUriAmountValidator());
 
         // Label
-        label = new MaterialTextField(Res.get("wallet.receive.label"));
+        label = new WalletInputBox();
         label.setEditable(true);
         label.setPrefWidth(230);
+        label.setPromptText(Res.get("wallet.receive.label"));
         label.setValidators(model.getLabelMaxLengthValidator());
 
         HBox optionsHBox = new HBox(30, amount, label);
         optionsHBox.setAlignment(Pos.TOP_CENTER);
+        optionsHBox.setMinHeight(51);
+        optionsHBox.setMaxHeight(51);
 
         root.getChildren().setAll(qrCodeVBox, optionsHBox);
         root.setAlignment(Pos.CENTER);
@@ -78,6 +96,7 @@ public class WalletAddressQrCodeView extends View<VBox, WalletAddressQrCodeModel
         model.getIsAmountValid().bind(amount.isValidProperty());
         label.textProperty().bindBidirectional(model.getLabel());
 
+        copyQrImage.setOnAction(e -> controller.onCopyQrCodeImage());
         copyBtcUri.setOnAction(e -> controller.onCopyToClipboard());
         root.setOnMouseClicked(e -> {
             root.requestFocus();
@@ -94,6 +113,7 @@ public class WalletAddressQrCodeView extends View<VBox, WalletAddressQrCodeModel
         model.getIsAmountValid().unbind();
         label.textProperty().unbindBidirectional(model.getLabel());
 
+        copyQrImage.setOnAction(null);
         copyBtcUri.setOnAction(null);
         root.setOnMouseClicked(null);
 

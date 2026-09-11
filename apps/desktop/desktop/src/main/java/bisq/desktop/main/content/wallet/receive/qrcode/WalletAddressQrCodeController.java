@@ -84,6 +84,12 @@ public class WalletAddressQrCodeController implements Controller {
         }
     }
 
+    void onCopyQrCodeImage() {
+        if (model.getQrCodeImage() != null) {
+            ClipboardUtil.copyToClipboard(model.getQrCodeImage().get());
+        }
+    }
+
     private void parseAmount() {
         String amount = model.getAmount().get();
         if (amount != null && !StringUtils.isEmpty(amount) && MathUtils.isValidDouble(amount)) {
@@ -108,7 +114,7 @@ public class WalletAddressQrCodeController implements Controller {
                     .map(String::trim)
                     .filter(s -> !s.isEmpty());
             String btcUri = BitcoinURIScheme.buildBitcoinUri(address, amount, label);
-            Image image = QrCodeDisplay.toImage(btcUri, model.getQrCodeSize());
+            Image image = QrCodeDisplay.toImage(btcUri, model.getQrCodeSize(), 1);
             model.getBtcUri().set(btcUri);
             model.getQrCodeImage().set(image);
         }
