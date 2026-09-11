@@ -22,14 +22,14 @@ import bisq.api.access.permissions.PermissionSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.persistence.PersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 
 @Slf4j
-public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAccessStore> {
+public class ApiAccessStoreService implements PersistenceClient<ApiAccessStore> {
     @Getter(onMethod_ = {@Override})
     private final ApiAccessStore persistableStore = new ApiAccessStore();
     @Getter(onMethod_ = {@Override})
@@ -62,14 +62,36 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
         }
     }
 
-    public void putClientProfile(String clientId, ClientProfile clientProfile) {
-        persistableStore.getClientProfileByIdMap().put(clientId, clientProfile);
-        persist();
+    /**
+     * Stores a client's profile and its permissions as one step, persisted once.
+     * <p>
+     * Written under the same monitor as {@link #removeClientProfile(String)} because the two are
+     * otherwise interleavable: a revocation landing between separate writes removes a profile and a
+     * grant that does not exist yet, and the grant is then written afterwards. That orphan grant is
+     * not inert — the authorization filter reads permissions, not profiles, so with session
+     * handling off (as every shipped config runs) it is by itself enough to authorize the client
+     * that was just revoked.
+     */
+    public void putClientProfileAndPermissions(String clientId,
+                                               ClientProfile clientProfile,
+                                               PermissionSet permissionSet) {
+        synchronized (persistableStore) {
+            persistableStore.getClientProfileByIdMap().put(clientId, clientProfile);
+            persistableStore.getPermissionsByClientId().put(clientId, permissionSet);
+            persist();
+        }
     }
 
-    public void putPermissions(String clientId, PermissionSet permissionSet) {
-        persistableStore.getPermissionsByClientId().put(clientId, permissionSet);
-        persist();
+    /**
+     * Removes only the permissions, leaving the profile. Used to end a client's access at the start
+     * of a revocation, before the steps that can fail.
+     */
+    public void removePermissions(String clientId) {
+        synchronized (persistableStore) {
+            if (persistableStore.getPermissionsByClientId().remove(clientId) != null) {
+                persist();
+            }
+        }
     }
 
     /**

@@ -73,7 +73,8 @@ import static org.mockito.Mockito.mock;
 class RestPermissionMappingTest {
     /**
      * Hand-written rather than read off the rules, which would assert the mapping against itself. The
-     * paths are the {@code @Path} of the resource that serves them.
+     * paths are the {@code @Path} of the resource that serves them, except for the client endpoints
+     * of {@code AccessApi}, whose siblings are unauthenticated per method rather than per class.
      */
     private static final Map<String, Permission> EXPECTED = Map.ofEntries(
             Map.entry("/trade-chat-channels", Permission.TRADE_CHAT_CHANNELS),
@@ -91,7 +92,8 @@ class RestPermissionMappingTest {
             Map.entry("/trades", Permission.TRADES),
             Map.entry("/user-identities", Permission.USER_IDENTITIES),
             Map.entry("/user-profiles", Permission.USER_PROFILES),
-            Map.entry("/mobile-devices", Permission.MOBILE_DEVICES));
+            Map.entry("/mobile-devices", Permission.MOBILE_DEVICES),
+            Map.entry("/access/clients", Permission.CLIENT_MANAGEMENT));
 
     /**
      * Reachable without a permission, so the mapping is never asked and no rule is expected.

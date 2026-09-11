@@ -19,6 +19,7 @@ package bisq.api;
 
 import bisq.account.AccountService;
 import bisq.api.access.ApiAccessService;
+import bisq.api.access.ClientRevocationService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
@@ -85,6 +86,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 /**
  * Swagger docs at: http://localhost:8090/doc/v1/index.html if rest is enabled
@@ -111,6 +113,9 @@ public class ApiService implements Service {
     private final PermissionService permissionService;
     @Getter
     private final SessionService sessionService;
+    @Getter
+    private final ApiAccessService apiAccessService;
+    private final DeviceRegistrationService deviceRegistrationService;
     @Getter
     private final HttpServerBootstrapService httpServerBootstrapService;
     @Getter
@@ -140,6 +145,7 @@ public class ApiService implements Service {
                       ReputationService reputationService,
                       DeviceRegistrationService deviceRegistrationService) {
         this.apiConfig = apiConfig;
+        this.deviceRegistrationService = deviceRegistrationService;
 
         int bindPort = apiConfig.getBindPort();
 
@@ -159,7 +165,48 @@ public class ApiService implements Service {
 
         SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-        ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
+        // Asked of the grant wherever a caller is identified at all. With both flags off a client
+        // never has to pair, so it holds no grant and requiring one would refuse everyone. Session
+        // handling alone is enough to make the check safe and worth keeping: every caller past that
+        // filter is paired, so the grant is the only thing that still separates a live client from
+        // one whose revocation is in flight.
+        Predicate<String> clientAuthorizedCheck =
+                apiConfig.isAuthorizationRequired() || apiConfig.isSupportSessionHandling()
+                        ? pairingService::hasPermissions
+                        : clientId -> true;
+
+        if (apiConfig.isWebsocketEnabled()) {
+            webSocketService = Optional.of(new WebSocketService(apiConfig,
+                    tlsContextService,
+                    bondedRolesService,
+                    alertNotificationsService,
+                    chatService,
+                    tradeService,
+                    userService,
+                    bisqEasyService,
+                    networkService,
+                    openTradeItemsService,
+                    permissionService,
+                    // A handshake that authenticated before a revocation must not leave a live
+                    // connection behind, so registration revalidates against the store. The grant
+                    // is what answers that: a revocation withdraws it first and keeps the profile
+                    // until its cleanup succeeds.
+                    clientAuthorizedCheck));
+        } else {
+            webSocketService = Optional.empty();
+        }
+
+        // Deliberately not exposed: callers reach revocation through ApiAccessService, so the
+        // access layer keeps a single entry point.
+        ClientRevocationService clientRevocationService = new ClientRevocationService(pairingService,
+                sessionService,
+                List.of(
+                        // WebSocket auth happens at the handshake only, so a revoked client keeps
+                        // receiving data until the socket is closed explicitly.
+                        clientId -> webSocketService.ifPresent(service -> service.disconnectClient(clientId)),
+                        // Push registrations are keyed by device and outlive both session and profile.
+                        deviceRegistrationService::unregisterByClientId));
+        apiAccessService = new ApiAccessService(pairingService, sessionService, clientRevocationService);
         AccessApi accessApi = new AccessApi(apiAccessService);
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
@@ -187,7 +234,7 @@ public class ApiService implements Service {
                 userService.getRepublishUserProfileService());
         ExplorerRestApi explorerRestApi = new ExplorerRestApi(bondedRolesService.getExplorerService());
         ReputationRestApi reputationRestApi = new ReputationRestApi(reputationService, userService);
-        DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService);
+        DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService, clientAuthorizedCheck);
         ConfigRestApi configRestApi = new ConfigRestApi();
         ContactsRestApi contactsRestApi = new ContactsRestApi(userService);
 
@@ -221,22 +268,6 @@ public class ApiService implements Service {
             resourceConfig = new PairingApiResourceConfig(accessApi);
         }
 
-        if (apiConfig.isWebsocketEnabled()) {
-            webSocketService = Optional.of(new WebSocketService(apiConfig,
-                    tlsContextService,
-                    bondedRolesService,
-                    alertNotificationsService,
-                    chatService,
-                    tradeService,
-                    userService,
-                    bisqEasyService,
-                    networkService,
-                    openTradeItemsService,
-                    permissionService));
-        } else {
-            webSocketService = Optional.empty();
-        }
-
         httpServerBootstrapService = new HttpServerBootstrapService(apiConfig,
                 resourceConfig,
                 webSocketService,
@@ -252,6 +283,7 @@ public class ApiService implements Service {
         }
 
         setState(State.STARTING);
+        apiAccessService.completeInterruptedRevocations();
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
 
         // REST API and Websocket are handled inside httpServerBootstrapService
