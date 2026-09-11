@@ -20,6 +20,7 @@ package bisq.network.http;
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
+import bisq.network.http.utils.HttpException;
 import bisq.network.http.utils.HttpMethod;
 import bisq.network.http.utils.Socks5ProxyProvider;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -30,6 +31,8 @@ import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -146,24 +149,24 @@ public class TorHttpClient extends BaseHttpClient {
             optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));
             var target = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
             return closeableHttpClient.execute(target, request, response -> {
-                String responseString = inputStreamToString(response.getEntity().getContent());
+                String responseString = readBody(response);
                 int statusCode = response.getCode();
                 if (isSuccess(statusCode)) {
                     log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
                             logBaseUrl,
                             System.currentTimeMillis() - ts,
                             StringUtils.fromBytes(responseString.getBytes().length),
-                            StringUtils.truncate(response, 2000),
+                            loggableBody(responseString),
                             safeParam);
                     return responseString;
                 }
                 log.info("Received errorMsg '{}' with statusCode {} from {}. Response took: {} ms. param: {}",
-                        responseString,
+                        loggableBody(responseString),
                         statusCode,
                         logBaseUrl,
                         System.currentTimeMillis() - ts,
                         safeParam);
-                throw new RuntimeException(responseString);
+                throw httpResponseFailure(statusCode, responseString);
             });
         } catch (Throwable t) {
             String message = "Error at doRequestWithProxy with url " + logBaseUrl + " and param " + safeParam +
@@ -176,5 +179,36 @@ public class TorHttpClient extends BaseHttpClient {
             }
             hasPendingRequest = false;
         }
+    }
+
+    /**
+     * Response bodies are server-controlled: control characters could forge log lines (CR/LF)
+     * or corrupt a followed console (escape sequences), so the logged copy neutralizes them and
+     * is capped. Only for logging — the raw body keeps flowing to callers and into
+     * {@link #httpResponseFailure}.
+     */
+    static String loggableBody(String responseBody) {
+        return StringUtils.truncate(responseBody.replaceAll("\\p{Cntrl}", "_"), 2000);
+    }
+
+    /**
+     * Responses without a body (204, some error responses) carry a null entity — normalized
+     * to an empty body so the status code still reaches {@link #httpResponseFailure} instead
+     * of an NPE escaping the response handler.
+     */
+    String readBody(ClassicHttpResponse response) throws IOException {
+        HttpEntity entity = response.getEntity();
+        return entity == null ? "" : inputStreamToString(entity.getContent());
+    }
+
+    /**
+     * Non-2xx responses surface with their status code and raw body in an {@link HttpException},
+     * matching ClearNetHttpClient, so that {@link HttpRequestService} classifies them as
+     * server-level (4xx fails fast, 5xx retry gated per request descriptor) rather than as a
+     * retriable transport failure. HttpException is checked and Apache's response handler only
+     * permits IOException, so it travels as the cause; root-cause extraction recovers it upstream.
+     */
+    static IOException httpResponseFailure(int statusCode, String responseBody) {
+        return new IOException(new HttpException(responseBody, statusCode));
     }
 }

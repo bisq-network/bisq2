@@ -22,17 +22,23 @@ import bisq.network.NetworkService;
 import bisq.network.http.HttpRequest;
 import bisq.network.http.HttpRequestServiceConfig;
 import bisq.network.http.HttpRequestUrlProvider;
+import bisq.network.http.utils.HttpException;
 import bisq.network.http.utils.HttpMethod;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -149,11 +155,88 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
-    void parseResult_reportsSuccess_whenAnyBodyReceived() {
+    void parseResult_mapsStructuredBody() {
         TestableRelayClient client = newClient();
 
-        assertThat(client.publicParseResult("any-body")).isTrue();
-        assertThat(client.publicParseResult("")).isTrue();
+        MobileNotificationRelayResult accepted =
+                client.publicParseResult("{\"wasAccepted\":true,\"isUnregistered\":false}");
+        assertThat(accepted.wasAccepted()).isTrue();
+        assertThat(accepted.isUnregistered()).isFalse();
+
+        MobileNotificationRelayResult rejected =
+                client.publicParseResult("{\"wasAccepted\":false,\"errorCode\":\"UNREGISTERED\",\"isUnregistered\":true}");
+        assertThat(rejected.wasAccepted()).isFalse();
+        assertThat(rejected.isUnregistered()).isTrue();
+    }
+
+    @Test
+    void parseResult_treatsUnstructuredBodyAsAccepted() {
+        // Older relays answer 2xx with a plain ack; keep today's behavior for them.
+        TestableRelayClient client = newClient();
+
+        assertThat(client.publicParseResult("any-body").wasAccepted()).isTrue();
+        assertThat(client.publicParseResult("").wasAccepted()).isTrue();
+    }
+
+    @Test
+    void structuredRejection_recovers400BodyThroughTheHttpClientsExceptionChain() {
+        // The exception shape both transports produce: HttpException(body, status) wrapped
+        // in the client's IOException, wrapped again by the framework's CompletionException.
+        HttpException httpException = new HttpException(
+                "{\"wasAccepted\":false,\"errorCode\":\"UNREGISTERED\",\"isUnregistered\":true}", 400);
+        Throwable chain = new CompletionException(new IOException("Request failed", httpException));
+
+        Optional<MobileNotificationRelayResult> rejection = MobileNotificationRelayClient.structuredRejection(chain);
+
+        assertThat(rejection).isPresent();
+        assertThat(rejection.orElseThrow().wasAccepted()).isFalse();
+        assertThat(rejection.orElseThrow().isUnregistered()).isTrue();
+        assertThat(rejection.orElseThrow().errorCode()).contains("UNREGISTERED");
+    }
+
+    @Test
+    void structuredRejection_ignores400WithoutStructuredBody() {
+        // An older relay's 400 (framework error page) keeps today's behavior: exceptional, no verdict.
+        Throwable chain = new CompletionException(new IOException("Request failed",
+                new HttpException("{\"status\":400,\"error\":\"Bad Request\"}", 400)));
+
+        assertThat(MobileNotificationRelayClient.structuredRejection(chain)).isEmpty();
+    }
+
+    @Test
+    void structuredRejection_ignoresServerErrorsAndTransportFailures() {
+        // 500 carries no verdict (relay answers it with an empty body) and a transport
+        // failure never reached the relay — both are transient, never a rejection.
+        Throwable serverError = new CompletionException(new IOException("Request failed",
+                new HttpException("", 500)));
+        Throwable transportFailure = new CompletionException(new IOException("connect: connection refused"));
+
+        assertThat(MobileNotificationRelayClient.structuredRejection(serverError)).isEmpty();
+        assertThat(MobileNotificationRelayClient.structuredRejection(transportFailure)).isEmpty();
+    }
+
+    @Test
+    void withRejectionTranslation_turnsStructured400IntoCompletedRejection() {
+        CompletableFuture<MobileNotificationRelayResult> failed = CompletableFuture.failedFuture(
+                new IOException("Request failed", new HttpException(
+                        "{\"wasAccepted\":false,\"errorCode\":\"UNREGISTERED\",\"isUnregistered\":true}", 400)));
+
+        MobileNotificationRelayResult result = MobileNotificationRelayClient.withRejectionTranslation(failed).join();
+
+        assertThat(result.wasAccepted()).isFalse();
+        assertThat(result.isUnregistered()).isTrue();
+    }
+
+    @Test
+    void withRejectionTranslation_passesThroughSuccessAndTransientFailures() {
+        MobileNotificationRelayResult accepted = MobileNotificationRelayResult.accepted();
+        assertThat(MobileNotificationRelayClient.withRejectionTranslation(
+                CompletableFuture.completedFuture(accepted)).join()).isEqualTo(accepted);
+
+        CompletableFuture<MobileNotificationRelayResult> transientFailure = CompletableFuture.failedFuture(
+                new IOException("Request failed", new HttpException("", 500)));
+        assertThatThrownBy(() -> MobileNotificationRelayClient.withRejectionTranslation(transientFailure).join())
+                .isNotNull();
     }
 
     private TestableRelayClient newClient() {
@@ -182,7 +265,7 @@ class MobileNotificationRelayClientTest {
             return buildRequest(provider, data);
         }
 
-        Boolean publicParseResult(String json) {
+        MobileNotificationRelayResult publicParseResult(String json) {
             return parseResult(json);
         }
     }
