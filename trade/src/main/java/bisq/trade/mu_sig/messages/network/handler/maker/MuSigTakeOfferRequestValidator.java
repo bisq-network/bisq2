@@ -344,9 +344,15 @@ public final class MuSigTakeOfferRequestValidator {
             // the absolute and rail limits, so require a fresh one before enforcing them.
             throw reject("No fresh BTC/USD price is available to validate the absolute trade limits");
         }
+        PriceQuote btcUsdQuote = btcUsdMarketPrice.get().getPriceQuote();
+        if (btcUsdQuote.getValue() <= 0) {
+            // MarketPrice validates only the timestamp. A non-positive rate would value the
+            // Bitcoin side at zero and leave the fiat obligation alone to decide the limits.
+            throw reject("No positive BTC/USD price is available to validate the absolute trade limits");
+        }
         // Exact BigDecimal; the result is a USD Fiat atomic value comparable to the policy limits.
         BigDecimal btcValueUsd = BigDecimal.valueOf(btcAmount.getValue())
-                .multiply(BigDecimal.valueOf(btcUsdMarketPrice.get().getPriceQuote().getValue()))
+                .multiply(BigDecimal.valueOf(btcUsdQuote.getValue()))
                 .movePointLeft(btcAmount.getPrecision());
         // The limits bound the fiat obligation. For a USD quote that is the quote amount itself;
         // the Bitcoin-side value only stands in for it otherwise (non-USD fiat needs a fiat/USD

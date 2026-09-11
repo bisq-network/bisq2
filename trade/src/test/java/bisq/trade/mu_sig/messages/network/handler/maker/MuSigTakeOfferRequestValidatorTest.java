@@ -738,6 +738,19 @@ class MuSigTakeOfferRequestValidatorTest {
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile)), TradeProtocolFailure.OFFER_NOT_AVAILABLE);
     }
 
+    @Test
+    void nonPositiveBtcUsdPriceIsRejectedInsteadOfDisablingTheBitcoinSideCap() {
+        // A fresh BTC/USD quote of zero values the Bitcoin side at 0 USD. The rail cap must not
+        // then fall back to the fiat obligation alone: 10 BTC against a 5,000 USD ACH obligation
+        // would pass. Such a quote is not a usable rate and is rejected outright.
+        PriceQuote offerPrice = PriceQuote.fromFiatPrice(500, "USD");
+        stubFreshBtcUsdPrice(PriceQuote.fromFiatPrice(0, "USD"));
+        MuSigOffer offer = createOffer(new BaseSideFixedAmountSpec(1_000_000_000L), offerPrice);
+
+        assertEconomicsRejected(createContract(offer, 1_000_000_000L, 50_000_000L, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile)), TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+    }
+
     private void stubFreshBtcUsdPrice(PriceQuote price) {
         bisq.bonded_roles.market_price.MarketPrice freshPrice =
                 org.mockito.Mockito.mock(bisq.bonded_roles.market_price.MarketPrice.class);
