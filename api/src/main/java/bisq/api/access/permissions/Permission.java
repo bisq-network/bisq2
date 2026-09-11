@@ -62,7 +62,12 @@ public enum Permission implements ProtoEnum {
     //
     // STANDARD so a grantAll pairing picks it up at read time (see PermissionSet) rather than
     // losing the network banner until the user pairs again.
-    NETWORK_INFO(12, Kind.STANDARD);
+    NETWORK_INFO(12, Kind.STANDARD),
+    // The node owner's contact list (My Contacts). STANDARD by taxonomy consistency: the entries
+    // reference pseudonymous profiles, and PAYMENT_ACCOUNTS and PRIVATE_CHAT_CHANNELS already put
+    // strictly more sensitive data behind STANDARD — so existing pairings gain contacts on node
+    // upgrade without re-pairing.
+    CONTACTS(13, Kind.STANDARD);
 
     /** Grant classification. Named so a declaration reads as an explicit security decision. */
     public enum Kind {
