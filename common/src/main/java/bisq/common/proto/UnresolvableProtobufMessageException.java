@@ -20,12 +20,10 @@ package bisq.common.proto;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class UnresolvableProtobufMessageException extends RuntimeException {
     public UnresolvableProtobufMessageException(String message, Message proto) {
-        super(message + ". Message case not found for proto message: \n" + proto.toString());
+        super(message + ". Message case not found for proto message: " + describe(proto));
     }
 
     public UnresolvableProtobufMessageException(Throwable cause) {
@@ -37,18 +35,31 @@ public class UnresolvableProtobufMessageException extends RuntimeException {
     }
 
     public UnresolvableProtobufMessageException(Message proto) {
-        super("Message case not found for proto message: \n" + proto.toString());
+        super("Message case not found for proto message: " + describe(proto));
     }
 
     public UnresolvableProtobufMessageException(Any proto, Throwable cause) {
-        super("Message case not found for proto message: \n" + proto.toString(), cause);
+        super("Message case not found for proto message: " + describe(proto), cause);
     }
 
     public UnresolvableProtobufMessageException(Any any) {
-        super("No class found for resolving proto Any message.\n" + any.toString());
+        super("No class found for resolving proto Any message. " + describe(any));
     }
 
     public UnresolvableProtobufMessageException(InvalidProtocolBufferException e) {
         super("Could not resolve proto Any message", e);
+    }
+
+    /**
+     * Protos reaching here can hold private keys, payment account details or trade data, and exception messages end up
+     * in the log file, which users share. Only the type and the size may be included, and they are what identifies the
+     * problem anyway.
+     */
+    private static String describe(Message proto) {
+        return proto.getDescriptorForType().getFullName() + ", " + proto.getSerializedSize() + " bytes";
+    }
+
+    private static String describe(Any any) {
+        return "typeUrl=" + any.getTypeUrl() + ", " + any.getValue().size() + " bytes";
     }
 }
