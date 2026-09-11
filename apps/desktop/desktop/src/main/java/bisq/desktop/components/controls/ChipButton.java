@@ -49,9 +49,9 @@ public class ChipButton extends HBox {
         if (newValue) {
             getStyleClass().add("chips-button-selected");
         }
-        if (onActionHandler != null) {
-            onActionHandler.run();
-        }
+
+        // We do not call the onActionHandler here but at the setOnMouseReleased method to only call it on user input,
+        // not on selection state change triggered by method calls
     };
 
     public ChipButton(String text) {
@@ -76,7 +76,12 @@ public class ChipButton extends HBox {
                 getStyleClass().add("chips-button-pressed");
             }
         });
-        setOnMouseReleased(e -> toggleButton.setSelected(!toggleButton.isSelected()));
+        setOnMouseReleased(e -> {
+            toggleButton.setSelected(!toggleButton.isSelected());
+            if (onActionHandler != null) {
+                onActionHandler.run();
+            }
+        });
         setOnMouseEntered(e -> {
             removeStyles();
             if (toggleButton.isSelected()) {

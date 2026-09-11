@@ -17,6 +17,7 @@
 
 package bisq.offer;
 
+import bisq.common.market.Market;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
 import bisq.i18n.Res;
@@ -50,5 +51,13 @@ public enum Direction implements ProtoEnum {
 
     public String getDisplayString() {
         return Res.get("offer." + name().toLowerCase(Locale.ROOT));
+    }
+
+    public static Direction displayDirectionToOfferDirection(Direction displayDirection, Market market) {
+        return market.isBaseCurrencyBitcoin() ? displayDirection : displayDirection.mirror();
+    }
+
+    public static Direction offerDirectionToDisplayDirection(Direction offerDirection, Market market) {
+        return market.isBaseCurrencyBitcoin() ? offerDirection : offerDirection.mirror();
     }
 }

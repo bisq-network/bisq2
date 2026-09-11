@@ -18,6 +18,7 @@
 package bisq.common.monetary;
 
 import bisq.common.data.Range;
+import bisq.common.market.Market;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
@@ -37,5 +38,17 @@ public class TradeAmountRange extends Range<TradeAmount> {
         checkArgument(min.getQuoteSideAmount().getCode().equals(max.getQuoteSideAmount().getCode()),
                 "min and max quote side codes must match. min.quote=%s; max.quote=%s",
                 min.getQuoteSideAmount().getCode(), max.getQuoteSideAmount().getCode());
+    }
+
+    public String printRelevantString(Market market) {
+        TradeAmount minAmount = getMin();
+        TradeAmount maxAmount = getMax();
+        if (market.getRelevantCurrencyCode().equals(minAmount.getQuoteSideAmount().getCode())) {
+            return minAmount.getQuoteSideAmount().printAsDouble(false) + " - " +
+                    maxAmount.getQuoteSideAmount().printAsDouble();
+        } else {
+            return minAmount.getBaseSideAmount().printAsDouble(false) + " - " +
+                    maxAmount.getBaseSideAmount().printAsDouble();
+        }
     }
 }

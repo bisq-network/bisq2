@@ -17,6 +17,12 @@
 
 package bisq.common.observable;
 
-public interface Pin {
+import bisq.common.application.Disposable;
+
+public interface Pin extends Disposable {
     void unbind();
+
+    default void dispose() {
+        unbind();
+    }
 }

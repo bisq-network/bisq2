@@ -475,7 +475,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER), "USD");
         MuSigOffer offer = new MuSigOffer("test-id", OFFER_MAKER_NETWORK_ID, Direction.BUY, market,
                 new BaseSideFixedAmountSpec(baseSats), new FixPriceSpec(price),
-                List.of(paymentMethodSpec.getPaymentMethod()), List.of(), "1.0.0");
+                List.of(paymentMethodSpec.getPaymentMethod()), List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)), "1.0.0");
         MuSigContract contract = createContract(offer, baseSats, consistentQuote, offer.getPriceSpec(),
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
 
@@ -494,7 +494,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER), "USD");
         MuSigOffer offer = new MuSigOffer("test-id", OFFER_MAKER_NETWORK_ID, Direction.SELL, market,
                 new BaseSideFixedAmountSpec(10_000_000L), new FixPriceSpec(PriceQuote.fromFiatPrice(50_000, "USD")),
-                List.of(paymentMethodSpec.getPaymentMethod()), List.of(), "1.0.0");
+                List.of(paymentMethodSpec.getPaymentMethod()), List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)), "1.0.0");
         // base 0.1 BTC, quote 1,000,000,000 = $100,000 (expected $5,000).
         MuSigContract contract = createContract(offer, 10_000_000L, 1_000_000_000L, offer.getPriceSpec(),
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
@@ -573,7 +573,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 new BaseSideFixedAmountSpec(2_000_000L),
                 new bisq.offer.price.spec.MarketPriceSpec(),
                 List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)),
                 "1.0.0");
         MuSigContract contract = createContract(offer, 2_000_000L, 10_000_000L, offer.getPriceSpec(),
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
@@ -602,7 +602,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 new bisq.offer.amount.spec.QuoteSideFixedAmountSpec(100_000L),
                 new bisq.offer.price.spec.MarketPriceSpec(),
                 List.of(cryptoSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)),
                 "1.0.0");
         MuSigContract contract = createContract(offer, 5_000_000_000_000L, 100_000L, offer.getPriceSpec(),
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
@@ -631,7 +631,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 new BaseSideFixedAmountSpec(4_000_000_000_000L),
                 new bisq.offer.price.spec.MarketPriceSpec(),
                 List.of(cryptoSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)),
                 "1.0.0");
         // 4 XMR at 0.005 BTC/XMR = 2,000,000 sats, exactly the expected quote.
         MuSigContract contract = createContract(offer, 4_000_000_000_000L, 2_000_000L, offer.getPriceSpec(),
@@ -659,7 +659,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 new bisq.offer.amount.spec.QuoteSideFixedAmountSpec(10_000_000L),
                 new FixPriceSpec(PriceQuote.fromPrice(1L, "XMR", "BTC")),
                 List.of(cryptoSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)),
                 "1.0.0");
         MuSigContract contract = createContract(offer, 1L, 10_000_000L, offer.getPriceSpec(),
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
@@ -684,7 +684,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 new bisq.offer.amount.spec.QuoteSideFixedAmountSpec(1_000_000L),
                 new FixPriceSpec(PriceQuote.fromPrice(7L, "XMR", "BTC")),
                 List.of(cryptoSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)),
                 "1.0.0");
         MuSigContract overLimit = createContract(offer, 150_000_000_000_000_020L, 1_000_000L,
                 offer.getPriceSpec(), Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
@@ -861,7 +861,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 new BaseSideFixedAmountSpec(baseSideAmount),
                 new FixPriceSpec(PriceQuote.fromPrice(0.005, "XMR", "BTC")),
                 List.of(cryptoSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)),
                 "1.0.0");
         return createContract(offer, baseSideAmount, quoteSideAmount, offer.getPriceSpec(),
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
@@ -1003,7 +1003,7 @@ class MuSigTakeOfferRequestValidatorTest {
                 amountSpec,
                 new FixPriceSpec(price),
                 List.of(nonBtcPaymentMethodSpec.getPaymentMethod()),
-                List.of(),
+                List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)),
                 "1.0.0");
     }
 

@@ -61,12 +61,12 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
 
     @Override
     protected void onViewAttached() {
-        balanceBitcoinAmountDisplay.getBtcAmount().bind(model.getFormattedBalanceProperty());
+        balanceBitcoinAmountDisplay.btcAmountProperty().bind(model.getFormattedBalanceProperty());
     }
 
     @Override
     protected void onViewDetached() {
-        balanceBitcoinAmountDisplay.getBtcAmount().unbind();
+        balanceBitcoinAmountDisplay.btcAmountProperty().unbind();
     }
 
     private HBox createBalanceBox() {
