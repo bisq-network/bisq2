@@ -398,19 +398,9 @@ public class TorService implements Service {
 
             readExternalTorConfig(externalTorConfigPath)
                     .lines()
-                    .map(String::trim)
-                    .filter(line -> !line.isEmpty() && !line.startsWith("#"))
-                    .forEach(line -> {
-                        int firstSpaceIndex = line.indexOf(" ");
-                        if (firstSpaceIndex != -1) {
-                            String key = line.substring(0, firstSpaceIndex);
-                            String value = line.substring(firstSpaceIndex + 1);
-                            externalTorConfigMap.put(key, value);
-                        } else {
-                            log.warn("Ignoring malformed line (no key/value separator) in external " +
-                                    "Tor config: '{}'", line);
-                        }
-                    });
+                    .map(TorrcFileParser::parseDirective)
+                    .flatMap(Optional::stream)
+                    .forEach(directive -> externalTorConfigMap.put(directive.getFirst(), directive.getSecond()));
 
         } catch (IOException e) {
             log.warn("Could not read external tor config file.", e);
