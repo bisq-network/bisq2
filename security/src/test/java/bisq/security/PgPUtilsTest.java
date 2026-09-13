@@ -23,15 +23,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.SignatureException;
 import java.util.Locale;
 
@@ -41,15 +39,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 public class PgPUtilsTest {
-    @BeforeEach
-    void setUp() throws IOException {
-        FileMutatorUtils.createDirectories(Paths.get("temp"));
-    }
-
-    @AfterEach
-    void tearDown() throws IOException {
-        FileMutatorUtils.deleteFileOrDirectory(Paths.get("temp"));
-    }
+    @TempDir
+    Path tempDirPath;
 
     @Test
     public void testReadPgpPublicKeyRing() {
@@ -92,7 +83,7 @@ public class PgPUtilsTest {
     }
 
     private PGPPublicKeyRing getPGPPublicKeyRing(String fileName) throws IOException, PGPException {
-        Path filePath = Paths.get("temp", fileName);
+        Path filePath = tempDirPath.resolve(fileName);
         try {
             try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
                  OutputStream out = FileMutatorUtils.newOutputStream(filePath)) {
@@ -105,7 +96,7 @@ public class PgPUtilsTest {
     }
 
     private PGPSignature getPGPSignature(String fileName) throws IOException, SignatureException {
-        Path filePath = Paths.get("temp", fileName);
+        Path filePath = tempDirPath.resolve(fileName);
         try {
             try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
                  OutputStream out = FileMutatorUtils.newOutputStream(filePath)) {
@@ -118,10 +109,10 @@ public class PgPUtilsTest {
     }
 
     private Path getDataAsFilePath(String fileName) throws IOException {
-        Path filePath = Paths.get("temp", fileName);
+        Path filePath = tempDirPath.resolve(fileName);
         try {
-            try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName)) {
-                OutputStream out = FileMutatorUtils.newOutputStream(filePath);
+            try (InputStream resource = FileReaderUtils.getResourceAsStream(fileName);
+                 OutputStream out = FileMutatorUtils.newOutputStream(filePath)) {
                 FileMutatorUtils.copy(resource, out);
             }
             return filePath;
