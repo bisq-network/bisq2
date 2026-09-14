@@ -15,26 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.web_socket.subscription;
+package bisq.api.dto.chat.common;
 
-public enum Topic {
-    MARKET_PRICE,
-    NUM_OFFERS,
-    OFFERS,
-    TRADES,
-    TRADE_PROPERTIES,
-    TRADE_CHAT_MESSAGES,
-    CHAT_REACTIONS,
-    REPUTATION,
-    NUM_USER_PROFILES,
-    ALERT_NOTIFICATIONS,
-    TRADE_RESTRICTING_ALERT,
-    NETWORK_INFO,
-    PRIVATE_CHAT_CHANNELS,
-    PRIVATE_CHAT_MESSAGES,
-    PRIVATE_CHAT_REACTIONS,
-    CONTACTS,
-    PUBLIC_CHAT_CHANNELS,
-    PUBLIC_CHAT_MESSAGES,
-    PUBLIC_CHAT_REACTIONS,
+import bisq.api.dto.chat.ChatChannelDomainDto;
+
+public record CommonPublicChatChannelDto(String id,
+                                         ChatChannelDomainDto chatChannelDomain,
+                                         String title,
+                                         String description,
+                                         long unreadCount) {
 }

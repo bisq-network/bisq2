@@ -55,6 +55,7 @@ public final class RestPermissionMapping implements PermissionMapping {
                 new PermissionRule("^/trade-chat-channels(/.*)?$", Optional.empty(), Permission.TRADE_CHAT_CHANNELS),
                 new PermissionRule("^/private-chat-channels(/.*)?$", Optional.empty(), Permission.PRIVATE_CHAT_CHANNELS),
                 new PermissionRule("^/contacts(/.*)?$", Optional.empty(), Permission.CONTACTS),
+                new PermissionRule("^/public-chat-channels(/.*)?$", Optional.empty(), Permission.PUBLIC_CHAT_CHANNELS),
                 new PermissionRule("^/explorer(/.*)?$", Optional.empty(), Permission.EXPLORER),
                 new PermissionRule("^/market-price(/.*)?$", Optional.empty(), Permission.MARKET_PRICE),
                 new PermissionRule("^/offerbook(/.*)?$", Optional.empty(), Permission.OFFERBOOK),

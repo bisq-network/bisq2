@@ -67,7 +67,8 @@ public enum Permission implements ProtoEnum {
     // reference pseudonymous profiles, and PAYMENT_ACCOUNTS and PRIVATE_CHAT_CHANNELS already put
     // strictly more sensitive data behind STANDARD — so existing pairings gain contacts on node
     // upgrade without re-pairing.
-    CONTACTS(13, Kind.STANDARD);
+    CONTACTS(13, Kind.STANDARD),
+    PUBLIC_CHAT_CHANNELS(14, Kind.STANDARD);
 
     /** Grant classification. Named so a declaration reads as an explicit security decision. */
     public enum Kind {

@@ -22,6 +22,7 @@ import bisq.api.access.permissions.PermissionService;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
 import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
+import bisq.api.rest_api.endpoints.chat.public_chat.PublicChatRestApi;
 import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.web_socket.domain.BaseWebSocketService;
@@ -101,6 +102,7 @@ class ConfigRestApiTest {
         assertThat(ApiFeature.NETWORK_INFO.getKey()).isEqualTo("network-info");
         assertThat(ApiFeature.PRIVATE_CHAT.getKey()).isEqualTo("private-chat");
         assertThat(ApiFeature.CONTACTS.getKey()).isEqualTo("contacts");
+        assertThat(ApiFeature.PUBLIC_CHAT.getKey()).isEqualTo("public-chat");
     }
 
     /**
@@ -134,7 +136,7 @@ class ConfigRestApiTest {
                     yield true;
                 }
                 case PRIVATE_CHAT -> {
-                    assertThat(hasPostEndpoint(PrivateChatRestApi.class, "/{channelId}/messages"))
+                    assertThat(hasPostEndpoint(PrivateChatRestApi.class, "/private-chat-channels", "/{channelId}/messages"))
                             .as("private-chat must expose POST /private-chat-channels/{channelId}/messages")
                             .isTrue();
                     // Resolved through a real SubscriptionService, as the NETWORK_INFO case does. That
@@ -156,6 +158,19 @@ class ConfigRestApiTest {
                     assertThat(topicOf(routeTopic(Topic.CONTACTS)))
                             .as("contacts needs %s wired to a WebSocketService", Topic.CONTACTS)
                             .isEqualTo(Topic.CONTACTS);
+                    yield true;
+                }
+                case PUBLIC_CHAT -> {
+                    assertThat(hasPostEndpoint(PublicChatRestApi.class, "/public-chat-channels", "/{channelId}/messages"))
+                            .as("public-chat must expose POST /public-chat-channels/{channelId}/messages")
+                            .isTrue();
+                    for (Topic topic : List.of(Topic.PUBLIC_CHAT_CHANNELS,
+                            Topic.PUBLIC_CHAT_MESSAGES,
+                            Topic.PUBLIC_CHAT_REACTIONS)) {
+                        assertThat(topicOf(routeTopic(topic)))
+                                .as("public-chat needs %s wired to a WebSocketService", topic)
+                                .isEqualTo(topic);
+                    }
                     yield true;
                 }
             };
@@ -231,11 +246,6 @@ class ConfigRestApiTest {
     private static boolean hasClassPath(Class<?> resource, String classPath) {
         Path annotation = resource.getAnnotation(Path.class);
         return annotation != null && annotation.value().equals(classPath);
-    }
-
-    private static boolean hasPostEndpoint(Class<?> resource, String path) {
-        return Arrays.stream(resource.getDeclaredMethods())
-                .anyMatch(m -> m.isAnnotationPresent(POST.class) && isPath(m, path));
     }
 
     private static boolean isPath(Method method, String path) {

@@ -47,6 +47,7 @@ public final class SubscriptionPermissionMapping {
             case ALERT_NOTIFICATIONS, TRADE_RESTRICTING_ALERT -> Permission.SETTINGS;
             case NETWORK_INFO -> Permission.NETWORK_INFO;
             case CONTACTS -> Permission.CONTACTS;
+            case PUBLIC_CHAT_CHANNELS, PUBLIC_CHAT_MESSAGES, PUBLIC_CHAT_REACTIONS -> Permission.PUBLIC_CHAT_CHANNELS;
         };
     }
 }

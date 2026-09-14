@@ -19,6 +19,7 @@ package bisq.api.rest_api.endpoints.chat.private_chat;
 
 import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
 import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
+import bisq.api.rest_api.endpoints.chat.SendRefusedResponse;
 import bisq.api.dto.chat.CitationDto;
 import bisq.api.dto.chat.SendRejectionDto;
 import bisq.chat.ChatChannelDomain;
@@ -159,19 +160,21 @@ class PrivateChatRestApiTest {
     }
 
     /**
-     * The citation is not checked by the endpoint on purpose: {@code Citation} verifies its own length in
-     * its constructor. This pins that, so the endpoint check is not added the day the constructor stops.
+     * Rejected by {@code ChatRequestValidation} rather than by the {@code Citation} constructor, whose
+     * message appends the offending input: the body must not hand the client back what it just sent.
+     * Both chat endpoints share that check.
      */
     @Test
     void aCitationLongerThanItsLimitIsRejectedAsBadRequest() {
         TwoPartyPrivateChatChannel channel = mock(TwoPartyPrivateChatChannel.class, RETURNS_DEEP_STUBS);
         when(channelService.findChannel(CHANNEL_ID)).thenReturn(Optional.of(channel));
-        CitationDto citation = new CitationDto(AUTHOR_PROFILE_ID, "x".repeat(Citation.MAX_TEXT_LENGTH + 1),
-                Optional.empty());
+        String citationText = "x".repeat(Citation.MAX_TEXT_LENGTH + 1);
+        CitationDto citation = new CitationDto(AUTHOR_PROFILE_ID, citationText, Optional.empty());
 
         restApi.sendTextMessage(CHANNEL_ID, new SendChatMessageRequest("hi", citation), asyncResponse);
 
         assertThat(status()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        assertThat(resumedEntity().toString()).doesNotContain(citationText);
         verifyNoMessageSent();
     }
 
