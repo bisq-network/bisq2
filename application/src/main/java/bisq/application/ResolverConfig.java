@@ -56,6 +56,7 @@ import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsResponse;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
+import bisq.support.mediation.mu_sig.MuSigMediationResultRejectionMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
@@ -137,6 +138,7 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("support.MuSigMediationRequest", MuSigMediationRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigMediationStateChangeMessage", MuSigMediationStateChangeMessage.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigMediationResultAcceptanceMessage", MuSigMediationResultAcceptanceMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigMediationResultRejectionMessage", MuSigMediationResultRejectionMessage.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigDisputeCasePaymentDetailsRequest", MuSigDisputeCasePaymentDetailsRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigDisputeCasePaymentDetailsResponse", MuSigDisputeCasePaymentDetailsResponse.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MuSigArbitrationRequest", MuSigArbitrationRequest.getNetworkMessageResolver());

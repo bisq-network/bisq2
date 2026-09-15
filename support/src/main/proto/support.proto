@@ -122,6 +122,12 @@ message MuSigMediationResultAcceptanceMessage {
   bool mediationResultAccepted = 3;
 }
 
+message MuSigMediationResultRejectionMessage {
+  string tradeId = 1;
+  network.identity.NetworkId senderNetworkId = 2;
+  bytes mediationResultHash = 3;
+}
+
 enum MuSigMediationIssueType {
   MUSIGMEDIATIONISSUETYPE_UNSPECIFIED = 0;
   MUSIGMEDIATIONISSUETYPE_PEER_CONTRACT_HASH_MISMATCH = 1;
