@@ -2,7 +2,10 @@
 
 ### Scope
 
-This document describes the mediation process from the perspective of a trader.
+This document describes the current mediation implementation from the perspective of a trader.
+
+The proposed target behavior for cooperative custom payout is documented in the
+[canonical MuSig mediation specifications](../../../../../../../../docs/specs/trade/mu_sig/mediation/README.md).
 
 In scope:
 
