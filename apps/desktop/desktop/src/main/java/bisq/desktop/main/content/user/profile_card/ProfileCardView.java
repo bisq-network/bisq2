@@ -44,7 +44,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
     private final TabButton offersTabButton, messagesTabButton, myNotesTabButton;
     private UserProfileIcon userProfileIcon;
     private ReputationScoreDisplay reputationScoreDisplay;
-    private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, rankingLabel;
+    private Label userNickNameLabel, userNymLabel, totalRepScoreLabel, completedTradesWithUserLabel, rankingLabel;
     private BisqMenuItem sendPrivateMsg, addToContacts, inMyContactList, ignore, undoIgnore, report;
     private Button closeButton;
     private HBox userActionsBox;
@@ -99,6 +99,10 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
             totalRepScoreLabel.setText(String.valueOf(reputationScore.getTotalScore()));
             rankingLabel.setText(reputationScore.getRankingAsString());
         }
+
+        completedTradesWithUserLabel.setVisible(!model.getNumPastTradesText().isEmpty());
+        completedTradesWithUserLabel.setManaged(!model.getNumPastTradesText().isEmpty());
+        completedTradesWithUserLabel.setText(model.getNumPastTradesText());
 
         addToContacts.visibleProperty().bind(model.getIsUserInMyContactList().not());
         addToContacts.managedProperty().bind(model.getIsUserInMyContactList().not());
@@ -163,6 +167,10 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
         HBox totalRepScoreBox = new HBox(5, totalRepScoreTitleLabel, totalRepScoreLabel);
         totalRepScoreBox.getStyleClass().add("total-score-box");
 
+        completedTradesWithUserLabel = new Label();
+        completedTradesWithUserLabel.getStyleClass().add("text-fill-grey-dimmed");
+        VBox totalRepScoreAndCompletedTradesBox = new VBox(2, totalRepScoreBox, completedTradesWithUserLabel);
+
         Label rankigTitleLabel = new Label(Res.get("user.profileCard.reputation.ranking"));
         rankigTitleLabel.getStyleClass().add("text-fill-grey-dimmed");
         rankingLabel = new Label();
@@ -194,7 +202,7 @@ public class ProfileCardView extends TabView<ProfileCardModel, ProfileCardContro
                 Res.get("user.profileCard.userActions.report"));
 
         HBox userNameBox = new HBox(10, bondedRoleBadge, userNickNameLabel, userNymLabel);
-        HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreBox, rankingBox);
+        HBox reputationBox = new HBox(30, reputationScoreDisplay, totalRepScoreAndCompletedTradesBox, rankingBox);
         reputationBox.setAlignment(Pos.BOTTOM_LEFT);
         userActionsBox = new HBox(30, sendPrivateMsg, addToContacts, inMyContactList, ignore, undoIgnore, report);
         VBox userNameReputationAndActionsBox = new VBox(5, userNameBox, reputationBox, Spacer.fillVBox(), userActionsBox);

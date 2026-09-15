@@ -32,10 +32,12 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -57,6 +59,11 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     private String userProfileInfo = "";
     private String livenessState = "";
     private String versionInfo = "";
+    @Setter
+    @Getter
+    private int numPastTrades;
+    private String numPastTradesText;
+    private final Label badge = new Label();
     private final LivenessScheduler livenessScheduler;
     private final ChangeListener<Scene> sceneChangeListener;
     private double size;
@@ -70,7 +77,11 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         setSize(size);
 
         setAlignment(Pos.CENTER);
-        getChildren().addAll(catHashImageView, livenessIndicator);
+
+        badge.visibleProperty().set(false);
+        badge.managedProperty().set(false);
+
+        getChildren().addAll(catHashImageView, badge, livenessIndicator);
         sceneChangeListener = (ov, oldValue, newScene) -> handleSceneChange(oldValue, newScene);
     }
 
@@ -88,8 +99,37 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     }
 
     private void updateTooltipText() {
-        tooltipText = userProfileInfo + livenessState + versionInfo;
+        if(numPastTradesText == null) {
+            tooltipText = userProfileInfo + livenessState + versionInfo;
+        }
+        else {
+            tooltipText = userProfileInfo + "\n" + numPastTradesText + livenessState + versionInfo;
+        }
         tooltip.setText(tooltipText);
+    }
+
+    public void updatePastTradesBadge() {
+        if (numPastTrades > 0) {
+            badge.managedProperty().set(true);
+            badge.visibleProperty().set(true);
+            setAlignment(badge, Pos.BOTTOM_LEFT);
+
+            if (numPastTrades > 99) {
+                badge.setText("99+");
+            } else {
+                badge.setText(String.valueOf(numPastTrades));
+            }
+
+            if (size > 40) {
+                badge.getStyleClass().add("bisq-easy-past-trades-count");
+                numPastTradesText = Res.get("user.userProfile.pastBisqEasyTradesWithPeer", numPastTrades);
+            } else {
+                badge.getStyleClass().add("mu-sig-past-trades-count");
+                numPastTradesText = Res.get("user.userProfile.pastMusigTradesWithPeer", numPastTrades);
+            }
+
+            updateTooltipText();
+        }
     }
 
     public void setUserProfile(@Nullable UserProfile userProfile) {

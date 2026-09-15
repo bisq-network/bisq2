@@ -79,6 +79,8 @@ public final class PeerOfferMessageBox extends PeerTextMessageBox {
     protected void setUpPeerMessage() {
         // User profile icon
         userProfileIcon.setSize(OFFER_MESSAGE_USER_ICON_SIZE);
+        userProfileIcon.setNumPastTrades(item.getPastTradesCount());
+        userProfileIcon.updatePastTradesBadge();
         userProfileIconVbox.getChildren().addAll(item.getReputationScoreDisplay(), Spacer.fillVBox(), supportedLanguagesHBox);
         supportedLanguagesHBox.setAlignment(Pos.CENTER);
         userProfileIconVbox.setSpacing(10);

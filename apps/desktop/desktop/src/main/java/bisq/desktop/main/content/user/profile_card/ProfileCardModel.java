@@ -46,6 +46,8 @@ public class ProfileCardModel extends TabModel {
     private String offersTabButtonText;
     @Setter
     private String messagesTabButtonText;
+    @Setter
+    private String numPastTradesText;
 
     private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
     private final BooleanProperty isUserInMyContactList = new SimpleBooleanProperty();
