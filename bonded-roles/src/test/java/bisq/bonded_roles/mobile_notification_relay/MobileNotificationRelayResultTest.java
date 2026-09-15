@@ -102,6 +102,45 @@ class MobileNotificationRelayResultTest {
     }
 
     @Test
+    void isRecoverable_trueForTransientGatewayCodes() {
+        // FCM codes its docs mark as retriable, and APNs gateway-outage/throttling reasons.
+        for (String code : new String[]{"UNAVAILABLE", "INTERNAL", "QUOTA_EXCEEDED",
+                "ServiceUnavailable", "InternalServerError", "TooManyRequests", "Shutdown"}) {
+            MobileNotificationRelayResult result = MobileNotificationRelayResult.fromJson(
+                    "{\"wasAccepted\":false,\"errorCode\":\"" + code + "\",\"isUnregistered\":false}").orElseThrow();
+            assertThat(result.isRecoverable()).as("errorCode %s", code).isTrue();
+        }
+    }
+
+    @Test
+    void isRecoverable_falseForPermanentAndUnknownCodes() {
+        for (String code : new String[]{"UNREGISTERED", "INVALID_ARGUMENT", "SENDER_ID_MISMATCH",
+                "THIRD_PARTY_AUTH_ERROR", "BadDeviceToken", "Unregistered", "SomeFutureCode"}) {
+            MobileNotificationRelayResult result = MobileNotificationRelayResult.fromJson(
+                    "{\"wasAccepted\":false,\"errorCode\":\"" + code + "\",\"isUnregistered\":false}").orElseThrow();
+            assertThat(result.isRecoverable()).as("errorCode %s", code).isFalse();
+        }
+    }
+
+    @Test
+    void isRecoverable_neverTrueForUnregisteredOrAcceptedResults() {
+        // A prune verdict is permanent even if a buggy relay pairs it with a transient code,
+        // and an accepted result has nothing to recover from.
+        MobileNotificationRelayResult unregistered = MobileNotificationRelayResult.fromJson(
+                "{\"wasAccepted\":false,\"errorCode\":\"UNAVAILABLE\",\"isUnregistered\":true}").orElseThrow();
+        assertThat(unregistered.isRecoverable()).isFalse();
+
+        assertThat(MobileNotificationRelayResult.accepted().isRecoverable()).isFalse();
+    }
+
+    @Test
+    void isRecoverable_falseWithoutAnErrorCode() {
+        MobileNotificationRelayResult result = MobileNotificationRelayResult.fromJson(
+                "{\"wasAccepted\":false,\"isUnregistered\":false}").orElseThrow();
+        assertThat(result.isRecoverable()).isFalse();
+    }
+
+    @Test
     void accepted_isAnAcceptedResultWithoutErrorDetails() {
         MobileNotificationRelayResult result = MobileNotificationRelayResult.accepted();
 

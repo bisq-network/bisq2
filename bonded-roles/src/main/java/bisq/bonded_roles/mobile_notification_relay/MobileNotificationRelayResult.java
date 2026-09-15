@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The relay's answer to a push dispatch, mirroring bisq-relay's {@code PushNotificationResult}.
@@ -37,8 +38,32 @@ public record MobileNotificationRelayResult(boolean wasAccepted,
                                             Optional<String> errorMessage,
                                             boolean isUnregistered) {
 
+    /**
+     * Gateway verdicts that signal transient upstream trouble, not a problem with the request:
+     * FCM {@code MessagingErrorCode} values its docs mark as retriable, and the APNs rejection
+     * reasons for gateway-side outages and throttling. The relay answers all of them with 400,
+     * so the HTTP status alone cannot separate them from permanent rejections. Unknown codes
+     * stay non-recoverable: retrying an unclassified rejection risks hammering the gateway,
+     * while failing fast merely skips a failover attempt.
+     */
+    private static final Set<String> RECOVERABLE_GATEWAY_ERROR_CODES = Set.of(
+            // FCM
+            "UNAVAILABLE", "INTERNAL", "QUOTA_EXCEEDED",
+            // APNs
+            "ServiceUnavailable", "InternalServerError", "TooManyRequests", "Shutdown");
+
     public static MobileNotificationRelayResult accepted() {
         return new MobileNotificationRelayResult(true, Optional.empty(), Optional.empty(), false);
+    }
+
+    /**
+     * Whether this rejection is worth another delivery attempt (against another relay
+     * provider). Never true for {@code isUnregistered} — that is a permanent verdict.
+     */
+    public boolean isRecoverable() {
+        return !wasAccepted
+                && !isUnregistered
+                && errorCode.map(RECOVERABLE_GATEWAY_ERROR_CODES::contains).orElse(false);
     }
 
     /**

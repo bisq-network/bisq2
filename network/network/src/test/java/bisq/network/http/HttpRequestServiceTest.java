@@ -46,7 +46,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Pins the retry/failover classification documented in {@link HttpRequestService}'s JavaDoc:
- * HTTP responses are server-level (4xx never retried; 5xx gated on the request descriptor),
+ * HTTP responses are server-level (4xx never retried unless the subclass reclassifies it via
+ * {@code isRecoverableClientError}; 5xx gated on the request descriptor),
  * everything else is transport-level and always retried. Both transports must feed the same
  * exception shape in — an {@link HttpException} root cause carrying status code and body —
  * for the classification to hold; these tests exercise the framework with exactly the shape
@@ -90,6 +91,40 @@ class HttpRequestServiceTest {
             assertThat(httpException.getMessage()).isEqualTo(REJECTION_BODY);
         });
         assertThat(attempts).as("400 is a caller error — must not fail over to the second provider").hasValue(1);
+    }
+
+    @Test
+    void recoverable400_onPostOptedIntoServerErrorRetry_failsOverToOtherProvider() {
+        AtomicInteger attempts = new AtomicInteger();
+        TestHttpRequestService service = newService(HttpMethod.POST, true, attempts,
+                () -> {
+                    throw asClientWouldThrow(400, "{\"transient\":true}");
+                });
+        service.treat400AsRecoverable = true;
+
+        CompletableFuture<String> future = service.request("data");
+
+        assertThatThrownBy(future::join).isNotNull();
+        assertThat(attempts)
+                .as("a 4xx the subclass reclassifies as recoverable must reach the second provider")
+                .hasValue(2);
+    }
+
+    @Test
+    void recoverable400_onNonIdempotentPost_isStillNotRetried() {
+        AtomicInteger attempts = new AtomicInteger();
+        TestHttpRequestService service = newService(HttpMethod.POST, false, attempts,
+                () -> {
+                    throw asClientWouldThrow(400, "{\"transient\":true}");
+                });
+        service.treat400AsRecoverable = true;
+
+        CompletableFuture<String> future = service.request("data");
+
+        assertThatThrownBy(future::join).isNotNull();
+        assertThat(attempts)
+                .as("reclassification moves a 4xx into the server-level bucket — the method gate still applies")
+                .hasValue(1);
     }
 
     @Test
@@ -223,6 +258,7 @@ class HttpRequestServiceTest {
     private static final class TestHttpRequestService extends HttpRequestService<String, String> {
         private final HttpMethod method;
         private final boolean retryOnServerError;
+        private volatile boolean treat400AsRecoverable;
 
         TestHttpRequestService(HttpRequestServiceConfig conf,
                                NetworkService networkService,
@@ -243,6 +279,11 @@ class HttpRequestServiceTest {
             return method == HttpMethod.GET
                     ? HttpRequest.get("api/path")
                     : HttpRequest.post("/api/path", "{}", new Pair<>("Content-Type", "application/json"), retryOnServerError);
+        }
+
+        @Override
+        protected boolean isRecoverableClientError(HttpException httpException) {
+            return treat400AsRecoverable && httpException.getResponseCode() == 400;
         }
     }
 }

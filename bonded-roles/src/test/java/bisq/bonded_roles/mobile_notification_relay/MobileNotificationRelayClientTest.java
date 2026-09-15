@@ -17,8 +17,12 @@
 
 package bisq.bonded_roles.mobile_notification_relay;
 
+import bisq.common.data.Pair;
+import bisq.common.facades.FacadeProvider;
+import bisq.common.facades.android.AndroidJdkFacade;
 import bisq.common.network.TransportType;
 import bisq.network.NetworkService;
+import bisq.network.http.BaseHttpClient;
 import bisq.network.http.HttpRequest;
 import bisq.network.http.HttpRequestServiceConfig;
 import bisq.network.http.HttpRequestUrlProvider;
@@ -27,6 +31,7 @@ import bisq.network.http.utils.HttpMethod;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -36,9 +41,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +53,13 @@ class MobileNotificationRelayClientTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final List<TestableRelayClient> openedClients = new ArrayList<>();
+
+    @BeforeAll
+    static void setUp() {
+        // request() routes exceptionallyCompose through the JdkFacade, which is normally
+        // registered at application bootstrap. The Android variant runs on any JVM.
+        FacadeProvider.setJdkFacade(new AndroidJdkFacade(0));
+    }
 
     @AfterEach
     void tearDown() {
@@ -204,6 +218,26 @@ class MobileNotificationRelayClientTest {
     }
 
     @Test
+    void structuredRejection_ignores400CarryingAnAcceptedBody() {
+        // A body contradicting the 400 status (buggy or hostile relay) must not turn an
+        // error into a delivery — the exceptional outcome is preserved.
+        Throwable chain = new CompletionException(new IOException("Request failed",
+                new HttpException("{\"wasAccepted\":true}", 400)));
+
+        assertThat(MobileNotificationRelayClient.structuredRejection(chain)).isEmpty();
+    }
+
+    @Test
+    void structuredRejection_ignores400CarryingARecoverableRejection() {
+        // A transient gateway rejection is retry material, never a final verdict — even if
+        // the retry pipeline hands it over with the response still in the exception chain.
+        Throwable chain = new CompletionException(new IOException("Request failed",
+                new HttpException("{\"wasAccepted\":false,\"errorCode\":\"UNAVAILABLE\"}", 400)));
+
+        assertThat(MobileNotificationRelayClient.structuredRejection(chain)).isEmpty();
+    }
+
+    @Test
     void structuredRejection_ignoresServerErrorsAndTransportFailures() {
         // 500 carries no verdict (relay answers it with an empty body) and a transport
         // failure never reached the relay — both are transient, never a rejection.
@@ -213,6 +247,64 @@ class MobileNotificationRelayClientTest {
 
         assertThat(MobileNotificationRelayClient.structuredRejection(serverError)).isEmpty();
         assertThat(MobileNotificationRelayClient.structuredRejection(transportFailure)).isEmpty();
+    }
+
+    @Test
+    void isRecoverableClientError_reclassifiesTransientGatewayRejections() {
+        TestableRelayClient client = newClient();
+
+        // The relay answers FCM UNAVAILABLE (and peers) with 400 — without reclassification
+        // the framework would fail fast and never try another relay provider.
+        assertThat(client.publicIsRecoverableClientError(new HttpException(
+                "{\"wasAccepted\":false,\"errorCode\":\"UNAVAILABLE\",\"isUnregistered\":false}", 400)))
+                .isTrue();
+
+        // Permanent verdicts, unstructured bodies and non-400 responses keep the default rule.
+        assertThat(client.publicIsRecoverableClientError(new HttpException(
+                "{\"wasAccepted\":false,\"errorCode\":\"UNREGISTERED\",\"isUnregistered\":true}", 400)))
+                .isFalse();
+        assertThat(client.publicIsRecoverableClientError(new HttpException(
+                "{\"status\":400,\"error\":\"Bad Request\"}", 400)))
+                .isFalse();
+        assertThat(client.publicIsRecoverableClientError(new HttpException(
+                "{\"wasAccepted\":false,\"errorCode\":\"UNAVAILABLE\",\"isUnregistered\":false}", 403)))
+                .isFalse();
+    }
+
+    @Test
+    void transientGatewayRejection_failsOverToSecondProviderAndSucceeds() {
+        // The regression a reviewer reproduced over SOCKS: relay 1's gateway push fails with
+        // FCM UNAVAILABLE (answered as 400), relay 2 delivers. The dispatch must reach relay 2.
+        AtomicInteger attempts = new AtomicInteger();
+        TestableRelayClient client = newFailoverClient(attempts, () -> {
+            if (attempts.get() == 1) {
+                throw new IOException("Request failed", new HttpException(
+                        "{\"wasAccepted\":false,\"errorCode\":\"UNAVAILABLE\",\"isUnregistered\":false}", 400));
+            }
+            return "{\"wasAccepted\":true,\"isUnregistered\":false}";
+        });
+
+        MobileNotificationRelayResult result =
+                client.sendToRelayServer(true, "tok", "ZW5jcnlwdGVk", false).join();
+
+        assertThat(attempts).hasValue(2);
+        assertThat(result.wasAccepted()).isTrue();
+    }
+
+    @Test
+    void permanentGatewayRejection_doesNotFailOver_andSurfacesTheVerdict() {
+        AtomicInteger attempts = new AtomicInteger();
+        TestableRelayClient client = newFailoverClient(attempts, () -> {
+            throw new IOException("Request failed", new HttpException(
+                    "{\"wasAccepted\":false,\"errorCode\":\"UNREGISTERED\",\"isUnregistered\":true}", 400));
+        });
+
+        MobileNotificationRelayResult result =
+                client.sendToRelayServer(true, "tok", "ZW5jcnlwdGVk", false).join();
+
+        assertThat(attempts).as("a dead token fails the same way everywhere — no second attempt").hasValue(1);
+        assertThat(result.wasAccepted()).isFalse();
+        assertThat(result.isUnregistered()).isTrue();
     }
 
     @Test
@@ -250,6 +342,50 @@ class MobileNotificationRelayClientTest {
         return client;
     }
 
+    /** Two providers backed by the given stub response, so a failover shows as a second attempt. */
+    private TestableRelayClient newFailoverClient(AtomicInteger attempts, StubResponse stubResponse) {
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.CLEAR));
+        when(networkService.getHttpClient(any(), any(), any(), any()))
+                .thenAnswer(invocation -> new StubHttpClient(attempts, stubResponse));
+        HttpRequestServiceConfig conf = new HttpRequestServiceConfig(60L,
+                Set.of(new HttpRequestUrlProvider("https://relay-1.example/", "op1", "/legacy", TransportType.CLEAR),
+                        new HttpRequestUrlProvider("https://relay-2.example/", "op2", "/legacy", TransportType.CLEAR)),
+                Set.of());
+        TestableRelayClient client = new TestableRelayClient(conf, networkService);
+        openedClients.add(client);
+        return client;
+    }
+
+    @FunctionalInterface
+    private interface StubResponse {
+        String respond() throws IOException;
+    }
+
+    private static final class StubHttpClient extends BaseHttpClient {
+        private final AtomicInteger attempts;
+        private final StubResponse stubResponse;
+
+        StubHttpClient(AtomicInteger attempts, StubResponse stubResponse) {
+            super("https://stub.example", "https://stub.example", "test-agent");
+            this.attempts = attempts;
+            this.stubResponse = stubResponse;
+        }
+
+        @Override
+        protected String doRequest(String param,
+                                   HttpMethod httpMethod,
+                                   Optional<Pair<String, String>> optionalHeader) throws IOException {
+            attempts.incrementAndGet();
+            return stubResponse.respond();
+        }
+
+        @Override
+        public CompletableFuture<Boolean> shutdown() {
+            return CompletableFuture.completedFuture(true);
+        }
+    }
+
     private static HttpRequestUrlProvider stubProvider() {
         return new HttpRequestUrlProvider("https://relay.example/", "operator", "/legacy", TransportType.CLEAR);
     }
@@ -267,6 +403,10 @@ class MobileNotificationRelayClientTest {
 
         MobileNotificationRelayResult publicParseResult(String json) {
             return parseResult(json);
+        }
+
+        boolean publicIsRecoverableClientError(HttpException httpException) {
+            return isRecoverableClientError(httpException);
         }
     }
 }

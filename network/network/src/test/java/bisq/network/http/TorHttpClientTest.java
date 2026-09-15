@@ -19,14 +19,18 @@ package bisq.network.http;
 
 import bisq.common.util.ExceptionUtil;
 import bisq.network.http.utils.HttpException;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicClassicHttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 class TorHttpClientTest {
 
@@ -56,6 +60,44 @@ class TorHttpClientTest {
         TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", null);
 
         assertThat(client.readBody(new BasicClassicHttpResponse(500))).isEmpty();
+    }
+
+    @Test
+    void processResponse_keepsTheStatusWhenTheErrorBodyIsUnreadable() {
+        // A failed body read must not demote a server answer to a retriable transport
+        // failure: the 400 still surfaces as an HttpException so retry gating holds.
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", null);
+        BasicClassicHttpResponse response = new BasicClassicHttpResponse(400);
+        response.setEntity(new InputStreamEntity(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                throw new IOException("stream reset");
+            }
+        }, ContentType.APPLICATION_JSON));
+
+        Throwable thrown = catchThrowable(() -> client.processResponse(response, "param", 0));
+
+        assertThat(ExceptionUtil.getRootCause(thrown)).isInstanceOfSatisfying(HttpException.class,
+                httpException -> assertThat(httpException.getResponseCode()).isEqualTo(400));
+    }
+
+    @Test
+    void processResponse_keepsAnUnreadableSuccessBodyTransportLevel() {
+        // A 2xx with an unreadable body has no result to return; it stays an IOException
+        // (transport-level) rather than fabricating an HTTP failure.
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", null);
+        BasicClassicHttpResponse response = new BasicClassicHttpResponse(200);
+        response.setEntity(new InputStreamEntity(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                throw new IOException("stream reset");
+            }
+        }, ContentType.APPLICATION_JSON));
+
+        Throwable thrown = catchThrowable(() -> client.processResponse(response, "param", 0));
+
+        assertThat(thrown).isInstanceOf(IOException.class);
+        assertThat(ExceptionUtil.getRootCause(thrown)).isNotInstanceOf(HttpException.class);
     }
 
     @Test
