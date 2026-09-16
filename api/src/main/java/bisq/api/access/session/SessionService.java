@@ -57,4 +57,14 @@ public class SessionService {
     public void remove(String sessionId) {
         sessionTokenBySessionIdMap.remove(sessionId);
     }
+
+    /**
+     * Removes all active sessions belonging to the given client.
+     * Called during client revocation to immediately invalidate any live session.
+     *
+     * @param clientId The client ID whose sessions should be invalidated
+     */
+    public void removeSessionByClientId(String clientId) {
+        sessionTokenBySessionIdMap.values().removeIf(token -> clientId.equals(token.getClientId()));
+    }
 }

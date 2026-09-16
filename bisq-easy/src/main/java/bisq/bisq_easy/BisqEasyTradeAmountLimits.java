@@ -56,6 +56,12 @@ public class BisqEasyTradeAmountLimits {
     public static final long MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER = 1200;
     private static final Set<String> SELL_OFFERS_WITH_INSUFFICIENT_REPUTATION = new HashSet<>();
 
+    // Exposes the otherwise-private reputation-per-USD constant so the Connect config API (and any
+    // single-source-of-truth reader) can surface it without duplicating the literal.
+    public static double getRequiredReputationScorePerUsd() {
+        return REQUIRED_REPUTATION_SCORE_PER_USD;
+    }
+
     public static Optional<Monetary> getMinQuoteSideTradeAmount(MarketPriceService marketPriceService, Market market) {
         return marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
                 .map(priceQuote -> priceQuote.toBaseSideMonetary(DEFAULT_MIN_USD_TRADE_AMOUNT))

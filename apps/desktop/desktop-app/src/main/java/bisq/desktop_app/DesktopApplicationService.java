@@ -20,6 +20,7 @@ package bisq.desktop_app;
 import bisq.account.AccountService;
 import bisq.api.ApiConfig;
 import bisq.api.ApiService;
+import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.application.ShutDownHandler;
 import bisq.application.State;
@@ -108,6 +109,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final WebcamAppService webcamAppService;
     private final ApiService apiService;
     private final OpenTradeItemsService openTradeItemsService;
+    private final ClosedTradeItemsService closedTradeItemsService;
     private final MuSigService muSigService;
     private final BurningmanService burningmanService;
 
@@ -222,6 +224,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         webcamAppService = new WebcamAppService(config);
 
         openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
+        closedTradeItemsService = new ClosedTradeItemsService(tradeService, userService);
 
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         apiService = new ApiService(apiConfig,
@@ -237,6 +240,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 settingsService,
                 bisqEasyService,
                 openTradeItemsService,
+                closedTradeItemsService,
                 accountService,
                 userService.getReputationService(),
                 notificationService.getMobileNotificationService().getDeviceRegistrationService());
@@ -308,6 +312,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> dontShowAgainService.initialize())
                 .thenCompose(result -> webcamAppService.initialize())
                 .thenCompose(result -> openTradeItemsService.initialize())
+                .thenCompose(result -> closedTradeItemsService.initialize())
                 .thenCompose(result -> apiService.initialize())
                 .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
@@ -338,6 +343,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
         return supplyAsync(() -> apiService.shutdown().exceptionally(this::logError)
+                .thenCompose(result -> closedTradeItemsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> openTradeItemsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> webcamAppService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> dontShowAgainService.shutdown().exceptionally(this::logError))

@@ -46,4 +46,5 @@ public class TradePropertiesDto {
     public Optional<String> peersErrorMessage = Optional.empty();
     public Optional<String> peersErrorStackTrace = Optional.empty();
     public Optional<TradeProtocolFailureDto> peersTradeProtocolFailure = Optional.empty();
+    public Optional<Long> tradeCompletedDate = Optional.empty();
 }

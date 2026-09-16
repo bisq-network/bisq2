@@ -68,6 +68,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static bisq.settings.DontShowAgainKey.WELCOME;
 
@@ -99,8 +100,9 @@ public class DesktopController extends NavigationController {
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
-    private Pin referenceTimePin, httpServerErrorMessagePin;
+    private Pin referenceTimePin, httpServerErrorMessagePin, languageTagPin;
     private boolean systemClockDriftWarningDisplayed;
+    private final AtomicBoolean skipInitialLanguageTagUpdate = new AtomicBoolean();
 
     public DesktopController(Observable<State> applicationServiceState,
                              ServiceProvider serviceProvider,
@@ -184,6 +186,18 @@ public class DesktopController extends NavigationController {
     @Override
     public void onActivate() {
         preventStandbyModeService.initialize();
+        skipInitialLanguageTagUpdate.set(true);
+
+        languageTagPin = settingsService.getLanguageTag().addObserver(languageTag -> {
+            if (skipInitialLanguageTagUpdate.getAndSet(false)) {
+                return;
+            }
+
+            if (languageTag != null) {
+                UIThread.runOnNextRenderFrame(this::reloadUI);
+            }
+        });
+
         // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
         Navigation.navigateTo(NavigationTarget.SPLASH);
 
@@ -252,6 +266,7 @@ public class DesktopController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        languageTagPin.unbind();
         referenceTimePin.unbind();
         httpServerErrorMessagePin.unbind();
         UIClock.shutdown();
@@ -357,6 +372,15 @@ public class DesktopController extends NavigationController {
 
     void onStageHeightChanged(double value) {
         settingsService.setCookie(CookieKey.STAGE_H, value);
+    }
+
+    private void reloadUI() {
+        // Clear all cached sub-controllers so their views are rebuilt with the new language strings.
+        // resetResolvedTarget() ensures processNavigationTarget does not short-circuit when it sees
+        // the same resolved child target still set.
+        clearControllerCache();
+        resetResolvedTarget();
+        applyNavigationTarget();
     }
 
     private void onShutdown() {

@@ -1,0 +1,14 @@
+# Keep the docker build context lean. The api-app image builds from source, so we
+# need the Gradle wrapper, build scripts and module sources — but not generated
+# output, caches, VCS or IDE files.
+.git
+.gradle
+**/build
+**/.gradle
+.idea
+*.iml
+.DS_Store
+**/.DS_Store
+*.log
+.sdkmanrc
+docs

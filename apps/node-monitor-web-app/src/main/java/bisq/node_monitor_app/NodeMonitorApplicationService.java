@@ -21,10 +21,10 @@ import bisq.account.AccountService;
 import bisq.api.ApiConfig;
 import bisq.api.HttpServerBootstrapService;
 import bisq.api.access.ApiAccessService;
+import bisq.api.access.ClientRevocationService;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
@@ -64,6 +64,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.annotation.Nullable;
 import java.awt.*;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -179,13 +180,18 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         if (apiConfig.isRestEnabled()) {
             ApiAccessStoreService apiAccessStoreService = new ApiAccessStoreService(persistenceService);
-            PermissionService<RestPermissionMapping> permissionService = new PermissionService<>(apiAccessStoreService, new RestPermissionMapping());
+            PermissionService permissionService = new PermissionService(apiAccessStoreService);
             PairingService pairingService = new PairingService(apiConfig, config.getAppDataDirPath(), apiAccessStoreService, permissionService);
             SessionService sessionService = new SessionService(apiConfig.getSessionTtlInMinutes());
             TlsContextService tlsContextService = new TlsContextService(apiConfig, config.getAppDataDirPath());
             SessionAuthenticationService sessionAuthenticationService = new SessionAuthenticationService(pairingService, sessionService);
 
-            ApiAccessService apiAccessService = new ApiAccessService(pairingService, sessionService);
+            ClientRevocationService clientRevocationService = new ClientRevocationService(pairingService,
+                    sessionService,
+                    List.of());
+            ApiAccessService apiAccessService = new ApiAccessService(pairingService,
+                    sessionService,
+                    clientRevocationService);
             AccessApi accessApi = new AccessApi(apiAccessService);
 
             ResourceConfig resourceConfig = new NodeMonitorRestApiResourceConfig(apiConfig,
@@ -207,7 +213,6 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     resourceConfig,
                     Optional.empty(),
                     sessionAuthenticationService,
-                    permissionService,
                     tlsContextService));
         }
     }
