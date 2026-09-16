@@ -54,7 +54,7 @@ class BitcoinUriAmountValidatorTest {
     }
 
     @Test
-    void shouldAcceptBlank() {
+    void shouldAcceptEmptyInput() {
         textField.setText("");
 
         assertTrue(textField.validate());
@@ -208,7 +208,7 @@ class BitcoinUriAmountValidatorTest {
     }
 
     @Test
-    void shouldRejectWhitespaceOnly() {
+    void shouldAcceptWhitespaceOnly() {
         textField.setText("   ");
 
         assertTrue(textField.validate());
@@ -236,7 +236,7 @@ class BitcoinUriAmountValidatorTest {
     }
 
     @Test
-    void shouldRejectNullInput() {
+    void shouldAcceptNullInput() {
         textField.setText(null);
 
         assertTrue(textField.validate());
