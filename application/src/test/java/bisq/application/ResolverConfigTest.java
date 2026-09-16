@@ -19,8 +19,20 @@ package bisq.application;
 
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.proto.ProtoResolver;
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ImportTree;
+import com.sun.source.tree.LiteralTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.TreeScanner;
 import org.junit.jupiter.api.Test;
 
+import javax.tools.JavaCompiler;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -29,22 +41,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Covers the two invariants of the resolver registrations which nothing else checks.
+ * Covers the invariants of the resolver registrations which nothing else checks. Each one fails silently in
+ * production: the payload is simply refused or cannot be decoded, on every node running the build.
  * <p>
- * The whitelist is the set of store keys the P2P storage accepts. A missing entry makes StorageService reject that
- * payload type on every node running the build. Pinning the expected names turns a wrong or forgotten class argument
- * into a build failure. Adding a payload type is expected to fail that test, add the new name to the list.
+ * The whitelist is the set of store keys the P2P storage accepts, so a missing entry makes StorageService reject that
+ * payload type. Adding a payload type is expected to fail that test, add the new name to the list.
  * <p>
- * The proto type name and the class passed to addResolver are two hand written spellings of the same type, and the
- * proto type name is the wire contract, so it cannot be derived from the class: renaming a class must not change it.
- * The second test asserts the two agree, with the deliberate exceptions listed explicitly.
+ * A registration names one type three times: as the proto type name on the wire, as the class the whitelist is keyed
+ * by, and as the owner of the decoder. The wire name is a contract and cannot be derived from the class, since
+ * renaming a class must not change it, so the three are checked against each other instead, with the deliberately
+ * frozen names listed explicitly.
+ * <p>
+ * Each registry is pinned separately, because a type dropped from one of the two still leaves that registry unable to
+ * decode it while the shared whitelist looks untouched.
  */
 class ResolverConfigTest {
     private static final Set<String> EXPECTED_CLASS_NAMES = new TreeSet<>(List.of(
@@ -128,9 +143,54 @@ class ResolverConfigTest {
 
     // Matched against the whole file, not line by line, so a call whose arguments are wrapped is still read. \s*
     // spans the newline, and [^"] cannot leave the string literal, so a match cannot run into the next call.
-    private static final Pattern REGISTRATION = Pattern.compile("addResolver\\(\"([^\"]+)\",\\s*(\\w+)\\.class");
-    private static final Pattern REGISTRATION_CALL = Pattern.compile("Resolver\\.addResolver\\(");
-    private static final Pattern IMPORT = Pattern.compile("^import\\s+([\\w.]+)\\.(\\w+);", Pattern.MULTILINE);
+    /**
+     * The proto type names each registry must hold. Pinned per registry rather than as one set, because a type
+     * registered in only one of the two still leaves the other unable to decode it while the shared whitelist looks
+     * untouched.
+     */
+    private static final Set<String> DISTRIBUTED_DATA_TYPES = new TreeSet<>(List.of(
+            "account.AccountTimestamp",
+            "account.AuthorizedAccountTimestamp",
+            "bonded_roles.AuthorizedAlertData",
+            "bonded_roles.AuthorizedBondedRole",
+            "bonded_roles.AuthorizedDifficultyAdjustmentData",
+            "bonded_roles.AuthorizedMarketPriceData",
+            "bonded_roles.AuthorizedMinRequiredReputationScoreData",
+            "bonded_roles.AuthorizedOracleNode",
+            "bonded_roles.ReleaseNotification",
+            "burningman.AuthorizedBurningmanListByBlock",
+            "chat.ChatMessage",
+            "chat.ChatMessageReaction",
+            "offer.MuSigOfferMessage",
+            "user.AuthorizedAccountAgeData",
+            "user.AuthorizedBondedReputationData",
+            "user.AuthorizedProofOfBurnData",
+            "user.AuthorizedSignedWitnessData",
+            "user.AuthorizedTimestampData",
+            "user.BannedUserProfileData",
+            "user.UserProfile"));
+
+    private static final Set<String> NETWORK_MESSAGE_TYPES = new TreeSet<>(List.of(
+            "account.AuthorizeAccountTimestampV1Request",
+            "account.AuthorizeAccountTimestampV2Request",
+            "bonded_roles.BondedRoleRegistrationRequest",
+            "chat.ChatMessage",
+            "chat.ChatMessageReaction",
+            "support.MediationRequest",
+            "support.MediatorsResponse",
+            "support.MuSigArbitrationRequest",
+            "support.MuSigArbitrationStateChangeMessage",
+            "support.MuSigDisputeCaseDataMessage",
+            "support.MuSigDisputeCasePaymentDetailsRequest",
+            "support.MuSigDisputeCasePaymentDetailsResponse",
+            "support.MuSigMediationRequest",
+            "support.MuSigMediationResultAcceptanceMessage",
+            "support.MuSigMediationStateChangeMessage",
+            "support.ReportToModeratorMessage",
+            "trade.TradeMessage",
+            "user.AuthorizeAccountAgeRequest",
+            "user.AuthorizeSignedWitnessRequest",
+            "user.AuthorizeTimestampRequest"));
 
     @Test
     void whiteListMatchesResolverRegistrations() {
@@ -140,57 +200,100 @@ class ResolverConfigTest {
     }
 
     @Test
-    void protoTypeNamesMatchRegisteredClasses() throws Exception {
-        String source = Files.readString(resolverConfigSource());
+    void everyRegistrationNamesOneTypeConsistently() throws Exception {
+        List<Registration> registrations = parseRegistrations();
         Map<String, String> packageBySimpleName = new HashMap<>();
-        Matcher importMatcher = IMPORT.matcher(source);
-        while (importMatcher.find()) {
-            packageBySimpleName.put(importMatcher.group(2), importMatcher.group(1));
+        for (ImportTree importTree : compilationUnit().getImports()) {
+            String qualified = importTree.getQualifiedIdentifier().toString();
+            packageBySimpleName.put(qualified.substring(qualified.lastIndexOf('.') + 1),
+                    qualified.substring(0, qualified.lastIndexOf('.')));
         }
 
-        List<String> registrations = new ArrayList<>();
-        List<String> mismatches = new ArrayList<>();
-        Matcher matcher = REGISTRATION.matcher(source);
-        while (matcher.find()) {
-            String protoTypeName = matcher.group(1);
-            String simpleName = matcher.group(2);
-            registrations.add(protoTypeName);
-
-            String legacyClassName = LEGACY_PROTO_TYPE_NAMES.get(protoTypeName);
+        List<String> violations = new ArrayList<>();
+        for (Registration registration : registrations) {
+            if (!registration.clazz().equals(registration.resolverOwner())) {
+                violations.add(registration.protoTypeName() + " is registered with " + registration.clazz()
+                        + " but decodes with " + registration.resolverOwner() + ".getResolver, so the payload type and"
+                        + " the decoder disagree");
+                continue;
+            }
+            String legacyClassName = LEGACY_PROTO_TYPE_NAMES.get(registration.protoTypeName());
             if (legacyClassName != null) {
-                if (!legacyClassName.equals(simpleName)) {
-                    mismatches.add(protoTypeName + " is frozen for " + legacyClassName + " but is registered with "
-                            + simpleName);
+                if (!legacyClassName.equals(registration.clazz())) {
+                    violations.add(registration.protoTypeName() + " is frozen for " + legacyClassName
+                            + " but is registered with " + registration.clazz());
                 }
             } else {
-                Class<?> clazz = Class.forName(packageBySimpleName.get(simpleName) + "." + simpleName);
+                Class<?> clazz = Class.forName(packageBySimpleName.get(registration.clazz())
+                        + "." + registration.clazz());
                 String derived = ProtoResolver.getProtoType(clazz);
-                if (!protoTypeName.equals(derived)) {
-                    mismatches.add(protoTypeName + " is registered with " + simpleName + " whose proto type name is "
-                            + derived);
+                if (!registration.protoTypeName().equals(derived)) {
+                    violations.add(registration.protoTypeName() + " is registered with " + registration.clazz()
+                            + " whose proto type name is " + derived);
                 }
             }
         }
-
-        // Guards against a scan which found nothing, which would let the assertions below pass for the wrong reason.
-        assertTrue(registrations.contains("user.UserProfile") && registrations.contains("support.MediationRequest"),
-                "Source scan did not reach the known registrations, found " + registrations);
-        // A call the pattern cannot read would drop out of the check without failing anything, so an unparsed call is
-        // a failure in itself rather than a silent loss of coverage.
-        assertEquals(countRegistrationCalls(source), registrations.size(),
-                "Not every addResolver call was parsed, so some are unchecked. Parsed " + registrations);
-        assertEquals(List.of(), mismatches,
-                "Proto type name and class disagree. Fix whichever is wrong, or if the name is frozen on the wire, "
-                        + "add it to LEGACY_PROTO_TYPE_NAMES with a comment saying why");
+        assertEquals(List.of(), violations,
+                "Fix whichever argument is wrong, or if a name is frozen on the wire, add it to "
+                        + "LEGACY_PROTO_TYPE_NAMES with a comment saying why");
     }
 
-    private static int countRegistrationCalls(String source) {
-        Matcher matcher = REGISTRATION_CALL.matcher(source);
-        int count = 0;
-        while (matcher.find()) {
-            count++;
+    @Test
+    void everyRegistryHoldsExactlyTheExpectedTypes() throws Exception {
+        List<Registration> registrations = parseRegistrations();
+
+        assertEquals(DISTRIBUTED_DATA_TYPES, typesRegisteredIn("DistributedDataResolver", registrations));
+        assertEquals(NETWORK_MESSAGE_TYPES, typesRegisteredIn("NetworkMessageResolver", registrations));
+    }
+
+    private static Set<String> typesRegisteredIn(String registry, List<Registration> registrations) {
+        return registrations.stream()
+                .filter(registration -> registry.equals(registration.registry()))
+                .map(Registration::protoTypeName)
+                .collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    private record Registration(String registry, String protoTypeName, String clazz, String resolverOwner) {
+    }
+
+    /**
+     * Parsed with the java compiler rather than matched with a regular expression. A text pattern silently skips the
+     * calls it was not written for, which costs coverage without failing anything, and it cannot see the third argument
+     * at all.
+     */
+    private static List<Registration> parseRegistrations() throws IOException {
+        List<Registration> registrations = new ArrayList<>();
+        new TreeScanner<Void, Void>() {
+            @Override
+            public Void visitMethodInvocation(MethodInvocationTree node, Void unused) {
+                if (node.getMethodSelect() instanceof MemberSelectTree select
+                        && "addResolver".contentEquals(select.getIdentifier())
+                        && node.getArguments().size() == 3
+                        && node.getArguments().get(0) instanceof LiteralTree protoTypeName
+                        && node.getArguments().get(1) instanceof MemberSelectTree classLiteral
+                        && node.getArguments().get(2) instanceof MethodInvocationTree resolverCall
+                        && resolverCall.getMethodSelect() instanceof MemberSelectTree resolverSelect) {
+                    registrations.add(new Registration(select.getExpression().toString(),
+                            protoTypeName.getValue().toString(),
+                            classLiteral.getExpression().toString(),
+                            resolverSelect.getExpression().toString()));
+                }
+                return super.visitMethodInvocation(node, unused);
+            }
+        }.scan(compilationUnit(), null);
+        return registrations;
+    }
+
+    private static CompilationUnitTree compilationUnit() throws IOException {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        assertNotNull(compiler, "No java compiler available, the test needs a JDK rather than a JRE");
+        try (StandardJavaFileManager fileManager =
+                     compiler.getStandardFileManager(null, null, StandardCharsets.UTF_8)) {
+            JavacTask task = (JavacTask) compiler.getTask(null, fileManager, diagnostic -> {
+            }, List.of("-proc:none"), null,
+                    fileManager.getJavaFileObjectsFromPaths(List.of(resolverConfigSource())));
+            return task.parse().iterator().next();
         }
-        return count;
     }
 
     private static Path resolverConfigSource() {
