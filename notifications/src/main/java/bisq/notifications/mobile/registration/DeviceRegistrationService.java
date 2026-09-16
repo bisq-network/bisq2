@@ -142,6 +142,35 @@ public class DeviceRegistrationService implements PersistenceClient<DeviceRegist
     }
 
     /**
+     * Removes a registration the push gateway has reported as permanently dead (token
+     * unregistered — app uninstalled or token rotated). Node-initiated: no API client is acting
+     * here, so unlike {@link #unregister(String, String)} there is no ownership check — the
+     * gateway's verdict applies to the device token itself, regardless of which client
+     * registered it.
+     *
+     * @param deviceId            The device whose registration is invalid
+     * @param rejectedDeviceToken The token the gateway rejected — removal only applies while the
+     *                            store still holds this exact token for the device
+     * @return {@code true} if a registration was removed
+     */
+    public boolean pruneDeadRegistration(String deviceId, String rejectedDeviceToken) {
+        checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(rejectedDeviceToken), "rejectedDeviceToken must not be null or empty");
+
+        synchronized (persistableStore) {
+            MobileDeviceProfile current = persistableStore.getDeviceByDeviceId().get(deviceId);
+            if (current == null || !current.getDeviceToken().equals(rejectedDeviceToken)) {
+                // The gateway's verdict names the token from the dispatch snapshot; a device that
+                // re-registered with a fresh token in the meantime keeps its live registration.
+                return false;
+            }
+            persistableStore.getDeviceByDeviceId().remove(deviceId);
+            persist();
+            return true;
+        }
+    }
+
+    /**
      * Removes all registrations owned by the given API client, and any registration that cannot be
      * attributed to a client at all. Called when the client is revoked: a revoked client must stop
      * receiving push notifications, not just lose API access.
