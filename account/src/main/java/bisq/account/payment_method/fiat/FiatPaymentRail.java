@@ -197,6 +197,10 @@ public enum FiatPaymentRail implements PaymentRail {
             FiatCurrencyRepository.getCurrencyByCode("SEK"),
             FiatPaymentMethodChargebackRisk.LOW),
 
+    TELE_BIRR(countryFromCode("ET"),
+            FiatCurrencyRepository.getCurrencyByCode("ETB"),
+            FiatPaymentMethodChargebackRisk.LOW),
+
     UPHOLD(FiatPaymentRailUtil.getUpholdCountries(),
             FiatPaymentRailUtil.getUpholdCurrencies(),
             FiatPaymentMethodChargebackRisk.MODERATE),
@@ -354,6 +358,7 @@ public enum FiatPaymentRail implements PaymentRail {
             case STRIKE -> TradeDuration.DAYS_4;
             case SWIFT -> TradeDuration.DAYS_4;
             case SWISH -> TradeDuration.HOURS_24;
+            case TELE_BIRR -> TradeDuration.HOURS_24;
             case UPHOLD -> TradeDuration.HOURS_24;
             case UPI -> TradeDuration.DAYS_4;
             case US_POSTAL_MONEY_ORDER -> TradeDuration.DAYS_4;
@@ -366,6 +371,29 @@ public enum FiatPaymentRail implements PaymentRail {
 
     public int getPopularityScore() {
         return FiatPaymentRailUtil.getPopularityScore().getOrDefault(this, 0);
+    }
+
+    /**
+     * Whether the given rail can back a standard (classic) payment account, i.e. one created via the
+     * account-creation wizard, MuSig offer flow, or the REST payment-accounts API.
+     * <p>
+     * This is the single source of truth for that distinction — do not hand-roll {@code filter(rail != X)}
+     * chains at call sites, as that duplication is exactly what let TELE_BIRR leak into some consumers
+     * (e.g. the REST payment-accounts endpoint) while being correctly excluded from others.
+     * <p>
+     * Rails excluded here are NOT excluded from Bisq Easy (accountless) offers — see
+     * {@link FiatPaymentMethodUtil#getPaymentMethods(String)} for the Bisq Easy rail list (which keeps
+     * accountless rails like TELE_BIRR) versus {@link FiatPaymentMethodUtil#getStandardAccountPaymentMethods(String)}
+     * for this filtered one.
+     */
+    public static boolean supportsStandardAccountCreation(FiatPaymentRail rail) {
+        return switch (rail) {
+            // CASH_APP: deprecated, kept only for backward compatibility with pre-2.1.8 Bisq Easy offers.
+            // CUSTOM: backed by a user-defined payload, not a "standard" account.
+            // TELE_BIRR: Bisq Easy-only rail, has no classic account form.
+            case CASH_APP, CUSTOM, TELE_BIRR -> false;
+            default -> true;
+        };
     }
 
     private static Logger getLogger() {

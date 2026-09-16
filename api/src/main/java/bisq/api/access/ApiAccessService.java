@@ -17,6 +17,7 @@
 
 package bisq.api.access;
 
+import bisq.api.access.identity.ClientManagementId;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingResponse;
@@ -29,18 +30,29 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.List;
 
+/**
+ * The single entry point of the access layer. Callers outside this package depend on this class
+ * only, never on the services behind it, so there is exactly one way to perform each operation.
+ * <p>
+ * Logic belongs in a dedicated service and reaches callers as a delegation here, as
+ * {@link ClientRevocationService} does for revocation.
+ */
 @Slf4j
 
 public class ApiAccessService {
 
     private final PairingService pairingService;
     private final SessionService sessionService;
+    private final ClientRevocationService clientRevocationService;
 
     public ApiAccessService(PairingService pairingService,
-                            SessionService sessionService) {
+                            SessionService sessionService,
+                            ClientRevocationService clientRevocationService) {
         this.pairingService = pairingService;
         this.sessionService = sessionService;
+        this.clientRevocationService = clientRevocationService;
     }
 
     public PairingResponse requestPairing(byte version,
@@ -54,6 +66,50 @@ public class ApiAccessService {
         return new PairingResponse(clientId, clientSecret, sessionToken.getSessionId(), expiresAt);
     }
 
+    /**
+     * All paired clients, as full domain objects carrying their credentials. Callers must map to a
+     * representation without the client secret and without the client ID before anything leaves the
+     * process; the REST layer does so via {@code PairedClientDto} and {@link ClientManagementId}.
+     */
+    public List<ClientProfile> getClientProfiles() {
+        return pairingService.getClientProfiles();
+    }
+
+    /**
+     * Revokes a paired client. See {@link ClientRevocationService#revokeClient(String)} for what
+     * revocation covers.
+     *
+     * @param clientId The client ID to revoke
+     * @return the outcome; see {@link ClientRevocationResult}
+     */
+    public ClientRevocationResult revokeClient(String clientId) {
+        return clientRevocationService.revokeClient(clientId);
+    }
+
+    /** See {@link ClientRevocationService#completeInterruptedRevocations()}. */
+    public void completeInterruptedRevocations() {
+        clientRevocationService.completeInterruptedRevocations();
+    }
+
+    /**
+     * Revokes the client a management ID names, for callers that must not be given client IDs. See
+     * {@link ClientManagementId}.
+     * <p>
+     * A handle that resolves to nothing is reported as not found. A client whose cleanup failed
+     * still resolves, as its profile is kept until the revocation completes, so the retry the
+     * endpoint asks for reaches the same client.
+     *
+     * @param managementId The management ID of the client to revoke
+     * @return the outcome; see {@link ClientRevocationResult}
+     */
+    public ClientRevocationResult revokeClientByManagementId(String managementId) {
+        return pairingService.getClientProfiles().stream()
+                .filter(clientProfile -> ClientManagementId.matches(clientProfile, managementId))
+                .findFirst()
+                .map(clientProfile -> revokeClient(clientProfile.getClientId()))
+                .orElse(ClientRevocationResult.NOT_FOUND);
+    }
+
     public SessionResponse requestSession(String clientId, String clientSecret) throws InvalidSessionRequestException {
         ClientProfile clientProfile = pairingService.findClientProfile(clientId)
                 .orElseThrow(() -> new InvalidSessionRequestException("No client profile found for Client ID"));
@@ -64,7 +120,21 @@ public class ApiAccessService {
             throw new InvalidSessionRequestException("Client secret is not matching");
         }
 
+        // Checked after the secret, so only the holder learns anything, and checked at all because
+        // a profile outlives its permissions while a revocation waits for its cleanup to succeed.
+        // Handing that client a session would mint a credential for an access that is already gone.
+        if (!pairingService.hasPermissions(clientId)) {
+            throw new InvalidSessionRequestException("No client profile found for Client ID");
+        }
+
         SessionToken sessionToken = sessionService.createSession(clientId);
+        // Re-read rather than hold a lock across both services: a revocation running between the
+        // check and this creates the session it has already swept. Revocation removes permissions
+        // before sessions, so either it swept this one, or this read finds the grant gone.
+        if (!pairingService.hasPermissions(clientId)) {
+            sessionService.remove(sessionToken.getSessionId());
+            throw new InvalidSessionRequestException("No client profile found for Client ID");
+        }
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
         return new SessionResponse(sessionToken.getSessionId(), expiresAt);
     }

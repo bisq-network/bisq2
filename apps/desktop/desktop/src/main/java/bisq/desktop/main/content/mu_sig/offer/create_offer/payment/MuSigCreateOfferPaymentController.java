@@ -129,7 +129,7 @@ public class MuSigCreateOfferPaymentController implements Controller {
     @Override
     public void onActivate() {
         model.getSortedPaymentMethods().setComparator(Comparator.comparing(PaymentMethod::getShortDisplayString));
-        model.getPaymentMethods().setAll(PaymentMethodUtil.getPaymentMethods(model.getPaymentMethodCurrencyCode()));
+        model.getPaymentMethods().setAll(PaymentMethodUtil.getStandardAccountPaymentMethods(model.getPaymentMethodCurrencyCode()));
         model.getAccountsByPaymentMethod().putAll(getEligibleAccounts().stream()
                 .collect(Collectors.groupingBy(
                         Account::getPaymentMethod,

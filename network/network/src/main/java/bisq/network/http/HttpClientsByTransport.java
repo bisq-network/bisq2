@@ -44,13 +44,21 @@ public class HttpClientsByTransport {
         this.configByTransportType = configByTransportType;
     }
 
+    /**
+     * @param logUrl Redacted variant of {@code url} used for log statements
+     *               and exception messages. Pass the same value as {@code url}
+     *               when there is nothing to redact (e.g. provider URL with no
+     *               sensitive path segments).
+     */
     public BaseHttpClient getHttpClient(String url,
+                                        String logUrl,
                                         String userAgent,
                                         TransportType transportType) {
-        return getHttpClient(url, userAgent, transportType, Optional.empty(), Optional.empty());
+        return getHttpClient(url, logUrl, userAgent, transportType, Optional.empty(), Optional.empty());
     }
 
     public BaseHttpClient getHttpClient(String url,
+                                        String logUrl,
                                         String userAgent,
                                         TransportType transportType,
                                         Optional<Socks5Proxy> socksProxy,
@@ -61,17 +69,17 @@ public class HttpClientsByTransport {
                         .map(Socks5ProxyProvider::new)
                         .orElseGet(() -> socksProxy.map(Socks5ProxyProvider::new)
                                 .orElseThrow(() -> new RuntimeException("No socks5ProxyAddress provided and no Tor socksProxy available.")));
-                yield new TorHttpClient(url, userAgent, socks5ProxyProvider);
+                yield new TorHttpClient(url, logUrl, userAgent, socks5ProxyProvider);
             }
 
             case I2P -> {
                 I2PTransportService.Config config = (I2PTransportService.Config) configByTransportType.get(TransportType.I2P);
                 Address address = new ClearnetAddress(config.getHttpProxyHost(), config.getHttpProxyPort());
                 Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(address.getHost(), address.getPort()));
-                yield new ClearNetHttpClient(url, userAgent, proxy);
+                yield new ClearNetHttpClient(url, logUrl, userAgent, proxy);
             }
 
-            case CLEAR -> new ClearNetHttpClient(url, userAgent);
+            case CLEAR -> new ClearNetHttpClient(url, logUrl, userAgent);
         };
     }
 }

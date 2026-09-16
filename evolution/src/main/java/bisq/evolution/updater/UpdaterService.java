@@ -22,8 +22,7 @@ import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AlertType;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.file.FileMutatorUtils;
@@ -128,38 +127,7 @@ public class UpdaterService implements Service {
             }
         }));
 
-        pins.add(alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
-            @Override
-            public void onAdded(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
-                        authorizedAlertData.isRequireVersionForTrading() &&
-                        authorizedAlertData.getAppType() == appType) {
-                    requireVersionForTrading = true;
-                    minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
-                    updateReleaseNotificationState();
-                }
-            }
-
-            @Override
-            public void onRemoved(Object element) {
-                if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
-                            authorizedAlertData.isRequireVersionForTrading() &&
-                            authorizedAlertData.getAppType() == appType) {
-                        requireVersionForTrading = false;
-                        minRequiredVersionForTrading = Optional.empty();
-                        updateReleaseNotificationState();
-                    }
-                }
-            }
-
-            @Override
-            public void onCleared() {
-                requireVersionForTrading = false;
-                minRequiredVersionForTrading = Optional.empty();
-                updateReleaseNotificationState();
-            }
-        }));
+        pins.add(alertService.getAuthorizedAlertDataSet().addObserver(this::updateVersionForTradingRequirement));
 
         pins.add(settingsService.getCookieChanged().addObserver(e -> {
             boolean notifyForPreRelease = settingsService.getCookie().asBoolean(CookieKey.NOTIFY_FOR_PRE_RELEASE).orElse(false);
@@ -228,6 +196,13 @@ public class UpdaterService implements Service {
     /* --------------------------------------------------------------------- */
     // Private/package static
     /* --------------------------------------------------------------------- */
+
+    private void updateVersionForTradingRequirement() {
+        minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+        requireVersionForTrading = minRequiredVersionForTrading.isPresent();
+        updateReleaseNotificationState();
+    }
 
     private void updateReleaseNotificationState() {
         if (releaseNotifications.isEmpty()) {

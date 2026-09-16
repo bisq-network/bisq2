@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,18 +38,22 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ConnectionMetrics {
     private final long created;
     private final AtomicLong lastUpdate = new AtomicLong();
-    private final TreeMap<Integer, AtomicLong> numMessagesSentPerMinute = new TreeMap<>();
-    private final TreeMap<Integer, AtomicLong> sentBytesPerMinute = new TreeMap<>();
-    private final TreeMap<Integer, AtomicLong> spentSendMessageTimePerMinute = new TreeMap<>();
-    private final TreeMap<Integer, AtomicLong> deserializeTimePerMinute = new TreeMap<>();
-    private final TreeMap<Integer, AtomicLong> numMessagesReceivedPerMinute = new TreeMap<>();
-    private final TreeMap<Integer, AtomicLong> receivedBytesPerMinute = new TreeMap<>();
+    // onSent is called from the connection's send thread pool (which grows to several threads), onReceived
+    // from its read thread and clear from whichever thread triggers the shutdown, while readers
+    // (NetworkLoadService, the desktop UI, the api services and toString) traverse the maps concurrently.
+    // ConcurrentSkipListMap makes computeIfAbsent atomic and gives weakly consistent iterators, and it keeps
+    // the ascending key order sumOfLastMinute relies on.
+    private final ConcurrentNavigableMap<Integer, AtomicLong> numMessagesSentPerMinute = new ConcurrentSkipListMap<>();
+    private final ConcurrentNavigableMap<Integer, AtomicLong> sentBytesPerMinute = new ConcurrentSkipListMap<>();
+    private final ConcurrentNavigableMap<Integer, AtomicLong> spentSendMessageTimePerMinute = new ConcurrentSkipListMap<>();
+    private final ConcurrentNavigableMap<Integer, AtomicLong> deserializeTimePerMinute = new ConcurrentSkipListMap<>();
+    private final ConcurrentNavigableMap<Integer, AtomicLong> numMessagesReceivedPerMinute = new ConcurrentSkipListMap<>();
+    private final ConcurrentNavigableMap<Integer, AtomicLong> receivedBytesPerMinute = new ConcurrentSkipListMap<>();
     private final Map<String, AtomicLong> numSentMessagesByClassName = new ConcurrentHashMap<>();
     private final Map<String, AtomicLong> numReceivedMessagesByClassName = new ConcurrentHashMap<>();
     private final Map<String, AtomicLong> numSentDistributedDataByClassName = new ConcurrentHashMap<>();
     private final Map<String, AtomicLong> numReceivedDistributedDataByClassName = new ConcurrentHashMap<>();
 
-    private final AtomicLong numMessagesReceived = new AtomicLong();
     private final List<Long> rrtList = new CopyOnWriteArrayList<>();
 
     public ConnectionMetrics() {
@@ -234,18 +240,21 @@ public class ConnectionMetrics {
         rrtList.clear();
     }
 
-    private long sumOf(TreeMap<Integer, AtomicLong> treeMap) {
-        return treeMap.values().stream().mapToLong(AtomicLong::get).sum();
+    private long sumOf(ConcurrentNavigableMap<Integer, AtomicLong> map) {
+        return map.values().stream().mapToLong(AtomicLong::get).sum();
     }
 
-    private long sumOfLastMinute(TreeMap<Integer, AtomicLong> treeMap, int lastMinutes) {
-        // The Treemap returns the values in ascending order of the corresponding keys.
-        int from = Math.max(0, treeMap.size() - lastMinutes);
-        List<AtomicLong> list = new ArrayList<>(treeMap.values()).subList(from, treeMap.size());
-        return list.stream().mapToLong(AtomicLong::get).sum();
+    private long sumOfLastMinute(ConcurrentNavigableMap<Integer, AtomicLong> map, int lastMinutes) {
+        // The buckets are keyed by the age in minutes, so the descending map returns the most recent ones first.
+        return map.descendingMap().values().stream()
+                .limit(lastMinutes)
+                .mapToLong(AtomicLong::get)
+                .sum();
     }
 
     private int getAgeInMinutes(long now) {
-        return (int) (now - created) / 60000;
+        // The cast has to be applied after the division, otherwise the millisecond delta gets truncated to int
+        // and wraps after about 25 days, which would make the bucket keys negative.
+        return (int) ((now - created) / 60000);
     }
 }

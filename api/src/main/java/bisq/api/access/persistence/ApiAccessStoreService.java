@@ -18,20 +18,18 @@
 package bisq.api.access.persistence;
 
 import bisq.api.access.identity.ClientProfile;
-import bisq.api.access.permissions.Permission;
+import bisq.api.access.permissions.PermissionSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.persistence.PersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
-public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAccessStore> {
+public class ApiAccessStoreService implements PersistenceClient<ApiAccessStore> {
     @Getter(onMethod_ = {@Override})
     private final ApiAccessStore persistableStore = new ApiAccessStore();
     @Getter(onMethod_ = {@Override})
@@ -45,21 +43,71 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
         return Map.copyOf(persistableStore.getClientProfileByIdMap());
     }
 
-    public Map<String, Set<Permission>> getPermissionsByClientId() {
-        return persistableStore.getPermissionsByClientId().entrySet().stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        Map.Entry::getKey,
-                        e -> Set.copyOf(e.getValue())
-                ));
+    public Map<String, PermissionSet> getPermissionsByClientId() {
+        return Map.copyOf(persistableStore.getPermissionsByClientId());
     }
 
-    public void putClientProfile(String clientId, ClientProfile clientProfile) {
-        persistableStore.getClientProfileByIdMap().put(clientId, clientProfile);
-        persist();
+    /**
+     * Write grantAll promotions back to disk on the boot that computed them. Without this, a
+     * node that never pairs a new client keeps the old explicit permission list on disk, and a
+     * later version with additional permissions no longer recognises it as a full standard
+     * grant — the client would silently fall back to a restricted set (see
+     * {@code ApiAccessStore#promoteIfFullStandardGrant}).
+     */
+    @Override
+    public void onPersistedApplied(ApiAccessStore persisted) {
+        if (persisted.hadPromotedEntriesDuringLoad()) {
+            log.info("Persisting grantAll promotions computed while loading the store");
+            persist();
+        }
     }
 
-    public void putPermissions(String clientId, Set<Permission> permissions) {
-        persistableStore.getPermissionsByClientId().put(clientId, permissions);
-        persist();
+    /**
+     * Stores a client's profile and its permissions as one step, persisted once.
+     * <p>
+     * Written under the same monitor as {@link #removeClientProfile(String)} because the two are
+     * otherwise interleavable: a revocation landing between separate writes removes a profile and a
+     * grant that does not exist yet, and the grant is then written afterwards. That orphan grant is
+     * not inert — the authorization filter reads permissions, not profiles, so with session
+     * handling off (as every shipped config runs) it is by itself enough to authorize the client
+     * that was just revoked.
+     */
+    public void putClientProfileAndPermissions(String clientId,
+                                               ClientProfile clientProfile,
+                                               PermissionSet permissionSet) {
+        synchronized (persistableStore) {
+            persistableStore.getClientProfileByIdMap().put(clientId, clientProfile);
+            persistableStore.getPermissionsByClientId().put(clientId, permissionSet);
+            persist();
+        }
+    }
+
+    /**
+     * Removes only the permissions, leaving the profile. Used to end a client's access at the start
+     * of a revocation, before the steps that can fail.
+     */
+    public void removePermissions(String clientId) {
+        synchronized (persistableStore) {
+            if (persistableStore.getPermissionsByClientId().remove(clientId) != null) {
+                persist();
+            }
+        }
+    }
+
+    /**
+     * Removes the client profile and associated permissions for the given client ID.
+     * Both removals are applied atomically under a lock and persisted in a single
+     * {@link #persist()} call.
+     *
+     * @param clientId The client ID to remove
+     * @return {@code true} if a profile was present and removed; {@code false} if the client was not found
+     */
+    public boolean removeClientProfile(String clientId) {
+        synchronized (persistableStore) {
+            boolean removed = persistableStore.getClientProfileByIdMap().remove(clientId) != null;
+            persistableStore.getPermissionsByClientId().remove(clientId);
+            persist();
+            return removed;
+        }
     }
 }

@@ -23,15 +23,13 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AlertType;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.Version;
 import bisq.common.threading.ExecutorFactory;
@@ -61,6 +59,7 @@ import bisq.support.mediation.mu_sig.MuSigPaymentDetailsRequest;
 import bisq.support.mediation.mu_sig.MuSigPaymentDetailsResponse;
 import bisq.trade.MuSigDisputeState;
 import bisq.trade.ServiceProvider;
+import bisq.trade.TradeRestrictedException;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.buyer.PaymentInitiatedEvent;
@@ -140,9 +139,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // We don't persist the protocol, only the model.
     private final Map<String, MuSigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
 
-    private boolean haltTrading;
-    private boolean requireVersionForTrading;
-    private Optional<String> minRequiredVersionForTrading = Optional.empty();
+    // Written from the alert-set observer thread, read from trade calls on other threads
+    private volatile boolean haltTrading;
+    private volatile Optional<String> minRequiredVersionForTrading = Optional.empty();
 
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
@@ -193,42 +192,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                             .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
                             .forEach(this::observeDepositTxConfirmationStatus);
 
-                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
-                        @Override
-                        public void onAdded(AuthorizedAlertData authorizedAlertData) {
-                            if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
-                                if (authorizedAlertData.isHaltTrading()) {
-                                    haltTrading = true;
-                                }
-                                if (authorizedAlertData.isRequireVersionForTrading()) {
-                                    requireVersionForTrading = true;
-                                    minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onRemoved(Object element) {
-                            if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY&& authorizedAlertData.getAppType() == appType ) {
-                                    if (authorizedAlertData.isHaltTrading()) {
-                                        haltTrading = false;
-                                    }
-                                    if (authorizedAlertData.isRequireVersionForTrading()) {
-                                        requireVersionForTrading = false;
-                                        minRequiredVersionForTrading = Optional.empty();
-                                    }
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onCleared() {
-                            haltTrading = false;
-                            requireVersionForTrading = false;
-                            minRequiredVersionForTrading = Optional.empty();
-                        }
-                    });
+                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
                     numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                             .host(this)
@@ -645,16 +609,24 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         return tradeProtocol;
     }
 
+    private void updateTradeRestrictions() {
+        haltTrading = AuthorizedAlertDataUtils.isTradingHalted(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+        minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+    }
+
     private void verifyTradingNotOnHalt() {
-        checkArgument(!haltTrading, "Trading is on halt for security reasons. " +
-                "The Bisq security manager has published an emergency alert with haltTrading set to true");
+        if (haltTrading) {
+            throw TradeRestrictedException.haltTrading();
+        }
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+        Optional<String> minRequiredVersion = minRequiredVersionForTrading;
+        if (minRequiredVersion.isPresent()
+                && !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersion.get()))) {
+            throw TradeRestrictedException.minVersionRequired(minRequiredVersion.get());
         }
     }
 

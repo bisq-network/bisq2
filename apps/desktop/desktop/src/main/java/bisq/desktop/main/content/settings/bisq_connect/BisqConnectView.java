@@ -42,6 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Optional;
+
 @Slf4j
 public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectController> {
     private final Label webSocketServerStateLabel, pairingCodeExpiryInfo;
@@ -208,18 +210,27 @@ public class BisqConnectView extends View<VBox, BisqConnectModel, BisqConnectCon
                 .title(Res.get("settings.bisqConnect.clients.userAgent"))
                 .valueSupplier(ClientListItem::getUserAgent)
                 .build());
+        clientsTable.getColumns().add(new BisqTableColumn.Builder<ClientListItem>()
+                .value(Res.get("settings.bisqConnect.clients.revoke"))
+                .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
+                .actionHandler(controller::onRevokeClient)
+                .isVisibleFunction(item -> item.getClientId().isPresent())
+                .includeForCsv(false)
+                .isSortable(false)
+                .fixWidth(150)
+                .build());
     }
 
     @Getter
     @EqualsAndHashCode
     static class ClientListItem {
-        private final WebSocketClient webSocketClient;
+        private final Optional<String> clientId;
         private final String clientName;
         private final String clientAddress;
         private final String userAgent;
 
         ClientListItem(WebSocketClient webSocketClient, PairingService pairingService) {
-            this.webSocketClient = webSocketClient;
+            this.clientId = webSocketClient.getClientId();
             clientName = webSocketClient.getClientId()
                     .flatMap(pairingService::findClientProfile)
                     .map(ClientProfile::getClientName)

@@ -56,7 +56,9 @@ public class Subscriber {
     }
 
     public CompletableFuture<Boolean> send(String json) {
-        log.info("Send json: {}", json);
+        // Not logged here: this is the whole WebSocketEvent, so it would repeat the fields that
+        // BaseWebSocketService#send — the only caller — already logs, and wrap the payload it logs
+        // separately at TRACE.
         return CompletableFuture.supplyAsync(() -> {
             try {
                 DataFrame dataFrame = webSocket.send(json).get();

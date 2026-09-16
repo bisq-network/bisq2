@@ -24,14 +24,15 @@ import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 import java.util.regex.Pattern;
 
+import static java.lang.Character.isDigit;
+
 public class PhoneNumberValidation {
     private static final PhoneNumberUtil PHONE_NUMBER_UTIL = PhoneNumberUtil.getInstance();
     private static final Pattern VALID_PHONE_INPUT = Pattern.compile("^\\+?[0-9 ()-]*$");
 
     public static boolean isValid(String number, String regionCode) {
         if (StringUtils.isEmpty(number) ||
-                StringUtils.isEmpty(regionCode) ||
-                number.length() > 15) {
+                StringUtils.isEmpty(regionCode)) {
             return false;
         }
         if (!PHONE_NUMBER_UTIL.getSupportedRegions().contains(regionCode)) {
@@ -40,9 +41,14 @@ public class PhoneNumberValidation {
 
         // Basic sanity check: allow only 0 or 1 '+' at the beginning
         if (!VALID_PHONE_INPUT.matcher(number).matches()
-                || countChar(number, '+') > 1
+                || countPlusSigns(number) > 1
                 || !number.startsWith("+")
                 && number.contains("+")) {
+            return false;
+        }
+
+        long digitCount = number.chars().filter(ch -> isDigit((char) ch)).count();
+        if (digitCount > 15) {
             return false;
         }
 
@@ -54,10 +60,12 @@ public class PhoneNumberValidation {
         }
     }
 
-    private static int countChar(String str, char c) {
+    private static int countPlusSigns(String str) {
         int count = 0;
         for (char ch : str.toCharArray()) {
-            if (ch == c) count++;
+            if (ch == '+') {
+                count++;
+            }
         }
         return count;
     }

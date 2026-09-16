@@ -248,14 +248,32 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         // Can be removed after I2P is activated
-        if (!AuthorizedData.IS_I2P_ACTIVATED ) {
+        if (!AuthorizedData.IS_I2P_ACTIVATED) {
             Boolean isBannedRoleInvalid = bannedRole.map(node -> node.isDataInvalid(pubKeyHash)).orElse(false);
-            if(isBannedRoleInvalid){
+            if (isBannedRoleInvalid) {
                 log.warn("AuthorizedAlertData considered invalid as bannedRole is invalid.\n" +
                         "bannedRole={}", bannedRole);
                 return true;
             }
         }
         return message.orElse("").length() > MAX_MESSAGE_LENGTH;
+    }
+
+    public boolean isTradeRestrictingAlert() {
+        if (alertType != AlertType.EMERGENCY) {
+            return false;
+        }
+        if (haltTrading) {
+            return true;
+        }
+        if (requireVersionForTrading) {
+            if (minVersion.isPresent()) {
+                return true;
+            } else {
+                log.warn("If requireVersionForTrading is set it is expected that requireMinVersion is present.\n" +
+                        "AuthorizedAlertData={}", this);
+            }
+        }
+        return false;
     }
 }

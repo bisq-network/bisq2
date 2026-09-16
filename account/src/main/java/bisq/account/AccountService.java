@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -117,6 +118,30 @@ public class AccountService extends RateLimitedPersistenceClient<AccountStore> i
                 setSelectedAccount(null);
             }
         });
+        persist();
+    }
+
+    public void updatePaymentAccount(String existingAccountName,
+                                     Account<? extends PaymentMethod<?>, ?> updatedAccount) {
+        Map<String, Account<? extends PaymentMethod<?>, ?>> accountByNameMap = persistableStore.getAccountByName();
+        String updatedAccountName = updatedAccount.getAccountName();
+
+        if (!existingAccountName.equals(updatedAccountName) && accountByNameMap.containsKey(updatedAccountName)) {
+            throw new IllegalArgumentException("The account name '" + updatedAccountName + "' already exists. Please choose a different name.");
+        }
+
+        if (accountByNameMap.remove(existingAccountName) == null) {
+            throw new IllegalArgumentException("Account not found: " + existingAccountName);
+        }
+
+        accountByNameMap.put(updatedAccountName, updatedAccount);
+
+        findSelectedAccount().ifPresent(selected -> {
+            if (selected.getAccountName().equals(existingAccountName)) {
+                persistableStore.getSelectedAccount().set(updatedAccount);
+            }
+        });
+
         persist();
     }
 

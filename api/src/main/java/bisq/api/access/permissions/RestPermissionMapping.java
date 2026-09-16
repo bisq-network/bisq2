@@ -23,6 +23,31 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Maps REST paths to required permissions. Unmapped paths are rejected (fail-closed).
+ * <p>
+ * For devs adding new endpoints or permissions:
+ * <ul>
+ * <li>Prefer mapping a new endpoint to an existing permission when one fits semantically —
+ *     established precedent: {@code /trade-restricting-alert} and {@code /alert-notifications}
+ *     map to {@link Permission#SETTINGS}.</li>
+ * <li>When adding a new {@link Permission} value, ids are append-only and must never be reused.
+ *     Already-paired clients holding a grantAll grant gain new non-sensitive permissions
+ *     automatically at read time (see {@link PermissionSet}) — no re-pairing needed. Explicit
+ *     grants are never expanded.</li>
+ * <li>Coordinate with a Connect app release: apps without the tolerant pairing-code decoder
+ *     (bisq-mobile, 2026-08) reject pairing codes that carry more permissions than they know,
+ *     so new permissions break pairing for older apps.</li>
+ * <li>A permission that lets a client act on OTHER clients (see {@link Permission#CLIENT_MANAGEMENT})
+ *     needs its auto-grantable classification argued explicitly on that permission, not inherited
+ *     from an existing cross-client one.</li>
+ * <li>Security-sensitive permissions (e.g. anything wallet/spend related) are never covered by
+ *     the grantAll expansion — declare them with {@code autoGrantable = false} on the
+ *     {@link Permission} enum and the exclusion is enforced by construction (see
+ *     {@link PermissionSet}); they then always require an explicit per-device grant with
+ *     deliberate approval.</li>
+ * </ul>
+ */
 @Slf4j
 public final class RestPermissionMapping implements PermissionMapping {
     private final List<PermissionRule> rules;
@@ -30,12 +55,18 @@ public final class RestPermissionMapping implements PermissionMapping {
     public RestPermissionMapping() {
         // TODO apply rules to actual endpoints and methods. Atm we only check the root path
         this.rules = List.of(
+                new PermissionRule("^/access/clients(/.*)?$", Optional.empty(), Permission.CLIENT_MANAGEMENT),
                 new PermissionRule("^/trade-chat-channels(/.*)?$", Optional.empty(), Permission.TRADE_CHAT_CHANNELS),
+                new PermissionRule("^/private-chat-channels(/.*)?$", Optional.empty(), Permission.PRIVATE_CHAT_CHANNELS),
+                new PermissionRule("^/contacts(/.*)?$", Optional.empty(), Permission.CONTACTS),
+                new PermissionRule("^/public-chat-channels(/.*)?$", Optional.empty(), Permission.PUBLIC_CHAT_CHANNELS),
                 new PermissionRule("^/explorer(/.*)?$", Optional.empty(), Permission.EXPLORER),
                 new PermissionRule("^/market-price(/.*)?$", Optional.empty(), Permission.MARKET_PRICE),
                 new PermissionRule("^/offerbook(/.*)?$", Optional.empty(), Permission.OFFERBOOK),
                 new PermissionRule("^/payment-accounts(/.*)?$", Optional.empty(), Permission.PAYMENT_ACCOUNTS),
                 new PermissionRule("^/reputation(/.*)?$", Optional.empty(), Permission.REPUTATION),
+                new PermissionRule("^/trade-restricting-alert(/.*)?$", Optional.empty(), Permission.SETTINGS),
+                new PermissionRule("^/alert-notifications(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/settings(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/trades(/.*)?$", Optional.empty(), Permission.TRADES),
                 new PermissionRule("^/user-identities(/.*)?$", Optional.empty(), Permission.USER_IDENTITIES),
@@ -46,7 +77,7 @@ public final class RestPermissionMapping implements PermissionMapping {
 
     @Override
     public Permission getRequiredPermission(String path, String method) {
-        String normalizedPath = path.replace("/api/v1","");
+        String normalizedPath = path.replace("/api/v1", "");
         return rules.stream()
                 .filter(rule -> rule.matches(normalizedPath, method))
                 .map(PermissionRule::permission)

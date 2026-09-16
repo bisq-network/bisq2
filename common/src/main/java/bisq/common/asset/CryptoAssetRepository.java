@@ -23,9 +23,12 @@ import lombok.Setter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CryptoAssetRepository {
+    private static final Set<String> AUTO_CONF_SUPPORTED_CODES = Set.of("XMR");
+
     public static final CryptoAsset BITCOIN = new CryptoAsset("BTC", "Bitcoin");
     public static final CryptoAsset XMR = new CryptoAsset("XMR", "Monero");
     public static final CryptoAsset BSQ = new CryptoAsset("BSQ", "BSQ");
@@ -74,5 +77,9 @@ public class CryptoAssetRepository {
 
     public static List<CryptoAsset> getCryptoAssets() {
         return CRYPTO_ASSETS;
+    }
+
+    public static boolean isAutoConfSupported(String code) {
+        return AUTO_CONF_SUPPORTED_CODES.contains(code);
     }
 }
