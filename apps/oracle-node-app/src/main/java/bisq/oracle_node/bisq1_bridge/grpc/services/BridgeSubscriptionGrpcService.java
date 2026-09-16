@@ -23,6 +23,7 @@ import bisq.common.timer.Delay;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -47,6 +48,13 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     private final AtomicReference<RequestState> requestState = new AtomicReference<>(RequestState.initial());
     private final AtomicBoolean streamRecoveryScheduled = new AtomicBoolean();
     protected volatile boolean shutdownCalled;
+    /**
+     * Set when the bridge answered the subscription with UNIMPLEMENTED. That is a deployment error which cannot
+     * resolve itself while the process runs, so recovery is not retried and the service stays without live data
+     * until the bridge is upgraded and the oracle is restarted.
+     */
+    @Getter
+    private volatile boolean bridgeVersionMismatch;
 
     public BridgeSubscriptionGrpcService(boolean staticPublicKeysProvided, GrpcClient grpcClient) {
         this.staticPublicKeysProvided = staticPublicKeysProvided;
@@ -150,6 +158,12 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
 
     protected abstract void subscribe();
 
+    /**
+     * Names the bridge RPC used by {@link #subscribe()}. Only used in operator-facing log messages, so it must
+     * describe what has to be upgraded on the Bisq 1 side.
+     */
+    protected abstract String getSubscriptionDescription();
+
     protected void handleRequestException(Exception exception) {
         if (shutdownCalled) {
             return;
@@ -206,6 +220,18 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
 
     private void recoverStream(Throwable throwable) {
         if (shutdownCalled) {
+            return;
+        }
+        Status status = Status.fromThrowable(throwable);
+        if (status.getCode() == Status.Code.UNIMPLEMENTED) {
+            bridgeVersionMismatch = true;
+            log.error("Bridge version mismatch: the configured Bisq 1 bridge does not implement {}. " +
+                            "This node keeps running but will not receive any further live data from that " +
+                            "subscription, and recovery is not retried because the RPC cannot appear without a " +
+                            "bridge upgrade. Upgrade the Bisq 1 bridge and restart the oracle. Status: {}{}",
+                    getSubscriptionDescription(),
+                    status.getCode(),
+                    status.getDescription() == null ? "" : " (" + status.getDescription() + ")");
             return;
         }
         if (!streamRecoveryScheduled.compareAndSet(false, true)) {

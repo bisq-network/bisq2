@@ -109,6 +109,30 @@ class BridgeSubscriptionGrpcServiceTest {
         }
     }
 
+    @Test
+    void unimplementedSubscriptionReportsVersionMismatchWithoutRetrying() throws InterruptedException {
+        TestService service = new TestService();
+        service.subscribeRetryInterval.set(0);
+
+        service.handleStreamObserverError(new StatusRuntimeException(Status.UNIMPLEMENTED));
+
+        assertThat(service.subscriptionAttempted.await(200, TimeUnit.MILLISECONDS)).isFalse();
+        assertThat(service.subscribeCount).hasValue(0);
+        assertThat(service.isBridgeVersionMismatch()).isTrue();
+    }
+
+    @Test
+    void anOrdinaryStreamErrorIsNotReportedAsAVersionMismatch() throws InterruptedException {
+        TestService service = new TestService();
+        service.subscribeRetryInterval.set(0);
+
+        service.handleStreamObserverError(new StatusRuntimeException(Status.UNAVAILABLE));
+
+        assertThat(service.subscriptionAttempted.await(1, TimeUnit.SECONDS)).isTrue();
+        assertThat(service.isBridgeVersionMismatch()).isFalse();
+        service.shutdown();
+    }
+
     private static final class TestService extends BridgeSubscriptionGrpcService<Integer> {
         private final List<String> calls = new ArrayList<>();
         private final AtomicInteger subscribeCount = new AtomicInteger();
@@ -119,6 +143,7 @@ class BridgeSubscriptionGrpcServiceTest {
         private final CountDownLatch firstRequestExecutionAcquired = new CountDownLatch(1);
         private final CountDownLatch releaseFirstRequestExecutionAcquisition = new CountDownLatch(1);
         private final CountDownLatch secondRequest = new CountDownLatch(1);
+        private final CountDownLatch subscriptionAttempted = new CountDownLatch(1);
         private final AtomicBoolean firstRequestExecution = new AtomicBoolean(true);
         private final RuntimeException requestFailure;
         private final boolean blockFirstRequest;
@@ -206,6 +231,12 @@ class BridgeSubscriptionGrpcServiceTest {
         protected void subscribe() {
             calls.add("subscribe");
             subscribeCount.incrementAndGet();
+            subscriptionAttempted.countDown();
+        }
+
+        @Override
+        protected String getSubscriptionDescription() {
+            return "the test subscription";
         }
     }
 }
