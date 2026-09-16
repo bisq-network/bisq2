@@ -33,9 +33,14 @@ import java.util.Map;
 public class QrCodeDisplay {
     private static final int BLACK_ARGB = 0xFF000000;
     private static final int WHITE_ARGB = 0xFFFFFFFF;
+    private static final int STANDARD_QUIET_ZONE = 4;
 
     public static Image toImage(String data, int size) {
         return toImage(data, size, 0);
+    }
+
+    public static Image toImageWithStandardQuietZone(String data, int size) {
+        return toImage(data, size, STANDARD_QUIET_ZONE);
     }
 
     public static Image toImage(String data, int size, int margin) {

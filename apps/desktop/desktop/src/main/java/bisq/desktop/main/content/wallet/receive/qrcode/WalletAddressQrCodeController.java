@@ -114,7 +114,7 @@ public class WalletAddressQrCodeController implements Controller {
                     .map(String::trim)
                     .filter(s -> !s.isEmpty());
             String btcUri = BitcoinURIScheme.buildBitcoinUri(address, amount, label);
-            Image image = QrCodeDisplay.toImage(btcUri, model.getQrCodeSize(), 1);
+            Image image = QrCodeDisplay.toImageWithStandardQuietZone(btcUri, model.getQrCodeSize());
             model.getBtcUri().set(btcUri);
             model.getQrCodeImage().set(image);
         }
