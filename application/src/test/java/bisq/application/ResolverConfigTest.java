@@ -131,7 +131,7 @@ class ResolverConfigTest {
             "TradeMessage",
             "TwoPartyPrivateChatMessage",
             "TwoPartyPrivateChatMessageReaction",
-            "UserProfile"    ));
+            "UserProfile"));
 
     /**
      * Proto type names which deliberately differ from their class, because the class was renamed after the name was
@@ -141,8 +141,6 @@ class ResolverConfigTest {
             "support.MediationRequest", "BisqEasyMediationRequest",
             "support.MediatorsResponse", "BisqEasyMediatorsResponse");
 
-    // Matched against the whole file, not line by line, so a call whose arguments are wrapped is still read. \s*
-    // spans the newline, and [^"] cannot leave the string literal, so a match cannot run into the next call.
     /**
      * The proto type names each registry must hold. Pinned per registry rather than as one set, because a type
      * registered in only one of the two still leaves the other unable to decode it while the shared whitelist looks
@@ -253,6 +251,8 @@ class ResolverConfigTest {
                 .collect(Collectors.toCollection(TreeSet::new));
     }
 
+    private static final Set<String> REGISTRIES = Set.of("DistributedDataResolver", "NetworkMessageResolver");
+
     private record Registration(String registry, String protoTypeName, String clazz, String resolverOwner) {
     }
 
@@ -260,27 +260,41 @@ class ResolverConfigTest {
      * Parsed with the java compiler rather than matched with a regular expression. A text pattern silently skips the
      * calls it was not written for, which costs coverage without failing anything, and it cannot see the third argument
      * at all.
+     * <p>
+     * A call to one of the two registries which does not have the expected shape is reported rather than skipped. The
+     * pinned type sets catch a registration that disappears from the parse, but not one that was never in them, so a
+     * newly added registration written in an unrecognised form would otherwise go unchecked.
      */
     private static List<Registration> parseRegistrations() throws IOException {
         List<Registration> registrations = new ArrayList<>();
+        List<String> unrecognised = new ArrayList<>();
         new TreeScanner<Void, Void>() {
             @Override
             public Void visitMethodInvocation(MethodInvocationTree node, Void unused) {
                 if (node.getMethodSelect() instanceof MemberSelectTree select
                         && "addResolver".contentEquals(select.getIdentifier())
-                        && node.getArguments().size() == 3
-                        && node.getArguments().get(0) instanceof LiteralTree protoTypeName
-                        && node.getArguments().get(1) instanceof MemberSelectTree classLiteral
-                        && node.getArguments().get(2) instanceof MethodInvocationTree resolverCall
-                        && resolverCall.getMethodSelect() instanceof MemberSelectTree resolverSelect) {
-                    registrations.add(new Registration(select.getExpression().toString(),
-                            protoTypeName.getValue().toString(),
-                            classLiteral.getExpression().toString(),
-                            resolverSelect.getExpression().toString()));
+                        && REGISTRIES.contains(select.getExpression().toString())) {
+                    if (node.getArguments().size() == 3
+                            && node.getArguments().get(0) instanceof LiteralTree protoTypeName
+                            && node.getArguments().get(1) instanceof MemberSelectTree classLiteral
+                            && node.getArguments().get(2) instanceof MethodInvocationTree resolverCall
+                            && resolverCall.getMethodSelect() instanceof MemberSelectTree resolverSelect) {
+                        registrations.add(new Registration(select.getExpression().toString(),
+                                protoTypeName.getValue().toString(),
+                                classLiteral.getExpression().toString(),
+                                resolverSelect.getExpression().toString()));
+                    } else {
+                        unrecognised.add(node.toString());
+                    }
                 }
                 return super.visitMethodInvocation(node, unused);
             }
         }.scan(compilationUnit(), null);
+
+        assertEquals(List.of(), unrecognised,
+                "A registration in this form is not checked by anything. Write it as "
+                        + "addResolver(\"proto.TypeName\", TypeName.class, TypeName.getResolver()), or teach "
+                        + "parseRegistrations to read the new form");
         return registrations;
     }
 
