@@ -46,6 +46,9 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeRequestStore> {
+    // Pin the migration to version 2; a later protocol may give these date fields meaning again.
+    private static final int WITNESS_REQUEST_VERSION_WITH_UNUSED_DATES = 2;
+
     @Getter(AccessLevel.PACKAGE)
     private final Set<AuthorizeAccountAgeRequest> accountAgeRequests = new CopyOnWriteArraySet<>();
     @Getter(AccessLevel.PACKAGE)
@@ -91,10 +94,10 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
     public static Bisq1BridgeRequestStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeRequestStore proto) {
         return new Bisq1BridgeRequestStore(
                 proto.getAccountAgeRequestsList().stream()
-                        .map(AuthorizeAccountAgeRequest::fromProto)
+                        .map(Bisq1BridgeRequestStore::fromPersistedAccountAgeRequest)
                         .collect(Collectors.toSet()),
                 proto.getSignedWitnessRequestsList().stream()
-                        .map(AuthorizeSignedWitnessRequest::fromProto)
+                        .map(Bisq1BridgeRequestStore::fromPersistedSignedWitnessRequest)
                         .collect(Collectors.toSet()),
                 proto.getAccountTimestampDateByHashMap().entrySet().stream()
                         .collect(Collectors.toMap(
@@ -111,6 +114,22 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
                             return true;
                         })
                         .collect(Collectors.toSet()));
+    }
+
+    // Earlier version-2 requests could persist unused dates. Normalize them only at this persistence boundary
+    // so their ownership bindings survive stricter network validation without changing the proof.
+    private static AuthorizeAccountAgeRequest fromPersistedAccountAgeRequest(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {
+        if (proto.getProtocolVersion() == WITNESS_REQUEST_VERSION_WITH_UNUSED_DATES) {
+            proto = proto.toBuilder().clearDate().build();
+        }
+        return AuthorizeAccountAgeRequest.fromProto(proto);
+    }
+
+    private static AuthorizeSignedWitnessRequest fromPersistedSignedWitnessRequest(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto) {
+        if (proto.getProtocolVersion() == WITNESS_REQUEST_VERSION_WITH_UNUSED_DATES) {
+            proto = proto.toBuilder().clearAccountAgeWitnessDate().clearWitnessSignDate().build();
+        }
+        return AuthorizeSignedWitnessRequest.fromProto(proto);
     }
 
     @Override
