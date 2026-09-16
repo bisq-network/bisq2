@@ -97,5 +97,7 @@ jobs:
         shell: bash
         run: |
           ./gradlew \
-            :persistence:test --tests 'bisq.persistence.PersistableStoreFinalityTest' \
+            :common:test --tests 'bisq.common.proto.ProtoResolverTest' \
+            :persistence:test --tests 'bisq.persistence.PersistableStoreContractTest' \
+                              --tests 'bisq.persistence.PersistableStoreReaderWriterTests' \
             :application:test --tests 'bisq.application.ResolverConfigTest'

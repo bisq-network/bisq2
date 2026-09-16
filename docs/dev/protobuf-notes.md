@@ -114,6 +114,11 @@ is what registers the type in `NetworkStorageWhiteList`, which the P2P storage c
 type registered with the wrong class is silently rejected by every node. If the registered class is not final, its
 subclasses must be added to `NetworkStorageWhiteList` explicitly.
 
+Keeping the proto type name fixed is not on its own enough to make a java rename safe. The simple class name is also
+the `MetaData.className` sent on the wire, the store key `StorageService` checks before accepting a payload and uses to
+discover existing files, and the mailbox key a peer stores a message under. A rename therefore needs the old name kept
+as an alias or the existing files migrated, not just the proto type name left alone.
+
 This solution is not really great but so far I have not found a better way. To do it in the domain services might be an
 option but the seedNode application does not use those domains, so it would be weird to instantiate a `OfferService` if
 not used. But the seedNode still requires the code dependency and the registration of the resolver as an offer is stored
