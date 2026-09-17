@@ -20,10 +20,11 @@ package bisq.desktop.main.content.user.accounts.crypto_accounts.create.summary.d
 import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.payment_method.crypto.CryptoPaymentRail;
 import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.desktop.common.utils.GridPaneUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
-import bisq.mu_sig.MuSigTradeAmountLimits;
+import bisq.offer.mu_sig.use_case.create_offer.amount.limits.PaymentMethodBasedAmountLimitsProvider;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.BooleanFormatter;
 import javafx.geometry.Insets;
@@ -79,8 +80,8 @@ public class SummaryDetails<P extends CryptoAssetAccountPayload> extends GridPan
 
     protected void addRestrictions(P accountPayload) {
         CryptoPaymentRail paymentRail = accountPayload.getPaymentMethod().getPaymentRail();
-
-        String tradeLimit = MuSigTradeAmountLimits.getFormattedMaxTradeLimitInUsd(paymentRail);
+        Fiat maxTradeLimitInUsd = PaymentMethodBasedAmountLimitsProvider.evaluateLimitInUsd(paymentRail);
+        String tradeLimit = AmountFormatter.formatQuoteAmount(maxTradeLimitInUsd);
         String restrictions = Res.get("paymentAccounts.summary.tradeLimit", tradeLimit) + " / " +
                 Res.get("paymentAccounts.summary.tradeDuration", paymentRail.getTradeDuration().getDisplayString());
         addDescriptionAndValue(Res.get("paymentAccounts.restrictions"), restrictions);

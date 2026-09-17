@@ -19,6 +19,7 @@ package bisq.desktop.main.content.mu_sig.trade.trade_limits.simulation;
 
 import bisq.account.payment_method.PaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.monetary.Fiat;
 import bisq.common.util.MathUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
@@ -27,7 +28,8 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.mu_sig.MuSigTradeAmountLimits;
+import bisq.offer.mu_sig.use_case.create_offer.amount.limits.PaymentMethodBasedAmountLimitsProvider;
+import bisq.presentation.formatters.AmountFormatter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -95,9 +97,11 @@ public class MuSigTradeLimitsSimulationController implements Controller {
         }
     }
 
-    private void applySelectFiatPaymentRail(FiatPaymentRail fiatPaymentRail) {
-        model.getSelectedFiatPaymentRail().set(fiatPaymentRail);
-        String maxTradeLimit = MuSigTradeAmountLimits.getFormattedMaxTradeLimitInUsd(fiatPaymentRail);
+    private void applySelectFiatPaymentRail(FiatPaymentRail paymentRail) {
+        model.getSelectedFiatPaymentRail().set(paymentRail);
+
+        Fiat maxTradeLimitInUsd = PaymentMethodBasedAmountLimitsProvider.evaluateLimitInUsd(paymentRail);
+        String maxTradeLimit = AmountFormatter.formatQuoteAmount(maxTradeLimitInUsd);
         model.getFiatPaymentRailMaxLimit().set(Res.get("muSig.trade.limits.simulation.fiatRail.maxLimit", maxTradeLimit));
         updateLimits();
     }
@@ -108,7 +112,7 @@ public class MuSigTradeLimitsSimulationController implements Controller {
             return;
         }
 
-        double maxTradeLimit = MuSigTradeAmountLimits.getMaxTradeLimitInUsd(fiatPaymentRail).getValue() / 10000d;
+        double maxTradeLimit = PaymentMethodBasedAmountLimitsProvider.evaluateLimitInUsd(fiatPaymentRail).getValue() / 10000d;
         // We use 10% of max limit as default limit
         double defaultTradeLimit = maxTradeLimit * 0.1;    // 250-1000
 

@@ -21,6 +21,9 @@ import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,5 +76,27 @@ public class OfferAmountUtilTest {
 
         assertThrows(IllegalArgumentException.class, () ->
                 OfferAmountUtil.calculateSecurityDepositAsBTC(nonBtcMonetary, 0.10));
+    }
+
+    @Test
+    void resolvedQuoteOverloadsRejectAQuoteFromAnotherMarket() {
+        Market eurMarket = new Market("BTC", "EUR", "Bitcoin", "Euro");
+        PriceQuote usdQuote = PriceQuote.fromFiatPrice(100_000, "USD");
+        // 4,000.00 EUR quote-side fixed spec: converting it with a BTC/USD quote would silently
+        // treat the EUR amount as USD.
+        AmountSpec amountSpec = new QuoteSideFixedAmountSpec(40_000_000);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                OfferAmountUtil.findBaseSideFixedAmount(usdQuote, amountSpec, eurMarket));
+        assertThrows(IllegalArgumentException.class, () ->
+                OfferAmountUtil.findBaseSideMinAmount(usdQuote, amountSpec, eurMarket));
+        assertThrows(IllegalArgumentException.class, () ->
+                OfferAmountUtil.findBaseSideMaxAmount(usdQuote, amountSpec, eurMarket));
+        assertThrows(IllegalArgumentException.class, () ->
+                OfferAmountUtil.findQuoteSideFixedAmount(usdQuote, amountSpec, eurMarket));
+        assertThrows(IllegalArgumentException.class, () ->
+                OfferAmountUtil.findQuoteSideMinAmount(usdQuote, amountSpec, eurMarket));
+        assertThrows(IllegalArgumentException.class, () ->
+                OfferAmountUtil.findQuoteSideMaxAmount(usdQuote, amountSpec, eurMarket));
     }
 }

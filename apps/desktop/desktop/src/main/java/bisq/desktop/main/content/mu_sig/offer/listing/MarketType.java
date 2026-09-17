@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offer.listing;
 
+import bisq.common.market.Market;
 import bisq.i18n.Res;
 
 public enum MarketType {
@@ -27,5 +28,9 @@ public enum MarketType {
         return this == FIAT
                 ? Res.get("muSig.offer.listing.marketListTitle.fiat")
                 : Res.get("muSig.offer.listing.marketListTitle.other");
+    }
+
+    public static MarketType from(Market market) {
+        return market.isBtcFiatMarket() ? FIAT : OTHER;
     }
 }

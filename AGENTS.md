@@ -71,6 +71,17 @@ Primary referenced docs:
 - Do not introduce new abstractions, patterns, or naming schemes without clear need
 - Avoid unrelated refactoring or “improvements”
 
+### Testing Discipline
+- Follow `docs/dev/testing.md` as the authoritative testing policy
+- Investigate root cause before changing tests
+- Do not weaken assertions to make tests pass
+- Update expected values only for intentional and correct behavior changes
+- Do not change tests to hide or compensate for production regressions
+
+### Execution Hygiene
+- Stage newly added files with `git add` before handoff/commit
+- Keep behavior changes in production code explicit; do not hide them inside test rewrites
+
 ### Quality Gate (Self-Check Before Completion)
 Ensure that:
 - The change is minimal and scoped to the request

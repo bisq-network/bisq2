@@ -223,10 +223,10 @@ public class ReviewDataDisplay {
             price.getFirst().getSecond().textProperty().bind(model.getPrice());
             price.getFirst().getThird().textProperty().bind(model.getPriceCode());
 
-            toSendBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToSendMinAmount());
-            toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToSendMaxOrFixedAmount());
-            toReceiveBitcoinMinAmountDisplay.getBtcAmount().bind(model.getToReceiveMinAmount());
-            toReceiveBitcoinMaxOrFixedAmountDisplay.getBtcAmount().bind(model.getToReceiveMaxOrFixedAmount());
+            toSendBitcoinMinAmountDisplay.btcAmountProperty().bind(model.getToSendMinAmount());
+            toSendBitcoinMaxOrFixedAmountDisplay.btcAmountProperty().bind(model.getToSendMaxOrFixedAmount());
+            toReceiveBitcoinMinAmountDisplay.btcAmountProperty().bind(model.getToReceiveMinAmount());
+            toReceiveBitcoinMaxOrFixedAmountDisplay.btcAmountProperty().bind(model.getToReceiveMaxOrFixedAmount());
 
             isSendBtcPin = EasyBind.subscribe(EasyBind.combine(model.getIsSendBtc(), model.getIsRangeAmount(), Pair::new), combinedValues -> {
                 boolean isSendBtc = combinedValues.getFirst();
@@ -315,10 +315,10 @@ public class ReviewDataDisplay {
             isSendBtcPin.unsubscribe();
             isReceiveBtcPin.unsubscribe();
 
-            toSendBitcoinMinAmountDisplay.getBtcAmount().unbind();
-            toSendBitcoinMaxOrFixedAmountDisplay.getBtcAmount().unbind();
-            toReceiveBitcoinMinAmountDisplay.getBtcAmount().unbind();
-            toReceiveBitcoinMaxOrFixedAmountDisplay.getBtcAmount().unbind();
+            toSendBitcoinMinAmountDisplay.btcAmountProperty().unbind();
+            toSendBitcoinMaxOrFixedAmountDisplay.btcAmountProperty().unbind();
+            toReceiveBitcoinMinAmountDisplay.btcAmountProperty().unbind();
+            toReceiveBitcoinMaxOrFixedAmountDisplay.btcAmountProperty().unbind();
         }
 
         private void configureBitcoinAmountDisplay(BitcoinAmountDisplay bitcoinAmountDisplay) {

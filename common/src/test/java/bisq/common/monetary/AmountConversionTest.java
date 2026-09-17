@@ -51,6 +51,28 @@ public class AmountConversionTest {
     }
 
     @Test
+    void testUsdToBtcThrowsOnOverflow() {
+        // 10^12 USD at 0.0001 USD/BTC (the smallest positive fiat price) is 10^16 BTC = 10^24
+        // satoshis, beyond long range.
+        PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(0.0001, "USD");
+        Monetary usdAmount = Fiat.fromFaceValue(1_000_000_000_000L, "USD");
+
+        assertThrows(ArithmeticException.class, () -> AmountConversion.usdToBtc(btcUsdPrice, usdAmount));
+    }
+
+    @Test
+    void testUsdToFiatThrowsWhenTheFiatLegOverflows() {
+        // The Bitcoin leg stays representable (10,000 USD at 0.01 USD/BTC = 10^6 BTC), the fiat
+        // leg does not: 10^6 BTC at 2 * 10^9 EUR/BTC = 2 * 10^15 EUR = 2 * 10^19 fiat units.
+        PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(0.01, "USD");
+        PriceQuote btcEurPrice = PriceQuote.fromFiatPrice(2_000_000_000, "EUR");
+        Monetary usdAmount = Fiat.fromFaceValue(10_000, "USD");
+
+        assertThrows(ArithmeticException.class,
+                () -> AmountConversion.usdToFiat(btcUsdPrice, btcEurPrice, usdAmount));
+    }
+
+    @Test
     void testUsdToBtc() {
         PriceQuote btcUsdPrice = PriceQuote.fromFiatPrice(50000, "USD");
         Monetary usdAmount = Fiat.fromFaceValue(100.0, "USD");

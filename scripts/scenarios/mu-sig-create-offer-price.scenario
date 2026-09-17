@@ -1,0 +1,46 @@
+# MuSig create-offer price step scenario
+# Walks onboarding, opens the create-offer wizard and exercises the price concern:
+# percentage input, fixed/percentage mode switch, back/next re-entry.
+# Prereq: MuSig activated in the harness profile and baked dev market prices
+# (refresh dev_market_price.json before building, see CLAUDE.md).
+
+health
+validate
+wait-node splash/logo 30000 true
+wait-node tac-risk-ack/loss 30000 true
+click tac-risk-ack/loss
+click tac-risk-ack/no-recovery
+click tac-risk-ack/next
+wait-node tac-legal-terms/confirm 30000 true
+click tac-legal-terms/confirm
+click tac-legal-terms/accept
+wait-node onboarding-welcome/next 30000 true
+click onboarding-welcome/next
+wait-node create-profile/nickname 30000 true
+sleep 1000
+type create-profile/nickname PriceScenarioUser
+click create-profile/create
+wait-node left-nav/mu-sig 60000 true
+sleep 2000
+click left-nav/mu-sig
+wait-node mu-sig-offerbook/create-offer 30000 true
+click mu-sig-offerbook/create-offer
+wait-node mu-sig-create-offer-direction-market/buy 30000 true
+click mu-sig-create-offer-direction-market/buy
+screenshot create-offer-direction-market
+click mu-sig-create-offer/next
+wait-node mu-sig-create-offer-price/percentage-input 30000 true
+screenshot create-offer-amount-price-initial
+type mu-sig-create-offer-price/percentage-input 5
+press-key ENTER mu-sig-create-offer-price/percentage-input
+screenshot create-offer-price-percentage-5
+click mu-sig-create-offer-price/fixed-mode
+screenshot create-offer-price-fixed-mode
+click mu-sig-create-offer-price/percentage-mode
+screenshot create-offer-price-back-to-percentage
+click mu-sig-create-offer/back
+wait-node mu-sig-create-offer-direction-market/buy 30000 true
+click mu-sig-create-offer/next
+wait-node mu-sig-create-offer-price/percentage-input 30000 true
+screenshot create-offer-price-reentry
+validate
