@@ -34,10 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.main.content.mu_sig.offer.create_offer.direction_and_market.MuSigCreateOfferDirectionAndMarketModel.MARKET_ICON_CACHE;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class MuSigCreateOfferDirectionAndMarketController implements Controller {
@@ -147,14 +150,14 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
         onNextHandler.run();
     }
 
-    void onMarketListItemClicked(MarketListItem item) {
+    void onMarketListItemClicked(@Nullable MarketListItem item) {
         if (item == null || item.equals(model.getSelectedMarketListItem().get())) {
             return;
         }
         setSelectedMarketAndListItem(item.getMarket());
     }
 
-    void onMarketTypeListItemSelected(MarketTypeListItem listItem) {
+    void onMarketTypeListItemSelected(@Nullable MarketTypeListItem listItem) {
         if (listItem == null || listItem.equals(model.getSelectedMarketTypeListItem().get())) {
             return;
         }
@@ -164,56 +167,67 @@ public class MuSigCreateOfferDirectionAndMarketController implements Controller 
     }
 
     private void updateWithLastSelectedOrDefaultMarket(MarketType marketType) {
-        if (marketType == MarketType.FIAT) {
-            setSelectedMarketAndListItem(settingsService.getMuSigLastSelectedFiatMarket().get());
-        } else {
-            setSelectedMarketAndListItem(settingsService.getMuSigLastSelectedOtherMarket().get());
-        }
+        Optional<Market> lastSelected = switch (marketType) {
+            case FIAT -> Optional.ofNullable(settingsService.getMuSigLastSelectedFiatMarket().get());
+            case OTHER -> Optional.ofNullable(settingsService.getMuSigLastSelectedOtherMarket().get());
+        };
+
+        lastSelected.filter(marketPriceService::hasMarketPrice)
+                .or(() -> {
+                    Optional<Market> fallback = findFallbackMarket(marketType);
+                    log.warn("No market price available for the stored '{}' market, using fallback '{}' market.",
+                            lastSelected.orElse(null), fallback.orElse(null));
+                    return fallback;
+                })
+                .ifPresent(this::setSelectedMarketAndListItem);
+    }
+
+    private Optional<Market> findFallbackMarket(MarketType marketType) {
+        checkArgument(marketType == model.getSelectedMarketTypeListItem().get().getMarketType(),
+                "marketType must not be different from the selected market type in the model");
+        return model.getMarketListItems().stream().findFirst().map(MarketListItem::getMarket);
     }
 
     private void setSelectedMarketAndListItem(Market market) {
-        if (market != null) {
-            updateSelectedMarket(market);
-            settingsService.setSelectedMuSigMarket(market);
-            if (market.isBtcFiatMarket()) {
-                settingsService.setMuSigLastSelectedFiatMarket(market);
-            } else {
-                settingsService.setMuSigLastSelectedOtherMarket(market);
-            }
+        updateSelectedMarket(market);
+        settingsService.setSelectedMuSigMarket(market);
+        if (market.isBtcFiatMarket()) {
+            settingsService.setMuSigLastSelectedFiatMarket(market);
+        } else {
+            settingsService.setMuSigLastSelectedOtherMarket(market);
         }
     }
 
     private void initializeMarketSelection() {
-        Market market = settingsService.getSelectedMuSigMarket().get();
-        if (market != null) {
-            updateSelectedMarket(market);
-            if (market.isBtcFiatMarket()) {
-                model.getSelectedMarketTypeListItem().set(new MarketTypeListItem(MarketType.FIAT));
-            } else {
-                model.getSelectedMarketTypeListItem().set(new MarketTypeListItem(MarketType.OTHER));
-            }
-        } else {
-            updateWithLastSelectedOrDefaultMarket(MarketType.FIAT);
-        }
+        Optional<Market> market = Optional.ofNullable(settingsService.getSelectedMuSigMarket().get());
+        MarketType marketType = market.map(Market::isBtcFiatMarket)
+                .map(fiat -> fiat ? MarketType.FIAT : MarketType.OTHER).orElse(MarketType.FIAT);
+        model.getSelectedMarketTypeListItem().set(new MarketTypeListItem(marketType));
+        market.filter(marketPriceService::hasMarketPrice)
+                .ifPresentOrElse(
+                        this::updateSelectedMarket,
+                        () -> updateWithLastSelectedOrDefaultMarket(marketType)
+                );
     }
 
     private void updateSelectedMarket(Market market) {
-        if (market != null) {
-            model.getSelectedMarket().set(market);
-            model.getTradePairImage().set(MarketImageComposition.getMarketIcons(market, MARKET_ICON_CACHE));
+        checkArgument(marketPriceService.hasMarketPrice(market),
+                "There is no market price available for the '%s' market", market);
 
-            MarketListItem item = model.getMarketListItems().stream()
-                    .filter(m -> m.getMarket().equals(market))
-                    .findAny()
-                    .orElse(null);
-            model.getSelectedMarketListItem().set(item);
+        model.getSelectedMarket().set(market);
+        model.getTradePairImage().set(MarketImageComposition.getMarketIcons(market, MARKET_ICON_CACHE));
 
-            String baseCurrencyName = market.getBaseCurrencyName();
-            model.getHeadlineText().set(Res.get("muSig.offer.create.directionAndMarket.headline",
-                    baseCurrencyName, market.getQuoteCurrencyName()));
-            model.getBuyButtonText().set(Res.get("muSig.offer.create.directionAndMarket.buyButton", baseCurrencyName));
-            model.getSellButtonText().set(Res.get("muSig.offer.create.directionAndMarket.sellButton", baseCurrencyName));
-        }
+        MarketListItem item = model.getMarketListItems().stream()
+                .filter(m -> m.getMarket().equals(market))
+                .findAny()
+                .orElse(null);
+        model.getSelectedMarketListItem().set(item);
+
+        String baseCurrencyName = market.getBaseCurrencyName();
+        model.getHeadlineText().set(Res.get("muSig.offer.create.directionAndMarket.headline",
+                baseCurrencyName, market.getQuoteCurrencyName()));
+        model.getBuyButtonText().set(Res.get("muSig.offer.create.directionAndMarket.buyButton", baseCurrencyName));
+        model.getSellButtonText().set(Res.get("muSig.offer.create.directionAndMarket.sellButton", baseCurrencyName));
     }
 
     private void setDisplayDirection(Direction direction) {
