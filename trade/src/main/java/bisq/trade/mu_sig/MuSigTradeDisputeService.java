@@ -26,10 +26,9 @@ import bisq.support.arbitration.ArbitrationCaseState;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationResult;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationResultService;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
-import bisq.support.mediation.MediationCaseState;
 import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
+import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationResultService;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.trade.MuSigDisputeState;
@@ -37,7 +36,6 @@ import bisq.trade.mu_sig.arbitration.MuSigTraderArbitrationService;
 import bisq.trade.mu_sig.mediation.MuSigTraderMediationService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -54,7 +52,6 @@ import static bisq.trade.MuSigDisputeState.isMediationState;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-@RequiredArgsConstructor
 final class MuSigTradeDisputeService {
     private final BannedUserService bannedUserService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
@@ -64,6 +61,20 @@ final class MuSigTradeDisputeService {
     private final Runnable persist;
 
     private final Map<String, Set<EnvelopePayloadMessage>> pendingDisputeMessagesByTradeId = new ConcurrentHashMap<>();
+
+    MuSigTradeDisputeService(BannedUserService bannedUserService,
+                             MuSigOpenTradeChannelService muSigOpenTradeChannelService,
+                             MuSigTraderMediationService muSigTraderMediationService,
+                             MuSigTraderArbitrationService muSigTraderArbitrationService,
+                             Function<String, Optional<MuSigTrade>> findTrade,
+                             Runnable persist) {
+        this.bannedUserService = bannedUserService;
+        this.muSigOpenTradeChannelService = muSigOpenTradeChannelService;
+        this.muSigTraderMediationService = muSigTraderMediationService;
+        this.muSigTraderArbitrationService = muSigTraderArbitrationService;
+        this.findTrade = findTrade;
+        this.persist = persist;
+    }
 
     public void requestMediation(MuSigTrade trade) {
         checkArgument(!bannedUserService.isUserProfileBanned(trade.getMyIdentity().getNetworkId()));
@@ -85,14 +96,6 @@ final class MuSigTradeDisputeService {
             muSigTraderMediationService.requestMediation(trade.getId(), trade.getMyIdentity(),
                     trade.getPeer(), mediator.get(), contract, channel);
         }
-    }
-
-    public void acceptMediationResult(MuSigTrade trade) {
-        applyMediationResultAcceptance(trade, true);
-    }
-
-    public void rejectMediationResult(MuSigTrade trade) {
-        applyMediationResultAcceptance(trade, false);
     }
 
     public void requestArbitration(MuSigTrade trade) {
@@ -121,16 +124,12 @@ final class MuSigTradeDisputeService {
         }
     }
 
-    // Must be called while holding the outer disputeStateLock.
+    // Must be called while holding the trade's protocol monitor.
     public void onDisputeMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigMediationStateChangeMessage message) {
             findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
                     .flatMap(tradeAndChannel -> verifyMediationStateChangeMessage(message, tradeAndChannel, bannedUserService))
                     .ifPresent(tradeAndChannel -> processMediationStateChangeMessage(message, tradeAndChannel));
-        } else if (envelopePayloadMessage instanceof MuSigMediationResultAcceptanceMessage message) {
-            findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
-                    .flatMap(tradeAndChannel -> verifyMediationResultAcceptanceMessage(message, tradeAndChannel, bannedUserService))
-                    .ifPresent(tradeAndChannel -> processMediationResultAcceptanceMessage(message, tradeAndChannel));
         } else if (envelopePayloadMessage instanceof MuSigDisputeCasePaymentDetailsRequest message) {
             findTradeAndChannelOrQueue(message.getTradeId(), envelopePayloadMessage)
                     .flatMap(tradeAndChannel -> verifyDisputeCasePaymentDetailsRequest(message, tradeAndChannel, bannedUserService))
@@ -142,21 +141,11 @@ final class MuSigTradeDisputeService {
         }
     }
 
-    // Must be called while holding the outer disputeStateLock.
+    // Must be called while holding the trade's protocol monitor.
     public void maybeProcessPendingDisputeMessages(String tradeId) {
         Set<EnvelopePayloadMessage> pendingMessages = pendingDisputeMessagesByTradeId.remove(tradeId);
         if (pendingMessages != null) {
             pendingMessages.forEach(this::onDisputeMessage);
-        }
-    }
-
-    private void applyMediationResultAcceptance(MuSigTrade trade, boolean mediationResultAccepted) {
-        checkArgument(trade.getTradeDispute().getMuSigMediationResult().isPresent());
-        MuSigOpenTradeChannel channel = findChannelByTradeId(trade.getId()).orElseThrow();
-        if (trade.getMyself().setMediationResultAccepted(mediationResultAccepted)) {
-            persist.run();
-            muSigTraderMediationService.sendMediationResultAcceptanceMessage(
-                    trade.getId(), trade.getMyIdentity(), trade.getPeer(), mediationResultAccepted, channel);
         }
     }
 
@@ -280,36 +269,6 @@ final class MuSigTradeDisputeService {
             log.warn("Ignoring MuSigMediationResult for trade {} because mediator signature verification failed.",
                     message.getTradeId(), e);
             return false;
-        }
-    }
-
-    private static Optional<MuSigTradeAndChannel> verifyMediationResultAcceptanceMessage(
-            MuSigMediationResultAcceptanceMessage message,
-            MuSigTradeAndChannel tradeAndChannel,
-            BannedUserService bannedUserService) {
-        if (!tradeAndChannel.trade().getPeer().getNetworkId().getId().equals(message.getSenderNetworkId().getId())) {
-            log.warn("Ignoring MuSigMediationResultAcceptanceMessage with unexpected senderNetworkId {} for trade {}.",
-                    message.getSenderNetworkId(), message.getTradeId());
-            return Optional.empty();
-        }
-
-        if (bannedUserService.isUserProfileBanned(message.getSenderNetworkId())) {
-            log.warn("Ignoring MuSigMediationResultAcceptanceMessage as sender is banned");
-            return Optional.empty();
-        }
-        return Optional.of(tradeAndChannel);
-    }
-
-    private void processMediationResultAcceptanceMessage(MuSigMediationResultAcceptanceMessage message,
-                                                         MuSigTradeAndChannel tradeAndChannel) {
-        MuSigTrade trade = tradeAndChannel.trade();
-        if (trade.getTradeDispute().getMuSigMediationResult().isEmpty()) {
-            addPendingDisputeMessage(trade.getId(), message);
-            return;
-        }
-
-        if (trade.getPeer().setMediationResultAccepted(message.isMediationResultAccepted())) {
-            persist.run();
         }
     }
 
@@ -504,7 +463,9 @@ final class MuSigTradeDisputeService {
         return Optional.empty();
     }
 
-    private void addPendingDisputeMessage(String tradeId, EnvelopePayloadMessage message) {
+    // Before protocol registration, the caller holds pendingMessagesLock; afterwards it holds
+    // the trade's protocol monitor. Registration coordinates the handoff between those locks.
+    void addPendingDisputeMessage(String tradeId, EnvelopePayloadMessage message) {
         pendingDisputeMessagesByTradeId
                 .computeIfAbsent(tradeId, key -> new CopyOnWriteArraySet<>())
                 .add(message);

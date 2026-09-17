@@ -20,7 +20,10 @@ package bisq.desktop.main.content.mu_sig.trade.pending.trade_state;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.common.view.Model;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
+import bisq.support.mediation.mu_sig.MuSigMediationResult;
+import bisq.trade.MuSigDisputeState;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.protocol.MuSigTradeState;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -30,8 +33,6 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 @Slf4j
 @Getter
@@ -49,7 +50,15 @@ public class MuSigTradeStateModel implements Model {
     private final ObjectProperty<MessageDeliveryStatus> requestMediationDeliveryStatus = new SimpleObjectProperty<>();
     private final ObjectProperty<MessageDeliveryStatus> requestArbitrationDeliveryStatus = new SimpleObjectProperty<>();
     private final BooleanProperty shouldShowTryRequestMediationAgain = new SimpleBooleanProperty();
-    private final ObjectProperty<Optional<Boolean>> myMediationResultAccepted = new SimpleObjectProperty<>(Optional.empty());
+    private final ObjectProperty<MuSigTradeState> tradeState = new SimpleObjectProperty<>(MuSigTradeState.INIT);
+    private final ObjectProperty<MuSigDisputeState> disputeState = new SimpleObjectProperty<>(MuSigDisputeState.NO_DISPUTE);
+    private final ObjectProperty<MuSigMediationResult> mediationResult = new SimpleObjectProperty<>();
+    private final BooleanProperty peerMediationResultRejected = new SimpleBooleanProperty();
+    private final BooleanProperty myMediationResultDecisionMade = new SimpleBooleanProperty();
+    private final BooleanProperty mediationResultAcceptanceAvailable = new SimpleBooleanProperty();
+    private final BooleanProperty showMediationResultDecisionButtons = new SimpleBooleanProperty();
+    private final StringProperty mediationBannerText = new SimpleStringProperty();
+    private final StringProperty arbitrationBannerText = new SimpleStringProperty();
 
     void resetAll() {
         reset();
@@ -69,6 +78,14 @@ public class MuSigTradeStateModel implements Model {
         requestMediationDeliveryStatus.set(null);
         requestArbitrationDeliveryStatus.set(null);
         shouldShowTryRequestMediationAgain.set(false);
-        myMediationResultAccepted.set(Optional.empty());
+        tradeState.set(MuSigTradeState.INIT);
+        disputeState.set(MuSigDisputeState.NO_DISPUTE);
+        mediationResult.set(null);
+        peerMediationResultRejected.set(false);
+        myMediationResultDecisionMade.set(false);
+        mediationResultAcceptanceAvailable.set(false);
+        showMediationResultDecisionButtons.set(false);
+        mediationBannerText.set(null);
+        arbitrationBannerText.set(null);
     }
 }

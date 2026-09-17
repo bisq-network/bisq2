@@ -49,12 +49,11 @@ import bisq.security.keys.TorKeyGeneration;
 import bisq.security.pow.ProofOfWork;
 import bisq.support.arbitration.ArbitrationCaseState;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
+import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.MediationResultReason;
-import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
 import bisq.trade.MuSigDisputeState;
 import bisq.trade.mu_sig.arbitration.MuSigTraderArbitrationService;
@@ -74,7 +73,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -83,6 +81,7 @@ import static org.mockito.Mockito.when;
 class MuSigTradeDisputeServiceTest {
     private static final AtomicInteger FIXTURE_SEQUENCE = new AtomicInteger();
 
+    private BannedUserService bannedUserService;
     private MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private MuSigTraderMediationService muSigTraderMediationService;
     private MuSigTraderArbitrationService muSigTraderArbitrationService;
@@ -92,7 +91,7 @@ class MuSigTradeDisputeServiceTest {
 
     @BeforeEach
     void setUp() {
-        BannedUserService bannedUserService = mock(BannedUserService.class);
+        bannedUserService = mock(BannedUserService.class);
         muSigOpenTradeChannelService = mock(MuSigOpenTradeChannelService.class);
         muSigTraderMediationService = mock(MuSigTraderMediationService.class);
         muSigTraderArbitrationService = mock(MuSigTraderArbitrationService.class);
@@ -149,53 +148,6 @@ class MuSigTradeDisputeServiceTest {
         assertThat(fixture.tradeDispute().getDisputeState()).isEqualTo(MuSigDisputeState.MEDIATION_OPEN);
         assertThat(persistCalls.get()).isZero();
         verifyNoInteractions(muSigTraderMediationService);
-    }
-
-    @Test
-    void givenTradeWithoutMediationResult_whenAcceptMediationResult_thenThrowsAndDoesNotPersist() {
-        TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_OPEN, true, false);
-        stubOpenTradeChannel(fixture);
-
-        assertThatThrownBy(() -> service.acceptMediationResult(fixture.trade()))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThat(persistCalls.get()).isZero();
-        verifyNoInteractions(muSigTraderMediationService);
-    }
-
-    @Test
-    void givenTradeWithMediationResult_whenAcceptMediationResult_thenMarksAcceptedPersistsAndDelegates() {
-        TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_CLOSED, true, false);
-        MuSigOpenTradeChannel channel = stubOpenTradeChannel(fixture);
-        fixture.tradeDispute().setMuSigMediationResult(createMediationResult());
-
-        service.acceptMediationResult(fixture.trade());
-
-        assertThat(fixture.myself().getMediationResultAccepted()).contains(true);
-        assertThat(persistCalls.get()).isEqualTo(1);
-        verify(muSigTraderMediationService).sendMediationResultAcceptanceMessage(
-                fixture.tradeId(),
-                fixture.identity(),
-                fixture.peer(),
-                true,
-                channel);
-    }
-
-    @Test
-    void givenTradeWithMediationResult_whenRejectMediationResult_thenMarksRejectedPersistsAndDelegates() {
-        TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_CLOSED, true, false);
-        MuSigOpenTradeChannel channel = stubOpenTradeChannel(fixture);
-        fixture.tradeDispute().setMuSigMediationResult(createMediationResult());
-
-        service.rejectMediationResult(fixture.trade());
-
-        assertThat(fixture.myself().getMediationResultAccepted()).contains(false);
-        assertThat(persistCalls.get()).isEqualTo(1);
-        verify(muSigTraderMediationService).sendMediationResultAcceptanceMessage(
-                fixture.tradeId(),
-                fixture.identity(),
-                fixture.peer(),
-                false,
-                channel);
     }
 
     @Test
@@ -283,26 +235,6 @@ class MuSigTradeDisputeServiceTest {
                 fixture.mediator().orElseThrow().getNetworkId(),
                 fixture.taker().getAccountPayload().orElseThrow(),
                 fixture.maker().getAccountPayload().orElseThrow());
-    }
-
-    @Test
-    void givenQueuedAcceptanceWithoutMediationResult_whenMaybeProcessPendingDisputeMessages_thenMarksPeerAcceptance() {
-        TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_OPEN, true, false);
-        tradeById.put(fixture.tradeId(), fixture.trade());
-        when(muSigOpenTradeChannelService.findChannelByTradeId(fixture.tradeId())).thenReturn(Optional.of(createOpenTradeChannel(fixture)));
-
-        MuSigMediationResultAcceptanceMessage message =
-                new MuSigMediationResultAcceptanceMessage(fixture.tradeId(), fixture.takerProfile().getNetworkId(), true);
-
-        service.onDisputeMessage(message);
-        assertThat(fixture.peer().getMediationResultAccepted()).isEmpty();
-        assertThat(persistCalls.get()).isZero();
-
-        fixture.tradeDispute().setMuSigMediationResult(createMediationResult());
-        service.maybeProcessPendingDisputeMessages(fixture.tradeId());
-
-        assertThat(fixture.peer().getMediationResultAccepted()).contains(true);
-        assertThat(persistCalls.get()).isEqualTo(1);
     }
 
     @Test

@@ -52,14 +52,14 @@ public final class MuSigMediationResultService {
         return verifyMediationResult(mediationResult, mediationResultSignature, publicKey);
     }
 
+    public static byte[] getMediationResultHash(MuSigMediationResult mediationResult) {
+        return DigestUtil.hash(mediationResult.serializeForHash());
+    }
+
     private static boolean verifyMediationResult(MuSigMediationResult mediationResult,
                                                 byte[] mediationResultSignature,
                                                 PublicKey publicKey) throws GeneralSecurityException {
         NetworkDataValidation.validateECSignature(mediationResultSignature);
         return SignatureUtil.verify(getMediationResultHash(mediationResult), mediationResultSignature, publicKey);
-    }
-
-    private static byte[] getMediationResultHash(MuSigMediationResult mediationResult) {
-        return DigestUtil.hash(mediationResult.serializeForHash());
     }
 }
