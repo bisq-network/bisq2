@@ -69,6 +69,7 @@ class MuSigMediationTableView extends VBox {
     private final SearchBox searchBox;
     private final BisqTableView<MuSigMediationCaseListItem> tableView;
     private BisqTableColumn<MuSigMediationCaseListItem> closeCaseDateColumn;
+    private BisqTableColumn<MuSigMediationCaseListItem> lastMessageColumn;
     private final Hyperlink exportHyperlink;
     private final Label numEntriesLabel;
     private final ListChangeListener<MuSigMediationCaseListItem> listChangeListener;
@@ -292,7 +293,17 @@ class MuSigMediationTableView extends VBox {
                 .valueSupplier(item -> item.getTaker().getUserName())// For csv export
                 .build());
 
-        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
+        lastMessageColumn = new BisqTableColumn.Builder<MuSigMediationCaseListItem>()
+                .title(Res.get("authorizedRole.mediator.table.lastMessage"))
+                .minWidth(130)
+                .comparator(MuSigMediationCaseListItem.BY_LAST_MESSAGE_DATE)
+                .sortType(TableColumn.SortType.DESCENDING)
+                .setCellFactory(getLastMessageCellFactory())
+                .valueSupplier(item -> item.getLastMessageDateString() + " " + item.getLastMessageTimeString())
+                .build();
+        tableView.getColumns().add(lastMessageColumn);
+
+        tableView.getColumns().add(DateColumnUtil.getDateColumn());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
@@ -337,6 +348,40 @@ class MuSigMediationTableView extends VBox {
                 .valueSupplier(item -> item.getCloseCaseDateString() + " " + item.getCloseCaseTimeString())
                 .build();
         tableView.getColumns().add(closeCaseDateColumn);
+
+        UIThread.runOnNextRenderFrame(() -> tableView.getSortOrder().add(lastMessageColumn));
+    }
+
+    private Callback<TableColumn<MuSigMediationCaseListItem, MuSigMediationCaseListItem>,
+            TableCell<MuSigMediationCaseListItem, MuSigMediationCaseListItem>> getLastMessageCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label date = new Label();
+            private final Label time = new Label();
+            private final VBox vBox = new VBox(3, date, time);
+
+            {
+                date.getStyleClass().add("table-view-date-column-date");
+                time.getStyleClass().add("table-view-date-column-time");
+                vBox.setAlignment(Pos.CENTER);
+                setAlignment(Pos.CENTER);
+            }
+
+            @Override
+            protected void updateItem(MuSigMediationCaseListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                date.textProperty().unbind();
+                time.textProperty().unbind();
+
+                if (item != null && !empty) {
+                    date.textProperty().bind(item.getLastMessageDateStringProperty());
+                    time.textProperty().bind(item.getLastMessageTimeStringProperty());
+                    setGraphic(vBox);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
     }
 
     private Callback<TableColumn<MuSigMediationCaseListItem, MuSigMediationCaseListItem>,
