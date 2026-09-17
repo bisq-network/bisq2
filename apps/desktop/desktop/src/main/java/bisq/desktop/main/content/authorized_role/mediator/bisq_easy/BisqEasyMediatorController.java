@@ -145,7 +145,6 @@ public class BisqEasyMediatorController implements Controller {
 
         searchPredicatePin = EasyBind.subscribe(model.getSearchPredicate(), searchPredicate -> updatePredicate());
         closedCasesPredicatePin = EasyBind.subscribe(model.getClosedCasesPredicate(), closedCasesPredicate -> updatePredicate());
-        maybeSelectFirst();
         updateEmptyState();
 
         model.getListItems().addListener(itemListener);
@@ -154,6 +153,7 @@ public class BisqEasyMediatorController implements Controller {
     @Override
     public void onDeactivate() {
         doCloseChatWindow();
+        selectionService.selectChannel(null);
 
         model.getListItems().removeListener(itemListener);
         model.getListItems().onDeactivate();
@@ -212,7 +212,6 @@ public class BisqEasyMediatorController implements Controller {
                 model.getSelectedItem().set(null);
                 bisqEasyMediationCaseHeader.setMediationCaseListItem(null);
                 bisqEasyMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                maybeSelectFirst();
                 updateEmptyState();
             } else if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
                 model.getListItems().stream()
@@ -232,12 +231,12 @@ public class BisqEasyMediatorController implements Controller {
         // Need a predicate change to trigger a list update
         applyFilteredListPredicate(!model.getShowClosedCases().get());
         applyFilteredListPredicate(model.getShowClosedCases().get());
-        maybeSelectFirst();
+        deselectIfFilteredOut();
     }
 
     private void updatePredicate() {
         model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
-        maybeSelectFirst();
+        deselectIfFilteredOut();
         updateEmptyState();
     }
 
@@ -262,12 +261,11 @@ public class BisqEasyMediatorController implements Controller {
         }
     }
 
-    private void maybeSelectFirst() {
-        UIThread.runOnNextRenderFrame(() -> {
-            if (!model.getListItems().getFilteredList().isEmpty()) {
-                selectionService.selectChannel(model.getListItems().getSortedList().get(0).getChannel());
-            }
-        });
+    private void deselectIfFilteredOut() {
+        BisqEasyMediationCaseListItem selectedItem = model.getSelectedItem().get();
+        if (selectedItem != null && model.getListItems().getFilteredList().stream().noneMatch(selectedItem::equals)) {
+            selectionService.selectChannel(null);
+        }
     }
 
     private BisqEasyOpenTradeChannel findOrCreateChannel(BisqEasyMediationRequest bisqEasyMediationRequest,
