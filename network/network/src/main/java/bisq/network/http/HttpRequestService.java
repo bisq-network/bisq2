@@ -28,6 +28,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.http.utils.HttpException;
+import bisq.network.http.utils.HttpLogSanitizer;
 import bisq.network.http.utils.HttpMethod;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
@@ -78,7 +79,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * <p>4xx responses (other than 408 and 429) bypass retry entirely and are
  * propagated to the caller as a {@link CompletionException} — these indicate
- * caller error, not transient failure.
+ * caller error, not transient failure. A subclass whose endpoint encodes
+ * transient upstream failures inside a 4xx (see {@link #isRecoverableClientError})
+ * can reclassify those specific responses back into the server-level bucket,
+ * where the same method gate applies.
  *
  * <h2>Lifecycle</h2>
  * The service owns the underlying {@link BaseHttpClient}: callers do not need
@@ -277,7 +281,17 @@ public abstract class HttpRequestService<T, R> implements Service {
                             }
 
                             Throwable rootCause = ExceptionUtil.getRootCause(e);
-                            log.warn("Encountered exception during HTTP request to provider {}", providerForThisRequest.getBaseUrl(), rootCause);
+                            // An HttpException message IS the raw response body — sanitize it for
+                            // the log; the exception itself keeps the raw body for classification.
+                            // Transport failures carry no body and keep their stack trace.
+                            if (rootCause instanceof HttpException httpException) {
+                                log.warn("HTTP {} from provider {}: {}",
+                                        httpException.getResponseCode(),
+                                        providerForThisRequest.getBaseUrl(),
+                                        HttpLogSanitizer.loggableBody(httpException.getMessage()));
+                            } else {
+                                log.warn("Encountered exception during HTTP request to provider {}", providerForThisRequest.getBaseUrl(), rootCause);
+                            }
 
                             // Distinguish HTTP responses from transport-level failures.
                             // HTTP responses came back from the server (4xx/5xx) — server-level.
@@ -285,11 +299,12 @@ public abstract class HttpRequestService<T, R> implements Service {
                             // request was never delivered — transport-level, always retriable.
                             if (rootCause instanceof HttpException httpException) {
                                 int responseCode = httpException.getResponseCode();
-                                if (responseCode < 500 && responseCode != 408 && responseCode != 429) {
+                                if (responseCode < 500 && responseCode != 408 && responseCode != 429
+                                        && !isRecoverableClientError(httpException)) {
                                     // 4xx (other than 408 / 429): caller error, never retry.
                                     throw new CompletionException(e);
                                 }
-                                // 5xx / 408 / 429: retry only if the method allows it.
+                                // 5xx / 408 / 429 / reclassified 4xx: retry only if the method allows it.
                                 if (!isServerErrorRetryAllowed(httpRequest)) {
                                     throw new CompletionException(e);
                                 }
@@ -344,6 +359,17 @@ public abstract class HttpRequestService<T, R> implements Service {
      */
     static boolean isServerErrorRetryAllowed(HttpRequest httpRequest) {
         return httpRequest.method() == HttpMethod.GET || httpRequest.retryOnServerError();
+    }
+
+    /**
+     * Hook for endpoints that encode transient upstream failures inside a 4xx response
+     * (e.g. a gateway answering an upstream outage with 400 plus a structured body).
+     * Returning {@code true} moves that response from the fail-fast bucket into the
+     * server-level one, so provider failover applies — still gated on
+     * {@link #isServerErrorRetryAllowed}. Default: every 4xx is a caller error.
+     */
+    protected boolean isRecoverableClientError(HttpException httpException) {
+        return false;
     }
 
     /**
