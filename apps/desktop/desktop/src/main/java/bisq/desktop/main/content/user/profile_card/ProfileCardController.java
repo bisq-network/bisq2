@@ -27,8 +27,10 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.main.content.bisq_easy.TradesUtils;
 import bisq.desktop.main.content.components.AddToContactsListWindow;
 import bisq.desktop.main.content.components.ReportToModeratorWindow;
+import bisq.desktop.main.content.mu_sig.MusigTradesUtils;
 import bisq.desktop.main.content.user.profile_card.details.ProfileCardDetailsController;
 import bisq.desktop.main.content.user.profile_card.messages.ProfileCardMessagesController;
 import bisq.desktop.main.content.user.profile_card.my_notes.ProfileCardMyNotesController;
@@ -38,6 +40,8 @@ import bisq.desktop.main.content.user.profile_card.reputation.ProfileCardReputat
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
@@ -77,6 +81,8 @@ public class ProfileCardController extends TabController<ProfileCardModel>
     @Getter
     private final ProfileCardView view;
     private final ReputationService reputationService;
+    private final BisqEasyTradeService bisqEasyTradeService;
+    private final MuSigTradeService muSigTradeService;
     private final BannedUserService bannedUserService;
     private final UserProfileService userProfileService;
     protected final UserIdentityService userIdentityService;
@@ -96,6 +102,8 @@ public class ProfileCardController extends TabController<ProfileCardModel>
 
         UserService userService = serviceProvider.getUserService();
         reputationService = userService.getReputationService();
+        bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
+        muSigTradeService = serviceProvider.getTradeService().getMuSigTradeService();
         bannedUserService = userService.getBannedUserService();
         userProfileService = userService.getUserProfileService();
         userIdentityService = userService.getUserIdentityService();
@@ -162,6 +170,7 @@ public class ProfileCardController extends TabController<ProfileCardModel>
 
     @Override
     public void onActivate() {
+        updatePastTradeCount();
     }
 
     @Override
@@ -218,5 +227,29 @@ public class ProfileCardController extends TabController<ProfileCardModel>
 
     void onClose() {
         OverlayController.hide();
+    }
+
+    private void updatePastTradeCount() {
+        model.setNumPastTradesText("");
+
+        String userProfileId = model.getUserProfile().getId();
+        if (userIdentityService.isUserIdentityPresent(userProfileId)) {
+            return;
+        }
+
+        int pastBisqEasyTrades = TradesUtils.getPreviousBisqEasyTradesWithPeer(
+                userProfileId,
+                bisqEasyTradeService);
+        int pastMusigTrades = MusigTradesUtils.getPreviousMusigTradesWithPeer(
+                userProfileId,
+                muSigTradeService);
+        if (pastBisqEasyTrades > 0 || pastMusigTrades > 0) {
+            String numTradesText = Res.get(
+                    "user.profileCard.completedTradesWithPeer",
+                    pastBisqEasyTrades,
+                    pastMusigTrades
+            );
+            model.setNumPastTradesText(numTradesText);
+        }
     }
 }
