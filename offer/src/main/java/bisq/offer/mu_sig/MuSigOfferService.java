@@ -19,6 +19,7 @@ package bisq.offer.mu_sig;
 
 import bisq.common.application.Service;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -118,7 +119,7 @@ public class MuSigOfferService implements Service {
     }
 
     public MuSigOffer cloneOffer(MuSigOffer offer) {
-        return MuSigOffer.fromProto(offer.toProto(true));
+        return MuSigOffer.cloneWithNewId(offer, StringUtils.createUid());
     }
 
 
