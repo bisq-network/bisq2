@@ -60,6 +60,14 @@ public abstract class MuSigProtocol extends TradeProtocol<MuSigTrade> {
         getServiceProvider().getMuSigTradeService().persist();
     }
 
+    @Override
+    protected void persistOnFinalState() {
+        // Unthrottled: a final state just cleared eventQueue/processedEvents in-memory (see Fsm#handle), and that
+        // wipe - which can cover sensitive account-data messages - must not be silently dropped by the
+        // rate-limited persist() path (see Fsm#persistOnFinalState's javadoc).
+        getServiceProvider().getMuSigTradeService().persistNow();
+    }
+
     public MuSigTrade getTrade() {
         return getModel();
     }
