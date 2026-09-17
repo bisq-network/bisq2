@@ -22,9 +22,18 @@ import com.google.protobuf.Any;
 public interface ProtoResolver<T extends Proto> {
     T fromAny(Any any);
 
-    static String getProtoType(ProtoResolver<?> resolver) {
-        // As resolver is a static method reference SimpleName is something like: PublicChatMessage$$Lambda$31/0x0000000800c8b720
-        String className = resolver.getClass().getSimpleName().split("\\$")[0];
-        return resolver.getClass().getName().split("\\.")[1] + "." + className;
+    /**
+     * Derives the proto type name from the class which gets packed into the Any, matching the type URL suffix from
+     * {@link ProtobufUtils#getProtoType(Any)}, e.g. bisq.user.identity.UserIdentityStore maps to user.UserIdentityStore.
+     * Must be a source declared class, never a compiler generated one like a lambda, as those names are unspecified
+     * and get merged by optimizers like R8.
+     */
+    static String getProtoType(Class<?> clazz) {
+        String[] tokens = clazz.getName().split("\\.");
+        if (tokens.length < 2) {
+            throw new IllegalArgumentException("Cannot derive the proto type name from " + clazz.getName()
+                    + ". The java package is part of the name, so the class must not be repackaged or obfuscated.");
+        }
+        return tokens[1] + "." + clazz.getSimpleName();
     }
 }

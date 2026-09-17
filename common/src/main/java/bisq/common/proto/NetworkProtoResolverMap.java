@@ -18,8 +18,4 @@
 package bisq.common.proto;
 
 public class NetworkProtoResolverMap<T extends NetworkProto> extends ProtoResolverMap<T> {
-    public void addProtoResolver(String protoTypeName, ProtoResolver<T> resolver) {
-        NetworkStorageWhiteList.add(protoTypeName, resolver);
-        super.addProtoResolver(protoTypeName, resolver);
-    }
 }
