@@ -19,6 +19,7 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
+import bisq.account.accounts.crypto.monero.MoneroAccount;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.timestamp.KeyType;
 import bisq.common.proto.UnresolvableProtobufMessageException;
