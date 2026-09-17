@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.content.wallet.receive.address;
+package bisq.desktop.main.content.wallet.receive;
 
 import bisq.desktop.components.controls.MaterialTextField;
 
-public class AddressNoteInputBox extends MaterialTextField {
-    public AddressNoteInputBox() {
+public class WalletInputBox extends MaterialTextField {
+    public WalletInputBox() {
         super();
     }
 
