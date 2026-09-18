@@ -150,14 +150,6 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
             }
         }));
 
-        subscriptions.add(EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
-            if (isOverlayVisible) {
-                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
-            } else {
-                root.setOnKeyPressed(null);
-            }
-        }));
-
         learnMore.setOnAction(e -> controller.onShowOverlay());
         linkToWiki.setOnAction(e -> controller.onOpenWiki(linkToWiki.getText()));
         learnHowToBuildReputation.setOnAction(e -> controller.onLearnHowToBuildReputation());
@@ -188,8 +180,6 @@ public class MuSigCreateOfferAmountView extends View<VBox, MuSigCreateOfferAmoun
         learnHowToBuildReputation.setOnAction(null);
         fixedAmountButton.setOnAction(null);
         rangeAmountButton.setOnAction(null);
-
-        root.setOnKeyPressed(null);
     }
 
     private static VBox createAndGetOverlayContent(Label amountLimitInfo,
