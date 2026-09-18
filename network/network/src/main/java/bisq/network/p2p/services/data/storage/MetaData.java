@@ -25,37 +25,53 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
- * Meta data for storage properties per DistributedData
+ * The storage properties in effect for one stored entry: how long it is kept, how it is prioritised when an
+ * inventory response is truncated, how many entries its store holds, and which store it belongs to.
+ * <p>
+ * Usually it is resolved locally from the {@link StoragePolicy} declared by the payload type, and is then as
+ * trustworthy as the running build. It is sent between peers only where a receiver has no payload to resolve it
+ * from: remove and refresh requests carry a hash rather than the payload, and MailboxData wraps an encrypted
+ * message whose type it cannot know. A MetaData built by {@link #fromProto} therefore holds unverified remote
+ * input, and unlike a declared policy its values are not restricted to {@link Ttl}, {@link Priority} and
+ * {@link MaxMapSize}.
  */
 @Slf4j
 @EqualsAndHashCode
 @ToString
 @Getter
 public final class MetaData implements NetworkProto {
-    public static final long TTL_2_DAYS = TimeUnit.DAYS.toMillis(2);
-    public static final long TTL_5_DAYS = TimeUnit.DAYS.toMillis(5);
-    public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
-    public static final long TTL_15_DAYS = TimeUnit.DAYS.toMillis(15);
-    public static final long TTL_20_DAYS = TimeUnit.DAYS.toMillis(20);
-    public static final long TTL_30_DAYS = TimeUnit.DAYS.toMillis(30);
-    public static final long TTL_100_DAYS = TimeUnit.DAYS.toMillis(100);
-
-    public static final int MAX_MAP_SIZE_100 = 100;
-    public static final int MAX_MAP_SIZE_1000 = 1000;
-    public static final int MAX_MAP_SIZE_5000 = 5000;
-    public static final int MAX_MAP_SIZE_10_000 = 10_000;
-    public static final int MAX_MAP_SIZE_50_000 = 50_000;
-
-    public static final int LOW_PRIORITY = -1;
-    public static final int DEFAULT_PRIORITY = 0;
-    public static final int HIGH_PRIORITY = 1;
-    public static final int HIGHEST_PRIORITY = 2;
-
     private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("^[A-Z][A-Za-z0-9_$]*$");
+
+    // MetaData is constant per class, so we resolve it once per class and share the instance.
+    private static final Map<Class<?>, MetaData> BY_CLASS = new ConcurrentHashMap<>();
+
+    public static MetaData from(Class<?> clazz) {
+        return BY_CLASS.computeIfAbsent(clazz, MetaData::resolve);
+    }
+
+    /**
+     * Resolves the policy now and discards the result, so a type which does not declare one fails where it is
+     * registered rather than when the first payload of that type is handled.
+     */
+    public static void verifyStoragePolicyDeclared(Class<?> clazz) {
+        from(clazz);
+    }
+
+    private static MetaData resolve(Class<?> clazz) {
+        StoragePolicy annotation = clazz.getAnnotation(StoragePolicy.class);
+        checkArgument(annotation != null, "%s is missing the @StoragePolicy annotation", clazz.getName());
+        return new MetaData(annotation.ttl().getMillis(),
+                annotation.priority().getValue(),
+                clazz.getSimpleName(),
+                annotation.maxMapSize().getValue());
+    }
 
     // How long data are kept in the storage map
     private final long ttl;
@@ -65,22 +81,6 @@ public final class MetaData implements NetworkProto {
     private final String className;
     // Max file size of the storage file
     private final int maxMapSize;
-
-    public MetaData(String className) {
-        this(TTL_10_DAYS, className);
-    }
-
-    public MetaData(long ttl, String className) {
-        this(ttl, className, MAX_MAP_SIZE_1000);
-    }
-
-    public MetaData(long ttl, int priority, String className) {
-        this(ttl, priority, className, MAX_MAP_SIZE_1000);
-    }
-
-    public MetaData(long ttl, String className, int maxMapSize) {
-        this(ttl, DEFAULT_PRIORITY, className, maxMapSize);
-    }
 
     public MetaData(long ttl, int priority, String className, int maxMapSize) {
         this.ttl = ttl;
@@ -118,8 +118,8 @@ public final class MetaData implements NetworkProto {
     }
 
     public double getCostFactor() {
-        double ttlImpact = MathUtils.bounded(0, 1, ttl / (double) TTL_100_DAYS);
-        double mapSizeImpact = MathUtils.bounded(0, 1, maxMapSize / (double) MAX_MAP_SIZE_10_000);
+        double ttlImpact = MathUtils.bounded(0, 1, ttl / (double) Ttl.DAYS_100.getMillis());
+        double mapSizeImpact = MathUtils.bounded(0, 1, maxMapSize / (double) MaxMapSize.SIZE_10_000.getValue());
         double impact = ttlImpact + mapSizeImpact;
         return MathUtils.bounded(0, 1, impact);
     }

@@ -23,11 +23,16 @@ import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.proto.ProtoResolver;
 import com.google.protobuf.Any;
 
+import java.lang.reflect.Modifier;
+
 public class DistributedDataResolver {
     private static final NetworkProtoResolverMap<DistributedData> protoResolverMap = new NetworkProtoResolverMap<>();
 
     public static void addResolver(String protoTypeName, Class<? extends NetworkProto> clazz, ProtoResolver<DistributedData> resolver) {
         NetworkStorageWhiteList.add(clazz);
+        if (!Modifier.isAbstract(clazz.getModifiers())) {
+            MetaData.verifyStoragePolicyDeclared(clazz);
+        }
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 

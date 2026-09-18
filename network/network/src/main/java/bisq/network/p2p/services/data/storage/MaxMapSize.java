@@ -17,9 +17,22 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.common.proto.NetworkProto;
+import lombok.Getter;
 
-// Interface covering data for storage. Implemented by AppendOnlyData, AuthenticatedData
-public interface StorageData extends NetworkProto, StoragePolicyAware {
-    boolean isDataInvalid(byte[] ownerPubKeyHash);
+/**
+ * Upper bound for the number of entries a store keeps for a given data type. The value is what goes on the wire.
+ */
+@Getter
+public enum MaxMapSize {
+    SIZE_100(100),
+    SIZE_1000(1000),
+    SIZE_5000(5000),
+    SIZE_10_000(10_000),
+    SIZE_50_000(50_000);
+
+    private final int value;
+
+    MaxMapSize(int value) {
+        this.value = value;
+    }
 }

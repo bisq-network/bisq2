@@ -42,10 +42,12 @@ import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.MuSigOpenTradeMessageReaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.mu_sig.MuSigOfferMessage;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationRequest;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
@@ -148,44 +150,51 @@ public class ResolverConfig {
         // Otherwise, the className gets added from the `addResolver` method call.
 
         // ChatMessage subclasses
-        NetworkStorageWhiteList.add(CommonPublicChatMessage.class);
-        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyOfferbookMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessage.class);
-        NetworkStorageWhiteList.add(MuSigOpenTradeMessage.class);
+        addStorageType(CommonPublicChatMessage.class);
+        addStorageType(TwoPartyPrivateChatMessage.class);
+        addStorageType(BisqEasyOfferbookMessage.class);
+        addStorageType(BisqEasyOpenTradeMessage.class);
+        addStorageType(MuSigOpenTradeMessage.class);
 
         // BisqEasyTradeMessage subclasses
-        NetworkStorageWhiteList.add(BisqEasyReportErrorMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
-        NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
-        NetworkStorageWhiteList.add(BisqEasyCancelTradeMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyRejectTradeMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyBtcAddressMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmFiatSentMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmFiatReceiptMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmBtcSentMessage.class);
+        addStorageType(BisqEasyReportErrorMessage.class);
+        addStorageType(BisqEasyTakeOfferRequest.class);
+        addStorageType(BisqEasyTakeOfferResponse.class);
+        addStorageType(BisqEasyCancelTradeMessage.class);
+        addStorageType(BisqEasyRejectTradeMessage.class);
+        addStorageType(BisqEasyAccountDataMessage.class);
+        addStorageType(BisqEasyBtcAddressMessage.class);
+        addStorageType(BisqEasyConfirmFiatSentMessage.class);
+        addStorageType(BisqEasyConfirmFiatReceiptMessage.class);
+        addStorageType(BisqEasyConfirmBtcSentMessage.class);
 
         // MuSigTradeMessage subclasses
-        NetworkStorageWhiteList.add(MuSigReportErrorMessage.class);
-        NetworkStorageWhiteList.add(SetupTradeMessage_A.class);
-        NetworkStorageWhiteList.add(SetupTradeMessage_B.class);
-        NetworkStorageWhiteList.add(SetupTradeMessage_C.class);
-        NetworkStorageWhiteList.add(SetupTradeMessage_D.class);
-        NetworkStorageWhiteList.add(SendAccountPayloadMessage.class);
-        NetworkStorageWhiteList.add(SendAccountPayloadAndDepositTxMessage.class);
-        NetworkStorageWhiteList.add(PaymentInitiatedMessage_E.class);
-        NetworkStorageWhiteList.add(PaymentReceivedMessage_F.class);
-        NetworkStorageWhiteList.add(CooperativeClosureMessage_G.class);
+        addStorageType(MuSigReportErrorMessage.class);
+        addStorageType(SetupTradeMessage_A.class);
+        addStorageType(SetupTradeMessage_B.class);
+        addStorageType(SetupTradeMessage_C.class);
+        addStorageType(SetupTradeMessage_D.class);
+        addStorageType(SendAccountPayloadMessage.class);
+        addStorageType(SendAccountPayloadAndDepositTxMessage.class);
+        addStorageType(PaymentInitiatedMessage_E.class);
+        addStorageType(PaymentReceivedMessage_F.class);
+        addStorageType(CooperativeClosureMessage_G.class);
 
         // ChatMessageReaction subclasses
-        NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);
-        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessageReaction.class);
-        NetworkStorageWhiteList.add(BisqEasyOfferbookMessageReaction.class);
-        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessageReaction.class);
-        NetworkStorageWhiteList.add(MuSigOpenTradeMessageReaction.class);
+        addStorageType(CommonPublicChatMessageReaction.class);
+        addStorageType(TwoPartyPrivateChatMessageReaction.class);
+        addStorageType(BisqEasyOfferbookMessageReaction.class);
+        addStorageType(BisqEasyOpenTradeMessageReaction.class);
+        addStorageType(MuSigOpenTradeMessageReaction.class);
 
         // From network module. As it is used as mailbox message we add it here as well.
-        NetworkStorageWhiteList.add(AckMessage.class);
+        addStorageType(AckMessage.class);
+    }
+
+    // Registers a concrete payload type which is stored in the network, and verifies that it declares
+    // its storage properties. Types registered via the resolvers are verified there.
+    private static void addStorageType(Class<? extends NetworkProto> clazz) {
+        NetworkStorageWhiteList.add(clazz);
+        MetaData.verifyStoragePolicyDeclared(clazz);
     }
 }

@@ -26,7 +26,10 @@ import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
+import bisq.network.p2p.services.data.storage.Priority;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -40,15 +43,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
-
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-    public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
+// MetaData needs to be symmetric with BisqEasyOpenTradeMessageReaction.
+// Metadata needs to be symmetric with BisqEasyOpenTradeMessageReaction.
+@StoragePolicy(ttl = Ttl.DAYS_10, priority = Priority.HIGH, maxMapSize = MaxMapSize.SIZE_100)
+public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
     public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
 
     public static BisqEasyOpenTradeMessage createTakeOfferMessage(String tradeId,
@@ -66,10 +68,6 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
                 ChatMessageType.TAKE_BISQ_EASY_OFFER,
                 bisqEasyOffer);
     }
-
-    // Metadata needs to be symmetric with BisqEasyOpenTradeMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;

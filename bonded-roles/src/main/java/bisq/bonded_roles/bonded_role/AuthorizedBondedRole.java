@@ -31,7 +31,10 @@ import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
+import bisq.network.p2p.services.data.storage.Priority;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -44,21 +47,17 @@ import java.util.Set;
 
 import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.LEGACY_VERSION;
 import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.PROPOSAL_KEY_VERSION;
-import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
+@StoragePolicy(ttl = Ttl.DAYS_100, priority = Priority.HIGHEST, maxMapSize = MaxMapSize.SIZE_100)
 public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private static final int LEGACY_DATA_VERSION = 1;
     private static final int PROPOSAL_KEY_DATA_VERSION = 2;
     private static final int CURRENT_DATA_VERSION = PROPOSAL_KEY_DATA_VERSION;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final int version;
@@ -324,7 +323,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    registrationProtocolVersion=" + registrationProtocolVersion +
                 ",\r\n                    proposalTxId='" + proposalTxId + '\'' +
                 ",\r\n                    lockupTxId='" + lockupTxId + '\'' +
-                ",\r\n                    metaData=" + metaData +
+                ",\r\n                    metaData=" + getMetaData() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }
