@@ -34,7 +34,6 @@ import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -91,9 +90,7 @@ class BisqEasyTradeServiceTest {
     private BisqEasyOffer offer;
 
     @BeforeAll
-    static void init_i18n() throws Exception {
-        Res.setAndApplyLanguageTag("en");
-
+    static void stub_user_profile_service() throws Exception {
         UserProfileService ups = mock(UserProfileService.class);
         when(ups.evaluateUserName(any(), any())).thenAnswer(inv -> inv.getArgument(0));
         Field f = UserProfileService.class.getDeclaredField("instance");

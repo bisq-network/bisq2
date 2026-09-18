@@ -101,6 +101,8 @@ class BisqEasyTakeOfferRequestHandlerTest {
     private static final Market MARKET = new Market("BTC", "USD", "Bitcoin", "US Dollar");
     private static final long TAKE_OFFER_DATE = 1_700_000_000_000L;
     private static Object previousUserProfileServiceInstance;
+    private static Object previousResLocale;
+    private static Object previousResBundles;
     private static final PriceQuote PRICE_60K = PriceQuote.fromFiatPrice(60_000, "USD");
     // At $60,000/BTC: 0.001 BTC (100_000 sat) costs $60 (600_000 in 4-decimal fiat units)
     private static final long CONSISTENT_BASE = 100_000L;
@@ -119,21 +121,32 @@ class BisqEasyTakeOfferRequestHandlerTest {
 
     @BeforeAll
     static void initGlobals() throws Exception {
+        previousResLocale = staticField(Res.class, "locale").get(null);
+        previousResBundles = staticField(Res.class, "bundles").get(null);
         Res.setAndApplyLanguageTag("en");
 
         UserProfileService ups = mock(UserProfileService.class);
         when(ups.evaluateUserName(any(), any())).thenAnswer(inv -> inv.getArgument(0));
-        Field f = UserProfileService.class.getDeclaredField("instance");
-        f.setAccessible(true);
-        previousUserProfileServiceInstance = f.get(null);
-        f.set(null, ups);
+        Field field = staticField(UserProfileService.class, "instance");
+        previousUserProfileServiceInstance = field.get(null);
+        field.set(null, ups);
     }
 
     @AfterAll
-    static void restoreUserProfileService() throws Exception {
-        Field f = UserProfileService.class.getDeclaredField("instance");
-        f.setAccessible(true);
-        f.set(null, previousUserProfileServiceInstance);
+    static void restoreGlobals() throws Exception {
+        staticField(UserProfileService.class, "instance").set(null, previousUserProfileServiceInstance);
+        staticField(Res.class, "locale").set(null, previousResLocale);
+        staticField(Res.class, "bundles").set(null, previousResBundles);
+    }
+
+    /**
+     * Res and UserProfileService keep process-wide state in static fields without accessors, so
+     * what this class overwrites is captured and put back for the test classes running after it.
+     */
+    private static Field staticField(Class<?> type, String name) throws ReflectiveOperationException {
+        Field field = type.getDeclaredField(name);
+        field.setAccessible(true);
+        return field;
     }
 
     @BeforeEach

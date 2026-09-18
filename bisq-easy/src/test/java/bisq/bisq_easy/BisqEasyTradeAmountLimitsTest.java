@@ -19,10 +19,15 @@ package bisq.bisq_easy;
 
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
+import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class BisqEasyTradeAmountLimitsTest {
 
@@ -119,29 +124,27 @@ class BisqEasyTradeAmountLimitsTest {
     }
 
     @Test
-    @DisplayName("min reputation score threshold at boundary")
-    void min_reputation_score_threshold_at_boundary() {
-        // Score exactly at threshold should be allowed
-        assertTrue(1200L >= BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER);
+    @DisplayName("sell offer allowed with score at threshold")
+    void sell_offer_allowed_with_score_at_threshold() {
+        assertTrue(isAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER));
     }
 
     @Test
-    @DisplayName("min reputation score threshold below boundary")
-    void min_reputation_score_threshold_below_boundary() {
-        // Score below threshold should not be allowed
-        assertFalse(1199L >= BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER);
+    @DisplayName("sell offer rejected with score below threshold")
+    void sell_offer_rejected_with_score_below_threshold() {
+        assertFalse(isAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER - 1));
     }
 
     @Test
-    @DisplayName("min reputation score threshold above boundary")
-    void min_reputation_score_threshold_above_boundary() {
-        assertTrue(5000L >= BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER);
+    @DisplayName("sell offer allowed with score above threshold")
+    void sell_offer_allowed_with_score_above_threshold() {
+        assertTrue(isAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER + 1));
     }
 
     @Test
-    @DisplayName("min reputation score threshold zero")
-    void min_reputation_score_threshold_zero() {
-        assertFalse(0L >= BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER);
+    @DisplayName("sell offer rejected with zero score")
+    void sell_offer_rejected_with_zero_score() {
+        assertFalse(isAllowedToCreateSellOffer(0));
     }
 
     @Test
@@ -170,5 +173,13 @@ class BisqEasyTradeAmountLimitsTest {
     @DisplayName("result enum score too low is not valid")
     void result_enum_score_too_low_is_not_valid() {
         assertFalse(BisqEasyTradeAmountLimits.Result.SCORE_TOO_LOW.isValid());
+    }
+
+    private boolean isAllowedToCreateSellOffer(long totalScore) {
+        UserProfile userProfile = mock(UserProfile.class);
+        ReputationService reputationService = mock(ReputationService.class);
+        when(reputationService.getReputationScore(userProfile))
+                .thenReturn(new ReputationScore(totalScore, 0, Integer.MAX_VALUE));
+        return BisqEasyTradeAmountLimits.isAllowedToCreateSellOffer(reputationService, userProfile);
     }
 }

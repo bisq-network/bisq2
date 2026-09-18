@@ -51,10 +51,12 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import jakarta.ws.rs.container.AsyncResponse;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -79,9 +81,30 @@ class TradeRestApiTakeOfferAmountTest {
     private static final Market MARKET = new Market("BTC", "USD", "Bitcoin", "US Dollar");
     private static final String OFFER_ID = "test-offer-id";
 
+    private static Object previousResLocale;
+    private static Object previousResBundles;
+
     @BeforeAll
-    static void init_i18n() {
+    static void init_i18n() throws Exception {
+        previousResLocale = resField("locale").get(null);
+        previousResBundles = resField("bundles").get(null);
         Res.setAndApplyLanguageTag("en");
+    }
+
+    @AfterAll
+    static void restore_i18n() throws Exception {
+        resField("locale").set(null, previousResLocale);
+        resField("bundles").set(null, previousResBundles);
+    }
+
+    /**
+     * Res keeps the locale and loaded bundles in static fields without accessors, so what this
+     * class overwrites is captured and put back for the test classes running after it.
+     */
+    private static Field resField(String name) throws ReflectiveOperationException {
+        Field field = Res.class.getDeclaredField(name);
+        field.setAccessible(true);
+        return field;
     }
 
     @Test
