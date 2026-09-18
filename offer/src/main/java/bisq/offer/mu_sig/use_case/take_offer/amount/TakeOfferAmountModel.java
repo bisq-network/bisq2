@@ -34,6 +34,7 @@ public class TakeOfferAmountModel implements TakeOfferAmountReadOnlyModel {
     protected final Observable<Optional<Double>> userSpecificTradeAmountLimitAsSliderValue = new Observable<>(Optional.empty());
     protected final Observable<TradeAmountRange> tradeAmountLimits = new Observable<>();
     protected final Observable<MonetaryRange> inputAmountLimits = new Observable<>();
+    protected final Observable<MonetaryRange> inputAmountLimitsInUsd = new Observable<>();
     protected final Observable<Double> fixAmountSliderValue = new Observable<>(0d);
     protected final Observable<Boolean> amountValid = new Observable<>(true);
     // Bumped after every constraints recomputation, also when every published projection stays
@@ -184,6 +185,20 @@ public class TakeOfferAmountModel implements TakeOfferAmountReadOnlyModel {
         return inputAmountLimits.get();
     }
 
+    void setInputAmountLimitsInUsd(MonetaryRange inputAmountLimitsInUsd) {
+        this.inputAmountLimitsInUsd.set(inputAmountLimitsInUsd);
+    }
+
+    @Override
+    public ReadOnlyObservable<MonetaryRange> inputAmountLimitsInUsdObservable() {
+        return inputAmountLimitsInUsd;
+    }
+
+    @Override
+    public MonetaryRange getInputAmountLimitsInUsd() {
+        return inputAmountLimitsInUsd.get();
+    }
+
 
     /* --------------------------------------------------------------------- */
     // fixAmountSliderValue
@@ -231,6 +246,7 @@ public class TakeOfferAmountModel implements TakeOfferAmountReadOnlyModel {
         userSpecificTradeAmountLimitAsSliderValue.set(Optional.empty());
         tradeAmountLimits.set(null);
         inputAmountLimits.set(null);
+        inputAmountLimitsInUsd.set(null);
         fixAmountSliderValue.set(0d);
         amountValid.set(true);
     }
