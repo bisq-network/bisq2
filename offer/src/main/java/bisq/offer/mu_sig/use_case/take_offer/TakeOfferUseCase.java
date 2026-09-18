@@ -480,6 +480,7 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
     // the pre-user range omits the user cap and is what the slider spans. A null effectiveRange
     // means the intersection is empty.
     private record AmountConstraints(@Nullable TradeAmountRange preUserRange,
+                                     @Nullable MonetaryRange preUserRangeInUsd,
                                      @Nullable TradeAmountRange effectiveRange,
                                      Optional<TradeAmount> userSpecificLimit) {
     }
@@ -741,29 +742,32 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
                 UserSpecificAmountLimitsProvider.getUserSpecificLimitInUsd()))
                 : Optional.empty();
         if (storedSideValue(quoteSideStored, minEndpoint) > storedSideValue(quoteSideStored, maxEndpoint)) {
-            return new AmountConstraints(null, null, userSpecificLimit);
+            return new AmountConstraints(null, null, null, userSpecificLimit);
         }
         // Mixed-provenance endpoints can invert on the derived side by one rounding unit when
         // the range is only rounding-distance wide; such a range is empty rather than
         // published (a collapse could publish a pair below a hard limit).
         TradeAmountRange preUserRange = toOrderedRange(minEndpoint, maxEndpoint);
         if (preUserRange == null) {
-            return new AmountConstraints(null, null, userSpecificLimit);
+            return new AmountConstraints(null, null, null, userSpecificLimit);
         }
+        MonetaryRange preUserRangeInUsd = new MonetaryRange(
+                TradeAmountLimitUtils.toUsd(rates, market, preUserRange.getMin()),
+                TradeAmountLimitUtils.toUsd(rates, market, preUserRange.getMax()));
         TradeAmount effectiveMaxEndpoint = maxEndpoint;
         if (userSpecificLimit.isPresent()) {
             TradeAmount cap = userSpecificLimit.get();
             if (storedSideValue(quoteSideStored, cap) < storedSideValue(quoteSideStored, minEndpoint)) {
                 // The limit is never relaxed to meet the minimum; the intersection is empty.
-                return new AmountConstraints(preUserRange, null, userSpecificLimit);
+                return new AmountConstraints(preUserRange, preUserRangeInUsd, null, userSpecificLimit);
             }
             effectiveMaxEndpoint = minOnStoredSide(quoteSideStored, effectiveMaxEndpoint, cap);
         }
         TradeAmountRange effectiveRange = toOrderedRange(minEndpoint, effectiveMaxEndpoint);
         if (effectiveRange == null) {
-            return new AmountConstraints(preUserRange, null, userSpecificLimit);
+            return new AmountConstraints(preUserRange, preUserRangeInUsd, null, userSpecificLimit);
         }
-        return new AmountConstraints(preUserRange, effectiveRange, userSpecificLimit);
+        return new AmountConstraints(preUserRange, preUserRangeInUsd, effectiveRange, userSpecificLimit);
     }
 
     // Collapse test: a point intersection, or bounds indistinguishable at the display precision
@@ -968,6 +972,7 @@ public class TakeOfferUseCase extends DraftOfferUseCase {
             return false;
         }
         amountService.setTradeAmountLimits(effectiveRange);
+        amountService.setInputAmountLimitsInUsd(checkNotNull(constraints.preUserRangeInUsd()));
         MonetaryRange inputAmountLimits = toInputSideRange(preUserRange);
         amountService.setInputAmountLimits(inputAmountLimits);
         amountService.setUserSpecificTradeAmountLimit(constraints.userSpecificLimit());

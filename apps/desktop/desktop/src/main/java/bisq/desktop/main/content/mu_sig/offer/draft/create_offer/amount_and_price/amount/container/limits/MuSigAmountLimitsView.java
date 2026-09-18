@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MuSigAmountLimitsView extends View<HBox, MuSigAmountLimitsModel, MuSigAmountLimitsController> {
     private final Label minTradeAmountLimitValue, maxTradeAmountLimitValue, minTradeAmountLimitCode, maxTradeAmountLimitCode;
+    private final BisqTooltip minInUsdTooltip, maxInUsdTooltip;
 
     public MuSigAmountLimitsView(MuSigAmountLimitsModel model,
                                  MuSigAmountLimitsController controller) {
@@ -42,7 +43,8 @@ public class MuSigAmountLimitsView extends View<HBox, MuSigAmountLimitsModel, Mu
         minTradeAmountLimitCode.getStyleClass().add("code");
         HBox minHBox = new HBox(2, minTradeAmountLimitValue, minTradeAmountLimitCode);
         minHBox.setAlignment(Pos.BASELINE_LEFT);
-        Tooltip.install(minHBox, new BisqTooltip(model.getMinInUsd()));
+        minInUsdTooltip = new BisqTooltip();
+        Tooltip.install(minHBox, minInUsdTooltip);
 
         maxTradeAmountLimitValue = new Label();
         maxTradeAmountLimitValue.getStyleClass().add("value");
@@ -50,7 +52,8 @@ public class MuSigAmountLimitsView extends View<HBox, MuSigAmountLimitsModel, Mu
         maxTradeAmountLimitCode.getStyleClass().add("code");
         HBox maxHBox = new HBox(2, maxTradeAmountLimitValue, maxTradeAmountLimitCode);
         maxHBox.setAlignment(Pos.BASELINE_RIGHT);
-        Tooltip.install(maxHBox, new BisqTooltip(model.getMaxInUsd()));
+        maxInUsdTooltip = new BisqTooltip();
+        Tooltip.install(maxHBox, maxInUsdTooltip);
 
         root.getChildren().addAll(minHBox, Spacer.fillHBox(), maxHBox);
     }
@@ -61,10 +64,14 @@ public class MuSigAmountLimitsView extends View<HBox, MuSigAmountLimitsModel, Mu
         minTradeAmountLimitCode.textProperty().bind(model.getCode());
         maxTradeAmountLimitValue.textProperty().bind(model.getMax());
         maxTradeAmountLimitCode.textProperty().bind(model.getCode());
+        minInUsdTooltip.textProperty().bind(model.getMinInUsd());
+        maxInUsdTooltip.textProperty().bind(model.getMaxInUsd());
     }
 
     @Override
     protected void onViewDetached() {
+        minInUsdTooltip.textProperty().unbind();
+        maxInUsdTooltip.textProperty().unbind();
         minTradeAmountLimitValue.textProperty().unbind();
         minTradeAmountLimitCode.textProperty().unbind();
         maxTradeAmountLimitValue.textProperty().unbind();

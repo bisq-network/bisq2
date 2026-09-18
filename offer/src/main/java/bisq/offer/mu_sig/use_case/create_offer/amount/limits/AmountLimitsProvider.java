@@ -19,6 +19,8 @@ package bisq.offer.mu_sig.use_case.create_offer.amount.limits;
 
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.application.LifecycleScope;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.MonetaryRange;
 import bisq.common.monetary.TradeAmount;
 import bisq.common.monetary.TradeAmountRange;
 import bisq.common.observable.Observable;
@@ -30,6 +32,8 @@ import bisq.offer.mu_sig.use_case.create_offer.price.PriceSelection;
 
 import java.util.Optional;
 
+import static bisq.offer.mu_sig.use_case.create_offer.amount.limits.AbsoluteAmountLimitsProvider.MAX_TRADE_AMOUNT_IN_USD;
+import static bisq.offer.mu_sig.use_case.create_offer.amount.limits.AbsoluteAmountLimitsProvider.MIN_TRADE_AMOUNT_IN_USD;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -43,6 +47,7 @@ public class AmountLimitsProvider extends LifecycleScope {
 
     private final Observable<TradeAmountRange> effectiveTradeAmountLimits = new Observable<>();
     private final Observable<TradeAmountRange> potentialTradeAmountLimits = new Observable<>();
+    private final Observable<MonetaryRange> potentialTradeAmountLimitsInUsd = new Observable<>();
 
     private final Observable<Boolean> initialized = new Observable<>(false);
 
@@ -101,6 +106,11 @@ public class AmountLimitsProvider extends LifecycleScope {
             TradeAmount min = absoluteTradeAmountLimits.getMin();
             TradeAmount potentialLimit = paymentMethodSpecificAmountLimit.clamp(absoluteTradeAmountLimits);
             TradeAmountRange paymentMethodSpecificAmountLimits = new TradeAmountRange(min, potentialLimit);
+            // The USD-defined origin of the potential range, published before the converted
+            // range so a consumer of the range can read both together.
+            Monetary potentialLimitInUsd = paymentMethodSpecificAmountLimitsProvider.getAmountLimitInUsd()
+                    .clamp(MIN_TRADE_AMOUNT_IN_USD, MAX_TRADE_AMOUNT_IN_USD);
+            potentialTradeAmountLimitsInUsd.set(new MonetaryRange(MIN_TRADE_AMOUNT_IN_USD, potentialLimitInUsd));
             potentialTradeAmountLimits.set(new TradeAmountRange(min, potentialLimit));
 
             if (userSpecificAmountLimit.isPresent()) {
@@ -117,6 +127,7 @@ public class AmountLimitsProvider extends LifecycleScope {
             // A provider cleared its output on a market change; the combined limits must not
             // retain the previous market's ranges either. Consumers treat null as the
             // unseeded state.
+            potentialTradeAmountLimitsInUsd.set(null);
             potentialTradeAmountLimits.set(null);
             effectiveTradeAmountLimits.set(null);
             this.userSpecificAmountLimit.set(Optional.empty());
@@ -173,6 +184,14 @@ public class AmountLimitsProvider extends LifecycleScope {
 
     public TradeAmountRange getPotentialTradeAmountLimits() {
         return potentialTradeAmountLimits.get();
+    }
+
+    public ReadOnlyObservable<MonetaryRange> potentialTradeAmountLimitsInUsdObservable() {
+        return potentialTradeAmountLimitsInUsd;
+    }
+
+    public MonetaryRange getPotentialTradeAmountLimitsInUsd() {
+        return potentialTradeAmountLimitsInUsd.get();
     }
 
     public ReadOnlyObservable<Optional<TradeAmount>> userSpecificAmountLimitObservable() {

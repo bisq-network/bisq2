@@ -70,6 +70,10 @@ public class TakeOfferAmountService {
         model.setInputAmountLimits(inputAmountLimits);
     }
 
+    public void setInputAmountLimitsInUsd(MonetaryRange inputAmountLimitsInUsd) {
+        model.setInputAmountLimitsInUsd(inputAmountLimitsInUsd);
+    }
+
     public void setFixAmountSliderValue(double sliderValue) {
         model.setFixAmountSliderValue(sliderValue);
     }
