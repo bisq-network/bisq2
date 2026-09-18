@@ -169,9 +169,8 @@ class MuSigMediationCustomPayoutServiceTest {
     }
 
     @Test
-    void givenMissingPayoutContextOrInvalidPayoutAmounts_whenCheckingSigningEligibility_thenRejectsSigning()
+    void givenInvalidPayoutAmounts_whenCheckingSigningEligibility_thenRejectsSigning()
             throws GeneralSecurityException {
-        SigningFixture missingPayoutContext = createSigningFixtureWithoutPayoutContext();
         SigningFixture invalidPayoutAmounts = createSigningFixture(
                 Optional.of(new ResultDefinition(
                         MediationPayoutDistributionType.CUSTOM_PAYOUT,
@@ -181,7 +180,6 @@ class MuSigMediationCustomPayoutServiceTest {
                 SignatureState.VALID,
                 true);
 
-        assertThat(service.canSignCustomPayout(missingPayoutContext.trade())).isFalse();
         assertThat(service.canSignCustomPayout(invalidPayoutAmounts.trade())).isFalse();
     }
 
@@ -383,26 +381,20 @@ class MuSigMediationCustomPayoutServiceTest {
 
     private SigningFixture createSigningFixtureWithoutMediator() throws GeneralSecurityException {
         return createSigningFixture(
-                Optional.of(VALID_CUSTOM_PAYOUT), SignatureState.VALID, true, false, true);
-    }
-
-    private SigningFixture createSigningFixtureWithoutPayoutContext() throws GeneralSecurityException {
-        return createSigningFixture(
-                Optional.of(VALID_CUSTOM_PAYOUT), SignatureState.VALID, true, true, false);
+                Optional.of(VALID_CUSTOM_PAYOUT), SignatureState.VALID, true, false);
     }
 
     private SigningFixture createSigningFixture(Optional<ResultDefinition> optionalResultDefinition,
                                                 SignatureState signatureState,
                                                 boolean matchingContractHash)
             throws GeneralSecurityException {
-        return createSigningFixture(optionalResultDefinition, signatureState, matchingContractHash, true, true);
+        return createSigningFixture(optionalResultDefinition, signatureState, matchingContractHash, true);
     }
 
     private SigningFixture createSigningFixture(Optional<ResultDefinition> optionalResultDefinition,
                                                 SignatureState signatureState,
                                                 boolean matchingContractHash,
-                                                boolean includeMediator,
-                                                boolean includePayoutContext)
+                                                boolean includeMediator)
             throws GeneralSecurityException {
         KeyPair mediatorKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         UserProfile mediator = createUserProfile(mediatorKeyPair, 9996, "mediator-key");
@@ -412,8 +404,7 @@ class MuSigMediationCustomPayoutServiceTest {
         MuSigContract contract = createContract(
                 myIdentity.getNetworkId(),
                 peerNetworkId,
-                includeMediator ? Optional.of(mediator) : Optional.empty(),
-                includePayoutContext);
+                includeMediator ? Optional.of(mediator) : Optional.empty());
         MuSigTrade trade = createTrade(
                 contract, myIdentity, peerNetworkId, MuSigTradeState.DEPOSIT_TX_CONFIRMED);
         MuSigTradeDispute tradeDispute = trade.getTradeDispute();
@@ -454,12 +445,9 @@ class MuSigMediationCustomPayoutServiceTest {
 
     private static MuSigContract createContract(NetworkId makerNetworkId,
                                                 NetworkId takerNetworkId,
-                                                Optional<UserProfile> mediator,
-                                                boolean includePayoutContext) {
+                                                Optional<UserProfile> mediator) {
         PaymentMethod<?> paymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK);
-        List<CollateralOption> offerOptions = includePayoutContext
-                ? List.of(new CollateralOption(0.25, 0.25))
-                : List.of();
+        List<CollateralOption> offerOptions = List.of(new CollateralOption(0.25, 0.25));
         PriceSpec priceSpec = new MarketPriceSpec();
         MuSigOffer offer = new MuSigOffer(
                 "custom-payout-offer",

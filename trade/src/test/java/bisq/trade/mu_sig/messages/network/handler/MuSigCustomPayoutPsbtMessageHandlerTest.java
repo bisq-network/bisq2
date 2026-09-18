@@ -32,6 +32,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.options.CollateralOption;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.security.keys.I2PKeyGeneration;
 import bisq.security.keys.KeyBundle;
@@ -293,7 +294,7 @@ class MuSigCustomPayoutPsbtMessageHandlerTest {
                 new BaseSideFixedAmountSpec(100_000),
                 priceSpec,
                 List.of(paymentMethod),
-                List.of(),
+                List.of(new CollateralOption(0.25, 0.25)),
                 MuSigProtocol.VERSION);
         PaymentMethodSpec<?> paymentMethodSpec =
                 PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, market.getQuoteCurrencyCode());
