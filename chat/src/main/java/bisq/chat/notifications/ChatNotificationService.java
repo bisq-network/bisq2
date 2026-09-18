@@ -40,7 +40,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.DataStorageService;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -79,7 +79,7 @@ import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DAT
 public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNotificationsStore> implements Service {
     // BisqEasyOfferbookMessage use TTL_10_DAYS, BisqEasyOpenTradeMessage and TwoPartyPrivateChatMessage
     // use TTL_30_DAYS
-    private static final long MAX_AGE = MetaData.TTL_30_DAYS;
+    private static final long MAX_AGE = Ttl.DAYS_30.getMillis();
 
     @Getter
     private final ChatNotificationsStore persistableStore = new ChatNotificationsStore();

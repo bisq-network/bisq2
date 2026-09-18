@@ -20,7 +20,10 @@ package bisq.chat.reactions;
 import bisq.chat.ChatChannelDomain;
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
+import bisq.network.p2p.services.data.storage.Priority;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,11 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+// Metadata needs to be symmetric with CommonPublicChatMessage.
+@StoragePolicy(ttl = Ttl.DAYS_10, priority = Priority.LOW, maxMapSize = MaxMapSize.SIZE_10_000)
 public class CommonPublicChatMessageReaction extends ChatMessageReaction implements DistributedData {
-    // Metadata needs to be symmetric with CommonPublicChatMessage.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, getClass().getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
-
     public CommonPublicChatMessageReaction(String id,
                                            String userProfileId,
                                            String chatChannelId,

@@ -17,25 +17,28 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.common.proto.NetworkProto;
-import com.google.protobuf.Any;
+import lombok.Getter;
 
-// Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
-// like Offer, ChatMessage,...
-public interface DistributedData extends NetworkProto, StoragePolicyAware {
-    static DistributedData fromAny(Any any) {
-        return DistributedDataResolver.fromAny(any);
+import java.util.concurrent.TimeUnit;
+
+/**
+ * How long data of a given type is kept in the distributed storage. The set is closed on purpose: the ttl is
+ * protocol level policy shared by all nodes, so adding a value is a deliberate decision, not a local choice.
+ */
+@Getter
+public enum Ttl {
+    MINUTES_10(TimeUnit.MINUTES.toMillis(10)),
+    DAYS_2(TimeUnit.DAYS.toMillis(2)),
+    DAYS_5(TimeUnit.DAYS.toMillis(5)),
+    DAYS_10(TimeUnit.DAYS.toMillis(10)),
+    DAYS_15(TimeUnit.DAYS.toMillis(15)),
+    DAYS_20(TimeUnit.DAYS.toMillis(20)),
+    DAYS_30(TimeUnit.DAYS.toMillis(30)),
+    DAYS_100(TimeUnit.DAYS.toMillis(100));
+
+    private final long millis;
+
+    Ttl(long millis) {
+        this.millis = millis;
     }
-
-    default Any toAny(boolean serializeForHash) {
-        return Any.pack(toProto(serializeForHash));
-    }
-
-    default String getClassName() {
-        return getMetaData().getClassName();
-    }
-
-    boolean isDataInvalid(byte[] pubKeyHash);
-
-    double getCostFactor();
 }

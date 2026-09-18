@@ -25,8 +25,10 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Priority;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -40,17 +42,14 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
+@StoragePolicy(ttl = Ttl.DAYS_30, priority = Priority.HIGH)
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData, PublishDateAware {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @ExcludeForHash
     private final int version;
     private final long blockTime;
@@ -193,15 +192,13 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         return blockTime == that.blockTime &&
                 amount == that.amount &&
                 blockHeight == that.blockHeight &&
-                Objects.equals(metaData, that.metaData) &&
                 Arrays.equals(hash, that.hash) &&
                 Objects.equals(txId, that.txId);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(metaData);
-        result = 31 * result + Long.hashCode(blockTime);
+        int result = Long.hashCode(blockTime);
         result = 31 * result + Long.hashCode(amount);
         result = 31 * result + Arrays.hashCode(hash);
         result = 31 * result + blockHeight;

@@ -17,9 +17,22 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.common.proto.NetworkProto;
+import lombok.Getter;
 
-// Interface covering data for storage. Implemented by AppendOnlyData, AuthenticatedData
-public interface StorageData extends NetworkProto, StoragePolicyAware {
-    boolean isDataInvalid(byte[] ownerPubKeyHash);
+/**
+ * Delivery priority used when an inventory response has to be truncated. Higher priority data is sent first.
+ * The value is what goes on the wire.
+ */
+@Getter
+public enum Priority {
+    LOW(-1),
+    DEFAULT(0),
+    HIGH(1),
+    HIGHEST(2);
+
+    private final int value;
+
+    Priority(int value) {
+        this.value = value;
+    }
 }

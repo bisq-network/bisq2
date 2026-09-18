@@ -26,6 +26,8 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -38,18 +40,16 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
+@StoragePolicy(ttl = Ttl.MINUTES_10)
 public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
-    public static final long TTL = TimeUnit.MINUTES.toMillis(10);
+    public static final long TTL = MetaData.from(AuthorizedMarketPriceData.class).getTtl();
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

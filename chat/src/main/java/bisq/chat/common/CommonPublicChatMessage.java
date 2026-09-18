@@ -22,7 +22,11 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.util.StringUtils;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
+import bisq.network.p2p.services.data.storage.Priority;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,19 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
-
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+// MetaData needs to be symmetric with CommonPublicChatMessageReaction.
+@StoragePolicy(ttl = Ttl.DAYS_10, priority = Priority.LOW, maxMapSize = MaxMapSize.SIZE_10_000)
 public final class CommonPublicChatMessage extends PublicChatMessage {
-    public static final long COMMON_PUBLIC_CHAT_MESSAGE_TTL = TTL_10_DAYS;
-
-    // MetaData needs to be symmetric with CommonPublicChatMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes.
-    // Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(COMMON_PUBLIC_CHAT_MESSAGE_TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final long COMMON_PUBLIC_CHAT_MESSAGE_TTL = MetaData.from(CommonPublicChatMessage.class).getTtl();
 
     public CommonPublicChatMessage(ChatChannelDomain chatChannelDomain,
                                    String channelId,

@@ -23,7 +23,9 @@ import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Priority;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -33,16 +35,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
-
 @Slf4j
 @EqualsAndHashCode
 @Getter
+@StoragePolicy(ttl = Ttl.DAYS_100, priority = Priority.HIGH)
 public final class BannedUserProfileData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

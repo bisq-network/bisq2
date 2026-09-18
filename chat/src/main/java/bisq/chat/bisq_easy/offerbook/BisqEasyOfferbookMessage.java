@@ -23,7 +23,11 @@ import bisq.chat.Citation;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.common.util.StringUtils;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
+import bisq.network.p2p.services.data.storage.Priority;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,18 +36,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
-
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+// MetaData needs to be symmetric with BisqEasyOfferbookMessageReaction.
+@StoragePolicy(ttl = Ttl.DAYS_10, priority = Priority.LOW, maxMapSize = MaxMapSize.SIZE_10_000)
 public final class BisqEasyOfferbookMessage extends PublicChatMessage implements BisqEasyOfferMessage {
-    public static final long BISQ_EASY_OFFERBOOK_MESSAGE_TTL = TTL_10_DAYS;
+    public static final long BISQ_EASY_OFFERBOOK_MESSAGE_TTL = MetaData.from(BisqEasyOfferbookMessage.class).getTtl();
 
-    // MetaData needs to be symmetric with BisqEasyOfferbookMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyOfferbookMessage(String channelId,
