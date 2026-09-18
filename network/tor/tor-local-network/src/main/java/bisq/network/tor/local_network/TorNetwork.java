@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -133,19 +134,19 @@ public class TorNetwork {
         Set<TorNode> allDAs = dirAuthFactory.getAllDirectoryAuthorities();
         for (TorNode da : allDAs) {
             TorrcConfigGenerator torDaTorrcGenerator = TestNetworkTorrcGeneratorFactory.directoryTorrcGenerator(da);
-            Map<String, String> torrcConfigs = torDaTorrcGenerator.generate();
+            Map<String, List<String>> torrcConfigs = torDaTorrcGenerator.generate();
             generateTorrc(da, torrcConfigs, allDAs);
         }
 
         for (TorNode relay : relays) {
             TorrcConfigGenerator relayTorrcGenerator = TestNetworkTorrcGeneratorFactory.relayTorrcGenerator(relay);
-            Map<String, String> torrcConfigs = relayTorrcGenerator.generate();
+            Map<String, List<String>> torrcConfigs = relayTorrcGenerator.generate();
             generateTorrc(relay, torrcConfigs, allDAs);
         }
 
         for (TorNode client : clients) {
             TorrcConfigGenerator clientTorrcGenerator = TestNetworkTorrcGeneratorFactory.clientTorrcGenerator(client);
-            Map<String, String> torrcConfigs = clientTorrcGenerator.generate();
+            Map<String, List<String>> torrcConfigs = clientTorrcGenerator.generate();
             generateTorrc(client, torrcConfigs, allDAs);
         }
     }
@@ -192,7 +193,7 @@ public class TorNetwork {
         return processBuilder.start();
     }
 
-    private void generateTorrc(TorNode torNode, Map<String, String> torrcConfigs, Set<TorNode> allDAs) {
+    private void generateTorrc(TorNode torNode, Map<String, List<String>> torrcConfigs, Set<TorNode> allDAs) {
         if (Files.exists(torNode.getTorrcPath())) {
             return;
         }
