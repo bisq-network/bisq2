@@ -29,6 +29,7 @@ import bisq.offer.mu_sig.use_case.create_offer.market.MarketSelection;
 import bisq.offer.price.spec.PriceSpec;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.Region;
+import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,6 +83,14 @@ public class MuSigCreateOfferAmountAndPriceController implements Controller {
     public void onDeactivate() {
         model.getIsAmountOverlayVisible().unbind();
         model.getIsPriceOverlayVisible().unbind();
+    }
+
+    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+        if (model.getIsAmountOverlayVisible().get()) {
+            muSigCreateOfferAmountController.onKeyPressedWhileShowingOverlay(keyEvent);
+        } else if (model.getIsPriceOverlayVisible().get()) {
+            muSigCreateOfferPriceController.onKeyPressedWhileShowingOverlay(keyEvent);
+        }
     }
 
 

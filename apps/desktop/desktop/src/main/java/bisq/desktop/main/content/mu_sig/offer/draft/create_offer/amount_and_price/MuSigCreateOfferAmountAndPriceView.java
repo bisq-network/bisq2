@@ -20,7 +20,10 @@ package bisq.desktop.main.content.mu_sig.offer.draft.create_offer.amount_and_pri
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.View;
+import javafx.event.EventHandler;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -36,6 +39,17 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
     private final Label headline;
     private final VBox priceOverlay, content, amountOverlay;
     private final Set<Subscription> subscriptions = new HashSet<>();
+    // Routed at the step root rather than on the overlays: the overlays are siblings of the
+    // content and mouse handlers move the focus around inside the step, so this is the one
+    // node every key event passes on its way to the wizard's Escape-closes handler. Escape is
+    // taken in the capture phase; other keys bubble so a focused overlay control handles
+    // Enter before the leftover is consumed.
+    private final EventHandler<KeyEvent> overlayEscapeFilter = keyEvent -> {
+        if (keyEvent.getCode() == KeyCode.ESCAPE) {
+            controller.onKeyPressedWhileShowingOverlay(keyEvent);
+        }
+    };
+    private final EventHandler<KeyEvent> overlayKeyHandler = keyEvent -> controller.onKeyPressedWhileShowingOverlay(keyEvent);
 
     public MuSigCreateOfferAmountAndPriceView(MuSigCreateOfferAmountAndPriceModel model,
                                               MuSigCreateOfferAmountAndPriceController controller,
@@ -66,6 +80,8 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
     @Override
     protected void onViewAttached() {
         headline.setText(model.getHeadline());
+        root.addEventFilter(KeyEvent.KEY_PRESSED, overlayEscapeFilter);
+        root.addEventHandler(KeyEvent.KEY_PRESSED, overlayKeyHandler);
 
         subscriptions.add(EasyBind.subscribe(model.getIsAmountOverlayVisible(), isAmountOverlayVisible -> {
             if (isAmountOverlayVisible) {
@@ -73,6 +89,7 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
                 amountOverlay.setOpacity(1);
                 Transitions.blurStrong(content, 0);
                 Transitions.slideInTop(amountOverlay, 450);
+                amountOverlay.requestFocus();
             } else {
                 Transitions.removeEffect(content);
                 if (amountOverlay.isVisible()) {
@@ -92,6 +109,7 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
                 priceOverlay.setOpacity(1);
                 Transitions.blurStrong(content, 0);
                 Transitions.slideInTop(priceOverlay, 450);
+                priceOverlay.requestFocus();
             } else {
                 Transitions.removeEffect(content);
                 if (priceOverlay.isVisible()) {
@@ -108,6 +126,8 @@ public class MuSigCreateOfferAmountAndPriceView extends View<VBox, MuSigCreateOf
 
     @Override
     protected void onViewDetached() {
+        root.removeEventFilter(KeyEvent.KEY_PRESSED, overlayEscapeFilter);
+        root.removeEventHandler(KeyEvent.KEY_PRESSED, overlayKeyHandler);
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
     }
