@@ -266,7 +266,7 @@ public abstract class ApplicationService implements Service {
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", appDataDirPath);
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
-        log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
+        log.info("Tor binary version: v{}", ApplicationVersion.getTorBinaryVersionString());
     }
 
     protected void checkInstanceLock() {
