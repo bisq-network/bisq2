@@ -51,6 +51,7 @@ public class VersionDistributionView extends View<VBox, VersionDistributionModel
         Label details = new Label(Res.get("network.version.localVersion.details",
                 ApplicationVersion.getVersion().getVersionAsString(),
                 ApplicationVersion.getBuildCommitShortHash(),
+                ApplicationVersion.getTorBinaryVersionString(),
                 ApplicationVersion.getTorVersionString()));
 
         tooltip = new BisqTooltip();

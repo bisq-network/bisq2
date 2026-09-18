@@ -11,6 +11,11 @@ if (torVersion == null) {
     throw GradleException("Tor version is not defined in gradle.properties")
 }
 
+val torBinaryVersion: String? = project.findProperty("tor.binaryVersion") as String?
+if (torBinaryVersion == null) {
+    throw GradleException("Tor binary version is not defined in gradle.properties")
+}
+
 /**
  * Generate a Java class with the current version number extracted from gradle.properties and makes
  * it available for use in all java modules that has access to common.
@@ -37,6 +42,7 @@ val generateVersionClass by tasks.registering {
                 public static final String VERSION = "${project.version}";
                 public static final String COMMIT_SHORT_HASH = "$gitCommitVersion";
                 public static final String TOR_VERSION = "$torVersion";
+                public static final String TOR_BINARY_VERSION = "$torBinaryVersion";
             }
         """.trimIndent())
     }
@@ -44,6 +50,7 @@ val generateVersionClass by tasks.registering {
     outputs.dir(outputDir)
     inputs.property("version", project.version)
     inputs.property("torVersion", torVersion)
+    inputs.property("torBinaryVersion", torBinaryVersion)
 }
 
 
