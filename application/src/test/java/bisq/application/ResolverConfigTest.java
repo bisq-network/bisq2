@@ -101,8 +101,6 @@ class ResolverConfigTest {
             "BisqEasyTakeOfferRequest",
             "BisqEasyTakeOfferResponse",
             "BondedRoleRegistrationRequest",
-            "ChatMessage",
-            "ChatMessageReaction",
             "CommonPublicChatMessage",
             "CommonPublicChatMessageReaction",
             "CooperativeClosureMessage_G",
@@ -129,7 +127,6 @@ class ResolverConfigTest {
             "SetupTradeMessage_B",
             "SetupTradeMessage_C",
             "SetupTradeMessage_D",
-            "TradeMessage",
             "TwoPartyPrivateChatMessage",
             "TwoPartyPrivateChatMessageReaction",
             "UserProfile"));
@@ -272,6 +269,22 @@ class ResolverConfigTest {
             @Override
             public Void visitMethodInvocation(MethodInvocationTree node, Void unused) {
                 if (node.getMethodSelect() instanceof MemberSelectTree select
+                        && REGISTRIES.contains(select.getExpression().toString())
+                        && "addBaseTypeResolver".contentEquals(select.getIdentifier())) {
+                    // An abstract base is not a store key, so it is registered without a class literal. The
+                    // resolver owner is the base itself, which is what the naming check compares against.
+                    if (node.getArguments().size() == 2
+                            && node.getArguments().get(0) instanceof LiteralTree protoTypeName
+                            && node.getArguments().get(1) instanceof MethodInvocationTree resolverCall
+                            && resolverCall.getMethodSelect() instanceof MemberSelectTree resolverSelect) {
+                        String owner = resolverSelect.getExpression().toString();
+                        registrations.add(new Registration(select.getExpression().toString(),
+                                protoTypeName.getValue().toString(), owner, owner));
+                    } else {
+                        unrecognised.add(node.toString());
+                    }
+                }
+                if (node.getMethodSelect() instanceof MemberSelectTree select
                         && "addResolver".contentEquals(select.getIdentifier())
                         && REGISTRIES.contains(select.getExpression().toString())) {
                     if (node.getArguments().size() == 3
@@ -293,7 +306,8 @@ class ResolverConfigTest {
 
         assertEquals(List.of(), unrecognised,
                 "A registration in this form is not checked by anything. Write it as "
-                        + "addResolver(\"proto.TypeName\", TypeName.class, TypeName.getResolver()), or teach "
+                        + "addResolver(\"proto.TypeName\", TypeName.class, TypeName.getResolver()) or "
+                        + "addBaseTypeResolver(\"proto.TypeName\", TypeName.getResolver()), or teach "
                         + "parseRegistrations to read the new form");
         return registrations;
     }

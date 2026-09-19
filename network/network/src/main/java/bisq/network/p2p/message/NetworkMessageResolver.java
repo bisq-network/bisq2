@@ -17,23 +17,37 @@
 
 package bisq.network.p2p.message;
 
-import bisq.common.proto.NetworkProto;
 import bisq.common.proto.NetworkProtoResolverMap;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicyAware;
 import bisq.common.proto.ProtoResolver;
 import com.google.protobuf.Any;
-
-import java.lang.reflect.Modifier;
 
 public class NetworkMessageResolver {
     private static final NetworkProtoResolverMap<ExternalNetworkMessage> protoResolverMap = new NetworkProtoResolverMap<>();
 
-    public static void addResolver(String protoTypeName, Class<? extends NetworkProto> clazz, ProtoResolver<ExternalNetworkMessage> resolver) {
+    /**
+     * Registers a concrete message type: its simple name becomes a store key if the message can be stored, so it is
+     * added to the whitelist and, when it is a stored type, its storage policy is verified here rather than when the
+     * first message of that type arrives. ExternalNetworkMessage does not imply a stored type, so a direct only
+     * message declares no policy.
+     */
+    public static void addResolver(String protoTypeName,
+                                   Class<? extends ExternalNetworkMessage> clazz,
+                                   ProtoResolver<ExternalNetworkMessage> resolver) {
         NetworkStorageWhiteList.add(clazz);
-        if (!Modifier.isAbstract(clazz.getModifiers())) {
+        if (StoragePolicyAware.class.isAssignableFrom(clazz)) {
             MetaData.verifyStoragePolicyDeclared(clazz);
         }
+        protoResolverMap.addProtoResolver(protoTypeName, resolver);
+    }
+
+    /**
+     * Registers an abstract base which dispatches to its subclasses. The base is never a store key, so it is not
+     * whitelisted and declares no policy of its own.
+     */
+    public static void addBaseTypeResolver(String protoTypeName, ProtoResolver<ExternalNetworkMessage> resolver) {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 

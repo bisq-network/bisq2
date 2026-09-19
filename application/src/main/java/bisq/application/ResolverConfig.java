@@ -97,8 +97,8 @@ public class ResolverConfig {
     public static void config() {
         // Register resolvers for distributedData
         // Abstract classes
-        DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.class, ChatMessage.getDistributedDataResolver());
-        DistributedDataResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.class, ChatMessageReaction.getDistributedDataResolver());
+        DistributedDataResolver.addBaseTypeResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
+        DistributedDataResolver.addBaseTypeResolver("chat.ChatMessageReaction", ChatMessageReaction.getDistributedDataResolver());
 
         // Final classes
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.class, UserProfile.getResolver());
@@ -123,9 +123,9 @@ public class ResolverConfig {
 
         // Register resolvers for networkMessages 
         // Abstract classes
-        NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.class, ChatMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.class, TradeMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.class, ChatMessageReaction.getNetworkMessageResolver());
+        NetworkMessageResolver.addBaseTypeResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addBaseTypeResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addBaseTypeResolver("chat.ChatMessageReaction", ChatMessageReaction.getNetworkMessageResolver());
 
         // Final classes
         NetworkMessageResolver.addResolver("user.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.class, AuthorizeAccountAgeRequest.getNetworkMessageResolver());
