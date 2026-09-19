@@ -177,8 +177,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     @Override
     public String toString() {
         return "AuthorizedOracleNode{" +
-                "metaData=" + getMetaData() +
-                ", networkId=" + networkId +
+                "networkId=" + networkId +
                 ", profileId='" + profileId + '\'' +
                 ", authorizedPublicKey='" + authorizedPublicKey + '\'' +
                 ", bondUserName='" + bondUserName + '\'' +

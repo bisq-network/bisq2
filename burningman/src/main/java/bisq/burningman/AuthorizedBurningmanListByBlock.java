@@ -159,7 +159,6 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
                 .collect(Collectors.joining("\n")) +
                 "\nversion=" + version +
                 ", staticPublicKeysProvided=" + staticPublicKeysProvided +
-                ", metaData=" + getMetaData() +
                 '}';
     }
 }
