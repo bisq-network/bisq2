@@ -101,4 +101,6 @@ jobs:
             :persistence:test --tests 'bisq.persistence.PersistableStoreContractTest' \
                               --tests 'bisq.persistence.PersistableStoreReaderWriterTests' \
             :application:test --tests 'bisq.application.ResolverConfigTest' \
-                              --tests 'bisq.application.StorageWhiteListTest'
+                              --tests 'bisq.application.StorageWhiteListTest' \
+                              --tests 'bisq.application.StoragePolicyCoverageTest' \
+                              --tests 'bisq.application.StoragePolicyValuesTest'
