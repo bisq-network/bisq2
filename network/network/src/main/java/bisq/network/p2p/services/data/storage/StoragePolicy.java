@@ -36,6 +36,21 @@ import java.lang.annotation.Target;
  * <p>
  * The annotation is {@link Inherited} so that an abstract payload base class can declare the policy for all its
  * subclasses, while each subclass still resolves its own className and therefore its own storage file.
+ *
+ * <h2>Choosing a value the enums do not offer</h2>
+ * Add the constant to {@link Ttl} or {@link MaxMapSize}. The sets are closed so that a value is chosen once and
+ * shared, not invented per call site: every node applies these to the same data, and a renamed or changed constant
+ * shows at once which types it affects.
+ *
+ * <h2>Properties which depend on more than the type</h2>
+ * A type whose storage properties cannot be a constant, because they follow from the payload itself, declares no
+ * policy and overrides {@code getMetaData()} instead. The wrappers do this already: AuthenticatedData passes on the
+ * policy of the payload it holds, and MailboxData the one it received over the wire.
+ * <p>
+ * Such an override must be a deterministic function of data every node already has, because each receiver resolves
+ * the properties on its own. Two nodes which compute a different ttl for the same entry expire it at different
+ * times, and nothing in a running network reports the disagreement. In particular it must not depend on anything a
+ * peer chooses, since that would let the sender pick its own retention.
  */
 @Documented
 @Inherited
