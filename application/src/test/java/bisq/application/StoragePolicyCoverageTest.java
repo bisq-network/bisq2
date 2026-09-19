@@ -76,4 +76,23 @@ class StoragePolicyCoverageTest {
             assertEquals(clazz.getSimpleName(), MetaData.from(clazz).getClassName());
         }
     }
+    /**
+     * Declaring a policy and overriding {@code getMetaData()} are alternatives, never both. A wrapper which gets an
+     * annotation added on top of its override would keep working today and start filing entries under its own class
+     * name the moment the override was lost, which is the state MailboxData's comment says the design avoids.
+     */
+    @Test
+    void noTypeBothDeclaresAPolicyAndOverridesTheAccessor() throws Exception {
+        List<String> both = new ArrayList<>();
+        for (Class<?> clazz : BisqClasses.bisqClasses()) {
+            if (!StoragePolicyAware.class.isAssignableFrom(clazz) || clazz.isInterface()) {
+                continue;
+            }
+            boolean overrides = clazz.getMethod("getMetaData").getDeclaringClass() != StoragePolicyAware.class;
+            if (overrides && clazz.getAnnotation(StoragePolicy.class) != null) {
+                both.add(clazz.getName());
+            }
+        }
+        assertEquals(List.of(), both, "Types which both declare @StoragePolicy and override getMetaData()");
+    }
 }
