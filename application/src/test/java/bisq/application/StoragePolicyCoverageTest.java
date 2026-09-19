@@ -27,13 +27,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Storage properties are declared per type with {@link StoragePolicy} and resolved by
  * {@link MetaData#from(Class)}. A concrete {@link StoragePolicyAware} type which neither declares the annotation nor
  * overrides {@code getMetaData()} compiles fine and only fails once a payload of that type is handled, on every node
  * running the build, so it is checked here instead.
+ * <p>
+ * These all pass if the classpath scan returns nothing, so none of them guards it. That is
+ * {@code StoragePolicyValuesTest.everyDeclaringTypeIsPinned}, which compares the scan against a frozen table and so
+ * fails when the scan comes back short.
  * <p>
  * The types which legitimately override rather than declare are the wrappers: AuthenticatedData and its subclasses
  * delegate to the payload they hold, MailboxData carries the metadata it received over the wire, and
@@ -43,20 +46,17 @@ class StoragePolicyCoverageTest {
     @Test
     void everyStoredTypeDeclaresItsStorageProperties() throws Exception {
         List<String> undeclared = new ArrayList<>();
-        int concreteTypes = 0;
         for (Class<?> clazz : BisqClasses.bisqClasses()) {
             if (!StoragePolicyAware.class.isAssignableFrom(clazz)
                     || clazz.isInterface()
                     || Modifier.isAbstract(clazz.getModifiers())) {
                 continue;
             }
-            concreteTypes++;
             boolean overrides = clazz.getMethod("getMetaData").getDeclaringClass() != StoragePolicyAware.class;
             if (!overrides && clazz.getAnnotation(StoragePolicy.class) == null) {
                 undeclared.add(clazz.getName());
             }
         }
-        assertTrue(concreteTypes > 50, "Classpath scan found only " + concreteTypes + " types, it is not working");
         assertEquals(List.of(), undeclared, "Types missing @StoragePolicy");
     }
 
