@@ -7,6 +7,8 @@ plugins {
 version = rootProject.version
 
 dependencies {
+    annotationProcessor(project(":storage-policy-processor"))
+    testAnnotationProcessor(project(":storage-policy-processor"))
     implementation("bisq:common")
     implementation("bisq:security")
     implementation("bisq:persistence")
