@@ -28,8 +28,11 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
@@ -45,10 +48,6 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
-
 /**
  * Publicly shared user profile (from other peers or mine).
  * Data size about 300 bytes
@@ -56,8 +55,10 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
+// We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
+@StoragePolicy(ttl = Ttl.DAYS_15, maxMapSize = MaxMapSize.SIZE_10_000)
 public final class UserProfile implements DistributedData, PublishDateAware {
-    public static final long TTL = TTL_15_DAYS;
+    public static final long TTL = MetaData.from(UserProfile.class).getTtl();
     public static final int VERSION = 1;
     public static final int MAX_LENGTH_NICK_NAME = 100;
     public static final int MAX_LENGTH_TERMS = 500;
@@ -81,10 +82,6 @@ public final class UserProfile implements DistributedData, PublishDateAware {
                 terms,
                 statement);
     }
-
-    // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
 
     @EqualsAndHashCode.Include
     private final String nickName;

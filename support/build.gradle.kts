@@ -4,6 +4,8 @@ plugins {
 }
 
 dependencies {
+    annotationProcessor("network:storage-policy-processor:$version")
+    testAnnotationProcessor("network:storage-policy-processor:$version")
     implementation(project(":persistence"))
     implementation(project(":security"))
     implementation(project(":i18n"))

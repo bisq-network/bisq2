@@ -22,7 +22,7 @@ import com.google.protobuf.Any;
 
 // Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
 // like Offer, ChatMessage,...
-public interface DistributedData extends NetworkProto {
+public interface DistributedData extends NetworkProto, StoragePolicyAware {
     static DistributedData fromAny(Any any) {
         return DistributedDataResolver.fromAny(any);
     }
@@ -30,8 +30,6 @@ public interface DistributedData extends NetworkProto {
     default Any toAny(boolean serializeForHash) {
         return Any.pack(toProto(serializeForHash));
     }
-
-    MetaData getMetaData();
 
     default String getClassName() {
         return getMetaData().getClassName();

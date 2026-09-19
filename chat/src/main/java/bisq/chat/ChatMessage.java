@@ -31,7 +31,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicyAware;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -47,7 +47,7 @@ import java.util.Optional;
 @ToString
 @Getter
 @EqualsAndHashCode
-public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessage> {
+public abstract class ChatMessage implements NetworkProto, StoragePolicyAware, Comparable<ChatMessage> {
     public static final int MAX_TEXT_LENGTH = 10_000;
 
     protected final String id;
@@ -169,8 +169,6 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     public boolean isExpired() {
         return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
-
-    protected abstract MetaData getMetaData();
 
     public boolean isMyMessage(UserIdentityService userIdentityService) {
         return userIdentityService.isUserIdentityPresent(authorUserProfileId);

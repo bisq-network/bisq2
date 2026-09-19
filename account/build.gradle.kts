@@ -6,6 +6,8 @@ plugins {
 version = rootProject.version
 
 dependencies {
+    annotationProcessor("network:storage-policy-processor:$version")
+    testAnnotationProcessor("network:storage-policy-processor:$version")
     implementation(project(":i18n"))
     implementation(project(":persistence"))
     implementation(project(":security"))

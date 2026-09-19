@@ -26,7 +26,10 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
+import bisq.network.p2p.services.data.storage.Priority;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -37,18 +40,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
-
 @Slf4j
 @EqualsAndHashCode
 @Getter
+@StoragePolicy(ttl = Ttl.DAYS_100, priority = Priority.HIGHEST, maxMapSize = MaxMapSize.SIZE_100)
 public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -179,8 +177,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     @Override
     public String toString() {
         return "AuthorizedOracleNode{" +
-                "metaData=" + metaData +
-                ", networkId=" + networkId +
+                "networkId=" + networkId +
                 ", profileId='" + profileId + '\'' +
                 ", authorizedPublicKey='" + authorizedPublicKey + '\'' +
                 ", bondUserName='" + bondUserName + '\'' +

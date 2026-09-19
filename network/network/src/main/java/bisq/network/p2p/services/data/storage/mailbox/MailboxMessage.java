@@ -20,13 +20,12 @@ package bisq.network.p2p.services.data.storage.mailbox;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicyAware;
 
 /**
  * Message which will be stored in the network as encrypted data in case the receiver was not available.
  */
-public interface MailboxMessage extends EnvelopePayloadMessage {
-    MetaData getMetaData();
-
+public interface MailboxMessage extends EnvelopePayloadMessage, StoragePolicyAware {
     default double getCostFactor(double lowerBound, double upperBound) {
         return MathUtils.bounded(lowerBound, upperBound, getMetaData().getCostFactor());
     }
