@@ -323,7 +323,6 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    registrationProtocolVersion=" + registrationProtocolVersion +
                 ",\r\n                    proposalTxId='" + proposalTxId + '\'' +
                 ",\r\n                    lockupTxId='" + lockupTxId + '\'' +
-                ",\r\n                    metaData=" + getMetaData() +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }
