@@ -100,4 +100,6 @@ jobs:
             :common:test --tests 'bisq.common.proto.ProtoResolverTest' \
             :persistence:test --tests 'bisq.persistence.PersistableStoreContractTest' \
                               --tests 'bisq.persistence.PersistableStoreReaderWriterTests' \
-            :application:test --tests 'bisq.application.ResolverConfigTest'
+            :application:test --tests 'bisq.application.ResolverConfigTest' \
+                              --tests 'bisq.application.StoragePolicyCoverageTest' \
+                              --tests 'bisq.application.StoragePolicyValuesTest'
