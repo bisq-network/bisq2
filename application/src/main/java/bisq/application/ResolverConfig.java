@@ -68,6 +68,8 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
 import bisq.trade.mu_sig.messages.network.CooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.MuSigCustomPayoutPsbtMessage;
+import bisq.trade.mu_sig.messages.network.MuSigMediationResultRejectionMessage;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.PaymentReceivedMessage_F;
@@ -177,6 +179,8 @@ public class ResolverConfig {
         NetworkStorageWhiteList.add(PaymentInitiatedMessage_E.class);
         NetworkStorageWhiteList.add(PaymentReceivedMessage_F.class);
         NetworkStorageWhiteList.add(CooperativeClosureMessage_G.class);
+        NetworkStorageWhiteList.add(MuSigCustomPayoutPsbtMessage.class);
+        NetworkStorageWhiteList.add(MuSigMediationResultRejectionMessage.class);
 
         // ChatMessageReaction subclasses
         NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);
