@@ -53,6 +53,7 @@ public class StoragePolicyProcessor extends AbstractProcessor {
     private static final String POLICY = "bisq.network.p2p.services.data.storage.StoragePolicy";
     private static final String AWARE = "bisq.network.p2p.services.data.storage.StoragePolicyAware";
     private static final String ACCESSOR = "getMetaData";
+    private static final String ACCESSOR_FIELD = "metaData";
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -86,7 +87,9 @@ public class StoragePolicyProcessor extends AbstractProcessor {
                     + " is not a StoragePolicyAware type, so the storage never resolves a policy for it");
             return;
         }
-        if (!aware || type.getKind() != ElementKind.CLASS || type.getModifiers().contains(Modifier.ABSTRACT)) {
+        boolean concreteType = (type.getKind() == ElementKind.CLASS || type.getKind() == ElementKind.RECORD)
+                && !type.getModifiers().contains(Modifier.ABSTRACT);
+        if (!aware || !concreteType) {
             return;
         }
 
@@ -120,19 +123,27 @@ public class StoragePolicyProcessor extends AbstractProcessor {
     }
 
     /**
-     * True when the accessor is implemented by a class in the hierarchy. The default on the interface does not count:
-     * that is the one we are checking a policy exists for.
+     * True when the type takes its properties from elsewhere rather than declaring them. The default on the
+     * interface does not count: that is the one we are checking a policy exists for.
+     * <p>
+     * A field named {@code metaData} counts as well as a method. The accessor for such a field is usually generated
+     * by Lombok, and a generated method is only visible here if Lombok ran first, so reading the method alone would
+     * make the answer depend on the order processors happen to be declared in.
      */
     private boolean providesOwnAccessor(TypeElement type) {
         for (TypeElement classInHierarchy : superClasses(type)) {
-            boolean declared = classInHierarchy.getEnclosedElements().stream()
-                    .filter(member -> member.getKind() == ElementKind.METHOD)
-                    .map(member -> (ExecutableElement) member)
-                    .anyMatch(method -> ACCESSOR.contentEquals(method.getSimpleName())
-                            && method.getParameters().isEmpty()
-                            && !method.getModifiers().contains(Modifier.ABSTRACT));
-            if (declared) {
-                return true;
+            for (Element member : classInHierarchy.getEnclosedElements()) {
+                if (member.getKind() == ElementKind.METHOD
+                        && ACCESSOR.contentEquals(member.getSimpleName())
+                        && ((ExecutableElement) member).getParameters().isEmpty()
+                        && !member.getModifiers().contains(Modifier.ABSTRACT)) {
+                    return true;
+                }
+                if (member.getKind() == ElementKind.FIELD
+                        && ACCESSOR_FIELD.contentEquals(member.getSimpleName())
+                        && !member.getModifiers().contains(Modifier.STATIC)) {
+                    return true;
+                }
             }
         }
         return false;
