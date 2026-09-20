@@ -95,17 +95,23 @@ public class StoragePolicyProcessor extends AbstractProcessor {
                     + " Declare it on the implementing classes, or on a shared abstract base");
             return;
         }
-        boolean concreteType = (type.getKind() == ElementKind.CLASS || type.getKind() == ElementKind.RECORD)
-                && !type.getModifiers().contains(Modifier.ABSTRACT);
-        if (!aware || !concreteType) {
+        if (!aware) {
             return;
         }
 
+        // Declaring and overriding are alternatives for an abstract base too, where the policy would sit dormant
+        // until someone removed the override and every entry then filed under the base's own name.
         boolean providesAccessor = providesOwnAccessor(type);
         if (declaresPolicy && providesAccessor) {
             error(type, type.getSimpleName() + " both declares @StoragePolicy and provides its own " + ACCESSOR
                     + "(). Remove one: a type either declares its policy or passes on somebody else's");
-        } else if (!declaresPolicy && !providesAccessor && !inheritsPolicy(type)) {
+            return;
+        }
+
+        // Only a concrete type has to have a policy. An abstract one may leave it to its subclasses.
+        boolean concreteType = (type.getKind() == ElementKind.CLASS || type.getKind() == ElementKind.RECORD)
+                && !type.getModifiers().contains(Modifier.ABSTRACT);
+        if (concreteType && !declaresPolicy && !providesAccessor && !inheritsPolicy(type)) {
             error(type, type.getSimpleName() + " is stored but declares no storage properties. Add @StoragePolicy,"
                     + " or override " + ACCESSOR + "() if its policy comes from elsewhere");
         }

@@ -112,6 +112,25 @@ class StoragePolicyProcessorTest {
                 """);
     }
 
+    /** The same rule applies to an abstract base: the policy would be dormant until the override was removed. */
+    @Test
+    void anAbstractTypeDeclaringAndOverridingIsRejected() {
+        assertError("both declares", """
+                @StoragePolicy
+                abstract class AbstractBoth implements StoragePolicyAware {
+                    public MetaData getMetaData() { return null; }
+                }
+                """);
+    }
+
+    /** An abstract base needs no policy of its own, since its subclasses carry one. */
+    @Test
+    void anAbstractTypeWithNeitherIsAccepted() {
+        assertNoError("""
+                abstract class AbstractNeither implements StoragePolicyAware { }
+                """);
+    }
+
     @Test
     void anInheritedPolicyIsAccepted() {
         assertNoError("""
