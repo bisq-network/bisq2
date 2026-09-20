@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StoragePolicyAware;
 
 /**

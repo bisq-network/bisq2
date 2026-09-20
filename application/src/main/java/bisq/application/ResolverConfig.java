@@ -148,8 +148,9 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampV2Request", AuthorizeAccountTimestampV2Request.class, AuthorizeAccountTimestampV2Request.getNetworkMessageResolver());
 
 
-        // If the classes added via `addResolver` are not final classes, we need to add manually the subclasses.
-        // Otherwise, the className gets added from the `addResolver` method call.
+        // addResolver whitelists the concrete type it is given. The abstract bases above went through
+        // addBaseTypeResolver, which registers only the proto resolver, so their subclasses are added here: each
+        // subclass name is its own store key.
 
         // ChatMessage subclasses
         addStorageType(CommonPublicChatMessage.class);

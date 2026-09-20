@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 // MetaData needs to be symmetric with BisqEasyOpenTradeMessageReaction.
-// Metadata needs to be symmetric with BisqEasyOpenTradeMessageReaction.
 @StoragePolicy(ttl = Ttl.DAYS_10, priority = Priority.HIGH, maxMapSize = MaxMapSize.SIZE_100)
 public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
     public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
