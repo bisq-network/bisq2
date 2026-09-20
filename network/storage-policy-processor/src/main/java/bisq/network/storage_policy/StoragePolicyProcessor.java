@@ -63,14 +63,18 @@ public class StoragePolicyProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         for (Element element : roundEnv.getRootElements()) {
             if (element instanceof TypeElement type) {
-                check(type);
-                // Nested types are not root elements, so they are visited through their enclosing type.
-                type.getEnclosedElements().stream()
-                        .filter(enclosed -> enclosed instanceof TypeElement)
-                        .forEach(enclosed -> check((TypeElement) enclosed));
+                checkIncludingNested(type);
             }
         }
         return false;
+    }
+
+    /** Only top level types are root elements, so nested ones are reached through their enclosing type. */
+    private void checkIncludingNested(TypeElement type) {
+        check(type);
+        type.getEnclosedElements().stream()
+                .filter(enclosed -> enclosed instanceof TypeElement)
+                .forEach(enclosed -> checkIncludingNested((TypeElement) enclosed));
     }
 
     private void check(TypeElement type) {
