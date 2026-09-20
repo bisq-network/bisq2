@@ -24,8 +24,10 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.DateUtils;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Priority;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -39,23 +41,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
+// We use a rather long TTL to ensure in case the oracle nodes have issues to still have BM data in the network.
+// Oracle nodes remove BM data which are older than a certain number of blocks (e.g. 144 blocks or 1 day)
+@StoragePolicy(ttl = Ttl.DAYS_100, priority = Priority.HIGH)
 public final class AuthorizedBurningmanListByBlock implements AuthorizedDistributedData, PublishDateAware {
     // Can be removed after 2.1.7 is not used anymore
     public static final Date BM_ACTIVATION_DATE = DateUtils.getUTCDate(2026, GregorianCalendar.JANUARY, 1);
     public static final boolean IS_BM_ACTIVATED = new Date().after(BM_ACTIVATION_DATE);
 
     private static final int VERSION = 1;
-
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    // We use a rather long TTL to ensure in case the oracle nodes have issues to still have BM data in the network.
-    // Oracle nodes remove BM data which are older than a certain number of blocks (e.g. 144 blocks or 1 day)
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
 
     @ExcludeForHash
     private final int version;
@@ -161,7 +159,6 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
                 .collect(Collectors.joining("\n")) +
                 "\nversion=" + version +
                 ", staticPublicKeysProvided=" + staticPublicKeysProvided +
-                ", metaData=" + metaData +
                 '}';
     }
 }
