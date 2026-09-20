@@ -8,6 +8,10 @@
 # maxMapSize takes them from the AnnotationDefault attribute on the annotation's own methods, so the members are
 # kept as well as the type: losing one produces wrong storage properties, or an IncompleteAnnotationException,
 # rather than an error at build time.
+#
+# Note that -keepattributes is a global option with no per class form, so this retains both attributes for every
+# class the consuming app ships, not only for ours. That is the cost of asking for it from a library, and it is
+# the lesser one: the alternative is a consumer that strips them and fails silently at runtime.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault
 
 -keep @interface bisq.network.p2p.services.data.storage.StoragePolicy { *; }
