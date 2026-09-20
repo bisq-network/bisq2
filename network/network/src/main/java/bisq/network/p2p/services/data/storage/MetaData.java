@@ -76,9 +76,22 @@ public final class MetaData implements NetworkProto {
     /**
      * Resolves the policy now and discards the result, so a type which does not declare one fails where it is
      * registered rather than when the first payload of that type is handled.
+     * <p>
+     * A type which takes its properties from elsewhere overrides {@code getMetaData()} instead of declaring a
+     * policy, which is what the wrappers do, so there is nothing to resolve and nothing to check.
      */
     public static void verifyStoragePolicyDeclared(Class<?> clazz) {
-        from(clazz);
+        if (!overridesAccessor(clazz)) {
+            from(clazz);
+        }
+    }
+
+    private static boolean overridesAccessor(Class<?> clazz) {
+        try {
+            return clazz.getMethod("getMetaData").getDeclaringClass() != StoragePolicyAware.class;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
     }
 
     private static MetaData resolve(Class<?> clazz) {
