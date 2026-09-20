@@ -29,6 +29,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Pins the storage properties every payload type resolves to. A ttl, a priority or a map cap is protocol level
@@ -124,9 +125,10 @@ class StoragePolicyValuesTest {
                 continue;
             }
             Class<?> declaring = clazz.getSuperclass();
-            while (declaring.getDeclaredAnnotation(StoragePolicy.class) == null) {
+            while (declaring != null && declaring.getDeclaredAnnotation(StoragePolicy.class) == null) {
                 declaring = declaring.getSuperclass();
             }
+            assertNotNull(declaring, clazz.getName() + " resolves a policy but no ancestor declares one");
             MetaData inherited = MetaData.from(clazz);
             MetaData base = MetaData.from(declaring);
             String type = clazz.getSimpleName();

@@ -48,6 +48,7 @@ import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicyAware;
 import bisq.offer.mu_sig.MuSigOfferMessage;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationRequest;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
@@ -198,7 +199,7 @@ public class ResolverConfig {
 
     // Registers a concrete payload type which is stored in the network, and verifies that it declares
     // its storage properties. Types registered via the resolvers are verified there.
-    private static void addStorageType(Class<? extends NetworkProto> clazz) {
+    private static <T extends NetworkProto & StoragePolicyAware> void addStorageType(Class<T> clazz) {
         NetworkStorageWhiteList.add(clazz);
         MetaData.verifyStoragePolicyDeclared(clazz);
     }

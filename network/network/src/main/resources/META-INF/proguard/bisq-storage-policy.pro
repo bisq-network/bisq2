@@ -5,11 +5,12 @@
 # Two things have to survive for that to work, and both fail quietly rather than loudly.
 
 # The annotation has to stay on the class, with its default values. A declaration which omits priority or
-# maxMapSize takes them from the AnnotationDefault attribute of the annotation type, so stripping that attribute
-# produces wrong storage properties rather than an error.
+# maxMapSize takes them from the AnnotationDefault attribute on the annotation's own methods, so the members are
+# kept as well as the type: losing one produces wrong storage properties, or an IncompleteAnnotationException,
+# rather than an error at build time.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault
 
--keep @interface bisq.network.p2p.services.data.storage.StoragePolicy
+-keep @interface bisq.network.p2p.services.data.storage.StoragePolicy { *; }
 
 # These appear only as annotation values, so shrinking does not see the use.
 -keep enum bisq.network.p2p.services.data.storage.Ttl { *; }
