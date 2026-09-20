@@ -17,16 +17,14 @@
 -keep enum bisq.network.p2p.services.data.storage.Priority { *; }
 -keep enum bisq.network.p2p.services.data.storage.MaxMapSize { *; }
 
-# The type that carries the policy must survive as itself. @Inherited exists only in the declaring class file, so
-# an abstract base merged into a subclass would take the policy with it and MetaData.from would throw at runtime.
-# BisqEasyTradeMessage and MuSigTradeMessage each declare the policy for eleven subclasses this way. -keepnames
-# would not cover it, because it allows shrinking and R8 counts merging a class away as shrinking.
--keep @bisq.network.p2p.services.data.storage.StoragePolicy class *
-
 # MetaData derives className from Class.getSimpleName(), and that name is the store key a node publishes to its
-# peers. A payload type that is renamed, or merged into another class, silently stores under a different key and
-# stops interoperating with the rest of the network. -keep rather than -keepnames for the same reason as above:
-# -keepnames permits merging. Nothing is lost by keeping them, since every one of these types is registered in
-# ResolverConfig and therefore reachable anyway. The name requirement predates the annotation: see the javadoc of
-# NetworkStorageWhiteList.
+# peers, so a renamed payload type silently stores under a different key and stops interoperating. Verified by
+# removing this line and running R8: the store key of an inheriting subclass became "a".
+#
+# This also covers the types that carry the policy, including the two abstract bases which declare it for eleven
+# subclasses each through @Inherited, because the processor rejects @StoragePolicy on anything that is not
+# StoragePolicyAware. -keep rather than -keepnames, since -keepnames permits merging and nothing is lost by
+# keeping these: every one is registered in ResolverConfig and therefore reachable anyway.
+#
+# The name requirement predates the annotation: see the javadoc of NetworkStorageWhiteList.
 -keep class * implements bisq.network.p2p.services.data.storage.StoragePolicyAware
