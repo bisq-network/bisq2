@@ -23,8 +23,9 @@
 #
 # This also covers the types that carry the policy, including the two abstract bases which declare it for eleven
 # subclasses each through @Inherited, because the processor rejects @StoragePolicy on anything that is not
-# StoragePolicyAware. -keep rather than -keepnames, since -keepnames permits merging and nothing is lost by
-# keeping these: every one is registered in ResolverConfig and therefore reachable anyway.
+# StoragePolicyAware. That check is what makes this single rule enough, so weakening the processor weakens these
+# rules with it. -keep rather than -keepnames, since -keepnames permits merging and nothing is lost by keeping
+# these: every one is registered in ResolverConfig and therefore reachable anyway.
 #
 # The name requirement predates the annotation: see the javadoc of NetworkStorageWhiteList.
 -keep class * implements bisq.network.p2p.services.data.storage.StoragePolicyAware
