@@ -20,13 +20,9 @@ package bisq.support.mediation.bisq_easy;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
-import bisq.security.keys.KeyGeneration;
-import bisq.security.keys.PubKey;
-import bisq.security.pow.ProofOfWork;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.Test;
 
-import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 
@@ -36,8 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class BisqEasyMediationContractIdentityChecksTest {
     @Test
     void acceptsRequesterAndPeerWhenTheyMatchMakerAndTaker() {
-        UserProfile maker = createUserProfile("maker");
-        UserProfile taker = createUserProfile("taker");
+        UserProfile maker = TestUserProfiles.create("maker");
+        UserProfile taker = TestUserProfiles.create("taker");
 
         assertTrue(BisqEasyMediationContractIdentityChecks.hasMatchingContractParties(
                 maker.getNetworkId(),
@@ -48,8 +44,8 @@ class BisqEasyMediationContractIdentityChecksTest {
 
     @Test
     void acceptsRequesterAndPeerWhenTheyMatchTakerAndMaker() {
-        UserProfile maker = createUserProfile("maker");
-        UserProfile taker = createUserProfile("taker");
+        UserProfile maker = TestUserProfiles.create("maker");
+        UserProfile taker = TestUserProfiles.create("taker");
 
         assertTrue(BisqEasyMediationContractIdentityChecks.hasMatchingContractParties(
                 maker.getNetworkId(),
@@ -60,9 +56,9 @@ class BisqEasyMediationContractIdentityChecksTest {
 
     @Test
     void rejectsRequesterOrPeerOutsideContractParties() {
-        UserProfile maker = createUserProfile("maker");
-        UserProfile taker = createUserProfile("taker");
-        UserProfile outsider = createUserProfile("outsider");
+        UserProfile maker = TestUserProfiles.create("maker");
+        UserProfile taker = TestUserProfiles.create("taker");
+        UserProfile outsider = TestUserProfiles.create("outsider");
 
         assertFalse(BisqEasyMediationContractIdentityChecks.hasMatchingContractParties(
                 maker.getNetworkId(),
@@ -75,7 +71,7 @@ class BisqEasyMediationContractIdentityChecksTest {
     // traders, so a request which names one profile twice must not match, also with another copy of the profile.
     @Test
     void rejectsRequesterWhoIsAlsoThePeer() {
-        UserProfile trader = createUserProfile("trader");
+        UserProfile trader = TestUserProfiles.create("trader");
         UserProfile traderWithOtherNickName = new UserProfile(0,
                 "other nick name",
                 trader.getProofOfWork(),
@@ -99,7 +95,7 @@ class BisqEasyMediationContractIdentityChecksTest {
 
     @Test
     void acceptsMatchingContractMediator() {
-        UserProfile mediator = createUserProfile("mediator");
+        UserProfile mediator = TestUserProfiles.create("mediator");
 
         assertTrue(BisqEasyMediationContractIdentityChecks.hasMatchingContractMediator(
                 Optional.of(mediator),
@@ -108,8 +104,8 @@ class BisqEasyMediationContractIdentityChecksTest {
 
     @Test
     void rejectsMissingOrMismatchingContractMediator() {
-        UserProfile mediator = createUserProfile("mediator");
-        UserProfile other = createUserProfile("other");
+        UserProfile mediator = TestUserProfiles.create("mediator");
+        UserProfile other = TestUserProfiles.create("other");
 
         assertFalse(BisqEasyMediationContractIdentityChecks.hasMatchingContractMediator(
                 Optional.empty(),
@@ -123,9 +119,9 @@ class BisqEasyMediationContractIdentityChecksTest {
     // transport. The parties are identified by their keys.
     @Test
     void acceptsPartiesAndMediatorWhoseAddressesChanged() {
-        UserProfile maker = createUserProfile("maker");
-        UserProfile taker = createUserProfile("taker");
-        UserProfile mediator = createUserProfile("mediator");
+        UserProfile maker = TestUserProfiles.create("maker");
+        UserProfile taker = TestUserProfiles.create("taker");
+        UserProfile mediator = TestUserProfiles.create("mediator");
 
         assertTrue(BisqEasyMediationContractIdentityChecks.hasMatchingContractParties(
                 withOtherAddress(maker.getNetworkId()),
@@ -141,23 +137,5 @@ class BisqEasyMediationContractIdentityChecksTest {
         Address otherAddress = Address.from("127.0.0.1", 2000);
         return new NetworkId(new AddressByTransportTypeMap(Map.of(otherAddress.getTransportType(), otherAddress)),
                 networkId.getPubKey());
-    }
-
-    private UserProfile createUserProfile(String nickName) {
-        return new UserProfile(0,
-                nickName,
-                new ProofOfWork(new byte[20], 0, null, 1, new byte[72], 0),
-                0,
-                createNetworkId(nickName),
-                "",
-                "",
-                "");
-    }
-
-    private NetworkId createNetworkId(String keyId) {
-        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-        Address address = Address.from("127.0.0.1", 1000);
-        return new NetworkId(new AddressByTransportTypeMap(Map.of(address.getTransportType(), address)),
-                new PubKey(keyPair.getPublic(), keyId));
     }
 }
