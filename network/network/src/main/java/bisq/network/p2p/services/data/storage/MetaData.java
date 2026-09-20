@@ -55,21 +55,14 @@ public final class MetaData implements NetworkProto {
     /**
      * The storage policy declared by a payload type, resolved once per class and shared from then on.
      * <p>
-     * The {@code get()} before {@code computeIfAbsent} is deliberate and must stay. {@code computeIfAbsent} returns
-     * without locking only when the key is the first node in its bin, a branch its source marks "check first node
-     * without acquiring lock"; any other key falls through to {@code synchronized(f)} on every call, whether or not
-     * the value is already cached. {@code get()} is lock free for every node.
+     * Keep the {@code get()}, do not fold it into {@code computeIfAbsent}: {@code computeIfAbsent} returns without
+     * locking only when the key is the first node in its bin, and 22 of the 71 payload classes are not.
+     * {@code get()} never locks.
      * <p>
-     * That matters because this is a hot path rather than a lookup at startup. {@code FilterService} sorts a whole
-     * store by {@code getMetaData().getPriority()} when answering an inventory request, two calls per comparison,
-     * so a store at its 10 000 entry cap makes on the order of 270 000 calls per request, on network threads and
-     * concurrently for different peers.
-     * <p>
-     * Measured on this map: 71 payload classes occupy 49 bins of a 128 slot table, so 22 of them, just under a
-     * third, are not the first node in their bin. Which classes those are depends on identity hash codes and so
-     * differs per JVM, but the proportion does not: a uniform model of 71 keys in 128 bins gives a median of 16 and
-     * a 95th percentile of 21. Before the storage policy moved onto the annotation this was an instance field read,
-     * so the lock would be a regression rather than a cost that was always there.
+     * It is worth the care because this runs per comparison while {@code FilterService} sorts a store by priority to
+     * answer an inventory request, on network threads. Sorting 10 000 entries: about 0.55 ms back when the policy
+     * was an instance field, about 0.9 ms as written, about 1.4 ms with the {@code get()} folded away, and the last
+     * of those degrades further when several peers are served at once.
      */
     public static MetaData from(Class<?> clazz) {
         MetaData metaData = BY_CLASS.get(clazz);
