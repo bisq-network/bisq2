@@ -18,6 +18,7 @@
 package bisq.network.storage_policy;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -47,6 +48,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * applied to the module that defines them and so cannot depend on it.
  */
 class StoragePolicyProcessorTest {
+    @TempDir
+    private Path classOutput;
+
     private static final String PACKAGE = "package bisq.network.p2p.services.data.storage;\n";
 
     // Top level in that package, because the processor matches them by fully qualified name.
@@ -63,7 +67,7 @@ class StoragePolicyProcessorTest {
             import java.lang.annotation.*;
             @Retention(RetentionPolicy.RUNTIME)
             @Target({ElementType.TYPE, ElementType.FIELD})
-            public @interface Getter { AccessLevel value() default AccessLevel.PUBLIC; }
+            public @interface Getter { AccessLevel value() default AccessLevel.PUBLIC; boolean lazy() default false; }
             """;
 
     private static final String ACCESS_LEVEL = """
@@ -128,6 +132,29 @@ class StoragePolicyProcessorTest {
     void anAbstractTypeWithNeitherIsAccepted() {
         assertNoError("""
                 abstract class AbstractNeither implements StoragePolicyAware { }
+                """);
+    }
+
+    /** Inheriting a policy and overriding the accessor is the same dormant state as declaring one and overriding. */
+    @Test
+    void inheritingAPolicyAndOverridingIsRejected() {
+        assertError("both declares", """
+                @StoragePolicy
+                abstract class InheritedBase implements StoragePolicyAware { }
+                class InheritedBoth extends InheritedBase {
+                    public MetaData getMetaData() { return null; }
+                }
+                """);
+    }
+
+    /** Only the value element of @Getter carries the AccessLevel; the others must not read as no accessor. */
+    @Test
+    void aGetterWithANonAccessLevelElementStillCounts() {
+        assertNoError("""
+                class OtherElement implements StoragePolicyAware {
+                    @lombok.Getter(lazy = true)
+                    private final MetaData metaData = null;
+                }
                 """);
     }
 
@@ -253,8 +280,7 @@ class StoragePolicyProcessorTest {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         try (var fileManager = compiler.getStandardFileManager(diagnostics, null, null)) {
-            Path classes = Files.createTempDirectory("storage-policy-processor-test");
-            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, List.of(classes.toFile()));
+            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, List.of(classOutput.toFile()));
             JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, null, null,
                     List.of(inMemory("StoragePolicyAware", AWARE), inMemory("StoragePolicy", POLICY),
                             inMemory("MetaData", META_DATA), inMemory("Getter", LOMBOK), inMemory("AccessLevel", ACCESS_LEVEL),

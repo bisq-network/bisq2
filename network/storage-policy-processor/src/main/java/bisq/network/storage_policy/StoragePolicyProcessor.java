@@ -30,6 +30,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -102,7 +104,7 @@ public class StoragePolicyProcessor extends AbstractProcessor {
         // Declaring and overriding are alternatives for an abstract base too, where the policy would sit dormant
         // until someone removed the override and every entry then filed under the base's own name.
         boolean providesAccessor = providesOwnAccessor(type);
-        if (declaresPolicy && providesAccessor) {
+        if ((declaresPolicy || inheritsPolicy(type)) && providesAccessor) {
             error(type, type.getSimpleName() + " both declares @StoragePolicy and provides its own " + ACCESSOR
                     + "(). Remove one: a type either declares its policy or passes on somebody else's");
             return;
@@ -194,8 +196,11 @@ public class StoragePolicyProcessor extends AbstractProcessor {
     }
 
     private static boolean generatesPublicAccessor(AnnotationMirror getter) {
-        return getter.getElementValues().values().stream()
-                .allMatch(value -> "PUBLIC".equals(String.valueOf(value.getValue())));
+        // Only the value element carries the AccessLevel. @Getter takes others, such as onMethod_ and lazy, and
+        // reading all of them would make any of those read as no accessor. An absent value means PUBLIC.
+        return getter.getElementValues().entrySet().stream()
+                .filter(entry -> "value".contentEquals(entry.getKey().getSimpleName()))
+                .allMatch(entry -> "PUBLIC".equals(String.valueOf(entry.getValue().getValue())));
     }
 
     /** The Lombok reasoning only applies to the field an accessor would be generated from, so the type matters. */
@@ -207,7 +212,7 @@ public class StoragePolicyProcessor extends AbstractProcessor {
 
     /** The type itself and every class above it, excluding interfaces. */
     private Iterable<TypeElement> superClasses(TypeElement type) {
-        java.util.List<TypeElement> classes = new java.util.ArrayList<>();
+        List<TypeElement> classes = new ArrayList<>();
         TypeElement current = type;
         while (current != null) {
             classes.add(current);
