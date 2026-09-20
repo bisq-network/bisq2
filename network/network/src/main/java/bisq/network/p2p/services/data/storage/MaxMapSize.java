@@ -21,6 +21,12 @@ import lombok.Getter;
 
 /**
  * Upper bound for the number of entries a store keeps for a given data type. The value is what goes on the wire.
+ * <p>
+ * A declared value below 10 000 has no effect on the store today. {@code DataStorageService.getMaxMapSize()} raises
+ * whatever a type declares to at least {@link #SIZE_10_000}, with a comment saying it does so until the too low
+ * values are fixed, so {@link #SIZE_100} reads as a 100 entry cap while the store holds 10 000. That predates the
+ * annotation, which only moved where the value is written, but it means these constants are not yet the truth about
+ * the cap.
  */
 @Getter
 public enum MaxMapSize {

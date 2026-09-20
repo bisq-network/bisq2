@@ -54,6 +54,7 @@ public class StoragePolicyProcessor extends AbstractProcessor {
     private static final String AWARE = "bisq.network.p2p.services.data.storage.StoragePolicyAware";
     private static final String ACCESSOR = "getMetaData";
     private static final String ACCESSOR_FIELD = "metaData";
+    private static final String META_DATA = "bisq.network.p2p.services.data.storage.MetaData";
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -141,12 +142,20 @@ public class StoragePolicyProcessor extends AbstractProcessor {
                 }
                 if (member.getKind() == ElementKind.FIELD
                         && ACCESSOR_FIELD.contentEquals(member.getSimpleName())
-                        && !member.getModifiers().contains(Modifier.STATIC)) {
+                        && !member.getModifiers().contains(Modifier.STATIC)
+                        && isMetaData(member.asType())) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /** The Lombok reasoning only applies to the field an accessor would be generated from, so the type matters. */
+    private boolean isMetaData(TypeMirror mirror) {
+        return asTypeElement(mirror)
+                .map(element -> META_DATA.contentEquals(element.getQualifiedName()))
+                .orElse(false);
     }
 
     /** The type itself and every class above it, excluding interfaces. */

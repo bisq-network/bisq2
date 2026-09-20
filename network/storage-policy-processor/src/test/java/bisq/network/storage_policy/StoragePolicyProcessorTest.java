@@ -54,6 +54,10 @@ class StoragePolicyProcessorTest {
             public interface StoragePolicyAware { default Object getMetaData() { return null; } }
             """;
 
+    private static final String META_DATA = PACKAGE + """
+            public class MetaData { }
+            """;
+
     private static final String POLICY = PACKAGE + """
             import java.lang.annotation.*;
             @Inherited
@@ -118,7 +122,17 @@ class StoragePolicyProcessorTest {
     void aMetaDataFieldCountsAsAnOverride() {
         assertNoError("""
                 class LombokStyle implements StoragePolicyAware {
-                    private final Object metaData = null;
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
+    /** Only the field an accessor would be generated from counts, so the name alone must not exempt a type. */
+    @Test
+    void aFieldNamedMetaDataOfAnotherTypeDoesNotCount() {
+        assertError("declares no storage properties", """
+                class Misleading implements StoragePolicyAware {
+                    private final String metaData = null;
                 }
                 """);
     }
@@ -169,6 +183,7 @@ class StoragePolicyProcessorTest {
             fileManager.setLocation(StandardLocation.CLASS_OUTPUT, List.of(classes.toFile()));
             JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, null, null,
                     List.of(inMemory("StoragePolicyAware", AWARE), inMemory("StoragePolicy", POLICY),
+                            inMemory("MetaData", META_DATA),
                             inMemory("Fixture", PACKAGE + source)));
             task.setProcessors(List.of(new StoragePolicyProcessor()));
             task.call();
