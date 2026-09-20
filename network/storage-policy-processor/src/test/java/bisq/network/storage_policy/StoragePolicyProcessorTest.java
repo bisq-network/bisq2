@@ -63,7 +63,12 @@ class StoragePolicyProcessorTest {
             import java.lang.annotation.*;
             @Retention(RetentionPolicy.RUNTIME)
             @Target({ElementType.TYPE, ElementType.FIELD})
-            public @interface Getter { }
+            public @interface Getter { AccessLevel value() default AccessLevel.PUBLIC; }
+            """;
+
+    private static final String ACCESS_LEVEL = """
+            package lombok;
+            public enum AccessLevel { PUBLIC, NONE }
             """;
 
     private static final String POLICY = PACKAGE + """
@@ -146,6 +151,18 @@ class StoragePolicyProcessorTest {
                 """);
     }
 
+    /** AccessLevel.NONE is how a class level getter is suppressed, so it generates no accessor at all. */
+    @Test
+    void aGetterSuppressedWithAccessLevelNoneDoesNotCount() {
+        assertError("declares no storage properties", """
+                @lombok.Getter
+                class Suppressed implements StoragePolicyAware {
+                    @lombok.Getter(lombok.AccessLevel.NONE)
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
     /** Without a @Getter nothing generates an accessor, so the type would fall back to the failing default. */
     @Test
     void aMetaDataFieldWithNoGetterDoesNotCount() {
@@ -221,7 +238,7 @@ class StoragePolicyProcessorTest {
             fileManager.setLocation(StandardLocation.CLASS_OUTPUT, List.of(classes.toFile()));
             JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, null, null,
                     List.of(inMemory("StoragePolicyAware", AWARE), inMemory("StoragePolicy", POLICY),
-                            inMemory("MetaData", META_DATA), inMemory("Getter", LOMBOK),
+                            inMemory("MetaData", META_DATA), inMemory("Getter", LOMBOK), inMemory("AccessLevel", ACCESS_LEVEL),
                             inMemory("Fixture", PACKAGE + source)));
             task.setProcessors(List.of(new StoragePolicyProcessor()));
             task.call();

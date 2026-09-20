@@ -165,13 +165,31 @@ public class StoragePolicyProcessor extends AbstractProcessor {
      * throw on its first payload.
      */
     private boolean generatesAccessors(TypeElement enclosing, Element field) {
-        return hasLombokGetter(field) || hasLombokGetter(enclosing);
+        // A @Getter on the field decides for that field, which is how a class level one is suppressed for it.
+        return lombokGetter(field)
+                .map(StoragePolicyProcessor::generatesPublicAccessor)
+                .orElseGet(() -> lombokGetter(enclosing)
+                        .map(StoragePolicyProcessor::generatesPublicAccessor)
+                        .orElse(false));
     }
 
-    private boolean hasLombokGetter(Element element) {
+    /**
+     * {@code @Getter(AccessLevel.NONE)} is how a class level getter is suppressed for one field, so an explicit
+     * level that is not PUBLIC does not give the accessor the interface needs. PRIVATE and PROTECTED would not
+     * compile anyway, since the method cannot reduce the visibility of the one it implements, but NONE generates
+     * nothing at all and would otherwise pass.
+     */
+    private Optional<AnnotationMirror> lombokGetter(Element element) {
         return element.getAnnotationMirrors().stream()
-                .map(mirror -> ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName())
-                .anyMatch(LOMBOK_GETTER::contentEquals);
+                .filter(mirror -> LOMBOK_GETTER.contentEquals(
+                        ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName()))
+                .map(mirror -> (AnnotationMirror) mirror)
+                .findFirst();
+    }
+
+    private static boolean generatesPublicAccessor(AnnotationMirror getter) {
+        return getter.getElementValues().values().stream()
+                .allMatch(value -> "PUBLIC".equals(String.valueOf(value.getValue())));
     }
 
     /** The Lombok reasoning only applies to the field an accessor would be generated from, so the type matters. */
