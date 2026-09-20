@@ -53,6 +53,14 @@ dependencies {
         testCompileOnly(it)
     }
 
+    // Verifies at compile time that a network payload type declares its storage properties. Applied to every module
+    // rather than to a maintained list, so a payload type cannot be added to a module that forgot to wire it. The
+    // processor declares itself ISOLATING, so incremental compilation stays on.
+    if (project.path != ":storage-policy-processor") {
+        annotationProcessor("network:storage-policy-processor")
+        testAnnotationProcessor("network:storage-policy-processor")
+    }
+
     versionCatalog.findLibrary("slf4j-api").ifPresent {
         implementation(it)
     }
