@@ -99,25 +99,64 @@ For the `NetworkMessage` and `DistributedData` implementations we need to regist
 protobuf code gets executed. We do that in `ResolverConfig`, called from `ApplicationService`.
 
 ```
-// Register resolvers for distributedData 
-DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.class, ChatMessage.getDistributedDataResolver());
+// A concrete type. Its simple name becomes a store key, so it is whitelisted and its storage policy is verified.
 DistributedDataResolver.addResolver("user.UserProfile", UserProfile.class, UserProfile.getResolver());
 
-// Register resolvers for networkMessages 
-NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.class, TradeMessage.getNetworkMessageResolver());
+// An abstract base, registered only so its proto type dispatches to its subclasses. It is never a store key, so it
+// is not whitelisted and declares no policy of its own. Its subclasses are registered separately.
+DistributedDataResolver.addBaseTypeResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
+
+// The same split applies to networkMessages.
+NetworkMessageResolver.addResolver("user.AuthorizeTimestampRequest", AuthorizeTimestampRequest.class, AuthorizeTimestampRequest.getNetworkMessageResolver());
+NetworkMessageResolver.addBaseTypeResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());
 ```
+
+Use `addResolver` for a concrete type and `addBaseTypeResolver` for an abstract base. The method you call states
+whether the type is a store key, so `addResolver` takes `Class<? extends DistributedData>` or
+`Class<? extends ExternalNetworkMessage>` rather than any `NetworkProto`, and an abstract base cannot reach the
+whitelist by accident. Passing an abstract class to `addResolver` fails at startup, because it has no storage policy
+of its own to verify.
 
 The proto type name and the class are passed separately because they can differ. The proto type name is the wire
 contract and must never change, while the class may be renamed, which is why for example the message class
 `BisqEasyMediationRequest` is still registered under the proto type name `support.MediationRequest`. The class argument
 is what registers the type in `NetworkStorageWhiteList`, which the P2P storage checks before accepting a payload, so a
-type registered with the wrong class is silently rejected by every node. If the registered class is not final, its
-subclasses must be added to `NetworkStorageWhiteList` explicitly.
+type registered with the wrong class is silently rejected by every node. Subclasses of a base registered with
+`addBaseTypeResolver` are added with `ResolverConfig.addStorageType`, which whitelists them and verifies their policy.
+`StorageWhiteListTest` compares the whitelist against the stored types found on the classpath, so a forgotten entry
+fails rather than going unnoticed.
 
 Keeping the proto type name fixed is not on its own enough to make a java rename safe. The simple class name is also
 the `MetaData.className` sent on the wire, the store key `StorageService` checks before accepting a payload and uses to
 discover existing files, and the mailbox key a peer stores a message under. A rename therefore needs the old name kept
 as an alias or the existing files migrated, not just the proto type name left alone.
+
+### Declaring storage properties
+
+A payload type declares how the distributed storage treats it with `@StoragePolicy` on the class:
+
+```java
+@StoragePolicy(ttl = Ttl.DAYS_30, priority = Priority.HIGH)
+public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData, PublishDateAware {
+```
+
+`priority` and `maxMapSize` have defaults, so a type states only what differs. `MetaData.from(Class)` resolves the
+policy once per class and adds the `className` derived from the annotated class. The
+annotation is `@Inherited`, so an abstract base declares the policy for its subclasses while each subclass still
+resolves its own `className` and therefore its own store file.
+
+The ttl, priority and map size come from the `Ttl`, `Priority` and `MaxMapSize` enums. If none of them has the value
+you need, add the constant rather than working around it: these are protocol level policy shared by every node, so the
+set is closed on purpose.
+
+A type whose properties cannot be a constant, because they follow from the payload rather than from its type, declares
+no policy and overrides `getMetaData()` instead. The wrappers do that: `AuthenticatedData` passes on the policy of the
+payload it holds, and `MailboxData` the one it received over the wire. Such an override must be a deterministic
+function of data every node already has, since each receiver resolves independently, and it must not depend on
+anything a peer chooses.
+
+An annotation processor rejects at compile time a stored type with neither a policy nor an override, a policy on a
+type the storage never resolves one for, and a type that has both.
 
 This solution is not really great but so far I have not found a better way. To do it in the domain services might be an
 option but the seedNode application does not use those domains, so it would be weird to instantiate a `OfferService` if
