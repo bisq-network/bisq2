@@ -58,6 +58,14 @@ class StoragePolicyProcessorTest {
             public class MetaData { }
             """;
 
+    private static final String LOMBOK = """
+            package lombok;
+            import java.lang.annotation.*;
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target({ElementType.TYPE, ElementType.FIELD})
+            public @interface Getter { }
+            """;
+
     private static final String POLICY = PACKAGE + """
             import java.lang.annotation.*;
             @Inherited
@@ -117,13 +125,43 @@ class StoragePolicyProcessorTest {
                 """);
     }
 
-    /** Lombok generates the accessor from this field, and only if it runs first. The field alone has to count. */
+    /** Lombok generates the accessor from this field, and only if it runs first, so the field has to count. */
     @Test
-    void aMetaDataFieldCountsAsAnOverride() {
+    void aMetaDataFieldWithALombokGetterCountsAsAnOverride() {
         assertNoError("""
+                @lombok.Getter
                 class LombokStyle implements StoragePolicyAware {
                     private final MetaData metaData = null;
                 }
+                """);
+    }
+
+    @Test
+    void aFieldLevelLombokGetterAlsoCounts() {
+        assertNoError("""
+                class FieldLevel implements StoragePolicyAware {
+                    @lombok.Getter
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
+    /** Without a @Getter nothing generates an accessor, so the type would fall back to the failing default. */
+    @Test
+    void aMetaDataFieldWithNoGetterDoesNotCount() {
+        assertError("declares no storage properties", """
+                class NoAccessor implements StoragePolicyAware {
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
+    /** @Inherited does not reach a type through an interface, so a policy declared there resolves for nobody. */
+    @Test
+    void aPolicyOnAnInterfaceIsRejected() {
+        assertError("no effect on an interface", """
+                @StoragePolicy
+                interface Inert extends StoragePolicyAware { }
                 """);
     }
 
@@ -183,7 +221,7 @@ class StoragePolicyProcessorTest {
             fileManager.setLocation(StandardLocation.CLASS_OUTPUT, List.of(classes.toFile()));
             JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, null, null,
                     List.of(inMemory("StoragePolicyAware", AWARE), inMemory("StoragePolicy", POLICY),
-                            inMemory("MetaData", META_DATA),
+                            inMemory("MetaData", META_DATA), inMemory("Getter", LOMBOK),
                             inMemory("Fixture", PACKAGE + source)));
             task.setProcessors(List.of(new StoragePolicyProcessor()));
             task.call();

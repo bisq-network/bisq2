@@ -55,6 +55,7 @@ public class StoragePolicyProcessor extends AbstractProcessor {
     private static final String ACCESSOR = "getMetaData";
     private static final String ACCESSOR_FIELD = "metaData";
     private static final String META_DATA = "bisq.network.p2p.services.data.storage.MetaData";
+    private static final String LOMBOK_GETTER = "lombok.Getter";
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -86,6 +87,12 @@ public class StoragePolicyProcessor extends AbstractProcessor {
         if (declaresPolicy && !aware) {
             error(type, "@StoragePolicy has no effect here: " + type.getSimpleName()
                     + " is not a StoragePolicyAware type, so the storage never resolves a policy for it");
+            return;
+        }
+        if (declaresPolicy && type.getKind() == ElementKind.INTERFACE) {
+            error(type, "@StoragePolicy has no effect on an interface: it is @Inherited, which does not reach a type"
+                    + " through an interface, so " + type.getSimpleName() + " declares a policy nothing resolves."
+                    + " Declare it on the implementing classes, or on a shared abstract base");
             return;
         }
         boolean concreteType = (type.getKind() == ElementKind.CLASS || type.getKind() == ElementKind.RECORD)
@@ -143,12 +150,28 @@ public class StoragePolicyProcessor extends AbstractProcessor {
                 if (member.getKind() == ElementKind.FIELD
                         && ACCESSOR_FIELD.contentEquals(member.getSimpleName())
                         && !member.getModifiers().contains(Modifier.STATIC)
-                        && isMetaData(member.asType())) {
+                        && isMetaData(member.asType())
+                        && generatesAccessors(classInHierarchy, member)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * A field only implies an accessor if something generates one from it. Without a Lombok {@code @Getter} on the
+     * field or its class there is no accessor at all, and the type would fall back to the interface default and
+     * throw on its first payload.
+     */
+    private boolean generatesAccessors(TypeElement enclosing, Element field) {
+        return hasLombokGetter(field) || hasLombokGetter(enclosing);
+    }
+
+    private boolean hasLombokGetter(Element element) {
+        return element.getAnnotationMirrors().stream()
+                .map(mirror -> ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName())
+                .anyMatch(LOMBOK_GETTER::contentEquals);
     }
 
     /** The Lombok reasoning only applies to the field an accessor would be generated from, so the type matters. */
