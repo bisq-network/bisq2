@@ -42,10 +42,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * so this also shows that the move to the annotation preserved them.
  */
 class StoragePolicyValuesTest {
-    private record Expected(Class<?> type, long ttl, int priority, int maxMapSize) {
+    private record Expected(Class<? extends StoragePolicyAware> type, long ttl, int priority, int maxMapSize) {
     }
 
-    private static Expected entry(Class<?> type, long ttl, int priority, int maxMapSize) {
+    private static Expected entry(Class<? extends StoragePolicyAware> type, long ttl, int priority,
+                                  int maxMapSize) {
         return new Expected(type, ttl, priority, maxMapSize);
     }
 
@@ -130,8 +131,8 @@ class StoragePolicyValuesTest {
                 declaring = declaring.getSuperclass();
             }
             assertNotNull(declaring, clazz.getName() + " resolves a policy but no ancestor declares one");
-            MetaData inherited = MetaData.from(clazz);
-            MetaData base = MetaData.from(declaring);
+            MetaData inherited = MetaData.from(clazz.asSubclass(StoragePolicyAware.class));
+            MetaData base = MetaData.from(declaring.asSubclass(StoragePolicyAware.class));
             String type = clazz.getSimpleName();
             assertEquals(base.getTtl(), inherited.getTtl(), type + " ttl");
             assertEquals(base.getPriority(), inherited.getPriority(), type + " priority");

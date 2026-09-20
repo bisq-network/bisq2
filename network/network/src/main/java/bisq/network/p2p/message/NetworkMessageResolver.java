@@ -38,7 +38,7 @@ public class NetworkMessageResolver {
                                    ProtoResolver<ExternalNetworkMessage> resolver) {
         NetworkStorageWhiteList.add(clazz);
         if (StoragePolicyAware.class.isAssignableFrom(clazz)) {
-            MetaData.verifyStoragePolicyDeclared(clazz);
+            MetaData.verifyStoragePolicyDeclared(clazz.asSubclass(StoragePolicyAware.class));
         }
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }

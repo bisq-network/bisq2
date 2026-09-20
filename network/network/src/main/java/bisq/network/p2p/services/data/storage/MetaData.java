@@ -50,7 +50,7 @@ public final class MetaData implements NetworkProto {
     private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("^[A-Z][A-Za-z0-9_$]*$");
 
     // MetaData is constant per class, so we resolve it once per class and share the instance.
-    private static final Map<Class<?>, MetaData> BY_CLASS = new ConcurrentHashMap<>();
+    private static final Map<Class<? extends StoragePolicyAware>, MetaData> BY_CLASS = new ConcurrentHashMap<>();
 
     /**
      * The storage policy declared by a payload type, resolved once per class and shared from then on.
@@ -64,7 +64,7 @@ public final class MetaData implements NetworkProto {
      * was an instance field, about 0.9 ms as written, about 1.4 ms with the {@code get()} folded away, and the last
      * of those degrades further when several peers are served at once.
      */
-    public static MetaData from(Class<?> clazz) {
+    public static MetaData from(Class<? extends StoragePolicyAware> clazz) {
         MetaData metaData = BY_CLASS.get(clazz);
         return metaData != null ? metaData : BY_CLASS.computeIfAbsent(clazz, MetaData::resolve);
     }
@@ -76,13 +76,13 @@ public final class MetaData implements NetworkProto {
      * A type which takes its properties from elsewhere overrides {@code getMetaData()} instead of declaring a
      * policy, which is what the wrappers do, so there is nothing to resolve and nothing to check.
      */
-    public static void verifyStoragePolicyDeclared(Class<?> clazz) {
+    public static void verifyStoragePolicyDeclared(Class<? extends StoragePolicyAware> clazz) {
         if (!overridesAccessor(clazz)) {
             from(clazz);
         }
     }
 
-    private static boolean overridesAccessor(Class<?> clazz) {
+    private static boolean overridesAccessor(Class<? extends StoragePolicyAware> clazz) {
         try {
             return clazz.getMethod("getMetaData").getDeclaringClass() != StoragePolicyAware.class;
         } catch (NoSuchMethodException e) {
@@ -90,7 +90,7 @@ public final class MetaData implements NetworkProto {
         }
     }
 
-    private static MetaData resolve(Class<?> clazz) {
+    private static MetaData resolve(Class<? extends StoragePolicyAware> clazz) {
         StoragePolicy annotation = clazz.getAnnotation(StoragePolicy.class);
         checkArgument(annotation != null, "%s is missing the @StoragePolicy annotation", clazz.getName());
         return new MetaData(annotation.ttl().getMillis(),

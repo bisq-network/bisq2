@@ -18,8 +18,8 @@
 package bisq.application;
 
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.StoragePolicyAware;
 import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.StoragePolicyAware;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;
@@ -73,9 +73,11 @@ class StoragePolicyCoverageTest {
                     || clazz.getMethod("getMetaData").getDeclaringClass() != StoragePolicyAware.class) {
                 continue;
             }
-            assertEquals(clazz.getSimpleName(), MetaData.from(clazz).getClassName());
+            assertEquals(clazz.getSimpleName(),
+                    MetaData.from(clazz.asSubclass(StoragePolicyAware.class)).getClassName());
         }
     }
+
     /**
      * Declaring a policy and overriding {@code getMetaData()} are alternatives, never both. A wrapper which gets an
      * annotation added on top of its override would keep working today and start filing entries under its own class
