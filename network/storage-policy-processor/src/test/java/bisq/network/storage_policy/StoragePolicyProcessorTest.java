@@ -158,6 +158,20 @@ class StoragePolicyProcessorTest {
                 """);
     }
 
+    /**
+     * MetaData and the coverage tests read the accessor with getMethod, which sees an interface default, so the
+     * processor has to agree or it rejects a type that does have one.
+     */
+    @Test
+    void anAccessorInheritedFromAnInterfaceCounts() {
+        assertNoError("""
+                interface Wrapper extends StoragePolicyAware {
+                    default MetaData getMetaData() { return null; }
+                }
+                class ViaInterface implements Wrapper { }
+                """);
+    }
+
     @Test
     void anInheritedPolicyIsAccepted() {
         assertNoError("""

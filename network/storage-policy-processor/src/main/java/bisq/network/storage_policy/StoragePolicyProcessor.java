@@ -128,7 +128,10 @@ public class StoragePolicyProcessor extends AbstractProcessor {
                 .findFirst();
     }
 
-    /** The annotation is {@code @Inherited}, so an abstract base may declare the policy for its subclasses. */
+    /**
+     * The annotation is {@code @Inherited}, so an abstract base may declare the policy for its subclasses. Only
+     * classes, because {@code @Inherited} does not reach a type through an interface.
+     */
     private boolean inheritsPolicy(TypeElement type) {
         for (TypeElement superType : superClasses(type)) {
             if (findPolicy(superType).isPresent()) {
@@ -147,7 +150,10 @@ public class StoragePolicyProcessor extends AbstractProcessor {
      * make the answer depend on the order processors happen to be declared in.
      */
     private boolean providesOwnAccessor(TypeElement type) {
-        for (TypeElement classInHierarchy : superClasses(type)) {
+        for (TypeElement classInHierarchy : supertypes(type)) {
+            if (AWARE.contentEquals(classInHierarchy.getQualifiedName())) {
+                continue; // The default being checked for, not an accessor of the type's own.
+            }
             for (Element member : classInHierarchy.getEnclosedElements()) {
                 if (member.getKind() == ElementKind.METHOD
                         && ACCESSOR.contentEquals(member.getSimpleName())
@@ -210,6 +216,17 @@ public class StoragePolicyProcessor extends AbstractProcessor {
                 .orElse(false);
     }
 
+    /**
+     * The type itself and everything above it, interfaces included. An accessor inherited as an interface default
+     * counts, because {@code MetaData} and the coverage tests read it with {@code getMethod}, which sees one. The
+     * two answers to "does this type have its own accessor" have to agree.
+     */
+    private Iterable<TypeElement> supertypes(TypeElement type) {
+        List<TypeElement> found = new ArrayList<>();
+        collectSupertypes(type, found);
+        return found;
+    }
+
     /** The type itself and every class above it, excluding interfaces. */
     private Iterable<TypeElement> superClasses(TypeElement type) {
         List<TypeElement> classes = new ArrayList<>();
@@ -219,6 +236,17 @@ public class StoragePolicyProcessor extends AbstractProcessor {
             current = asTypeElement(current.getSuperclass()).orElse(null);
         }
         return classes;
+    }
+
+    private void collectSupertypes(TypeElement type, List<TypeElement> found) {
+        if (found.contains(type)) {
+            return;
+        }
+        found.add(type);
+        processingEnv.getTypeUtils().directSupertypes(type.asType()).stream()
+                .map(this::asTypeElement)
+                .flatMap(Optional::stream)
+                .forEach(supertype -> collectSupertypes(supertype, found));
     }
 
     private boolean isStoragePolicyAware(TypeElement type) {
