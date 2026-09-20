@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pins the storage properties every payload type resolves to. A ttl, a priority or a map cap is protocol level
@@ -138,7 +139,10 @@ class StoragePolicyValuesTest {
             assertEquals(type, inherited.getClassName(), type + " className");
             checked++;
         }
-        assertEquals(22, checked, "Expected the BisqEasy and MuSig trade message subclasses to inherit their policy");
+        // Only guards against the filter matching nothing. A count would fail on an ordinary change, adding a
+        // subclass, and point the author at a number in a test rather than at what they did. That the scan
+        // itself sees everything is asserted by everyDeclaringTypeIsPinned below.
+        assertTrue(checked > 0, "No type inherits its policy, so this asserted nothing");
     }
 
     /**
