@@ -77,8 +77,9 @@ import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DAT
  */
 @Slf4j
 public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNotificationsStore> implements Service {
-    // BisqEasyOfferbookMessage use TTL_10_DAYS, BisqEasyOpenTradeMessage and TwoPartyPrivateChatMessage
-    // use TTL_30_DAYS
+    // Longer than every chat message ttl, so a notification outlives the message it refers to rather than the
+    // other way round. The longest today is 15 days, for TwoPartyPrivateChatMessage; BisqEasyOfferbookMessage and
+    // BisqEasyOpenTradeMessage are 10.
     private static final long MAX_AGE = Ttl.DAYS_30.getMillis();
 
     @Getter

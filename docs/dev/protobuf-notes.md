@@ -114,8 +114,8 @@ NetworkMessageResolver.addBaseTypeResolver("trade.TradeMessage", TradeMessage.ge
 Use `addResolver` for a concrete type and `addBaseTypeResolver` for an abstract base. The method you call states
 whether the type is a store key, so `addResolver` takes `Class<? extends DistributedData>` or
 `Class<? extends ExternalNetworkMessage>` rather than any `NetworkProto`, and an abstract base cannot reach the
-whitelist by accident. Passing an abstract class to `addResolver` fails at startup, because it has no storage policy
-of its own to verify.
+whitelist by accident. Passing an abstract base to `addResolver` would whitelist its own name, which is not a store
+key any payload uses, so use `addBaseTypeResolver` for a base even when it declares a policy for its subclasses.
 
 The proto type name and the class are passed separately because they can differ. The proto type name is the wire
 contract and must never change, while the class may be renamed, which is why for example the message class

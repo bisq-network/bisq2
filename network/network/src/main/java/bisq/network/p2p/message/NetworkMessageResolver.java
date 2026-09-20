@@ -19,9 +19,9 @@ package bisq.network.p2p.message;
 
 import bisq.common.proto.NetworkProtoResolverMap;
 import bisq.common.proto.NetworkStorageWhiteList;
+import bisq.common.proto.ProtoResolver;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StoragePolicyAware;
-import bisq.common.proto.ProtoResolver;
 import com.google.protobuf.Any;
 
 public class NetworkMessageResolver {
