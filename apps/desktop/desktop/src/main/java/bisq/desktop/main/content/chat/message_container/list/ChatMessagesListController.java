@@ -73,6 +73,7 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
@@ -128,6 +129,7 @@ public class ChatMessagesListController implements Controller {
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final DontShowAgainService dontShowAgainService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
+    private final BisqEasyMediatorService bisqEasyMediatorService;
     private Pin selectedChannelPin, chatMessagesPin, bisqEasyOfferbookMessageTypeFilterPin, highlightedMessagePin,
             ignoredUserProfileIdsPin, offerValidityRevisionPin;
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
@@ -156,6 +158,7 @@ public class ChatMessagesListController implements Controller {
         bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
+        bisqEasyMediatorService = serviceProvider.getSupportService().getBisqEasyMediatorService();
 
         this.mentionUserHandler = mentionUserHandler;
         this.showChatUserDetailsHandler = showChatUserDetailsHandler;
@@ -722,16 +725,26 @@ public class ChatMessagesListController implements Controller {
         handleScrollValueChanged();
     }
 
+    private Set<String> getUnverifiedForwardedMessageIds(ChatChannel<?> channel) {
+        if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel && bisqEasyOpenTradeChannel.isMediator()) {
+            return bisqEasyMediatorService.getUnverifiedChatMessageIds(bisqEasyOpenTradeChannel.getTradeId());
+        }
+        return Set.of();
+    }
+
     private <M extends ChatMessage, C extends ChatChannel<M>> Pin bindChatMessages(C channel) {
         // We clear and fill the list at channel change. The addObserver triggers the add method for each item,
         // but as we have a contains() check there it will not have any effect.
         int bindingGeneration = ++channelBindingGeneration;
 
+        Set<String> unverifiedMessageIds = getUnverifiedForwardedMessageIds(channel);
         Set<ChatMessageListItem<M, C>> items = channel.getChatMessages().stream()
                 .filter(chatMessage -> chatMessage.getChatMessageType() != TAKE_BISQ_EASY_OFFER)
                 .filter(chatMessage -> !(chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) ||
                         bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage))
-                .map(chatMessage -> tryCreateChatMessageListItem(chatMessage, channel))
+                .map(chatMessage -> tryCreateChatMessageListItem(chatMessage,
+                        channel,
+                        unverifiedMessageIds.contains(chatMessage.getId())))
                 .flatMap(Optional::stream)
                 .collect(Collectors.toCollection(LinkedHashSet::new)); // preserve insertion order
         model.getChatMessages().addAll(items);
@@ -843,7 +856,9 @@ public class ChatMessagesListController implements Controller {
             return false;
         }
 
-        Optional<ChatMessageListItem<M, C>> item = tryCreateChatMessageListItem(chatMessage, channel);
+        Optional<ChatMessageListItem<M, C>> item = tryCreateChatMessageListItem(chatMessage,
+                channel,
+                getUnverifiedForwardedMessageIds(channel).contains(chatMessage.getId()));
         item.ifPresent(listItem -> {
             model.getChatMessages().add(listItem);
             model.getChatMessageIds().add(chatMessage.getId());
@@ -852,7 +867,8 @@ public class ChatMessagesListController implements Controller {
     }
 
     private <M extends ChatMessage, C extends ChatChannel<M>> Optional<ChatMessageListItem<M, C>> tryCreateChatMessageListItem(M chatMessage,
-                                                                                                                                C channel) {
+                                                                                                                                C channel,
+                                                                                                                                boolean unverifiedForwardedMessage) {
         try {
             return Optional.of(new ChatMessageListItem<>(chatMessage,
                     channel,
@@ -863,7 +879,8 @@ public class ChatMessagesListController implements Controller {
                     userIdentityService,
                     networkService,
                     resendMessageService,
-                    authorizedBondedRolesService));
+                    authorizedBondedRolesService,
+                    unverifiedForwardedMessage));
         } catch (RuntimeException e) {
             log.warn("Could not create the list item for chat message {}", chatMessage.getId(), e);
             return Optional.empty();
@@ -1000,7 +1017,8 @@ public class ChatMessagesListController implements Controller {
                 userIdentityService,
                 networkService,
                 Optional.empty(),
-                authorizedBondedRolesService);
+                authorizedBondedRolesService,
+                false);
     }
 
     private Predicate<? super ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> getPredicate() {
