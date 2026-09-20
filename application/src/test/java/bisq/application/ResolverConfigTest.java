@@ -253,6 +253,29 @@ class ResolverConfigTest {
     private record Registration(String registry, String protoTypeName, String clazz, String resolverOwner) {
     }
 
+    private static Registration readResolver(String registry, MethodInvocationTree node) {
+        if (node.getArguments().size() == 3
+                && node.getArguments().get(0) instanceof LiteralTree protoTypeName
+                && node.getArguments().get(1) instanceof MemberSelectTree classLiteral
+                && node.getArguments().get(2) instanceof MethodInvocationTree resolverCall
+                && resolverCall.getMethodSelect() instanceof MemberSelectTree resolverSelect) {
+            return new Registration(registry, protoTypeName.getValue().toString(),
+                    classLiteral.getExpression().toString(), resolverSelect.getExpression().toString());
+        }
+        return null;
+    }
+
+    private static Registration readBaseTypeResolver(String registry, MethodInvocationTree node) {
+        if (node.getArguments().size() == 2
+                && node.getArguments().get(0) instanceof LiteralTree protoTypeName
+                && node.getArguments().get(1) instanceof MethodInvocationTree resolverCall
+                && resolverCall.getMethodSelect() instanceof MemberSelectTree resolverSelect) {
+            String owner = resolverSelect.getExpression().toString();
+            return new Registration(registry, protoTypeName.getValue().toString(), owner, owner);
+        }
+        return null;
+    }
+
     /**
      * Parsed with the java compiler rather than matched with a regular expression. A text pattern silently skips the
      * calls it was not written for, which costs coverage without failing anything, and it cannot see the third argument
@@ -268,36 +291,22 @@ class ResolverConfigTest {
         new TreeScanner<Void, Void>() {
             @Override
             public Void visitMethodInvocation(MethodInvocationTree node, Void unused) {
+                // The registry is matched first and the method name second, so a call to one of them that this
+                // parser was not written for is reported rather than skipped.
                 if (node.getMethodSelect() instanceof MemberSelectTree select
-                        && REGISTRIES.contains(select.getExpression().toString())
-                        && "addBaseTypeResolver".contentEquals(select.getIdentifier())) {
-                    // An abstract base is not a store key, so it is registered without a class literal. The
-                    // resolver owner is the base itself, which is what the naming check compares against.
-                    if (node.getArguments().size() == 2
-                            && node.getArguments().get(0) instanceof LiteralTree protoTypeName
-                            && node.getArguments().get(1) instanceof MethodInvocationTree resolverCall
-                            && resolverCall.getMethodSelect() instanceof MemberSelectTree resolverSelect) {
-                        String owner = resolverSelect.getExpression().toString();
-                        registrations.add(new Registration(select.getExpression().toString(),
-                                protoTypeName.getValue().toString(), owner, owner));
-                    } else {
-                        unrecognised.add(node.toString());
-                    }
-                }
-                if (node.getMethodSelect() instanceof MemberSelectTree select
-                        && "addResolver".contentEquals(select.getIdentifier())
                         && REGISTRIES.contains(select.getExpression().toString())) {
-                    if (node.getArguments().size() == 3
-                            && node.getArguments().get(0) instanceof LiteralTree protoTypeName
-                            && node.getArguments().get(1) instanceof MemberSelectTree classLiteral
-                            && node.getArguments().get(2) instanceof MethodInvocationTree resolverCall
-                            && resolverCall.getMethodSelect() instanceof MemberSelectTree resolverSelect) {
-                        registrations.add(new Registration(select.getExpression().toString(),
-                                protoTypeName.getValue().toString(),
-                                classLiteral.getExpression().toString(),
-                                resolverSelect.getExpression().toString()));
-                    } else {
+                    String registry = select.getExpression().toString();
+                    Registration registration = switch (select.getIdentifier().toString()) {
+                        case "addResolver" -> readResolver(registry, node);
+                        // An abstract base is not a store key, so it is registered without a class literal. The
+                        // resolver owner is the base itself, which is what the naming check compares against.
+                        case "addBaseTypeResolver" -> readBaseTypeResolver(registry, node);
+                        default -> null;
+                    };
+                    if (registration == null) {
                         unrecognised.add(node.toString());
+                    } else {
+                        registrations.add(registration);
                     }
                 }
                 return super.visitMethodInvocation(node, unused);
