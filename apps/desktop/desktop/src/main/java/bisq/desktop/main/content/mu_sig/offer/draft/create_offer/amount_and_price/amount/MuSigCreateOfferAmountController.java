@@ -64,6 +64,8 @@ public class MuSigCreateOfferAmountController implements Controller {
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         amountSelection = createOfferUseCase.getAmountSelection();
         model = new MuSigCreateOfferAmountModel();
+        model.setAmountLimitInfoLink(Res.get("muSig.offer.create.amount.limitInfo.learnMore"));
+        model.setLinkToWikiText(Res.get("muSig.offer.create.amount.limitInfo.overlay.linkToWikiText"));
 
         MuSigAmountContainerController muSigAmountComponentsController = new MuSigAmountContainerController(createOfferUseCase);
         view = new MuSigCreateOfferAmountView(model, this, muSigAmountComponentsController.getView().getRoot());
@@ -121,7 +123,7 @@ public class MuSigCreateOfferAmountController implements Controller {
         amountSelection.onSetUseRangeAmount(value);
     }
 
-    void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
+    public void onKeyPressedWhileShowingOverlay(KeyEvent keyEvent) {
         KeyHandlerUtil.handleEnterKeyEvent(keyEvent, () -> {
         });
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
@@ -150,11 +152,17 @@ public class MuSigCreateOfferAmountController implements Controller {
     }
 
     private void applyUserSpecificTradeAmountLimitInfo(Optional<TradeAmount> userSpecificTradeAmountLimit) {
-        model.getShouldShowAmountLimitInfo().set(userSpecificTradeAmountLimit.isPresent());
-        model.getAmountLimitInfo().set(userSpecificTradeAmountLimit
+        Optional<String> formattedLimit = userSpecificTradeAmountLimit
                 .map(amountSelection::toInputAmount)
-                .map(monetary -> AmountFormatter.formatAmountWithCode(monetary, true))
+                .map(monetary -> AmountFormatter.formatAmountWithCode(monetary, true));
+        model.getShouldShowAmountLimitInfo().set(formattedLimit.isPresent());
+        model.getLearnMoreVisible().set(formattedLimit.isPresent());
+        model.getShouldShowHowToBuildReputationButton().set(formattedLimit.isPresent());
+        model.getAmountLimitInfo().set(formattedLimit
                 .map(formatted -> Res.get("muSig.offer.create.amount.limitInfo.buyer", formatted))
+                .orElse(""));
+        model.getAmountLimitInfoOverlayInfo().set(formattedLimit
+                .map(formatted -> Res.get("muSig.offer.create.amount.limitInfo.overlay.buyer", formatted))
                 .orElse(""));
     }
 }

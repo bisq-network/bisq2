@@ -18,6 +18,7 @@
 package bisq.offer.mu_sig.use_case.create_offer.amount.limits;
 
 import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.monetary.TradeAmount;
@@ -43,6 +44,26 @@ public class TradeAmountLimitUtilsTest {
 
         assertEquals(Fiat.fromFaceValue(9_000, "EUR"), limit.getQuoteSideAmount());
         assertEquals(10_000_000L, limit.getBaseSideAmount().getValue());
+    }
+
+    @Test
+    void usdEquivalentConvertsTheMarketDerivedQuoteSide() {
+        Rates rates = new Rates(PriceQuote.fromFiatPrice(100_000, "USD"),
+                Optional.of(PriceQuote.fromFiatPrice(80_000, "EUR")));
+        // The limit's Bitcoin side follows an offer priced away from the market; the USD
+        // equivalent is taken from the fiat side at the market rates: 1 EUR = 1.25 USD.
+        TradeAmount eurLimit = TradeAmountLimitUtils.toTradeAmountLimit(rates, eurMarket,
+                PriceQuote.fromFiatPrice(100_000, "EUR"), tenThousandUsd);
+        assertEquals(Fiat.fromFaceValue(8_000, "EUR"), eurLimit.getQuoteSideAmount());
+        assertEquals(tenThousandUsd, TradeAmountLimitUtils.toUsd(rates, eurMarket, eurLimit));
+
+        // On an altcoin market the quote side is Bitcoin, valued at the BTC/USD rate.
+        Market xmrMarket = MarketRepository.getXmrBtcMarket();
+        Rates altcoinRates = new Rates(PriceQuote.fromFiatPrice(100_000, "USD"), Optional.empty());
+        TradeAmount xmrLimit = TradeAmountLimitUtils.toTradeAmountLimit(altcoinRates, xmrMarket,
+                PriceQuote.fromAltCoinPrice(0.002, "XMR"), tenThousandUsd);
+        assertEquals(10_000_000L, xmrLimit.getQuoteSideAmount().getValue());
+        assertEquals(tenThousandUsd, TradeAmountLimitUtils.toUsd(altcoinRates, xmrMarket, xmrLimit));
     }
 
     @Test

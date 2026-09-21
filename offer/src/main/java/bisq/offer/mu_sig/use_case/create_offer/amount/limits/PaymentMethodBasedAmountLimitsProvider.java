@@ -42,7 +42,7 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PaymentMethodBasedAmountLimitsProvider extends LifecycleScope {
-    private final Observable<Fiat> amountLimitInUsd = new Observable<>(AbsoluteAmountLimitsProvider.MAX_TRADE_AMOUNT_IN_USD); //todo remove
+    private final Observable<Fiat> amountLimitInUsd = new Observable<>(AbsoluteAmountLimitsProvider.MAX_TRADE_AMOUNT_IN_USD);
     private final Observable<TradeAmount> tradeAmountLimit = new Observable<>();
 
     private final MarketPriceService marketPriceService;
@@ -142,12 +142,6 @@ public class PaymentMethodBasedAmountLimitsProvider extends LifecycleScope {
         return tradeAmountLimit.get();
     }
 
-    //todo remove
-    ReadOnlyObservable<Fiat> amountLimitInUsdObservable() {
-        return amountLimitInUsd;
-    }
-
-    //todo remove
     Fiat getAmountLimitInUsd() {
         return amountLimitInUsd.get();
     }
