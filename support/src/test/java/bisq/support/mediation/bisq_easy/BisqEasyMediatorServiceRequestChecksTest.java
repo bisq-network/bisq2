@@ -124,21 +124,15 @@ class BisqEasyMediatorServiceRequestChecksTest {
     }
 
     @Test
-    void firstRequestImportsWholeTranscript() {
-        BisqEasyOpenTradeMessage requesterMessage = createMessage("m1", requester, "hi");
-        BisqEasyOpenTradeMessage peerMessage = createMessage("m2", peer, "hello");
-        BisqEasyMediationRequest request = createRequest("trade-1", contract, requester, peer, List.of(requesterMessage, peerMessage));
+    void rejectsRepeatedRequestFromPeerStoredOnCase() {
+        BisqEasyMediationCase mediationCase = new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer));
+        assertFalse(mediationCase.setPeersMediationRequest(createRequest("trade-1", contract, requester, peer)));
+        assertTrue(mediationCase.setPeersMediationRequest(createRequest("trade-1", contract, peer, requester)));
+        assertFalse(mediationCase.setPeersMediationRequest(createRequest("trade-1", contract, peer, requester)));
+        cases.add(mediationCase);
 
-        assertEquals(Set.of(requesterMessage, peerMessage), Set.copyOf(BisqEasyMediatorService.selectChatMessages(request, false)));
-    }
-
-    @Test
-    void laterRequestImportsOnlyRequestersOwnMessages() {
-        BisqEasyOpenTradeMessage peersOwnMessage = createMessage("m3", peer, "hello");
-        BisqEasyOpenTradeMessage claimedRequesterMessage = createMessage("m4", requester, "hi");
-        BisqEasyMediationRequest peersRequest = createRequest("trade-1", contract, peer, requester, List.of(peersOwnMessage, claimedRequesterMessage));
-
-        assertEquals(List.of(peersOwnMessage), BisqEasyMediatorService.selectChatMessages(peersRequest, true));
+        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, peer, requester), cases, true));
+        assertEquals(2, BisqEasyMediatorService.getRequestsForTrade("trade-1", cases).size());
     }
 
     @Test
@@ -155,11 +149,12 @@ class BisqEasyMediatorServiceRequestChecksTest {
 
     @Test
     void messagesForwardedByTheirAuthorAreVerified() {
-        cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer,
-                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "hello")))));
-        // Peer's request with a different contract is stored as second case and carries copies of both messages
-        cases.add(new BisqEasyMediationCase(createRequest("trade-1", mock(BisqEasyContract.class), peer, requester,
-                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "hello")))));
+        BisqEasyMediationCase mediationCase = new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer,
+                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "hello"))));
+        // Peer's request for the same contract is kept on the case and carries copies of both messages
+        mediationCase.setPeersMediationRequest(createRequest("trade-1", contract, peer, requester,
+                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "hello"))));
+        cases.add(mediationCase);
 
         assertEquals(Set.of(), BisqEasyMediatorService.getUnverifiedChatMessageKeys("trade-1", cases));
     }
@@ -177,9 +172,10 @@ class BisqEasyMediatorServiceRequestChecksTest {
     @Test
     void alteredCopyOfPeersMessageStaysUnverified() {
         BisqEasyOpenTradeMessage alteredCopy = createMessage("m2", peer, "I never paid");
-        cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer, List.of(alteredCopy))));
-        cases.add(new BisqEasyMediationCase(createRequest("trade-1", mock(BisqEasyContract.class), peer, requester,
-                List.of(createMessage("m2", peer, "I paid")))));
+        BisqEasyMediationCase mediationCase = new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer, List.of(alteredCopy)));
+        mediationCase.setPeersMediationRequest(createRequest("trade-1", contract, peer, requester,
+                List.of(createMessage("m2", peer, "I paid"))));
+        cases.add(mediationCase);
 
         assertEquals(Set.of(BisqEasyMediatorService.getProvenanceKey(alteredCopy)),
                 BisqEasyMediatorService.getUnverifiedChatMessageKeys("trade-1", cases));
