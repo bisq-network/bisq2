@@ -173,8 +173,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         BisqEasyContract contract = bisqEasyMediationRequest.getContract();
         findMyMediatorUserIdentity(contract.getMediator()).ifPresent(myUserIdentity -> {
             UserProfile peer = bisqEasyMediationRequest.getPeer();
-            boolean hasCaseForTrade = hasCaseForTrade(tradeId, getMediationCases());
-            List<BisqEasyOpenTradeMessage> chatMessages = selectChatMessages(bisqEasyMediationRequest, hasCaseForTrade);
             BisqEasyOpenTradeChannel channel = bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
                     tradeId,
                     contract.getOffer(),
@@ -186,14 +184,25 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
             bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
 
             // We apply the bisqEasyMediationCase after the channel is set up as clients will expect a channel.
+            // The other trader's request for the same contract is kept on the existing case.
             BisqEasyMediationCase bisqEasyMediationCase = new BisqEasyMediationCase(bisqEasyMediationRequest);
-            addNewMediationCase(bisqEasyMediationCase);
+            getMediationCases().stream()
+                    .filter(bisqEasyMediationCase::equals)
+                    .findAny()
+                    .ifPresentOrElse(existingCase -> {
+                                if (existingCase.setPeersMediationRequest(bisqEasyMediationRequest)) {
+                                    persist();
+                                }
+                            },
+                            () -> addNewMediationCase(bisqEasyMediationCase));
 
-            Set<String> existingMessageIds = channel.getChatMessages().stream()
-                    .map(BisqEasyOpenTradeMessage::getId)
+            // Import by exact message, so a trader's own version of a message is kept next to a differing copy
+            // the other trader forwarded under the same ID.
+            Set<String> existingMessageKeys = channel.getChatMessages().stream()
+                    .map(BisqEasyMediatorService::getProvenanceKey)
                     .collect(Collectors.toSet());
-            chatMessages.stream()
-                    .filter(chatMessage -> !existingMessageIds.contains(chatMessage.getId()))
+            bisqEasyMediationRequest.getChatMessages().stream()
+                    .filter(chatMessage -> !existingMessageKeys.contains(getProvenanceKey(chatMessage)))
                     .forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
             NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
@@ -255,10 +264,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                                       boolean channelExists) {
         String tradeId = bisqEasyMediationRequest.getTradeId();
         String requesterId = bisqEasyMediationRequest.getRequester().getId();
-        List<BisqEasyMediationRequest> requestsForTrade = existingCases.stream()
-                .map(BisqEasyMediationCase::getBisqEasyMediationRequest)
-                .filter(request -> request.getTradeId().equals(tradeId))
-                .collect(Collectors.toList());
+        List<BisqEasyMediationRequest> requestsForTrade = getRequestsForTrade(tradeId, existingCases);
         boolean alreadyRequested = requestsForTrade.stream()
                 .anyMatch(request -> request.getRequester().getId().equals(requesterId));
         if (alreadyRequested && channelExists) {
@@ -292,21 +298,11 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                 && traderIds.equals(Set.of(requester.getId(), peer.getId()));
     }
 
-    static boolean hasCaseForTrade(String tradeId, Collection<BisqEasyMediationCase> existingCases) {
+    static List<BisqEasyMediationRequest> getRequestsForTrade(String tradeId,
+                                                              Collection<BisqEasyMediationCase> existingCases) {
         return existingCases.stream()
-                .anyMatch(mediationCase -> mediationCase.getBisqEasyMediationRequest().getTradeId().equals(tradeId));
-    }
-
-    // The first request for a trade brings the whole transcript. A later request from the other party only
-    // adds the messages that party wrote itself; its copies of the first requester's messages are not stored
-    // in a case and would otherwise show up without the unverified mark.
-    static List<BisqEasyOpenTradeMessage> selectChatMessages(BisqEasyMediationRequest bisqEasyMediationRequest,
-                                                             boolean hasCaseForTrade) {
-        if (!hasCaseForTrade) {
-            return bisqEasyMediationRequest.getChatMessages();
-        }
-        return bisqEasyMediationRequest.getChatMessages().stream()
-                .filter(message -> isOwnMessage(message, bisqEasyMediationRequest))
+                .filter(mediationCase -> mediationCase.getBisqEasyMediationRequest().getTradeId().equals(tradeId))
+                .flatMap(mediationCase -> mediationCase.getMediationRequests().stream())
                 .collect(Collectors.toList());
     }
 
@@ -318,10 +314,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     }
 
     static Set<String> getUnverifiedChatMessageKeys(String tradeId, Collection<BisqEasyMediationCase> existingCases) {
-        List<BisqEasyMediationRequest> requestsForTrade = existingCases.stream()
-                .map(BisqEasyMediationCase::getBisqEasyMediationRequest)
-                .filter(request -> request.getTradeId().equals(tradeId))
-                .collect(Collectors.toList());
+        List<BisqEasyMediationRequest> requestsForTrade = getRequestsForTrade(tradeId, existingCases);
         Set<String> ownMessageKeys = requestsForTrade.stream()
                 .flatMap(request -> request.getChatMessages().stream()
                         .filter(message -> isOwnMessage(message, request)))

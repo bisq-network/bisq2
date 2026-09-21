@@ -855,7 +855,11 @@ public class ChatMessagesListController implements Controller {
     }
 
     private <M extends ChatMessage, C extends ChatChannel<M>> boolean maybeAddChatMessage(M chatMessage, C channel) {
-        if (model.getChatMessageIds().contains(chatMessage.getId()) ||
+        // Avoid to add already existing items. A differing message under a known ID is kept, the
+        // mediator gets both traders' versions of a forwarded message.
+        boolean exists = model.getChatMessages().stream()
+                .anyMatch(item -> item.getChatMessage().equals(chatMessage));
+        if (exists ||
                 chatMessage.getChatMessageType() == TAKE_BISQ_EASY_OFFER ||
                 (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage &&
                         !bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage))) {
