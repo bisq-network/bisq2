@@ -25,6 +25,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
@@ -36,6 +37,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -45,6 +47,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -186,8 +189,12 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
             BisqEasyMediationCase bisqEasyMediationCase = new BisqEasyMediationCase(bisqEasyMediationRequest);
             addNewMediationCase(bisqEasyMediationCase);
 
-            chatMessages.forEach(chatMessage ->
-                    bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
+            Set<String> existingMessageIds = channel.getChatMessages().stream()
+                    .map(BisqEasyOpenTradeMessage::getId)
+                    .collect(Collectors.toSet());
+            chatMessages.stream()
+                    .filter(chatMessage -> !existingMessageIds.contains(chatMessage.getId()))
+                    .forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
             NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
 
@@ -304,27 +311,47 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     }
 
     // A message is unverified when it reached the mediator only inside a request of somebody else than its
-    // author. The mediator UI marks such messages.
-    public Set<String> getUnverifiedChatMessageIds(String tradeId) {
-        return getUnverifiedChatMessageIds(tradeId, getMediationCases());
+    // author. Provenance is bound to the exact message content and author, not to the message ID, so a
+    // second message under the same ID cannot clear the mark. The mediator UI marks such messages.
+    public Set<String> getUnverifiedChatMessageKeys(String tradeId) {
+        return getUnverifiedChatMessageKeys(tradeId, getMediationCases());
     }
 
-    static Set<String> getUnverifiedChatMessageIds(String tradeId, Collection<BisqEasyMediationCase> existingCases) {
+    static Set<String> getUnverifiedChatMessageKeys(String tradeId, Collection<BisqEasyMediationCase> existingCases) {
         List<BisqEasyMediationRequest> requestsForTrade = existingCases.stream()
                 .map(BisqEasyMediationCase::getBisqEasyMediationRequest)
                 .filter(request -> request.getTradeId().equals(tradeId))
                 .collect(Collectors.toList());
-        Set<String> ownMessageIds = requestsForTrade.stream()
+        Set<String> ownMessageKeys = requestsForTrade.stream()
                 .flatMap(request -> request.getChatMessages().stream()
                         .filter(message -> isOwnMessage(message, request)))
-                .map(BisqEasyOpenTradeMessage::getId)
+                .map(BisqEasyMediatorService::getProvenanceKey)
                 .collect(Collectors.toSet());
         return requestsForTrade.stream()
                 .flatMap(request -> request.getChatMessages().stream()
                         .filter(message -> !isOwnMessage(message, request)))
-                .map(BisqEasyOpenTradeMessage::getId)
-                .filter(id -> !ownMessageIds.contains(id))
+                .map(BisqEasyMediatorService::getProvenanceKey)
+                .filter(key -> !ownMessageKeys.contains(key))
                 .collect(Collectors.toSet());
+    }
+
+    // Hash of the message without reactions. Reactions get added later in the channel and must not change the key.
+    public static String getProvenanceKey(BisqEasyOpenTradeMessage message) {
+        BisqEasyOpenTradeMessage withoutReactions = new BisqEasyOpenTradeMessage(message.getTradeId(),
+                message.getId(),
+                message.getChannelId(),
+                message.getSenderUserProfile(),
+                message.getReceiverUserProfileId(),
+                message.getReceiverNetworkId(),
+                message.getText().orElse(null),
+                message.getCitation(),
+                message.getDate(),
+                message.isWasEdited(),
+                message.getMediator(),
+                message.getChatMessageType(),
+                message.getBisqEasyOffer(),
+                new HashSet<>());
+        return Hex.encode(DigestUtil.hash(withoutReactions.serializeForHash()));
     }
 
     private static boolean isOwnMessage(BisqEasyOpenTradeMessage message, BisqEasyMediationRequest request) {
@@ -336,6 +363,14 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                                                 UserProfile peer) {
         String tradeId = bisqEasyMediationRequest.getTradeId();
         String channelId = BisqEasyOpenTradeChannel.createId(tradeId);
+        long numDistinctIds = bisqEasyMediationRequest.getChatMessages().stream()
+                .map(BisqEasyOpenTradeMessage::getId)
+                .distinct()
+                .count();
+        if (numDistinctIds != bisqEasyMediationRequest.getChatMessages().size()) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat messages share an ID.", tradeId);
+            return false;
+        }
         return bisqEasyMediationRequest.getChatMessages().stream()
                 .allMatch(chatMessage -> {
                     if (!chatMessage.getTradeId().equals(tradeId)) {

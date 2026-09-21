@@ -725,9 +725,15 @@ public class ChatMessagesListController implements Controller {
         handleScrollValueChanged();
     }
 
-    private Set<String> getUnverifiedForwardedMessageIds(ChatChannel<?> channel) {
+    private boolean isUnverifiedForwardedMessage(ChatMessage chatMessage, Set<String> unverifiedMessageKeys) {
+        return !unverifiedMessageKeys.isEmpty()
+                && chatMessage instanceof BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage
+                && unverifiedMessageKeys.contains(BisqEasyMediatorService.getProvenanceKey(bisqEasyOpenTradeMessage));
+    }
+
+    private Set<String> getUnverifiedForwardedMessageKeys(ChatChannel<?> channel) {
         if (channel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel && bisqEasyOpenTradeChannel.isMediator()) {
-            return bisqEasyMediatorService.getUnverifiedChatMessageIds(bisqEasyOpenTradeChannel.getTradeId());
+            return bisqEasyMediatorService.getUnverifiedChatMessageKeys(bisqEasyOpenTradeChannel.getTradeId());
         }
         return Set.of();
     }
@@ -737,14 +743,14 @@ public class ChatMessagesListController implements Controller {
         // but as we have a contains() check there it will not have any effect.
         int bindingGeneration = ++channelBindingGeneration;
 
-        Set<String> unverifiedMessageIds = getUnverifiedForwardedMessageIds(channel);
+        Set<String> unverifiedMessageKeys = getUnverifiedForwardedMessageKeys(channel);
         Set<ChatMessageListItem<M, C>> items = channel.getChatMessages().stream()
                 .filter(chatMessage -> chatMessage.getChatMessageType() != TAKE_BISQ_EASY_OFFER)
                 .filter(chatMessage -> !(chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) ||
                         bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage))
                 .map(chatMessage -> tryCreateChatMessageListItem(chatMessage,
                         channel,
-                        unverifiedMessageIds.contains(chatMessage.getId())))
+                        isUnverifiedForwardedMessage(chatMessage, unverifiedMessageKeys)))
                 .flatMap(Optional::stream)
                 .collect(Collectors.toCollection(LinkedHashSet::new)); // preserve insertion order
         model.getChatMessages().addAll(items);
@@ -858,7 +864,7 @@ public class ChatMessagesListController implements Controller {
 
         Optional<ChatMessageListItem<M, C>> item = tryCreateChatMessageListItem(chatMessage,
                 channel,
-                getUnverifiedForwardedMessageIds(channel).contains(chatMessage.getId()));
+                isUnverifiedForwardedMessage(chatMessage, getUnverifiedForwardedMessageKeys(channel)));
         item.ifPresent(listItem -> {
             model.getChatMessages().add(listItem);
             model.getChatMessageIds().add(chatMessage.getId());
