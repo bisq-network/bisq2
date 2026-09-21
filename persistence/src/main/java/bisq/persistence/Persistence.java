@@ -72,6 +72,11 @@ public class Persistence<T extends PersistableStore<T>> {
         return CompletableFuture.runAsync(persistableStoreReaderWriter::pruneBackups, EXECUTOR);
     }
 
+    /** Runs on the persistence executor, so it is ordered against pending writes. */
+    public CompletableFuture<Void> deleteBackups() {
+        return CompletableFuture.runAsync(persistableStoreReaderWriter::deleteBackups, EXECUTOR);
+    }
+
     public List<BackupFileInfo> getBackups() {
         return persistableStoreReaderWriter.getBackups();
     }

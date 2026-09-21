@@ -140,6 +140,20 @@ public class BackupService {
         return success;
     }
 
+    /** Removes every backup of this store, for when the backups hold data the store must no longer keep. */
+    public void deleteAll() {
+        for (BackupFileInfo backupFileInfo : getBackups()) {
+            try {
+                Files.deleteIfExists(backupFileInfo.getPath());
+            } catch (IOException e) {
+                log.error("Failed to delete backup {}", backupFileInfo.getPath(), e);
+            }
+        }
+        accumulatedFileSize = 0;
+        accumulatedFileSizeByStore.put(fileName, 0L);
+        fileSizeByBackupFileInfo.clear();
+    }
+
     public void prune() {
         if (maxBackupSize == MaxBackupSize.ZERO) {
             return;

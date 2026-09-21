@@ -17,8 +17,10 @@
 
 package bisq.api.access.persistence;
 
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
+import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -43,6 +45,120 @@ class ApiAccessStoreTest {
             Permission.USER_IDENTITIES,
             Permission.USER_PROFILES,
             Permission.MOBILE_DEVICES);
+
+    private static bisq.api.protobuf.ClientProfile legacyProfile(String clientId, String clientSecret) {
+        return bisq.api.protobuf.ClientProfile.newBuilder()
+                .setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .setClientName("Pixel 8")
+                .build();
+    }
+
+    @Test
+    void plaintextSecretIsReplacedByItsHashOnLoadAndWrittenBack() {
+        // A store written before secrets were hashed still authenticates its clients, and the
+        // flag makes the service persist so the plaintext leaves the disk on this boot.
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("legacy-client", legacyProfile("legacy-client", "secret"))
+                .putPermissionsByClientId("legacy-client", PermissionSet.grantAll().toProto(false))
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        ClientProfile loaded = store.getClientProfileByIdMap().get("legacy-client");
+        assertTrue(loaded.matchesSecret("secret"));
+        assertTrue(store.hadPlaintextSecretsDuringLoad());
+        assertTrue(store.needsWriteBackAfterLoad());
+        bisq.api.protobuf.ClientProfile written = store.toProto(false).getClientProfileByIdMapMap().get("legacy-client");
+        assertTrue(written.getClientSecret().isEmpty());
+        assertFalse(written.getClientSecretHash().isEmpty());
+        // And a second load of what was written is a no-op.
+        assertFalse(ApiAccessStore.fromProto(store.toProto(false)).needsWriteBackAfterLoad());
+    }
+
+    @Test
+    void hashOnlyStoreLoadsWithoutWriteBack() {
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("client-1",
+                        ClientProfile.fromSecret("client-1", "secret", "Pixel 8").toProto(false))
+                .putPermissionsByClientId("client-1", PermissionSet.grantAll().toProto(false))
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        assertTrue(store.getClientProfileByIdMap().get("client-1").matchesSecret("secret"));
+        assertFalse(store.needsWriteBackAfterLoad());
+    }
+
+    @Test
+    void hashTakesPrecedenceOverAStalePlaintextField() {
+        // Both set cannot be written by any version, but if it ever is, the hash is the newer fact.
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("client-1",
+                        ClientProfile.fromSecret("client-1", "current", "Pixel 8").toProto(false).toBuilder()
+                                .setClientSecret("stale")
+                                .build())
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        ClientProfile loaded = store.getClientProfileByIdMap().get("client-1");
+        assertTrue(loaded.matchesSecret("current"));
+        assertFalse(loaded.matchesSecret("stale"));
+        // The stale plaintext is still a secret on disk, so it is written away like a legacy one.
+        assertTrue(store.needsWriteBackAfterLoad());
+        assertTrue(store.toProto(false).getClientProfileByIdMapMap().get("client-1").getClientSecret().isEmpty());
+    }
+
+    @Test
+    void profileWithoutAnyCredentialIsDroppedTogetherWithItsGrant() {
+        // What a downgraded node leaves behind after loading a hashed store: it rebuilt the entry
+        // from its own model and dropped the hash. Nothing can authenticate as that client and
+        // nothing could revoke it, as its management ID is keyed by the missing hash.
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("dead-client", bisq.api.protobuf.ClientProfile.newBuilder()
+                        .setClientId("dead-client")
+                        .setClientName("Pixel 8")
+                        .build())
+                .putPermissionsByClientId("dead-client", PermissionSet.grantAll().toProto(false))
+                .putClientProfileByIdMap("client-1",
+                        ClientProfile.fromSecret("client-1", "secret", "Pixel 8").toProto(false))
+                .putPermissionsByClientId("client-1", PermissionSet.grantAll().toProto(false))
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        assertEquals(Set.of("client-1"), store.getClientProfileByIdMap().keySet());
+        assertEquals(Set.of("client-1"), store.getPermissionsByClientId().keySet());
+        assertEquals(Set.of("dead-client"), store.getClientIdsDroppedDuringLoad());
+        assertTrue(store.needsWriteBackAfterLoad());
+        // Nothing was hashed, so the backups can stay: they never held a plaintext.
+        assertFalse(store.hadPlaintextSecretsDuringLoad());
+    }
+
+    @Test
+    void profileWithAMalformedHashIsDroppedInsteadOfFailingTheLoad() {
+        // Not written by any version; a corrupted or hand-edited entry. Failing the whole load
+        // would take every other client's access with it.
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("corrupt-client", bisq.api.protobuf.ClientProfile.newBuilder()
+                        .setClientId("corrupt-client")
+                        .setClientName("Pixel 8")
+                        .setClientSecretHash(ByteString.copyFrom(new byte[]{1, 2, 3}))
+                        .build())
+                .putPermissionsByClientId("corrupt-client", PermissionSet.grantAll().toProto(false))
+                .putClientProfileByIdMap("client-1",
+                        ClientProfile.fromSecret("client-1", "secret", "Pixel 8").toProto(false))
+                .putPermissionsByClientId("client-1", PermissionSet.grantAll().toProto(false))
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        assertEquals(Set.of("client-1"), store.getClientProfileByIdMap().keySet());
+        assertEquals(Set.of("client-1"), store.getPermissionsByClientId().keySet());
+        assertEquals(Set.of("corrupt-client"), store.getClientIdsDroppedDuringLoad());
+        assertTrue(store.needsWriteBackAfterLoad());
+    }
 
     @Test
     void fullPermissionSetIsPromotedToGrantAllOnLoad() {

@@ -29,7 +29,7 @@ class ClientManagementIdTest {
     private static final String CLIENT_SECRET = "0123456789012345678901234567890123456789012";
 
     private static ClientProfile clientProfile(String clientId, String clientSecret) {
-        return new ClientProfile(clientId, clientSecret, "Pixel 8");
+        return ClientProfile.fromSecret(clientId, clientSecret, "Pixel 8");
     }
 
     @Test
@@ -61,6 +61,22 @@ class ClientManagementIdTest {
         // Keyed by the client's own secret, so a client ID alone does not yield the handle.
         assertNotEquals(ClientManagementId.of(clientProfile(CLIENT_ID, CLIENT_SECRET)),
                 ClientManagementId.of(clientProfile(CLIENT_ID, "9876543210987654321098765432109876543210987")));
+    }
+
+    @Test
+    void theIdDidNotMoveWhenSecretsBecameHashes() {
+        // Clients paired before secrets were hashed keep the handle they were listed under: the
+        // HMAC key is the stored hash, which is exactly what was derived from the plaintext before.
+        // Pinned to a fixed value so a change to the derivation cannot pass unnoticed.
+        ClientProfile fromLegacyStore = ClientProfile.fromProto(bisq.api.protobuf.ClientProfile.newBuilder()
+                .setClientId(CLIENT_ID)
+                .setClientSecret(CLIENT_SECRET)
+                .setClientName("Pixel 8")
+                .build());
+
+        assertEquals("zmDIpjAPyG8VJLatn5gCcQ", ClientManagementId.of(fromLegacyStore));
+        assertEquals(ClientManagementId.of(clientProfile(CLIENT_ID, CLIENT_SECRET)),
+                ClientManagementId.of(fromLegacyStore));
     }
 
     @Test

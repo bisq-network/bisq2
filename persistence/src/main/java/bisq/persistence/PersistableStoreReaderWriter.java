@@ -61,6 +61,10 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         return readStoreFromFileOrRestoreFromBackup();
     }
 
+    /**
+     * @throws CouldNotWritePersistableStore if the store did not reach the disk, so callers that
+     *                                       take follow-up steps on a completed write can tell.
+     */
     public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
         try {
@@ -72,13 +76,19 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             storeFileManager.renameTempFileToCurrentFile();
         } catch (CouldNotSerializePersistableStore e) {
             log.error("Couldn't serialize {}", persistableStore, e);
+            throw new CouldNotWritePersistableStore(e);
         } catch (Exception e) {
             log.error("Couldn't write persistable store to disk.", e);
+            throw new CouldNotWritePersistableStore(e);
         }
     }
 
     public void pruneBackups() {
         storeFileManager.pruneBackups();
+    }
+
+    public synchronized void deleteBackups() {
+        storeFileManager.deleteBackups();
     }
 
     public List<BackupFileInfo> getBackups() {
