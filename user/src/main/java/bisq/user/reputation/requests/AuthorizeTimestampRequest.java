@@ -21,7 +21,8 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -29,15 +30,12 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
-
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
+@StoragePolicy(ttl = Ttl.DAYS_10)
 public final class AuthorizeTimestampRequest implements MailboxMessage, ExternalNetworkMessage {
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
     private final String profileId;
     private final long date;
 

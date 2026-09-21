@@ -27,7 +27,9 @@ import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Priority;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.support.dispute.SerializedSizeExceededException;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
@@ -45,14 +47,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
+@StoragePolicy(ttl = Ttl.DAYS_10, priority = Priority.HIGH)
 public final class MuSigArbitrationRequest implements
         MailboxMessage, ExternalNetworkMessage, AckRequestingMessage,
         SenderPublicKeyProvidingPayload, ReceiverPublicKeyProvidingPayload {
@@ -60,7 +61,6 @@ public final class MuSigArbitrationRequest implements
         return MuSigArbitrationRequest.class.getSimpleName() + "." + tradeId;
     }
 
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final MuSigContract contract;
     private final String tradeId;
     private final MuSigMediationResult muSigMediationResult;

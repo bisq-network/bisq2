@@ -23,7 +23,8 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
@@ -32,13 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Date;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
-
 @Slf4j
 @Getter
+@StoragePolicy(ttl = Ttl.DAYS_30)
 public final class AccountTimestamp implements DistributedData {
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName());
-
     private final byte[] hash;
 
     // We exclude the date so that the hash is the only input for the hash in the storage map. This ensures that only

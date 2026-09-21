@@ -21,7 +21,9 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -32,17 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
-
 @Slf4j
 @Getter
 @ToString
+@StoragePolicy(ttl = Ttl.DAYS_10, maxMapSize = MaxMapSize.SIZE_100)
 public final class AuthorizeSignedWitnessRequest implements MailboxMessage, ExternalNetworkMessage {
     public static final int LEGACY_VERSION = 1;
     public static final int CURRENT_VERSION = 2;
     public static final int MAX_ACCOUNT_INPUT_LENGTH = 4096;
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String hashAsHex;
     private final long accountAgeWitnessDate;

@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.data.storage;
 
-import bisq.common.proto.NetworkProto;
 import bisq.common.proto.NetworkProtoResolverMap;
 import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.proto.ProtoResolver;
@@ -26,8 +25,23 @@ import com.google.protobuf.Any;
 public class DistributedDataResolver {
     private static final NetworkProtoResolverMap<DistributedData> protoResolverMap = new NetworkProtoResolverMap<>();
 
-    public static void addResolver(String protoTypeName, Class<? extends NetworkProto> clazz, ProtoResolver<DistributedData> resolver) {
+    /**
+     * Registers a concrete payload type: its simple name becomes a store key, so it is added to the whitelist and
+     * its storage policy is verified here rather than when the first payload of that type arrives.
+     */
+    public static void addResolver(String protoTypeName,
+                                   Class<? extends DistributedData> clazz,
+                                   ProtoResolver<DistributedData> resolver) {
         NetworkStorageWhiteList.add(clazz);
+        MetaData.verifyStoragePolicyDeclared(clazz);
+        protoResolverMap.addProtoResolver(protoTypeName, resolver);
+    }
+
+    /**
+     * Registers an abstract base which dispatches to its subclasses. The base is never a store key, so it is not
+     * whitelisted and declares no policy of its own.
+     */
+    public static void addBaseTypeResolver(String protoTypeName, ProtoResolver<DistributedData> resolver) {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 

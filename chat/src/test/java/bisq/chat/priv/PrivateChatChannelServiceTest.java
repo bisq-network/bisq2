@@ -30,7 +30,8 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -235,15 +236,11 @@ public class PrivateChatChannelServiceTest {
         return new TestChatMessage(date, text, type);
     }
 
+    @StoragePolicy(ttl = Ttl.DAYS_10)
     private static class TestChatMessage extends ChatMessage {
         private TestChatMessage(long date, String text, ChatMessageType type) {
             super("id", ChatChannelDomain.DISCUSSION, "channelId", "author",
                     Optional.ofNullable(text), Optional.<Citation>empty(), date, false, type);
-        }
-
-        @Override
-        protected MetaData getMetaData() {
-            return null;
         }
 
         @Override
