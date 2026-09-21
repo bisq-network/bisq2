@@ -27,7 +27,6 @@ public final class WitnessReputationProtocol {
     public static final int NULLIFIER_LENGTH = 32;
     public static final long DATE_BUCKET_SIZE_MILLIS = TimeUnit.DAYS.toMillis(1);
 
-    private static final long DAY_AS_MILLIS = TimeUnit.DAYS.toMillis(1);
     private static final long EARLIEST_DATE_BUCKET = Math.floorDiv(
             NetworkDataValidation.BISQ_1_LAUNCH_DATE,
             DATE_BUCKET_SIZE_MILLIS) * DATE_BUCKET_SIZE_MILLIS;
@@ -58,6 +57,6 @@ public final class WitnessReputationProtocol {
 
     static long getConservativeAgeInDays(long dateBucket, long now) {
         long latestPossibleDate = getLatestPossibleDate(dateBucket);
-        return now <= latestPossibleDate ? 0 : (now - latestPossibleDate) / DAY_AS_MILLIS;
+        return now <= latestPossibleDate ? 0 : (now - latestPossibleDate) / DATE_BUCKET_SIZE_MILLIS;
     }
 }

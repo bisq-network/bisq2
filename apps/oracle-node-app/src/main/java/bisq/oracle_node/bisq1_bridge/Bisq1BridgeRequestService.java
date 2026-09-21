@@ -238,6 +238,7 @@ public class Bisq1BridgeRequestService implements Service,
         ExecutorService currentRevalidationExecutor = revalidationExecutor;
         revalidationExecutor = null;
         ExecutorFactory.shutdownAndAwaitTermination(currentRevalidationExecutor, 100);
+        revalidationInProgress.set(false);
         ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
         executor = null;
         return bondedRoleGrpcService.shutdown()
@@ -278,6 +279,14 @@ public class Bisq1BridgeRequestService implements Service,
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        try {
+            recoverRegistrationRequest(authorizedData);
+        } catch (Exception e) {
+            log.error("Could not recover a bonded-role registration from authorized data", e);
+        }
+    }
+
+    private void recoverRegistrationRequest(AuthorizedData authorizedData) {
         if (!(authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole authorizedBondedRole)) {
             return;
         }
@@ -360,10 +369,8 @@ public class Bisq1BridgeRequestService implements Service,
         // AuthorizedBondedRolesService.addListener replays stored data only when that service completed its own
         // initialization first. This explicit replay makes recovery independent of the initialization order and is
         // idempotent. Read the authorized wrappers here because their outer signing key is required for ownership.
-        networkService.getDataService().ifPresent(dataService -> dataService.getAuthorizedData()
-                .filter(authorizedData ->
-                        authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                .forEach(this::onAuthorizedDataAdded));
+        networkService.getDataService().ifPresent(dataService ->
+                dataService.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
     }
 
     private void processAuthorizeAccountAgeRequest(PublicKey senderPublicKey,
@@ -557,13 +564,24 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     void revalidateBondedRolesNow() {
-        List<BondedRoleRegistrationRequest> requests = persistableStore.getBondedRoleRegistrationRequests().stream()
+        List<BondedRoleRegistrationRequest> supportedRequests = persistableStore.getBondedRoleRegistrationRequests().stream()
                 .filter(request -> BondedRoleRegistrationProtocol.isSupported(request.getRegistrationProtocolVersion()))
                 .toList();
-        int unsupportedRequestCount = persistableStore.getBondedRoleRegistrationRequests().size() - requests.size();
+        int unsupportedRequestCount = persistableStore.getBondedRoleRegistrationRequests().size() - supportedRequests.size();
         if (unsupportedRequestCount > 0) {
             log.warn("Retaining {} bonded-role registrations with unsupported protocol versions without revalidation",
                     unsupportedRequestCount);
+        }
+        // A record which cannot be expressed as a bridge message would make the batch message constructor throw and
+        // thereby skip revalidation of every other registration, for as long as that record is persisted. Such a
+        // record can never be verified, so it is retained and reported while the remaining ones are revalidated.
+        List<BondedRoleRegistrationRequest> requests = supportedRequests.stream()
+                .filter(BondedRoleGrpcService::canBeVerifiedByBridge)
+                .toList();
+        int unusableRequestCount = supportedRequests.size() - requests.size();
+        if (unusableRequestCount > 0) {
+            log.warn("Retaining {} bonded-role registrations which cannot be verified by the Bisq 1 bridge",
+                    unusableRequestCount);
         }
         if (requests.isEmpty()) {
             return;

@@ -91,15 +91,13 @@ class BondedRolesVerificationMessagesTest {
 
     @Test
     void verificationMessageRejectsNonHexTransactionIds() {
-        BondedRoleVerificationRequest request = new BondedRoleVerificationRequest("future",
+        assertThatIllegalArgumentException().isThrownBy(() -> new BondedRoleVerificationRequest("future",
                 "MEDIATOR",
                 "0123456789abcdef0123456789abcdef01234567",
                 "signature",
                 "z".repeat(64),
                 LOCKUP_TX_ID,
-                3);
-
-        assertThatIllegalArgumentException().isThrownBy(request::verify);
+                3));
     }
 
     private static BondedRoleVerificationRequest request(String bondUserName) {

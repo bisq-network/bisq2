@@ -51,11 +51,13 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
         this.proposalTxId = proposalTxId;
         this.lockupTxId = lockupTxId;
         this.protocolVersion = protocolVersion;
+
+        verify();
     }
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(bondUserName, 1, 200);
+        NetworkDataValidation.validateRequiredBondUserName(bondUserName);
         NetworkDataValidation.validateText(roleType, 1, 200);
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
