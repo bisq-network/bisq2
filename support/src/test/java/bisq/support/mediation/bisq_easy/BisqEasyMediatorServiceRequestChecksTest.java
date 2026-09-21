@@ -17,16 +17,23 @@
 
 package bisq.support.mediation.bisq_easy;
 
+import bisq.chat.ChatMessageType;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
+import bisq.contract.Party;
+import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -118,8 +125,8 @@ class BisqEasyMediatorServiceRequestChecksTest {
 
     @Test
     void firstRequestImportsWholeTranscript() {
-        BisqEasyOpenTradeMessage requesterMessage = createMessage("m1", requester);
-        BisqEasyOpenTradeMessage peerMessage = createMessage("m2", peer);
+        BisqEasyOpenTradeMessage requesterMessage = createMessage("m1", requester, "hi");
+        BisqEasyOpenTradeMessage peerMessage = createMessage("m2", peer, "hello");
         BisqEasyMediationRequest request = createRequest("trade-1", contract, requester, peer, List.of(requesterMessage, peerMessage));
 
         assertEquals(Set.of(requesterMessage, peerMessage), Set.copyOf(BisqEasyMediatorService.selectChatMessages(request, false)));
@@ -127,8 +134,8 @@ class BisqEasyMediatorServiceRequestChecksTest {
 
     @Test
     void laterRequestImportsOnlyRequestersOwnMessages() {
-        BisqEasyOpenTradeMessage peersOwnMessage = createMessage("m3", peer);
-        BisqEasyOpenTradeMessage claimedRequesterMessage = createMessage("m4", requester);
+        BisqEasyOpenTradeMessage peersOwnMessage = createMessage("m3", peer, "hello");
+        BisqEasyOpenTradeMessage claimedRequesterMessage = createMessage("m4", requester, "hi");
         BisqEasyMediationRequest peersRequest = createRequest("trade-1", contract, peer, requester, List.of(peersOwnMessage, claimedRequesterMessage));
 
         assertEquals(List.of(peersOwnMessage), BisqEasyMediatorService.selectChatMessages(peersRequest, true));
@@ -136,26 +143,70 @@ class BisqEasyMediatorServiceRequestChecksTest {
 
     @Test
     void peersForwardedMessagesAreUnverified() {
-        BisqEasyOpenTradeMessage requesterMessage = createMessage("m1", requester);
-        BisqEasyOpenTradeMessage peerMessage = createMessage("m2", peer);
+        BisqEasyOpenTradeMessage requesterMessage = createMessage("m1", requester, "hi");
+        BisqEasyOpenTradeMessage peerMessage = createMessage("m2", peer, "hello");
         cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer,
                 List.of(requesterMessage, peerMessage))));
 
-        assertEquals(Set.of("m2"), BisqEasyMediatorService.getUnverifiedChatMessageIds("trade-1", cases));
-        assertEquals(Set.of(), BisqEasyMediatorService.getUnverifiedChatMessageIds("trade-2", cases));
+        assertEquals(Set.of(BisqEasyMediatorService.getProvenanceKey(peerMessage)),
+                BisqEasyMediatorService.getUnverifiedChatMessageKeys("trade-1", cases));
+        assertEquals(Set.of(), BisqEasyMediatorService.getUnverifiedChatMessageKeys("trade-2", cases));
     }
 
     @Test
     void messagesForwardedByTheirAuthorAreVerified() {
-        BisqEasyOpenTradeMessage requesterMessage = createMessage("m1", requester);
-        BisqEasyOpenTradeMessage peerMessage = createMessage("m2", peer);
         cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer,
-                List.of(requesterMessage, peerMessage))));
+                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "hello")))));
         // Peer's request with a different contract is stored as second case and carries copies of both messages
         cases.add(new BisqEasyMediationCase(createRequest("trade-1", mock(BisqEasyContract.class), peer, requester,
-                List.of(createMessage("m1", requester), createMessage("m2", peer)))));
+                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "hello")))));
 
-        assertEquals(Set.of(), BisqEasyMediatorService.getUnverifiedChatMessageIds("trade-1", cases));
+        assertEquals(Set.of(), BisqEasyMediatorService.getUnverifiedChatMessageKeys("trade-1", cases));
+    }
+
+    @Test
+    void sharedMessageIdDoesNotClearTheMark() {
+        BisqEasyOpenTradeMessage forgedPeerMessage = createMessage("m1", peer, "I never paid");
+        cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer,
+                List.of(createMessage("m1", requester, "hi"), forgedPeerMessage))));
+
+        assertEquals(Set.of(BisqEasyMediatorService.getProvenanceKey(forgedPeerMessage)),
+                BisqEasyMediatorService.getUnverifiedChatMessageKeys("trade-1", cases));
+    }
+
+    @Test
+    void alteredCopyOfPeersMessageStaysUnverified() {
+        BisqEasyOpenTradeMessage alteredCopy = createMessage("m2", peer, "I never paid");
+        cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer, List.of(alteredCopy))));
+        cases.add(new BisqEasyMediationCase(createRequest("trade-1", mock(BisqEasyContract.class), peer, requester,
+                List.of(createMessage("m2", peer, "I paid")))));
+
+        assertEquals(Set.of(BisqEasyMediatorService.getProvenanceKey(alteredCopy)),
+                BisqEasyMediatorService.getUnverifiedChatMessageKeys("trade-1", cases));
+    }
+
+    @Test
+    void provenanceKeyIgnoresReactions() {
+        BisqEasyOpenTradeMessage message = createMessage("m1", peer, "hi");
+        BisqEasyOpenTradeMessage withReaction = createMessage("m1", peer, "hi");
+        withReaction.getChatMessageReactions().add(mock(BisqEasyOpenTradeMessageReaction.class));
+
+        assertEquals(BisqEasyMediatorService.getProvenanceKey(message), BisqEasyMediatorService.getProvenanceKey(withReaction));
+    }
+
+    @Test
+    void rejectsRequestWithSharedMessageIds() {
+        when(contract.getMaker()).thenReturn(new Party(Role.MAKER, requester.getNetworkId()));
+        when(contract.getTaker()).thenReturn(new Party(Role.TAKER, peer.getNetworkId()));
+        when(contract.getMediator()).thenReturn(Optional.of(mediator));
+        BannedUserService bannedUserService = mock(BannedUserService.class);
+        BisqEasyMediationRequest accepted = createRequest("trade-1", contract, requester, peer,
+                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "I never paid")));
+        BisqEasyMediationRequest rejected = createRequest("trade-1", contract, requester, peer,
+                List.of(createMessage("m1", requester, "hi"), createMessage("m1", peer, "I never paid")));
+
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(accepted, bannedUserService, cases, Optional.empty()).isPresent());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(rejected, bannedUserService, cases, Optional.empty()).isEmpty());
     }
 
     private BisqEasyMediationRequest createRequest(String tradeId,
@@ -173,11 +224,20 @@ class BisqEasyMediatorServiceRequestChecksTest {
         return new BisqEasyMediationRequest(tradeId, contract, requester, peer, new ArrayList<>(chatMessages), mediator.getNetworkId());
     }
 
-    private BisqEasyOpenTradeMessage createMessage(String id, UserProfile sender) {
-        BisqEasyOpenTradeMessage message = mock(BisqEasyOpenTradeMessage.class);
-        when(message.getId()).thenReturn(id);
-        when(message.getSenderUserProfile()).thenReturn(sender);
-        when(message.getTextOrNA()).thenReturn("text");
-        return message;
+    private BisqEasyOpenTradeMessage createMessage(String id, UserProfile sender, String text) {
+        return new BisqEasyOpenTradeMessage("trade-1",
+                id,
+                BisqEasyOpenTradeChannel.createId("trade-1"),
+                sender,
+                mediator.getId(),
+                mediator.getNetworkId(),
+                text,
+                Optional.empty(),
+                1L,
+                false,
+                Optional.empty(),
+                ChatMessageType.TEXT,
+                Optional.empty(),
+                new HashSet<>());
     }
 }
