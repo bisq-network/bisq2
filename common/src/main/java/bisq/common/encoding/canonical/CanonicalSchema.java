@@ -79,6 +79,8 @@ public final class CanonicalSchema<T> {
         INT32,
         UINT32,
         INT64,
+        SINT32,
+        SINT64,
         DOUBLE,
         BOOL,
         ENUM,
@@ -258,6 +260,16 @@ public final class CanonicalSchema<T> {
 
         public Builder<T> int64(int number, ToLongFunction<T> getter) {
             return add(number, FieldType.INT64, Rule.OMIT_DEFAULT,
+                    getter::applyAsLong);
+        }
+
+        public Builder<T> sint32(int number, ToIntFunction<T> getter) {
+            return add(number, FieldType.SINT32, Rule.OMIT_DEFAULT,
+                    getter::applyAsInt);
+        }
+
+        public Builder<T> sint64(int number, ToLongFunction<T> getter) {
+            return add(number, FieldType.SINT64, Rule.OMIT_DEFAULT,
                     getter::applyAsLong);
         }
 

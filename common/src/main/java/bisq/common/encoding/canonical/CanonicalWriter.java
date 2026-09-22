@@ -61,6 +61,20 @@ public final class CanonicalWriter {
         }
     }
 
+    public void writeSInt32(int fieldNumber, int value) {
+        if (value != 0) {
+            writeTag(fieldNumber, WIRE_TYPE_VARINT);
+            writeVarint32((value << 1) ^ (value >> 31));
+        }
+    }
+
+    public void writeSInt64(int fieldNumber, long value) {
+        if (value != 0) {
+            writeTag(fieldNumber, WIRE_TYPE_VARINT);
+            writeVarint64((value << 1) ^ (value >> 63));
+        }
+    }
+
     public void writeDouble(int fieldNumber, double value) {
         if (Double.doubleToRawLongBits(value) != 0) {
             writeDoubleValue(fieldNumber, value);

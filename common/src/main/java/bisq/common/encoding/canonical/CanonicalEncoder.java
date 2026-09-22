@@ -48,6 +48,12 @@ public final class CanonicalEncoder {
             case INT64:
                 writer.writeInt64(field.getNumber(), (long) fieldValue);
                 break;
+            case SINT32:
+                writer.writeSInt32(field.getNumber(), (int) fieldValue);
+                break;
+            case SINT64:
+                writer.writeSInt64(field.getNumber(), (long) fieldValue);
+                break;
             case DOUBLE:
                 writer.writeDouble(field.getNumber(), (double) fieldValue);
                 break;
@@ -218,6 +224,8 @@ public final class CanonicalEncoder {
                 writer.writeLengthDelimitedValue(fieldNumber, encodeNested(fieldValue, Objects.requireNonNull(schema)));
                 break;
             case ONEOF:
+            case SINT32:
+            case SINT64:
             case PACKED_REPEATED_INT32:
             case REPEATED_COMPOSE:
             case REPEATED_STRING:
