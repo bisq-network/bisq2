@@ -196,11 +196,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
             getMediationCases().stream()
                     .filter(bisqEasyMediationCase::equals)
                     .findAny()
-                    .ifPresentOrElse(existingCase -> {
-                                if (existingCase.setPeersMediationRequest(bisqEasyMediationRequest)) {
-                                    persist();
-                                }
-                            },
+                    .ifPresentOrElse(existingCase -> retainRequest(existingCase, bisqEasyMediationRequest),
                             () -> addNewMediationCase(bisqEasyMediationCase));
 
             // Import by exact message, so a trader's own version of a message is kept next to a differing copy
@@ -284,12 +280,12 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                     tradeId, requesterId);
             return false;
         }
-        if (!requestsForTrade.isEmpty()) {
-            return true;
-        }
+        // Open cases of other trades the requester is on record for, as requester or as the other trader.
         long numOpenCases = existingCases.stream()
                 .filter(mediationCase -> !mediationCase.isClosed())
-                .filter(mediationCase -> mediationCase.getBisqEasyMediationRequest().getRequester().getId().equals(requesterId))
+                .filter(mediationCase -> !mediationCase.getBisqEasyMediationRequest().getTradeId().equals(tradeId))
+                .filter(mediationCase -> mediationCase.getMediationRequests().stream()
+                        .anyMatch(request -> request.getRequester().getId().equals(requesterId)))
                 .count();
         if (numOpenCases >= MAX_OPEN_CASES_PER_REQUESTER) {
             log.warn("Ignoring BisqEasyMediationRequest for trade {} because requester {} has {} open cases.",
@@ -406,6 +402,21 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                     }
                     return true;
                 });
+    }
+
+    // Every accepted request is retained before its messages get imported, so that the provenance of each
+    // message in the channel is on record.
+    private void retainRequest(BisqEasyMediationCase existingCase, BisqEasyMediationRequest request) {
+        if (existingCase.setPeersMediationRequest(request)) {
+            persist();
+            return;
+        }
+        BisqEasyMediationCase updatedCase = existingCase.withRequest(request);
+        if (updatedCase != existingCase) {
+            getMediationCases().remove(existingCase);
+            getMediationCases().add(updatedCase);
+            persist();
+        }
     }
 
     private void addNewMediationCase(BisqEasyMediationCase bisqEasyMediationCase) {
