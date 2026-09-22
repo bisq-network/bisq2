@@ -39,6 +39,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -265,6 +266,19 @@ class BisqEasyMediatorServiceRequestChecksTest {
                 List.of(createMessage("m1", mediator, "I confirm the payment arrived")));
 
         assertTrue(BisqEasyMediatorService.verifyMediationRequest(request, bannedUserService, cases, Optional.empty()).isEmpty());
+    }
+
+    @Test
+    void requestsOfBothTradersAreDistinctMessagesForOneCase() {
+        BisqEasyMediationRequest requestersRequest = createRequest("trade-1", contract, requester, peer);
+        BisqEasyMediationRequest peersRequest = createRequest("trade-1", contract, peer, requester);
+
+        assertNotEquals(requestersRequest, peersRequest);
+        assertEquals(new BisqEasyMediationCase(requestersRequest), new BisqEasyMediationCase(peersRequest));
+        assertEquals(new BisqEasyMediationCase(requestersRequest).hashCode(), new BisqEasyMediationCase(peersRequest).hashCode());
+        assertNotEquals(new BisqEasyMediationCase(requestersRequest),
+                new BisqEasyMediationCase(createRequest("trade-1", mock(BisqEasyContract.class), requester, peer)));
+        assertEquals(requestersRequest, createRequest("trade-1", contract, requester, peer, List.of(createMessage("m1", peer, "resent"))));
     }
 
     private void setUpContractParties() {

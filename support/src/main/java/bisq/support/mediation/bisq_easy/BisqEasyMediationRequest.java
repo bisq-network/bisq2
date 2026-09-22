@@ -65,8 +65,8 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyMediationRequest.class.getSimpleName());
     private final BisqEasyContract contract;
     private final String tradeId;
-
-    @EqualsAndHashCode.Exclude
+    // Part of the identity, so that the network layer does not drop the other trader's request for the same
+    // contract as a duplicate. The case identity is the contract and the trade ID, see BisqEasyMediationCase.
     private final UserProfile requester;
     @EqualsAndHashCode.Exclude
     private final UserProfile peer;
