@@ -36,6 +36,7 @@ import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -312,13 +313,18 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
 
     @Override
     protected Optional<BisqEasyOpenTradeChannel> createNewChannelFromReceivedMessage(BisqEasyOpenTradeMessage message) {
+        Optional<UserIdentity> myUserIdentity = userIdentityService.findUserIdentity(message.getReceiverUserProfileId());
+        if (myUserIdentity.isEmpty() || message.isExpired()) {
+            log.warn("We received a message for a new channel which is not addressed to one of our identities or is " +
+                    "expired. We ignore it. tradeId={}, messageId={}", message.getTradeId(), message.getId());
+            return Optional.empty();
+        }
         if (message.getBisqEasyOffer().isPresent()) {
-            return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
-                    .map(myUserIdentity -> traderFindOrCreatesChannel(message.getTradeId(),
-                            message.getBisqEasyOffer().get(),
-                            myUserIdentity,
-                            message.getSenderUserProfile(),
-                            message.getMediator()));
+            return Optional.of(traderFindOrCreatesChannel(message.getTradeId(),
+                    message.getBisqEasyOffer().get(),
+                    myUserIdentity.get(),
+                    message.getSenderUserProfile(),
+                    message.getMediator()));
         } else {
             // It could be that taker sends quickly a message after take offer, and we receive them
             // out of order. In that case the seconds message (which arrived first) would get dropped.
@@ -333,13 +339,25 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         }
     }
 
-    private BisqEasyOpenTradeChannel traderFindOrCreatesChannel(String tradeId,
-                                                                BisqEasyOffer bisqEasyOffer,
-                                                                UserIdentity myUserIdentity,
-                                                                UserProfile peer,
-                                                                Optional<UserProfile> mediator) {
-        return findChannelByTradeId(tradeId)
-                .orElseGet(() -> createAndAddChannel(tradeId, bisqEasyOffer, myUserIdentity, Set.of(peer), mediator, false));
+    // The taker's UI and the received take offer message can both create the channel, on different threads.
+    @VisibleForTesting
+    BisqEasyOpenTradeChannel traderFindOrCreatesChannel(String tradeId,
+                                                        BisqEasyOffer bisqEasyOffer,
+                                                        UserIdentity myUserIdentity,
+                                                        UserProfile peer,
+                                                        Optional<UserProfile> mediator) {
+        BisqEasyOpenTradeChannel channel;
+        synchronized (this) {
+            Optional<BisqEasyOpenTradeChannel> existingChannel = findChannelByTradeId(tradeId);
+            if (existingChannel.isPresent()) {
+                return existingChannel.get();
+            }
+            channel = BisqEasyOpenTradeChannel.create(tradeId, bisqEasyOffer, myUserIdentity, Set.of(peer), mediator, false);
+            getChannels().add(channel);
+        }
+        persist();
+        processPendingMessages(tradeId);
+        return channel;
     }
 
     private BisqEasyOpenTradeChannel createAndAddChannel(String tradeId,

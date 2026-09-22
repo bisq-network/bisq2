@@ -127,11 +127,14 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
     public void requestMediation(BisqEasyOpenTradeChannel channel,
                                  BisqEasyContract contract) {
         checkArgument(channel.getBisqEasyOffer().equals(contract.getOffer()));
+        // The channel's mediator is a copy. The request goes to the mediator of the signed contract.
+        UserProfile mediator = contract.getMediator().orElseThrow();
+        checkArgument(channel.getMediator().map(UserProfile::getNetworkId).equals(Optional.of(mediator.getNetworkId())),
+                "The channel's mediator does not match the contract's mediator");
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
         UserProfile peer = channel.getPeer();
-        UserProfile mediator = channel.getMediator().orElseThrow();
         NetworkId mediatorNetworkId = mediator.getNetworkId();
         BisqEasyMediationRequest bisqEasyMediationRequest = ChatMessagePruning.createWithMaybePrunedMessages(
                 new ArrayList<>(channel.getChatMessages()),
