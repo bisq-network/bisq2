@@ -774,7 +774,8 @@ public class ChatMessagesListController implements Controller {
             @Override
             public void onAdded(M chatMessage) {
                 UIThread.run(() -> {
-                    if (!isSelected(channel, bindingGeneration) || !maybeAddChatMessage(chatMessage, channel)) {
+                    if (!isSelected(channel, bindingGeneration) ||
+                            !maybeAddChatMessage(chatMessage, channel, unverifiedMessageKeys)) {
                         return;
                     }
 
@@ -788,14 +789,24 @@ public class ChatMessagesListController implements Controller {
             public void onRemoved(Object element) {
                 UIThread.run(() -> {
                     if (isSelected(channel, bindingGeneration) && element instanceof ChatMessage chatMessage) {
+                        // Two items can share an ID, so we remove the exact message and keep the ID while
+                        // another item still carries it.
                         Optional<ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>>> toRemove =
                                 model.getChatMessages().stream()
-                                        .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
-                                        .findAny();
+                                        .filter(item -> item.getChatMessage().equals(chatMessage))
+                                        .findAny()
+                                        .or(() -> model.getChatMessages().stream()
+                                                .filter(item -> item.getChatMessage().getId().equals(chatMessage.getId()))
+                                                .findAny());
                         toRemove.ifPresent(item -> {
                             item.dispose();
                             model.getChatMessages().remove(item);
-                            model.getChatMessageIds().remove(item.getChatMessage().getId());
+                            String id = item.getChatMessage().getId();
+                            boolean idStillInUse = model.getChatMessages().stream()
+                                    .anyMatch(other -> other.getChatMessage().getId().equals(id));
+                            if (!idStillInUse) {
+                                model.getChatMessageIds().remove(id);
+                            }
                         });
                         updateHasBisqEasyOfferMessages();
                     }
@@ -843,7 +854,7 @@ public class ChatMessagesListController implements Controller {
 
         boolean wasMessageAdded = false;
         for (BisqEasyOfferbookMessage message : channel.getChatMessages()) {
-            wasMessageAdded |= maybeAddChatMessage(message, channel);
+            wasMessageAdded |= maybeAddChatMessage(message, channel, getUnverifiedForwardedMessageKeys(channel));
         }
         if (wasMessageAdded) {
             maybeScrollDownOnNewItemAdded();
@@ -854,10 +865,14 @@ public class ChatMessagesListController implements Controller {
         }
     }
 
-    private <M extends ChatMessage, C extends ChatChannel<M>> boolean maybeAddChatMessage(M chatMessage, C channel) {
+    private <M extends ChatMessage, C extends ChatChannel<M>> boolean maybeAddChatMessage(M chatMessage,
+                                                                                          C channel,
+                                                                                          Set<String> unverifiedMessageKeys) {
         // Avoid to add already existing items. A differing message under a known ID is kept, the
-        // mediator gets both traders' versions of a forwarded message.
-        boolean exists = model.getChatMessages().stream()
+        // mediator gets both traders' versions of a forwarded message. The ID set keeps the common
+        // path constant time.
+        boolean exists = model.getChatMessageIds().contains(chatMessage.getId())
+                && model.getChatMessages().stream()
                 .anyMatch(item -> item.getChatMessage().equals(chatMessage));
         if (exists ||
                 chatMessage.getChatMessageType() == TAKE_BISQ_EASY_OFFER ||
@@ -868,7 +883,7 @@ public class ChatMessagesListController implements Controller {
 
         Optional<ChatMessageListItem<M, C>> item = tryCreateChatMessageListItem(chatMessage,
                 channel,
-                isUnverifiedForwardedMessage(chatMessage, getUnverifiedForwardedMessageKeys(channel)));
+                isUnverifiedForwardedMessage(chatMessage, unverifiedMessageKeys));
         item.ifPresent(listItem -> {
             model.getChatMessages().add(listItem);
             model.getChatMessageIds().add(chatMessage.getId());
