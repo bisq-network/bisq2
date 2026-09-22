@@ -1,0 +1,143 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.chat.bisq_easy.open_trades;
+
+import bisq.chat.ChatMessageType;
+import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.persistence.DbSubDirectory;
+import bisq.persistence.PersistableStore;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceService;
+import bisq.user.UserService;
+import bisq.user.banned.BannedUserService;
+import bisq.user.contact_list.ContactListService;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class BisqEasyOpenTradeChannelServiceTest {
+    private static final String TAKER_PROFILE_ID = "1111111111111111111111111111111111111111";
+    private static final String MAKER_PROFILE_ID = "2222222222222222222222222222222222222222";
+    private static final String TRADE_ID = "tradeId";
+
+    private BisqEasyOpenTradeChannelService service;
+    private UserProfile taker;
+    private UserIdentity makerIdentity;
+
+    @BeforeEach
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void setUp() {
+        PersistenceService persistenceService = mock(PersistenceService.class);
+        Persistence persistence = mock(Persistence.class);
+        when(persistenceService.getOrCreatePersistence(any(), any(DbSubDirectory.class), any(PersistableStore.class)))
+                .thenReturn(persistence);
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+
+        UserIdentityService userIdentityService = mock(UserIdentityService.class);
+        UserService userService = mock(UserService.class);
+        when(userService.getUserIdentityService()).thenReturn(userIdentityService);
+        when(userService.getUserProfileService()).thenReturn(mock(UserProfileService.class));
+        when(userService.getBannedUserService()).thenReturn(mock(BannedUserService.class));
+        when(userService.getContactListService()).thenReturn(mock(ContactListService.class));
+
+        makerIdentity = mock(UserIdentity.class);
+        when(makerIdentity.getId()).thenReturn(MAKER_PROFILE_ID);
+        when(userIdentityService.findUserIdentity(MAKER_PROFILE_ID)).thenReturn(Optional.of(makerIdentity));
+
+        taker = mock(UserProfile.class);
+        when(taker.getId()).thenReturn(TAKER_PROFILE_ID);
+
+        service = new BisqEasyOpenTradeChannelService(persistenceService, mock(NetworkService.class), userService);
+    }
+
+    @Test
+    void takeOfferMessageCreatesChannel() {
+        BisqEasyOffer offer = mock(BisqEasyOffer.class);
+        BisqEasyOpenTradeMessage message = takeOfferMessage(offer, MAKER_PROFILE_ID, System.currentTimeMillis());
+
+        service.onMessage(message);
+
+        BisqEasyOpenTradeChannel channel = service.findChannelByTradeId(TRADE_ID).orElseThrow();
+        assertSame(offer, channel.getBisqEasyOffer());
+        assertTrue(channel.getChatMessages().contains(message));
+    }
+
+    @Test
+    void takeOfferMessageJoinsChannelCreatedByTaker() {
+        BisqEasyOffer offer = mock(BisqEasyOffer.class);
+        BisqEasyOpenTradeChannel channel = service.traderFindOrCreatesChannel(TRADE_ID, offer, makerIdentity, taker, Optional.empty());
+
+        BisqEasyOpenTradeMessage message = takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis());
+        service.onMessage(message);
+
+        assertEquals(1, service.getChannels().size());
+        assertSame(channel, service.findChannelByTradeId(TRADE_ID).orElseThrow());
+        assertSame(offer, channel.getBisqEasyOffer());
+        assertTrue(channel.getChatMessages().contains(message));
+    }
+
+    @Test
+    void expiredTakeOfferMessageIsIgnored() {
+        long elevenDaysAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11);
+
+        service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, elevenDaysAgo));
+
+        assertTrue(service.getChannels().isEmpty());
+    }
+
+    @Test
+    void takeOfferMessageForUnknownReceiverIdentityIsIgnored() {
+        service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class), "3333333333333333333333333333333333333333", System.currentTimeMillis()));
+
+        assertTrue(service.getChannels().isEmpty());
+    }
+
+    private BisqEasyOpenTradeMessage takeOfferMessage(BisqEasyOffer bisqEasyOffer, String receiverUserProfileId, long date) {
+        return new BisqEasyOpenTradeMessage(TRADE_ID,
+                "messageId",
+                BisqEasyOpenTradeChannel.createId(TRADE_ID),
+                taker,
+                receiverUserProfileId,
+                mock(NetworkId.class),
+                null,
+                Optional.empty(),
+                date,
+                false,
+                Optional.of(mock(UserProfile.class)),
+                ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                Optional.of(bisqEasyOffer),
+                new HashSet<>());
+    }
+}

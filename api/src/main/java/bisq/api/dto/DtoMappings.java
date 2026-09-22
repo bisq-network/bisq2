@@ -319,16 +319,18 @@ public class DtoMappings {
     public static class BisqEasyOpenTradeChannelMapping {
         // toBisq2Model not provided as we don't have the mutable data in the dto
 
-        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel value) {
+        // Clients such as Bisq Connect read the offer from the channel DTO, so it carries the offer of the trade
+        // contract rather than the channel's copy.
+        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel channel, BisqEasyOffer contractOffer) {
             return new BisqEasyOpenTradeChannelDto(
-                    value.getId(),
-                    value.getTradeId(),
-                    BisqEasyOfferMapping.fromBisq2Model(value.getBisqEasyOffer()),
-                    UserIdentityMapping.fromBisq2Model(value.getMyUserIdentity()),
-                    value.getTraders().stream()
+                    channel.getId(),
+                    channel.getTradeId(),
+                    BisqEasyOfferMapping.fromBisq2Model(contractOffer),
+                    UserIdentityMapping.fromBisq2Model(channel.getMyUserIdentity()),
+                    channel.getTraders().stream()
                             .map(UserProfileMapping::fromBisq2Model)
                             .collect(Collectors.toSet()),
-                    value.getMediator().map(UserProfileMapping::fromBisq2Model)
+                    channel.getMediator().map(UserProfileMapping::fromBisq2Model)
             );
         }
     }
