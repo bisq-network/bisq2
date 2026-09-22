@@ -205,6 +205,41 @@ class BisqEasyMediatorServiceRequestChecksTest {
         assertTrue(BisqEasyMediatorService.verifyMediationRequest(rejected, bannedUserService, cases, Optional.empty()).isEmpty());
     }
 
+    @Test
+    void rejectsTranscriptWithLocalNoticeTypes() {
+        setUpContractParties();
+        BannedUserService bannedUserService = mock(BannedUserService.class);
+        BisqEasyMediationRequest withLeave = createRequest("trade-1", contract, requester, peer,
+                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "left", ChatMessageType.LEAVE)));
+        BisqEasyMediationRequest withChatRulesWarning = createRequest("trade-1", contract, requester, peer,
+                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "rules", ChatMessageType.CHAT_RULES_WARNING)));
+        BisqEasyMediationRequest withExpiredIndicator = createRequest("trade-1", contract, requester, peer,
+                List.of(createMessage("m1", peer, "expired", ChatMessageType.EXPIRED_MESSAGES_INDICATOR)));
+
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(withLeave, bannedUserService, cases, Optional.empty()).isPresent());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(withChatRulesWarning, bannedUserService, cases, Optional.empty()).isEmpty());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(withExpiredIndicator, bannedUserService, cases, Optional.empty()).isEmpty());
+    }
+
+    @Test
+    void rejectsRequestNamingTheMediatorAsTrader() {
+        // Forged messages from the mediator's own profile would render as the mediator's own words.
+        when(contract.getMaker()).thenReturn(new Party(Role.MAKER, requester.getNetworkId()));
+        when(contract.getTaker()).thenReturn(new Party(Role.TAKER, mediator.getNetworkId()));
+        when(contract.getMediator()).thenReturn(Optional.of(mediator));
+        BannedUserService bannedUserService = mock(BannedUserService.class);
+        BisqEasyMediationRequest request = createRequest("trade-1", contract, requester, mediator,
+                List.of(createMessage("m1", mediator, "I confirm the payment arrived")));
+
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(request, bannedUserService, cases, Optional.empty()).isEmpty());
+    }
+
+    private void setUpContractParties() {
+        when(contract.getMaker()).thenReturn(new Party(Role.MAKER, requester.getNetworkId()));
+        when(contract.getTaker()).thenReturn(new Party(Role.TAKER, peer.getNetworkId()));
+        when(contract.getMediator()).thenReturn(Optional.of(mediator));
+    }
+
     private BisqEasyMediationRequest createRequest(String tradeId,
                                                    BisqEasyContract contract,
                                                    UserProfile requester,
@@ -221,6 +256,10 @@ class BisqEasyMediatorServiceRequestChecksTest {
     }
 
     private BisqEasyOpenTradeMessage createMessage(String id, UserProfile sender, String text) {
+        return createMessage(id, sender, text, ChatMessageType.TEXT);
+    }
+
+    private BisqEasyOpenTradeMessage createMessage(String id, UserProfile sender, String text, ChatMessageType type) {
         return new BisqEasyOpenTradeMessage("trade-1",
                 id,
                 BisqEasyOpenTradeChannel.createId("trade-1"),
@@ -232,7 +271,7 @@ class BisqEasyMediatorServiceRequestChecksTest {
                 1L,
                 false,
                 Optional.empty(),
-                ChatMessageType.TEXT,
+                type,
                 Optional.empty(),
                 new HashSet<>());
     }

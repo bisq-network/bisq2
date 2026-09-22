@@ -54,6 +54,11 @@ public final class BisqEasyMediationContractIdentityChecks {
                 (requesterId.equals(takerNetworkId.getId()) && peerId.equals(makerNetworkId.getId()));
     }
 
+    // A forged message from the mediator's own profile would render as the mediator's own words, without any mark.
+    public static boolean isMediatorAParty(UserProfile requester, UserProfile peer, NetworkId receiver) {
+        return requester.getNetworkId().equals(receiver) || peer.getNetworkId().equals(receiver);
+    }
+
     public static boolean hasMatchingContractMediator(Optional<UserProfile> mediator,
                                                       NetworkId receiver) {
         return mediator

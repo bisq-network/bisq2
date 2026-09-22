@@ -20,6 +20,7 @@ package bisq.support.mediation.bisq_easy;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -47,6 +48,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +59,7 @@ import java.util.stream.Stream;
 
 import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractMediator;
 import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractParties;
+import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.isMediatorAParty;
 
 /**
  * Service used by mediators
@@ -64,6 +67,10 @@ import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentity
 @Slf4j
 public class BisqEasyMediatorService extends RateLimitedPersistenceClient<MediatorStore> implements Service, ConfidentialMessageService.Listener {
     static final int MAX_OPEN_CASES_PER_REQUESTER = 10;
+    static final Set<ChatMessageType> FORWARDABLE_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
+            ChatMessageType.LEAVE,
+            ChatMessageType.TAKE_BISQ_EASY_OFFER,
+            ChatMessageType.PROTOCOL_LOG_MESSAGE);
 
     @Getter
     private final MediatorStore persistableStore = new MediatorStore();
@@ -243,6 +250,11 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                     bisqEasyMediationRequest.getTradeId());
             return Optional.empty();
         }
+        if (isMediatorAParty(requester, peer, bisqEasyMediationRequest.getReceiver())) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because it names the mediator as a trader.",
+                    bisqEasyMediationRequest.getTradeId());
+            return Optional.empty();
+        }
         if (!hasValidChatMessages(bisqEasyMediationRequest, requester, peer)) {
             return Optional.empty();
         }
@@ -356,6 +368,16 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                                                 UserProfile peer) {
         String tradeId = bisqEasyMediationRequest.getTradeId();
         String channelId = BisqEasyOpenTradeChannel.createId(tradeId);
+        // Only message types a trader's channel holds. Chat rules warnings and expired messages indicators are
+        // local UI notices, their renderers show no provenance.
+        Optional<BisqEasyOpenTradeMessage> unexpectedType = bisqEasyMediationRequest.getChatMessages().stream()
+                .filter(chatMessage -> !FORWARDABLE_MESSAGE_TYPES.contains(chatMessage.getChatMessageType()))
+                .findAny();
+        if (unexpectedType.isPresent()) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has type {}.",
+                    tradeId, unexpectedType.get().getId(), unexpectedType.get().getChatMessageType());
+            return false;
+        }
         long numDistinctIds = bisqEasyMediationRequest.getChatMessages().stream()
                 .map(BisqEasyOpenTradeMessage::getId)
                 .distinct()
