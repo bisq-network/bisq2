@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.take_offer.amount;
 
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
@@ -33,6 +32,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.PriceFormatter;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;

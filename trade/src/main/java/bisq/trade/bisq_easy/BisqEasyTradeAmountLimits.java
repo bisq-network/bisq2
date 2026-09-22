@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bisq_easy;
+package bisq.trade.bisq_easy;
 
 import bisq.bonded_roles.market_price.MarketBasedAmountConversion;
 import bisq.bonded_roles.market_price.MarketPriceService;
