@@ -95,6 +95,19 @@ public class BisqEasyMediationCase implements PersistableProto {
         return Stream.concat(Stream.of(bisqEasyMediationRequest), peersMediationRequest.stream()).toList();
     }
 
+    // A repeated request from a trader already on record replaces that trader's retained request, so that the
+    // retained provenance covers the transcript the mediator imports.
+    public BisqEasyMediationCase withRequest(BisqEasyMediationRequest request) {
+        String requesterId = request.getRequester().getId();
+        if (requesterId.equals(bisqEasyMediationRequest.getRequester().getId())) {
+            return new BisqEasyMediationCase(request, requestDate, isClosed.get(), closeCaseDate, peersMediationRequest);
+        }
+        if (peersMediationRequest.map(peersRequest -> peersRequest.getRequester().getId().equals(requesterId)).orElse(false)) {
+            return new BisqEasyMediationCase(bisqEasyMediationRequest, requestDate, isClosed.get(), closeCaseDate, Optional.of(request));
+        }
+        return this;
+    }
+
     public boolean setPeersMediationRequest(BisqEasyMediationRequest request) {
         boolean isFromPeer = !request.getRequester().getId().equals(bisqEasyMediationRequest.getRequester().getId());
         if (!isFromPeer || peersMediationRequest.isPresent()) {
