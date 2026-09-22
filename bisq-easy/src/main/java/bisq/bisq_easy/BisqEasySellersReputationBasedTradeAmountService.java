@@ -24,6 +24,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;

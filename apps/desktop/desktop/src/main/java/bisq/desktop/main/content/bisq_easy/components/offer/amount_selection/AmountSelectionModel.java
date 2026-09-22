@@ -17,12 +17,12 @@
 
 package bisq.desktop.main.content.bisq_easy.components.offer.amount_selection;
 
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.Direction;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
