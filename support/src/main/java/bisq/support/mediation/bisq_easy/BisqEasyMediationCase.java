@@ -21,16 +21,15 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufException;
-import lombok.EqualsAndHashCode;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BisqEasyMediationCase implements PersistableProto {
-    @EqualsAndHashCode.Include
     @Getter
     private final BisqEasyMediationRequest bisqEasyMediationRequest;
     @Getter
@@ -123,6 +122,31 @@ public class BisqEasyMediationCase implements PersistableProto {
 
     public ReadOnlyObservable<Boolean> isClosedObservable() {
         return isClosed;
+    }
+
+    public String getTradeId() {
+        return bisqEasyMediationRequest.getTradeId();
+    }
+
+    public BisqEasyContract getContract() {
+        return bisqEasyMediationRequest.getContract();
+    }
+
+    // A case is identified by the trade and the contract, whichever trader requested it.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof BisqEasyMediationCase other)) {
+            return false;
+        }
+        return getTradeId().equals(other.getTradeId()) && getContract().equals(other.getContract());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTradeId(), getContract());
     }
 
     public boolean setClosed(boolean closed) {
