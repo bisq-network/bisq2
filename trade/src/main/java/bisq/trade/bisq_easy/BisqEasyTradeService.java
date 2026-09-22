@@ -22,10 +22,13 @@ import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
@@ -55,6 +58,7 @@ import bisq.trade.bisq_easy.protocol.BisqEasySellerAsTakerProtocol;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyAccountDataEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyBtcConfirmedEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyCancelTradeEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyChatChannelMismatchEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmBtcSentEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmFiatReceiptEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmFiatSentEvent;
@@ -64,6 +68,7 @@ import bisq.trade.bisq_easy.protocol.events.BisqEasyTakeOfferEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyTradeEvent;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator;
 import bisq.trade.protocol.handler.TradeMessageHandler;
 import bisq.trade.protocol.messages.PendingTradeMessages;
 import bisq.user.banned.BannedUserService;
@@ -105,11 +110,12 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
     private final ContactListService contactListService;
     private final UserProfileService userProfileService;
+    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     // Written from the alert-set observer thread, read from trade calls on other threads
     private volatile boolean haltTrading;
     private volatile Optional<String> minRequiredVersionForTrading = Optional.empty();
     @Nullable
-    private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
+    private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin, chatChannelsPin;
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final PendingTradeMessages<BisqEasyTradeMessage> pendingMessages = new PendingTradeMessages<>();
@@ -123,6 +129,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         contactListService = serviceProvider.getUserService().getContactListService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
+        bisqEasyOpenTradeChannelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.appType = appType;
@@ -136,6 +143,23 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     public CompletableFuture<Boolean> initialize() {
 
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
+
+        // Checks all existing channels against their trades, and later a channel which appears for an existing
+        // trade. A trade which appears for an existing channel is checked when its protocol gets created.
+        chatChannelsPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAdded(BisqEasyOpenTradeChannel channel) {
+                findTrade(channel.getTradeId()).ifPresent(trade -> failTradeOnChatChannelMismatch(trade, channel));
+            }
+
+            @Override
+            public void onRemoved(Object element) {
+            }
+
+            @Override
+            public void onCleared() {
+            }
+        });
 
         networkService.getConfidentialMessageServices().stream()
                 .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
@@ -161,6 +185,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         if (numDaysAfterRedactingTradeDataPin != null) {
             numDaysAfterRedactingTradeDataPin.unbind();
             numDaysAfterRedactingTradeDataPin = null;
+        }
+        if (chatChannelsPin != null) {
+            chatChannelsPin.unbind();
+            chatChannelsPin = null;
         }
         if (numDaysAfterRedactingTradeDataScheduler != null) {
             numDaysAfterRedactingTradeDataScheduler.stop();
@@ -457,7 +485,22 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
         tradeProtocolById.put(id, tradeProtocol);
+
+        bisqEasyOpenTradeChannelService.findChannelByTradeId(id)
+                .ifPresent(channel -> failTradeOnChatChannelMismatch(trade, channel));
         return tradeProtocol;
+    }
+
+    // A trade may only progress while its chat channel data matches the signed contract. The event handlers
+    // enforce that at the user's actions, here we fail a mismatching trade as soon as both exist.
+    private void failTradeOnChatChannelMismatch(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
+        if (trade.getState().isFinalState()) {
+            return;
+        }
+        BisqEasyTradeChatChannelValidator.findMismatch(channel, trade).ifPresent(mismatch -> {
+            log.warn("Trade chat channel does not match the contract. We fail the trade. {}", mismatch);
+            findProtocol(trade.getId()).ifPresent(protocol -> protocol.handle(new BisqEasyChatChannelMismatchEvent(mismatch)));
+        });
     }
 
     private void updateTradeRestrictions() {

@@ -1,0 +1,141 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.trade.bisq_easy;
+
+import bisq.bonded_roles.release.AppType;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.common.observable.collection.ObservableSet;
+import bisq.common.proto.UnresolvableProtobufException;
+import bisq.identity.Identity;
+import bisq.network.identity.NetworkId;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.trade.exceptions.TradeProtocolFailure;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
+
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.buyerAsTakerTrade;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.channel;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.contract;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.inState;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.networkId;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ * The trade service fails a trade whose chat channel does not match the contract as soon as both exist:
+ * at startup for stored pairs, and when a channel appears for a stored trade.
+ */
+class BisqEasyTradeServiceChatChannelBindingTest {
+    private BisqEasyTradeService service;
+    private ObservableSet<BisqEasyOpenTradeChannel> channels;
+    private NetworkId makerNetworkId;
+    private BisqEasyOffer offer;
+    private BisqEasyTrade trade;
+
+    @BeforeEach
+    void setUp() {
+        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
+        BisqEasyOpenTradeChannelService channelService = mock(BisqEasyOpenTradeChannelService.class);
+        when(serviceProvider.getChatService().getBisqEasyOpenTradeChannelService()).thenReturn(channelService);
+        channels = new ObservableSet<>();
+        when(channelService.getChannels()).thenReturn(channels);
+        when(channelService.findChannelByTradeId(anyString())).thenAnswer(invocation -> channels.stream()
+                .filter(channel -> channel.getTradeId().equals(invocation.getArgument(0)))
+                .findAny());
+        service = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP);
+
+        makerNetworkId = networkId("maker");
+        offer = offer("offer-id", makerNetworkId, QUOTE_AMOUNT);
+        Identity takerIdentity = identity("taker");
+        trade = buyerAsTakerTrade(contract(offer, takerIdentity.getNetworkId(), Optional.empty()), takerIdentity);
+    }
+
+    @AfterEach
+    void tearDown() {
+        service.shutdown();
+    }
+
+    private BisqEasyOpenTradeChannel channelWith(BisqEasyOffer channelOffer) {
+        return channel(trade, channelOffer, userProfile(makerNetworkId), Optional.empty());
+    }
+
+    @Test
+    void storedMismatchingPairFailsAtStartup() {
+        channels.add(channelWith(offer("offer-id", makerNetworkId, QUOTE_AMOUNT * 2)));
+        service.getPersistableStore().addTrade(trade);
+
+        service.initialize();
+
+        assertEquals(BisqEasyTradeState.FAILED, trade.getState());
+        assertEquals(TradeProtocolFailure.CHANNEL_DATA_MISMATCH, trade.getTradeProtocolFailure());
+    }
+
+    @Test
+    void storedMatchingPairIsUntouchedAtStartup() throws UnresolvableProtobufException {
+        channels.add(channelWith(BisqEasyOffer.fromProto(offer.toProto(false))));
+        service.getPersistableStore().addTrade(trade);
+
+        service.initialize();
+
+        assertEquals(BisqEasyTradeState.INIT, trade.getState());
+    }
+
+    @Test
+    void completedTradeIsUntouchedAtStartup() {
+        BisqEasyTrade completedTrade = inState(trade, BisqEasyTradeState.BTC_CONFIRMED);
+        channels.add(channel(completedTrade, offer("offer-id", makerNetworkId, QUOTE_AMOUNT * 2), userProfile(makerNetworkId), Optional.empty()));
+        service.getPersistableStore().addTrade(completedTrade);
+
+        service.initialize();
+
+        assertEquals(BisqEasyTradeState.BTC_CONFIRMED, completedTrade.getState());
+    }
+
+    @Test
+    void mismatchingChannelAppearingForStoredTradeFailsTrade() {
+        service.getPersistableStore().addTrade(trade);
+        service.initialize();
+
+        channels.add(channelWith(offer("offer-id", makerNetworkId, QUOTE_AMOUNT * 2)));
+
+        assertEquals(BisqEasyTradeState.FAILED, trade.getState());
+    }
+
+    @Test
+    void matchingChannelAppearingForStoredTradeIsAccepted() {
+        service.getPersistableStore().addTrade(trade);
+        service.initialize();
+
+        channels.add(channelWith(offer));
+
+        assertEquals(BisqEasyTradeState.INIT, trade.getState());
+    }
+}

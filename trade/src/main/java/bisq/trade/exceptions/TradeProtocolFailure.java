@@ -28,6 +28,7 @@ public enum TradeProtocolFailure implements ProtoEnum {
     NO_MATCHING_OFFER_FOUND(false),
     MEDIATORS_NOT_MATCHING(false),
     OFFER_NOT_AVAILABLE(false),
+    CHANNEL_DATA_MISMATCH(false),
     SELLER_REPUTATION_TOO_LOW(false);
 
     @Getter

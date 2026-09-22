@@ -1,0 +1,39 @@
+# Trade Chat Channel Binding
+
+## Authoritative data
+
+The signed trade contract is the authority for the offer, the mediator and the peer of a Bisq Easy trade. The trade chat channel keeps its own copies of them. On the maker's node they come from the taker's first chat message, which is unsigned and freely chosen by the taker.
+
+Everything the application presents for a trade or acts upon must be derived from the contract or from local state. The API channel DTO carries the offer of the contract, the open trades list reads the offer from the trade, and a mediation request goes to the mediator of the contract.
+
+## Matching rule
+
+A trade chat channel matches its trade when:
+
+- the channel offer equals the contract offer by full value equality (`Offer.equals` excludes only the version fields, so a copy serialized by another app version still matches);
+- the channel mediator and the contract mediator have the same network ID, or both are absent (a user profile can change its nick name, terms and statement, so profiles are not compared by value);
+- the channel peer's profile ID equals the ID of the trade peer's network ID (both are the hash of the public key, which also binds the channel peer to the identity which signed the contract).
+
+## Presence and progress
+
+A trade may only progress while its chat channel exists and matches the contract. The rule is enforced in the trade protocol before the steps that move value or account data:
+
+- seller sends payment account data;
+- buyer sends the Bitcoin address;
+- buyer confirms fiat sent;
+- seller confirms fiat receipt;
+- seller confirms Bitcoin sent.
+
+Rejecting and cancelling a trade stay possible on a mismatching trade. Taking an offer is not gated as the taker's channel is created after the trade. Confirming the Bitcoin transaction is local bookkeeping and not gated.
+
+## Failure reaction
+
+A missing or mismatching channel at a gated step fails the trade with `TradeProtocolFailure.CHANNEL_DATA_MISMATCH`. The trade moves to `FAILED` and the peer is notified and moves to `FAILED_AT_PEER`. A failed trade ignores every later event. Older clients map the failure reason to `UNKNOWN`.
+
+The trade service fails a mismatching pair as soon as both the trade and the channel exist, without a user action:
+
+- at startup, for all stored pairs, which also covers channels written by earlier versions;
+- when a channel appears for a stored trade;
+- when a trade's protocol is created while its channel already exists.
+
+Trades in a final state are not touched. A missing channel outside a gated step is not a failure: the channel may not have arrived yet, or the user may have left it after the trade.
