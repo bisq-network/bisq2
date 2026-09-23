@@ -21,13 +21,18 @@ import bisq.application.AnotherInstanceRunningException;
 import bisq.application.Executable;
 import bisq.application.InstanceLockException;
 import bisq.application.InstanceLockUnavailableException;
+import bisq.application.TailsDataDirMigrationException;
 import bisq.desktop.DesktopController;
+import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -36,6 +41,7 @@ import javax.swing.SwingUtilities;
 import java.awt.GraphicsEnvironment;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Optional;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
 
@@ -68,11 +74,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                         try {
                             log.info("Java FX Application launched");
                             setupStartupAndShutdownErrorHandlers();
-                            desktopController = new DesktopController(applicationService.getState(),
-                                    applicationService.getServiceProvider(),
-                                    applicationData,
-                                    this::onApplicationLaunched);
-                            desktopController.init();
+                            startDesktopControllerAfterTailsCheck(applicationData);
                         } catch (Throwable t) {
                             shutdownAfterStartupFailure("Desktop startup failed", t);
                         }
@@ -80,6 +82,71 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                         shutdownAfterStartupFailure("Could not launch JavaFX application.", throwable);
                     }
                 });
+    }
+
+    /**
+     * On Tails, if the data directory is not on the Persistent Storage volume the user would lose
+     * their identity keys and open offers on shutdown. Warn with a quit/continue popup before any
+     * domain initialization starts (domain init is only triggered from desktopController via the
+     * onApplicationLaunched callback, so deferring its creation defers initialization too).
+     */
+    private void startDesktopControllerAfterTailsCheck(JavaFxApplicationData applicationData) {
+        Optional<Path> tailsDotfilesDataDirPath = applicationService.getTailsDotfilesDataDirPath();
+        if (tailsDotfilesDataDirPath.isPresent()) {
+            showTailsDotfilesInfoThenStart(applicationData, tailsDotfilesDataDirPath.get());
+            return;
+        }
+
+        if (!applicationService.isTailsDataDirNonPersistent()) {
+            startDesktopController(applicationData);
+            return;
+        }
+
+        // The app UI does not exist yet, so the Bisq Popup (which needs an owner scene) cannot be used.
+        // Defer a standalone JavaFX Alert via runLater so it shows after the startup pulse, then gate
+        // domain initialization on the user's choice (continue) or shut down.
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle(Res.get("action.shutDown"));
+            alert.setHeaderText(null);
+            alert.setContentText(Res.get("popup.tails.noPersistentStorage.warning"));
+            alert.getDialogPane().setMinWidth(560);
+
+            ButtonType continueButton = new ButtonType(
+                    Res.get("popup.tails.noPersistentStorage.continue"), ButtonBar.ButtonData.OK_DONE);
+            ButtonType shutDownButton = new ButtonType(
+                    Res.get("action.shutDown"), ButtonBar.ButtonData.CANCEL_CLOSE);
+            alert.getButtonTypes().setAll(continueButton, shutDownButton);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == continueButton) {
+                startDesktopController(applicationData);
+            } else {
+                exitJavaFXPlatform();
+            }
+        });
+    }
+
+    // Shown once, right after the data directory was migrated out of the Tails Dotfiles copy.
+    private void showTailsDotfilesInfoThenStart(JavaFxApplicationData applicationData, Path dotfilesDataDirPath) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(Res.get("popup.headline.information"));
+            alert.setHeaderText(null);
+            alert.setContentText(Res.get("popup.tails.dotfilesDataDir.info",
+                    applicationService.getConfig().getAppDataDirPath(), dotfilesDataDirPath));
+            alert.getDialogPane().setMinWidth(560);
+            alert.showAndWait();
+            startDesktopController(applicationData);
+        });
+    }
+
+    private void startDesktopController(JavaFxApplicationData applicationData) {
+        desktopController = new DesktopController(applicationService.getState(),
+                applicationService.getServiceProvider(),
+                applicationData,
+                this::onApplicationLaunched);
+        desktopController.init();
     }
 
     @Override
@@ -103,6 +170,18 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
             message = Res.get("popup.instanceLockFailed.msg", appName, appDataDirPath,
                     InstanceLockUnavailableException.DISABLE_CHECK_OPTION, reason);
         }
+        showStartupErrorAndExit(headline, message);
+    }
+
+    @Override
+    protected void handleTailsDataDirMigrationFailure(TailsDataDirMigrationException exception) {
+        log.error(exception.getMessage(), exception.getCause());
+        showStartupErrorAndExit(Res.get("popup.tails.dataDirMigrationFailed.headline"),
+                Res.get("popup.tails.dataDirMigrationFailed.msg", exception.getLegacyDataDirPath(),
+                        exception.getAppDataDirPath(), exception.getCause().getMessage()));
+    }
+
+    private void showStartupErrorAndExit(String headline, String message) {
         // We are called before JavaFX is launched, thus we cannot use our Popup. We use a lightweight AWT dialog
         // instead if a display is available and fall back to stderr otherwise.
         if (!GraphicsEnvironment.isHeadless()) {
@@ -112,7 +191,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted state
             } catch (Throwable t) {
-                log.warn("Could not show the 'already running' dialog", t);
+                log.warn("Could not show the startup error dialog", t);
             }
         }
         System.err.println("Error: " + message);
