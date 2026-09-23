@@ -24,7 +24,6 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.encoding.Hex;
 import bisq.common.util.ByteArrayUtils;
 import bisq.security.DigestUtil;
-import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@Slf4j
 public class OfferOptionUtil {
     public static List<OfferOption> fromTradeTermsAndReputationScore(String makersTradeTerms,
                                                                      long requiredTotalReputationScore) {
@@ -134,9 +132,7 @@ public class OfferOptionUtil {
     // The account ID is added to the offer so that maker knows which account was assigned once a taker takes the offer.
     public static String createdSaltedAccountId(String accountId, String offerId) {
         String input = accountId + offerId;
-        log.info("createdSaltedAccountId accountId={}; offerId={}", accountId, offerId);
         byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
-        log.info("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
         return Hex.encode(hash);
     }
 
@@ -152,8 +148,6 @@ public class OfferOptionUtil {
         Set<Account<? extends PaymentMethod<?>, ?>> accountSet = accounts.stream()
                 .filter(account -> {
                     String salted = createdSaltedAccountId(account.getId(), offerId);
-                    log.error("findAccountFromSaltedAccountId accountId={}; offerId={}", account.getId(), offerId);
-                    log.error("findAccountFromSaltedAccountId \n{}\n{}", salted, saltedAccountId);
 
                     return saltedAccountId.equals(salted);
                 })
