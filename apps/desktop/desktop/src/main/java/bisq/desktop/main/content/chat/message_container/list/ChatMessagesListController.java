@@ -774,8 +774,7 @@ public class ChatMessagesListController implements Controller {
             @Override
             public void onAdded(M chatMessage) {
                 UIThread.run(() -> {
-                    if (!isSelected(channel, bindingGeneration) ||
-                            !maybeAddChatMessage(chatMessage, channel, unverifiedMessageKeys)) {
+                    if (!isSelected(channel, bindingGeneration) || !maybeAddChatMessage(chatMessage, channel)) {
                         return;
                     }
 
@@ -854,7 +853,7 @@ public class ChatMessagesListController implements Controller {
 
         boolean wasMessageAdded = false;
         for (BisqEasyOfferbookMessage message : channel.getChatMessages()) {
-            wasMessageAdded |= maybeAddChatMessage(message, channel, getUnverifiedForwardedMessageKeys(channel));
+            wasMessageAdded |= maybeAddChatMessage(message, channel);
         }
         if (wasMessageAdded) {
             maybeScrollDownOnNewItemAdded();
@@ -865,12 +864,11 @@ public class ChatMessagesListController implements Controller {
         }
     }
 
-    private <M extends ChatMessage, C extends ChatChannel<M>> boolean maybeAddChatMessage(M chatMessage,
-                                                                                          C channel,
-                                                                                          Set<String> unverifiedMessageKeys) {
+    private <M extends ChatMessage, C extends ChatChannel<M>> boolean maybeAddChatMessage(M chatMessage, C channel) {
         // Avoid to add already existing items. A differing message under a known ID is kept, the
         // mediator gets both traders' versions of a forwarded message. The ID set keeps the common
-        // path constant time.
+        // path constant time. The keys are read per message as a request can arrive while the
+        // channel is open; the mediator service caches them per trade.
         boolean exists = model.getChatMessageIds().contains(chatMessage.getId())
                 && model.getChatMessages().stream()
                 .anyMatch(item -> item.getChatMessage().equals(chatMessage));
@@ -883,7 +881,7 @@ public class ChatMessagesListController implements Controller {
 
         Optional<ChatMessageListItem<M, C>> item = tryCreateChatMessageListItem(chatMessage,
                 channel,
-                isUnverifiedForwardedMessage(chatMessage, unverifiedMessageKeys));
+                isUnverifiedForwardedMessage(chatMessage, getUnverifiedForwardedMessageKeys(channel)));
         item.ifPresent(listItem -> {
             model.getChatMessages().add(listItem);
             model.getChatMessageIds().add(chatMessage.getId());

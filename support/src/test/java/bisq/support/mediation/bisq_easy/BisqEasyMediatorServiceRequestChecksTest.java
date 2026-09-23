@@ -25,6 +25,11 @@ import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.bonded_roles.BondedRolesService;
+import bisq.chat.ChatService;
+import bisq.network.NetworkService;
+import bisq.persistence.PersistenceService;
+import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -279,6 +285,27 @@ class BisqEasyMediatorServiceRequestChecksTest {
         assertNotEquals(new BisqEasyMediationCase(requestersRequest),
                 new BisqEasyMediationCase(createRequest("trade-1", mock(BisqEasyContract.class), requester, peer)));
         assertEquals(requestersRequest, createRequest("trade-1", contract, requester, peer, List.of(createMessage("m1", peer, "resent"))));
+    }
+
+    @Test
+    void unverifiedKeysFollowRequestsArrivingWhileTheChannelIsOpen() {
+        PersistenceService persistenceService = mock(PersistenceService.class, RETURNS_DEEP_STUBS);
+        BisqEasyMediatorService service = new BisqEasyMediatorService(persistenceService,
+                mock(NetworkService.class, RETURNS_DEEP_STUBS),
+                mock(ChatService.class, RETURNS_DEEP_STUBS),
+                mock(UserService.class, RETURNS_DEEP_STUBS),
+                mock(BondedRolesService.class, RETURNS_DEEP_STUBS));
+        BisqEasyOpenTradeMessage peersMessage = createMessage("m1", peer, "I never paid");
+        service.getMediationCases().add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer, List.of(peersMessage))));
+
+        String key = BisqEasyMediatorService.getProvenanceKey(peersMessage);
+        assertEquals(Set.of(key), service.getUnverifiedChatMessageKeys("trade-1"));
+
+        // The author's own request arrives while the mediator has the channel open.
+        service.getMediationCases().add(new BisqEasyMediationCase(createRequest("trade-1",
+                mock(BisqEasyContract.class), peer, requester, List.of(peersMessage))));
+
+        assertTrue(service.getUnverifiedChatMessageKeys("trade-1").isEmpty());
     }
 
     private void setUpContractParties() {
