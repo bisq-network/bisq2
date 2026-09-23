@@ -22,6 +22,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.Node;
 
+import java.util.Optional;
+
 public class KeyHandlerUtil {
 
     public static void handleShutDownKeyEvent(KeyEvent keyEvent, Runnable handler) {
@@ -46,14 +48,24 @@ public class KeyHandlerUtil {
     }
 
     public static void handleEnterKeyEventWithTextInputFocusCheck(KeyEvent keyEvent, Node node, Runnable handler) {
-        if (node != null && node.getScene() != null && node.getScene().getFocusOwner() instanceof TextInputControl textInputControl) {
-            handleEnterKeyEvent(keyEvent, () -> {
-                if (textInputControl.getParent() != null) {
-                    textInputControl.getParent().requestFocus();
-                }
-            });
+        if (findFocusedTextInput(node).isPresent()) {
+            handleEnterKeyEvent(keyEvent, () -> moveFocusOffTextInput(node));
         } else {
             handleEnterKeyEvent(keyEvent, handler);
         }
+    }
+
+    // Moving the focus off a text input lets it commit what was typed before the caller acts on it.
+    public static void moveFocusOffTextInput(Node node) {
+        findFocusedTextInput(node)
+                .map(TextInputControl::getParent)
+                .ifPresent(Node::requestFocus);
+    }
+
+    private static Optional<TextInputControl> findFocusedTextInput(Node node) {
+        if (node != null && node.getScene() != null && node.getScene().getFocusOwner() instanceof TextInputControl textInputControl) {
+            return Optional.of(textInputControl);
+        }
+        return Optional.empty();
     }
 }
