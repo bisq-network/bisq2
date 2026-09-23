@@ -185,6 +185,9 @@ public class MuSigCreateOfferController extends NavigationController implements 
     }
 
     void onNext() {
+        // The Back and Close buttons are not focus traversable, so a click on them does not take the
+        // focus from an amount field; the field commits its edit when the focus leaves it.
+        KeyHandlerUtil.moveFocusOffTextInput(getView().getRoot());
         if (model.getSelectedChildTarget().get() == NavigationTarget.MU_SIG_CREATE_OFFER_REVIEW_OFFER) {
             muSigCreateOfferReviewController.publishOffer();
         } else {
@@ -215,6 +218,7 @@ public class MuSigCreateOfferController extends NavigationController implements 
     }
 
     void onBack() {
+        KeyHandlerUtil.moveFocusOffTextInput(getView().getRoot());
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
             if (!validate(false)) {
