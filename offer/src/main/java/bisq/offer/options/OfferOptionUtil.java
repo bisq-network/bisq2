@@ -19,6 +19,7 @@ package bisq.offer.options;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.encoding.Hex;
 import bisq.common.util.ByteArrayUtils;
@@ -113,6 +114,20 @@ public class OfferOptionUtil {
                 .filter(AccountOption.class::isInstance)
                 .map(AccountOption.class::cast)
                 .collect(Collectors.toSet());
+    }
+
+    // The option carries what a taker needs to check compatibility (country and bank data)
+    // and what the maker needs to find the account again (the salted id and payload hash);
+    // the account id and payload themselves never leave the maker.
+    public static AccountOption createAccountOption(Account<?, ?> account, String offerId) {
+        AccountPayload<?> accountPayload = account.getAccountPayload();
+        return new AccountOption(account.getPaymentMethod(),
+                createdSaltedAccountId(account.getId(), offerId),
+                AccountUtils.getCountryCode(accountPayload),
+                AccountUtils.getAcceptedCountryCodes(accountPayload),
+                AccountUtils.getBankId(accountPayload),
+                AccountUtils.getAcceptedBanks(accountPayload),
+                createSaltedAccountPayloadHash(accountPayload, offerId));
     }
 
     // Account ID stays private to user. We use offerId for hashing so that it's always a new string in each offer.

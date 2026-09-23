@@ -18,8 +18,6 @@
 package bisq.desktop.main.content.mu_sig.offer.draft.create_offer.review;
 
 import bisq.account.accounts.Account;
-import bisq.account.accounts.AccountPayload;
-import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpecFormatter;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
@@ -27,7 +25,6 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
-import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
@@ -45,9 +42,6 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.mu_sig.use_case.create_offer.CreateOfferUseCase;
 import bisq.offer.mu_sig.use_case.create_offer.DraftSnapshot;
-import bisq.offer.options.AccountOption;
-import bisq.offer.options.CollateralOption;
-import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
@@ -62,13 +56,11 @@ import javafx.scene.input.KeyEvent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class MuSigCreateOfferReviewController implements Controller {
@@ -98,18 +90,15 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     public void initialize() {
-        // One synchronized capture: a concurrent market-price update cannot produce mixed
-        // review values or an offer inconsistent with what is displayed.
-        DraftSnapshot snapshot = createOfferUseCase.captureDraftSnapshot();
-        Market market = snapshot.market();
+        // One synchronized capture: the offer parts and the displayed values come from the same
+        // snapshot, so a concurrent market-price update cannot make them diverge.
+        CreateOfferUseCase.Handoff handoff = createOfferUseCase.getHandoff()
+                .orElseThrow(() -> new IllegalStateException("The draft is not ready for review"));
+        DraftSnapshot snapshot = handoff.snapshot();
         Direction displayDirection = snapshot.displayDirection();
-        AmountSpec amountSpec = snapshot.amountSpec();
-        PriceSpec priceSpec = snapshot.priceSpec();
 
         Map<PaymentMethod<?>, Account<?, ?>> accountByPaymentMethod = snapshot.accountByPaymentMethod();
-        List<PaymentMethod<?>> paymentMethods = accountByPaymentMethod.keySet().stream()
-                .sorted(Comparator.comparing(PaymentMethod::getPaymentRailName))
-                .toList();
+        List<PaymentMethod<?>> paymentMethods = handoff.paymentMethods();
         model.setPaymentMethods(paymentMethods);
         model.setPaymentMethodDescription(
                 paymentMethods.size() == 1
@@ -127,40 +116,15 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         model.setPaymentMethodsDisplayString(PaymentMethodSpecFormatter.fromPaymentMethods(paymentMethods));
 
-        applyData(snapshot);
+        applyData(handoff);
 
-        String offerId = StringUtils.createUid();
-        List<OfferOption> offerOptions = accountByPaymentMethod.values().stream()
-                .map(account -> {
-                    AccountPayload<?> accountPayload = account.getAccountPayload();
-                    String saltedAccountId = OfferOptionUtil.createdSaltedAccountId(account.getId(), offerId);
-                    Optional<String> countryCode = AccountUtils.getCountryCode(accountPayload);
-                    List<String> acceptedCountryCodes = AccountUtils.getAcceptedCountryCodes(accountPayload);
-                    Optional<String> bankId = AccountUtils.getBankId(accountPayload);
-                    List<String> acceptedBanks = AccountUtils.getAcceptedBanks(accountPayload);
-                    byte[] saltedAccountPayloadHash = OfferOptionUtil.createSaltedAccountPayloadHash(accountPayload, offerId);
-                    return new AccountOption(
-                            account.getPaymentMethod(),
-                            saltedAccountId,
-                            countryCode,
-                            acceptedCountryCodes,
-                            bankId,
-                            acceptedBanks,
-                            saltedAccountPayloadHash);
-                })
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        // We use static values for both traders of 25%
-        offerOptions.add(new CollateralOption(model.getSecurityDepositAsPercent(), model.getSecurityDepositAsPercent()));
-
-        Direction offerDirection = Direction.displayDirectionToOfferDirection(displayDirection, market);
-        MuSigOffer offer = muSigService.createAndGetMuSigOffer(offerId,
-                offerDirection,
-                market,
-                amountSpec,
-                priceSpec,
-                paymentMethods,
-                offerOptions);
+        MuSigOffer offer = muSigService.createAndGetMuSigOffer(handoff.offerId(),
+                handoff.direction(),
+                handoff.market(),
+                handoff.amountSpec(),
+                handoff.priceSpec(),
+                handoff.paymentMethods(),
+                handoff.offerOptions());
         model.setOffer(offer);
 
         if (displayDirection.isSell()) {
@@ -203,7 +167,8 @@ public class MuSigCreateOfferReviewController implements Controller {
     }
 
     // direction is from user perspective not offer direction
-    private void applyData(DraftSnapshot snapshot) {
+    private void applyData(CreateOfferUseCase.Handoff handoff) {
+        DraftSnapshot snapshot = handoff.snapshot();
         Direction displayDirection = snapshot.displayDirection();
         AmountSpec amountSpec = snapshot.amountSpec();
         PriceSpec priceSpec = snapshot.priceSpec();
@@ -224,8 +189,7 @@ public class MuSigCreateOfferReviewController implements Controller {
 
         applyPriceDetails(snapshot);
 
-        // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
-        double securityDeposit = MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT;
+        double securityDeposit = OfferOptionUtil.findSymmetricSecurityDepositPercent(handoff.offerOptions()).orElseThrow();
         model.setSecurityDepositAsPercent(securityDeposit);
         String securityDepositAsPercent = PercentageFormatter.formatToPercentWithSymbol(securityDeposit, 0);
         model.setFormattedSecurityDepositAsPercent(securityDepositAsPercent);
