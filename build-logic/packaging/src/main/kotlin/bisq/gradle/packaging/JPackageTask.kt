@@ -98,13 +98,13 @@ abstract class JPackageTask : DefaultTask() {
 
             OS.LINUX -> {
                 val resourcesPath = packagePath.resolve("linux")
-                val appContentPaths = stageLinuxAppContent(resourcesPath)
+                val appContentPaths = stageLinuxAppContent()
                 LinuxPackages(resourcesPath, appName.get(), appContentPaths)
             }
         }
     }
 
-    private fun stageLinuxAppContent(linuxResourcesPath: Path): List<Path> {
+    private fun stageLinuxAppContent(): List<Path> {
         val stagingDir = project.layout.buildDirectory.get().asFile.toPath()
             .resolve("packaging").resolve("app-content")
         if (stagingDir.notExists()) {
@@ -112,15 +112,6 @@ abstract class JPackageTask : DefaultTask() {
         }
 
         val contentPaths = mutableListOf<Path>()
-
-        // Stage prepare_tails.sh as a standalone file in lib/prepare_tails.sh
-        val prepareTailsSrc = linuxResourcesPath.resolve("prepare_tails.sh")
-        if (Files.exists(prepareTailsSrc)) {
-            val dest = stagingDir.resolve("prepare_tails.sh")
-            Files.copy(prepareTailsSrc, dest, StandardCopyOption.REPLACE_EXISTING)
-            dest.toFile().setExecutable(true)
-            contentPaths.add(dest)
-        }
 
         // Stage the Tails onion-grater profile into lib/onion-grater/. Only the Tails profile is
         // shipped: the deb postinst enables it on Tails, while Whonix gets the Bisq profile from the

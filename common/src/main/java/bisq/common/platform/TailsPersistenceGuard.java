@@ -36,7 +36,7 @@ import java.util.Optional;
 public class TailsPersistenceGuard {
     // The persistent volume is unlocked to this mountpoint; persistent directories (e.g.
     // /home/amnesia/Persistent) are bind-mounted from it, so /proc/mounts references it as the source.
-    private static final String PERSISTENCE_MOUNT = "/live/persistence/TailsData_unlocked";
+    public static final String PERSISTENCE_MOUNT = "/live/persistence/TailsData_unlocked";
     private static final String PERSISTENCE_DEVICE_MARKER = "TailsData_unlocked";
 
     /**

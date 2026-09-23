@@ -46,6 +46,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -167,6 +168,10 @@ public abstract class ApplicationService implements Service {
     // to do with this (the desktop app shows a quit/continue warning popup).
     @Getter
     private final boolean tailsDataDirNonPersistent;
+    // Present when the data directory was just migrated on Tails and the Dotfiles copy it came from is
+    // still there. The presentation layer asks the user to delete that outdated copy.
+    @Getter
+    private final Optional<Path> tailsDotfilesDataDirPath;
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -184,9 +189,20 @@ public abstract class ApplicationService implements Service {
                 .resolve();
 
         String appName = rootConfig.getString("application.appName");
-        Path appDataDirPath = rootConfig.hasPath("application.baseDir")
+        boolean hasCustomBaseDir = rootConfig.hasPath("application.baseDir");
+        Path appDataDirPath = hasCustomBaseDir
                 ? Paths.get(rootConfig.getString("application.baseDir"))
                 : userDataDirPath.resolve(appName);
+        Optional<Path> tailsMigratedFromPath;
+        try {
+            // Must run before the data directory is created, as an existing one is never overwritten.
+            tailsMigratedFromPath = hasCustomBaseDir
+                    ? Optional.empty()
+                    : TailsDataDirMigration.migrateIfNeeded(appDataDirPath);
+        } catch (IOException e) {
+            log.error("Could not migrate the Tails data directory to {}", appDataDirPath, e);
+            throw new RuntimeException(e);
+        }
         try {
             FileMutatorUtils.createDirectories(appDataDirPath);
         } catch (IOException e) {
@@ -227,9 +243,19 @@ public abstract class ApplicationService implements Service {
             checkInstanceLock();
         }
 
-        tailsDataDirNonPersistent = evaluateTailsDataDirNonPersistent(appDataDirPath);
-
         setupLogging(appDataDirPath);
+
+        tailsMigratedFromPath.ifPresent(migratedFromPath ->
+                log.info("Copied the data directory from {} to {}. The original was left in place.",
+                        migratedFromPath, appDataDirPath));
+        tailsDotfilesDataDirPath = tailsMigratedFromPath.isPresent()
+                ? TailsDataDirMigration.findDotfilesDataDir(appDataDirPath)
+                : Optional.empty();
+        tailsDotfilesDataDirPath.ifPresent(dotfilesDataDirPath ->
+                log.warn("The outdated Tails Dotfiles copy at {} is no longer used and should be deleted.",
+                        dotfilesDataDirPath));
+
+        tailsDataDirNonPersistent = evaluateTailsDataDirNonPersistent(appDataDirPath);
 
         persistenceService = new PersistenceService(appDataDirPath);
         migrationService = new MigrationService(appDataDirPath);
@@ -280,14 +306,8 @@ public abstract class ApplicationService implements Service {
     }
 
     /**
-     * On Tails, abort early if the data directory is not on the unlocked Persistent Storage volume.
-     * Otherwise the user would lose their identity keys and open offers on shutdown (Tails is amnesic).
-     * The user can override and proceed at their own risk via the {@value #ALLOW_NON_PERSISTENT_TAILS_ENV}
-     * environment variable, which is the explicit permission to run without persistence.
-     */
-    /**
      * Detects whether we run on Tails with a data directory that is NOT on the Persistent Storage
-     * volume. We do not abort here (that is a UX decision the presentation layer owns — e.g. the
+     * volume. We do not abort here, as that is a UX decision the presentation layer owns (e.g. the
      * desktop app shows a warning popup with a quit/continue choice). Headless apps still get the
      * logged warning. Returns false when the user has granted explicit permission to run without
      * persistence via {@value #ALLOW_NON_PERSISTENT_TAILS_ENV}.
@@ -301,7 +321,7 @@ public abstract class ApplicationService implements Service {
         boolean userAllowsNonPersistent = overrideValue != null && !overrideValue.isBlank();
         if (userAllowsNonPersistent) {
             log.warn("Running on Tails with a non-persistent data directory ({}). {} is set, so Bisq " +
-                            "continues at the user's request — ALL data will be lost on shutdown.",
+                            "continues at the user's request. ALL data will be lost on shutdown.",
                     appDataDirPath, ALLOW_NON_PERSISTENT_TAILS_ENV);
             return false;
         }

@@ -90,6 +90,12 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
      * onApplicationLaunched callback, so deferring its creation defers initialization too).
      */
     private void startDesktopControllerAfterTailsCheck(JavaFxApplicationData applicationData) {
+        Optional<Path> tailsDotfilesDataDirPath = applicationService.getTailsDotfilesDataDirPath();
+        if (tailsDotfilesDataDirPath.isPresent()) {
+            showTailsDotfilesInfoThenStart(applicationData, tailsDotfilesDataDirPath.get());
+            return;
+        }
+
         if (!applicationService.isTailsDataDirNonPersistent()) {
             startDesktopController(applicationData);
             return;
@@ -117,6 +123,20 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
             } else {
                 exitJavaFXPlatform();
             }
+        });
+    }
+
+    // Shown once, right after the data directory was migrated out of the Tails Dotfiles copy.
+    private void showTailsDotfilesInfoThenStart(JavaFxApplicationData applicationData, Path dotfilesDataDirPath) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(Res.get("popup.headline.information"));
+            alert.setHeaderText(null);
+            alert.setContentText(Res.get("popup.tails.dotfilesDataDir.info",
+                    applicationService.getConfig().getAppDataDirPath(), dotfilesDataDirPath));
+            alert.getDialogPane().setMinWidth(560);
+            alert.showAndWait();
+            startDesktopController(applicationData);
         });
     }
 

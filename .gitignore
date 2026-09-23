@@ -41,7 +41,6 @@ hs_err_pid*
 *.wallet
 *.ser
 *.sh
-!apps/desktop/desktop-app-launcher/package/linux/prepare_tails.sh
 .DS_Store
 .gradle
 build
