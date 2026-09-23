@@ -1627,7 +1627,7 @@ tasks.register("publishAll") {
     }
 }
 
-// for jitpack publishing
+// publishAll also publishes the network and tor builds, which the root publishToMavenLocal does not reach on its own
 tasks.named("publishToMavenLocal").configure {
     dependsOn("publishAll")
 }

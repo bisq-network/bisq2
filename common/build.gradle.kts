@@ -12,6 +12,39 @@ if (torVersion == null) {
 }
 
 /**
+ * The current commit, cut to a fixed length, as the length of git's --short grows with the number of objects in the
+ * clone. A value source rather than a plain provider, so it is also read again on each build with the configuration
+ * cache.
+ */
+abstract class GitCommitShortHash : ValueSource<String, GitCommitShortHash.Parameters> {
+    interface Parameters : ValueSourceParameters {
+        val projectDir: DirectoryProperty
+    }
+
+    override fun obtain(): String {
+        val logger = Logging.getLogger(GitCommitShortHash::class.java)
+        try {
+            val process = ProcessBuilder("git", "rev-parse", "HEAD")
+                .directory(parameters.projectDir.get().asFile)
+                .start()
+            val output = process.inputStream.bufferedReader().use { it.readText().trim() }
+            val error = process.errorStream.bufferedReader().use { it.readText().trim() }
+            if (process.waitFor() == 0) {
+                return output.take(10)
+            }
+            logger.warn("Using 'unknown' as the commit hash, git rev-parse HEAD failed: {}", error)
+        } catch (e: Exception) {
+            logger.warn("Using 'unknown' as the commit hash, git could not be run", e)
+        }
+        return "unknown"
+    }
+}
+
+val gitCommitShortHash = providers.of(GitCommitShortHash::class) {
+    parameters.projectDir.set(layout.projectDirectory)
+}
+
+/**
  * Generate a Java class with the current version number extracted from gradle.properties and makes
  * it available for use in all java modules that has access to common.
  */
@@ -23,19 +56,11 @@ val generateVersionClass by tasks.registering {
         outputDir.mkdirs()
         versionFile.parentFile.mkdirs()
 
-        val gitCommitVersion = try {
-            val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD").start()
-            process.inputStream.bufferedReader().use { it.readText().trim() }
-        } catch (e: Exception) {
-            "unknown"
-        }
-
         versionFile.writeText("""
             package bisq.common.application;
 
             public final class BuildVersion {
                 public static final String VERSION = "${project.version}";
-                public static final String COMMIT_SHORT_HASH = "$gitCommitVersion";
                 public static final String TOR_VERSION = "$torVersion";
             }
         """.trimIndent())
@@ -45,6 +70,26 @@ val generateVersionClass by tasks.registering {
     inputs.property("version", project.version)
     inputs.property("torVersion", torVersion)
 }
+
+/**
+ * Writes the commit hash to a resource that ApplicationVersion reads at runtime. As a constant in BuildVersion it
+ * would change the classes of common with every commit, and every test task using common would rerun. The
+ * bisq.java-conventions plugin excludes this resource from runtime classpath checks for the same reason.
+ */
+val generateBuildCommitResource by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/resources/build-commit").get().asFile
+    val resourceFile = file("${outputDir}/bisq/common/application/build-commit.properties")
+
+    doLast {
+        resourceFile.parentFile.mkdirs()
+        resourceFile.writeText("commitShortHash=${gitCommitShortHash.get()}\n")
+    }
+
+    outputs.dir(outputDir)
+    inputs.property("commitShortHash", gitCommitShortHash)
+}
+
+sourceSets["main"].resources.srcDir(generateBuildCommitResource)
 
 
 /**

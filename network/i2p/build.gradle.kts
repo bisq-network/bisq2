@@ -4,8 +4,10 @@ plugins {
     id("bisq.grpc")
 }
 
+version = rootProject.version
+
 dependencies {
-    implementation("bisq:security")
+    implementation("bisq:security:$version")
     implementation(libs.bundles.i2p)
     implementation(libs.grpc.netty.shaded)
     // Exclude httpclient transitive dependency because it may override
