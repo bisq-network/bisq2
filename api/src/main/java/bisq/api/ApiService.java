@@ -278,12 +278,21 @@ public class ApiService implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        // Before the enabled check: the access store is read and rewritten on every boot, so the
+        // clients it dropped, and any revocation cut short, would otherwise be forgotten on a boot
+        // with both transports off, leaving their push registrations behind. Guarded, because the
+        // access of those clients is already withdrawn and a stale registration is retried next
+        // boot, which must not cost the operator the whole node.
+        try {
+            apiAccessService.completeInterruptedRevocations();
+        } catch (Exception e) {
+            log.error("Completing interrupted client revocations failed, continuing", e);
+        }
         if (!apiConfig.isEnabled()) {
             return CompletableFuture.completedFuture(true);
         }
 
         setState(State.STARTING);
-        apiAccessService.completeInterruptedRevocations();
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
 
         // REST API and Websocket are handled inside httpServerBootstrapService

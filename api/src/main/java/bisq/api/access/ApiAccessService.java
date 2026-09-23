@@ -20,6 +20,7 @@ package bisq.api.access;
 import bisq.api.access.identity.ClientManagementId;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.InvalidPairingRequestException;
+import bisq.api.access.pairing.NewPairing;
 import bisq.api.access.pairing.PairingResponse;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.InvalidSessionRequestException;
@@ -28,8 +29,6 @@ import bisq.api.access.session.SessionService;
 import bisq.api.access.session.SessionToken;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.List;
 
 /**
@@ -58,12 +57,11 @@ public class ApiAccessService {
     public PairingResponse requestPairing(byte version,
                                           String pairingCodeId,
                                           String clientName) throws InvalidPairingRequestException {
-        ClientProfile clientProfile = pairingService.requestPairing(version, pairingCodeId, clientName);
-        String clientSecret = clientProfile.getClientSecret();
-        String clientId = clientProfile.getClientId();
+        NewPairing newPairing = pairingService.requestPairing(version, pairingCodeId, clientName);
+        String clientId = newPairing.clientProfile().getClientId();
         SessionToken sessionToken = sessionService.createSession(clientId);
         long expiresAt = sessionToken.getExpiresAt().toEpochMilli();
-        return new PairingResponse(clientId, clientSecret, sessionToken.getSessionId(), expiresAt);
+        return new PairingResponse(clientId, newPairing.clientSecret(), sessionToken.getSessionId(), expiresAt);
     }
 
     /**
@@ -114,9 +112,7 @@ public class ApiAccessService {
         ClientProfile clientProfile = pairingService.findClientProfile(clientId)
                 .orElseThrow(() -> new InvalidSessionRequestException("No client profile found for Client ID"));
 
-        if (!MessageDigest.isEqual(
-                                clientSecret.getBytes(StandardCharsets.UTF_8),
-                                clientProfile.getClientSecret().getBytes(StandardCharsets.UTF_8))) {
+        if (!clientProfile.matchesSecret(clientSecret)) {
             throw new InvalidSessionRequestException("Client secret is not matching");
         }
 

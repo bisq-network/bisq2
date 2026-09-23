@@ -76,7 +76,11 @@ public class PersistableStoreFileManager {
             throw new NoSuchFileException(tempFilePath.toAbsolutePath() + " does not exist. Cannot rename not existing file.");
         }
 
-        FileMutatorUtils.renameFile(tempFilePath, storeFilePath);
+        // The rename reports failure instead of throwing; unchecked, a failed move would leave the
+        // caller believing the store reached the disk while the active file is missing.
+        if (!FileMutatorUtils.renameFile(tempFilePath, storeFilePath)) {
+            throw new IOException("Could not rename " + tempFilePath + " to " + storeFilePath);
+        }
     }
 
     public boolean maybeBackup() {
@@ -85,6 +89,10 @@ public class PersistableStoreFileManager {
 
     public void pruneBackups() {
         backupService.prune();
+    }
+
+    public void deleteBackups() {
+        backupService.deleteAll();
     }
 
     public List<BackupFileInfo> getBackups() {

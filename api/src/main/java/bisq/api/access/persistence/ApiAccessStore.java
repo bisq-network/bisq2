@@ -29,6 +29,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,6 +90,8 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
                     Permission.MOBILE_DEVICES));
 
     private transient boolean promotedEntriesDuringLoad;
+    private transient boolean hashedPlaintextSecretsDuringLoad;
+    private transient Set<String> clientIdsDroppedDuringLoad = Set.of();
 
     @Getter(AccessLevel.PACKAGE)
     private final Map<String, ClientProfile> clientProfileByIdMap = new ConcurrentHashMap<>();
@@ -123,12 +126,32 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
     }
 
     public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto) {
-        Map<String, ClientProfile> clientProfileByIdMap = proto.getClientProfileByIdMapMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> ClientProfile.fromProto(e.getValue())));
+        Map<String, ClientProfile> clientProfileByIdMap = new HashMap<>();
+        Set<String> droppedClientIds = new HashSet<>();
+        boolean anyPlaintextHashed = false;
+        for (Map.Entry<String, bisq.api.protobuf.ClientProfile> e : proto.getClientProfileByIdMapMap().entrySet()) {
+            bisq.api.protobuf.ClientProfile profileProto = e.getValue();
+            if (!ClientProfile.hasUsableCredential(profileProto)) {
+                // Either written by a version that predates hashed secrets after it loaded a hashed
+                // store (it rebuilt the entry from its own model and dropped the hash), or a hash of
+                // the wrong length. No secret can ever match, so the client has to pair again; kept,
+                // the entry would only be a listing that cannot be revoked, because the management
+                // ID is keyed by the missing hash. Dropped rather than failing the load, so one bad
+                // entry does not take every other client's access with it.
+                log.warn("Dropping paired client {} whose stored credential is unusable", e.getKey());
+                droppedClientIds.add(e.getKey());
+                continue;
+            }
+            // Any plaintext on disk is rewritten away, also next to a hash that takes precedence.
+            anyPlaintextHashed |= !profileProto.getClientSecret().isEmpty();
+            clientProfileByIdMap.put(e.getKey(), ClientProfile.fromProto(profileProto));
+        }
         Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
         boolean anyPromoted = false;
         for (Map.Entry<String, bisq.api.protobuf.PermissionSet> e : proto.getPermissionsByClientIdMap().entrySet()) {
+            if (droppedClientIds.contains(e.getKey())) {
+                continue;
+            }
             PermissionSet loaded = PermissionSet.fromProto(e.getValue());
             PermissionSet effective = promoteIfFullStandardGrant(e.getKey(), loaded);
             anyPromoted |= effective != loaded;
@@ -136,7 +159,31 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
         }
         ApiAccessStore store = new ApiAccessStore(clientProfileByIdMap, permissionsByClientId);
         store.promotedEntriesDuringLoad = anyPromoted;
+        store.hashedPlaintextSecretsDuringLoad = anyPlaintextHashed;
+        store.clientIdsDroppedDuringLoad = Set.copyOf(droppedClientIds);
         return store;
+    }
+
+    /**
+     * Whether this load replaced a plaintext secret with its hash. In memory only, like promotion;
+     * {@code ApiAccessStoreService#onPersistedApplied} persists so the plaintext leaves the disk on
+     * the first boot that could read it, and drops the backups that still carry it.
+     */
+    boolean hadPlaintextSecretsDuringLoad() {
+        return hashedPlaintextSecretsDuringLoad;
+    }
+
+    /**
+     * Clients this load dropped for an unusable credential. Their profile and grant are gone, but
+     * what a revocation cleans up outside this store, such as push registrations, is not; the
+     * revocation handlers still have to run for them.
+     */
+    Set<String> getClientIdsDroppedDuringLoad() {
+        return clientIdsDroppedDuringLoad;
+    }
+
+    boolean needsWriteBackAfterLoad() {
+        return promotedEntriesDuringLoad || hashedPlaintextSecretsDuringLoad || !clientIdsDroppedDuringLoad.isEmpty();
     }
 
     /**

@@ -53,7 +53,7 @@ class ApiAccessServiceTest {
     @Test
     void getClientProfilesReturnsPairedClients() {
         PairingService pairingService = mock(PairingService.class);
-        ClientProfile clientProfile = new ClientProfile("client-1", "secret", "Pixel 8");
+        ClientProfile clientProfile = ClientProfile.fromSecret("client-1", "secret", "Pixel 8");
         when(pairingService.getClientProfiles()).thenReturn(List.of(clientProfile));
 
         List<ClientProfile> clientProfiles =
@@ -67,8 +67,8 @@ class ApiAccessServiceTest {
     @Test
     void revokeByManagementIdResolvesTheClientItNames() {
         PairingService pairingService = mock(PairingService.class);
-        ClientProfile clientProfile = new ClientProfile("client-1", "secret", "Pixel 8");
-        ClientProfile otherProfile = new ClientProfile("client-2", "other-secret", "iPhone");
+        ClientProfile clientProfile = ClientProfile.fromSecret("client-1", "secret", "Pixel 8");
+        ClientProfile otherProfile = ClientProfile.fromSecret("client-2", "other-secret", "iPhone");
         ClientRevocationService clientRevocationService = mock(ClientRevocationService.class);
         when(pairingService.getClientProfiles()).thenReturn(List.of(otherProfile, clientProfile));
         when(clientRevocationService.revokeClient("client-1")).thenReturn(ClientRevocationResult.REVOKED);
@@ -86,7 +86,7 @@ class ApiAccessServiceTest {
         // A handle nothing resolves to must not fall through to any client, and a client ID is not
         // a handle: passing one resolves to nothing.
         PairingService pairingService = mock(PairingService.class);
-        ClientProfile clientProfile = new ClientProfile("client-1", "secret", "Pixel 8");
+        ClientProfile clientProfile = ClientProfile.fromSecret("client-1", "secret", "Pixel 8");
         ClientRevocationService clientRevocationService = mock(ClientRevocationService.class);
         when(pairingService.getClientProfiles()).thenReturn(List.of(clientProfile));
 
@@ -106,7 +106,7 @@ class ApiAccessServiceTest {
         PairingService pairingService = mock(PairingService.class);
         SessionService sessionService = mock(SessionService.class);
         when(pairingService.findClientProfile("client-1"))
-                .thenReturn(Optional.of(new ClientProfile("client-1", "secret", "Pixel 8")));
+                .thenReturn(Optional.of(ClientProfile.fromSecret("client-1", "secret", "Pixel 8")));
         when(pairingService.hasPermissions("client-1")).thenReturn(false);
 
         ApiAccessService apiAccessService = new ApiAccessService(pairingService,
@@ -123,7 +123,7 @@ class ApiAccessServiceTest {
         PairingService pairingService = mock(PairingService.class);
         SessionService sessionService = mock(SessionService.class);
         when(pairingService.findClientProfile("client-1"))
-                .thenReturn(Optional.of(new ClientProfile("client-1", "secret", "Pixel 8")));
+                .thenReturn(Optional.of(ClientProfile.fromSecret("client-1", "secret", "Pixel 8")));
         when(pairingService.hasPermissions("client-1")).thenReturn(true);
         when(sessionService.createSession("client-1")).thenReturn(new SessionToken(60, "client-1"));
 
@@ -141,7 +141,7 @@ class ApiAccessServiceTest {
         PairingService pairingService = mock(PairingService.class);
         SessionService sessionService = mock(SessionService.class);
         when(pairingService.findClientProfile("client-1"))
-                .thenReturn(Optional.of(new ClientProfile("client-1", "secret", "Pixel 8")));
+                .thenReturn(Optional.of(ClientProfile.fromSecret("client-1", "secret", "Pixel 8")));
         when(pairingService.hasPermissions("client-1")).thenReturn(true, false);
         when(sessionService.createSession("client-1")).thenReturn(new SessionToken(60, "client-1"));
 

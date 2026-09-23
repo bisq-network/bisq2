@@ -22,11 +22,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class PersistableStoreFileManagerTests {
 
@@ -79,6 +85,34 @@ public class PersistableStoreFileManagerTests {
         Path storePath = tempDirPath.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
         assertThrows(NoSuchFileException.class, storeFileManager::renameTempFileToCurrentFile);
+    }
+
+    @Test
+    void renameTempFileFailsWhenTheMoveIsRefused(@TempDir Path tempDirPath) throws IOException {
+        // A rename the file system refuses is reported by the utility as false, not thrown. Swallowed,
+        // the write would count as done while the active store file is missing.
+        assumeCanRevokeDirectoryWrite();
+        Path tmpFilePath = tempDirPath.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
+        createEmptyFilePath(tmpFilePath);
+        Path storePath = tempDirPath.resolve("store");
+        var storeFileManager = new PersistableStoreFileManager(storePath);
+
+        Set<PosixFilePermission> original = Files.getPosixFilePermissions(tempDirPath);
+        Files.setPosixFilePermissions(tempDirPath, PosixFilePermissions.fromString("r-x------"));
+        try {
+            assertThrows(IOException.class, storeFileManager::renameTempFileToCurrentFile);
+        } finally {
+            Files.setPosixFilePermissions(tempDirPath, original);
+        }
+        assertThat(storePath).doesNotExist();
+        assertThat(tmpFilePath).exists();
+    }
+
+    static void assumeCanRevokeDirectoryWrite() {
+        assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"),
+                "Needs POSIX permissions to make the directory read-only");
+        assumeTrue(!"root".equals(System.getProperty("user.name")),
+                "root ignores directory permissions");
     }
 
     public static void createEmptyFilePath(Path path) throws IOException {
