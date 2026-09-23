@@ -21,6 +21,7 @@ import bisq.application.AnotherInstanceRunningException;
 import bisq.application.Executable;
 import bisq.application.InstanceLockException;
 import bisq.application.InstanceLockUnavailableException;
+import bisq.application.TailsDataDirMigrationException;
 import bisq.desktop.DesktopController;
 import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.threading.UIScheduler;
@@ -169,6 +170,18 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
             message = Res.get("popup.instanceLockFailed.msg", appName, appDataDirPath,
                     InstanceLockUnavailableException.DISABLE_CHECK_OPTION, reason);
         }
+        showStartupErrorAndExit(headline, message);
+    }
+
+    @Override
+    protected void handleTailsDataDirMigrationFailure(TailsDataDirMigrationException exception) {
+        log.error(exception.getMessage(), exception.getCause());
+        showStartupErrorAndExit(Res.get("popup.tails.dataDirMigrationFailed.headline"),
+                Res.get("popup.tails.dataDirMigrationFailed.msg", exception.getLegacyDataDirPath(),
+                        exception.getAppDataDirPath(), exception.getCause().getMessage()));
+    }
+
+    private void showStartupErrorAndExit(String headline, String message) {
         // We are called before JavaFX is launched, thus we cannot use our Popup. We use a lightweight AWT dialog
         // instead if a display is available and fall back to stderr otherwise.
         if (!GraphicsEnvironment.isHeadless()) {
@@ -178,7 +191,7 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // Restore interrupted state
             } catch (Throwable t) {
-                log.warn("Could not show the 'already running' dialog", t);
+                log.warn("Could not show the startup error dialog", t);
             }
         }
         System.err.println("Error: " + message);

@@ -22,10 +22,13 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TailsDataDirMigrationTest {
@@ -49,6 +52,68 @@ public class TailsDataDirMigrationTest {
         assertFalse(Files.exists(targetPath.resolve("instance.lock")));
         assertFalse(Files.exists(targetPath.resolveSibling("Bisq2.migrating")));
         assertTrue(Files.exists(legacyPath.resolve("db").resolve("private").resolve("KeyBundleStore")));
+    }
+
+    @Test
+    void skipsLockAndExternalTorConfigOnlyAtTheirOwnLocation(@TempDir Path tempDirPath) throws IOException {
+        Path legacyPath = tempDirPath.resolve("legacy").resolve("Bisq2");
+        Files.createDirectories(legacyPath.resolve("db"));
+        Files.writeString(legacyPath.resolve("db").resolve("instance.lock"), "data");
+        Files.writeString(legacyPath.resolve("external_tor.config"), "data");
+        Path targetPath = tempDirPath.resolve("Bisq2");
+
+        assertTrue(TailsDataDirMigration.migrate(legacyPath, targetPath));
+
+        assertEquals("data", Files.readString(targetPath.resolve("db").resolve("instance.lock")));
+        assertEquals("data", Files.readString(targetPath.resolve("external_tor.config")));
+    }
+
+    @Test
+    void keepsLastModifiedTime(@TempDir Path tempDirPath) throws IOException {
+        Path legacyPath = tempDirPath.resolve("legacy").resolve("Bisq2");
+        Files.createDirectories(legacyPath);
+        Path legacyFilePath = legacyPath.resolve("settings");
+        Files.writeString(legacyFilePath, "settings");
+        FileTime lastModifiedTime = FileTime.fromMillis(1_600_000_000_000L);
+        Files.setLastModifiedTime(legacyFilePath, lastModifiedTime);
+        Path targetPath = tempDirPath.resolve("Bisq2");
+
+        assertTrue(TailsDataDirMigration.migrate(legacyPath, targetPath));
+
+        assertEquals(lastModifiedTime, Files.getLastModifiedTime(targetPath.resolve("settings")));
+    }
+
+    @Test
+    void skipsBrokenLinks(@TempDir Path tempDirPath) throws IOException {
+        Path legacyPath = tempDirPath.resolve("legacy").resolve("Bisq2");
+        Files.createDirectories(legacyPath);
+        Files.writeString(legacyPath.resolve("settings"), "settings");
+        Files.createSymbolicLink(legacyPath.resolve("broken"), tempDirPath.resolve("missing"));
+        Path targetPath = tempDirPath.resolve("Bisq2");
+
+        assertTrue(TailsDataDirMigration.migrate(legacyPath, targetPath));
+
+        assertEquals("settings", Files.readString(targetPath.resolve("settings")));
+        assertFalse(Files.exists(targetPath.resolve("broken"), LinkOption.NOFOLLOW_LINKS));
+    }
+
+    @Test
+    void failsWithoutLeavingADataDirBehind(@TempDir Path tempDirPath) throws IOException {
+        Path legacyPath = tempDirPath.resolve("legacy").resolve("Bisq2");
+        Files.createDirectories(legacyPath);
+        Files.writeString(legacyPath.resolve("settings"), "settings");
+        // A link to an ancestor makes the walk loop, which fails the copy.
+        Files.createSymbolicLink(legacyPath.resolve("loop"), legacyPath);
+        Path targetPath = tempDirPath.resolve("Bisq2");
+
+        TailsDataDirMigrationException exception = assertThrows(TailsDataDirMigrationException.class,
+                () -> TailsDataDirMigration.migrate(legacyPath, targetPath));
+
+        assertEquals(legacyPath, exception.getLegacyDataDirPath());
+        assertEquals(targetPath, exception.getAppDataDirPath());
+        assertFalse(Files.exists(targetPath));
+        assertFalse(Files.exists(tempDirPath.resolve("Bisq2.migrating")));
+        assertEquals("settings", Files.readString(legacyPath.resolve("settings")));
     }
 
     @Test

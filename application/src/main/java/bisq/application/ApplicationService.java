@@ -193,16 +193,21 @@ public abstract class ApplicationService implements Service {
         Path appDataDirPath = hasCustomBaseDir
                 ? Paths.get(rootConfig.getString("application.baseDir"))
                 : userDataDirPath.resolve(appName);
-        Optional<Path> tailsMigratedFromPath;
-        try {
-            // Must run before the data directory is created, as an existing one is never overwritten.
-            tailsMigratedFromPath = hasCustomBaseDir
-                    ? Optional.empty()
-                    : TailsDataDirMigration.migrateIfNeeded(appDataDirPath);
-        } catch (IOException e) {
-            log.error("Could not migrate the Tails data directory to {}", appDataDirPath, e);
-            throw new RuntimeException(e);
-        }
+
+        // Set up before the Tails migration and the instance lock check, so that their user facing
+        // messages can be localized.
+        Locale locale = LocaleRepository.getDefaultLocale();
+        CountryRepository.applyDefaultLocale(locale);
+        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
+        FiatCurrencyRepository.setLocale(locale);
+        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
+        ResolverConfig.config();
+
+        // Must run before the data directory is created, as an existing one is never overwritten.
+        Optional<Path> tailsMigratedFromPath = hasCustomBaseDir
+                ? Optional.empty()
+                : TailsDataDirMigration.migrateIfNeeded(appDataDirPath);
+
         try {
             FileMutatorUtils.createDirectories(appDataDirPath);
         } catch (IOException e) {
@@ -227,13 +232,6 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeReputationScore(config.getDevModeReputationScore());
             DevMode.setDevModeWalletSetup(config.isDevModeWalletSetup());
         }
-
-        Locale locale = LocaleRepository.getDefaultLocale();
-        CountryRepository.applyDefaultLocale(locale);
-        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
-        FiatCurrencyRepository.setLocale(locale);
-        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
-        ResolverConfig.config();
 
         // We check the instance lock after Res is set up, so that the user facing message can be
         // localized, but before the file based logging and the services which use the data directory

@@ -19,15 +19,19 @@ package bisq.application;
 
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.platform.LinuxDistribution;
+import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.platform.TailsPersistenceGuard;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -39,20 +43,24 @@ import java.util.stream.Stream;
  * those links. The persisted copy is therefore a snapshot restored on every boot. Now that the data
  * directory is on Persistent Storage, we copy that data over once so the user keeps their identity.
  */
+@Slf4j
 final class TailsDataDirMigration {
     private static final Path DOTFILES_DIR_PATH = Paths.get(TailsPersistenceGuard.PERSISTENCE_MOUNT, "dotfiles");
     private static final String MIGRATION_DIR_SUFFIX = ".migrating";
     // A stale lock file is not data. An external_tor.config from a version without Tails support points
     // at the wrong control port, and the Tails defaults are only written when the file is absent.
-    private static final Set<String> FILE_NAMES_TO_SKIP = Set.of(InstanceLock.LOCK_FILE_NAME, "external_tor.config");
+    private static final Set<Path> RELATIVE_PATHS_TO_SKIP = Set.of(
+            Paths.get(InstanceLock.LOCK_FILE_NAME),
+            Paths.get("tor", "external_tor.config"));
 
     private TailsDataDirMigration() {
     }
 
     /**
      * @return the directory the data was copied from, if a migration happened.
+     * @throws TailsDataDirMigrationException if the data could not be copied.
      */
-    static Optional<Path> migrateIfNeeded(Path appDataDirPath) throws IOException {
+    static Optional<Path> migrateIfNeeded(Path appDataDirPath) {
         if (!LinuxDistribution.isTails()) {
             return Optional.empty();
         }
@@ -72,23 +80,33 @@ final class TailsDataDirMigration {
         return Files.isDirectory(dotfilesDataDirPath) ? Optional.of(dotfilesDataDirPath) : Optional.empty();
     }
 
-    static boolean migrate(Path legacyDataDirPath, Path appDataDirPath) throws IOException {
-        // An existing data directory means the user already runs from it, so never overwrite it.
-        if (legacyDataDirPath.equals(appDataDirPath) || Files.exists(appDataDirPath) || isEmptyOrMissing(legacyDataDirPath)) {
-            return false;
-        }
-
-        // Copy into a sibling first, so an interrupted copy never leaves a partial data directory behind.
+    static boolean migrate(Path legacyDataDirPath, Path appDataDirPath) {
         Path migrationDirPath = appDataDirPath.resolveSibling(appDataDirPath.getFileName() + MIGRATION_DIR_SUFFIX);
-        FileMutatorUtils.deleteFileOrDirectory(migrationDirPath);
         try {
-            copyFollowingLinks(legacyDataDirPath, migrationDirPath);
-            Files.move(migrationDirPath, appDataDirPath, StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException | RuntimeException e) {
+            // An existing data directory means the user already runs from it, so never overwrite it.
+            if (legacyDataDirPath.equals(appDataDirPath) ||
+                    Files.exists(appDataDirPath) ||
+                    isEmptyOrMissing(legacyDataDirPath)) {
+                return false;
+            }
+
+            // Copy into a sibling first, so an interrupted copy never leaves a partial data directory behind.
             FileMutatorUtils.deleteFileOrDirectory(migrationDirPath);
-            throw e;
+            copyFollowingLinks(legacyDataDirPath, migrationDirPath);
+            // Tails users may pull the USB stick to shut down, so the copy must be on disk before the
+            // data directory exists, as an existing one is never migrated again.
+            syncTree(migrationDirPath);
+            Files.move(migrationDirPath, appDataDirPath, StandardCopyOption.ATOMIC_MOVE);
+            syncDirectory(appDataDirPath.getParent());
+            return true;
+        } catch (IOException | RuntimeException e) {
+            try {
+                FileMutatorUtils.deleteFileOrDirectory(migrationDirPath);
+            } catch (IOException | RuntimeException cleanupException) {
+                e.addSuppressed(cleanupException);
+            }
+            throw new TailsDataDirMigrationException(legacyDataDirPath, appDataDirPath, e);
         }
-        return true;
     }
 
     // Dotfiles links single files, but users may also have linked the whole directory or subdirectories,
@@ -96,13 +114,43 @@ final class TailsDataDirMigration {
     private static void copyFollowingLinks(Path sourceDirPath, Path destinationDirPath) throws IOException {
         try (Stream<Path> sourcePaths = Files.walk(sourceDirPath, FileVisitOption.FOLLOW_LINKS)) {
             for (Path sourcePath : (Iterable<Path>) sourcePaths::iterator) {
-                Path destinationPath = destinationDirPath.resolve(sourceDirPath.relativize(sourcePath).toString());
+                Path relativePath = sourceDirPath.relativize(sourcePath);
+                Path destinationPath = destinationDirPath.resolve(relativePath.toString());
                 if (Files.isDirectory(sourcePath)) {
                     FileMutatorUtils.createDirectories(destinationPath);
-                } else if (!FILE_NAMES_TO_SKIP.contains(sourcePath.getFileName().toString())) {
+                } else if (!Files.exists(sourcePath)) {
+                    // A dangling link has no data to copy.
+                    log.warn("Skipped the broken link {} while copying the data directory", sourcePath);
+                } else if (!RELATIVE_PATHS_TO_SKIP.contains(relativePath)) {
                     FileMutatorUtils.copyFile(sourcePath, destinationPath);
+                    Files.setLastModifiedTime(destinationPath, Files.getLastModifiedTime(sourcePath));
                 }
             }
+        }
+    }
+
+    private static void syncTree(Path dirPath) throws IOException {
+        try (Stream<Path> paths = Files.walk(dirPath)) {
+            for (Path path : (Iterable<Path>) paths::iterator) {
+                if (Files.isDirectory(path)) {
+                    syncDirectory(path);
+                } else {
+                    try (FileChannel channel = FileChannel.open(path, StandardOpenOption.WRITE)) {
+                        channel.force(true);
+                    }
+                }
+            }
+        }
+    }
+
+    // Syncing a directory persists its entries. Windows cannot open directories, but only Tails runs
+    // this in production.
+    private static void syncDirectory(Path dirPath) throws IOException {
+        if (OS.isWindows()) {
+            return;
+        }
+        try (FileChannel channel = FileChannel.open(dirPath, StandardOpenOption.READ)) {
+            channel.force(true);
         }
     }
 
