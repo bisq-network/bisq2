@@ -24,7 +24,6 @@ import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
-import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatService;
 import bisq.network.NetworkService;
@@ -151,19 +150,14 @@ class BisqEasyMediatorServiceRequestChecksTest {
     }
 
     @Test
-    void channelMustMatchOfferAndTraders() {
-        BisqEasyOffer offer = mock(BisqEasyOffer.class);
-        when(contract.getOffer()).thenReturn(offer);
-        BisqEasyOpenTradeChannel channel = mock(BisqEasyOpenTradeChannel.class);
-        when(channel.getBisqEasyOffer()).thenReturn(offer);
-        when(channel.getTraders()).thenReturn(Set.of(requester, peer));
+    void channelMustMatchTraders() {
+        BisqEasyOpenTradeChannel channel = createMediatorChannel("trade-1",
+                TestContracts.contract(requester, peer, mediator), requester, peer);
 
-        assertTrue(BisqEasyMediatorService.hasMatchingChannel(channel, contract, requester, peer));
-        assertTrue(BisqEasyMediatorService.hasMatchingChannel(channel, contract, peer, requester));
-        assertFalse(BisqEasyMediatorService.hasMatchingChannel(channel, contract, requester, TestUserProfiles.create("outsider")));
-
-        when(channel.getBisqEasyOffer()).thenReturn(mock(BisqEasyOffer.class));
-        assertFalse(BisqEasyMediatorService.hasMatchingChannel(channel, contract, requester, peer));
+        assertTrue(BisqEasyMediatorService.hasMatchingTraders(channel, requester, peer));
+        assertTrue(BisqEasyMediatorService.hasMatchingTraders(channel, peer, requester));
+        assertFalse(BisqEasyMediatorService.hasMatchingTraders(channel, requester, TestUserProfiles.create("outsider")));
+        assertFalse(BisqEasyMediatorService.hasMatchingTraders(channel, requester, requester));
     }
 
     @Test
@@ -294,11 +288,28 @@ class BisqEasyMediatorServiceRequestChecksTest {
     }
 
     @Test
-    void channelMatchesTheOtherTradersCopyOfTheContract() {
+    void acceptsOtherTradersCopyOfTheContractIntoTheSameCase() {
         BisqEasyContract realContract = TestContracts.contract(requester, peer, mediator);
-        BisqEasyOpenTradeChannel channel = createMediatorChannel("trade-1", TestContracts.protoCopy(realContract), requester, peer);
+        BisqEasyMediationRequest requestersRequest = createRequest("trade-1", TestContracts.protoCopy(realContract), requester, peer);
+        cases.add(new BisqEasyMediationCase(requestersRequest));
+        BisqEasyOpenTradeChannel channel = createMediatorChannel("trade-1", requestersRequest.getContract(), requester, peer);
+        BisqEasyMediationRequest peersRequest = createRequest("trade-1", TestContracts.protoCopy(realContract), peer, requester);
 
-        assertTrue(BisqEasyMediatorService.hasMatchingChannel(channel, TestContracts.protoCopy(realContract), peer, requester));
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(peersRequest, mock(BannedUserService.class), cases, Optional.of(channel)).isPresent());
+        assertEquals(cases.get(0), new BisqEasyMediationCase(peersRequest));
+    }
+
+    @Test
+    void acceptsOtherTradersRequestWithDifferentOfferAsSecondCase() {
+        // The first accepted request set the channel's offer. The other trader's contract differs in one offer field.
+        BisqEasyContract firstContract = TestContracts.contract(requester, peer, mediator);
+        cases.add(new BisqEasyMediationCase(createRequest("trade-1", firstContract, requester, peer)));
+        BisqEasyOpenTradeChannel channel = createMediatorChannel("trade-1", firstContract, requester, peer);
+        BisqEasyContract otherContract = TestContracts.contract(requester, peer, mediator, List.of("en", "de"));
+        BisqEasyMediationRequest peersRequest = createRequest("trade-1", otherContract, peer, requester);
+
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(peersRequest, mock(BannedUserService.class), cases, Optional.of(channel)).isPresent());
+        assertNotEquals(cases.get(0), new BisqEasyMediationCase(peersRequest));
     }
 
     @Test
