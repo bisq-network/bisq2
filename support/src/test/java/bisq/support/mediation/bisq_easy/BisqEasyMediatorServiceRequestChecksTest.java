@@ -17,6 +17,7 @@
 
 package bisq.support.mediation.bisq_easy;
 
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
@@ -233,6 +234,36 @@ class BisqEasyMediatorServiceRequestChecksTest {
     }
 
     @Test
+    void forwardedReactionsAreNotImported() {
+        // The requester's own message carries a reaction attributed to the other trader.
+        BisqEasyOpenTradeMessage requestersMessage = createMessage("m1", requester, "I paid");
+        requestersMessage.getChatMessageReactions().add(createReaction("m1", peer));
+        BisqEasyMediationRequest request = createRequest("trade-1", contract, requester, peer, List.of(requestersMessage));
+
+        List<BisqEasyOpenTradeMessage> messagesToImport = BisqEasyMediatorService.getMessagesToImport(request, Set.of());
+
+        assertEquals(1, messagesToImport.size());
+        assertTrue(messagesToImport.get(0).getChatMessageReactions().isEmpty());
+        assertEquals(BisqEasyMediatorService.getProvenanceKey(requestersMessage),
+                BisqEasyMediatorService.getProvenanceKey(messagesToImport.get(0)));
+    }
+
+    @Test
+    void messageAlreadyInChannelIsNotImported() {
+        // The channel's copy carries a reaction the mediator added, which does not change the message.
+        BisqEasyOpenTradeMessage channelCopy = createMessage("m1", requester, "hi");
+        channelCopy.getChatMessageReactions().add(createReaction("m1", mediator));
+        BisqEasyOpenTradeMessage newMessage = createMessage("m2", peer, "hello");
+        BisqEasyMediationRequest request = createRequest("trade-1", contract, peer, requester,
+                List.of(createMessage("m1", requester, "hi"), newMessage));
+        BisqEasyOpenTradeMessage alteredCopy = createMessage("m1", requester, "I never paid");
+        BisqEasyMediationRequest requestWithAlteredCopy = createRequest("trade-1", contract, peer, requester, List.of(alteredCopy));
+
+        assertEquals(List.of(newMessage), BisqEasyMediatorService.getMessagesToImport(request, Set.of(channelCopy)));
+        assertEquals(List.of(alteredCopy), BisqEasyMediatorService.getMessagesToImport(requestWithAlteredCopy, Set.of(channelCopy)));
+    }
+
+    @Test
     void rejectsRequestWithSharedMessageIds() {
         when(contract.getMaker()).thenReturn(new Party(Role.MAKER, requester.getNetworkId()));
         when(contract.getTaker()).thenReturn(new Party(Role.TAKER, peer.getNetworkId()));
@@ -369,6 +400,19 @@ class BisqEasyMediatorServiceRequestChecksTest {
                                                    UserProfile peer,
                                                    List<BisqEasyOpenTradeMessage> chatMessages) {
         return new BisqEasyMediationRequest(tradeId, contract, requester, peer, new ArrayList<>(chatMessages), mediator.getNetworkId());
+    }
+
+    private BisqEasyOpenTradeMessageReaction createReaction(String chatMessageId, UserProfile sender) {
+        return new BisqEasyOpenTradeMessageReaction("reaction-" + chatMessageId,
+                sender,
+                mediator.getId(),
+                mediator.getNetworkId(),
+                BisqEasyOpenTradeChannel.createId("trade-1"),
+                ChatChannelDomain.BISQ_EASY_OPEN_TRADES,
+                chatMessageId,
+                0,
+                1_700_000_000_000L,
+                false);
     }
 
     private BisqEasyOpenTradeMessage createMessage(String id, UserProfile sender, String text) {
