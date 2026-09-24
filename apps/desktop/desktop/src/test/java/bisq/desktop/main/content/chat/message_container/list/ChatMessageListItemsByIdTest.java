@@ -75,6 +75,16 @@ class ChatMessageListItemsByIdTest {
     }
 
     @Test
+    void findsCopyDeliveredAgainAfterAReactionWasAdded() {
+        BisqEasyOpenTradeMessage message = createMessage("m1", "I paid");
+        itemsById.add(new Item(message));
+
+        message.getChatMessageReactions().add(createReaction("m1"));
+
+        assertTrue(itemsById.contains(createMessage("m1", "I paid")));
+    }
+
+    @Test
     void removingOneVersionKeepsTheOther() {
         Item paid = new Item(createMessage("m1", "I paid"));
         Item neverPaid = new Item(createMessage("m1", "I never paid"));
