@@ -26,7 +26,7 @@ Every accepted request is retained on the case before its messages are imported.
 
 ## Provenance of chat messages
 
-A message is imported by its exact content, so both traders' versions of a message under one ID sit next to each other. A message is marked unverified when it reached the mediator only inside a request of a trader who is not its author. The mark is bound to the exact message content and author, not to the message ID, and it is cleared only by a request of the author carrying the same message. Every renderer of a forwarded message shows the mark.
+A message is imported by its exact content, so both traders' versions of a message under one ID sit next to each other. A message is marked unverified when it reached the mediator only inside a request of a trader who is not its author. The mark is bound to the exact message content and author, not to the message ID, and it is cleared only by a request of the author carrying the same message. Every renderer of a forwarded message shows the mark. Forwarded messages are imported without their reactions, because nothing shows who added a reaction in a transcript; the traders' live reactions are not sent to the mediator.
 
 ## Not covered
 

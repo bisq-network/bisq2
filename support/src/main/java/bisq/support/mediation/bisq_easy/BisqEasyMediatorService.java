@@ -206,13 +206,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                     .ifPresentOrElse(existingCase -> retainRequest(existingCase, bisqEasyMediationRequest),
                             () -> addNewMediationCase(bisqEasyMediationCase));
 
-            // Import by exact message, so a trader's own version of a message is kept next to a differing copy
-            // the other trader forwarded under the same ID.
-            Set<String> existingMessageKeys = channel.getChatMessages().stream()
-                    .map(BisqEasyMediatorService::getProvenanceKey)
-                    .collect(Collectors.toSet());
-            bisqEasyMediationRequest.getChatMessages().stream()
-                    .filter(chatMessage -> !existingMessageKeys.contains(getProvenanceKey(chatMessage)))
+            getMessagesToImport(bisqEasyMediationRequest, channel.getChatMessages())
                     .forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
             NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
@@ -366,9 +360,28 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                 .collect(Collectors.toSet());
     }
 
+    // Import by exact message, so a trader's own version of a message is kept next to a differing copy the other
+    // trader forwarded under the same ID. Reactions are not imported: nothing shows who added a reaction in a
+    // transcript, so it could be attributed to the other trader without a mark. The traders' live reactions are not
+    // sent to the mediator.
+    static List<BisqEasyOpenTradeMessage> getMessagesToImport(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                                              Collection<BisqEasyOpenTradeMessage> channelMessages) {
+        Set<String> existingMessageKeys = channelMessages.stream()
+                .map(BisqEasyMediatorService::getProvenanceKey)
+                .collect(Collectors.toSet());
+        return bisqEasyMediationRequest.getChatMessages().stream()
+                .map(BisqEasyMediatorService::withoutReactions)
+                .filter(chatMessage -> !existingMessageKeys.contains(getProvenanceKey(chatMessage)))
+                .toList();
+    }
+
     // Hash of the message without reactions. Reactions get added later in the channel and must not change the key.
     public static String getProvenanceKey(BisqEasyOpenTradeMessage message) {
-        BisqEasyOpenTradeMessage withoutReactions = new BisqEasyOpenTradeMessage(message.getTradeId(),
+        return Hex.encode(DigestUtil.hash(withoutReactions(message).serializeForHash()));
+    }
+
+    private static BisqEasyOpenTradeMessage withoutReactions(BisqEasyOpenTradeMessage message) {
+        return new BisqEasyOpenTradeMessage(message.getTradeId(),
                 message.getId(),
                 message.getChannelId(),
                 message.getSenderUserProfile(),
@@ -382,7 +395,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                 message.getChatMessageType(),
                 message.getBisqEasyOffer(),
                 new HashSet<>());
-        return Hex.encode(DigestUtil.hash(withoutReactions.serializeForHash()));
     }
 
     private static boolean isOwnMessage(BisqEasyOpenTradeMessage message, BisqEasyMediationRequest request) {
