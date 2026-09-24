@@ -54,7 +54,8 @@ public class BisqEasyTradeAmountLimits {
     public static final Fiat DEFAULT_MIN_USD_TRADE_AMOUNT = Fiat.fromFaceValue(6, "USD");
     public static final Fiat MAX_USD_TRADE_AMOUNT = Fiat.fromFaceValue(600, "USD");
     public static final Fiat MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION = Fiat.fromFaceValue(0, "USD");
-    // MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER / DEFAULT_MIN_USD_TRADE_AMOUNT. Keep those three values in sync.
+    // Must equal MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER / DEFAULT_MIN_USD_TRADE_AMOUNT (1200 / 6).
+    // Checked by BisqEasyTradeAmountLimitsTest.minSellOfferScoreCoversMinUsdAmount.
     private static final double REQUIRED_REPUTATION_SCORE_PER_USD = 200d;
     public static final double TOLERANCE = 0.05;
     public static final long MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER = 1200;
