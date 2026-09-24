@@ -37,8 +37,9 @@ public class BisqEasyMediationCase implements PersistableProto {
     private final Observable<Boolean> isClosed = new Observable<>();
     @Getter
     private Optional<Long> closeCaseDate;
-    // Request of the other trader for the same contract, kept so that both transcripts are on record
-    private Optional<BisqEasyMediationRequest> peersMediationRequest;
+    // Request of the other trader for the same contract, kept so that both transcripts are on record. Set on the
+    // network thread and read on the UI thread.
+    private volatile Optional<BisqEasyMediationRequest> peersMediationRequest;
 
     public BisqEasyMediationCase(BisqEasyMediationRequest bisqEasyMediationRequest) {
         this(bisqEasyMediationRequest, System.currentTimeMillis(), false, Optional.empty(), Optional.empty());
@@ -92,19 +93,6 @@ public class BisqEasyMediationCase implements PersistableProto {
 
     public List<BisqEasyMediationRequest> getMediationRequests() {
         return Stream.concat(Stream.of(bisqEasyMediationRequest), peersMediationRequest.stream()).toList();
-    }
-
-    // A repeated request from a trader already on record replaces that trader's retained request, so that the
-    // retained provenance covers the transcript the mediator imports.
-    public BisqEasyMediationCase withRequest(BisqEasyMediationRequest request) {
-        String requesterId = request.getRequester().getId();
-        if (requesterId.equals(bisqEasyMediationRequest.getRequester().getId())) {
-            return new BisqEasyMediationCase(request, requestDate, isClosed.get(), closeCaseDate, peersMediationRequest);
-        }
-        if (peersMediationRequest.map(peersRequest -> peersRequest.getRequester().getId().equals(requesterId)).orElse(false)) {
-            return new BisqEasyMediationCase(bisqEasyMediationRequest, requestDate, isClosed.get(), closeCaseDate, Optional.of(request));
-        }
-        return this;
     }
 
     public boolean setPeersMediationRequest(BisqEasyMediationRequest request) {

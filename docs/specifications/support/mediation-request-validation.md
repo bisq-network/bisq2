@@ -13,7 +13,8 @@ The mediator accepts a request only when:
 - the contract's mediator is the receiving mediator, and neither trader is the mediator;
 - every forwarded message belongs to the trade and its channel, is authored by one of the two traders, has a unique ID within the request, and is of a type a trader's channel holds: text, leave, take offer or protocol log;
 - the requester has fewer than ten open cases for other trades, counting cases the requester is on record for as the other trader;
-- while the mediator's channel for the trade exists, each trader may request once, and the channel must hold the two traders; the channel's offer is not compared.
+- while the mediator keeps a case of the trade, each trader may request once, whether or not the mediator's channel still exists, and a request must name the same two traders as the trade's cases;
+- when the mediator's channel for the trade exists, it must hold the two traders; the channel's offer is not compared.
 
 ## Case identity and retained requests
 
@@ -21,7 +22,7 @@ A case is identified by the trade ID and the contract. A request from the other 
 
 All cases of a trade share the mediator's channel for that trade. The channel's offer is a display copy from the first accepted request, and each case shows its own contract. The mediator UI lists each case of a trade as its own row and acts on the selected row.
 
-Every accepted request is retained on the case before its messages are imported. A repeated request from a trader already on record, accepted after the mediator left the channel, replaces that trader's retained request. A case stored before the other trader's request was retained loads with only the requester's request.
+Every accepted request is retained on the case before its messages are imported. A repeated request does not replace a retained request or reopen a closed case; the mediator reopens a case from the case list. Channel existence is not mediation state: leaving removes the channel, and the mediator view creates it again for every stored case. A case stored before the other trader's request was retained loads with only the requester's request.
 
 ## Provenance of chat messages
 
@@ -32,3 +33,7 @@ A message is imported by its exact content, so both traders' versions of a messa
 Contract signatures of both traders and signed chat messages are not part of the request. Until they are, accepted contracts and forwarded messages are unauthenticated, the case view shows the contract as submitted, and a spammer can rotate profiles to open more cases. MuSig mediation has none of these checks.
 
 The other trader sends no request when the mediator joins, so a differing contract shows only when both traders requested.
+
+The first accepted request fixes the trade's two traders. A later request for that trade from or naming another profile is rejected, so until contracts are signed, a party can lock its counterparty out of mediation by naming another profile first.
+
+A request sent after the mediator joined carries the mediator's own messages and is rejected as a whole, so a second case can only come from a request sent before the mediator's response arrived.

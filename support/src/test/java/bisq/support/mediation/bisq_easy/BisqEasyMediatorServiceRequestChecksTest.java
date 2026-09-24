@@ -70,22 +70,46 @@ class BisqEasyMediatorServiceRequestChecksTest {
 
     @Test
     void acceptsFirstRequestForTrade() {
-        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, requester, peer), cases, false));
+        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, requester, peer), cases));
     }
 
     @Test
-    void rejectsRepeatedRequestFromSameRequesterWhileChannelExists() {
+    void rejectsRepeatedRequestFromSameRequester() {
         cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer)));
 
-        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, requester, peer), cases, true));
-        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", mock(BisqEasyContract.class), requester, peer), cases, true));
+        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, requester, peer), cases));
+        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", mock(BisqEasyContract.class), requester, peer), cases));
     }
 
     @Test
-    void acceptsRepeatedRequestAfterMediatorLeftChannel() {
-        cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer)));
+    void rejectsRepeatedRequestAfterMediatorLeftChannel() {
+        // Leaving removes the mediator's channel. The case keeps the requester on record.
+        BisqEasyContract realContract = TestContracts.contract(requester, peer, mediator);
+        cases.add(new BisqEasyMediationCase(createRequest("trade-1", realContract, requester, peer)));
+        BannedUserService bannedUserService = mock(BannedUserService.class);
 
-        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, requester, peer), cases, false));
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(createRequest("trade-1", TestContracts.protoCopy(realContract), requester, peer),
+                bannedUserService, cases, Optional.empty()).isEmpty());
+        BisqEasyContract otherContract = TestContracts.contract(requester, peer, mediator, List.of("en", "de"));
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(createRequest("trade-1", otherContract, requester, peer),
+                bannedUserService, cases, Optional.empty()).isEmpty());
+    }
+
+    @Test
+    void rejectsRequestNamingOtherTradersForKnownTrade() {
+        cases.add(new BisqEasyMediationCase(createRequest("trade-1", TestContracts.contract(requester, peer, mediator), requester, peer)));
+        BannedUserService bannedUserService = mock(BannedUserService.class);
+        UserProfile outsider = TestUserProfiles.create("outsider");
+        UserProfile otherOutsider = TestUserProfiles.create("otherOutsider");
+        BisqEasyMediationRequest outsidersRequest = createRequest("trade-1",
+                TestContracts.contract(outsider, otherOutsider, mediator), outsider, otherOutsider);
+        // The other trader of the trade names another profile as its counterparty.
+        BisqEasyMediationRequest peerNamingOutsider = createRequest("trade-1",
+                TestContracts.contract(peer, outsider, mediator), peer, outsider);
+
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(outsidersRequest, bannedUserService, cases, Optional.empty()).isEmpty());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(peerNamingOutsider, bannedUserService, cases, Optional.empty()).isEmpty());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(outsidersRequest, bannedUserService, List.of(), Optional.empty()).isPresent());
     }
 
     @Test
@@ -94,10 +118,10 @@ class BisqEasyMediatorServiceRequestChecksTest {
                 .forEach(i -> cases.add(new BisqEasyMediationCase(createRequest("other-" + i, mock(BisqEasyContract.class), peer, requester))));
         cases.add(new BisqEasyMediationCase(createRequest("trade-1", contract, requester, peer)));
 
-        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, peer, requester), cases, true));
+        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, peer, requester), cases));
 
         cases.add(new BisqEasyMediationCase(createRequest("other-last", mock(BisqEasyContract.class), peer, requester)));
-        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, peer, requester), cases, true));
+        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, peer, requester), cases));
     }
 
     @Test
@@ -109,26 +133,7 @@ class BisqEasyMediatorServiceRequestChecksTest {
                     cases.add(mediationCase);
                 });
 
-        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-new", contract, requester, peer), cases, false));
-    }
-
-    @Test
-    void repeatedRequestReplacesTheRetainedRequestOfThatTrader() {
-        BisqEasyMediationRequest first = createRequest("trade-1", contract, requester, peer, List.of(createMessage("m1", peer, "v1")));
-        BisqEasyMediationCase mediationCase = new BisqEasyMediationCase(first);
-        BisqEasyMediationRequest peersRequest = createRequest("trade-1", contract, peer, requester, List.of(createMessage("m1", peer, "v1")));
-        assertTrue(mediationCase.setPeersMediationRequest(peersRequest));
-
-        BisqEasyMediationRequest repeated = createRequest("trade-1", contract, requester, peer, List.of(createMessage("m2", peer, "forged")));
-        BisqEasyMediationCase updated = mediationCase.withRequest(repeated);
-        assertEquals(List.of(repeated, peersRequest), updated.getMediationRequests());
-        assertEquals(mediationCase, updated);
-
-        BisqEasyMediationRequest peersRepeated = createRequest("trade-1", contract, peer, requester, List.of(createMessage("m3", peer, "v2")));
-        assertEquals(List.of(repeated, peersRepeated), updated.withRequest(peersRepeated).getMediationRequests());
-
-        UserProfile outsider = TestUserProfiles.create("outsider");
-        assertEquals(updated, updated.withRequest(createRequest("trade-1", contract, outsider, peer)));
+        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-new", contract, requester, peer), cases));
     }
 
     @Test
@@ -136,8 +141,8 @@ class BisqEasyMediatorServiceRequestChecksTest {
         IntStream.range(0, BisqEasyMediatorService.MAX_OPEN_CASES_PER_REQUESTER)
                 .forEach(i -> cases.add(new BisqEasyMediationCase(createRequest("trade-" + i, mock(BisqEasyContract.class), requester, peer))));
 
-        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-new", contract, requester, peer), cases, false));
-        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-new", contract, peer, requester), cases, false));
+        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-new", contract, requester, peer), cases));
+        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-new", contract, peer, requester), cases));
     }
 
     @Test
@@ -146,7 +151,7 @@ class BisqEasyMediatorServiceRequestChecksTest {
                 .forEach(i -> cases.add(new BisqEasyMediationCase(createRequest("trade-" + i, mock(BisqEasyContract.class), requester, peer))));
         cases.get(0).setClosed(true);
 
-        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-new", contract, requester, peer), cases, false));
+        assertTrue(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-new", contract, requester, peer), cases));
     }
 
     @Test
@@ -168,7 +173,7 @@ class BisqEasyMediatorServiceRequestChecksTest {
         assertFalse(mediationCase.setPeersMediationRequest(createRequest("trade-1", contract, peer, requester)));
         cases.add(mediationCase);
 
-        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, peer, requester), cases, true));
+        assertFalse(BisqEasyMediatorService.isWithinCaseLimits(createRequest("trade-1", contract, peer, requester), cases));
         assertEquals(2, BisqEasyMediatorService.getRequestsForTrade("trade-1", cases).size());
     }
 
