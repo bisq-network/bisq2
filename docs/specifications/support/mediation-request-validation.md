@@ -37,3 +37,9 @@ The other trader sends no request when the mediator joins, so a differing contra
 The first accepted request fixes the trade's two traders. A later request for that trade from or naming another profile is rejected, so until contracts are signed, a party can lock its counterparty out of mediation by naming another profile first.
 
 A request sent after the mediator joined carries the mediator's own messages and is rejected as a whole, so a second case can only come from a request sent before the mediator's response arrived.
+
+A mark on a message already displayed is updated when the mediator opens the channel again. Until then, a message can keep a mark that a later request of its author cleared. A displayed message cannot miss a mark it needs: an unmarked message is either in a request of its author, which stays on record, or was received live, and a live message has the mediator as receiver, so it never matches a forwarded copy.
+
+A quote inside a message is part of that message. Its text is not checked against the quoted author's messages, in live chat as well, so a quote carries no mark.
+
+A reaction the mediator receives for a message ID attaches to the first message in the channel with that ID, also when both traders' versions of that message are shown. Trader clients send reactions only to the other trader, so this needs a modified client.
