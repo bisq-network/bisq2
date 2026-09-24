@@ -29,6 +29,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * reputation is the only security the buyer has. The policy is applied on the side which bears the risk:
  * the buyer as taker checks the maker's reputation in the take offer UI, the buyer as maker checks the
  * taker's reputation in the take offer request handler.
+ * Specified in docs/specifications/trade/bisq-easy-seller-reputation-limit.md.
  */
 public final class BisqEasySellerReputationValidator {
     private BisqEasySellerReputationValidator() {

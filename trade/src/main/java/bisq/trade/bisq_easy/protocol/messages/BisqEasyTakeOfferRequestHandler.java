@@ -213,8 +213,9 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 usdMarketPrice.getPriceQuote(),
                 takersContract.getQuoteSideMonetary());
 
-        // The user profile ID is the ID of the taker's network ID. We do not need the user profile itself.
-        // If we have no reputation data for the taker, the score is 0 and the request gets rejected.
+        // The taker's user profile ID is the ID of the taker's network ID. We have a score for it only after we
+        // have received the taker's user profile and reputation data. Until then the score is 0 and the request
+        // gets rejected.
         String takersUserProfileId = takersContract.getTaker().getNetworkId().getId();
         long takersReputationScore = serviceProvider.getUserService().getReputationService()
                 .getReputationScore(takersUserProfileId)
