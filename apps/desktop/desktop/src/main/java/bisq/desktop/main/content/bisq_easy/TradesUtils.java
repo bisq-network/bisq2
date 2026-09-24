@@ -126,17 +126,26 @@ public class TradesUtils {
                                          BisqEasyContract contract,
                                          BisqEasyMediationRequestService bisqEasyMediationRequestService,
                                          BisqEasyOpenTradeChannelService channelService) {
-        Optional<UserProfile> mediator = channel.getMediator();
+        Optional<UserProfile> mediator = contract.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
+                        // The request carries the chat messages, so the trade log message is added before it.
                         String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendTradeLogMessage(encoded, channel);
+                        try {
+                            bisqEasyMediationRequestService.requestMediation(channel, contract);
+                        } catch (IllegalArgumentException e) {
+                            // The request is refused if the channel data differs from the contract. Trades in a final
+                            // state are not checked against their channel, so a channel from an earlier version can differ.
+                            log.warn("Mediation request for trade {} was refused.", channel.getTradeId(), e);
+                            new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.channelDataMismatch")).show();
+                            return;
+                        }
                         channel.setIsInMediation(true);
                         channelService.persist();
-                        bisqEasyMediationRequestService.requestMediation(channel, contract);
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                 .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
                                 .show();
