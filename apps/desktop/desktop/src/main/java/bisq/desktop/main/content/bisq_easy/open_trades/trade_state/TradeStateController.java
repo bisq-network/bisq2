@@ -65,6 +65,7 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.user.banned.BannedUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -88,6 +89,7 @@ public class TradeStateController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
+    private final BannedUserService bannedUserService;
     private final DontShowAgainService dontShowAgainService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final Optional<ResendMessageService> resendMessageService;
@@ -103,6 +105,7 @@ public class TradeStateController implements Controller {
         channelService = chatService.getBisqEasyOpenTradeChannelService();
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         bisqEasyMediationRequestService = serviceProvider.getSupportService().getBisqEasyMediationRequestService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
 
@@ -335,7 +338,7 @@ public class TradeStateController implements Controller {
     void onRequestMediation() {
         TradesUtils.requestMediation(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
-                bisqEasyMediationRequestService, channelService);
+                bisqEasyMediationRequestService, channelService, bannedUserService);
     }
 
     public void onResendMediationRequest() {
