@@ -29,7 +29,7 @@ The rule protects the buyer, so the buyer's node enforces it:
 - When the buyer takes a sell offer, the buyer's client checks the maker's score before it lets the buyer take the offer, and it limits the amount to the seller's maximum. There is no additional check in the trade protocol, because only the buyer is at risk and the check runs in the buyer's own client.
 - When the seller takes a buy offer, the buyer is the maker. The maker's node checks the taker's score against the amount of the take offer request before it signs the contract, and rejects the request if the score is too low.
 
-The seller's client also shows the seller's maximum and warns when the seller's score is too low for an offer, but the buyer cannot rely on that, because a modified client can skip these checks. The maker's check uses the maker's own market prices and the maker's own reputation data for the taker. It does not use values sent by the taker.
+The seller's client also shows the seller's maximum and warns when the seller's score is too low for an offer, but the buyer cannot rely on that, because a modified client can skip these checks. The maker's check uses the maker's own market prices and the maker's own reputation data for the taker. The offer in the take offer request must be an offer of the maker. Apart from the offer, the check takes only two values from the request: the amount, and the taker's network ID, with which it looks up the taker's score. Before the check, the maker verifies the amount against its offer and verifies that the network ID is the one of the sender of the request.
 
 ## Market Prices at the Maker
 
