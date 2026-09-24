@@ -28,8 +28,7 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 // The displayed items of a channel by message ID. Two items can share an ID, as the mediator keeps both traders'
-// versions of a forwarded message, so content is compared only among the items with that ID. Messages are
-// compared at lookup and never hashed, as the hash of a private chat message changes when a reaction is added.
+// versions of a forwarded message, so content is compared only among the items with that ID.
 final class ChatMessageListItemsById<T> {
     private final Function<T, ChatMessage> chatMessageOfItem;
     private final Map<String, List<T>> itemsById = new HashMap<>();
