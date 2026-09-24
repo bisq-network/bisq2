@@ -31,6 +31,7 @@ import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,7 @@ import static org.mockito.Mockito.when;
 class BisqEasyMediatorServiceRequestChecksTest {
     private UserProfile requester;
     private UserProfile peer;
+    private UserIdentity mediatorIdentity;
     private UserProfile mediator;
     private BisqEasyContract contract;
     private List<BisqEasyMediationCase> cases;
@@ -61,7 +63,8 @@ class BisqEasyMediatorServiceRequestChecksTest {
     void setUp() {
         requester = TestUserProfiles.create("requester");
         peer = TestUserProfiles.create("peer");
-        mediator = TestUserProfiles.create("mediator");
+        mediatorIdentity = TestUserProfiles.createUserIdentity("mediator");
+        mediator = mediatorIdentity.getUserProfile();
         contract = mock(BisqEasyContract.class);
         cases = new ArrayList<>();
     }
@@ -276,15 +279,26 @@ class BisqEasyMediatorServiceRequestChecksTest {
 
     @Test
     void requestsOfBothTradersAreDistinctMessagesForOneCase() {
-        BisqEasyMediationRequest requestersRequest = createRequest("trade-1", contract, requester, peer);
-        BisqEasyMediationRequest peersRequest = createRequest("trade-1", contract, peer, requester);
+        BisqEasyContract realContract = TestContracts.contract(requester, peer, mediator);
+        BisqEasyMediationRequest requestersRequest = createRequest("trade-1", TestContracts.protoCopy(realContract), requester, peer);
+        BisqEasyMediationRequest peersRequest = createRequest("trade-1", TestContracts.protoCopy(realContract), peer, requester);
 
         assertNotEquals(requestersRequest, peersRequest);
         assertEquals(new BisqEasyMediationCase(requestersRequest), new BisqEasyMediationCase(peersRequest));
         assertEquals(new BisqEasyMediationCase(requestersRequest).hashCode(), new BisqEasyMediationCase(peersRequest).hashCode());
+        BisqEasyContract otherOffersContract = TestContracts.contract(requester, peer, mediator, List.of("en", "de"));
         assertNotEquals(new BisqEasyMediationCase(requestersRequest),
-                new BisqEasyMediationCase(createRequest("trade-1", mock(BisqEasyContract.class), requester, peer)));
-        assertEquals(requestersRequest, createRequest("trade-1", contract, requester, peer, List.of(createMessage("m1", peer, "resent"))));
+                new BisqEasyMediationCase(createRequest("trade-1", otherOffersContract, peer, requester)));
+        assertEquals(requestersRequest, createRequest("trade-1", TestContracts.protoCopy(realContract), requester, peer,
+                List.of(createMessage("m1", peer, "resent"))));
+    }
+
+    @Test
+    void channelMatchesTheOtherTradersCopyOfTheContract() {
+        BisqEasyContract realContract = TestContracts.contract(requester, peer, mediator);
+        BisqEasyOpenTradeChannel channel = createMediatorChannel("trade-1", TestContracts.protoCopy(realContract), requester, peer);
+
+        assertTrue(BisqEasyMediatorService.hasMatchingChannel(channel, TestContracts.protoCopy(realContract), peer, requester));
     }
 
     @Test
@@ -312,6 +326,18 @@ class BisqEasyMediatorServiceRequestChecksTest {
         when(contract.getMaker()).thenReturn(new Party(Role.MAKER, requester.getNetworkId()));
         when(contract.getTaker()).thenReturn(new Party(Role.TAKER, peer.getNetworkId()));
         when(contract.getMediator()).thenReturn(Optional.of(mediator));
+    }
+
+    private BisqEasyOpenTradeChannel createMediatorChannel(String tradeId,
+                                                           BisqEasyContract contract,
+                                                           UserProfile requester,
+                                                           UserProfile peer) {
+        return BisqEasyOpenTradeChannel.create(tradeId,
+                contract.getOffer(),
+                mediatorIdentity,
+                Set.of(requester, peer),
+                Optional.of(mediatorIdentity.getUserProfile()),
+                true);
     }
 
     private BisqEasyMediationRequest createRequest(String tradeId,

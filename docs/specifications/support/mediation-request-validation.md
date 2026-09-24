@@ -19,7 +19,7 @@ The mediator accepts a request only when:
 
 A case is identified by the trade ID and the contract. A request from the other trader for the same contract joins the existing case; a request with a different contract for the same trade opens a second case, so that the mediator sees the conflict rather than the first submitter winning. Request identity includes the requester, so the network layer delivers both traders' requests.
 
-Every accepted request is retained on the case before its messages are imported. A repeated request from a trader already on record, accepted after the mediator left the channel, replaces that trader's retained request.
+Every accepted request is retained on the case before its messages are imported. A repeated request from a trader already on record, accepted after the mediator left the channel, replaces that trader's retained request. A case stored before the other trader's request was retained loads with only the requester's request.
 
 ## Provenance of chat messages
 
