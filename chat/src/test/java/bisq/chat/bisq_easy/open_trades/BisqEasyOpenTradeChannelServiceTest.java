@@ -124,6 +124,49 @@ public class BisqEasyOpenTradeChannelServiceTest {
         assertTrue(service.getChannels().isEmpty());
     }
 
+    @Test
+    void expiredMessageWithoutOfferIsDroppedAndNotParked() {
+        long elevenDaysAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11);
+        service.onMessage(textMessage(MAKER_PROFILE_ID, elevenDaysAgo));
+
+        BisqEasyOpenTradeMessage takeOfferMessage = takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis());
+        service.onMessage(takeOfferMessage);
+
+        // A parked message would be added to the channel once the take offer message has created it.
+        BisqEasyOpenTradeChannel channel = service.findChannelByTradeId(TRADE_ID).orElseThrow();
+        assertEquals(1, channel.getChatMessages().size());
+        assertTrue(channel.getChatMessages().contains(takeOfferMessage));
+    }
+
+    @Test
+    void messageWithoutOfferForUnknownReceiverIdentityIsDroppedAndNotParked() {
+        service.onMessage(textMessage("3333333333333333333333333333333333333333", System.currentTimeMillis()));
+
+        BisqEasyOpenTradeMessage takeOfferMessage = takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis());
+        service.onMessage(takeOfferMessage);
+
+        BisqEasyOpenTradeChannel channel = service.findChannelByTradeId(TRADE_ID).orElseThrow();
+        assertEquals(1, channel.getChatMessages().size());
+        assertTrue(channel.getChatMessages().contains(takeOfferMessage));
+    }
+
+    private BisqEasyOpenTradeMessage textMessage(String receiverUserProfileId, long date) {
+        return new BisqEasyOpenTradeMessage(TRADE_ID,
+                "textMessageId",
+                BisqEasyOpenTradeChannel.createId(TRADE_ID),
+                taker,
+                receiverUserProfileId,
+                mock(NetworkId.class),
+                "text",
+                Optional.empty(),
+                date,
+                false,
+                Optional.empty(),
+                ChatMessageType.TEXT,
+                Optional.empty(),
+                new HashSet<>());
+    }
+
     private BisqEasyOpenTradeMessage takeOfferMessage(BisqEasyOffer bisqEasyOffer, String receiverUserProfileId, long date) {
         return new BisqEasyOpenTradeMessage(TRADE_ID,
                 "messageId",
