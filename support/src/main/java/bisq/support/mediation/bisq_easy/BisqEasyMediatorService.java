@@ -261,7 +261,12 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         if (!hasValidChatMessages(bisqEasyMediationRequest, requester, peer)) {
             return Optional.empty();
         }
-        if (!isWithinCaseLimits(bisqEasyMediationRequest, existingCases, existingChannel.isPresent())) {
+        if (!hasTradersOnRecord(bisqEasyMediationRequest, existingCases)) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because it names other traders than the cases of that trade.",
+                    bisqEasyMediationRequest.getTradeId());
+            return Optional.empty();
+        }
+        if (!isWithinCaseLimits(bisqEasyMediationRequest, existingCases)) {
             return Optional.empty();
         }
         if (existingChannel.isPresent() && !hasMatchingTraders(existingChannel.get(), requester, peer)) {
@@ -272,18 +277,26 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         return Optional.of(requester);
     }
 
-    // One request per requester and trade while the channel exists. The peer of a known trade may send its own
-    // request; it does not take a new open case slot.
+    // The traders of a trade are the ones of its first accepted request. The cases are the mediator's record of a
+    // trade. The channel is not, as leaving removes it and the mediator view creates it again.
+    static boolean hasTradersOnRecord(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                      Collection<BisqEasyMediationCase> existingCases) {
+        Set<String> traderIds = getTraderIds(bisqEasyMediationRequest);
+        return getRequestsForTrade(bisqEasyMediationRequest.getTradeId(), existingCases).stream()
+                .allMatch(request -> getTraderIds(request).equals(traderIds));
+    }
+
+    // One request per requester and trade. The peer of a known trade may send its own request; it does not take a
+    // new open case slot.
     static boolean isWithinCaseLimits(BisqEasyMediationRequest bisqEasyMediationRequest,
-                                      Collection<BisqEasyMediationCase> existingCases,
-                                      boolean channelExists) {
+                                      Collection<BisqEasyMediationCase> existingCases) {
         String tradeId = bisqEasyMediationRequest.getTradeId();
         String requesterId = bisqEasyMediationRequest.getRequester().getId();
         List<BisqEasyMediationRequest> requestsForTrade = getRequestsForTrade(tradeId, existingCases);
         boolean alreadyRequested = requestsForTrade.stream()
                 .anyMatch(request -> request.getRequester().getId().equals(requesterId));
-        if (alreadyRequested && channelExists) {
-            log.warn("Ignoring BisqEasyMediationRequest for trade {} because requester {} already opened that case.",
+        if (alreadyRequested) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because requester {} already requested mediation for it.",
                     tradeId, requesterId);
             return false;
         }
@@ -313,6 +326,11 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         Set<String> requestTraderIds = Stream.of(requester.getId(), peer.getId())
                 .collect(Collectors.toSet());
         return traderIds.equals(requestTraderIds);
+    }
+
+    private static Set<String> getTraderIds(BisqEasyMediationRequest request) {
+        return Stream.of(request.getRequester().getId(), request.getPeer().getId())
+                .collect(Collectors.toSet());
     }
 
     static List<BisqEasyMediationRequest> getRequestsForTrade(String tradeId,
@@ -417,18 +435,11 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     }
 
     // Every accepted request is retained before its messages get imported, so that the provenance of each
-    // message in the channel is on record.
+    // message in the channel is on record. A known case is reached only by the other trader's first request.
     private void retainRequest(BisqEasyMediationCase existingCase, BisqEasyMediationRequest request) {
         if (existingCase.setPeersMediationRequest(request)) {
             // The case object changed in place, so the observer on the set does not fire.
             unverifiedChatMessageKeysByTradeId.remove(existingCase.getTradeId());
-            persist();
-            return;
-        }
-        BisqEasyMediationCase updatedCase = existingCase.withRequest(request);
-        if (updatedCase != existingCase) {
-            getMediationCases().remove(existingCase);
-            getMediationCases().add(updatedCase);
             persist();
         }
     }
