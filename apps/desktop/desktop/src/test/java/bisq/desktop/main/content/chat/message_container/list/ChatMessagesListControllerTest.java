@@ -57,7 +57,6 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -183,13 +182,13 @@ class ChatMessagesListControllerTest {
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(displayedMessageIds()).doesNotContain("offer-message-id");
-        assertThat(processedMessageIds()).doesNotContain("offer-message-id");
+        assertThat(isIndexed(message)).isFalse();
 
         putMarketPrice(FITTING_PRICE);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(displayedMessageIds()).contains("offer-message-id");
-        assertThat(processedMessageIds()).contains("offer-message-id");
+        assertThat(isIndexed(message)).isTrue();
     }
 
     @Test
@@ -203,7 +202,7 @@ class ChatMessagesListControllerTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(displayedMessageIds()).doesNotContain("offer-message-id");
-        assertThat(processedMessageIds()).doesNotContain("offer-message-id");
+        assertThat(isIndexed(message)).isFalse();
         assertThat(messageService.isValid(message)).isFalse();
 
         putMarketPrice(FITTING_PRICE);
@@ -222,7 +221,7 @@ class ChatMessagesListControllerTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(displayedMessageIds()).doesNotContain("offer-message-id");
-        assertThat(processedMessageIds()).doesNotContain("offer-message-id");
+        assertThat(isIndexed(message)).isFalse();
         WaitForAsyncUtils.asyncFx(() -> controller.onActivate());
         WaitForAsyncUtils.waitForFxEvents();
     }
@@ -270,7 +269,7 @@ class ChatMessagesListControllerTest {
                 .toList();
     }
 
-    private Set<String> processedMessageIds() {
-        return controller.getModel().getChatMessageIds();
+    private boolean isIndexed(ChatMessage chatMessage) {
+        return controller.getModel().getChatMessageListItemsById().contains(chatMessage);
     }
 }
