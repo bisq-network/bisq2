@@ -52,6 +52,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import static bisq.support.dispute.DisputeAgentSelection.selectDeterministicProfileId;
+import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractParties;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -132,9 +133,12 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         checkArgument(channel.getMediator().map(UserProfile::getNetworkId).equals(Optional.of(mediator.getNetworkId())),
                 "The channel's mediator does not match the contract's mediator");
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
+        UserProfile peer = channel.getPeer();
+        // The mediator ignores a request whose requester and peer are not the parties of the contract.
+        checkArgument(hasMatchingContractParties(contract, myUserIdentity.getUserProfile(), peer),
+                "The channel's parties do not match the contract's parties");
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
-        UserProfile peer = channel.getPeer();
         NetworkId mediatorNetworkId = mediator.getNetworkId();
         BisqEasyMediationRequest bisqEasyMediationRequest = ChatMessagePruning.createWithMaybePrunedMessages(
                 new ArrayList<>(channel.getChatMessages()),

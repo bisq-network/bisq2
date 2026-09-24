@@ -72,7 +72,8 @@ import static org.mockito.Mockito.when;
 /**
  * A mediation request goes to the mediator of the signed contract. The chat routes messages to the mediator and
  * accepts mediator responses by the channel's copy, so a channel whose mediator differs from the contract's one
- * cannot request mediation.
+ * cannot request mediation. The mediator ignores a request whose requester and peer are not the parties of the
+ * contract, so a channel with another own identity or peer cannot request mediation either.
  */
 class BisqEasyMediationRequestServiceTest {
     private NetworkService networkService;
@@ -110,7 +111,13 @@ class BisqEasyMediationRequestServiceTest {
     }
 
     private BisqEasyOpenTradeChannel makersChannel(Optional<UserProfile> channelMediator) {
-        return BisqEasyOpenTradeChannel.create(tradeId, contract.getOffer(), makerIdentity, Set.of(taker), channelMediator, false);
+        return makersChannel(makerIdentity, taker, channelMediator);
+    }
+
+    private BisqEasyOpenTradeChannel makersChannel(UserIdentity myUserIdentity,
+                                                   UserProfile peer,
+                                                   Optional<UserProfile> channelMediator) {
+        return BisqEasyOpenTradeChannel.create(tradeId, contract.getOffer(), myUserIdentity, Set.of(peer), channelMediator, false);
     }
 
     @Test
@@ -139,6 +146,24 @@ class BisqEasyMediationRequestServiceTest {
     @Test
     void requestWithoutMediatorInTheChannelIsRefused() {
         BisqEasyOpenTradeChannel channel = makersChannel(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
+
+        verify(networkService, never()).confidentialSend(any(), any(), any());
+    }
+
+    @Test
+    void requestFromAnotherLocalIdentityInTheChannelIsRefused() {
+        BisqEasyOpenTradeChannel channel = makersChannel(createUserIdentity("other-maker-identity"), taker, Optional.of(mediator));
+
+        assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
+
+        verify(networkService, never()).confidentialSend(any(), any(), any());
+    }
+
+    @Test
+    void requestWithAnotherPeerInTheChannelIsRefused() {
+        BisqEasyOpenTradeChannel channel = makersChannel(makerIdentity, createUserProfile("other-taker"), Optional.of(mediator));
 
         assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
 
