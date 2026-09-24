@@ -68,8 +68,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * A trade may only progress while its chat channel exists and matches the contract. A mismatch fails the trade
- * and a failed trade ignores later events.
+ * A trade may only progress while its chat channel exists and matches the trade and its contract. A mismatch fails
+ * the trade and a failed trade ignores later events.
  */
 class BisqEasyProtocolChatChannelBindingTest {
     // The steps which move value or account data, each with the state it starts from and the state it leads to.

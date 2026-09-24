@@ -58,9 +58,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * The trade service fails a trade whose chat channel does not match the contract as soon as both exist:
- * at startup for stored pairs, when a channel appears for a stored trade, and when a trade is created while its
- * channel exists.
+ * The trade service fails a trade whose chat channel does not match the trade or its contract as soon as both
+ * exist: at startup for stored pairs, when a channel appears for a stored trade, and when a trade is created while
+ * its channel exists.
  */
 class BisqEasyTradeServiceChatChannelBindingTest {
     private ServiceProvider serviceProvider;

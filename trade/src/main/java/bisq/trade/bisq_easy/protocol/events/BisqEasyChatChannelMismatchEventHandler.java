@@ -48,7 +48,7 @@ public class BisqEasyChatChannelMismatchEventHandler extends BisqEasyTradeEventH
 
     @Override
     protected void sendMessage() {
-        log.warn("Trade failed as the chat channel data does not match the contract. errorMessage={}", errorMessage);
+        log.warn("Trade failed as the chat channel data does not match the trade or its contract. errorMessage={}", errorMessage);
         send(new BisqEasyReportErrorMessage(createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
