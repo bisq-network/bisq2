@@ -18,18 +18,24 @@
 package bisq.trade.bisq_easy.validation;
 
 import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceProviderInfo;
+import bisq.common.monetary.PriceQuote;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class BisqEasySellerReputationValidatorTest {
+    // MarketPrice treats a price older than 12 hours as outdated
+    private static final long OUTDATED_AGE = TimeUnit.HOURS.toMillis(12) + TimeUnit.MINUTES.toMillis(1);
+
     @Test
     void acceptsScoreMatchingRequiredScore() {
         assertDoesNotThrow(() -> BisqEasySellerReputationValidator.validateSellersReputation(20_000, 20_000));
@@ -62,42 +68,43 @@ class BisqEasySellerReputationValidatorTest {
         assertDoesNotThrow(() -> BisqEasySellerReputationValidator.validateSellersReputation(0, 0));
     }
 
-    private static MarketPrice marketPrice(long timestamp, boolean isValidDate) {
-        MarketPrice marketPrice = mock(MarketPrice.class);
-        when(marketPrice.getTimestamp()).thenReturn(timestamp);
-        when(marketPrice.isValidDate()).thenReturn(isValidDate);
-        return marketPrice;
+    private static MarketPrice eurMarketPrice(long timestamp) {
+        return new MarketPrice(PriceQuote.fromFiatPrice(50_000, "EUR"), timestamp, mock(MarketPriceProviderInfo.class));
+    }
+
+    private static MarketPrice usdMarketPrice(long timestamp) {
+        return new MarketPrice(PriceQuote.fromFiatPrice(60_000, "USD"), timestamp, mock(MarketPriceProviderInfo.class));
     }
 
     @Test
     void acceptsMarketPricesWithinStaleAgeOfEachOther() {
         long now = System.currentTimeMillis();
         assertDoesNotThrow(() -> BisqEasySellerReputationValidator.validateMarketPrices(
-                marketPrice(now - MarketPrice.STALE_AGE, true),
-                marketPrice(now, true)));
+                eurMarketPrice(now - MarketPrice.STALE_AGE),
+                usdMarketPrice(now)));
     }
 
     @Test
     void rejectsMarketPricesNotFromTheSameTime() {
         long now = System.currentTimeMillis();
         assertThrows(IllegalArgumentException.class, () -> BisqEasySellerReputationValidator.validateMarketPrices(
-                marketPrice(now - MarketPrice.STALE_AGE - 1, true),
-                marketPrice(now, true)));
+                eurMarketPrice(now - MarketPrice.STALE_AGE - 1),
+                usdMarketPrice(now)));
     }
 
     @Test
     void rejectsOutdatedFiatMarketPrice() {
-        long now = System.currentTimeMillis();
+        long outdatedTimestamp = System.currentTimeMillis() - OUTDATED_AGE;
         assertThrows(IllegalArgumentException.class, () -> BisqEasySellerReputationValidator.validateMarketPrices(
-                marketPrice(now, false),
-                marketPrice(now, true)));
+                eurMarketPrice(outdatedTimestamp),
+                usdMarketPrice(outdatedTimestamp + MarketPrice.STALE_AGE)));
     }
 
     @Test
     void rejectsOutdatedUsdMarketPrice() {
-        long now = System.currentTimeMillis();
+        long outdatedTimestamp = System.currentTimeMillis() - OUTDATED_AGE;
         assertThrows(IllegalArgumentException.class, () -> BisqEasySellerReputationValidator.validateMarketPrices(
-                marketPrice(now, true),
-                marketPrice(now, false)));
+                eurMarketPrice(outdatedTimestamp + MarketPrice.STALE_AGE),
+                usdMarketPrice(outdatedTimestamp)));
     }
 }
