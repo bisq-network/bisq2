@@ -91,11 +91,11 @@ public class BisqEasyMediationCase implements PersistableProto {
         }
     }
 
-    public List<BisqEasyMediationRequest> getMediationRequests() {
+    List<BisqEasyMediationRequest> getMediationRequests() {
         return Stream.concat(Stream.of(bisqEasyMediationRequest), peersMediationRequest.stream()).toList();
     }
 
-    public boolean setPeersMediationRequest(BisqEasyMediationRequest request) {
+    boolean setPeersMediationRequest(BisqEasyMediationRequest request) {
         boolean isFromPeer = !request.getRequester().getId().equals(bisqEasyMediationRequest.getRequester().getId());
         if (!isFromPeer || peersMediationRequest.isPresent()) {
             return false;
@@ -112,11 +112,11 @@ public class BisqEasyMediationCase implements PersistableProto {
         return isClosed;
     }
 
-    public String getTradeId() {
+    private String getTradeId() {
         return bisqEasyMediationRequest.getTradeId();
     }
 
-    public BisqEasyContract getContract() {
+    private BisqEasyContract getContract() {
         return bisqEasyMediationRequest.getContract();
     }
 

@@ -44,6 +44,7 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,8 +67,9 @@ import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentity
  */
 @Slf4j
 public class BisqEasyMediatorService extends RateLimitedPersistenceClient<MediatorStore> implements Service, ConfidentialMessageService.Listener {
+    @VisibleForTesting
     static final int MAX_OPEN_CASES_PER_REQUESTER = 10;
-    static final Set<ChatMessageType> FORWARDABLE_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
+    private static final Set<ChatMessageType> FORWARDABLE_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
             ChatMessageType.LEAVE,
             ChatMessageType.TAKE_BISQ_EASY_OFFER,
             ChatMessageType.PROTOCOL_LOG_MESSAGE);
@@ -220,6 +222,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         });
     }
 
+    @VisibleForTesting
     static Optional<UserProfile> verifyMediationRequest(BisqEasyMediationRequest bisqEasyMediationRequest,
                                                         BannedUserService bannedUserService,
                                                         Collection<BisqEasyMediationCase> existingCases,
@@ -268,8 +271,8 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
 
     // The traders of a trade are the ones of its first accepted request. The cases are the mediator's record of a
     // trade. The channel is not, as leaving removes it and the mediator view creates it again.
-    static boolean hasTradersOnRecord(BisqEasyMediationRequest bisqEasyMediationRequest,
-                                      Collection<BisqEasyMediationCase> existingCases) {
+    private static boolean hasTradersOnRecord(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                              Collection<BisqEasyMediationCase> existingCases) {
         Set<String> traderIds = getTraderIds(bisqEasyMediationRequest);
         return getRequestsForTrade(bisqEasyMediationRequest.getTradeId(), existingCases).stream()
                 .allMatch(request -> getTraderIds(request).equals(traderIds));
@@ -277,6 +280,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
 
     // One request per requester and trade. The peer of a known trade may send its own request; it does not take a
     // new open case slot.
+    @VisibleForTesting
     static boolean isWithinCaseLimits(BisqEasyMediationRequest bisqEasyMediationRequest,
                                       Collection<BisqEasyMediationCase> existingCases) {
         String tradeId = bisqEasyMediationRequest.getTradeId();
@@ -338,6 +342,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         return unverifiedChatMessageKeysByTrade.get(tradeId);
     }
 
+    @VisibleForTesting
     static Set<String> getUnverifiedChatMessageKeys(String tradeId, Collection<BisqEasyMediationCase> existingCases) {
         return getUnverifiedChatMessageKeys(getRequestsForTrade(tradeId, existingCases));
     }
@@ -360,6 +365,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     // trader forwarded under the same ID. Reactions are not imported: nothing shows who added a reaction in a
     // transcript, so it could be attributed to the other trader without a mark. The traders' live reactions are not
     // sent to the mediator.
+    @VisibleForTesting
     static List<BisqEasyOpenTradeMessage> getMessagesToImport(BisqEasyMediationRequest bisqEasyMediationRequest,
                                                               Collection<BisqEasyOpenTradeMessage> channelMessages) {
         Set<String> existingMessageKeys = channelMessages.stream()
