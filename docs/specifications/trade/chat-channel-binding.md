@@ -4,7 +4,9 @@
 
 The signed trade contract is the authority for the offer, the mediator and the peer of a Bisq Easy trade, and the trade is the authority for the own identity under which the trader takes part in it. The trade chat channel keeps its own copies of them. On the maker's node they come from the taker's first chat message, which is unsigned and freely chosen by the taker; the channel's own identity is the local identity to which that message is addressed.
 
-Everything the application presents for a trade or acts upon must be derived from the contract or from local state. The API channel DTO carries the offer of the contract, the open trades list reads the offer from the trade, and a mediation request goes to the mediator of the contract.
+Everything the application presents for a trade or acts upon must be derived from the contract or from local state. The API channel DTO carries the offer and the mediator of the contract, the open trades list reads the offer and the mediator from the trade and its contract, the trade details show the mediator of the contract, and a mediation request goes to the mediator of the contract.
+
+The chat routes messages to the mediator by the channel's copy of the mediator, and it accepts a mediator response only from that copy. The copy equals the contract mediator for every trade that is not in a final state, because a mismatch fails the trade (see below). Only a trade in a final state can still have a channel whose offer or mediator differs from the contract, and a mediation request for such a trade is refused, so that one mediation is not split between two mediators.
 
 ## Matching rule
 

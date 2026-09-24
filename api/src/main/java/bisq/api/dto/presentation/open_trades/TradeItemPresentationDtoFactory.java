@@ -66,7 +66,7 @@ public class TradeItemPresentationDtoFactory {
 
         String formattedMyRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
 
-        BisqEasyOpenTradeChannelDto channelDto = DtoMappings.BisqEasyOpenTradeChannelMapping.fromBisq2Model(channel, trade.getOffer());
+        BisqEasyOpenTradeChannelDto channelDto = DtoMappings.BisqEasyOpenTradeChannelMapping.fromBisq2Model(channel, contract);
         BisqEasyTradeDto tradeDto = DtoMappings.BisqEasyTradeMapping.fromBisq2Model(trade);
 
         UserProfileDto myUserProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(myUserProfile);

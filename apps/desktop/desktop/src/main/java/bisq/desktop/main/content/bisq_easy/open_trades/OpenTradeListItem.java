@@ -113,7 +113,7 @@ class OpenTradeListItem implements DateTableItem {
             }
             this.isInMediation = isInMediation;
             if (isInMediation) {
-                mediatorUserName = channel.getMediator().map(UserProfile::getUserName).orElse("");
+                mediatorUserName = trade.getContract().getMediator().map(UserProfile::getUserName).orElse("");
             }
         });
     }
