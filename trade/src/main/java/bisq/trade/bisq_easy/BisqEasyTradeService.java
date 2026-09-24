@@ -499,7 +499,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             return;
         }
         BisqEasyTradeChatChannelValidator.findMismatch(channel, trade).ifPresent(mismatch -> {
-            log.warn("Trade chat channel does not match the contract. We fail the trade. {}", mismatch);
+            log.warn("Trade chat channel does not match the trade or its contract. We fail the trade. {}", mismatch);
             findProtocol(trade.getId()).ifPresent(protocol -> protocol.handle(new BisqEasyChatChannelMismatchEvent(mismatch)));
         });
     }

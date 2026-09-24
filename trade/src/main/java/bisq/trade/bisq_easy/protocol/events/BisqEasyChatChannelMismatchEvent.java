@@ -22,8 +22,8 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
- * The trade chat channel data does not match the signed contract. Fired by the trade service when it detects the
- * mismatch outside of a user action, at startup or when the channel or the trade appears.
+ * The trade chat channel data does not match the trade or its signed contract. Fired by the trade service when it
+ * detects the mismatch outside of a user action, at startup or when the channel or the trade appears.
  */
 @ToString(callSuper = true)
 @Getter

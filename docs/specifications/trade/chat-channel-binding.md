@@ -19,7 +19,7 @@ A trade chat channel matches its trade when:
 
 ## Presence and progress
 
-A trade may only progress while its chat channel exists and matches the contract. The rule is enforced in the trade protocol before the steps that move value or account data:
+A trade may only progress while its chat channel exists and matches the trade and its contract. The rule is enforced in the trade protocol before the steps that move value or account data:
 
 - seller sends payment account data;
 - buyer sends the Bitcoin address;
