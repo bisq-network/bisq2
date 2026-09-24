@@ -22,16 +22,23 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.common.util.StringUtils;
+import bisq.contract.ContractService;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.security.SecurityService;
 import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
@@ -52,9 +59,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * The trade service fails a trade whose chat channel does not match the contract as soon as both exist:
- * at startup for stored pairs, and when a channel appears for a stored trade.
+ * at startup for stored pairs, when a channel appears for a stored trade, and when a trade is created while its
+ * channel exists.
  */
 class BisqEasyTradeServiceChatChannelBindingTest {
+    private ServiceProvider serviceProvider;
     private BisqEasyTradeService service;
     private ObservableSet<BisqEasyOpenTradeChannel> channels;
     private Identity makerIdentity;
@@ -65,7 +74,7 @@ class BisqEasyTradeServiceChatChannelBindingTest {
 
     @BeforeEach
     void setUp() {
-        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
+        serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         BisqEasyOpenTradeChannelService channelService = mock(BisqEasyOpenTradeChannelService.class);
         when(serviceProvider.getChatService().getBisqEasyOpenTradeChannelService()).thenReturn(channelService);
         channels = new ObservableSet<>();
@@ -169,5 +178,33 @@ class BisqEasyTradeServiceChatChannelBindingTest {
 
         assertEquals(BisqEasyTradeState.FAILED, makerTrade.getState());
         assertEquals(TradeProtocolFailure.CHANNEL_DATA_MISMATCH, makerTrade.getTradeProtocolFailure());
+    }
+
+    @Test
+    void mismatchingChannelExistingWhenMakerTradeIsCreatedFailsTrade() throws GeneralSecurityException {
+        when(serviceProvider.getIdentityService().findAnyIdentityByNetworkId(makerNetworkId)).thenReturn(Optional.of(makerIdentity));
+        service.initialize();
+        BisqEasyContract contract = trade.getContract();
+        // The taker's first chat message arrived before the take offer request and created the maker's channel.
+        channels.add(channel(sellerAsMakerTrade(contract, makerIdentity),
+                offer("offer-id", makerNetworkId, QUOTE_AMOUNT * 2),
+                userProfile(takerIdentity.getNetworkId()),
+                Optional.empty()));
+
+        service.onMessage(takeOfferRequest(contract));
+
+        BisqEasyTrade makerTrade = service.findTrade(trade.getId()).orElseThrow();
+        assertEquals(BisqEasyTradeState.FAILED, makerTrade.getState());
+        assertEquals(TradeProtocolFailure.CHANNEL_DATA_MISMATCH, makerTrade.getTradeProtocolFailure());
+    }
+
+    private BisqEasyTakeOfferRequest takeOfferRequest(BisqEasyContract contract) throws GeneralSecurityException {
+        return new BisqEasyTakeOfferRequest(StringUtils.createUid(),
+                trade.getId(),
+                BisqEasyProtocol.VERSION,
+                takerIdentity.getNetworkId(),
+                makerNetworkId,
+                contract,
+                new ContractService(mock(SecurityService.class)).signContract(contract, takerIdentity.getKeyBundle().getKeyPair()));
     }
 }
