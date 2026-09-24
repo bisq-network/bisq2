@@ -62,6 +62,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -124,8 +125,10 @@ class BisqEasyMediationRequestServiceTest {
     void requestGoesToTheContractMediator() throws UnresolvableProtobufException {
         // The channel holds its own copy of the mediator's profile, as it came with the taker's first chat message.
         UserProfile channelMediator = UserProfile.fromProto(mediator.toProto(false));
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(channelMediator));
+        assertTrue(service.findChannelMismatch(channel, contract).isEmpty());
 
-        service.requestMediation(makersChannel(Optional.of(channelMediator)), contract);
+        service.requestMediation(channel, contract);
 
         ArgumentCaptor<BisqEasyMediationRequest> request = ArgumentCaptor.forClass(BisqEasyMediationRequest.class);
         verify(networkService).confidentialSend(request.capture(), eq(mediator.getNetworkId()), any());
@@ -135,8 +138,24 @@ class BisqEasyMediationRequestServiceTest {
     }
 
     @Test
+    void requestWithAnotherOfferInTheChannelIsRefused() {
+        BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.create(tradeId,
+                createOffer(makerIdentity.getUserProfile().getNetworkId(), 200_0000),
+                makerIdentity,
+                Set.of(taker),
+                Optional.of(mediator),
+                false);
+        assertTrue(service.findChannelMismatch(channel, contract).isPresent());
+
+        assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
+
+        verify(networkService, never()).confidentialSend(any(), any(), any());
+    }
+
+    @Test
     void requestWithAnotherMediatorInTheChannelIsRefused() {
         BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(createUserProfile("other-mediator")));
+        assertTrue(service.findChannelMismatch(channel, contract).isPresent());
 
         assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
 
@@ -146,6 +165,7 @@ class BisqEasyMediationRequestServiceTest {
     @Test
     void requestWithoutMediatorInTheChannelIsRefused() {
         BisqEasyOpenTradeChannel channel = makersChannel(Optional.empty());
+        assertTrue(service.findChannelMismatch(channel, contract).isPresent());
 
         assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
 
@@ -155,6 +175,7 @@ class BisqEasyMediationRequestServiceTest {
     @Test
     void requestFromAnotherLocalIdentityInTheChannelIsRefused() {
         BisqEasyOpenTradeChannel channel = makersChannel(createUserIdentity("other-maker-identity"), taker, Optional.of(mediator));
+        assertTrue(service.findChannelMismatch(channel, contract).isPresent());
 
         assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
 
@@ -164,6 +185,7 @@ class BisqEasyMediationRequestServiceTest {
     @Test
     void requestWithAnotherPeerInTheChannelIsRefused() {
         BisqEasyOpenTradeChannel channel = makersChannel(makerIdentity, createUserProfile("other-taker"), Optional.of(mediator));
+        assertTrue(service.findChannelMismatch(channel, contract).isPresent());
 
         assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
 
@@ -171,12 +193,16 @@ class BisqEasyMediationRequestServiceTest {
     }
 
     private static BisqEasyOffer createOffer(NetworkId makerNetworkId) {
+        return createOffer(makerNetworkId, 100_0000);
+    }
+
+    private static BisqEasyOffer createOffer(NetworkId makerNetworkId, long quoteAmount) {
         return new BisqEasyOffer("offer-id",
                 System.currentTimeMillis(),
                 makerNetworkId,
                 Direction.SELL,
                 MarketRepository.getUSDBitcoinMarket(),
-                new QuoteSideFixedAmountSpec(100_0000),
+                new QuoteSideFixedAmountSpec(quoteAmount),
                 new MarketPriceSpec(),
                 List.of(TradeProtocolType.BISQ_EASY),
                 List.of(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN))),
