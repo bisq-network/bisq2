@@ -2,7 +2,7 @@
 
 ## Authoritative data
 
-The signed trade contract is the authority for the offer, the mediator and the peer of a Bisq Easy trade. The trade chat channel keeps its own copies of them. On the maker's node they come from the taker's first chat message, which is unsigned and freely chosen by the taker.
+The signed trade contract is the authority for the offer, the mediator and the peer of a Bisq Easy trade, and the trade is the authority for the own identity under which the trader takes part in it. The trade chat channel keeps its own copies of them. On the maker's node they come from the taker's first chat message, which is unsigned and freely chosen by the taker; the channel's own identity is the local identity to which that message is addressed.
 
 Everything the application presents for a trade or acts upon must be derived from the contract or from local state. The API channel DTO carries the offer of the contract, the open trades list reads the offer from the trade, and a mediation request goes to the mediator of the contract.
 
@@ -12,7 +12,8 @@ A trade chat channel matches its trade when:
 
 - the channel offer equals the contract offer by full value equality (`Offer.equals` excludes only the version fields, so a copy serialized by another app version still matches);
 - the channel mediator and the contract mediator have the same network ID, or both are absent (a user profile can change its nick name, terms and statement, so profiles are not compared by value);
-- the channel peer's profile ID equals the ID of the trade peer's network ID (both are the hash of the public key, which also binds the channel peer to the identity which signed the contract).
+- the channel peer's profile ID equals the ID of the trade peer's network ID (both are the hash of the public key, which also binds the channel peer to the identity which signed the contract);
+- the ID of the channel's own identity equals the ID of the trader's identity in the trade (both are the hash of the own public key; on the maker's node the channel's identity comes from the receiver field of the taker's first chat message, which is not bound to the trade).
 
 ## Presence and progress
 

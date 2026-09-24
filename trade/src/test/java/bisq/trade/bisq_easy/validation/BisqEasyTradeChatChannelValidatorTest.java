@@ -37,6 +37,8 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.contract;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.networkId;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.sellerAsMakerTrade;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userIdentity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,18 +46,22 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BisqEasyTradeChatChannelValidatorTest {
+    private Identity makerIdentity;
     private NetworkId makerNetworkId;
+    private NetworkId takerNetworkId;
     private NetworkId mediatorNetworkId;
     private BisqEasyOffer offer;
     private BisqEasyTrade trade;
 
     @BeforeEach
     void setUp() {
-        makerNetworkId = networkId("maker");
+        makerIdentity = identity("maker");
+        makerNetworkId = makerIdentity.getNetworkId();
         mediatorNetworkId = networkId("mediator");
         offer = offer("offer-id", makerNetworkId, QUOTE_AMOUNT);
         Identity takerIdentity = identity("taker");
-        trade = buyerAsTakerTrade(contract(offer, takerIdentity.getNetworkId(), Optional.of(userProfile(mediatorNetworkId))), takerIdentity);
+        takerNetworkId = takerIdentity.getNetworkId();
+        trade = buyerAsTakerTrade(contract(offer, takerNetworkId, Optional.of(userProfile(mediatorNetworkId))), takerIdentity);
     }
 
     private BisqEasyOpenTradeChannel channelWith(BisqEasyOffer channelOffer, NetworkId peer, Optional<NetworkId> mediator) {
@@ -108,6 +114,27 @@ class BisqEasyTradeChatChannelValidatorTest {
         BisqEasyOpenTradeChannel channel = channelWith(offer, networkId("other-maker"), Optional.of(mediatorNetworkId));
 
         assertTrue(BisqEasyTradeChatChannelValidator.findMismatch(channel, trade).orElseThrow().contains("peer"));
+    }
+
+    @Test
+    void makerChannelUnderTheTradeIdentityMatches() {
+        BisqEasyTrade makerTrade = sellerAsMakerTrade(trade.getContract(), makerIdentity);
+        BisqEasyOpenTradeChannel channel = channel(makerTrade, offer, userProfile(takerNetworkId), Optional.of(userProfile(mediatorNetworkId)));
+
+        assertTrue(BisqEasyTradeChatChannelValidator.findMismatch(channel, makerTrade).isEmpty());
+    }
+
+    @Test
+    void makerChannelUnderAnotherLocalIdentityDoesNotMatch() {
+        // The taker addressed its first chat message to another identity of the maker.
+        BisqEasyTrade makerTrade = sellerAsMakerTrade(trade.getContract(), makerIdentity);
+        BisqEasyOpenTradeChannel channel = channel(makerTrade,
+                offer,
+                userIdentity(identity("other-maker-identity")),
+                userProfile(takerNetworkId),
+                Optional.of(userProfile(mediatorNetworkId)));
+
+        assertTrue(BisqEasyTradeChatChannelValidator.findMismatch(channel, makerTrade).orElseThrow().contains("identity"));
     }
 
     @Test
