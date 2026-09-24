@@ -17,8 +17,11 @@
 
 package bisq.common.encoding.canonical;
 
+import com.google.protobuf.CodedOutputStream;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +48,42 @@ public class CanonicalEncoderTest {
     private static final CanonicalSchema<Value> VALUE_SCHEMA = CanonicalSchema.<Value>newBuilder()
             .int32(1, Value::getValue)
             .build();
+
+    @Test
+    public void signedIntegerSchemasMatchProtobufWithoutChangingIntEncoding() throws IOException {
+        CanonicalSchema<SignedNumbers> schema = CanonicalSchema.<SignedNumbers>newBuilder()
+                .sint32(1, SignedNumbers::intValue)
+                .sint64(2, SignedNumbers::longValue)
+                .int32(3, SignedNumbers::intValue)
+                .int64(4, SignedNumbers::longValue)
+                .build();
+        int[] intValues = {0, 1, -1, 63, -63, 64, -64, 128, -128, Integer.MIN_VALUE, Integer.MAX_VALUE};
+        long[] longValues = {0, 1, -1, 63, -63, 64, -64, 128, -128, Long.MIN_VALUE, Long.MAX_VALUE};
+
+        for (int intValue : intValues) {
+            for (long longValue : longValues) {
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                CodedOutputStream protobuf = CodedOutputStream.newInstance(output);
+                if (intValue != 0) {
+                    protobuf.writeSInt32(1, intValue);
+                }
+                if (longValue != 0) {
+                    protobuf.writeSInt64(2, longValue);
+                }
+                if (intValue != 0) {
+                    protobuf.writeInt32(3, intValue);
+                }
+                if (longValue != 0) {
+                    protobuf.writeInt64(4, longValue);
+                }
+                protobuf.flush();
+
+                assertArrayEquals(output.toByteArray(),
+                        CanonicalEncoder.DEFAULT.encode(new SignedNumbers(intValue, longValue), schema),
+                        "integer schema parity for " + intValue + ", " + longValue);
+            }
+        }
+    }
 
     @Test
     public void supportsDoubleAndPackedRepeatedInt32() {
@@ -250,6 +289,9 @@ public class CanonicalEncoderTest {
             bytes[i] = (byte) values[i];
         }
         return bytes;
+    }
+
+    private record SignedNumbers(int intValue, long longValue) {
     }
 
     private static final class KeyReader {

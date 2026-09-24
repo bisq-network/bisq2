@@ -28,6 +28,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CanonicalSchemaTest {
     @Test
+    public void signedIntegerFieldsDeclareZigZagTypesAndOmitDefaults() {
+        CanonicalSchema<Object> schema = CanonicalSchema.<Object>newBuilder()
+                .sint32(1, ignored -> Integer.MIN_VALUE)
+                .sint64(2, ignored -> Long.MIN_VALUE)
+                .build();
+
+        CanonicalSchema.Field<Object> intField = schema.getFields().get(0);
+        assertEquals(CanonicalSchema.FieldType.SINT32, intField.getType());
+        assertEquals(CanonicalSchema.Rule.OMIT_DEFAULT, intField.getRule());
+        assertEquals(Integer.MIN_VALUE, intField.getValue(new Object()));
+        CanonicalSchema.Field<Object> longField = schema.getFields().get(1);
+        assertEquals(CanonicalSchema.FieldType.SINT64, longField.getType());
+        assertEquals(CanonicalSchema.Rule.OMIT_DEFAULT, longField.getRule());
+        assertEquals(Long.MIN_VALUE, longField.getValue(new Object()));
+    }
+
+    @Test
     public void newBuilderUsesCurrentVersionByDefault() {
         CanonicalSchema<Object> schema = CanonicalSchema.<Object>newBuilder()
                 .int32(1, ignored -> 1)

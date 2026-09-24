@@ -17,13 +17,46 @@
 
 package bisq.common.encoding.canonical;
 
+import com.google.protobuf.CodedOutputStream;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public class CanonicalWriterTest {
+    @Test
+    public void writeSInt32MatchesGoldenVectorsAndProtobuf() throws IOException {
+        assertSInt32(0);
+        assertSInt32(1, 0x08, 0x02);
+        assertSInt32(-1, 0x08, 0x01);
+        assertSInt32(63, 0x08, 0x7e);
+        assertSInt32(-63, 0x08, 0x7d);
+        assertSInt32(64, 0x08, 0x80, 0x01);
+        assertSInt32(-64, 0x08, 0x7f);
+        assertSInt32(128, 0x08, 0x80, 0x02);
+        assertSInt32(-128, 0x08, 0xff, 0x01);
+        assertSInt32(Integer.MAX_VALUE, 0x08, 0xfe, 0xff, 0xff, 0xff, 0x0f);
+        assertSInt32(Integer.MIN_VALUE, 0x08, 0xff, 0xff, 0xff, 0xff, 0x0f);
+    }
+
+    @Test
+    public void writeSInt64MatchesGoldenVectorsAndProtobuf() throws IOException {
+        assertSInt64(0);
+        assertSInt64(1, 0x08, 0x02);
+        assertSInt64(-1, 0x08, 0x01);
+        assertSInt64(63, 0x08, 0x7e);
+        assertSInt64(-63, 0x08, 0x7d);
+        assertSInt64(64, 0x08, 0x80, 0x01);
+        assertSInt64(-64, 0x08, 0x7f);
+        assertSInt64(128, 0x08, 0x80, 0x02);
+        assertSInt64(-128, 0x08, 0xff, 0x01);
+        assertSInt64(Long.MAX_VALUE, 0x08, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01);
+        assertSInt64(Long.MIN_VALUE, 0x08, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01);
+    }
+
     @Test
     public void writeInt32UsesShortestVarintAtBoundary() {
         CanonicalWriter writer = new CanonicalWriter();
@@ -132,6 +165,36 @@ public class CanonicalWriterTest {
                         0x1a, 0x00,
                         0x1a, 0x05, 0x6f, 0x6d, 0x65, 0x67, 0x61),
                 writer.toByteArray());
+    }
+
+    private static void assertSInt32(int value, int... expected) throws IOException {
+        CanonicalWriter writer = new CanonicalWriter();
+        writer.writeSInt32(1, value);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        CodedOutputStream protobuf = CodedOutputStream.newInstance(output);
+        if (value != 0) {
+            protobuf.writeSInt32(1, value);
+        }
+        protobuf.flush();
+
+        assertArrayEquals(bytes(expected), writer.toByteArray(), "sint32 golden vector for " + value);
+        assertArrayEquals(output.toByteArray(), writer.toByteArray(), "sint32 protobuf parity for " + value);
+    }
+
+    private static void assertSInt64(long value, int... expected) throws IOException {
+        CanonicalWriter writer = new CanonicalWriter();
+        writer.writeSInt64(1, value);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        CodedOutputStream protobuf = CodedOutputStream.newInstance(output);
+        if (value != 0) {
+            protobuf.writeSInt64(1, value);
+        }
+        protobuf.flush();
+
+        assertArrayEquals(bytes(expected), writer.toByteArray(), "sint64 golden vector for " + value);
+        assertArrayEquals(output.toByteArray(), writer.toByteArray(), "sint64 protobuf parity for " + value);
     }
 
     private static byte[] bytes(int... values) {
