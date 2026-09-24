@@ -18,7 +18,7 @@ The client derives the seller's maximum amount from the score in a way that the 
 2. This USD amount is converted through BTC to the offer's currency with the client's own market prices, and rounded to whole units of that currency.
 3. The amount is lowered by one whole unit at a time until the rule requires at most the score for it. The tolerance is not used here, because it is left for price differences between the two traders' nodes.
 
-Step 2 rounds to the nearest unit and not down, because the conversion through BTC can end slightly below a whole unit: 6 USD can come back as 5.9995 USD, which rounding down would turn into 5 USD. Step 3 is needed because rounding up in step 2 can raise the USD value enough for the rule to round it to the next USD. Example: with BTC at 55200 EUR and at 60000 USD, a score of 1200 allows 6 USD, which are 5.52 EUR; 6 EUR would be 6.52 USD, count as 7 USD and require 1400, so the maximum is 5 EUR.
+Step 2 rounds to the nearest unit and not down, because the conversion through BTC can end slightly below a whole unit: with BTC at 83875.15 USD, 6 USD come back as 5.9995 USD, which rounding down would turn into 5 USD. Step 3 is needed because rounding up in step 2 can raise the USD value enough for the rule to round it to the next USD. Example: with BTC at 55200 EUR and at 60000 USD, a score of 1200 allows 6 USD, which are 5.52 EUR; 6 EUR would be 6.52 USD, count as 7 USD and require 1400, so the maximum is 5 EUR.
 
 With the same market prices on both nodes, the maker accepts the maximum. The maximum is computed with the prices of the node that shows it. Clients that compute the maximum themselves, for example through the API, need to use the same steps, otherwise the maker can reject their maximum.
 
@@ -58,7 +58,7 @@ A rejection because of the score is reported to the taker with the failure reaso
 
 ## Known Limitation
 
-Below a score of 4000, the tolerance of 5% of the score is less than 200, the score for one USD. If the maker's prices value an amount slightly higher than the taker's prices, the USD value of an amount just below a half USD at the taker can be just above it at the maker, and the maker then rounds it to the next USD. The maker then requires 200 more than the taker computed, which the tolerance does not cover. Example: for a score of 2400 the maximum of 11 EUR is 12.4999 USD at the taker's prices and requires 2400, but at a maker's EUR price that is 0.05% lower it is 12.5066 USD, which requires 2600, more than the 2520 that the tolerance allows.
+Below a score of 4000, the tolerance of 5% of the score is less than 200, the score for one USD. If the maker's prices value an amount slightly higher than the taker's prices, the USD value of an amount just below a half USD at the taker can be just above it at the maker, and the maker then rounds it to the next USD. The maker then requires 200 more than the taker computed, which the tolerance does not cover. Example: with BTC at 73808.56 EUR and at 83875.15 USD at the taker's node, the maximum for a score of 2400 is 11 EUR, which are 12.4999 USD and require 2400. At a maker with the same USD price and a EUR price that is 0.05% lower, 73771.66 EUR, 11 EUR are 12.5066 USD, which count as 13 USD and require 2600, more than the 2520 that the tolerance allows.
 
 ## Not Covered
 
