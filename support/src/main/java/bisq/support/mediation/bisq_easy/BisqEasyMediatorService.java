@@ -264,8 +264,8 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         if (!isWithinCaseLimits(bisqEasyMediationRequest, existingCases, existingChannel.isPresent())) {
             return Optional.empty();
         }
-        if (existingChannel.isPresent() && !hasMatchingChannel(existingChannel.get(), contract, requester, peer)) {
-            log.warn("Ignoring BisqEasyMediationRequest for trade {} because the existing channel has a different offer or traders.",
+        if (existingChannel.isPresent() && !hasMatchingTraders(existingChannel.get(), requester, peer)) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because the existing channel has different traders.",
                     bisqEasyMediationRequest.getTradeId());
             return Optional.empty();
         }
@@ -302,15 +302,17 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         return true;
     }
 
-    static boolean hasMatchingChannel(BisqEasyOpenTradeChannel channel,
-                                      BisqEasyContract contract,
+    // The channel's offer is a display copy from the first accepted request of the trade and is not compared, so
+    // that a request with a differing offer opens its own case.
+    static boolean hasMatchingTraders(BisqEasyOpenTradeChannel channel,
                                       UserProfile requester,
                                       UserProfile peer) {
         Set<String> traderIds = channel.getTraders().stream()
                 .map(UserProfile::getId)
                 .collect(Collectors.toSet());
-        return channel.getBisqEasyOffer().equals(contract.getOffer())
-                && traderIds.equals(Set.of(requester.getId(), peer.getId()));
+        Set<String> requestTraderIds = Stream.of(requester.getId(), peer.getId())
+                .collect(Collectors.toSet());
+        return traderIds.equals(requestTraderIds);
     }
 
     static List<BisqEasyMediationRequest> getRequestsForTrade(String tradeId,

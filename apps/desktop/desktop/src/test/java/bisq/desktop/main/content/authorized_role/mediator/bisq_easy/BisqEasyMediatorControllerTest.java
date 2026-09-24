@@ -95,12 +95,14 @@ class BisqEasyMediatorControllerTest {
                 contract(offer, Optional.of(otherMediator)))).isFalse();
     }
 
+    // All cases of a trade share its channel, whose offer comes from the first accepted request. A request with a
+    // differing offer opens its own case, which shows its own contract.
     @Test
-    void caseWhoseChannelHasAnotherOfferIsNotShown() {
+    void caseWhoseContractHasAnotherOfferThanTheChannelIsShown() {
         UserProfile mediatorNow = userProfile(mediatorIdentity.getNetworkId(), "");
 
         assertThat(BisqEasyMediatorController.isChannelMatchingContract(mediatorsChannel(mediatorNow, offer(maker.getNetworkId())),
-                contract(offer, Optional.of(mediatorNow)))).isFalse();
+                contract(offer, Optional.of(mediatorNow)))).isTrue();
     }
 
     private BisqEasyOpenTradeChannel mediatorsChannel(UserProfile mediator, BisqEasyOffer channelOffer) {
