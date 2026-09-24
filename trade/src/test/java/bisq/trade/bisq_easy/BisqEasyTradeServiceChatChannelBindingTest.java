@@ -40,8 +40,9 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.channel;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.contract;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.inState;
-import static bisq.trade.bisq_easy.BisqEasyTradeTestData.networkId;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.sellerAsMakerTrade;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userIdentity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -56,6 +57,8 @@ import static org.mockito.Mockito.when;
 class BisqEasyTradeServiceChatChannelBindingTest {
     private BisqEasyTradeService service;
     private ObservableSet<BisqEasyOpenTradeChannel> channels;
+    private Identity makerIdentity;
+    private Identity takerIdentity;
     private NetworkId makerNetworkId;
     private BisqEasyOffer offer;
     private BisqEasyTrade trade;
@@ -72,9 +75,10 @@ class BisqEasyTradeServiceChatChannelBindingTest {
                 .findAny());
         service = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP);
 
-        makerNetworkId = networkId("maker");
+        makerIdentity = identity("maker");
+        makerNetworkId = makerIdentity.getNetworkId();
         offer = offer("offer-id", makerNetworkId, QUOTE_AMOUNT);
-        Identity takerIdentity = identity("taker");
+        takerIdentity = identity("taker");
         trade = buyerAsTakerTrade(contract(offer, takerIdentity.getNetworkId(), Optional.empty()), takerIdentity);
     }
 
@@ -137,5 +141,33 @@ class BisqEasyTradeServiceChatChannelBindingTest {
         channels.add(channelWith(offer));
 
         assertEquals(BisqEasyTradeState.INIT, trade.getState());
+    }
+
+    @Test
+    void makerChannelUnderTheTradeIdentityAppearingForStoredMakerTradeIsAccepted() {
+        BisqEasyTrade makerTrade = sellerAsMakerTrade(trade.getContract(), makerIdentity);
+        service.getPersistableStore().addTrade(makerTrade);
+        service.initialize();
+
+        channels.add(channel(makerTrade, offer, userProfile(takerIdentity.getNetworkId()), Optional.empty()));
+
+        assertEquals(BisqEasyTradeState.INIT, makerTrade.getState());
+    }
+
+    @Test
+    void makerChannelUnderAnotherLocalIdentityAppearingForStoredMakerTradeFailsTrade() {
+        BisqEasyTrade makerTrade = sellerAsMakerTrade(trade.getContract(), makerIdentity);
+        service.getPersistableStore().addTrade(makerTrade);
+        service.initialize();
+
+        // The taker addressed its first chat message to another identity of the maker.
+        channels.add(channel(makerTrade,
+                offer,
+                userIdentity(identity("other-maker-identity")),
+                userProfile(takerIdentity.getNetworkId()),
+                Optional.empty()));
+
+        assertEquals(BisqEasyTradeState.FAILED, makerTrade.getState());
+        assertEquals(TradeProtocolFailure.CHANNEL_DATA_MISMATCH, makerTrade.getTradeProtocolFailure());
     }
 }

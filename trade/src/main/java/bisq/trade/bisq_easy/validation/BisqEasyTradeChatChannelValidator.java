@@ -27,9 +27,10 @@ import bisq.user.profile.UserProfile;
 import java.util.Optional;
 
 /**
- * The trade chat channel keeps its own copies of the offer, the mediator and the peer. On the maker's side they
- * come from the taker's first chat message, which is unsigned. A trade may only progress while its channel exists
- * and its channel data matches the signed contract. See docs/specifications/trade/chat-channel-binding.md.
+ * The trade chat channel keeps its own copies of the offer, the mediator and the peer, and its own user identity.
+ * On the maker's side all of them come from the taker's first chat message, which is unsigned. A trade may only
+ * progress while its channel exists and its channel data matches the trade and its signed contract.
+ * See docs/specifications/trade/chat-channel-binding.md.
  */
 public final class BisqEasyTradeChatChannelValidator {
     private BisqEasyTradeChatChannelValidator() {
@@ -58,6 +59,11 @@ public final class BisqEasyTradeChatChannelValidator {
         // The user profile ID is the hash of the network ID's public key.
         if (!channel.getPeer().getId().equals(trade.getPeer().getNetworkId().getId())) {
             return Optional.of("The peer of the trade chat channel does not match the peer of the contract. tradeId=" + trade.getId());
+        }
+        // On the maker's side the channel's identity is the one the taker's first chat message is addressed to.
+        // Both IDs are the hash of the own public key.
+        if (!channel.getMyUserIdentity().getId().equals(trade.getMyIdentity().getId())) {
+            return Optional.of("The own identity of the trade chat channel does not match the identity of the trade. tradeId=" + trade.getId());
         }
         return Optional.empty();
     }

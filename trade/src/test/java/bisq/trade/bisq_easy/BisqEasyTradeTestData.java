@@ -156,6 +156,14 @@ public final class BisqEasyTradeTestData {
 
     // A channel held under the trade's own identity.
     public static BisqEasyOpenTradeChannel channel(BisqEasyTrade trade, BisqEasyOffer offer, UserProfile peer, Optional<UserProfile> mediator) {
-        return BisqEasyOpenTradeChannel.create(trade.getId(), offer, userIdentity(trade.getMyIdentity()), Set.of(peer), mediator, false);
+        return channel(trade, offer, userIdentity(trade.getMyIdentity()), peer, mediator);
+    }
+
+    public static BisqEasyOpenTradeChannel channel(BisqEasyTrade trade,
+                                                   BisqEasyOffer offer,
+                                                   UserIdentity myUserIdentity,
+                                                   UserProfile peer,
+                                                   Optional<UserProfile> mediator) {
+        return BisqEasyOpenTradeChannel.create(trade.getId(), offer, myUserIdentity, Set.of(peer), mediator, false);
     }
 }
