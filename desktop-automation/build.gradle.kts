@@ -9,6 +9,6 @@ javafx {
 }
 
 dependencies {
-    implementation("bisq:desktop-automation-contract")
+    implementation("bisq:desktop-automation-contract:$version")
     implementation(libs.google.gson)
 }

@@ -18,8 +18,11 @@ The build context is the **repository root** (the image builds the api-app from
 source). From the repo root:
 
 ```bash
-docker build -f apps/api-app/docker/Dockerfile -t bisq2-api .
+docker build -f apps/api-app/docker/Dockerfile --build-arg BUILD_COMMIT=$(git rev-parse HEAD) -t bisq2-api .
 ```
+
+`BUILD_COMMIT` is the commit the node reports. The build context leaves out `.git`, so
+without it the node reports its commit hash as `unknown`.
 
 ## Run
 
@@ -49,7 +52,7 @@ network namespace (to reach `127.0.0.1:8090`) and reads the same `/data` volume:
 
 ```bash
 # build both images
-docker build -f apps/api-app/docker/Dockerfile -t bisq2-api .
+docker build -f apps/api-app/docker/Dockerfile --build-arg BUILD_COMMIT=$(git rev-parse HEAD) -t bisq2-api .
 docker build -f apps/api-app/docker/qr-ui/Dockerfile --build-arg APP_VERSION=2.1.11.1 \
   -t bisq2-api-web-ui apps/api-app/docker/qr-ui
 
@@ -121,7 +124,7 @@ echo "$GITHUB_PAT" | docker login ghcr.io -u <you> --password-stdin
 
 VERSION=2.1.11.1
 docker build -f apps/api-app/docker/Dockerfile --build-arg IMAGE_VERSION=$VERSION \
-  -t ghcr.io/<you>/bisq2-api:$VERSION .
+  --build-arg BUILD_COMMIT=$(git rev-parse HEAD) -t ghcr.io/<you>/bisq2-api:$VERSION .
 docker build -f apps/api-app/docker/qr-ui/Dockerfile --build-arg APP_VERSION=$VERSION \
   -t ghcr.io/<you>/bisq2-api-web-ui:$VERSION apps/api-app/docker/qr-ui
 docker push ghcr.io/<you>/bisq2-api:$VERSION

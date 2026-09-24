@@ -1,8 +1,10 @@
+# Gradle compresses the jars with the zlib of the JDK it runs on. JitPack's OpenJDK 21 (the jdk.java.net build)
+# ships its own zlib, and its jars were byte-identical to a build on Temurin 21.0.12. With other JDKs, compare the
+# files inside the jars, not the jar bytes. The compiler JDK is pinned separately by the toolchain resolver.
 jdk:
-  - openjdk17
-before_install:
-  - sdk install java 17.0.12.fx-zulu
-  - sdk use java 17.0.12.fx-zulu
-commands:
-  build:
-    - ./publish.sh
+  - openjdk21
+# Replaces JitPack's default command, which sets the same group on all our projects (-Pgroup).
+# build-logic/bi2p (a Gradle plugin) and apps/desktop/bi2p (an app) then get the same coordinates,
+# Gradle loads the app where it needs the plugin, and the build fails. webcam-app clashes the same way.
+install:
+  - ./gradlew publishAll
