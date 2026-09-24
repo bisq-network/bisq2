@@ -26,7 +26,6 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.application.Service;
-import bisq.common.observable.Pin;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -52,11 +51,9 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -84,8 +81,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
-    private final Map<String, Set<String>> unverifiedChatMessageKeysByTradeId = new ConcurrentHashMap<>();
-    private final Pin mediationCasesPin;
+    private final UnverifiedChatMessageKeysByTrade unverifiedChatMessageKeysByTrade;
 
     public BisqEasyMediatorService(PersistenceService persistenceService,
                                    NetworkService networkService,
@@ -98,7 +94,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         bannedUserService = userService.getBannedUserService();
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
-        mediationCasesPin = getMediationCases().addObserver(unverifiedChatMessageKeysByTradeId::clear);
+        unverifiedChatMessageKeysByTrade = new UnverifiedChatMessageKeysByTrade(getMediationCases());
     }
 
     /* --------------------------------------------------------------------- */
@@ -113,7 +109,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        mediationCasesPin.unbind();
         networkService.removeConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -338,15 +333,16 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     // A message is unverified when it reached the mediator only inside a request of somebody else than its
     // author. Provenance is bound to the exact message content and author, not to the message ID, so a
     // second message under the same ID cannot clear the mark. The mediator UI marks such messages.
-    // Each key is a hash over a message, so the result is cached per trade and dropped when a case of that
-    // trade gains or loses a request. Closing or reopening a case keeps its requests and its keys.
+    // Each key is a hash over a message, so the result is kept per trade until the trade's retained requests change.
     public Set<String> getUnverifiedChatMessageKeys(String tradeId) {
-        return unverifiedChatMessageKeysByTradeId.computeIfAbsent(tradeId,
-                id -> getUnverifiedChatMessageKeys(id, getMediationCases()));
+        return unverifiedChatMessageKeysByTrade.get(tradeId);
     }
 
     static Set<String> getUnverifiedChatMessageKeys(String tradeId, Collection<BisqEasyMediationCase> existingCases) {
-        List<BisqEasyMediationRequest> requestsForTrade = getRequestsForTrade(tradeId, existingCases);
+        return getUnverifiedChatMessageKeys(getRequestsForTrade(tradeId, existingCases));
+    }
+
+    static Set<String> getUnverifiedChatMessageKeys(List<BisqEasyMediationRequest> requestsForTrade) {
         Set<String> ownMessageKeys = requestsForTrade.stream()
                 .flatMap(request -> request.getChatMessages().stream()
                         .filter(message -> isOwnMessage(message, request)))
@@ -450,8 +446,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     // message in the channel is on record. A known case is reached only by the other trader's first request.
     private void retainRequest(BisqEasyMediationCase existingCase, BisqEasyMediationRequest request) {
         if (existingCase.setPeersMediationRequest(request)) {
-            // The case object changed in place, so the observer on the set does not fire.
-            unverifiedChatMessageKeysByTradeId.remove(existingCase.getTradeId());
             persist();
         }
     }
