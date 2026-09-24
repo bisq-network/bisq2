@@ -34,6 +34,7 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
@@ -125,7 +126,12 @@ public class TradesUtils {
     public static void requestMediation(BisqEasyOpenTradeChannel channel,
                                          BisqEasyContract contract,
                                          BisqEasyMediationRequestService bisqEasyMediationRequestService,
-                                         BisqEasyOpenTradeChannelService channelService) {
+                                         BisqEasyOpenTradeChannelService channelService,
+                                         BannedUserService bannedUserService) {
+        if (bannedUserService.isUserProfileBanned(channel.getMyUserIdentity().getUserProfile())) {
+            // A banned user cannot request mediation. As in the take offer flow, we don't show a popup.
+            return;
+        }
         Optional<UserProfile> mediator = contract.getMediator();
         if (mediator.isPresent()) {
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
