@@ -491,8 +491,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return tradeProtocol;
     }
 
-    // A trade may only progress while its chat channel data matches the signed contract. The event handlers
-    // enforce that at the user's actions, here we fail a mismatching trade as soon as both exist.
+    // A trade may only progress while its chat channel data matches the trade and its signed contract. The event
+    // handlers enforce that at the user's actions, here we fail a mismatching trade as soon as both exist.
+    // Failing a mismatching trade must not wait for the halt or version checks of handleBisqEasyTradeEvent.
     private void failTradeOnChatChannelMismatch(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
         if (trade.getState().isFinalState()) {
             return;
