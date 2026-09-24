@@ -134,6 +134,15 @@ public class TradesUtils {
         }
         Optional<UserProfile> mediator = contract.getMediator();
         if (mediator.isPresent()) {
+            // The request is refused if the channel data differs from the contract. Trades in a final state are not
+            // checked against their channel, so a channel from an earlier version can differ. We check it before the
+            // trade log message is sent, so that a refused request leaves nothing in the chat.
+            Optional<String> channelMismatch = bisqEasyMediationRequestService.findChannelMismatch(channel, contract);
+            if (channelMismatch.isPresent()) {
+                log.warn("Mediation request for trade {} is refused. {}", channel.getTradeId(), channelMismatch.get());
+                new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.channelDataMismatch")).show();
+                return;
+            }
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
@@ -141,15 +150,7 @@ public class TradesUtils {
                         // The request carries the chat messages, so the trade log message is added before it.
                         String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendTradeLogMessage(encoded, channel);
-                        try {
-                            bisqEasyMediationRequestService.requestMediation(channel, contract);
-                        } catch (IllegalArgumentException e) {
-                            // The request is refused if the channel data differs from the contract. Trades in a final
-                            // state are not checked against their channel, so a channel from an earlier version can differ.
-                            log.warn("Mediation request for trade {} was refused.", channel.getTradeId(), e);
-                            new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.channelDataMismatch")).show();
-                            return;
-                        }
+                        bisqEasyMediationRequestService.requestMediation(channel, contract);
                         channel.setIsInMediation(true);
                         channelService.persist();
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
