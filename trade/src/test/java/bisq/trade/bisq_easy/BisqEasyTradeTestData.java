@@ -41,6 +41,7 @@ import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import bisq.security.keys.TorKeyGeneration;
+import bisq.security.pow.ProofOfWork;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -51,11 +52,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
- * Real offers, contracts, trades and channels for tests of the trade chat channel binding.
+ * Real offers, contracts, user profiles, identities, trades and channels for tests of the trade chat channel
+ * binding. A trade in a given state is read back from its protobuf form, so the fixture uses no mocks.
  */
 public final class BisqEasyTradeTestData {
     public static final long QUOTE_AMOUNT = 100_0000;
@@ -120,6 +119,17 @@ public final class BisqEasyTradeTestData {
                 contract.getMaker().getNetworkId());
     }
 
+    // The maker of a sell offer is the seller.
+    public static BisqEasyTrade sellerAsMakerTrade(BisqEasyContract contract, Identity makerIdentity) {
+        return new BisqEasyTrade(contract,
+                false,
+                false,
+                makerIdentity,
+                contract.getOffer(),
+                contract.getTaker().getNetworkId(),
+                makerIdentity.getNetworkId());
+    }
+
     // A trade in the given state, as it would be read from the store.
     public static BisqEasyTrade inState(BisqEasyTrade trade, BisqEasyTradeState state) {
         try {
@@ -130,15 +140,22 @@ public final class BisqEasyTradeTestData {
     }
 
     public static UserProfile userProfile(NetworkId networkId) {
-        UserProfile userProfile = mock(UserProfile.class);
-        when(userProfile.getNetworkId()).thenReturn(networkId);
-        when(userProfile.getId()).thenReturn(networkId.getId());
-        return userProfile;
+        return new UserProfile(0,
+                networkId.getPubKey().getKeyId(),
+                new ProofOfWork(new byte[20], 0, null, 1, new byte[72], 0),
+                0,
+                networkId,
+                "",
+                "",
+                "");
     }
 
+    public static UserIdentity userIdentity(Identity identity) {
+        return new UserIdentity(identity, userProfile(identity.getNetworkId()));
+    }
+
+    // A channel held under the trade's own identity.
     public static BisqEasyOpenTradeChannel channel(BisqEasyTrade trade, BisqEasyOffer offer, UserProfile peer, Optional<UserProfile> mediator) {
-        UserIdentity myUserIdentity = mock(UserIdentity.class);
-        when(myUserIdentity.getId()).thenReturn(trade.getMyIdentity().getNetworkId().getId());
-        return BisqEasyOpenTradeChannel.create(trade.getId(), offer, myUserIdentity, Set.of(peer), mediator, false);
+        return BisqEasyOpenTradeChannel.create(trade.getId(), offer, userIdentity(trade.getMyIdentity()), Set.of(peer), mediator, false);
     }
 }
