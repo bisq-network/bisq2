@@ -52,9 +52,20 @@ abstract class GitCommitShortHash : ValueSource<String, GitCommitShortHash.Param
     }
 }
 
-val gitCommitShortHash = providers.of(GitCommitShortHash::class) {
+// Builds without a git checkout, like the api-app Docker image, pass the commit as -PbuildCommit=<commit hash>. It is
+// written into a properties file, so only a plain hash is accepted.
+val buildCommitProperty = providers.gradleProperty("buildCommit")
+    .filter { it.isNotBlank() }
+    .map { commit ->
+        if (!commit.matches(Regex("[0-9a-f]{10,40}"))) {
+            throw GradleException("buildCommit must be a commit hash of at least 10 characters, but was '$commit'")
+        }
+        commit.take(10)
+    }
+
+val commitShortHash = buildCommitProperty.orElse(providers.of(GitCommitShortHash::class) {
     parameters.projectDir.set(layout.projectDirectory)
-}
+})
 
 /**
  * Generate a Java class with the current version number extracted from gradle.properties and makes
@@ -94,11 +105,11 @@ val generateBuildCommitResource by tasks.registering {
 
     doLast {
         resourceFile.parentFile.mkdirs()
-        resourceFile.writeText("commitShortHash=${gitCommitShortHash.get()}\n")
+        resourceFile.writeText("commitShortHash=${commitShortHash.get()}\n")
     }
 
     outputs.dir(outputDir)
-    inputs.property("commitShortHash", gitCommitShortHash)
+    inputs.property("commitShortHash", commitShortHash)
 }
 
 sourceSets["main"].resources.srcDir(generateBuildCommitResource)
