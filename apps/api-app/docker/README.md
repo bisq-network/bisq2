@@ -36,6 +36,15 @@ docker run --rm \
 The node uses its **own bundled Tor** by default, so this works standalone. The
 pairing QR code is written to `/data/pairing_qr_code.txt`.
 
+On Linux bisq2 runs the system `tor` binary, so the image installs it from the Tor
+Project's apt repository rather than Ubuntu's (which lags Tor security releases) and
+the build fails if the installed version is older than the `TOR_MIN_VERSION` build
+arg. Check what an image ships with:
+
+```bash
+docker run --rm --entrypoint tor bisq2-api --version
+```
+
 > Always pass a named `-v <name>:/data` mount (as above). The image declares
 > `VOLUME /data`, so running without `-v` creates a fresh **anonymous** volume on
 > every `docker run` — your node identity/state is lost between runs and orphaned
