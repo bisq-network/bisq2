@@ -50,10 +50,38 @@ LABEL org.opencontainers.image.title="Bisq2 trusted node (api-app)" \
 
 # bisq2's bundled Tor mode on Linux launches the SYSTEM tor binary
 # (TorService#getTorBinaryPath -> EmbeddedTorProcess.getSystemTorPath()), so it must
-# be installed for the default (self-contained) Tor mode to work.
+# be installed for the default (self-contained) Tor mode to work. The bundled Tor
+# archive bisq2 ships for macOS/Windows is never used here, so the Tor security
+# level of this image is decided by this install step alone.
+#
+# Ubuntu's own `tor` package lags Tor security releases, so it comes from the Tor
+# Project's repository (signed by its archive key, fingerprint pinned below). The build
+# fails when the installed tor is older than TOR_MIN_VERSION; newer is fine, so a Tor
+# security release reaches the next image build without a Dockerfile change. Bump
+# TOR_MIN_VERSION when a release must not ship without a given Tor fix. The apt
+# preference makes the Tor Project's package win over Ubuntu's whatever their versions,
+# and a failed index fetch fails the build instead of quietly falling back to Ubuntu's.
+ARG TOR_MIN_VERSION=0.4.9.13
+ARG TOR_REPO_FINGERPRINT=A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89
 RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates gnupg wget \
+    && wget -qO- "https://deb.torproject.org/torproject.org/${TOR_REPO_FINGERPRINT}.asc" \
+        | gpg --dearmor -o /usr/share/keyrings/deb.torproject.org-keyring.gpg \
+    && gpg --no-default-keyring --keyring /usr/share/keyrings/deb.torproject.org-keyring.gpg \
+        --list-keys --with-colons | grep -q "^fpr:::::::::${TOR_REPO_FINGERPRINT}:" \
+    && . /etc/os-release \
+    && printf 'Types: deb\nURIs: https://deb.torproject.org/torproject.org/\nSuites: %s\nComponents: main\nSigned-By: /usr/share/keyrings/deb.torproject.org-keyring.gpg %s\n' \
+        "$VERSION_CODENAME" "$TOR_REPO_FINGERPRINT" > /etc/apt/sources.list.d/tor.sources \
+    && printf 'Package: tor tor-geoipdb\nPin: origin deb.torproject.org\nPin-Priority: 990\n' \
+        > /etc/apt/preferences.d/tor \
+    && apt-get -o APT::Update::Error-Mode=any update \
     && apt-get install -y --no-install-recommends tor \
-    && rm -rf /var/lib/apt/lists/*
+    && installed="$(dpkg-query -W -f='${source:Upstream-Version}' tor)" \
+    && { dpkg --compare-versions "$installed" ge "$TOR_MIN_VERSION" \
+        || { echo "tor $installed is older than the required $TOR_MIN_VERSION" >&2; exit 1; }; } \
+    && apt-get purge -y --auto-remove gnupg wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /root/.gnupg
 
 # Non-root runtime user. All persistent state lives under the /data mount.
 # uid pinned to 999 so it stays in sync with the web-UI sidecar, which runs as uid 999
