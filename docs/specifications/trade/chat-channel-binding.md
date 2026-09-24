@@ -27,11 +27,13 @@ A trade may only progress while its chat channel exists and matches the contract
 - seller confirms fiat receipt;
 - seller confirms Bitcoin sent.
 
-Rejecting and cancelling a trade stay possible on a mismatching trade. Taking an offer is not gated as the taker's channel is created after the trade. Confirming the Bitcoin transaction is local bookkeeping and not gated.
+Rejecting and cancelling are not gated, so a trade whose channel has not arrived yet can still be rejected or cancelled. Taking an offer is not gated as the taker's channel is created after the trade. Confirming the Bitcoin transaction is local bookkeeping and not gated.
 
 ## Failure reaction
 
 A missing or mismatching channel at a gated step fails the trade with `TradeProtocolFailure.CHANNEL_DATA_MISMATCH`. The trade moves to `FAILED` and the peer is notified and moves to `FAILED_AT_PEER`. A failed trade ignores every later event. Older clients map the failure reason to `UNKNOWN`.
+
+Every client offers the gated actions only when the trade chat channel exists: the desktop shows them only for a selected trade chat channel, the REST API answers with 404 (not found) when the channel is missing, before it performs any of them, and the mobile app in node mode requires the channel in each of the gated actions and lists a trade only when both the trade and its channel exist. An honest client therefore does not reach a gated step without the channel, and failing the trade on a missing channel is intended.
 
 The trade service fails a mismatching pair as soon as both the trade and the channel exist, without a user action:
 
