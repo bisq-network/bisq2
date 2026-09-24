@@ -585,7 +585,7 @@ public class TradeWizardAmountController implements Controller {
                 .orElseThrow().round(0);
         boolean isCreateOfferMode = model.isCreateOfferMode();
         boolean isBuyer = model.getDirection().isBuy();
-        Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount().round(0);
+        Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount();
         amountSelectionController.setMaxAllowedLimitation(maxRangeValue);
         if (isCreateOfferMode) {
             model.getLearnMoreVisible().set(true);
@@ -643,7 +643,7 @@ public class TradeWizardAmountController implements Controller {
             model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
             Monetary reputationBasedQuoteSideAmount = model.getReputationBasedMaxAmount();
             long myReputationScore = model.getMyReputationScore();
-            String formattedAmount = formatQuoteAmountWithCode(reputationBasedQuoteSideAmount.round(0));
+            String formattedAmount = formatQuoteAmountWithCode(reputationBasedQuoteSideAmount);
             model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo", formattedAmount));
             model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay", myReputationScore, formattedAmount));
             if (isCreateOfferMode) {

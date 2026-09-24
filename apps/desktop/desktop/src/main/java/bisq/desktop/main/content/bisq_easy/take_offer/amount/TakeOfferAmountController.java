@@ -169,12 +169,11 @@ public class TakeOfferAmountController implements Controller {
             long sellersReputationScore = reputationService.getReputationScore(sellersProfileId).getTotalScore();
             model.setSellersReputationScore(sellersReputationScore);
             Monetary reputationBasedQuoteSideAmount = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, sellersReputationScore)
-                    .orElseThrow()
-                    .round(0);
+                    .orElseThrow();
             model.setSellersReputationBasedQuoteSideAmount(reputationBasedQuoteSideAmount);
         }
         long sellersReputationScore = model.getSellersReputationScore();
-        Monetary reputationBasedQuoteSideAmount = model.getSellersReputationBasedQuoteSideAmount().round(0);
+        Monetary reputationBasedQuoteSideAmount = model.getSellersReputationBasedQuoteSideAmount();
         // Don't round the offer's exact min/max bounds, else a fractional bound is rejected by the validator.
         Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
         Monetary minRangeValue = OptionalQuoteSideMinAmount.get();
@@ -208,7 +207,6 @@ public class TakeOfferAmountController implements Controller {
             long myReputationScore = reputationService.getReputationScore(myProfileId).getTotalScore();
             BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(marketPriceService, market, myReputationScore)
                     .ifPresent(myReputationBasedQuoteSideAmount -> {
-                        myReputationBasedQuoteSideAmount = myReputationBasedQuoteSideAmount.round(0);
                         model.getIsAmountHyperLinkDisabled().set(myReputationBasedQuoteSideAmount.isGreaterThan(offersQuoteSideMaxOrFixedAmount));
                         amountSelectionController.setRightMarkerQuoteSideValue(myReputationBasedQuoteSideAmount);
                         model.getIsAmountLimitInfoVisible().set(false);
