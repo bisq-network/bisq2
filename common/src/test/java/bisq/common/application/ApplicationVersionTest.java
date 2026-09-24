@@ -29,18 +29,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ApplicationVersionTest {
 
-    // The resource is written by generateBuildCommitResource in common/build.gradle.kts. This test keeps its path and
-    // key in line with what ApplicationVersion reads.
+    // The resource is written by generateBuildCommitResource in common/build.gradle.kts. This test fails if that task
+    // and ApplicationVersion disagree on its path or key.
     @Test
     void testBuildCommitShortHashComesFromBuildResource() throws IOException {
         Properties properties = new Properties();
-        try (InputStream inputStream = ApplicationVersion.class.getResourceAsStream("build-commit.properties")) {
-            assertNotNull(inputStream, "build-commit.properties is missing");
+        try (InputStream inputStream = ApplicationVersion.class.getResourceAsStream(ApplicationVersion.BUILD_COMMIT_RESOURCE)) {
+            assertNotNull(inputStream, ApplicationVersion.BUILD_COMMIT_RESOURCE + " is missing");
             properties.load(inputStream);
         }
-        String commitShortHash = properties.getProperty("commitShortHash");
+        String commitShortHash = properties.getProperty(ApplicationVersion.COMMIT_SHORT_HASH_KEY);
 
-        assertNotNull(commitShortHash, "build-commit.properties has no commitShortHash");
+        assertNotNull(commitShortHash, ApplicationVersion.BUILD_COMMIT_RESOURCE + " has no " + ApplicationVersion.COMMIT_SHORT_HASH_KEY);
         assertTrue(commitShortHash.matches("[0-9a-f]{10}|unknown"), commitShortHash);
         assertEquals(commitShortHash, ApplicationVersion.getBuildCommitShortHash());
     }

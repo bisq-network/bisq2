@@ -138,14 +138,19 @@ class LocalMavenPublishPlugin : Plugin<Project> {
     }
 
     // A dependency like implementation("bisq:common") still builds, because the composite build substitutes the
-    // project, but it is published without a version, and projects using the published jars cannot resolve it.
+    // project, but it is published without a version, and projects using the published jars cannot resolve it. The same
+    // goes for "bisq:common:$version" in a project whose own version is not set, which is published as "unspecified".
     private fun MavenPublication.requireVersionsOnOwnDependencies(rootNode: Node) {
-        val versionless = rootNode.childNode("dependencies")?.childNodes().orEmpty()
-            .filter { it.isOwnDependency() && it.childNode("version") == null }
-            .map { "${it.childNode("groupId")?.text()}:${it.childNode("artifactId")?.text()}" }
-        if (versionless.isNotEmpty()) {
-            throw GradleException("$groupId:$artifactId declares $versionless without a version. " +
-                    "Add one, for example implementation(\"bisq:common:\$version\").")
+        val withoutVersion = rootNode.childNode("dependencies")?.childNodes().orEmpty()
+            .filter { it.isOwnDependency() && it.childNode("version")?.text() in listOf(null, "unspecified") }
+            .map { dependency ->
+                listOf("groupId", "artifactId", "version")
+                    .mapNotNull { dependency.childNode(it)?.text() }
+                    .joinToString(":")
+            }
+        if (withoutVersion.isNotEmpty()) {
+            throw GradleException("$groupId:$artifactId declares $withoutVersion without a version. " +
+                    "Add one, for example implementation(\"bisq:common:\$version\"), in a project that sets its version.")
         }
     }
 

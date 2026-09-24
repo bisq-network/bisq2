@@ -1,3 +1,7 @@
+import org.gradle.process.ExecOperations
+import java.io.ByteArrayOutputStream
+import javax.inject.Inject
+
 plugins {
     java
     id("bisq.java-conventions")
@@ -21,18 +25,26 @@ abstract class GitCommitShortHash : ValueSource<String, GitCommitShortHash.Param
         val projectDir: DirectoryProperty
     }
 
+    // Reads stdout and stderr at the same time, so git cannot block on a full pipe
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
     override fun obtain(): String {
         val logger = Logging.getLogger(GitCommitShortHash::class.java)
+        val output = ByteArrayOutputStream()
+        val error = ByteArrayOutputStream()
         try {
-            val process = ProcessBuilder("git", "rev-parse", "HEAD")
-                .directory(parameters.projectDir.get().asFile)
-                .start()
-            val output = process.inputStream.bufferedReader().use { it.readText().trim() }
-            val error = process.errorStream.bufferedReader().use { it.readText().trim() }
-            if (process.waitFor() == 0) {
-                return output.take(10)
+            val result = execOperations.exec {
+                commandLine("git", "rev-parse", "HEAD")
+                workingDir(parameters.projectDir.get().asFile)
+                standardOutput = output
+                errorOutput = error
+                isIgnoreExitValue = true
             }
-            logger.warn("Using 'unknown' as the commit hash, git rev-parse HEAD failed: {}", error)
+            if (result.exitValue == 0) {
+                return output.toString().trim().take(10)
+            }
+            logger.warn("Using 'unknown' as the commit hash, git rev-parse HEAD failed: {}", error.toString().trim())
         } catch (e: Exception) {
             logger.warn("Using 'unknown' as the commit hash, git could not be run", e)
         }
