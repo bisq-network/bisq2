@@ -50,11 +50,12 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                                                       KeyPair keyPair)
             throws GeneralSecurityException {
         PublicKey publicKey = keyPair.getPublic();
+        byte[] publicKeyEncoded = publicKey.getEncoded();
         long created = System.currentTimeMillis();
         MetaData metaData = authenticatedData.getMetaData();
-        byte[] publicKeyEncoded = publicKey.getEncoded();
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        int sequenceNumber = store.getSequenceNumber(hash) + 1;
+        ByteArray storageKey = new ByteArray(hash);
+        int sequenceNumber = store.getNextSequenceNumber(storageKey);
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         return new RemoveAuthenticatedDataRequest(VERSION,
                 metaData,

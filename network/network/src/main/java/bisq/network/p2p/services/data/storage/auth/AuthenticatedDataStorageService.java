@@ -30,7 +30,6 @@ import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
-import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
@@ -311,17 +310,16 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         listeners.remove(listener);
     }
 
-    @VisibleForTesting
-    public int getSequenceNumber(byte[] hash) {
-        ByteArray byteArray = new ByteArray(hash);
-        int sequenceNumber = 0;
+    public int getNextSequenceNumber(ByteArray storageKey) {
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (map.containsKey(byteArray)) {
-                sequenceNumber = map.get(byteArray).getSequenceNumber();
+            AuthenticatedDataRequest requestFromMap = map.get(storageKey);
+            if (requestFromMap == null) {
+                return 1;
+            } else {
+                return map.get(storageKey).getSequenceNumber() + 1;
             }
         }
-        return sequenceNumber;
     }
 
     private void pruneExpired() {
