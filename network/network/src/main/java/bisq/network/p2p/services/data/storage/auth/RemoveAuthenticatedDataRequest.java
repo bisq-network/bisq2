@@ -75,10 +75,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
     private final transient PublicKey ownerPublicKey;
-    @Getter
     private final int sequenceNumber;
     private final byte[] signature;
-    @Getter
     private final long created;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
@@ -201,6 +199,16 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public ByteArray getStorageKey() {
         return new ByteArray(hash);
+    }
+
+    @Override
+    public int getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override

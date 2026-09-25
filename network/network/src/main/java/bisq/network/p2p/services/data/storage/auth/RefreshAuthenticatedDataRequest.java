@@ -68,10 +68,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes; // 442 bytes
     private final transient PublicKey ownerPublicKey;
-    @Getter
     private final int sequenceNumber;
     private final byte[] signature;         // 47 bytes
-    @Getter
     private final long created;
 
     private RefreshAuthenticatedDataRequest(int version,
@@ -189,6 +187,16 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     @Override
     public ByteArray getStorageKey() {
         return new ByteArray(hash);
+    }
+
+    @Override
+    public int getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override

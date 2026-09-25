@@ -69,7 +69,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     private final byte[] hash;
     private final byte[] receiverPublicKeyBytes;
     private final byte[] signature;
-    @Getter
     private final long created;
     private final transient PublicKey receiverPublicKey;
     @Setter
@@ -196,6 +195,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public ByteArray getStorageKey() {
         return new ByteArray(hash);
+    }
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override
