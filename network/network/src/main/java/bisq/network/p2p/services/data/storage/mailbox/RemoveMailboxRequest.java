@@ -193,7 +193,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, getMetaData().getTtl());
+        return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
     }
 
 

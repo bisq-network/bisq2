@@ -93,7 +93,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
 
-            if (mailboxSequentialData.isExpired()) {
+            if (request.isExpired()) {
                 return new DataStorageResult(false).expired();
             }
 

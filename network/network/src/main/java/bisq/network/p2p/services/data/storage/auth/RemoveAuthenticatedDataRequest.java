@@ -211,7 +211,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > getMetaData().getTtl();
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
     @Override

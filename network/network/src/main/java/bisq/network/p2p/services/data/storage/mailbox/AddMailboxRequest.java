@@ -171,7 +171,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public boolean isExpired() {
-        return mailboxSequentialData.isExpired();
+        return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
     }
 
     @Override

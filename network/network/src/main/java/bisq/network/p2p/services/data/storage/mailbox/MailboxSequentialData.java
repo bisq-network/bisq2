@@ -129,11 +129,6 @@ public final class MailboxSequentialData implements NetworkProto {
         }
     }
 
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - created) >
-                Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());
-    }
-
     @Override
     public String toString() {
         return "MailboxSequentialData{" +

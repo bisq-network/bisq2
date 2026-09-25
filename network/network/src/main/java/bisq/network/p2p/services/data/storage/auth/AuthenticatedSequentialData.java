@@ -88,10 +88,6 @@ public final class AuthenticatedSequentialData implements NetworkProto {
                 proto.getCreated());
     }
 
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > authenticatedData.getMetaData().getTtl();
-    }
-
     public DistributedData getDistributedData() {
         return authenticatedData.getDistributedData();
     }

@@ -191,7 +191,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public boolean isExpired() {
-        return authenticatedSequentialData.isExpired();
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
     public DistributedData getDistributedData() {
