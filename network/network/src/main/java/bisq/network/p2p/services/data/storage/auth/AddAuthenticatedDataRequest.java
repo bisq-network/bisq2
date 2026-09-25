@@ -50,13 +50,18 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
             throws GeneralSecurityException {
 
         byte[] hashForStoreMap = DigestUtil.hash(authenticatedData.serializeForHash());
-        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
+        PublicKey publicKey = keyPair.getPublic();
+        byte[] publicKeyEncoded = publicKey.getEncoded();
+        byte[] pubKeyHash = DigestUtil.hash(publicKeyEncoded);
         int sequenceNumber = store.getSequenceNumber(hashForStoreMap) + 1;
-        AuthenticatedSequentialData data =
-                new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
-        byte[] messageForSignature = data.serializeForHash();
-        byte[] signature = SignatureUtil.sign(messageForSignature, keyPair.getPrivate());
-        return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
+        long created = System.currentTimeMillis();
+        AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authenticatedData,
+                sequenceNumber,
+                pubKeyHash,
+                created);
+        byte[] preImage = sequentialData.serializeForHash();
+        byte[] signature = SignatureUtil.sign(preImage, keyPair.getPrivate());
+        return new AddAuthenticatedDataRequest(sequentialData, signature, publicKey);
     }
 
     @Getter
