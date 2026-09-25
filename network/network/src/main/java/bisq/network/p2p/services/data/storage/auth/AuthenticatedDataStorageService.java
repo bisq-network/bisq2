@@ -236,23 +236,24 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.error("Calling onRemoved at listener {} failed", listener, e);
             }
         });
+
         maybeLogMapState("remove success", persistableStore);
         return DataStorageResult.success().removedData(authenticatedDataFromMap);
     }
 
-    public DataStorageResult refresh(RefreshAuthenticatedDataRequest request) {
+    public DataStorageResult refresh(RefreshAuthenticatedDataRequest refreshRequest) {
         maybeLogMapState("refresh ", persistableStore);
 
-        if (request.isExpired()) {
+        if (refreshRequest.isExpired()) {
             return DataStorageResult.failed().expired();
         }
-        if (request.isSignatureInvalid()) {
-            log.warn("Signature is invalid at refresh. request={}", request);
+        if (refreshRequest.isSignatureInvalid()) {
+            log.warn("Signature is invalid at refresh. request={}", refreshRequest);
             return DataStorageResult.failed().signatureInvalid();
         }
 
-        ByteArray storageKey = request.getStorageKey();
-        AddAuthenticatedDataRequest updatedRequest;
+        ByteArray storageKey = refreshRequest.getStorageKey();
+        AddAuthenticatedDataRequest updatedAddRequest;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(storageKey);
@@ -274,40 +275,43 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     "requestFromMap expected be type of AddAuthenticatedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
             // We have an entry, lets validate if we can remove it
-            AuthenticatedSequentialData sequentialData = addRequestFromMap.getAuthenticatedSequentialData();
-            if (request.isSequenceNrInvalid(sequentialData.getSequenceNumber())) {
-                log.warn("SequenceNr is invalid at refresh. request={}", request);
+            AuthenticatedSequentialData sequentialDataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
+            if (refreshRequest.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
+                log.warn("SequenceNr is invalid at refresh. request={}", refreshRequest);
                 // Sequence number has not increased
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (request.isSignaturePubKeyHashInvalid(sequentialData.getPubKeyHash())) {
-                log.warn("PublicKey is invalid at refresh. request={}", request);
+            if (refreshRequest.isSignaturePubKeyHashInvalid(sequentialDataFromMap.getPubKeyHash())) {
+                log.warn("PublicKey is invalid at refresh. request={}", refreshRequest);
                 // Hash of pubKey of data does not match provided one
                 return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
-            long refreshDate = request.getCreated();
-            if (sequentialData.getDistributedData() instanceof PublishDateAware publishDateAware) {
+            long refreshDate = refreshRequest.getCreated();
+            if (sequentialDataFromMap.getDistributedData() instanceof PublishDateAware publishDateAware) {
                 publishDateAware.setPublishDate(refreshDate);
             }
-            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(sequentialData, request.getSequenceNumber(), refreshDate);
-            updatedRequest = new AddAuthenticatedDataRequest(updatedData,
+            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(sequentialDataFromMap, refreshRequest.getSequenceNumber(), refreshDate);
+            updatedAddRequest = new AddAuthenticatedDataRequest(updatedData,
                     addRequestFromMap.getSignature(),
                     addRequestFromMap.getSignaturePubKeyEncoded(),
                     addRequestFromMap.getSignaturePublicKey());
 
-            map.put(storageKey, updatedRequest);
+            map.put(storageKey, updatedAddRequest);
         }
 
         persist();
+
+        AuthenticatedData authenticatedData = updatedAddRequest.getAuthenticatedSequentialData().getAuthenticatedData();
         listeners.forEach(listener -> {
             try {
-                listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().getAuthenticatedData());
+                listener.onRefreshed(authenticatedData);
             } catch (Exception e) {
                 log.error("Calling onRefreshed at listener {} failed", listener, e);
             }
         });
+
         maybeLogMapState("refresh success", persistableStore);
         return DataStorageResult.success();
     }
