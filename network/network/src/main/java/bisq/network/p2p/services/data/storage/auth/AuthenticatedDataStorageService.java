@@ -32,7 +32,6 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -83,8 +82,30 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult add(AddAuthenticatedDataRequest request) {
         maybeLogMapState("add", persistableStore);
+
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
+        if (authenticatedData.isDataInvalid(authenticatedSequentialData.getPubKeyHash())) {
+            log.warn("AuthenticatedData is invalid at add. request={}", request);
+            return DataStorageResult.failed().dataInvalid();
+        }
+        if (authenticatedData instanceof AuthorizedData authorizedData && authorizedData.isNotAuthorized()) {
+            log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
+            return DataStorageResult.failed().isNotAuthorized();
+        }
+        if (request.isSignaturePubKeyHashInvalid(authenticatedSequentialData.getPubKeyHash())) {
+            log.warn("PublicKey is invalid at add. request={}", request);
+            return DataStorageResult.failed().publicKeyHashInvalid();
+        }
+        if (request.isSignatureInvalid()) {
+            log.warn("Signature is invalid at add. request={}", request);
+            return DataStorageResult.failed().signatureInvalid();
+        }
+
         ByteArray storageKey = request.getStorageKey();
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
@@ -100,37 +121,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
             if (requestFromMap != null && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                 return DataStorageResult.failed().sequenceNrInvalid();
-            }
-
-            if (request.isExpired()) {
-                log.debug("AddAuthenticatedDataRequest with {} is expired on {}",
-                        request.getClassName(),
-                        new Date(request.getCreated() + request.getTtl())
-                );
-                log.debug("Data is expired at add. request={}", request);
-                return DataStorageResult.failed().expired();
-            }
-
-            if (authenticatedData.isDataInvalid(authenticatedSequentialData.getPubKeyHash())) {
-                log.warn("AuthenticatedData is invalid at add. request={}", request);
-                return DataStorageResult.failed().dataInvalid();
-            }
-
-            if (authenticatedData instanceof AuthorizedData authorizedData) {
-                if (authorizedData.isNotAuthorized()) {
-                    log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
-                    return DataStorageResult.failed().isNotAuthorized();
-                }
-            }
-
-            if (request.isSignaturePubKeyHashInvalid(authenticatedSequentialData.getPubKeyHash())) {
-                log.warn("PublicKey is invalid at add. request={}", request);
-                return DataStorageResult.failed().publicKeyHashInvalid();
-            }
-
-            if (request.isSignatureInvalid()) {
-                log.warn("Signature is invalid at add. request={}", request);
-                return DataStorageResult.failed().signatureInvalid();
             }
 
             if (authenticatedData.getDistributedData() instanceof PublishDateAware publishDateAware) {
@@ -154,6 +144,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.error("Calling onAdded at listener {} failed", listener, e);
             }
         });
+
         maybeLogMapState("add success", persistableStore);
         return DataStorageResult.success();
     }

@@ -71,8 +71,24 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public DataStorageResult add(AddMailboxRequest request) {
         maybeLogMapState("add", persistableStore);
+
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
+
+        if (mailboxData.isDataInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
+            return DataStorageResult.failed().dataInvalid();
+        }
+        if (request.isSignaturePubKeyHashInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
+            return DataStorageResult.failed().publicKeyHashInvalid();
+        }
+        if (request.isSignatureInvalid()) {
+            return DataStorageResult.failed().signatureInvalid();
+        }
+
         ByteArray storageKey = request.getStorageKey();
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
@@ -91,21 +107,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (request.isExpired()) {
-                return DataStorageResult.failed().expired();
-            }
-
-            if (mailboxData.isDataInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
-                return DataStorageResult.failed().dataInvalid();
-            }
-
-            if (request.isSignaturePubKeyHashInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
-                return DataStorageResult.failed().publicKeyHashInvalid();
-            }
-
-            if (request.isSignatureInvalid()) {
-                return DataStorageResult.failed().signatureInvalid();
-            }
             map.put(storageKey, request);
         }
 
@@ -118,6 +119,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 log.error("Calling onAdded at listener {} failed", listener, e);
             }
         });
+
         maybeLogMapState("add success", persistableStore);
         return DataStorageResult.success();
     }
