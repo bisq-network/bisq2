@@ -140,7 +140,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                     proto.getCreated()
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }

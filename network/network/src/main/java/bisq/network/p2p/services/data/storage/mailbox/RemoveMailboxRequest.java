@@ -138,7 +138,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                     proto.getCreated()
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }

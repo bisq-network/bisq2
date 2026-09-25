@@ -116,7 +116,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                     senderPublicKey
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }
