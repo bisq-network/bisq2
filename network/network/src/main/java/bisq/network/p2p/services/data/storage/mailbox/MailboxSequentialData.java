@@ -44,34 +44,6 @@ public final class MailboxSequentialData implements NetworkProto {
                                  byte[] senderPublicKeyHash,
                                  byte[] receiversPublicKeyHash,
                                  PublicKey receiversPubKey,
-                                 int sequenceNumber) {
-        this(mailboxData,
-                senderPublicKeyHash,
-                receiversPublicKeyHash,
-                receiversPubKey,
-                System.currentTimeMillis(),
-                sequenceNumber);
-    }
-
-    public MailboxSequentialData(MailboxData mailboxData,
-                                 byte[] senderPublicKeyHash,
-                                 byte[] receiversPublicKeyHash,
-                                 PublicKey receiversPubKey,
-                                 long created,
-                                 int sequenceNumber) {
-        this(mailboxData,
-                senderPublicKeyHash,
-                receiversPublicKeyHash,
-                receiversPubKey,
-                receiversPubKey.getEncoded(),
-                created,
-                sequenceNumber);
-    }
-
-    public MailboxSequentialData(MailboxData mailboxData,
-                                 byte[] senderPublicKeyHash,
-                                 byte[] receiversPublicKeyHash,
-                                 PublicKey receiversPubKey,
                                  byte[] receiversPubKeyBytes,
                                  long created,
                                  int sequenceNumber) {
