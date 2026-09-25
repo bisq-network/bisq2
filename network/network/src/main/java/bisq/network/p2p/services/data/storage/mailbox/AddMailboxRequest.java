@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -169,6 +170,16 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public MetaData getMetaData() {
         return mailboxSequentialData.getMailboxData().getMetaData();
+    }
+
+    @Override
+    public ByteArray getStorageKey() {
+        byte[] hash = DigestUtil.hash(getStoragePreImage());
+        return new ByteArray(hash);
+    }
+
+    private byte[] getStoragePreImage() {
+        return mailboxSequentialData.getMailboxData().serializeForHash();
     }
 
     @Override

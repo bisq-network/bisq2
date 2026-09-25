@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -181,6 +182,16 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     public DistributedData getDistributedData() {
         return authenticatedSequentialData.getDistributedData();
+    }
+
+    @Override
+    public ByteArray getStorageKey() {
+        byte[] hash = DigestUtil.hash(getStoragePreImage());
+        return new ByteArray(hash);
+    }
+
+    private byte[] getStoragePreImage() {
+        return authenticatedSequentialData.getAuthenticatedData().serializeForHash();
     }
 
     @Override

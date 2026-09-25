@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -193,6 +194,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
     }
 
+
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
+    }
 
     @Override
     public String toString() {

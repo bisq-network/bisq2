@@ -30,7 +30,6 @@ import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,8 +87,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
         DistributedData distributedData = authenticatedData.distributedData;
-        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        ByteArray storageKey = new ByteArray(hash);
+        ByteArray storageKey = request.getStorageKey();
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
@@ -164,7 +162,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult remove(RemoveAuthenticatedDataRequest request) {
         maybeLogMapState("remove ", persistableStore);
-        ByteArray storageKey = new ByteArray(request.getHash());
+        ByteArray storageKey = request.getStorageKey();
         AuthenticatedData authenticatedDataFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
@@ -244,7 +242,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult refresh(RefreshAuthenticatedDataRequest request) {
         maybeLogMapState("refresh ", persistableStore);
-        ByteArray storageKey = new ByteArray(request.getHash());
+        ByteArray storageKey = request.getStorageKey();
         AddAuthenticatedDataRequest updatedRequest;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {

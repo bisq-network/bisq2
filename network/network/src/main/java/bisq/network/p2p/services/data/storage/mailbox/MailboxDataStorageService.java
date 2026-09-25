@@ -74,8 +74,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         maybeLogMapState("add", persistableStore);
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
-        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        ByteArray storageKey = new ByteArray(hash);
+        ByteArray storageKey = request.getStorageKey();
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
@@ -127,7 +126,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
-        ByteArray storageKey = new ByteArray(request.getHash());
+        ByteArray storageKey = request.getStorageKey();
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxRequest requestFromMap = map.get(storageKey);
         MailboxSequentialData sequentialDataFromMap;

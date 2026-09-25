@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -184,6 +185,11 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     @Override
     public MetaData getMetaData() {
         return metaData;
+    }
+
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
     }
 
     @Override

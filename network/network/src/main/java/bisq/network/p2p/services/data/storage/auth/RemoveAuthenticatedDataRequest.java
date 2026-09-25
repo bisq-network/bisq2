@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -196,6 +197,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public boolean isExpired() {
         return (System.currentTimeMillis() - getCreated()) > getTtl();
+    }
+
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
     }
 
     @Override

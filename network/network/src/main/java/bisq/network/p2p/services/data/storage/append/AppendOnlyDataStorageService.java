@@ -22,7 +22,6 @@ import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -68,13 +67,12 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
                 return new DataStorageResult(false).maxMapSizeReached();
             }
 
-            byte[] hash = DigestUtil.hash(appendOnlyData.serializeForHash());
-            ByteArray byteArray = new ByteArray(hash);
-            if (map.containsKey(byteArray)) {
+            ByteArray storageKey = addAppendOnlyDataRequest.getStorageKey();
+            if (map.containsKey(storageKey)) {
                 return new DataStorageResult(false).payloadAlreadyStored();
             }
 
-            map.put(byteArray, addAppendOnlyDataRequest);
+            map.put(storageKey, addAppendOnlyDataRequest);
         }
         persist();
         listeners.forEach(listener -> {

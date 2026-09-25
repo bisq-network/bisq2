@@ -17,11 +17,13 @@
 
 package bisq.network.p2p.services.data.storage.append;
 
+import bisq.common.data.ByteArray;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.DataRequest;
+import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -84,5 +86,15 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     @Override
     public MetaData getMetaData() {
         return appendOnlyData.getMetaData();
+    }
+
+    @Override
+    public ByteArray getStorageKey() {
+        byte[] hash = DigestUtil.hash(getStoragePreImage());
+        return new ByteArray(hash);
+    }
+
+    private byte[] getStoragePreImage() {
+        return appendOnlyData.serializeForHash();
     }
 }
