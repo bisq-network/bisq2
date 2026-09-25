@@ -317,7 +317,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             if (requestFromMap == null) {
                 return 1;
             } else {
-                return map.get(storageKey).getSequenceNumber() + 1;
+                return Math.incrementExact(map.get(storageKey).getSequenceNumber());
             }
         }
     }
