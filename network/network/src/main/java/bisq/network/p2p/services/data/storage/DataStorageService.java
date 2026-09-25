@@ -20,12 +20,6 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.DataRequest;
-import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -115,48 +109,21 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         int size = persistableStore.getMap().size();
         boolean isExceeding = size > getMaxMapSize();
         if (isExceeding) {
-            String className = persistableStore.getMap().values().stream()
-                    .findFirst()
-                    .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
-                            return addRequest.getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
-                            return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
-                            return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest addRequest) {
-                            return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        }
-                        return "N/A";
-                    }).orElse("N/A");
+            String className = getClassNameOfFirstEntry();
             log.warn("Max. map size reached for {}. map.size()={}, getMaxMapSize={}",
                     className, size, getMaxMapSize());
         }
         if (size > 20_000) {
-            String className = persistableStore.getMap().values().stream()
-                    .findFirst()
-                    .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
-                            return addRequest.getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
-                            return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
-                            return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest addRequest) {
-                            return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        }
-                        return "N/A";
-                    }).orElse("N/A");
+            String className = getClassNameOfFirstEntry();
             log.info("Map size for {} reached > 20 000 entries. map.size()={}", className, size);
         }
         return isExceeding;
+    }
+
+    private String getClassNameOfFirstEntry() {
+        return persistableStore.getMap().values().stream()
+                .findFirst()
+                .map(DataRequest::getClassName)
+                .orElse("N/A");
     }
 }

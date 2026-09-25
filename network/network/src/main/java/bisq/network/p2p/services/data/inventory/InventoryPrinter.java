@@ -20,12 +20,6 @@ package bisq.network.p2p.services.data.inventory;
 import bisq.common.data.ByteUnit;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.node.Connection;
-import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -49,20 +43,7 @@ public class InventoryPrinter {
         inventory.getEntries()
                 .forEach(dataRequest -> {
                     String dataRequestName = dataRequest.getClass().getSimpleName();
-                    String payloadName = dataRequest.getClass().getSimpleName();
-                    if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
-                        payloadName = addRequest.getDistributedData().getClass().getSimpleName();
-                    } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
-                        payloadName = removeRequest.getClassName();
-                    } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
-                        payloadName = request.getClassName();
-                    } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
-                        payloadName = addRequest.getAppendOnlyData().getClass().getSimpleName();
-                    } else if (dataRequest instanceof AddMailboxRequest addRequest) {
-                        payloadName = addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                    } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
-                        payloadName = removeRequest.getClassName();
-                    }
+                    String payloadName = dataRequest.getClassName();
                     dataRequestMap.putIfAbsent(dataRequestName, new HashMap<>());
                     Map<String, AtomicInteger> payloadMap = dataRequestMap.get(dataRequestName);
                     dataRequestMap.put(dataRequestName, payloadMap);
