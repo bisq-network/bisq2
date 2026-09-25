@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 @Getter
 public final class MailboxSequentialData implements NetworkProto {
@@ -39,6 +41,8 @@ public final class MailboxSequentialData implements NetworkProto {
     private final byte[] receiversPublicKeyHash;
     private final byte[] receiversPubKeyBytes;
     private final long created;
+    // Sequence number is always 1 as it is used only in AddMailboxRequests and those are permitted only once.
+    // The RemoveMailboxRequest will set it to Integer.MAX and disallow by that another message.
     private final int sequenceNumber;
     private transient final PublicKey receiversPubKey;
 
@@ -62,6 +66,8 @@ public final class MailboxSequentialData implements NetworkProto {
 
     @Override
     public void verify() {
+        checkArgument(sequenceNumber == 1,
+                "sequenceNumber must be 1. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateHash(senderPublicKeyHash);
         NetworkDataValidation.validateHash(receiversPublicKeyHash);
         NetworkDataValidation.validateECPubKey(receiversPubKeyBytes);
