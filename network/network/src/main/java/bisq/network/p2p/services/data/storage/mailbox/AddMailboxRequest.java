@@ -43,16 +43,18 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                                          PublicKey receiverPublicKey)
             throws GeneralSecurityException {
         PublicKey senderPublicKey = senderKeyPair.getPublic();
-        byte[] senderPublicKeyHash = DigestUtil.hash(senderPublicKey.getEncoded());
+        byte[] senderPublicKeyEncoded = senderPublicKey.getEncoded();
+        byte[] senderPublicKeyHash = DigestUtil.hash(senderPublicKeyEncoded);
         byte[] receiverPublicKeyHash = DigestUtil.hash(receiverPublicKey.getEncoded());
+        int sequenceNumber = 1;
         MailboxSequentialData mailboxSequentialData = new MailboxSequentialData(mailboxData,
                 senderPublicKeyHash,
                 receiverPublicKeyHash,
                 receiverPublicKey,
-                1);
-        byte[] serialized = mailboxSequentialData.serializeForHash();
-        byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
-        return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKey);
+                sequenceNumber);
+        byte[] preImage = mailboxSequentialData.serializeForHash();
+        byte[] signature = SignatureUtil.sign(preImage, senderKeyPair.getPrivate());
+        return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKeyEncoded, senderPublicKey);
     }
 
     @Getter
@@ -61,12 +63,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     private final byte[] senderPublicKeyBytes;
     @Getter
     private final transient PublicKey senderPublicKey;
-
-    private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
-                              byte[] signature,
-                              PublicKey senderPublicKey) {
-        this(mailboxSequentialData, signature, senderPublicKey.getEncoded(), senderPublicKey);
-    }
 
     private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
                               byte[] signature,
