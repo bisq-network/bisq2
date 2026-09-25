@@ -67,7 +67,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Getter
     private final byte[] hash;
     private final byte[] receiverPublicKeyBytes;
-    @Getter
     private final byte[] signature;
     @Getter
     private final long created;
@@ -143,6 +142,27 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         }
     }
 
+    public byte[] getPreImage() {
+        return hash;
+    }
+
+    public PublicKey getOwnerPublicKey() {
+        return receiverPublicKey;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public boolean isSignatureInvalid() {
+        try {
+            return !SignatureUtil.verify(getPreImage(), getSignature(), getOwnerPublicKey());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+
     public MetaData getMetaDataFromProto() {
         return metaData;
     }
@@ -160,14 +180,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         try {
             return !Arrays.equals(mailboxSequentialData.getReceiversPublicKeyHash(),
                     DigestUtil.hash(receiverPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
-    }
-
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(hash, signature, receiverPublicKey);
         } catch (Exception e) {
             return true;
         }

@@ -67,11 +67,9 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     @Getter
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes; // 442 bytes
-    @Getter
     private final transient PublicKey ownerPublicKey;
     @Getter
     private final int sequenceNumber;
-    @Getter
     private final byte[] signature;         // 47 bytes
     @Getter
     private final long created;
@@ -145,17 +143,29 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         }
     }
 
-    @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
+    public byte[] getPreImage() {
+        return hash;
+    }
+
+    public PublicKey getOwnerPublicKey() {
+        return ownerPublicKey;
+    }
+
+    public byte[] getSignature() {
+        return signature;
     }
 
     public boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(hash, signature, ownerPublicKey);
+            return !SignatureUtil.verify(getPreImage(), getSignature(), getOwnerPublicKey());
         } catch (Exception e) {
             return true;
         }
+    }
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
     }
 
     public boolean isPublicKeyInvalid(AuthenticatedSequentialData entryFromMap) {

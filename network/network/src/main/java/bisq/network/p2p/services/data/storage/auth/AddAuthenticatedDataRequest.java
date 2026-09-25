@@ -68,7 +68,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Getter
     private final AuthenticatedSequentialData authenticatedSequentialData;
-    @Getter
     private final byte[] signature;
     private final byte[] ownerPublicKeyBytes;
     private final transient PublicKey ownerPublicKey;
@@ -135,6 +134,28 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         }
     }
 
+    public byte[] getPreImage() {
+        return authenticatedSequentialData.serializeForHash();
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public PublicKey getOwnerPublicKey() {
+        return ownerPublicKey;
+    }
+
+    public boolean isSignatureInvalid() {
+        try {
+            return !SignatureUtil.verify(getPreImage(), getSignature(), getOwnerPublicKey());
+        } catch (Exception e) {
+            log.warn(e.toString(), e);
+            return true;
+        }
+    }
+
+
     @Override
     public double getCostFactor() {
         DistributedData distributedData = authenticatedSequentialData.getDistributedData();
@@ -144,26 +165,12 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         return MathUtils.bounded(0.25, 0.75, impact);
     }
 
-
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(authenticatedSequentialData.serializeForHash(), signature, getOwnerPublicKey());
-        } catch (Exception e) {
-            log.warn(e.toString(), e);
-            return true;
-        }
-    }
-
     public boolean isPublicKeyInvalid() {
         try {
             return !Arrays.equals(authenticatedSequentialData.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
         } catch (Exception e) {
             return true;
         }
-    }
-
-    public PublicKey getOwnerPublicKey() {
-        return ownerPublicKey;
     }
 
     @Override

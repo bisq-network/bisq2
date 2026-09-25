@@ -33,7 +33,6 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
@@ -57,7 +56,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Getter
     private final MailboxSequentialData mailboxSequentialData;
-    @Getter
     private final byte[] signature;
     private final byte[] senderPublicKeyBytes;
     @Getter
@@ -121,6 +119,27 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         }
     }
 
+    public byte[] getPreImage() {
+        return mailboxSequentialData.serializeForHash();
+    }
+
+    public PublicKey getOwnerPublicKey() {
+        return senderPublicKey;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public boolean isSignatureInvalid() {
+        try {
+            return !SignatureUtil.verify(getPreImage(), getSignature(), getOwnerPublicKey());
+        } catch (Exception e) {
+            log.warn(e.toString(), e);
+            return true;
+        }
+    }
+
     @Override
     public double getCostFactor() {
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
@@ -128,15 +147,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         double dataImpact = mailboxData.getConfidentialMessage().getCostFactor();
         double impact = metaDataImpact + dataImpact;
         return MathUtils.bounded(0.25, 1, impact);
-    }
-
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(mailboxSequentialData.serializeForHash(), signature, getOwnerPublicKey());
-        } catch (Exception e) {
-            log.warn(e.toString(), e);
-            return true;
-        }
     }
 
     public boolean isPublicKeyInvalid() {
@@ -147,11 +157,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
             return true;
         }
     }
-
-    public PublicKey getOwnerPublicKey() {
-        return senderPublicKey;
-    }
-
 
     @Override
     public int getSequenceNumber() {
