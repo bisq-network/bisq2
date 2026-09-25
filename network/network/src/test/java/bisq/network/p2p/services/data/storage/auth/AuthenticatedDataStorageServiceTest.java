@@ -123,6 +123,36 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isRequestAlreadyReceived(), result.toString());
     }
 
+    @Test
+    void removeRequestWithInvalidSignatureIsNotStoredWithoutEntry() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest otherRemoveRequest = RemoveAuthenticatedDataRequest.from(ownerStore,
+                new DefaultAuthenticatedData(new TestDistributedData("other content")),
+                ownerKeyPair);
+        // Signature of other data, so it does not match the hash of this request.
+        RemoveAuthenticatedDataRequest invalidRemoveRequest = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder()
+                        .setSignature(otherRemoveRequest.toValueProto(false).getSignature())
+                        .build());
+
+        DataStorageResult result = peerStore.remove(invalidRemoveRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isSignatureInvalid(), result.toString());
+        assertFalse(peerStore.getPersistableStore().getMap().containsKey(removeRequest.getStorageKey()));
+    }
+
+    @Test
+    void validRemoveRequestIsStoredWithoutEntry() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+
+        DataStorageResult result = peerStore.remove(removeRequest);
+
+        assertTrue(result.isSuccess(), result.toString());
+        assertTrue(result.isNoEntry());
+        assertTrue(peerStore.getPersistableStore().getMap().containsKey(removeRequest.getStorageKey()));
+    }
+
     private void addToOwnerAndPeer() throws GeneralSecurityException {
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(ownerStore.add(addRequest).isSuccess());
