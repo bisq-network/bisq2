@@ -129,9 +129,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         maybeLogMapState("remove ", persistableStore);
         ByteArray storageKey = request.getStorageKey();
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        MailboxRequest requestFromMap = map.get(storageKey);
         MailboxSequentialData sequentialDataFromMap;
         synchronized (mapAccessLock) {
+            MailboxRequest requestFromMap = map.get(storageKey);
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
