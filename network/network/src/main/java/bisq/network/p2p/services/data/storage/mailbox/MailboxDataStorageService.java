@@ -127,6 +127,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
+
+        if (request.isSignatureInvalid()) {
+            return DataStorageResult.failed().signatureInvalid();
+        }
+
         ByteArray storageKey = request.getStorageKey();
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         MailboxSequentialData sequentialDataFromMap;
@@ -162,10 +167,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             if (request.isSignaturePubKeyHashInvalid(sequentialDataFromMap.getReceiversPublicKeyHash())) {
                 // Hash of pubKey of data does not match provided one
                 return DataStorageResult.failed().publicKeyHashInvalid();
-            }
-
-            if (request.isSignatureInvalid()) {
-                return DataStorageResult.failed().signatureInvalid();
             }
 
             // As metaData from mailboxData is taken from the users current code base but the one from RemoveMailboxRequest

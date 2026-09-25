@@ -152,6 +152,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult remove(RemoveAuthenticatedDataRequest request) {
         maybeLogMapState("remove ", persistableStore);
+
+        if (request.isSignatureInvalid()) {
+            log.warn("Signature is invalid at remove. request={}", request);
+            return DataStorageResult.failed().signatureInvalid();
+        }
+
         ByteArray storageKey = request.getStorageKey();
         AuthenticatedData authenticatedDataFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
@@ -195,10 +201,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
-            if (request.isSignatureInvalid()) {
-                log.warn("Signature is invalid at remove. request={}", request);
-                return DataStorageResult.failed().signatureInvalid();
-            }
 
             // As metaData from distributedData is taken from the users current code base but the one from RemoveAuthenticatedDataRequest
             // is from the senders version (taken from senders distributedData) it could be different if both users had
@@ -236,6 +238,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         if (request.isExpired()) {
             return DataStorageResult.failed().expired();
         }
+        if (request.isSignatureInvalid()) {
+            log.warn("Signature is invalid at refresh. request={}", request);
+            return DataStorageResult.failed().signatureInvalid();
+        }
 
         ByteArray storageKey = request.getStorageKey();
         AddAuthenticatedDataRequest updatedRequest;
@@ -267,11 +273,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 log.warn("PublicKey is invalid at refresh. request={}", request);
                 // Hash of pubKey of data does not match provided one
                 return DataStorageResult.failed().publicKeyHashInvalid();
-            }
-
-            if (request.isSignatureInvalid()) {
-                log.warn("Signature is invalid at refresh. request={}", request);
-                return DataStorageResult.failed().signatureInvalid();
             }
 
             long refreshDate = request.getCreated();
