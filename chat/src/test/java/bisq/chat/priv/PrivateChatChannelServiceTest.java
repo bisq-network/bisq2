@@ -247,6 +247,11 @@ public class PrivateChatChannelServiceTest {
         }
 
         @Override
+        public boolean hasSupportedChatMessageType() {
+            return true;
+        }
+
+        @Override
         public <R extends ChatMessageReaction> ObservableSet<R> getChatMessageReactions() {
             return null;
         }
