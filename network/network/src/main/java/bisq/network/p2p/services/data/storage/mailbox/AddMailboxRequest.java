@@ -61,7 +61,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     private final byte[] signature;
     private final byte[] senderPublicKeyBytes;
     @Getter
-    private final PublicKey senderPublicKey;
+    private final transient PublicKey senderPublicKey;
 
     private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
                               byte[] signature,
@@ -149,14 +149,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     public PublicKey getOwnerPublicKey() {
-        return Optional.ofNullable(senderPublicKey).orElseGet(() -> {
-            try {
-                return KeyGeneration.generatePublic(senderPublicKeyBytes);
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        });
+        return senderPublicKey;
     }
 
 

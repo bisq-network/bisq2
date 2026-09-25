@@ -72,7 +72,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Getter
     private final long created;
     @Getter
-    private transient PublicKey receiverPublicKey;
+    private final transient PublicKey receiverPublicKey;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 
@@ -167,9 +167,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     public boolean isSignatureInvalid() {
         try {
-            if (receiverPublicKey == null) {
-                receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
-            }
             return !SignatureUtil.verify(hash, signature, receiverPublicKey);
         } catch (Exception e) {
             return true;

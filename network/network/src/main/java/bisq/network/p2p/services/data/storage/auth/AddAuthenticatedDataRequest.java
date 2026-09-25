@@ -35,7 +35,6 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Request for adding authenticated data to the data storage.
@@ -72,7 +71,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Getter
     private final byte[] signature;
     private final byte[] ownerPublicKeyBytes;
-    private transient final PublicKey ownerPublicKey;
+    private final transient PublicKey ownerPublicKey;
 
     public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
                                        byte[] signature,
@@ -145,6 +144,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         return MathUtils.bounded(0.25, 0.75, impact);
     }
 
+
     public boolean isSignatureInvalid() {
         try {
             return !SignatureUtil.verify(authenticatedSequentialData.serializeForHash(), signature, getOwnerPublicKey());
@@ -163,14 +163,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     public PublicKey getOwnerPublicKey() {
-        return Optional.ofNullable(ownerPublicKey).orElseGet(() -> {
-            try {
-                return KeyGeneration.generatePublic(ownerPublicKeyBytes);
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        });
+        return ownerPublicKey;
     }
 
     @Override

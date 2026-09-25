@@ -71,7 +71,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
     @Getter
-    transient private PublicKey ownerPublicKey;
+    private final transient PublicKey ownerPublicKey;
     @Getter
     private final int sequenceNumber;
     @Getter
@@ -183,9 +183,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     public boolean isSignatureInvalid() {
         try {
-            if (ownerPublicKey == null) {
-                ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
-            }
             return !SignatureUtil.verify(hash, signature, ownerPublicKey);
         } catch (Exception e) {
             return true;

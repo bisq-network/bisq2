@@ -68,7 +68,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes; // 442 bytes
     @Getter
-    transient private final PublicKey ownerPublicKey;
+    private final transient PublicKey ownerPublicKey;
     @Getter
     private final int sequenceNumber;
     @Getter
