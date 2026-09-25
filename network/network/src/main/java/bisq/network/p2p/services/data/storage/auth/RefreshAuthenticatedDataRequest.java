@@ -185,12 +185,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
     @Override
-    public int getMaxMapSize() {
-        return metaData.getMaxMapSize();
-    }
-
-    public String getClassName() {
-        return metaData.getClassName();
+    public MetaData getMetaData() {
+        return metaData;
     }
 
     @Override

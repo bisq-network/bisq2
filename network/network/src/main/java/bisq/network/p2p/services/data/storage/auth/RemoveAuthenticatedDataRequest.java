@@ -191,6 +191,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         return metaData;
     }
 
+    @Override
     public MetaData getMetaData() {
         return metaDataFromDistributedData.orElse(metaData);
     }
@@ -211,15 +212,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > getMetaData().getTtl();
-    }
-
-    @Override
-    public int getMaxMapSize() {
-        return getMetaData().getMaxMapSize();
-    }
-
-    public String getClassName() {
-        return getMetaData().getClassName();
     }
 
     @Override

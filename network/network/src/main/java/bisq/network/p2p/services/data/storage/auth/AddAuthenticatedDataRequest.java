@@ -22,6 +22,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -184,8 +185,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
-    public int getMaxMapSize() {
-        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getMaxMapSize();
+    public MetaData getMetaData() {
+        return authenticatedSequentialData.getAuthenticatedData().getMetaData();
     }
 
     @Override

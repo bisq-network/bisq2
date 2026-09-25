@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -174,8 +175,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public int getMaxMapSize() {
-        return mailboxSequentialData.getMailboxData().getMetaData().getMaxMapSize();
+    public MetaData getMetaData() {
+        return mailboxSequentialData.getMailboxData().getMetaData();
     }
 
     @Override

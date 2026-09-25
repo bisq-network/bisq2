@@ -166,6 +166,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         return metaData;
     }
 
+    @Override
     public MetaData getMetaData() {
         return metaDataFromDistributedData.orElse(metaData);
     }
@@ -184,10 +185,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         }
     }
 
-    public String getClassName() {
-        return getMetaData().getClassName();
-    }
-
     @Override
     public int getSequenceNumber() {
         // Use max value for sequence number so that no other addData call is permitted.
@@ -197,11 +194,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, getMetaData().getTtl());
-    }
-
-    @Override
-    public int getMaxMapSize() {
-        return getMetaData().getMaxMapSize();
     }
 
 

@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.append;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.DataRequest;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -81,7 +82,7 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     }
 
     @Override
-    public int getMaxMapSize() {
-        return appendOnlyData.getMetaData().getMaxMapSize();
+    public MetaData getMetaData() {
+        return appendOnlyData.getMetaData();
     }
 }
