@@ -150,13 +150,9 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         return MathUtils.bounded(0.25, 1, impact);
     }
 
-    public boolean isPublicKeyInvalid() {
-        try {
-            return !Arrays.equals(mailboxSequentialData.getSenderPublicKeyHash(),
-                    DigestUtil.hash(senderPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return senderPublicKeyBytes;
     }
 
     @Override

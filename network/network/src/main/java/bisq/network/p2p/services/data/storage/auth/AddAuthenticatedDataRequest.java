@@ -166,12 +166,9 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         return MathUtils.bounded(0.25, 0.75, impact);
     }
 
-    public boolean isPublicKeyInvalid() {
-        try {
-            return !Arrays.equals(authenticatedSequentialData.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return ownerPublicKeyBytes;
     }
 
     @Override

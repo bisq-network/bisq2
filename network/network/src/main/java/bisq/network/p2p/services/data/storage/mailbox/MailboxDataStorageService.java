@@ -101,7 +101,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return new DataStorageResult(false).dataInvalid();
             }
 
-            if (request.isPublicKeyInvalid()) {
+            if (request.isSignaturePubKeyHashInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
                 return new DataStorageResult(false).publicKeyHashInvalid();
             }
 
@@ -159,7 +159,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyHashInvalid(sequentialDataFromMap)) {
+            if (request.isSignaturePubKeyHashInvalid(sequentialDataFromMap.getReceiversPublicKeyHash())) {
                 // Hash of pubKey of data does not match provided one
                 return new DataStorageResult(false).publicKeyHashInvalid();
             }

@@ -169,12 +169,9 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
     }
 
-    public boolean isPublicKeyInvalid(AuthenticatedSequentialData entryFromMap) {
-        try {
-            return !Arrays.equals(entryFromMap.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return ownerPublicKeyBytes;
     }
 
     @Override

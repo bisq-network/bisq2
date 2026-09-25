@@ -176,13 +176,9 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
     }
 
-    public boolean isPublicKeyHashInvalid(MailboxSequentialData mailboxSequentialData) {
-        try {
-            return !Arrays.equals(mailboxSequentialData.getReceiversPublicKeyHash(),
-                    DigestUtil.hash(receiverPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return receiverPublicKeyBytes;
     }
 
     @Override

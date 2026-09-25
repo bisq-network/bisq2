@@ -201,12 +201,9 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
     }
 
-    public boolean isPublicKeyHashInvalid(AuthenticatedSequentialData entryFromMap) {
-        try {
-            return !Arrays.equals(entryFromMap.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return ownerPublicKeyBytes;
     }
 
     @Override

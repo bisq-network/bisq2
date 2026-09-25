@@ -127,7 +127,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 }
             }
 
-            if (request.isPublicKeyInvalid()) {
+            if (request.isSignaturePubKeyHashInvalid(authenticatedSequentialData.getPubKeyHash())) {
                 log.warn("PublicKey is invalid at add. request={}", request);
                 return new DataStorageResult(false).publicKeyHashInvalid();
             }
@@ -202,7 +202,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyHashInvalid(dataFromMap)) {
+            if (request.isSignaturePubKeyHashInvalid(dataFromMap.getPubKeyHash())) {
                 log.warn("PublicKey hash is invalid at remove. request={}", request);
                 return new DataStorageResult(false).publicKeyHashInvalid();
             }
@@ -270,7 +270,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyInvalid(sequentialData)) {
+            if (request.isSignaturePubKeyHashInvalid(sequentialData.getPubKeyHash())) {
                 log.warn("PublicKey is invalid at refresh. request={}", request);
                 // Hash of pubKey of data does not match provided one
                 return new DataStorageResult(false).publicKeyHashInvalid();
