@@ -288,15 +288,15 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
-            long refreshDate = refreshRequest.getCreated();
+            // We use the creation date, sequence number and signatures from our RefreshAuthenticatedDataRequest
+            // and the rest from our existing AddAuthenticatedDataRequest to create an updated AddAuthenticatedDataRequest.
+            // The signature of the RefreshAuthenticatedDataRequest is created with the full data of an
+            // AddAuthenticatedDataRequest at the owner's side, thus the signature will match the new object.
+            updatedAddRequest = AddAuthenticatedDataRequest.from(addRequestFromMap, refreshRequest);
+
             if (sequentialDataFromMap.getDistributedData() instanceof PublishDateAware publishDateAware) {
-                publishDateAware.setPublishDate(refreshDate);
+                publishDateAware.setPublishDate(updatedAddRequest.getCreated());
             }
-            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(sequentialDataFromMap, refreshRequest.getSequenceNumber(), refreshDate);
-            updatedAddRequest = new AddAuthenticatedDataRequest(updatedData,
-                    addRequestFromMap.getSignature(),
-                    addRequestFromMap.getSignaturePubKeyEncoded(),
-                    addRequestFromMap.getSignaturePublicKey());
 
             map.put(storageKey, updatedAddRequest);
         }

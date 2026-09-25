@@ -24,6 +24,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Sequential;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -64,6 +65,24 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         byte[] preImage = sequentialData.serializeForHash();
         byte[] signature = SignatureUtil.sign(preImage, keyPair.getPrivate());
         return new AddAuthenticatedDataRequest(sequentialData, signature, publicKeyEncoded, publicKey);
+    }
+
+    public static AddAuthenticatedDataRequest from(AddAuthenticatedDataRequest requestFromMap,
+                                                   RefreshAuthenticatedDataRequest refreshRequest) {
+        long newTimestamp = refreshRequest.getCreated();
+        int newSequenceNumber = refreshRequest.getSequenceNumber();
+        byte[] newSignature = refreshRequest.getSignature();
+
+        AuthenticatedSequentialData sequentialDataFromMap = requestFromMap.getAuthenticatedSequentialData();
+        AuthenticatedSequentialData newSequentialData = new AuthenticatedSequentialData(
+                sequentialDataFromMap.getAuthenticatedData(),
+                newSequenceNumber,
+                sequentialDataFromMap.getPubKeyHash(),
+                newTimestamp);
+        return new AddAuthenticatedDataRequest(newSequentialData,
+                newSignature,
+                refreshRequest.getSignaturePubKeyEncoded(),
+                refreshRequest.getSignaturePublicKey());
     }
 
     @Getter

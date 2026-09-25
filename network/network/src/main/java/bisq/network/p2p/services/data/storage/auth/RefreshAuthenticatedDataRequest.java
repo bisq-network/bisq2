@@ -24,7 +24,6 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
-import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -44,18 +43,19 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                                                        AuthenticatedData authenticatedData,
                                                        KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        int sequenceNumber = store.getNextSequenceNumber(new ByteArray(hash));
-        PublicKey publicKey = keyPair.getPublic();
+        MetaData metaData = authenticatedData.getMetaData();
+        byte[] authenticatedDataHash = DigestUtil.hash(authenticatedData.serializeForHash());
+
+        // We use the AddAuthenticatedDataRequest for signing and then copy out the data we need for RefreshAuthenticatedDataRequest
+        AddAuthenticatedDataRequest addAuthenticatedDataRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
         return new RefreshAuthenticatedDataRequest(VERSION,
-                authenticatedData.getMetaData(),
-                hash,
-                publicKey.getEncoded(),
-                publicKey,
-                sequenceNumber,
-                signature,
-                System.currentTimeMillis());
+                metaData,
+                authenticatedDataHash,
+                addAuthenticatedDataRequest.getSignaturePubKeyEncoded(),
+                addAuthenticatedDataRequest.getSignaturePublicKey(),
+                addAuthenticatedDataRequest.getSequenceNumber(),
+                addAuthenticatedDataRequest.getSignature(),
+                addAuthenticatedDataRequest.getCreated());
     }
 
 
@@ -64,7 +64,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @ExcludeForHash
     private final int version;
-    private final byte[] hash;
+    private final byte[] hash; // of authenticatedData
     private final byte[] ownerPublicKeyBytes; // 442 bytes
     private final transient PublicKey ownerPublicKey;
     private final int sequenceNumber;
