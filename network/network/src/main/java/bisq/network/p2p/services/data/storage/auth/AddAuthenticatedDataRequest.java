@@ -73,7 +73,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     private final byte[] signature;
     @Getter
     private final byte[] ownerPublicKeyBytes;
-    // transient fields are excluded by default for EqualsAndHashCode
     private transient final PublicKey ownerPublicKey;
 
     public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
