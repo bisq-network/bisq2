@@ -219,11 +219,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @Override
     public boolean isExpired() {
-        // Not used as we do not persist RefreshAuthenticatedDataRequest but use it to recreate a new
-        // AddAuthenticatedDataRequest with the updated sequenceNumber
-        // TODO implement same expiry as in remove messages
-        return false;
-        //return (System.currentTimeMillis() - getCreated()) > getTtl();
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
 

@@ -240,6 +240,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult refresh(RefreshAuthenticatedDataRequest request) {
         maybeLogMapState("refresh ", persistableStore);
+
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+
         ByteArray storageKey = request.getStorageKey();
         AddAuthenticatedDataRequest updatedRequest;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
