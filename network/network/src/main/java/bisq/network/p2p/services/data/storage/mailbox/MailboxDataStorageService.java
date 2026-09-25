@@ -93,11 +93,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (isExceedingMapSize()) {
+            requestFromMap = map.get(storageKey);
+            if (requestFromMap == null && isExceedingMapSize()) {
                 return DataStorageResult.failed().maxMapSizeReached();
             }
 
-            requestFromMap = map.get(storageKey);
             if (request.equals(requestFromMap)) {
                 return DataStorageResult.failed().requestAlreadyReceived();
             }

@@ -110,11 +110,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (isExceedingMapSize()) {
+            requestFromMap = map.get(storageKey);
+
+            if (requestFromMap == null && isExceedingMapSize()) {
                 return DataStorageResult.failed().maxMapSizeReached();
             }
 
-            requestFromMap = map.get(storageKey);
             if (request.equals(requestFromMap)) {
                 return DataStorageResult.failed().requestAlreadyReceived();
             }
