@@ -49,17 +49,21 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                                                       AuthenticatedData authenticatedData,
                                                       KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        int sequenceNumber = store.getSequenceNumber(hash) + 1;
         PublicKey publicKey = keyPair.getPublic();
+        long created = System.currentTimeMillis();
+        MetaData metaData = authenticatedData.getMetaData();
+        byte[] publicKeyEncoded = publicKey.getEncoded();
+        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
+        int sequenceNumber = store.getSequenceNumber(hash) + 1;
+        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         return new RemoveAuthenticatedDataRequest(VERSION,
-                authenticatedData.getMetaData(),
+                metaData,
                 hash,
-                publicKey.getEncoded(),
+                publicKeyEncoded,
                 publicKey,
                 sequenceNumber,
-                signature);
+                signature,
+                created);
     }
 
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
@@ -78,23 +82,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     private final long created;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
-
-    private RemoveAuthenticatedDataRequest(int version,
-                                           MetaData metaData,
-                                           byte[] hash,
-                                           byte[] ownerPublicKeyBytes,
-                                           PublicKey ownerPublicKey,
-                                           int sequenceNumber,
-                                           byte[] signature) {
-        this(version,
-                metaData,
-                hash,
-                ownerPublicKeyBytes,
-                ownerPublicKey,
-                sequenceNumber,
-                signature,
-                System.currentTimeMillis());
-    }
 
     private RemoveAuthenticatedDataRequest(int version,
                                            MetaData metaData,
