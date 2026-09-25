@@ -96,8 +96,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(receiverPublicKeyBytes);
-        NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateDate(created);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
 

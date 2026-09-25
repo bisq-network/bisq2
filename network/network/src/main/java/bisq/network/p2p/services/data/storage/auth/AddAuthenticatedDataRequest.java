@@ -85,8 +85,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
 

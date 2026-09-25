@@ -78,8 +78,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
 

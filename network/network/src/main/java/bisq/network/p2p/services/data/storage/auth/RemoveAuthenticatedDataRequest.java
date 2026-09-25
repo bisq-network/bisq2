@@ -104,8 +104,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
-        NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateDate(created);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
 
