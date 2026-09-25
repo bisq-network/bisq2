@@ -86,7 +86,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         maybeLogMapState("add", persistableStore);
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
-        DistributedData distributedData = authenticatedData.distributedData;
         ByteArray storageKey = request.getStorageKey();
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
@@ -106,8 +105,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
             if (request.isExpired()) {
                 log.debug("AddAuthenticatedDataRequest with {} is expired on {}",
-                        distributedData.getClass().getSimpleName(),
-                        new Date(authenticatedSequentialData.getCreated() + distributedData.getMetaData().getTtl())
+                        request.getClassName(),
+                        new Date(request.getCreated() + request.getTtl())
                 );
                 log.debug("Data is expired at add. request={}", request);
                 return new DataStorageResult(false).expired();
@@ -135,8 +134,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).signatureInvalid();
             }
 
-            if (distributedData instanceof PublishDateAware publishDateAware) {
-                publishDateAware.setPublishDate(authenticatedSequentialData.getCreated());
+            if (authenticatedData.getDistributedData() instanceof PublishDateAware publishDateAware) {
+                publishDateAware.setPublishDate(request.getCreated());
             }
 
             map.put(storageKey, request);
