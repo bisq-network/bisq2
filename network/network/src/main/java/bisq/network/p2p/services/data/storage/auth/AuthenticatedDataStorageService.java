@@ -169,6 +169,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             AuthenticatedDataRequest requestFromMap = map.get(storageKey);
             if (requestFromMap == null) {
                 log.debug("No entry at remove. hash={}", storageKey);
+
+                if (isExceedingMapSize()) {
+                    return DataStorageResult.failed().maxMapSizeReached();
+                }
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
                 map.put(storageKey, request);
@@ -254,6 +258,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             AuthenticatedDataRequest requestFromMap = map.get(storageKey);
 
             if (requestFromMap == null) {
+                if (isExceedingMapSize()) {
+                    return DataStorageResult.failed().maxMapSizeReached();
+                }
+
                 return DataStorageResult.failed().noEntry();
             }
 
