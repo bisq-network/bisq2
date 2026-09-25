@@ -24,7 +24,6 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.Sequential;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;

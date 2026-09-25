@@ -38,14 +38,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Getter
 public final class AuthenticatedSequentialData implements NetworkProto {
-    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
-        return from(data, sequenceNumber, data.getCreated());
-    }
-
-    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber, long created) {
-        return new AuthenticatedSequentialData(data.getAuthenticatedData(), sequenceNumber, data.getPubKeyHash(), created);
-    }
-
     private final AuthenticatedData authenticatedData;
     private final int sequenceNumber;
     private final long created;
