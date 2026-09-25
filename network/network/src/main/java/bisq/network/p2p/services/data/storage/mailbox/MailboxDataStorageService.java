@@ -183,16 +183,18 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             map.put(storageKey, request);
-            listeners.forEach(listener -> {
-                try {
-                    listener.onRemoved(sequentialDataFromMap.getMailboxData());
-                } catch (Exception e) {
-                    log.error("Calling onRemoved at listener {} failed", listener, e);
-                }
-            });
         }
 
         persist();
+
+        listeners.forEach(listener -> {
+            try {
+                listener.onRemoved(sequentialDataFromMap.getMailboxData());
+            } catch (Exception e) {
+                log.error("Calling onRemoved at listener {} failed", listener, e);
+            }
+        });
+
         maybeLogMapState("remove success", persistableStore);
         return DataStorageResult.success().removedData(sequentialDataFromMap.getMailboxData());
     }
