@@ -262,10 +262,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             AuthenticatedDataRequest requestFromMap = map.get(storageKey);
 
             if (requestFromMap == null) {
-                if (isExceedingMapSize()) {
-                    return DataStorageResult.failed().maxMapSizeReached();
-                }
-
                 return DataStorageResult.failed().noEntry();
             }
 
