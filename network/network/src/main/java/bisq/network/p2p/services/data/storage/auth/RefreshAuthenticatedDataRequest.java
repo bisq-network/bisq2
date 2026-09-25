@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
-@Getter
 @Slf4j
 public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataRequest {
     private static final int VERSION = 1;
@@ -65,12 +64,16 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @ExcludeForHash
     private final int version;
-
+    @Getter
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes; // 442 bytes
+    @Getter
     transient private final PublicKey ownerPublicKey;
+    @Getter
     private final int sequenceNumber;
+    @Getter
     private final byte[] signature;         // 47 bytes
+    @Getter
     private final long created;
 
     private RefreshAuthenticatedDataRequest(int version,

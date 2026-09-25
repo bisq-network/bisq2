@@ -71,7 +71,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     private final AuthenticatedSequentialData authenticatedSequentialData;
     @Getter
     private final byte[] signature;
-    @Getter
     private final byte[] ownerPublicKeyBytes;
     private transient final PublicKey ownerPublicKey;
 

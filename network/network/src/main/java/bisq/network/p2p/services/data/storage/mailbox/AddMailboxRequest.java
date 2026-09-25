@@ -36,7 +36,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
-@Getter
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     public static AddMailboxRequest from(MailboxData mailboxData,
@@ -56,9 +55,12 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKey);
     }
 
+    @Getter
     private final MailboxSequentialData mailboxSequentialData;
+    @Getter
     private final byte[] signature;
     private final byte[] senderPublicKeyBytes;
+    @Getter
     private final PublicKey senderPublicKey;
 
     private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,

@@ -41,7 +41,6 @@ import java.util.Optional;
 
 // Data size about 200-250 bytes
 @Slf4j
-@Getter
 public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
     private static final int VERSION = 1;
 
@@ -65,11 +64,14 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @ExcludeForHash
     private final int version;
-
+    @Getter
     private final byte[] hash;
     private final byte[] receiverPublicKeyBytes;
+    @Getter
     private final byte[] signature;
+    @Getter
     private final long created;
+    @Getter
     private transient PublicKey receiverPublicKey;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();

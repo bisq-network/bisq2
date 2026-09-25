@@ -41,7 +41,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 // Data size about 200-250 bytes
-@Getter
 @Slf4j
 public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
     private static final int VERSION = 1;
@@ -68,12 +67,16 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @ExcludeForHash
     private final int version;
-
+    @Getter
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
+    @Getter
     transient private PublicKey ownerPublicKey;
+    @Getter
     private final int sequenceNumber;
+    @Getter
     private final byte[] signature;
+    @Getter
     private final long created;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
