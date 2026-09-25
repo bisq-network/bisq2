@@ -177,7 +177,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     }
 
     @Override
-    public PublicKey getOwnerPublicKey() {
+    public PublicKey getSignaturePublicKey() {
         return ownerPublicKey;
     }
 

@@ -130,7 +130,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public PublicKey getOwnerPublicKey() {
+    public PublicKey getSignaturePublicKey() {
         return senderPublicKey;
     }
 

@@ -154,7 +154,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
     @Override
-    public PublicKey getOwnerPublicKey() {
+    public PublicKey getSignaturePublicKey() {
         return ownerPublicKey;
     }
 

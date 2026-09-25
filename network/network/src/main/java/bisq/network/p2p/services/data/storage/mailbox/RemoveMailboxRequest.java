@@ -152,7 +152,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
     @Override
-    public PublicKey getOwnerPublicKey() {
+    public PublicKey getSignaturePublicKey() {
         return receiverPublicKey;
     }
 

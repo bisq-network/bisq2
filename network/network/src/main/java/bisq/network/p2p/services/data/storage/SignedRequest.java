@@ -26,13 +26,13 @@ import java.security.PublicKey;
 public interface SignedRequest {
     byte[] getPreImage();
 
-    PublicKey getOwnerPublicKey();
+    PublicKey getSignaturePublicKey();
 
     byte[] getSignature();
 
     default boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(getPreImage(), getSignature(), getOwnerPublicKey());
+            return !SignatureUtil.verify(getPreImage(), getSignature(), getSignaturePublicKey());
         } catch (Exception e) {
             LoggerFactory.getLogger(getClass()).warn("Verifying signature failed", e);
             return true;

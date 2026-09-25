@@ -288,7 +288,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(sequentialData, request.getSequenceNumber(), refreshDate);
             updatedRequest = new AddAuthenticatedDataRequest(updatedData,
                     addRequestFromMap.getSignature(),
-                    addRequestFromMap.getOwnerPublicKey());
+                    addRequestFromMap.getSignaturePublicKey());
 
             map.put(byteArray, updatedRequest);
         }

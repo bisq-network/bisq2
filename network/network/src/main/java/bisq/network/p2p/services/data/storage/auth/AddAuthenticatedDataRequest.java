@@ -150,7 +150,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
-    public PublicKey getOwnerPublicKey() {
+    public PublicKey getSignaturePublicKey() {
         return ownerPublicKey;
     }
 
