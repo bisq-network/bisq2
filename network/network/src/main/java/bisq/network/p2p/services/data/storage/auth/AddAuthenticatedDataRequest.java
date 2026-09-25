@@ -134,26 +134,26 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         }
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // SignedRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
     public byte[] getPreImage() {
         return authenticatedSequentialData.serializeForHash();
     }
 
+    @Override
     public byte[] getSignature() {
         return signature;
     }
 
+    @Override
     public PublicKey getOwnerPublicKey() {
         return ownerPublicKey;
     }
 
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(getPreImage(), getSignature(), getOwnerPublicKey());
-        } catch (Exception e) {
-            log.warn(e.toString(), e);
-            return true;
-        }
-    }
 
 
     @Override

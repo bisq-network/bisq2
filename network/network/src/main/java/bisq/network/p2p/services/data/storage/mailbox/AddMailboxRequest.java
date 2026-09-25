@@ -119,26 +119,26 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         }
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // SignedRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
     public byte[] getPreImage() {
         return mailboxSequentialData.serializeForHash();
     }
 
+    @Override
     public PublicKey getOwnerPublicKey() {
         return senderPublicKey;
     }
 
+    @Override
     public byte[] getSignature() {
         return signature;
     }
 
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(getPreImage(), getSignature(), getOwnerPublicKey());
-        } catch (Exception e) {
-            log.warn(e.toString(), e);
-            return true;
-        }
-    }
 
     @Override
     public double getCostFactor() {

@@ -142,24 +142,23 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         }
     }
 
+    /* --------------------------------------------------------------------- */
+    // SignedRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
     public byte[] getPreImage() {
         return hash;
     }
 
+    @Override
     public PublicKey getOwnerPublicKey() {
         return receiverPublicKey;
     }
 
+    @Override
     public byte[] getSignature() {
         return signature;
-    }
-
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(getPreImage(), getSignature(), getOwnerPublicKey());
-        } catch (Exception e) {
-            return true;
-        }
     }
 
 
