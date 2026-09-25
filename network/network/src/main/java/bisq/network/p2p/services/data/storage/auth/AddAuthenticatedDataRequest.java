@@ -61,7 +61,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                 created);
         byte[] preImage = sequentialData.serializeForHash();
         byte[] signature = SignatureUtil.sign(preImage, keyPair.getPrivate());
-        return new AddAuthenticatedDataRequest(sequentialData, signature, publicKey);
+        return new AddAuthenticatedDataRequest(sequentialData, signature, publicKeyEncoded, publicKey);
     }
 
     @Getter
@@ -72,17 +72,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
                                        byte[] signature,
+                                       byte[] ownerPublicKeyBytes,
                                        PublicKey ownerPublicKey) {
-        this(authenticatedSequentialData,
-                signature,
-                ownerPublicKey.getEncoded(),
-                ownerPublicKey);
-    }
-
-    private AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
-                                        byte[] signature,
-                                        byte[] ownerPublicKeyBytes,
-                                        PublicKey ownerPublicKey) {
         this.authenticatedSequentialData = authenticatedSequentialData;
         this.signature = signature;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
