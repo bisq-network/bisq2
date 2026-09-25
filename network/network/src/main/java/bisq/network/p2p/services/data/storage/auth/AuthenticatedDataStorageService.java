@@ -247,10 +247,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         if (refreshRequest.isExpired()) {
             return DataStorageResult.failed().expired();
         }
-        if (refreshRequest.isSignatureInvalid()) {
-            log.warn("Signature is invalid at refresh. request={}", refreshRequest);
-            return DataStorageResult.failed().signatureInvalid();
-        }
 
         ByteArray storageKey = refreshRequest.getStorageKey();
         AddAuthenticatedDataRequest updatedAddRequest;
@@ -293,6 +289,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // The signature of the RefreshAuthenticatedDataRequest is created with the full data of an
             // AddAuthenticatedDataRequest at the owner's side, thus the signature will match the new object.
             updatedAddRequest = AddAuthenticatedDataRequest.from(addRequestFromMap, refreshRequest);
+            if (updatedAddRequest.isSignatureInvalid()) {
+                log.warn("Signature is invalid at refresh. request={}", refreshRequest);
+                return DataStorageResult.failed().signatureInvalid();
+            }
 
             if (sequentialDataFromMap.getDistributedData() instanceof PublishDateAware publishDateAware) {
                 publishDateAware.setPublishDate(updatedAddRequest.getCreated());

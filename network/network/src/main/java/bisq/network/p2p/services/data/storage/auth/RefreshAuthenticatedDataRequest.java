@@ -171,9 +171,19 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // SignedRequest implementation
     /* --------------------------------------------------------------------- */
 
+    // The signature is created over the AddAuthenticatedDataRequest which the refresh produces (see from()).
+    // It can only be verified on that request, which the receiver rebuilds from its stored entry with
+    // AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest). The refresh request alone has no pre-image.
     @Override
     public byte[] getPreImage() {
-        return hash;
+        throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest has no pre-image. " +
+                "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
+    }
+
+    @Override
+    public boolean isSignatureInvalid() {
+        throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest cannot be verified alone. " +
+                "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
     }
 
     @Override
