@@ -79,9 +79,13 @@ class BisqEasyTakeOfferRequestPriceSpecTest {
     @BeforeEach
     void setUp() {
         ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
-        BisqEasyOfferbookMessage offerbookMessage = mock(BisqEasyOfferbookMessage.class);
-        when(offerbookMessage.getBisqEasyOffer()).thenReturn(Optional.of(myOffer));
-        when(offerbookMessage.getAuthorUserProfileId()).thenReturn(myOffer.getMakersUserProfileId());
+        BisqEasyOfferbookMessage offerbookMessage = new BisqEasyOfferbookMessage(new BisqEasyOfferbookChannel(myOffer.getMarket()).getId(),
+                myOffer.getMakersUserProfileId(),
+                Optional.of(myOffer),
+                Optional.empty(),
+                Optional.empty(),
+                OFFER_DATE,
+                false);
         BisqEasyOfferbookChannel channel = mock(BisqEasyOfferbookChannel.class);
         when(channel.getChatMessages()).thenReturn(new ObservableSet<>(Set.of(offerbookMessage)));
         when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
