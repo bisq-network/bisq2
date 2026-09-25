@@ -161,6 +161,15 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     }
 
 
+    // Overrides Proto.getVersion(). Proto uses it to resolve @ExcludeForHash(excludeOnlyInVersions = ...), so it
+    // determines the result of serializeForHash(), which is the payload of the proof of work. It must return the
+    // version of the message.
+    @Override
+    public int getVersion() {
+        return version;
+    }
+
+
     /* --------------------------------------------------------------------- */
     // CostBearingMessage implementation
     /* --------------------------------------------------------------------- */
