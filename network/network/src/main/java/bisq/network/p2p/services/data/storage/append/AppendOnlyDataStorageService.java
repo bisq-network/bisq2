@@ -64,12 +64,12 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
         Map<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (isExceedingMapSize()) {
-                return new DataStorageResult(false).maxMapSizeReached();
+                return DataStorageResult.failed().maxMapSizeReached();
             }
 
             ByteArray storageKey = addAppendOnlyDataRequest.getStorageKey();
             if (map.containsKey(storageKey)) {
-                return new DataStorageResult(false).payloadAlreadyStored();
+                return DataStorageResult.failed().payloadAlreadyStored();
             }
 
             map.put(storageKey, addAppendOnlyDataRequest);
@@ -82,7 +82,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
                 log.error("Calling onAppended at listener {} failed", listener, e);
             }
         });
-        return new DataStorageResult(true);
+        return DataStorageResult.success();
     }
 
     @Override

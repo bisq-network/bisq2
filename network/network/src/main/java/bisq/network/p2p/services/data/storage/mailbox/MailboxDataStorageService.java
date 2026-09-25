@@ -78,33 +78,33 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (isExceedingMapSize()) {
-                return new DataStorageResult(false).maxMapSizeReached();
+                return DataStorageResult.failed().maxMapSizeReached();
             }
 
             requestFromMap = map.get(storageKey);
             if (request.equals(requestFromMap)) {
-                return new DataStorageResult(false).requestAlreadyReceived();
+                return DataStorageResult.failed().requestAlreadyReceived();
             }
 
             int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
             if (requestFromMap != null && request.isSequenceNrInvalid(sequenceNumberFromMap)) {
-                return new DataStorageResult(false).sequenceNrInvalid();
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
             if (request.isExpired()) {
-                return new DataStorageResult(false).expired();
+                return DataStorageResult.failed().expired();
             }
 
             if (mailboxData.isDataInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
-                return new DataStorageResult(false).dataInvalid();
+                return DataStorageResult.failed().dataInvalid();
             }
 
             if (request.isSignaturePubKeyHashInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
-                return new DataStorageResult(false).publicKeyHashInvalid();
+                return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
-                return new DataStorageResult(false).signatureInvalid();
+                return DataStorageResult.failed().signatureInvalid();
             }
             map.put(storageKey, request);
         }
@@ -119,7 +119,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
         });
         maybeLogMapState("add success", persistableStore);
-        return new DataStorageResult(true);
+        return DataStorageResult.success();
     }
 
 
@@ -135,7 +135,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 // track of the sequence number
                 map.put(storageKey, request);
                 persist();
-                return new DataStorageResult(true).noEntry();
+                return DataStorageResult.success().noEntry();
             }
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
@@ -145,7 +145,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     map.put(storageKey, request);
                     persist();
                 }
-                return new DataStorageResult(true).alreadyRemoved();
+                return DataStorageResult.success().alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddMailboxRequest
@@ -154,16 +154,16 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             sequentialDataFromMap = addRequest.getMailboxSequentialData();
             if (request.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
-                return new DataStorageResult(false).sequenceNrInvalid();
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
             if (request.isSignaturePubKeyHashInvalid(sequentialDataFromMap.getReceiversPublicKeyHash())) {
                 // Hash of pubKey of data does not match provided one
-                return new DataStorageResult(false).publicKeyHashInvalid();
+                return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
-                return new DataStorageResult(false).signatureInvalid();
+                return DataStorageResult.failed().signatureInvalid();
             }
 
             // As metaData from mailboxData is taken from the users current code base but the one from RemoveMailboxRequest
@@ -192,7 +192,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
         persist();
         maybeLogMapState("remove success", persistableStore);
-        return new DataStorageResult(true).removedData(sequentialDataFromMap.getMailboxData());
+        return DataStorageResult.success().removedData(sequentialDataFromMap.getMailboxData());
     }
 
     public void addListener(Listener listener) {
