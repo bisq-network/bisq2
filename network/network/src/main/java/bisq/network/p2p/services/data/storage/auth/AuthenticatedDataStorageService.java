@@ -83,6 +83,14 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public DataStorageResult add(AddAuthenticatedDataRequest request) {
         maybeLogMapState("add", persistableStore);
 
+        // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
+        // Detect them before the signature verification, which is the most expensive check. The check is
+        // repeated inside the lock because the map can change in between.
+        ByteArray storageKey = request.getStorageKey();
+        if (request.equals(persistableStore.getMap().get(storageKey))) {
+            return DataStorageResult.failed().requestAlreadyReceived();
+        }
+
         if (request.isExpired()) {
             return DataStorageResult.failed().expired();
         }
@@ -106,7 +114,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             return DataStorageResult.failed().signatureInvalid();
         }
 
-        ByteArray storageKey = request.getStorageKey();
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {

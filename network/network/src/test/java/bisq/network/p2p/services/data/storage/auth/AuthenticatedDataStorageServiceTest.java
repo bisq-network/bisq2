@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AuthenticatedDataStorageServiceRefreshTest {
+class AuthenticatedDataStorageServiceTest {
     @TempDir
     Path tempDir;
 
@@ -110,6 +110,17 @@ class AuthenticatedDataStorageServiceRefreshTest {
 
         assertFalse(result.isSuccess());
         assertTrue(result.isPublicKeyHashInvalid(), result.toString());
+    }
+
+    @Test
+    void duplicateAddRequestIsReportedAsAlreadyReceived() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.add(addRequest).isSuccess());
+
+        DataStorageResult result = peerStore.add(addRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isRequestAlreadyReceived(), result.toString());
     }
 
     private void addToOwnerAndPeer() throws GeneralSecurityException {
