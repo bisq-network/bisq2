@@ -26,7 +26,7 @@ import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataReques
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 
-public interface DataRequest extends BroadcastMessage {
+public interface DataRequest extends BroadcastMessage, Expirable {
     default bisq.network.protobuf.DataRequest.Builder newDataRequestBuilder() {
         return bisq.network.protobuf.DataRequest.newBuilder();
     }
@@ -56,10 +56,6 @@ public interface DataRequest extends BroadcastMessage {
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
     }
-
-    boolean isExpired();
-
-    long getCreated();
 
     int getMaxMapSize();
 }
