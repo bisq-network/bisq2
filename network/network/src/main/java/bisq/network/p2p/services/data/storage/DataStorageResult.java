@@ -26,7 +26,15 @@ public class DataStorageResult {
             dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid;
     private StorageData removedData;
 
-    public DataStorageResult(boolean success) {
+    public static DataStorageResult success() {
+        return new DataStorageResult(true);
+    }
+
+    public static DataStorageResult failed() {
+        return new DataStorageResult(false);
+    }
+
+    private DataStorageResult(boolean success) {
         this.success = success;
     }
 

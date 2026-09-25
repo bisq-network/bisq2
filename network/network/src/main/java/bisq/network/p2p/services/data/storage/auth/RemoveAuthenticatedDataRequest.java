@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -28,7 +29,6 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +41,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 // Data size about 200-250 bytes
-@Getter
 @Slf4j
 public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
     private static final int VERSION = 1;
@@ -50,17 +49,21 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                                                       AuthenticatedData authenticatedData,
                                                       KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        int sequenceNumber = store.getSequenceNumber(hash) + 1;
         PublicKey publicKey = keyPair.getPublic();
+        long created = System.currentTimeMillis();
+        MetaData metaData = authenticatedData.getMetaData();
+        byte[] publicKeyEncoded = publicKey.getEncoded();
+        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
+        int sequenceNumber = store.getSequenceNumber(hash) + 1;
+        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         return new RemoveAuthenticatedDataRequest(VERSION,
-                authenticatedData.getMetaData(),
+                metaData,
                 hash,
-                publicKey.getEncoded(),
+                publicKeyEncoded,
                 publicKey,
                 sequenceNumber,
-                signature);
+                signature,
+                created);
     }
 
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
@@ -68,32 +71,14 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @ExcludeForHash
     private final int version;
-
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
-    transient private PublicKey ownerPublicKey;
+    private final transient PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;
     private final long created;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
-
-    private RemoveAuthenticatedDataRequest(int version,
-                                           MetaData metaData,
-                                           byte[] hash,
-                                           byte[] ownerPublicKeyBytes,
-                                           PublicKey ownerPublicKey,
-                                           int sequenceNumber,
-                                           byte[] signature) {
-        this(version,
-                metaData,
-                hash,
-                ownerPublicKeyBytes,
-                ownerPublicKey,
-                sequenceNumber,
-                signature,
-                System.currentTimeMillis());
-    }
 
     private RemoveAuthenticatedDataRequest(int version,
                                            MetaData metaData,
@@ -122,6 +107,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateDate(created);
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
 
     @Override
     public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
@@ -160,60 +150,104 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                     proto.getCreated()
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }
 
-    public MetaData getFallbackMetaData() {
-        return metaData;
-    }
 
-    public MetaData getMetaData() {
-        return metaDataFromDistributedData.orElse(metaData);
-    }
+    /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public double getCostFactor() {
         return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
     }
 
-    public boolean isSignatureInvalid() {
-        try {
-            if (ownerPublicKey == null) {
-                ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
-            }
-            return !SignatureUtil.verify(hash, signature, ownerPublicKey);
-        } catch (Exception e) {
-            return true;
-        }
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
     }
 
-    public boolean isPublicKeyHashInvalid(AuthenticatedSequentialData entryFromMap) {
-        try {
-            return !Arrays.equals(entryFromMap.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+
+    /* --------------------------------------------------------------------- */
+    // SignedRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public byte[] getPreImage() {
+        return hash;
     }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
+    @Override
+    public PublicKey getSignaturePublicKey() {
+        return ownerPublicKey;
+    }
+
+    @Override
+    public byte[] getSignature() {
+        return signature;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return ownerPublicKeyBytes;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public int getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > getMetaData().getTtl();
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
 
     @Override
-    public int getMaxMapSize() {
-        return getMetaData().getMaxMapSize();
+    public MetaData getMetaData() {
+        return metaDataFromDistributedData.orElse(metaData);
     }
 
-    public String getClassName() {
-        return getMetaData().getClassName();
+    public MetaData getFallbackMetaData() {
+        return metaData;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

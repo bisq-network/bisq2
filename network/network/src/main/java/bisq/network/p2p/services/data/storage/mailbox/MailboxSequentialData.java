@@ -38,7 +38,6 @@ public final class MailboxSequentialData implements NetworkProto {
     private final byte[] receiversPubKeyBytes;
     private final long created;
     private final int sequenceNumber;
-    // transient fields are excluded by default for EqualsAndHashCode
     private transient final PublicKey receiversPubKey;
 
     public MailboxSequentialData(MailboxData mailboxData,
@@ -128,15 +127,6 @@ public final class MailboxSequentialData implements NetworkProto {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
-    }
-
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - created) >
-                Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());
     }
 
     @Override

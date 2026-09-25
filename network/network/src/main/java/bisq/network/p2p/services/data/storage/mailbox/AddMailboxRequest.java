@@ -17,10 +17,12 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -33,10 +35,8 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 
 @Slf4j
-@Getter
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     public static AddMailboxRequest from(MailboxData mailboxData,
@@ -44,28 +44,25 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                                          PublicKey receiverPublicKey)
             throws GeneralSecurityException {
         PublicKey senderPublicKey = senderKeyPair.getPublic();
-        byte[] senderPublicKeyHash = DigestUtil.hash(senderPublicKey.getEncoded());
+        byte[] senderPublicKeyEncoded = senderPublicKey.getEncoded();
+        byte[] senderPublicKeyHash = DigestUtil.hash(senderPublicKeyEncoded);
         byte[] receiverPublicKeyHash = DigestUtil.hash(receiverPublicKey.getEncoded());
+        int sequenceNumber = 1;
         MailboxSequentialData mailboxSequentialData = new MailboxSequentialData(mailboxData,
                 senderPublicKeyHash,
                 receiverPublicKeyHash,
                 receiverPublicKey,
-                1);
-        byte[] serialized = mailboxSequentialData.serializeForHash();
-        byte[] signature = SignatureUtil.sign(serialized, senderKeyPair.getPrivate());
-        return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKey);
+                sequenceNumber);
+        byte[] preImage = mailboxSequentialData.serializeForHash();
+        byte[] signature = SignatureUtil.sign(preImage, senderKeyPair.getPrivate());
+        return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKeyEncoded, senderPublicKey);
     }
 
+    @Getter
     private final MailboxSequentialData mailboxSequentialData;
     private final byte[] signature;
     private final byte[] senderPublicKeyBytes;
-    private final PublicKey senderPublicKey;
-
-    private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
-                              byte[] signature,
-                              PublicKey senderPublicKey) {
-        this(mailboxSequentialData, signature, senderPublicKey.getEncoded(), senderPublicKey);
-    }
+    private final transient PublicKey senderPublicKey;
 
     private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
                               byte[] signature,
@@ -84,6 +81,11 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
 
     @Override
     public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
@@ -114,10 +116,19 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                     senderPublicKey
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }
+
+    private byte[] getStoragePreImage() {
+        return mailboxSequentialData.getMailboxData().serializeForHash();
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public double getCostFactor() {
@@ -128,40 +139,61 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         return MathUtils.bounded(0.25, 1, impact);
     }
 
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(mailboxSequentialData.serializeForHash(), signature, getOwnerPublicKey());
-        } catch (Exception e) {
-            log.warn(e.toString(), e);
-            return true;
-        }
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKey() {
+        byte[] hash = DigestUtil.hash(getStoragePreImage());
+        return new ByteArray(hash);
     }
 
-    public boolean isPublicKeyInvalid() {
-        try {
-            return !Arrays.equals(mailboxSequentialData.getSenderPublicKeyHash(),
-                    DigestUtil.hash(senderPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+
+    /* --------------------------------------------------------------------- */
+    // SignedRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public byte[] getPreImage() {
+        return mailboxSequentialData.serializeForHash();
     }
 
-    public PublicKey getOwnerPublicKey() {
-        return Optional.ofNullable(senderPublicKey).orElseGet(() -> {
-            try {
-                return KeyGeneration.generatePublic(senderPublicKeyBytes);
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        });
+    @Override
+    public PublicKey getSignaturePublicKey() {
+        return senderPublicKey;
     }
 
+    @Override
+    public byte[] getSignature() {
+        return signature;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return senderPublicKeyBytes;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public int getSequenceNumber() {
         return mailboxSequentialData.getSequenceNumber();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public long getCreated() {
@@ -170,13 +202,23 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public boolean isExpired() {
-        return mailboxSequentialData.isExpired();
+        return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
+
     @Override
-    public int getMaxMapSize() {
-        return mailboxSequentialData.getMailboxData().getMetaData().getMaxMapSize();
+    public MetaData getMetaData() {
+        return mailboxSequentialData.getMailboxData().getMetaData();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

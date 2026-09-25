@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -26,7 +27,6 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
-@Getter
 @Slf4j
 public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataRequest {
     private static final int VERSION = 1;
@@ -65,10 +64,9 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @ExcludeForHash
     private final int version;
-
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes; // 442 bytes
-    transient private final PublicKey ownerPublicKey;
+    private final transient PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;         // 47 bytes
     private final long created;
@@ -99,6 +97,11 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
         NetworkDataValidation.validateECSignature(signature);
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
 
     @Override
     public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
@@ -137,51 +140,105 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                     proto.getCreated()
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public double getCostFactor() {
         return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
     }
 
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(hash, signature, ownerPublicKey);
-        } catch (Exception e) {
-            return true;
-        }
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
     }
 
-    public boolean isPublicKeyInvalid(AuthenticatedSequentialData entryFromMap) {
-        try {
-            return !Arrays.equals(entryFromMap.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+
+    /* --------------------------------------------------------------------- */
+    // SignedRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public byte[] getPreImage() {
+        return hash;
     }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
+    @Override
+    public PublicKey getSignaturePublicKey() {
+        return ownerPublicKey;
+    }
+
+    @Override
+    public byte[] getSignature() {
+        return signature;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
+
+
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return ownerPublicKeyBytes;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public int getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override
     public boolean isExpired() {
-        // Not used as we do not persist RefreshAuthenticatedDataRequest but use it to recreate a new 
+        // Not used as we do not persist RefreshAuthenticatedDataRequest but use it to recreate a new
         // AddAuthenticatedDataRequest with the updated sequenceNumber
+        // TODO implement same expiry as in remove messages
         return false;
+        //return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
 
     @Override
-    public int getMaxMapSize() {
-        return metaData.getMaxMapSize();
+    public MetaData getMetaData() {
+        return metaData;
     }
 
-    public String getClassName() {
-        return metaData.getClassName();
-    }
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

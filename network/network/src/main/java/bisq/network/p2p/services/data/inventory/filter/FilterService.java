@@ -101,8 +101,8 @@ public abstract class FilterService<T extends InventoryFilter> {
                 });
 
         List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getDistributedData().getMetaData().getPriority(),
-                        o1.getDistributedData().getMetaData().getPriority()))
+                .sorted((o1, o2) -> Integer.compare(o2.getPriority(),
+                        o1.getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
                         maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
@@ -114,7 +114,7 @@ public abstract class FilterService<T extends InventoryFilter> {
 
         if (!maxSizeReached.get()) {
             sortedAndFilteredRequests.addAll(removeRequests.stream()
-                    .sorted((o1, o2) -> Integer.compare(o2.getMetaData().getPriority(), o1.getMetaData().getPriority()))
+                    .sorted((o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()))
                     .filter(request -> {
                         if (!maxSizeReached.get()) {
                             maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
@@ -144,8 +144,8 @@ public abstract class FilterService<T extends InventoryFilter> {
                     }
                 });
         List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getMailboxSequentialData().getMailboxData().getMetaData().getPriority(),
-                        o1.getMailboxSequentialData().getMailboxData().getMetaData().getPriority()))
+                .sorted((o1, o2) -> Integer.compare(o2.getPriority(),
+                        o1.getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
                         maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
@@ -156,7 +156,7 @@ public abstract class FilterService<T extends InventoryFilter> {
 
         if (!maxSizeReached.get()) {
             sortedAndFilteredRequests.addAll(removeRequests.stream()
-                    .sorted((o1, o2) -> Integer.compare(o2.getMetaData().getPriority(), o1.getMetaData().getPriority()))
+                    .sorted((o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()))
                     .filter(request -> {
                         if (!maxSizeReached.get()) {
                             maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
@@ -175,8 +175,8 @@ public abstract class FilterService<T extends InventoryFilter> {
                 .filter(entry -> isAddAppendOnlyDataRequestMissing(filter, entry))
                 //hashSetFilter.getFilterEntries().contains(toFilterEntry(mapEntry)))
                 .map(Map.Entry::getValue)
-                .sorted((o1, o2) -> Integer.compare(o2.getAppendOnlyData().getMetaData().getPriority(),
-                        o1.getAppendOnlyData().getMetaData().getPriority()))
+                .sorted((o1, o2) -> Integer.compare(o2.getPriority(),
+                        o1.getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
                         maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);

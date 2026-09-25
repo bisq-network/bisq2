@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -27,7 +28,6 @@ import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,20 +41,20 @@ import java.util.Optional;
 
 // Data size about 200-250 bytes
 @Slf4j
-@Getter
 public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
     private static final int VERSION = 1;
 
     public static RemoveMailboxRequest from(MailboxData mailboxData, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
+        long created = System.currentTimeMillis();
+        PublicKey publicKey = receiverKeyPair.getPublic();
+        byte[] publicKeyEncoded = publicKey.getEncoded();
         byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
         byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
-        PublicKey publicKey = receiverKeyPair.getPublic();
-        long created = System.currentTimeMillis();
         return new RemoveMailboxRequest(VERSION,
                 mailboxData.getMetaData(),
                 hash,
-                publicKey.getEncoded(),
+                publicKeyEncoded,
                 publicKey,
                 signature,
                 created);
@@ -65,12 +65,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @ExcludeForHash
     private final int version;
-
     private final byte[] hash;
     private final byte[] receiverPublicKeyBytes;
     private final byte[] signature;
     private final long created;
-    private transient PublicKey receiverPublicKey;
+    private final transient PublicKey receiverPublicKey;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 
@@ -100,6 +99,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateDate(created);
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
 
     @Override
     public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
@@ -136,68 +140,104 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                     proto.getCreated()
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }
 
-    public MetaData getMetaDataFromProto() {
-        return metaData;
-    }
 
-    public MetaData getMetaData() {
-        return metaDataFromDistributedData.orElse(metaData);
-    }
+    /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public double getCostFactor() {
         return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
     }
 
-    public boolean isPublicKeyHashInvalid(MailboxSequentialData mailboxSequentialData) {
-        try {
-            return !Arrays.equals(mailboxSequentialData.getReceiversPublicKeyHash(),
-                    DigestUtil.hash(receiverPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
     }
 
-    public boolean isSignatureInvalid() {
-        try {
-            if (receiverPublicKey == null) {
-                receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
-            }
-            return !SignatureUtil.verify(hash, signature, receiverPublicKey);
-        } catch (Exception e) {
-            return true;
-        }
-    }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        // Use max value for sequence number so that no other addData call is permitted.
-        return Integer.MAX_VALUE <= seqNumberFromMap;
-    }
+    /* --------------------------------------------------------------------- */
+    // SignedRequest implementation
+    /* --------------------------------------------------------------------- */
 
-    public String getClassName() {
-        return getMetaData().getClassName();
+    @Override
+    public byte[] getPreImage() {
+        return hash;
     }
 
     @Override
+    public PublicKey getSignaturePublicKey() {
+        return receiverPublicKey;
+    }
+
+    @Override
+    public byte[] getSignature() {
+        return signature;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return receiverPublicKeyBytes;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
     public int getSequenceNumber() {
+        // Use max value for sequence number so that no other addData call is permitted.
         return Integer.MAX_VALUE;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > Math.min(MailboxData.MAX_TLL, getMetaData().getTtl());
+        return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
 
     @Override
-    public int getMaxMapSize() {
-        return getMetaData().getMaxMapSize();
+    public MetaData getMetaData() {
+        return metaDataFromDistributedData.orElse(metaData);
     }
 
+    public MetaData getMetaDataFromProto() {
+        return metaData;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

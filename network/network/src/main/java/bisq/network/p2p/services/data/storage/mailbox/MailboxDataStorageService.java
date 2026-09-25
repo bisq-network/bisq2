@@ -26,7 +26,6 @@ import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -74,41 +73,40 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         maybeLogMapState("add", persistableStore);
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
-        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        ByteArray byteArray = new ByteArray(hash);
+        ByteArray storageKey = request.getStorageKey();
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (isExceedingMapSize()) {
-                return new DataStorageResult(false).maxMapSizeReached();
+                return DataStorageResult.failed().maxMapSizeReached();
             }
 
-            requestFromMap = map.get(byteArray);
+            requestFromMap = map.get(storageKey);
             if (request.equals(requestFromMap)) {
-                return new DataStorageResult(false).requestAlreadyReceived();
+                return DataStorageResult.failed().requestAlreadyReceived();
             }
 
             int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
-            if (requestFromMap != null && mailboxSequentialData.isSequenceNrInvalid(sequenceNumberFromMap)) {
-                return new DataStorageResult(false).sequenceNrInvalid();
+            if (requestFromMap != null && request.isSequenceNrInvalid(sequenceNumberFromMap)) {
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (mailboxSequentialData.isExpired()) {
-                return new DataStorageResult(false).expired();
+            if (request.isExpired()) {
+                return DataStorageResult.failed().expired();
             }
 
             if (mailboxData.isDataInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
-                return new DataStorageResult(false).dataInvalid();
+                return DataStorageResult.failed().dataInvalid();
             }
 
-            if (request.isPublicKeyInvalid()) {
-                return new DataStorageResult(false).publicKeyHashInvalid();
+            if (request.isSignaturePubKeyHashInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
+                return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
-                return new DataStorageResult(false).signatureInvalid();
+                return DataStorageResult.failed().signatureInvalid();
             }
-            map.put(byteArray, request);
+            map.put(storageKey, request);
         }
 
         persist();
@@ -121,33 +119,33 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
         });
         maybeLogMapState("add success", persistableStore);
-        return new DataStorageResult(true);
+        return DataStorageResult.success();
     }
 
 
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
-        ByteArray byteArray = new ByteArray(request.getHash());
+        ByteArray storageKey = request.getStorageKey();
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        MailboxRequest requestFromMap = map.get(byteArray);
+        MailboxRequest requestFromMap = map.get(storageKey);
         MailboxSequentialData sequentialDataFromMap;
         synchronized (mapAccessLock) {
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
-                map.put(byteArray, request);
+                map.put(storageKey, request);
                 persist();
-                return new DataStorageResult(true).noEntry();
+                return DataStorageResult.success().noEntry();
             }
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
                 // We have had the entry already removed.
                 if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                     // We update the request, so we have the latest sequence number.
-                    map.put(byteArray, request);
+                    map.put(storageKey, request);
                     persist();
                 }
-                return new DataStorageResult(true).alreadyRemoved();
+                return DataStorageResult.success().alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddMailboxRequest
@@ -156,16 +154,16 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             sequentialDataFromMap = addRequest.getMailboxSequentialData();
             if (request.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
-                return new DataStorageResult(false).sequenceNrInvalid();
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyHashInvalid(sequentialDataFromMap)) {
+            if (request.isSignaturePubKeyHashInvalid(sequentialDataFromMap.getReceiversPublicKeyHash())) {
                 // Hash of pubKey of data does not match provided one
-                return new DataStorageResult(false).publicKeyHashInvalid();
+                return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
             if (request.isSignatureInvalid()) {
-                return new DataStorageResult(false).signatureInvalid();
+                return DataStorageResult.failed().signatureInvalid();
             }
 
             // As metaData from mailboxData is taken from the users current code base but the one from RemoveMailboxRequest
@@ -182,7 +180,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                         metaDataFromMailboxData);
             }
 
-            map.put(byteArray, request);
+            map.put(storageKey, request);
             listeners.forEach(listener -> {
                 try {
                     listener.onRemoved(sequentialDataFromMap.getMailboxData());
@@ -194,7 +192,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
         persist();
         maybeLogMapState("remove success", persistableStore);
-        return new DataStorageResult(true).removedData(sequentialDataFromMap.getMailboxData());
+        return DataStorageResult.success().removedData(sequentialDataFromMap.getMailboxData());
     }
 
     public void addListener(Listener listener) {
@@ -209,30 +207,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
-
-    int getSequenceNumber(byte[] hash) {
-        ByteArray byteArray = new ByteArray(hash);
-        int sequenceNumber = 0;
-        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        synchronized (mapAccessLock) {
-            if (map.containsKey(byteArray)) {
-                sequenceNumber = map.get(byteArray).getSequenceNumber();
-            }
-        }
-        return sequenceNumber;
-    }
-
-    boolean contains(byte[] hash) {
-        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        synchronized (mapAccessLock) {
-            return map.containsKey(new ByteArray(hash));
-        }
-    }
-
-    boolean canAddMailboxMessage(MailboxData mailboxData) {
-        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        return getSequenceNumber(hash) < Integer.MAX_VALUE;
-    }
 
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()

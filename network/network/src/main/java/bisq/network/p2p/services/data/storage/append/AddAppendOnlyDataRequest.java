@@ -17,10 +17,13 @@
 
 package bisq.network.p2p.services.data.storage.append;
 
+import bisq.common.data.ByteArray;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.DataRequest;
+import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -43,6 +46,11 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     public void verify() {
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
+
     @Override
     public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
         return newDataRequestBuilder().setAddAppendOnlyDataRequest(toValueProto(serializeForHash));
@@ -63,9 +71,40 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
         return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()));
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
+
     @Override
     public double getCostFactor() {
         return MathUtils.bounded(0.5, 1, appendOnlyData.getCostFactor());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKey() {
+        byte[] hash = DigestUtil.hash(getStoragePreImage());
+        return new ByteArray(hash);
+    }
+
+    private byte[] getStoragePreImage() {
+        return appendOnlyData.serializeForHash();
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public long getCreated() {
+        // Used for sorting at pruning, but AppendOnlyData does not get pruned
+        return 0;
     }
 
     @Override
@@ -74,14 +113,13 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
         return false;
     }
 
-    @Override
-    public long getCreated() {
-        // Used for sorting at pruning, but AppendOnlyData does not get pruned 
-        return 0;
-    }
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
 
     @Override
-    public int getMaxMapSize() {
-        return appendOnlyData.getMetaData().getMaxMapSize();
+    public MetaData getMetaData() {
+        return appendOnlyData.getMetaData();
     }
 }
