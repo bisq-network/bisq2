@@ -41,9 +41,23 @@ The committed verification files are:
 The root `resolveAndVerifyDependencies` task resolves every resolvable configuration in the Bisq 2 composite build,
 including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, and `network/tor` included builds.
 
-IDE import can also resolve `-sources.jar` and `-javadoc.jar` artifacts that normal builds and the task above do not
-request. When adding a dependency, include verification metadata for these IDE artifacts after verifying their
-signatures or checksums. A successful build alone does not verify that IDE import has all required metadata.
+The audit runs in one Gradle invocation through dependencies on the included builds' tasks. Each build keeps its own
+`build/dependency-verification/inventory.tsv` relative to its build root, so cleaning one build cannot delete another
+build's inventory. Unchanged inventories are `UP-TO-DATE`; they are regenerated when resolved modules, direct dependency
+scopes, artifact names or contents, verification metadata, or keyring change, or when an inventory is removed. Java
+source changes alone do not invalidate them.
+
+Gradle still resolves and verifies dependencies when evaluating the inventory inputs. This keeps graph changes from
+properties, resolution rules, dynamic versions, and local repositories visible without starting additional Gradle
+processes. The signature policy remains part of `check` and is checked on each invocation. `--refresh-dependencies`,
+`--write-verification-metadata`, and `--rerun-tasks` force inventory generation. The audit fails when the verification
+mode is `off` or `lenient`, whether set with `--dependency-verification` or the `org.gradle.dependency.verification`
+property (for example in `~/.gradle/gradle.properties`), because Gradle would not verify artifacts in those modes.
+
+IDE import can also resolve `-sources.jar` and `-javadoc.jar` artifacts that normal builds and
+`resolveAndVerifyDependencies` do not request. When adding a dependency, include verification metadata for these IDE
+artifacts after verifying their signatures or checksums. A successful build alone does not verify that IDE import has
+all required metadata.
 
 ### Sources and Javadoc requested by the IDE
 
@@ -114,3 +128,10 @@ Executable Maven artifacts, such as `protoc` and `protoc-gen-grpc-java`, must al
 `gradle/verification-metadata.xml` for the resolved classifier. `verifyDependencySignaturePolicy` fails when a resolved
 executable is covered only by a broad trusted-key rule or when executable metadata remains for an older unresolved
 version of the same tool.
+
+The audit's functional checks use isolated composite builds and a local Maven repository. With Python 3 and the
+Gradle wrapper distribution already available, run them without accessing remote artifact repositories:
+
+```bash
+python3 gradle/tests/dependency_verification_test.py -v
+```
