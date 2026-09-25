@@ -95,6 +95,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        NetworkDataValidation.validateDate(created);
         NetworkDataValidation.validateECSignature(signature);
     }
 
