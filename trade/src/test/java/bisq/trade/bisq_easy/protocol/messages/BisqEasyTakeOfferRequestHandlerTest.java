@@ -80,8 +80,10 @@ class BisqEasyTakeOfferRequestHandlerTest {
         when(takersContract.getBaseSideAmount()).thenReturn(1L);
         when(takersContract.getQuoteSideAmount()).thenReturn(Long.MAX_VALUE);
         // A fixed price of one quote unit per BTC: converting the Long.MAX_VALUE quote amount
-        // to the base side multiplies by 10^8 and overflows a long.
-        when(takersContract.getPriceSpec()).thenReturn(new FixPriceSpec(PriceQuote.fromFiatPrice(0.0001, "USD")));
+        // to the base side multiplies by 10^8 and overflows a long. The contract keeps the offer's price spec.
+        FixPriceSpec priceSpec = new FixPriceSpec(PriceQuote.fromFiatPrice(0.0001, "USD"));
+        when(takersOffer.getPriceSpec()).thenReturn(priceSpec);
+        when(takersContract.getPriceSpec()).thenReturn(priceSpec);
 
         NetworkId takerNetworkId = mock(NetworkId.class, RETURNS_DEEP_STUBS);
         when(takersContract.getTaker().getNetworkId()).thenReturn(takerNetworkId);
