@@ -153,6 +153,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public DataStorageResult remove(RemoveAuthenticatedDataRequest request) {
         maybeLogMapState("remove ", persistableStore);
 
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+
         if (request.isSignatureInvalid()) {
             log.warn("Signature is invalid at remove. request={}", request);
             return DataStorageResult.failed().signatureInvalid();

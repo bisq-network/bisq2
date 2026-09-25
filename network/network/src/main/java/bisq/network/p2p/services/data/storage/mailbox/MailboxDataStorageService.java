@@ -128,6 +128,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
 
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
         if (request.isSignatureInvalid()) {
             return DataStorageResult.failed().signatureInvalid();
         }
