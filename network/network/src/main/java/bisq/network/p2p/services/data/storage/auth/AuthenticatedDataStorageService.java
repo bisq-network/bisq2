@@ -89,7 +89,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
         DistributedData distributedData = authenticatedData.distributedData;
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        ByteArray byteArray = new ByteArray(hash);
+        ByteArray storageKey = new ByteArray(hash);
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
@@ -97,7 +97,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).maxMapSizeReached();
             }
 
-            requestFromMap = map.get(byteArray);
+            requestFromMap = map.get(storageKey);
             if (request.equals(requestFromMap)) {
                 return new DataStorageResult(false).requestAlreadyReceived();
             }
@@ -141,7 +141,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 publishDateAware.setPublishDate(authenticatedSequentialData.getCreated());
             }
 
-            map.put(byteArray, request);
+            map.put(storageKey, request);
 
             // In case we only updated the seq number we still want to broadcast and update the listeners.
             // It is a valid use case that we have both an add and remove data request, and we get repeated sequences
@@ -164,16 +164,16 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult remove(RemoveAuthenticatedDataRequest request) {
         maybeLogMapState("remove ", persistableStore);
-        ByteArray byteArray = new ByteArray(request.getHash());
+        ByteArray storageKey = new ByteArray(request.getHash());
         AuthenticatedData authenticatedDataFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            AuthenticatedDataRequest requestFromMap = map.get(byteArray);
+            AuthenticatedDataRequest requestFromMap = map.get(storageKey);
             if (requestFromMap == null) {
-                log.debug("No entry at remove. hash={}", byteArray);
+                log.debug("No entry at remove. hash={}", storageKey);
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
-                map.put(byteArray, request);
+                map.put(storageKey, request);
                 persist();
                 return new DataStorageResult(true).noEntry();
             }
@@ -183,7 +183,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 // We have had the entry already removed.
                 if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                     // We update the map with the new request with the fresh sequence number.
-                    map.put(byteArray, request);
+                    map.put(storageKey, request);
                     persist();
                 }
                 return new DataStorageResult(true).alreadyRemoved();
@@ -226,7 +226,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                         metaDataFromDistributedData);
             }
 
-            map.put(byteArray, request);
+            map.put(storageKey, request);
         }
 
         persist();
@@ -244,11 +244,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult refresh(RefreshAuthenticatedDataRequest request) {
         maybeLogMapState("refresh ", persistableStore);
-        ByteArray byteArray = new ByteArray(request.getHash());
+        ByteArray storageKey = new ByteArray(request.getHash());
         AddAuthenticatedDataRequest updatedRequest;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            AuthenticatedDataRequest requestFromMap = map.get(byteArray);
+            AuthenticatedDataRequest requestFromMap = map.get(storageKey);
 
             if (requestFromMap == null) {
                 return new DataStorageResult(false).noEntry();
@@ -291,7 +291,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     addRequestFromMap.getSignaturePubKeyEncoded(),
                     addRequestFromMap.getSignaturePublicKey());
 
-            map.put(byteArray, updatedRequest);
+            map.put(storageKey, updatedRequest);
         }
 
         persist();

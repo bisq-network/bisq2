@@ -75,7 +75,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
         byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        ByteArray byteArray = new ByteArray(hash);
+        ByteArray storageKey = new ByteArray(hash);
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
@@ -83,7 +83,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return new DataStorageResult(false).maxMapSizeReached();
             }
 
-            requestFromMap = map.get(byteArray);
+            requestFromMap = map.get(storageKey);
             if (request.equals(requestFromMap)) {
                 return new DataStorageResult(false).requestAlreadyReceived();
             }
@@ -108,7 +108,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             if (request.isSignatureInvalid()) {
                 return new DataStorageResult(false).signatureInvalid();
             }
-            map.put(byteArray, request);
+            map.put(storageKey, request);
         }
 
         persist();
@@ -127,15 +127,15 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
-        ByteArray byteArray = new ByteArray(request.getHash());
+        ByteArray storageKey = new ByteArray(request.getHash());
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        MailboxRequest requestFromMap = map.get(byteArray);
+        MailboxRequest requestFromMap = map.get(storageKey);
         MailboxSequentialData sequentialDataFromMap;
         synchronized (mapAccessLock) {
             if (requestFromMap == null) {
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
-                map.put(byteArray, request);
+                map.put(storageKey, request);
                 persist();
                 return new DataStorageResult(true).noEntry();
             }
@@ -144,7 +144,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 // We have had the entry already removed.
                 if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                     // We update the request, so we have the latest sequence number.
-                    map.put(byteArray, request);
+                    map.put(storageKey, request);
                     persist();
                 }
                 return new DataStorageResult(true).alreadyRemoved();
@@ -182,7 +182,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                         metaDataFromMailboxData);
             }
 
-            map.put(byteArray, request);
+            map.put(storageKey, request);
             listeners.forEach(listener -> {
                 try {
                     listener.onRemoved(sequentialDataFromMap.getMailboxData());
