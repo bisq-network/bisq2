@@ -55,15 +55,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         AuthenticatedSequentialData data =
                 new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
         byte[] messageForSignature = data.serializeForHash();
-        // messageForSignature will get hashed internally by signature algo (SHA256withECDSA)
         byte[] signature = SignatureUtil.sign(messageForSignature, keyPair.getPrivate());
-         /*  log.error("hashForStoreMap={}", Hex.encode(hashForStoreMap));
-        log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
-        log.error("pubKeyHash={}", Hex.encode(pubKeyHash));
-        log.error("sequenceNumber={}", sequenceNumber);
-        log.error("messageForSignature={}", Hex.encode(messageForSignature));
-        log.error("signature={}", Hex.encode(signature));
-        log.error("data={}", data);*/
         return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
     }
 
