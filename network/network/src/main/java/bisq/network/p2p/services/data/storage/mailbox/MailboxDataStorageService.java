@@ -26,7 +26,6 @@ import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -208,30 +207,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
-
-    int getSequenceNumber(byte[] hash) {
-        ByteArray byteArray = new ByteArray(hash);
-        int sequenceNumber = 0;
-        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        synchronized (mapAccessLock) {
-            if (map.containsKey(byteArray)) {
-                sequenceNumber = map.get(byteArray).getSequenceNumber();
-            }
-        }
-        return sequenceNumber;
-    }
-
-    boolean contains(byte[] hash) {
-        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        synchronized (mapAccessLock) {
-            return map.containsKey(new ByteArray(hash));
-        }
-    }
-
-    boolean canAddMailboxMessage(MailboxData mailboxData) {
-        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        return getSequenceNumber(hash) < Integer.MAX_VALUE;
-    }
 
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
