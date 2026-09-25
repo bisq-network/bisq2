@@ -62,7 +62,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     private final MailboxSequentialData mailboxSequentialData;
     private final byte[] signature;
     private final byte[] senderPublicKeyBytes;
-    @Getter
     private final transient PublicKey senderPublicKey;
 
     private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,

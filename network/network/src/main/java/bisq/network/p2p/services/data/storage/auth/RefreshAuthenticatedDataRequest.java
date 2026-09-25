@@ -65,7 +65,6 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @ExcludeForHash
     private final int version;
-    @Getter
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes; // 442 bytes
     private final transient PublicKey ownerPublicKey;

@@ -72,7 +72,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @ExcludeForHash
     private final int version;
-    @Getter
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
     private final transient PublicKey ownerPublicKey;
