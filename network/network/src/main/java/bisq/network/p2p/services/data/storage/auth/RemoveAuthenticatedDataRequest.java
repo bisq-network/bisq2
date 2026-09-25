@@ -40,6 +40,8 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 // Data size about 200-250 bytes
 @Slf4j
 public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
@@ -105,6 +107,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        checkArgument(sequenceNumber > 0,
+                "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateDate(created);
         NetworkDataValidation.validateECSignature(signature);
     }
