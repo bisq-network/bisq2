@@ -208,10 +208,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         }
     }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
-    }
-
     @Override
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) > getMetaData().getTtl();

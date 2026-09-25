@@ -92,10 +92,6 @@ public final class AuthenticatedSequentialData implements NetworkProto {
         return (System.currentTimeMillis() - created) > authenticatedData.getMetaData().getTtl();
     }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
-    }
-
     public DistributedData getDistributedData() {
         return authenticatedData.getDistributedData();
     }

@@ -18,8 +18,8 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.storage.Sequential;
 import bisq.network.p2p.services.data.storage.SignedRequest;
 
-public interface AuthenticatedDataRequest extends DataRequest, SignedRequest {
-    int getSequenceNumber();
+public interface AuthenticatedDataRequest extends DataRequest, SignedRequest, Sequential {
 }

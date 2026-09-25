@@ -89,7 +89,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
-            if (requestFromMap != null && mailboxSequentialData.isSequenceNrInvalid(sequenceNumberFromMap)) {
+            if (requestFromMap != null && request.isSequenceNrInvalid(sequenceNumberFromMap)) {
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
 

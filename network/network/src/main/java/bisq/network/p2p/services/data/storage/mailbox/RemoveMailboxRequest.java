@@ -184,17 +184,13 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         }
     }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        // Use max value for sequence number so that no other addData call is permitted.
-        return Integer.MAX_VALUE <= seqNumberFromMap;
-    }
-
     public String getClassName() {
         return getMetaData().getClassName();
     }
 
     @Override
     public int getSequenceNumber() {
+        // Use max value for sequence number so that no other addData call is permitted.
         return Integer.MAX_VALUE;
     }
 

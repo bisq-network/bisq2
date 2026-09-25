@@ -177,10 +177,6 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         }
     }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
-    }
-
     @Override
     public boolean isExpired() {
         // Not used as we do not persist RefreshAuthenticatedDataRequest but use it to recreate a new 

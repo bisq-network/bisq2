@@ -129,10 +129,6 @@ public final class MailboxSequentialData implements NetworkProto {
         }
     }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
-    }
-
     public boolean isExpired() {
         return (System.currentTimeMillis() - created) >
                 Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());

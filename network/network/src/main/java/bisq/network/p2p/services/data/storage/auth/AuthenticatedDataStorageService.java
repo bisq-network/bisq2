@@ -102,7 +102,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return new DataStorageResult(false).requestAlreadyReceived();
             }
 
-            if (requestFromMap != null && authenticatedSequentialData.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+            if (requestFromMap != null && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                 return new DataStorageResult(false).sequenceNrInvalid();
             }
 
