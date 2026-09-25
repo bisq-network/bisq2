@@ -29,6 +29,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Data which ensures that the sequence of add or remove request is maintained correctly.
  * The data gets hashed and signed and need to be deterministic.
@@ -36,14 +38,6 @@ import java.util.Objects;
 @Slf4j
 @Getter
 public final class AuthenticatedSequentialData implements NetworkProto {
-    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
-        return from(data, sequenceNumber, data.getCreated());
-    }
-
-    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber, long created) {
-        return new AuthenticatedSequentialData(data.getAuthenticatedData(), sequenceNumber, data.getPubKeyHash(), created);
-    }
-
     private final AuthenticatedData authenticatedData;
     private final int sequenceNumber;
     private final long created;
@@ -63,6 +57,8 @@ public final class AuthenticatedSequentialData implements NetworkProto {
 
     @Override
     public void verify() {
+        checkArgument(sequenceNumber > 0,
+                "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateHash(pubKeyHash);
         NetworkDataValidation.validateDate(created);
     }

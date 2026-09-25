@@ -24,7 +24,6 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
-import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -44,18 +43,19 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                                                        AuthenticatedData authenticatedData,
                                                        KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        int sequenceNumber = store.getSequenceNumber(hash) + 1;
-        PublicKey publicKey = keyPair.getPublic();
+        MetaData metaData = authenticatedData.getMetaData();
+        byte[] authenticatedDataHash = DigestUtil.hash(authenticatedData.serializeForHash());
+
+        // We use the AddAuthenticatedDataRequest for signing and then copy out the data we need for RefreshAuthenticatedDataRequest
+        AddAuthenticatedDataRequest addAuthenticatedDataRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
         return new RefreshAuthenticatedDataRequest(VERSION,
-                authenticatedData.getMetaData(),
-                hash,
-                publicKey.getEncoded(),
-                publicKey,
-                sequenceNumber,
-                signature,
-                System.currentTimeMillis());
+                metaData,
+                authenticatedDataHash,
+                addAuthenticatedDataRequest.getSignaturePubKeyEncoded(),
+                addAuthenticatedDataRequest.getSignaturePublicKey(),
+                addAuthenticatedDataRequest.getSequenceNumber(),
+                addAuthenticatedDataRequest.getSignature(),
+                addAuthenticatedDataRequest.getCreated());
     }
 
 
@@ -64,7 +64,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @ExcludeForHash
     private final int version;
-    private final byte[] hash;
+    private final byte[] hash; // of authenticatedData
     private final byte[] ownerPublicKeyBytes; // 442 bytes
     private final transient PublicKey ownerPublicKey;
     private final int sequenceNumber;
@@ -95,6 +95,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        NetworkDataValidation.validateDate(created);
         NetworkDataValidation.validateECSignature(signature);
     }
 
@@ -146,6 +147,15 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
 
+    // Overrides Proto.getVersion(). Proto uses it to resolve @ExcludeForHash(excludeOnlyInVersions = ...), so it
+    // determines the result of serializeForHash(), which is the payload of the proof of work. It must return the
+    // version of the message.
+    @Override
+    public int getVersion() {
+        return version;
+    }
+
+
     /* --------------------------------------------------------------------- */
     // CostBearingMessage implementation
     /* --------------------------------------------------------------------- */
@@ -170,9 +180,19 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // SignedRequest implementation
     /* --------------------------------------------------------------------- */
 
+    // The signature is created over the AddAuthenticatedDataRequest which the refresh produces (see from()).
+    // It can only be verified on that request, which the receiver rebuilds from its stored entry with
+    // AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest). The refresh request alone has no pre-image.
     @Override
     public byte[] getPreImage() {
-        return hash;
+        throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest has no pre-image. " +
+                "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
+    }
+
+    @Override
+    public boolean isSignatureInvalid() {
+        throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest cannot be verified alone. " +
+                "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
     }
 
     @Override
@@ -218,11 +238,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @Override
     public boolean isExpired() {
-        // Not used as we do not persist RefreshAuthenticatedDataRequest but use it to recreate a new
-        // AddAuthenticatedDataRequest with the updated sequenceNumber
-        // TODO implement same expiry as in remove messages
-        return false;
-        //return (System.currentTimeMillis() - getCreated()) > getTtl();
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
 

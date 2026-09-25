@@ -96,8 +96,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(receiverPublicKeyBytes);
-        NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateDate(created);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
 
@@ -143,6 +143,15 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
             log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
+    }
+
+
+    // Overrides Proto.getVersion(). Proto uses it to resolve @ExcludeForHash(excludeOnlyInVersions = ...), so it
+    // determines the result of serializeForHash(), which is the payload of the proof of work. It must return the
+    // version of the message.
+    @Override
+    public int getVersion() {
+        return version;
     }
 
 

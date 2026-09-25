@@ -23,6 +23,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
@@ -30,6 +31,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Slf4j
 @Getter
 public final class MailboxSequentialData implements NetworkProto {
     private final MailboxData mailboxData;
@@ -37,36 +41,10 @@ public final class MailboxSequentialData implements NetworkProto {
     private final byte[] receiversPublicKeyHash;
     private final byte[] receiversPubKeyBytes;
     private final long created;
+    // Sequence number is always 1 as it is used only in AddMailboxRequests and those are permitted only once.
+    // The RemoveMailboxRequest will set it to Integer.MAX and disallow by that another message.
     private final int sequenceNumber;
     private transient final PublicKey receiversPubKey;
-
-    public MailboxSequentialData(MailboxData mailboxData,
-                                 byte[] senderPublicKeyHash,
-                                 byte[] receiversPublicKeyHash,
-                                 PublicKey receiversPubKey,
-                                 int sequenceNumber) {
-        this(mailboxData,
-                senderPublicKeyHash,
-                receiversPublicKeyHash,
-                receiversPubKey,
-                System.currentTimeMillis(),
-                sequenceNumber);
-    }
-
-    public MailboxSequentialData(MailboxData mailboxData,
-                                 byte[] senderPublicKeyHash,
-                                 byte[] receiversPublicKeyHash,
-                                 PublicKey receiversPubKey,
-                                 long created,
-                                 int sequenceNumber) {
-        this(mailboxData,
-                senderPublicKeyHash,
-                receiversPublicKeyHash,
-                receiversPubKey,
-                receiversPubKey.getEncoded(),
-                created,
-                sequenceNumber);
-    }
 
     public MailboxSequentialData(MailboxData mailboxData,
                                  byte[] senderPublicKeyHash,
@@ -88,6 +66,8 @@ public final class MailboxSequentialData implements NetworkProto {
 
     @Override
     public void verify() {
+        checkArgument(sequenceNumber == 1,
+                "sequenceNumber must be 1. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateHash(senderPublicKeyHash);
         NetworkDataValidation.validateHash(receiversPublicKeyHash);
         NetworkDataValidation.validateECPubKey(receiversPubKeyBytes);
@@ -124,7 +104,7 @@ public final class MailboxSequentialData implements NetworkProto {
                     proto.getSequenceNumber()
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }

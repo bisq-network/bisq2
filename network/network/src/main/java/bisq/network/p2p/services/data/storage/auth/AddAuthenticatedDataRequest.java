@@ -50,11 +50,12 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                                                    KeyPair keyPair)
             throws GeneralSecurityException {
 
-        byte[] hashForStoreMap = DigestUtil.hash(authenticatedData.serializeForHash());
+        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
+        ByteArray storageKey = new ByteArray(hash);
         PublicKey publicKey = keyPair.getPublic();
         byte[] publicKeyEncoded = publicKey.getEncoded();
         byte[] pubKeyHash = DigestUtil.hash(publicKeyEncoded);
-        int sequenceNumber = store.getSequenceNumber(hashForStoreMap) + 1;
+        int sequenceNumber = store.getNextSequenceNumber(storageKey);
         long created = System.currentTimeMillis();
         AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authenticatedData,
                 sequenceNumber,
@@ -63,6 +64,24 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         byte[] preImage = sequentialData.serializeForHash();
         byte[] signature = SignatureUtil.sign(preImage, keyPair.getPrivate());
         return new AddAuthenticatedDataRequest(sequentialData, signature, publicKeyEncoded, publicKey);
+    }
+
+    public static AddAuthenticatedDataRequest from(AddAuthenticatedDataRequest requestFromMap,
+                                                   RefreshAuthenticatedDataRequest refreshRequest) {
+        long newTimestamp = refreshRequest.getCreated();
+        int newSequenceNumber = refreshRequest.getSequenceNumber();
+        byte[] newSignature = refreshRequest.getSignature();
+
+        AuthenticatedSequentialData sequentialDataFromMap = requestFromMap.getAuthenticatedSequentialData();
+        AuthenticatedSequentialData newSequentialData = new AuthenticatedSequentialData(
+                sequentialDataFromMap.getAuthenticatedData(),
+                newSequenceNumber,
+                sequentialDataFromMap.getPubKeyHash(),
+                newTimestamp);
+        return new AddAuthenticatedDataRequest(newSequentialData,
+                newSignature,
+                refreshRequest.getSignaturePubKeyEncoded(),
+                refreshRequest.getSignaturePublicKey());
     }
 
     @Getter
@@ -85,8 +104,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
 

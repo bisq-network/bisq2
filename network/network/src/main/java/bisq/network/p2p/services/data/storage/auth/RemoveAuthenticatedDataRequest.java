@@ -40,6 +40,8 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 // Data size about 200-250 bytes
 @Slf4j
 public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
@@ -50,11 +52,12 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                                                       KeyPair keyPair)
             throws GeneralSecurityException {
         PublicKey publicKey = keyPair.getPublic();
+        byte[] publicKeyEncoded = publicKey.getEncoded();
         long created = System.currentTimeMillis();
         MetaData metaData = authenticatedData.getMetaData();
-        byte[] publicKeyEncoded = publicKey.getEncoded();
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        int sequenceNumber = store.getSequenceNumber(hash) + 1;
+        ByteArray storageKey = new ByteArray(hash);
+        int sequenceNumber = store.getNextSequenceNumber(storageKey);
         byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
         return new RemoveAuthenticatedDataRequest(VERSION,
                 metaData,
@@ -104,8 +107,10 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     public void verify() {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
-        NetworkDataValidation.validateECSignature(signature);
+        checkArgument(sequenceNumber > 0,
+                "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateDate(created);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
 
@@ -153,6 +158,15 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
             log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
+    }
+
+
+    // Overrides Proto.getVersion(). Proto uses it to resolve @ExcludeForHash(excludeOnlyInVersions = ...), so it
+    // determines the result of serializeForHash(), which is the payload of the proof of work. It must return the
+    // version of the message.
+    @Override
+    public int getVersion() {
+        return version;
     }
 
 

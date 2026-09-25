@@ -43,15 +43,19 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                                          KeyPair senderKeyPair,
                                          PublicKey receiverPublicKey)
             throws GeneralSecurityException {
+        long created = System.currentTimeMillis();
         PublicKey senderPublicKey = senderKeyPair.getPublic();
         byte[] senderPublicKeyEncoded = senderPublicKey.getEncoded();
         byte[] senderPublicKeyHash = DigestUtil.hash(senderPublicKeyEncoded);
-        byte[] receiverPublicKeyHash = DigestUtil.hash(receiverPublicKey.getEncoded());
+        byte[] receiverPublicKeyEncoded = receiverPublicKey.getEncoded();
+        byte[] receiverPublicKeyHash = DigestUtil.hash(receiverPublicKeyEncoded);
         int sequenceNumber = 1;
         MailboxSequentialData mailboxSequentialData = new MailboxSequentialData(mailboxData,
                 senderPublicKeyHash,
                 receiverPublicKeyHash,
                 receiverPublicKey,
+                receiverPublicKeyEncoded,
+                created,
                 sequenceNumber);
         byte[] preImage = mailboxSequentialData.serializeForHash();
         byte[] signature = SignatureUtil.sign(preImage, senderKeyPair.getPrivate());
@@ -78,8 +82,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECSignature(signature);
         NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
+        NetworkDataValidation.validateECSignature(signature);
     }
 
 
