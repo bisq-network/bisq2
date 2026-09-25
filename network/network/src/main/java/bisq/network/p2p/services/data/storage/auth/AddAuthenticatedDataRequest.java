@@ -89,6 +89,11 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
+
     @Override
     public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
         return newDataRequestBuilder().setAddAuthenticatedDataRequest(toValueProto(serializeForHash));
@@ -126,6 +131,35 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
 
     /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public double getCostFactor() {
+        DistributedData distributedData = authenticatedSequentialData.getDistributedData();
+        double metaDataImpact = distributedData.getMetaData().getCostFactor();
+        double dataImpact = distributedData.getCostFactor();
+        double impact = metaDataImpact + dataImpact;
+        return MathUtils.bounded(0.25, 0.75, impact);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKey() {
+        byte[] hash = DigestUtil.hash(getStoragePreImage());
+        return new ByteArray(hash);
+    }
+
+    private byte[] getStoragePreImage() {
+        return authenticatedSequentialData.getAuthenticatedData().serializeForHash();
+    }
+
+
+    /* --------------------------------------------------------------------- */
     // SignedRequest implementation
     /* --------------------------------------------------------------------- */
 
@@ -145,25 +179,29 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
 
-
-    @Override
-    public double getCostFactor() {
-        DistributedData distributedData = authenticatedSequentialData.getDistributedData();
-        double metaDataImpact = distributedData.getMetaData().getCostFactor();
-        double dataImpact = distributedData.getCostFactor();
-        double impact = metaDataImpact + dataImpact;
-        return MathUtils.bounded(0.25, 0.75, impact);
-    }
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public byte[] getSignaturePubKeyEncoded() {
         return ownerPublicKeyBytes;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
+
     @Override
     public int getSequenceNumber() {
         return authenticatedSequentialData.getSequenceNumber();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public long getCreated() {
@@ -171,28 +209,33 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
+
+    @Override
     public MetaData getMetaData() {
         return authenticatedSequentialData.getAuthenticatedData().getMetaData();
     }
 
-    @Override
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - getCreated()) > getTtl();
-    }
+
+    /* --------------------------------------------------------------------- */
+    // Delegates
+    /* --------------------------------------------------------------------- */
 
     public DistributedData getDistributedData() {
         return authenticatedSequentialData.getDistributedData();
     }
 
-    @Override
-    public ByteArray getStorageKey() {
-        byte[] hash = DigestUtil.hash(getStoragePreImage());
-        return new ByteArray(hash);
-    }
 
-    private byte[] getStoragePreImage() {
-        return authenticatedSequentialData.getAuthenticatedData().serializeForHash();
-    }
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

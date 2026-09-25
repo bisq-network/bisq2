@@ -101,6 +101,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         NetworkDataValidation.validateDate(created);
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
+
     @Override
     public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
         return newDataRequestBuilder().setRemoveMailboxRequest(toValueProto(serializeForHash));
@@ -141,6 +146,26 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         }
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
+    }
+
+
     /* --------------------------------------------------------------------- */
     // SignedRequest implementation
     /* --------------------------------------------------------------------- */
@@ -161,29 +186,34 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
 
-    public MetaData getMetaDataFromProto() {
-        return metaData;
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaDataFromDistributedData.orElse(metaData);
-    }
-
-    @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
-    }
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public byte[] getSignaturePubKeyEncoded() {
         return receiverPublicKeyBytes;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
+
     @Override
     public int getSequenceNumber() {
         // Use max value for sequence number so that no other addData call is permitted.
         return Integer.MAX_VALUE;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override
@@ -192,15 +222,23 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
 
-    @Override
-    public ByteArray getStorageKey() {
-        return new ByteArray(hash);
-    }
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
 
     @Override
-    public long getCreated() {
-        return created;
+    public MetaData getMetaData() {
+        return metaDataFromDistributedData.orElse(metaData);
     }
+
+    public MetaData getMetaDataFromProto() {
+        return metaData;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

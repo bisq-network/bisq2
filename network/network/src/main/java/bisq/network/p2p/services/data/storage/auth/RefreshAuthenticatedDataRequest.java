@@ -99,6 +99,11 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         NetworkDataValidation.validateECSignature(signature);
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
+
     @Override
     public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
         return newDataRequestBuilder().setRefreshAuthenticatedDataRequest(toValueProto(serializeForHash));
@@ -143,6 +148,26 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
 
     /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
+    }
+
+
+    /* --------------------------------------------------------------------- */
     // SignedRequest implementation
     /* --------------------------------------------------------------------- */
 
@@ -162,14 +187,34 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
 
-    @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
-    }
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
+
 
     @Override
     public byte[] getSignaturePubKeyEncoded() {
         return ownerPublicKeyBytes;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public int getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override
@@ -181,25 +226,20 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         //return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
+
     @Override
     public MetaData getMetaData() {
         return metaData;
     }
 
-    @Override
-    public ByteArray getStorageKey() {
-        return new ByteArray(hash);
-    }
 
-    @Override
-    public int getSequenceNumber() {
-        return sequenceNumber;
-    }
-
-    @Override
-    public long getCreated() {
-        return created;
-    }
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

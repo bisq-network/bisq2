@@ -109,6 +109,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         NetworkDataValidation.validateDate(created);
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
+
     @Override
     public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
         return newDataRequestBuilder().setRemoveAuthenticatedDataRequest(toValueProto(serializeForHash));
@@ -153,6 +158,26 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
 
     /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public double getCostFactor() {
+        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKey() {
+        return new ByteArray(hash);
+    }
+
+
+    /* --------------------------------------------------------------------- */
     // SignedRequest implementation
     /* --------------------------------------------------------------------- */
 
@@ -172,23 +197,33 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     }
 
 
-    public MetaData getFallbackMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaDataFromDistributedData.orElse(metaData);
-    }
-
-    @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
-    }
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public byte[] getSignaturePubKeyEncoded() {
         return ownerPublicKeyBytes;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public int getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public long getCreated() {
+        return created;
     }
 
     @Override
@@ -196,20 +231,24 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
-    @Override
-    public ByteArray getStorageKey() {
-        return new ByteArray(hash);
-    }
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
 
     @Override
-    public int getSequenceNumber() {
-        return sequenceNumber;
+    public MetaData getMetaData() {
+        return metaDataFromDistributedData.orElse(metaData);
     }
 
-    @Override
-    public long getCreated() {
-        return created;
+    public MetaData getFallbackMetaData() {
+        return metaData;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

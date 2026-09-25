@@ -82,6 +82,11 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
+
     @Override
     public bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
         return newDataRequestBuilder().setAddMailboxRequest(toValueProto(serializeForHash));
@@ -116,6 +121,35 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         }
     }
 
+    private byte[] getStoragePreImage() {
+        return mailboxSequentialData.getMailboxData().serializeForHash();
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public double getCostFactor() {
+        MailboxData mailboxData = mailboxSequentialData.getMailboxData();
+        double metaDataImpact = mailboxData.getMetaData().getCostFactor();
+        double dataImpact = mailboxData.getConfidentialMessage().getCostFactor();
+        double impact = metaDataImpact + dataImpact;
+        return MathUtils.bounded(0.25, 1, impact);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKey() {
+        byte[] hash = DigestUtil.hash(getStoragePreImage());
+        return new ByteArray(hash);
+    }
+
 
     /* --------------------------------------------------------------------- */
     // SignedRequest implementation
@@ -137,24 +171,29 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
 
-    @Override
-    public double getCostFactor() {
-        MailboxData mailboxData = mailboxSequentialData.getMailboxData();
-        double metaDataImpact = mailboxData.getMetaData().getCostFactor();
-        double dataImpact = mailboxData.getConfidentialMessage().getCostFactor();
-        double impact = metaDataImpact + dataImpact;
-        return MathUtils.bounded(0.25, 1, impact);
-    }
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public byte[] getSignaturePubKeyEncoded() {
         return senderPublicKeyBytes;
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
+
     @Override
     public int getSequenceNumber() {
         return mailboxSequentialData.getSequenceNumber();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public long getCreated() {
@@ -166,20 +205,20 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
+
     @Override
     public MetaData getMetaData() {
         return mailboxSequentialData.getMailboxData().getMetaData();
     }
 
-    @Override
-    public ByteArray getStorageKey() {
-        byte[] hash = DigestUtil.hash(getStoragePreImage());
-        return new ByteArray(hash);
-    }
 
-    private byte[] getStoragePreImage() {
-        return mailboxSequentialData.getMailboxData().serializeForHash();
-    }
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public String toString() {

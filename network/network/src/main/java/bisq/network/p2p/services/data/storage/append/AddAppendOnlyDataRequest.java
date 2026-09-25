@@ -46,6 +46,11 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     public void verify() {
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
+
     @Override
     public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
         return newDataRequestBuilder().setAddAppendOnlyDataRequest(toValueProto(serializeForHash));
@@ -66,27 +71,20 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
         return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()));
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // CostBearingMessage implementation
+    /* --------------------------------------------------------------------- */
+
     @Override
     public double getCostFactor() {
         return MathUtils.bounded(0.5, 1, appendOnlyData.getCostFactor());
     }
 
-    @Override
-    public boolean isExpired() {
-        // AppendOnlyData never expires
-        return false;
-    }
 
-    @Override
-    public long getCreated() {
-        // Used for sorting at pruning, but AppendOnlyData does not get pruned 
-        return 0;
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return appendOnlyData.getMetaData();
-    }
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public ByteArray getStorageKey() {
@@ -96,5 +94,32 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
 
     private byte[] getStoragePreImage() {
         return appendOnlyData.serializeForHash();
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public long getCreated() {
+        // Used for sorting at pruning, but AppendOnlyData does not get pruned
+        return 0;
+    }
+
+    @Override
+    public boolean isExpired() {
+        // AppendOnlyData never expires
+        return false;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public MetaData getMetaData() {
+        return appendOnlyData.getMetaData();
     }
 }
