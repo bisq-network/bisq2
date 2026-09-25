@@ -138,6 +138,8 @@ class ChatMessagesListControllerTest {
         when(message.getId()).thenReturn("offer-message-id");
         when(message.getAuthorUserProfileId()).thenReturn("author-id");
         when(message.hasBisqEasyOffer()).thenReturn(true);
+        // A channel holds only messages of supported types
+        when(message.hasSupportedChatMessageType()).thenReturn(true);
         when(message.getBisqEasyOffer()).thenReturn(Optional.of(offer));
         when(message.getCitation()).thenReturn(Optional.empty());
 
@@ -225,12 +227,14 @@ class ChatMessagesListControllerTest {
         when(failingMessage.getId()).thenReturn("failing-message-id");
         when(failingMessage.getAuthorUserProfileId()).thenReturn("failing-author-id");
         when(failingMessage.hasBisqEasyOffer()).thenReturn(true);
+        when(failingMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(failingMessage.getBisqEasyOffer()).thenReturn(offer);
         when(failingMessage.getCitation()).thenThrow(new IllegalStateException("test"));
         BisqEasyOfferbookMessage laterMessage = mock(BisqEasyOfferbookMessage.class);
         when(laterMessage.getId()).thenReturn("later-message-id");
         when(laterMessage.getAuthorUserProfileId()).thenReturn("author-id");
         when(laterMessage.hasBisqEasyOffer()).thenReturn(true);
+        when(laterMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(laterMessage.getBisqEasyOffer()).thenReturn(offer);
         when(laterMessage.getCitation()).thenReturn(Optional.empty());
         BisqEasyOfferbookChannel otherChannel = new BisqEasyOfferbookChannel(new Market("BTC", "EUR", "Bitcoin", "Euro"));
