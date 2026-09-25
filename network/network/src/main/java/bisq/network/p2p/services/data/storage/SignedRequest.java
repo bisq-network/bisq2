@@ -20,7 +20,6 @@ package bisq.network.p2p.services.data.storage;
 import bisq.security.SignatureUtil;
 import org.slf4j.LoggerFactory;
 
-import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
 public interface SignedRequest {
