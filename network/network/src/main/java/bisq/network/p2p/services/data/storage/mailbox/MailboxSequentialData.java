@@ -23,6 +23,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
@@ -30,6 +31,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
+@Slf4j
 @Getter
 public final class MailboxSequentialData implements NetworkProto {
     private final MailboxData mailboxData;
@@ -96,7 +98,7 @@ public final class MailboxSequentialData implements NetworkProto {
                     proto.getSequenceNumber()
             );
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
     }
