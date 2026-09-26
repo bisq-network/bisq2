@@ -282,8 +282,10 @@ public class Res {
         }
 
         String[] tokens = encoded.split(separator);
-        String key = tokens[0];
-        if (tokens.length == 1) {
+        // String.split drops trailing empty strings, so a text of only separators has no tokens
+        String key = tokens.length > 0 ? tokens[0] : "";
+        // The text shown for an unknown key contains the key, which may come from a peer, so it is not formatted
+        if (tokens.length <= 1 || !Res.has(key)) {
             return Res.get(key);
         }
 

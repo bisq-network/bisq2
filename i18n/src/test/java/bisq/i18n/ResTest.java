@@ -21,10 +21,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 public class ResTest {
+    private static final char ARGS_SEPARATOR = 0x1f;
+    private static final char PARAM_SEPARATOR = 0x1e;
+
     @BeforeAll
     public static void setup() {
         Res.setAndApplyLanguageTag("en");
@@ -59,4 +66,37 @@ public class ResTest {
         assertEquals(expected, decoded);
     }
 
+    @Test
+    public void testDecodeSeparatorsOnly() {
+        assertEquals(Res.get(""), Res.decode(String.valueOf(PARAM_SEPARATOR)));
+        assertEquals(Res.get(""), Res.decode("" + PARAM_SEPARATOR + PARAM_SEPARATOR));
+    }
+
+    @Test
+    public void testDecodeUnknownKeyWithArguments() {
+        assertEquals(Res.get("a{b"), Res.decode(Res.encode("a{b", "x")));
+        assertEquals(Res.get("it's"), Res.decode(Res.encode("it's", "x")));
+    }
+
+    @Test
+    public void testDecodeNeverThrows() {
+        String key = "bisqEasy.openTrades.tradeLogMessage.cancelled";
+        for (String text : textsUpToLength(4, 'a', '{', '}', '\'', PARAM_SEPARATOR, ARGS_SEPARATOR)) {
+            assertDoesNotThrow(() -> Res.decode(text), text);
+            assertDoesNotThrow(() -> Res.decode(key + PARAM_SEPARATOR + text), text);
+        }
+    }
+
+    private static List<String> textsUpToLength(int maxLength, char... alphabet) {
+        List<String> texts = new ArrayList<>(List.of(""));
+        for (int i = 0; i < texts.size(); i++) {
+            String text = texts.get(i);
+            if (text.length() < maxLength) {
+                for (char c : alphabet) {
+                    texts.add(text + c);
+                }
+            }
+        }
+        return texts;
+    }
 }
