@@ -4,21 +4,13 @@ import bisq.gradle.common.VersionUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.kotlin.dsl.register
 
 class WebcamAppPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-
-        val copyWebcamAppVersionToDesktop = project.tasks.register<Copy>("copyWebcamAppVersionToDesktop") {
-            val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
-            desktopProject?.tasks?.let {
-                from(project.layout.projectDirectory.asFile.absolutePath + "/version.txt")
-                include("version.txt")
-                into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/webcam-app"))
-            }
-        }
 
         val zipWebcamAppShadowJar: TaskProvider<Zip> = project.tasks.register<Zip>("zipWebcamAppShadowJar") {
             dependsOn(project.tasks.named("shadowJar"))
@@ -41,15 +33,17 @@ class WebcamAppPlugin : Plugin<Project> {
             into(project.layout.buildDirectory.dir("generated/src/main/resources/webcam-app"))
         }
 
-        project.tasks.register<Copy>("processWebcamForDesktop") {
+        project.tasks.register<Sync>("processWebcamForDesktop") {
             dependsOn(copyWebcamAppVersionToResources)
             dependsOn(zipWebcamAppShadowJar)
-            dependsOn(copyWebcamAppVersionToDesktop)
 
             val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
             desktopProject?.tasks?.let {
-                from(project.layout.buildDirectory.dir("generated"))
-                exclude("sources")
+                from(project.layout.buildDirectory.dir("generated")) {
+                    exclude("sources")
+                    include("webcam-app-" + VersionUtil.getVersionFromFile(project) + ".zip")
+                }
+                from(project.layout.projectDirectory.file("version.txt"))
                 into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/webcam-app"))
             }
         }
