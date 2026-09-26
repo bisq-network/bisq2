@@ -21,6 +21,7 @@ import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -50,6 +51,13 @@ class AuthenticatedDataStorageServiceTest {
         peerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "test", "PeerStore");
         ownerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+    }
+
+    // The stores write asynchronously, on the single thread of the persistence executor. JUnit deletes tempDir after
+    // the test, and fails if a write still creates files in it. A write queued now completes after all earlier ones.
+    @AfterEach
+    void waitForPendingWrites() {
+        peerStore.getPersistence().persistAsync(peerStore.getPersistableStore().getClone()).join();
     }
 
     @Test
