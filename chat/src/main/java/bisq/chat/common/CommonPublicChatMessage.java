@@ -139,6 +139,11 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     @Override
+    public boolean hasValidChannelId() {
+        return SubDomain.find(channelId).isPresent();
+    }
+
+    @Override
     public boolean canShowReactions() {
         return true;
     }

@@ -180,6 +180,11 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
     // Types a peer sends in this kind of chat. Notices which the client shows by itself are never sent.
     public abstract boolean hasSupportedChatMessageType();
 
+    // The sender chooses the channel ID. Messages which migrate it in getChannelId check that it can be migrated.
+    public boolean hasValidChannelId() {
+        return true;
+    }
+
     @Override
     public int compareTo(@Nonnull ChatMessage o) {
         return id.compareTo(o.getId());
