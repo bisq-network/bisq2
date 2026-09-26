@@ -18,6 +18,10 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
@@ -35,7 +39,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public final class MailboxSequentialData implements NetworkProto {
+public final class MailboxSequentialData implements NetworkProto, Canonical {
     private final MailboxData mailboxData;
     // Sequence number is always 1 as it is used only in AddMailboxRequests and those are permitted only once.
     // The RemoveMailboxRequest will set it to Integer.MAX and disallow by that another message.
@@ -107,6 +111,31 @@ public final class MailboxSequentialData implements NetworkProto {
             log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<MailboxSequentialData> DEFAULT_SCHEMA =
+            CanonicalSchema.<MailboxSequentialData>newBuilder()
+                    .canonical(1, MailboxSequentialData::getMailboxData)
+                    .sint32(2, MailboxSequentialData::getSequenceNumber)
+                    .bytes(3, MailboxSequentialData::getSenderPublicKeyHash)
+                    .sint64(4, MailboxSequentialData::getCreated)
+                    .bytes(5, MailboxSequentialData::getReceiversPubKeyBytes)
+                    .bytes(6, MailboxSequentialData::getReceiversPublicKeyHash)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<MailboxSequentialData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     @Override

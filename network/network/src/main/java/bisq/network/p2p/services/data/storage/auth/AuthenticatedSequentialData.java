@@ -18,6 +18,10 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -37,7 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 @Getter
-public final class AuthenticatedSequentialData implements NetworkProto {
+public final class AuthenticatedSequentialData implements NetworkProto, Canonical {
     private final AuthenticatedData authenticatedData;
     private final int sequenceNumber;
     private final byte[] pubKeyHash;
@@ -82,6 +86,29 @@ public final class AuthenticatedSequentialData implements NetworkProto {
                 proto.getSequenceNumber(),
                 proto.getPubKeyHash().toByteArray(),
                 proto.getCreated());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<AuthenticatedSequentialData> DEFAULT_SCHEMA =
+            CanonicalSchema.<AuthenticatedSequentialData>newBuilder()
+                    .canonical(1, AuthenticatedSequentialData::getAuthenticatedData)
+                    .sint32(2, AuthenticatedSequentialData::getSequenceNumber)
+                    .bytes(3, AuthenticatedSequentialData::getPubKeyHash)
+                    .sint64(4, AuthenticatedSequentialData::getCreated)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<AuthenticatedSequentialData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     public DistributedData getDistributedData() {

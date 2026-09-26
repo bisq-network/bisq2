@@ -18,6 +18,9 @@
 package bisq.network.p2p.services.data.storage.append;
 
 import bisq.common.data.ByteArray;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -69,6 +72,30 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
 
     public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {
         return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<AddAppendOnlyDataRequest> DEFAULT_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
+                    CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
+                            // Canonical encoding is not yet supported for AppendOnlyData, as its implementations are
+                            // defined outside the network module. We use the protobuf serialization for hashes
+                            // instead: the Any with the type URL and the serializeForHash() bytes, as
+                            // getValueBuilder(true) writes it.
+                            .encodedMessage(1, request -> request.appendOnlyData.toAny(true).toByteArray()));
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<AddAppendOnlyDataRequest> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
 

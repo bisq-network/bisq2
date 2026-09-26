@@ -17,6 +17,10 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -35,7 +39,7 @@ import java.util.regex.Pattern;
 @EqualsAndHashCode
 @ToString
 @Getter
-public final class MetaData implements NetworkProto {
+public final class MetaData implements NetworkProto, Canonical {
     public static final long TTL_2_DAYS = TimeUnit.DAYS.toMillis(2);
     public static final long TTL_5_DAYS = TimeUnit.DAYS.toMillis(5);
     public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
@@ -115,6 +119,28 @@ public final class MetaData implements NetworkProto {
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
         return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<MetaData> DEFAULT_SCHEMA = CanonicalSchema.<MetaData>newBuilder()
+            .sint64(1, MetaData::getTtl)
+            .sint32(2, MetaData::getPriority)
+            .sint32(3, MetaData::getMaxMapSize)
+            .string(4, MetaData::getClassName)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<MetaData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     public double getCostFactor() {

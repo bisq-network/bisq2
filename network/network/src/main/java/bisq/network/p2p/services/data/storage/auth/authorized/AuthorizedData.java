@@ -18,6 +18,9 @@
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -135,6 +138,32 @@ public final class AuthorizedData extends AuthenticatedData {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // Unlike serializeForHash(), which omits the signature so that republishing keeps the storage key, the default
+    // encoding contains all non-transient fields, including the signature.
+    public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
+            AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
+                    .extend(11,
+                            authorizedData -> authorizedData,
+                            CanonicalSchema.<AuthorizedData>newBuilder()
+                                    .bytes(1, authorizedData -> authorizedData.signature.orElse(null))
+                                    .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes))
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<AuthorizedData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     public AuthorizedDistributedData getAuthorizedDistributedData() {

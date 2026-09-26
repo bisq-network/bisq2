@@ -18,6 +18,9 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
@@ -166,6 +169,34 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public int getVersion() {
         return version;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // Contains metaData and version, which serializeForHash() omits (metaData only in versions 1 to 3), as the
+    // default encoding contains all non-transient fields.
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> DEFAULT_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
+                    CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
+                            .canonical(1, request -> request.metaData)
+                            .bytes(2, request -> request.hash)
+                            .bytes(3, request -> request.ownerPublicKeyBytes)
+                            .sint32(4, request -> request.sequenceNumber)
+                            .bytes(5, request -> request.signature)
+                            .sint64(6, request -> request.created)
+                            .sint32(7, request -> request.version));
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<RemoveAuthenticatedDataRequest> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
 
