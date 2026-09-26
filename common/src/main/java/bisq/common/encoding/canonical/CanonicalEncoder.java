@@ -78,6 +78,9 @@ public final class CanonicalEncoder {
             case ONEOF:
                 writeOneof(writer, field, fieldValue);
                 break;
+            case ENCODED_MESSAGE:
+                writer.writeCompose(field.getNumber(), (byte[]) fieldValue);
+                break;
             case REPEATED_COMPOSE:
                 writeRepeatedCompose(writer, field, fieldValue);
                 break;
@@ -224,6 +227,7 @@ public final class CanonicalEncoder {
                 writer.writeLengthDelimitedValue(fieldNumber, encodeNested(fieldValue, Objects.requireNonNull(schema)));
                 break;
             case ONEOF:
+            case ENCODED_MESSAGE:
             case SINT32:
             case SINT64:
             case PACKED_REPEATED_INT32:

@@ -278,6 +278,26 @@ public class CanonicalEncoderTest {
                 () -> CanonicalEncoder.DEFAULT.encode(new MappedContainer(values), schema));
     }
 
+    @Test
+    public void encodedMessageFieldWritesBytesUnchanged() {
+        CanonicalSchema<EncodedMessageHolder> schema = CanonicalSchema.<EncodedMessageHolder>newBuilder()
+                .encodedMessage(1, EncodedMessageHolder::getEncodedMessage)
+                .int32(2, EncodedMessageHolder::getNumber)
+                .build();
+
+        assertArrayEquals(bytes(
+                        0x0a, 0x02, 0x08, 0x01,
+                        0x10, 0x07),
+                CanonicalEncoder.DEFAULT.encode(new EncodedMessageHolder(bytes(0x08, 0x01), 7), schema));
+        // An empty message is still present, as with a nested message whose schema writes no fields
+        assertArrayEquals(bytes(
+                        0x0a, 0x00,
+                        0x10, 0x07),
+                CanonicalEncoder.DEFAULT.encode(new EncodedMessageHolder(bytes(), 7), schema));
+        assertArrayEquals(bytes(0x10, 0x07),
+                CanonicalEncoder.DEFAULT.encode(new EncodedMessageHolder(null, 7), schema));
+    }
+
     private static List<String> readMapKeys(byte[] bytes) {
         KeyReader reader = new KeyReader(bytes);
         return reader.readKeys();
@@ -518,6 +538,24 @@ public class CanonicalEncoderTest {
 
         private int getValue() {
             return value;
+        }
+    }
+
+    private static final class EncodedMessageHolder {
+        private final byte[] encodedMessage;
+        private final int number;
+
+        private EncodedMessageHolder(byte[] encodedMessage, int number) {
+            this.encodedMessage = encodedMessage;
+            this.number = number;
+        }
+
+        private byte[] getEncodedMessage() {
+            return encodedMessage;
+        }
+
+        private int getNumber() {
+            return number;
         }
     }
 }
