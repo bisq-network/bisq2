@@ -34,6 +34,9 @@ import javax.annotation.Nullable;
  * all entries are written, it calls {@link #putEncodedMap(Object, byte[])} so implementations can cache the complete
  * encoded map field for later unchanged encodes.
  * <p>
+ * {@link CanonicalEncoder} uses the cache only in {@link EncodingPurpose#DEFAULT}. The cached bytes do not record the
+ * encoding purpose which produced them, and a map value can contain nested objects with a purpose-specific encoding.
+ * <p>
  * Encoding cache-enabled maps mutates the cache. Implementations should therefore be thread-confined with the source
  * map or protected by external synchronization.
  */

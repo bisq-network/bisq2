@@ -89,6 +89,7 @@ public final class CanonicalSchema<T> {
         COMPOSE,
         EXTEND,
         ONEOF,
+        CANONICAL,
         ENCODED_MESSAGE,
         REPEATED_COMPOSE,
         PACKED_REPEATED_INT32,
@@ -332,6 +333,17 @@ public final class CanonicalSchema<T> {
                                     Function<T, N> getter,
                                     Builder<N> schemaBuilder) {
             return add(number, FieldType.ONEOF, Rule.OMIT_NULL, getter, schemaBuilder);
+        }
+
+        /**
+         * Nested message whose bytes are the canonical encoding of the value itself, for the encoding purpose of the
+         * enclosing object ({@link Canonical#encodeCanonical(CanonicalEncoder, EncodingPurpose)}). Use it for a field
+         * that holds another {@link Canonical} object: the object selects its own encoding for the purpose. When the
+         * declared type of the field has several implementations, the runtime type selects the encoding, so no
+         * implementation can be left out of a schema.
+         */
+        public Builder<T> canonical(int number, Function<T, ? extends Canonical> getter) {
+            return add(number, FieldType.CANONICAL, Rule.OMIT_NULL, getter);
         }
 
         /**

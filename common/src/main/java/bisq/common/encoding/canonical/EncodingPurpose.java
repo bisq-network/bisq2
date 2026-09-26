@@ -17,8 +17,22 @@
 
 package bisq.common.encoding.canonical;
 
+/**
+ * The purpose of a canonical encoding, for example a signature preimage. A purpose applies to the whole preimage: to
+ * the object on which {@link Canonical#encodeCanonical(CanonicalEncoder, EncodingPurpose)} is called and to all
+ * objects nested in it (see {@link Canonical}).
+ */
 public enum EncodingPurpose {
+    /**
+     * The complete encoding of the object, with all its encoded fields. Used when no specific purpose applies.
+     */
     DEFAULT,
+    /**
+     * The preimage of a signature: the bytes that are signed and verified.
+     */
     SIGNATURE,
+    /**
+     * The preimage of a storage key: the bytes that are hashed to the key under which an object is stored.
+     */
     STORAGE_KEY,
 }

@@ -46,6 +46,18 @@ public class CanonicalSchemaTest {
     }
 
     @Test
+    public void canonicalFieldDeclaresOmitNullWithoutNestedSchema() {
+        CanonicalSchema<Object> schema = CanonicalSchema.<Object>newBuilder()
+                .canonical(1, ignored -> null)
+                .build();
+
+        CanonicalSchema.Field<Object> canonicalField = schema.getFields().get(0);
+        assertEquals(CanonicalSchema.FieldType.CANONICAL, canonicalField.getType());
+        assertEquals(CanonicalSchema.Rule.OMIT_NULL, canonicalField.getRule());
+        assertNull(canonicalField.getSchema());
+    }
+
+    @Test
     public void encodedMessageFieldDeclaresOmitNullWithoutNestedSchema() {
         CanonicalSchema<Object> schema = CanonicalSchema.<Object>newBuilder()
                 .encodedMessage(1, ignored -> new byte[0])
