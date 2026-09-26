@@ -42,7 +42,6 @@ class WebcamAppPlugin : Plugin<Project> {
                 from(project.layout.buildDirectory.dir("generated")) {
                     exclude("sources")
                     include("webcam-app-" + VersionUtil.getVersionFromFile(project) + ".zip")
-                    include("src/**")
                 }
                 from(project.layout.projectDirectory.file("version.txt"))
                 into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/webcam-app"))
