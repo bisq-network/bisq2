@@ -21,6 +21,8 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.DistributedDataAny;
+import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 public final class DefaultAuthenticatedData extends AuthenticatedData {
     public DefaultAuthenticatedData(DistributedData distributedData) {
         super(distributedData);
+
+        verify();
+    }
+
+    private DefaultAuthenticatedData(DistributedData distributedData, Any distributedDataAny) {
+        super(distributedData, distributedDataAny);
 
         verify();
     }
@@ -50,7 +58,8 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
     }
 
     public static DefaultAuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
-        return new DefaultAuthenticatedData(DistributedData.fromAny(proto.getDistributedData()));
+        Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
+        return new DefaultAuthenticatedData(DistributedData.fromAny(proto.getDistributedData()), distributedDataAny);
     }
 
 
@@ -58,8 +67,17 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
     // Canonical
     /* --------------------------------------------------------------------- */
 
+    // The SIGNATURE purpose uses the default schema: it contains the DistributedData with its exact bytes.
     public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
             DefaultAuthenticatedData.<DefaultAuthenticatedData>getAuthenticatedDataSchemaBuilder()
+                    .extend(10,
+                            defaultAuthenticatedData -> defaultAuthenticatedData,
+                            CanonicalSchema.newBuilder())
+                    .build();
+
+    // Same as DEFAULT_SCHEMA, but with the DistributedData in its hash serialization, as serializeForHash() writes it
+    public static final CanonicalSchema<DefaultAuthenticatedData> STORAGE_KEY_SCHEMA =
+            DefaultAuthenticatedData.<DefaultAuthenticatedData>getStorageKeySchemaBuilder()
                     .extend(10,
                             defaultAuthenticatedData -> defaultAuthenticatedData,
                             CanonicalSchema.newBuilder())
@@ -70,7 +88,7 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
         CanonicalSchema<DefaultAuthenticatedData> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
-            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

@@ -24,9 +24,11 @@ import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.DistributedDataAny;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -59,20 +61,30 @@ public final class AuthorizedData extends AuthenticatedData {
     // At remove, we do not need to authorizedPublicKey as the normal keypair is used to verify right to remove.
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                           PublicKey authorizedPublicKey) {
-        this(authorizedDistributedData, Optional.empty(), authorizedPublicKey, authorizedPublicKey.getEncoded());
+        this(authorizedDistributedData,
+                authorizedDistributedData.toAny(false),
+                Optional.empty(),
+                authorizedPublicKey,
+                authorizedPublicKey.getEncoded());
     }
 
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                           Optional<byte[]> signature,
                           PublicKey authorizedPublicKey) {
-        this(authorizedDistributedData, signature, authorizedPublicKey, authorizedPublicKey.getEncoded());
+        this(authorizedDistributedData,
+                authorizedDistributedData.toAny(false),
+                signature,
+                authorizedPublicKey,
+                authorizedPublicKey.getEncoded());
     }
 
+    // distributedDataAny: see AuthenticatedData
     private AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                           Any distributedDataAny,
                            Optional<byte[]> signature,
                            PublicKey authorizedPublicKey,
                            byte[] authorizedPublicKeyBytes) {
-        super(authorizedDistributedData);
+        super(authorizedDistributedData, distributedDataAny);
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
         this.authorizedPublicKeyBytes = authorizedPublicKeyBytes;
@@ -121,12 +133,14 @@ public final class AuthorizedData extends AuthenticatedData {
         byte[] authorizedPublicKeyBytes = authorizedDataProto.getAuthorizedPublicKeyBytes().toByteArray();
         try {
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(authorizedPublicKeyBytes);
+            Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
             DistributedData distributedData = DistributedData.fromAny(proto.getDistributedData());
             if (distributedData instanceof AuthorizedDistributedData) {
                 Optional<byte[]> signature = authorizedDataProto.hasSignature() ?
                         Optional.of(authorizedDataProto.getSignature().toByteArray()) :
                         Optional.empty();
                 return new AuthorizedData((AuthorizedDistributedData) distributedData,
+                        distributedDataAny,
                         signature,
                         authorizedPublicKey,
                         authorizedPublicKeyBytes
@@ -146,24 +160,33 @@ public final class AuthorizedData extends AuthenticatedData {
     /* --------------------------------------------------------------------- */
 
     // Unlike serializeForHash(), which omits the signature so that republishing keeps the storage key, the default
-    // encoding contains all non-transient fields, including the signature. The SIGNATURE and STORAGE_KEY purposes use
-    // the default schema as well: the signature is not annotated with @ExcludeForHash, and serializeForHash() omits
-    // it only where AuthorizedData is the root of the preimage (see docs/specifications/encoding).
+    // encoding contains all non-transient fields, including the signature. The SIGNATURE purpose uses the default
+    // schema: it contains the DistributedData with its exact bytes. The STORAGE_KEY schema differs only in the
+    // DistributedData, which it contains in its hash serialization. Both contain the signature: it is not annotated
+    // with @ExcludeForHash, and serializeForHash() omits it only where AuthorizedData is the root of the preimage (see
+    // docs/specifications/encoding).
     public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
             AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
-                    .extend(11,
-                            authorizedData -> authorizedData,
-                            CanonicalSchema.<AuthorizedData>newBuilder()
-                                    .bytes(1, authorizedData -> authorizedData.signature.orElse(null))
-                                    .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes))
+                    .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
                     .build();
+
+    public static final CanonicalSchema<AuthorizedData> STORAGE_KEY_SCHEMA =
+            AuthorizedData.<AuthorizedData>getStorageKeySchemaBuilder()
+                    .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
+                    .build();
+
+    private static CanonicalSchema.Builder<AuthorizedData> getAuthorizedDataSchemaBuilder() {
+        return CanonicalSchema.<AuthorizedData>newBuilder()
+                .bytes(1, authorizedData -> authorizedData.signature.orElse(null))
+                .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes);
+    }
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<AuthorizedData> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
-            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

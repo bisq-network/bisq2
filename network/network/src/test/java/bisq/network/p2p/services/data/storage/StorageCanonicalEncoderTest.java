@@ -55,10 +55,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  * The default canonical encoding of the storage classes contains all non-transient fields, with the envelopes that
  * serialize() writes. The SIGNATURE and STORAGE_KEY purposes leave out the fields annotated with @ExcludeForHash, as
  * serializeForHash() does. Every class passes the encoding purpose on to its nested objects.
- * Data of higher-level modules, which the storage classes hold in a google.protobuf.Any, is encoded with its protobuf
- * serialization for hashes. The external data stub therefore has a field that is excluded from the hash: with it, the
- * canonical bytes equal serializeForHash() of classes without own excluded fields, and without it they equal
- * serialize().
+ * Data of higher-level modules, which the storage classes hold in a google.protobuf.Any, is encoded with the retained
+ * bytes of the Any in the DEFAULT and SIGNATURE purposes, and with its protobuf serialization for hashes in the
+ * STORAGE_KEY purpose. The external data stub therefore has a field that is excluded from the hash: with it, the
+ * SIGNATURE encoding differs from serializeForHash(), and without it, it equals serializeForHash() of classes without
+ * own excluded fields. DistributedDataAnyTest covers data with fields which this node does not know.
  */
 public class StorageCanonicalEncoderTest {
     private static final KeyPair KEY_PAIR = KeyGeneration.generateDefaultEcKeyPair();
@@ -79,10 +80,13 @@ public class StorageCanonicalEncoderTest {
     }
 
     @Test
-    public void authenticatedDataEncodesExternalDataWithHashSerialization() {
+    public void authenticatedDataEncodesExternalDataWithHashSerializationOnlyForStorageKey() {
         DefaultAuthenticatedData withExcludedField = new DefaultAuthenticatedData(new ExternalData("content", 7));
-        assertArrayEquals(withExcludedField.serializeForHash(), withExcludedField.encodeCanonical());
-        assertFalse(Arrays.equals(withExcludedField.serialize(), withExcludedField.encodeCanonical()));
+        assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical());
+        assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical(EncodingPurpose.SIGNATURE));
+        assertArrayEquals(withExcludedField.serializeForHash(),
+                withExcludedField.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+        assertFalse(Arrays.equals(withExcludedField.serialize(), withExcludedField.serializeForHash()));
 
         DefaultAuthenticatedData withoutExcludedField = getDefaultAuthenticatedData();
         assertArrayEquals(withoutExcludedField.serialize(), withoutExcludedField.encodeCanonical());
@@ -99,10 +103,20 @@ public class StorageCanonicalEncoderTest {
         assertArrayEquals(withoutSignature.serialize(), withoutSignature.encodeCanonical());
         assertArrayEquals(withoutSignature.serializeForHash(), withoutSignature.encodeCanonical());
 
-        // The hash purposes use the default schema: the signature is not annotated with @ExcludeForHash
+        // The hash purposes contain the signature: it is not annotated with @ExcludeForHash. Without a field excluded
+        // from the hash in the external data, they equal the default encoding.
         for (EncodingPurpose encodingPurpose : HASH_PURPOSES) {
             assertArrayEquals(withSignature.encodeCanonical(), withSignature.encodeCanonical(encodingPurpose));
         }
+
+        // The STORAGE_KEY purpose contains the external data in its hash serialization, the SIGNATURE purpose with its
+        // exact bytes
+        AuthorizedData withExcludedField = new AuthorizedData(new ExternalData("content", 7),
+                Optional.of(SIGNATURE),
+                KEY_PAIR.getPublic());
+        assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical(EncodingPurpose.SIGNATURE));
+        assertFalse(Arrays.equals(withExcludedField.encodeCanonical(),
+                withExcludedField.encodeCanonical(EncodingPurpose.STORAGE_KEY)));
     }
 
     @Test
@@ -164,10 +178,13 @@ public class StorageCanonicalEncoderTest {
     }
 
     @Test
-    public void addAppendOnlyDataRequestEncodesExternalDataWithHashSerialization() {
+    public void addAppendOnlyDataRequestEncodesExternalDataWithHashSerializationOnlyForStorageKey() {
         AddAppendOnlyDataRequest withExcludedField = new AddAppendOnlyDataRequest(new ExternalData("content", 7));
-        assertArrayEquals(withExcludedField.serializeForHash(), withExcludedField.encodeCanonical());
-        assertFalse(Arrays.equals(withExcludedField.serialize(), withExcludedField.encodeCanonical()));
+        assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical());
+        assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical(EncodingPurpose.SIGNATURE));
+        assertArrayEquals(withExcludedField.serializeForHash(),
+                withExcludedField.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+        assertFalse(Arrays.equals(withExcludedField.serialize(), withExcludedField.serializeForHash()));
 
         AddAppendOnlyDataRequest withoutExcludedField = new AddAppendOnlyDataRequest(new ExternalData("content", 0));
         assertArrayEquals(withoutExcludedField.serialize(), withoutExcludedField.encodeCanonical());
@@ -175,12 +192,13 @@ public class StorageCanonicalEncoderTest {
 
     // The SIGNATURE and STORAGE_KEY purposes leave out the fields annotated with @ExcludeForHash, also in nested
     // objects, so they give the bytes of serializeForHash(). The versions cover the
-    // @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3}) annotations. AuthorizedData is the exception, see
-    // authorizedDataContainsSignatureUnlikeHashSerialization().
+    // @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3}) annotations. AuthorizedData is an exception, see
+    // authorizedDataContainsSignatureUnlikeHashSerialization(). Data of higher-level modules is the other exception:
+    // the SIGNATURE purpose contains its exact bytes, with the fields excluded from the hash.
     @Test
     public void hashPurposesMatchSerializeForHash() {
         assertHashPurposesMatchSerializeForHash(getMetaData(), "");
-        assertHashPurposesMatchSerializeForHash(new DefaultAuthenticatedData(new ExternalData("content", 7)), "");
+        assertStorageKeyMatchesSerializeForHash(new DefaultAuthenticatedData(new ExternalData("content", 7)));
         for (AuthenticatedData authenticatedData : List.of(getDefaultAuthenticatedData(), getAuthorizedData())) {
             AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authenticatedData,
                     3,
@@ -193,7 +211,7 @@ public class StorageCanonicalEncoderTest {
                     KEY_PAIR.getPublic()), "");
         }
         assertHashPurposesMatchSerializeForHash(ConfidentialMessage.fromProto(getConfidentialMessageProto()), "");
-        assertHashPurposesMatchSerializeForHash(new AddAppendOnlyDataRequest(new ExternalData("content", 7)), "");
+        assertStorageKeyMatchesSerializeForHash(new AddAppendOnlyDataRequest(new ExternalData("content", 7)));
 
         for (int version = 0; version <= 4; version++) {
             String description = "version " + version;
@@ -231,6 +249,14 @@ public class StorageCanonicalEncoderTest {
             assertArrayEquals(value.serializeForHash(), value.encodeCanonical(encodingPurpose),
                     value.getClass().getSimpleName() + " " + encodingPurpose + " " + description);
         }
+    }
+
+    // For a holder of external data with a field excluded from the hash
+    private static <T extends Proto & Canonical> void assertStorageKeyMatchesSerializeForHash(T value) {
+        assertArrayEquals(value.serializeForHash(), value.encodeCanonical(EncodingPurpose.STORAGE_KEY),
+                value.getClass().getSimpleName());
+        assertArrayEquals(value.serialize(), value.encodeCanonical(EncodingPurpose.SIGNATURE),
+                value.getClass().getSimpleName());
     }
 
     private static MetaData getMetaData() {

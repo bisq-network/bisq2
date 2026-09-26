@@ -20,21 +20,25 @@ A schema is correct only when tests prove its bytes. Code review cannot find a w
 
 ## The comparisons
 
-- **With `serialize()`.** For a class whose external data has no `@ExcludeForHash` field, the canonical
-  bytes must equal `serialize()`: `assertArrayEquals(object.serialize(), object.encodeCanonical())`.
-  This proves field numbers, types, envelopes, and completeness.
-- **External data uses the hash serialization.** Use an external-data stub with a field annotated with
+- **With `serialize()`.** The canonical default bytes must equal `serialize()`:
+  `assertArrayEquals(object.serialize(), object.encodeCanonical())`. This proves field numbers, types,
+  envelopes, and completeness.
+- **External data per purpose.** Use an external-data stub with a field annotated with
   `@ExcludeForHash` (see `ExternalData` in `StorageCanonicalEncoderTest`: it serializes as
   `network.MetaData`, so no resolver is needed, and its `priority` is excluded from the hash). With a
-  non-default value in that field, the canonical bytes equal `serializeForHash()` of a holder without own
-  excluded fields and differ from `serialize()`.
+  non-default value in that field, the `STORAGE_KEY` bytes equal `serializeForHash()`, and the `DEFAULT`
+  and `SIGNATURE` bytes equal `serialize()`.
+- **External data with a field unknown to the node.** Build the `Any` as a newer node sends it, with an
+  unknown field in the value, and decode the holder with `fromProto` (see `DistributedDataAnyTest`: its
+  stub serializes as `common.StringLongPair` and registers a resolver). The field must survive relay,
+  persistence, and inventory round trips, and the `SIGNATURE` bytes must contain it.
 - **Differences to `serializeForHash()`.** Assert them (`assertFalse(Arrays.equals(...))`) for classes
   with `@ExcludeForHash` fields or a custom `serializeForHash()`, so that a change on either side is
   noticed.
 - **Hash purposes.** `encodeCanonical(SIGNATURE)` and `encodeCanonical(STORAGE_KEY)` must
   equal `serializeForHash()` (see `hashPurposesMatchSerializeForHash` in `StorageCanonicalEncoderTest`).
   For `excludeOnlyInVersions`, test versions inside and outside the list. Assert documented differences
-  (`AuthorizedData`).
+  (`AuthorizedData`, and the `SIGNATURE` bytes of holders of external data with an excluded field).
 - **The purpose reaches nested objects.** Bytes show it where a nested class has a purpose-specific
   schema, for example `MailboxSequentialData` with `MailboxData` in the hash-purpose test. Otherwise use a
   nested object that records the purposes it receives, as `PurposeRecordingAuthenticatedData` in

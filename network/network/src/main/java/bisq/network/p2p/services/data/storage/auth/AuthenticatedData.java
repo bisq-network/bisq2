@@ -21,9 +21,11 @@ import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.DistributedDataAny;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,17 +39,32 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AuthenticatedData implements StorageData, Canonical {
     @Getter
     protected final DistributedData distributedData;
+    // The Any in which distributedData is transported: as received, or as serialized once when this node created the
+    // data. serialize() writes it unchanged, so that fields of the DistributedData which this node does not know are
+    // relayed, persisted, and sent in inventory responses (see DistributedDataAny).
+    protected final Any distributedDataAny;
 
+    // For data created by this node
     public AuthenticatedData(DistributedData distributedData) {
+        this(distributedData, distributedData.toAny(false));
+    }
+
+    // For received data: distributedData must be decoded from the type URL and value of distributedDataAny, which
+    // DistributedDataAny.retain() returns.
+    protected AuthenticatedData(DistributedData distributedData, Any distributedDataAny) {
         this.distributedData = distributedData;
+        this.distributedDataAny = distributedDataAny;
     }
 
     @Override
     public abstract bisq.network.protobuf.AuthenticatedData toProto(boolean serializeForHash);
 
+    // The hash serialization rebuilds the Any from distributedData without the fields annotated with @ExcludeForHash,
+    // as nodes of all versions compute it for storage keys, signatures, the proof of work, and the inventory order. A
+    // field which this node does not know is not part of it.
     public bisq.network.protobuf.AuthenticatedData.Builder getAuthenticatedDataBuilder(boolean serializeForHash) {
         return bisq.network.protobuf.AuthenticatedData.newBuilder()
-                .setDistributedData(distributedData.toAny(serializeForHash));
+                .setDistributedData(serializeForHash ? distributedData.toAny(true) : distributedDataAny);
     }
 
     public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
@@ -63,7 +80,17 @@ public abstract class AuthenticatedData implements StorageData, Canonical {
     // Canonical
     /* --------------------------------------------------------------------- */
 
+    // Used by the DEFAULT and SIGNATURE schemas. The retained Any, with the type URL and the exact bytes of the
+    // DistributedData that serialize() writes. It contains the fields annotated with @ExcludeForHash and the fields
+    // which this node does not know, so a signature over it covers every field of the DistributedData.
     protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getAuthenticatedDataSchemaBuilder() {
+        return CanonicalSchema.<T>newBuilder()
+                .compose(1, authenticatedData -> authenticatedData.distributedDataAny, DistributedDataAny.SCHEMA);
+    }
+
+    // Used by the STORAGE_KEY schemas, which reproduce serializeForHash(): nodes of all versions must compute the same
+    // storage key.
+    protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getStorageKeySchemaBuilder() {
         return CanonicalSchema.<T>newBuilder()
                 // Canonical encoding is not yet supported for DistributedData, as its implementations are defined
                 // outside the network module. We use the protobuf serialization for hashes instead: the Any with the

@@ -25,14 +25,16 @@ other modules) map to canonical messages is specified in
 - The classes with fields annotated with `@ExcludeForHash` (`MailboxData`,
   `RemoveAuthenticatedDataRequest`, `RefreshAuthenticatedDataRequest`, `RemoveMailboxRequest`) leave
   these fields out of their `SIGNATURE` and `STORAGE_KEY` schemas. Because the purpose reaches
-  nested objects, the `SIGNATURE` and `STORAGE_KEY` encodings of all these classes equal their
-  `serializeForHash()`, except for `AuthorizedData`.
+  nested objects, the `STORAGE_KEY` encodings of all these classes equal their `serializeForHash()`,
+  except for `AuthorizedData`. The `SIGNATURE` encodings equal it as well, except for `AuthorizedData`
+  and for data of higher-level modules, which the `SIGNATURE` purpose contains with its exact bytes.
 - No production call site uses canonical encoding yet. Storage keys, signature preimages, proof of work
   payloads, and the inventory order still use `serializeForHash()`. Switching a call site is a protocol
   change; see [Changing an encoding](#changing-an-encoding).
 - Classes of higher-level modules (for example offers, user profiles, chat messages) have no canonical
-  encoding yet. The network classes hold them in a `google.protobuf.Any` and use their protobuf
-  serialization for hashes; see [Data of other modules](#data-of-other-modules).
+  encoding yet. The network classes hold them in a `google.protobuf.Any` and keep the received bytes of
+  that `Any`. The `DEFAULT` and `SIGNATURE` purposes contain these bytes; the `STORAGE_KEY` purpose
+  contains the protobuf serialization for hashes; see [Data of other modules](#data-of-other-modules).
 
 Out of scope: protobuf serialization of network messages and persisted data, and preimages built by
 explicit byte concatenation. Persisted containers get no canonical encoding, because no hash or
@@ -62,17 +64,19 @@ The bytes must depend only on:
 - for map fields, the entry order that the schema declares (see [Map fields](#map-fields)).
 
 The bytes must not depend on the protobuf runtime, on the iteration order of an arbitrary Java map,
-on object identity, on caches, or on the thread, locale, or time. The only exception is the protobuf
-serialization of data of higher-level modules, which is used until those classes support canonical
-encoding (see [Data of other modules](#data-of-other-modules)).
+on object identity, on caches, or on the thread, locale, or time. Data of higher-level modules is the
+exception (see [Data of other modules](#data-of-other-modules)): its kept bytes are part of the object
+state and are written unchanged, but they were produced by a protobuf serialization, and the
+`STORAGE_KEY` purpose uses its protobuf serialization for hashes until those classes support canonical
+encoding.
 
 ### Complete encoding
 
 The default encoding of a class contains all its non-transient fields, with the field numbers and
 protobuf types of its protobuf message, and with the envelopes that `serialize()` writes for the
-class. For a class whose fields are all defined in its own module, the canonical bytes are therefore
-identical to `serialize()` (`toProto(false).toByteArray()`, protobuf-java 4.28 in its default mode).
-The tests of each schema verify this identity.
+class. The canonical bytes are therefore identical to `serialize()` (`toProto(false).toByteArray()`,
+protobuf-java 4.28 in its default mode), also for a class that holds data of a higher-level module,
+because both write the kept bytes of that data. The tests of each schema verify this identity.
 
 The default encoding is not identical to `serializeForHash()`:
 
@@ -83,6 +87,9 @@ The default encoding is not identical to `serializeForHash()`:
 - `AuthorizedData.serializeForHash()` omits the signature, so that republishing keeps the storage key.
   All canonical encodings of `AuthorizedData` contain the signature (see
   [Unresolved questions](#unresolved-questions)).
+- `serializeForHash()` rebuilds data of a higher-level module from the decoded object, without its
+  fields annotated with `@ExcludeForHash` and without the fields that the node does not know. The
+  default and `SIGNATURE` encodings contain the kept bytes of that data.
 
 Rationale: a preimage must cover every field that a third party must not change. A field that is left
 out of a preimage for a specific purpose must be left out by the schema for that purpose (see
@@ -96,11 +103,17 @@ if the switch is activated as a protocol change (see [Changing an encoding](#cha
 Other nodes compare these hashes and verify these signatures; one differing byte breaks signature
 verification, storage keys, and proof of work verification between node versions.
 
-The `SIGNATURE` and `STORAGE_KEY` encodings of the storage classes equal their
-`serializeForHash()`, except for `AuthorizedData`. The storage key of `AuthorizedData`, the proof of work
-payload, and the inventory order therefore have no purpose with identical bytes yet (see
+The `STORAGE_KEY` encodings of the storage classes equal their `serializeForHash()`, except for
+`AuthorizedData`. The storage key of `AuthorizedData`, the proof of work payload, and the inventory order
+therefore have no purpose with identical bytes yet (see
 [Unresolved questions](#unresolved-questions)). A call site without such a purpose needs a new
 purpose-specific schema or an activation.
+
+The `SIGNATURE` encodings contain the exact bytes of data of higher-level modules. For the classes that
+hold such data, directly or nested (`AuthenticatedData`, `AuthenticatedSequentialData`,
+`AddAuthenticatedDataRequest`, `AddAppendOnlyDataRequest`), they are therefore not identical to the
+preimage of the existing signatures. These signatures keep `serializeForHash()`. The `SIGNATURE` purpose
+of these classes is the preimage of a new signature, which needs an activation.
 
 ### Preimages without legacy bytes
 
@@ -246,19 +259,30 @@ A network class can contain data of two kinds of other modules:
   `AppendOnlyData`) and holds it in a `google.protobuf.Any`. Canonical encoding is not yet supported for
   it.
 
-The network class encodes data of a higher-level module with its protobuf serialization for hashes, in
-an `encodedMessage` field, with a comment that canonical encoding is not yet supported: `DistributedData`
-in `AuthenticatedData` (implemented once in the base class for `DefaultAuthenticatedData` and
-`AuthorizedData`) and `AppendOnlyData` in `AddAppendOnlyDataRequest` are encoded as the
-`google.protobuf.Any` that `toAny(true)` returns. It contains the type URL and the `serializeForHash()`
-bytes, exactly as the protobuf hash serialization of the holder contains it. The type URL keeps the type
-of the data in the preimage. The fallback writes these bytes for every purpose.
+The network class keeps the `google.protobuf.Any` of such data with the received bytes, and writes it
+unchanged (see
+[`../network/distributed-data-payload-bytes.md`](../network/distributed-data-payload-bytes.md)). It
+encodes the data per purpose:
 
-These bytes are only as deterministic as the protobuf serialization of the external class. The
-fallback lives in the network class that holds the external data, not in the external classes: an
-external class must not appear to have a canonical encoding while it returns protobuf bytes, and a
-future canonical encoding of an external class changes the bytes of its holders, which must be an
-explicit change of the holder.
+- `DEFAULT` and `SIGNATURE`: the kept `Any`, in a `compose` field with `DistributedDataAny.SCHEMA`: the
+  type URL as field 1 and the value bytes as field 2, unchanged. These are the bytes that `serialize()`
+  writes. They contain the fields annotated with `@ExcludeForHash` and the fields that the node does not
+  know. A signature over them therefore covers every field of the data, and a node that does not know a
+  field computes the same bytes as the signer. The type URL keeps the type of the data in the preimage.
+- `STORAGE_KEY`: the protobuf serialization for hashes, in an `encodedMessage` field, with a comment
+  that canonical encoding is not yet supported: the `google.protobuf.Any` that `toAny(true)` returns. It
+  contains the type URL and the `serializeForHash()` bytes, exactly as the protobuf hash serialization
+  of the holder contains it. Nodes of all versions must compute the same storage key.
+
+Both encodings are implemented once where the data is held: in the base class `AuthenticatedData` for
+`DistributedData` (for `DefaultAuthenticatedData` and `AuthorizedData`), and in
+`AddAppendOnlyDataRequest` for `AppendOnlyData`.
+
+The protobuf serialization for hashes is only as deterministic as the protobuf serialization of the
+external class. The fallback lives in the network class that holds the external data, not in the
+external classes: an external class must not appear to have a canonical encoding while it returns
+protobuf bytes, and a future canonical encoding of an external class changes the bytes of its holders,
+which must be an explicit change of the holder.
 
 ## Encoding purpose
 
@@ -269,11 +293,11 @@ different purpose.
 | Purpose | Preimage |
 | --- | --- |
 | `DEFAULT` | The complete encoding of an object, with all its encoded fields. Used when no specific purpose applies. |
-| `SIGNATURE` | The bytes that are signed and verified, for example the `AuthenticatedSequentialData` that the signature of an `AddAuthenticatedDataRequest` covers. |
+| `SIGNATURE` | The bytes that are signed and verified, for example the `AuthenticatedSequentialData` of an `AddAuthenticatedDataRequest`. The existing signatures do not use it yet (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
 | `STORAGE_KEY` | The bytes that are hashed to the storage key of an object, for example the `AuthenticatedData` of an `AddAuthenticatedDataRequest`. |
 
-`SIGNATURE` and `STORAGE_KEY` are the hash purposes: their preimages are hashed or signed, and nodes
-compute them with `serializeForHash()`.
+`SIGNATURE` and `STORAGE_KEY` are the hash purposes: their preimages are hashed or signed. Nodes
+compute the existing preimages with `serializeForHash()`.
 
 Rules:
 
@@ -299,6 +323,10 @@ Rules:
   schema names the left-out fields and their annotation. An annotation with `excludeOnlyInVersions` is
   reproduced with the same version condition, based on the version that `getVersion()` of the object
   returns. With these schemas, the hash purposes reproduce the existing hash preimages.
+- Exception: data of higher-level modules. Its fields cannot be left out of the kept bytes without
+  decoding and encoding the data again, which loses the fields that the node does not know. The
+  `SIGNATURE` purpose contains the kept bytes completely; the `STORAGE_KEY` purpose uses the hash
+  serialization (see [Data of other modules](#data-of-other-modules)).
 - The encoding of an object for a purpose applies wherever the object appears in a preimage for that
   purpose, also as a nested object. It may therefore leave out only data that no preimage of that
   purpose must protect. In particular, it must not leave out the object's own signature if an enclosing
@@ -335,8 +363,10 @@ bytes must not repeat such exclusions without a reason.
 
 Current state: `MailboxData`, `RemoveAuthenticatedDataRequest`, `RefreshAuthenticatedDataRequest`, and
 `RemoveMailboxRequest` use `SIGNATURE_SCHEMA` and `STORAGE_KEY_SCHEMA` without their
-`@ExcludeForHash` fields. All other implementations use `DEFAULT_SCHEMA` for all three purposes. Every
-implementation passes the purpose on.
+`@ExcludeForHash` fields. `DefaultAuthenticatedData`, `AuthorizedData`, and `AddAppendOnlyDataRequest`
+use `DEFAULT_SCHEMA` for `DEFAULT` and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA` with the hash
+serialization of the data of the higher-level module. All other implementations use `DEFAULT_SCHEMA` for
+all three purposes. Every implementation passes the purpose on.
 
 ## Schema metadata without effect on the bytes
 
@@ -396,21 +426,27 @@ Canonical bytes become part of the protocol as soon as a call site uses them.
   that adds the field. Otherwise the field is not protected, and the identity with `serialize()` breaks.
 - A new implementation of a type that is encoded with a `canonical` field only needs its own
   `encodeCanonical`; the compiler enforces it when the type extends `Canonical`.
-- Canonical encoding does not change how protobuf handles new fields between versions. An old node
-  that does not know a new field drops it and computes a different preimage.
+- Canonical encoding does not change how protobuf handles new fields of the network classes between
+  versions. A node that does not know a new field of a network class drops it and computes a different
+  preimage. Data of higher-level modules is different: nodes keep its received bytes, and the
+  `SIGNATURE` purpose contains fields that the node does not know. Nodes released before that rule drop
+  them (see [`../network/distributed-data-payload-bytes.md`](../network/distributed-data-payload-bytes.md)).
 
 ## Verification
 
 - A schema of a class with a protobuf message must have tests that compare the canonical bytes with
-  `serialize()` for objects whose external data has no field excluded from the hash, including absent
-  and default values of fields that can be absent, and every implementation of a `canonical` field.
+  `serialize()`, including absent and default values of fields that can be absent, and every
+  implementation of a `canonical` field.
 - A class that encodes external data must have a test with external data that has a field annotated
-  with `@ExcludeForHash`, to show that the external data is encoded with its hash serialization.
+  with `@ExcludeForHash`, to show that the `STORAGE_KEY` purpose encodes the external data with its hash
+  serialization and the `DEFAULT` and `SIGNATURE` purposes with its exact bytes. It must have a test with
+  external data that contains a field which the node does not know.
 - Differences to `serializeForHash()` must be asserted by tests, so that a change of either side is
   noticed.
 - Tests must show the bytes of every purpose: the default encoding equals `serialize()`, and the
   `SIGNATURE` and `STORAGE_KEY` encodings equal `serializeForHash()`, for versions inside and
-  outside every `excludeOnlyInVersions` list. Documented differences (`AuthorizedData`) are asserted.
+  outside every `excludeOnlyInVersions` list. Documented differences (`AuthorizedData`, and the
+  `SIGNATURE` encoding of external data) are asserted.
 - Tests must show that the purpose reaches nested objects: in the framework for the `canonical` field
   and for every field type with a nested schema, and in the model for a chain of nested classes, with a
   nested object that records the purposes it receives.
@@ -435,14 +471,15 @@ Not supported:
 - map keys other than `string`, map values other than `string` and message, and `sint32`, `sint64`,
   `canonical`, and `encodedMessage` as map values;
 - explicit presence (proto3 `optional`, wrapper types), groups, extensions, `Any` as a typed field
-  (only as pre-encoded bytes), and unknown fields;
+  (only as the kept `Any` of data of higher-level modules, with `DistributedDataAny.SCHEMA`, or as
+  pre-encoded bytes), and unknown fields, except as opaque content of the value of a kept `Any`;
 - decoding. The framework only produces bytes; it does not parse or validate canonical bytes.
 
 Further limitations:
 
 - The identity with `serialize()` holds for protobuf-java's default serialization of Bisq's messages.
-- Data of higher-level modules is encoded with protobuf serialization (see
-  [Data of other modules](#data-of-other-modules)).
+- Data of higher-level modules is encoded with its kept bytes, and with protobuf serialization for the
+  `STORAGE_KEY` purpose (see [Data of other modules](#data-of-other-modules)).
 - The encoder checks values only through the Java type of the getter.
 - The encoder does not check that exactly one alternative of a protobuf `oneof` is present; see
   [`canonical-model-mapping.md`](canonical-model-mapping.md#polymorphic-fields).
@@ -468,9 +505,17 @@ the first schema that uses the feature, and an update of this specification.
   contains the signature. A `STORAGE_KEY` schema of `AuthorizedData` without the signature is
   therefore correct only while `STORAGE_KEY` is used for storage keys alone. The proof of work payload
   and the inventory order have no purpose yet.
-- **Canonical encoding of data of higher-level modules.** It is encoded with protobuf behind
-  `google.protobuf.Any`. Replacing it changes the bytes of the network classes that hold it, unless the
-  canonical bytes reproduce the protobuf hash serialization.
+- **Canonical encoding of data of higher-level modules.** Signatures do not need it: the `SIGNATURE`
+  purpose contains the kept bytes. The `STORAGE_KEY` purpose still uses the protobuf serialization for
+  hashes. Replacing it changes storage keys, unless the canonical bytes reproduce the protobuf hash
+  serialization.
+- **`@ExcludeForHash` fields of network classes in the `SIGNATURE` purpose.** The `SIGNATURE` schemas of
+  `MailboxData`, `RemoveAuthenticatedDataRequest`, `RefreshAuthenticatedDataRequest`, and
+  `RemoveMailboxRequest` leave these fields out, to reproduce `serializeForHash()`. The `SIGNATURE`
+  purpose of the holders of data of higher-level modules is now the preimage of a new signature. For a
+  new signature, the security note above applies: a preimage without legacy bytes must not repeat such
+  exclusions without a reason. Before a new signature uses these schemas, the exclusions need a
+  decision.
 - **Explicit presence.** `optional` fields whose present value can be the default need framework
   support.
 - **Enforcement of `oneof` alternatives.** The framework cannot express that a group of fields is a
