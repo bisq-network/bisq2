@@ -61,14 +61,13 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @ExcludeForHash
     private final MetaData metaData;
-
-    @ExcludeForHash
-    private final int version;
     private final byte[] hash; // of authenticatedData
     private final byte[] ownerPublicKeyBytes; // 442 bytes
     private final transient PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;         // 47 bytes
+    @ExcludeForHash
+    private final int version;
     private final long created;
 
     private RefreshAuthenticatedDataRequest(int version,

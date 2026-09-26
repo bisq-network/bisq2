@@ -62,13 +62,12 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
-
-    @ExcludeForHash
-    private final int version;
     private final byte[] hash;
     private final byte[] receiverPublicKeyBytes;
     private final byte[] signature;
     private final long created;
+    @ExcludeForHash
+    private final int version;
     private final transient PublicKey receiverPublicKey;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();

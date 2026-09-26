@@ -71,15 +71,14 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
-
-    @ExcludeForHash
-    private final int version;
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
     private final transient PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;
     private final long created;
+    @ExcludeForHash
+    private final int version;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 

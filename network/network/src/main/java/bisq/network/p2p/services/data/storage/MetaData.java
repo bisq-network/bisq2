@@ -61,10 +61,10 @@ public final class MetaData implements NetworkProto {
     private final long ttl;
     // Used for inventory request priority of delivery if inventory size exceeds limit
     private final int priority;
-    // Used for name of storage file, for lookup of the store for a given distributedData object and for logging
-    private final String className;
     // Max file size of the storage file
     private final int maxMapSize;
+    // Used for name of storage file, for lookup of the store for a given distributedData object and for logging
+    private final String className;
 
     public MetaData(String className) {
         this(TTL_10_DAYS, className);

@@ -40,8 +40,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AuthenticatedSequentialData implements NetworkProto {
     private final AuthenticatedData authenticatedData;
     private final int sequenceNumber;
-    private final long created;
     private final byte[] pubKeyHash;
+    private final long created;
 
     public AuthenticatedSequentialData(AuthenticatedData authenticatedData,
                                        int sequenceNumber,

@@ -37,13 +37,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 public final class MailboxSequentialData implements NetworkProto {
     private final MailboxData mailboxData;
-    private final byte[] senderPublicKeyHash;
-    private final byte[] receiversPublicKeyHash;
-    private final byte[] receiversPubKeyBytes;
-    private final long created;
     // Sequence number is always 1 as it is used only in AddMailboxRequests and those are permitted only once.
     // The RemoveMailboxRequest will set it to Integer.MAX and disallow by that another message.
     private final int sequenceNumber;
+    private final byte[] senderPublicKeyHash;
+    private final long created;
+    private final byte[] receiversPubKeyBytes;
+    private final byte[] receiversPublicKeyHash;
     private transient final PublicKey receiversPubKey;
 
     public MailboxSequentialData(MailboxData mailboxData,

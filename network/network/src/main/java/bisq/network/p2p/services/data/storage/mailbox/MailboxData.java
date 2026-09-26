@@ -40,6 +40,8 @@ public final class MailboxData implements StorageData {
     private static final int VERSION = 1;
     public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
 
+    private final ConfidentialMessage confidentialMessage;
+
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
@@ -47,7 +49,6 @@ public final class MailboxData implements StorageData {
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
-    private final ConfidentialMessage confidentialMessage;
 
     public MailboxData(MetaData metaData, ConfidentialMessage confidentialMessage) {
         this(VERSION, metaData, confidentialMessage);
