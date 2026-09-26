@@ -172,13 +172,33 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                             .bytes(4, request -> request.signature)
                             .sint64(5, request -> request.created)
                             .sint32(6, request -> request.version));
+    public static final CanonicalSchema<RemoveMailboxRequest> SIGNATURE_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<RemoveMailboxRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
+    // 1 to 3, and version (field 6).
+    private static CanonicalSchema<RemoveMailboxRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
+                CanonicalSchema.<RemoveMailboxRequest>newBuilder()
+                        // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+                        .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
+                        .bytes(2, request -> request.hash)
+                        .bytes(3, request -> request.receiverPublicKeyBytes)
+                        .bytes(4, request -> request.signature)
+                        .sint64(5, request -> request.created));
+    }
+
+    // Same versions as the @ExcludeForHash annotation of metaData
+    private static boolean isMetaDataExcludedForHash(int version) {
+        return version == 1 || version == 2 || version == 3;
+    }
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<RemoveMailboxRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
-            case SIGNATURE -> DEFAULT_SCHEMA;
-            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

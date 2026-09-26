@@ -174,13 +174,28 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                             .bytes(5, request -> request.signature)
                             .sint32(6, request -> request.version)
                             .sint64(7, request -> request.created));
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> SIGNATURE_SCHEMA =
+            createSchemaForHash();
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) and version
+    // (field 6).
+    private static CanonicalSchema<RefreshAuthenticatedDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
+                CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
+                        .bytes(2, request -> request.hash)
+                        .bytes(3, request -> request.ownerPublicKeyBytes)
+                        .sint32(4, request -> request.sequenceNumber)
+                        .bytes(5, request -> request.signature)
+                        .sint64(7, request -> request.created));
+    }
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<RefreshAuthenticatedDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
-            case SIGNATURE -> DEFAULT_SCHEMA;
-            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

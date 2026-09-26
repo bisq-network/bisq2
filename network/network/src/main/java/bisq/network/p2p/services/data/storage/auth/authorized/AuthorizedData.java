@@ -146,7 +146,9 @@ public final class AuthorizedData extends AuthenticatedData {
     /* --------------------------------------------------------------------- */
 
     // Unlike serializeForHash(), which omits the signature so that republishing keeps the storage key, the default
-    // encoding contains all non-transient fields, including the signature.
+    // encoding contains all non-transient fields, including the signature. The SIGNATURE and STORAGE_KEY purposes use
+    // the default schema as well: the signature is not annotated with @ExcludeForHash, and serializeForHash() omits
+    // it only where AuthorizedData is the root of the preimage (see docs/specifications/encoding).
     public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
             AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
                     .extend(11,
