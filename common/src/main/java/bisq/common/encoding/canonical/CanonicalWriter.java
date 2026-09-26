@@ -37,8 +37,12 @@ public final class CanonicalWriter {
     /**
      * Writes pre-encoded bytes directly to the output without adding field tags,
      * wire types, lengths, or any other canonical encoding.
+     * <p>
+     * Package-private because only {@link CanonicalEncoder} may use it, to write map field bytes that it
+     * encoded earlier for the same schema field. Public access would let callers add bytes that no schema
+     * declares, which canonical output must never contain.
      */
-    public void writeRawBytes(byte[] bytes) {
+    void writeRawBytes(byte[] bytes) {
         Objects.requireNonNull(bytes, "Canonical raw bytes must not be null");
         out.write(bytes, 0, bytes.length);
     }
