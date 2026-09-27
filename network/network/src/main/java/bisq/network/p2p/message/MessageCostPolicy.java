@@ -31,6 +31,13 @@ public final class MessageCostPolicy {
     }
 
     /**
+     * The cost factor of a message which a peer sends to another peer over a connection.
+     */
+    public static double getCostFactor(EnvelopePayloadMessage message) {
+        return message.getCostFactor();
+    }
+
+    /**
      * The part of the cost factor which depends on the storage properties of a storable type. Data which the network
      * storage keeps longer, or of which it may keep more entries, costs more.
      */
