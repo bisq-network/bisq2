@@ -323,8 +323,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public String toString() {
         return "RemoveMailboxRequest{" +
-                "metaData=" + metaData +
-                ", version=" + version +
+                "version=" + version +
                 ", hash=" + Hex.encode(hash) +
                 ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +
                 ", signature=" + Hex.encode(signature) +

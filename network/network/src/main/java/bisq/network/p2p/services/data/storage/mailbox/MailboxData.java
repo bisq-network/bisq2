@@ -173,8 +173,7 @@ public final class MailboxData implements StorageData, Canonical {
     @Override
     public String toString() {
         return "MailboxData{" +
-                "metaData=" + metaData +
-                ", version=" + version +
+                "version=" + version +
                 ", confidentialMessage=" + confidentialMessage +
                 ", className=" + className +
                 '}';
