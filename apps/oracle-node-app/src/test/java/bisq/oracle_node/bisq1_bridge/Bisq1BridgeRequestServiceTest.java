@@ -240,18 +240,18 @@ class Bisq1BridgeRequestServiceTest {
         BondedRoleRegistrationRequest request = createCurrentRequest();
         var authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
 
-        AuthorizedBondedRole role = mock(AuthorizedBondedRole.class);
-        when(role.getProfileId()).thenReturn(request.getProfileId());
-        when(role.getAuthorizedPublicKey()).thenReturn(request.getAuthorizedPublicKey());
-        when(role.getBondedRoleType()).thenReturn(request.getBondedRoleType());
-        when(role.getBondUserName()).thenReturn(request.getBondUserName());
-        when(role.getSignatureBase64()).thenReturn(request.getSignatureBase64());
-        when(role.getAddressByTransportTypeMap()).thenReturn(request.getAddressByTransportTypeMap());
-        when(role.getNetworkId()).thenReturn(request.getNetworkId());
-        when(role.getRegistrationProtocolVersion()).thenReturn(request.getRegistrationProtocolVersion());
-        when(role.getProposalTxId()).thenReturn(request.getProposalTxId());
-        when(role.getLockupTxId()).thenReturn(request.getLockupTxId());
-        when(role.canReconstructForRemoval()).thenReturn(true);
+        AuthorizedBondedRole role = new AuthorizedBondedRole(request.getProfileId(),
+                request.getAuthorizedPublicKey(),
+                request.getBondedRoleType(),
+                request.getBondUserName(),
+                request.getSignatureBase64(),
+                request.getAddressByTransportTypeMap(),
+                request.getNetworkId(),
+                Optional.empty(),
+                false,
+                request.getRegistrationProtocolVersion(),
+                request.getProposalTxId(),
+                request.getLockupTxId());
         AuthorizedData authorizedData = new AuthorizedData(role, authorizedKeyPair.getPublic());
 
         NetworkService networkService = mock(NetworkService.class);
@@ -319,7 +319,10 @@ class Bisq1BridgeRequestServiceTest {
                 request.getRegistrationProtocolVersion(),
                 request.getProposalTxId(),
                 request.getLockupTxId());
-        AuthorizedData malformedData = new AuthorizedData(malformedRole, authorizedKeyPair.getPublic());
+        AuthorizedData malformedData = mock(AuthorizedData.class);
+        when(malformedData.getAuthorizedDistributedData()).thenReturn(malformedRole);
+        when(malformedData.getAuthorizedPublicKeyBytes())
+                .thenReturn(authorizedKeyPair.getPublic().getEncoded());
         AuthorizedData validData = new AuthorizedData(validRole, authorizedKeyPair.getPublic());
 
         DataService dataService = mock(DataService.class);

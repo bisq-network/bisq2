@@ -121,12 +121,16 @@ A class of a lower-level module that a network class contains directly implement
 network class encodes it with a `canonical` field: `ConfidentialMessage.confidentialData`
 (`ConfidentialData` of the security module).
 
-A network class that contains data of a higher-level module in a `google.protobuf.Any` encodes that
-data with its protobuf serialization for hashes in an `encodedMessage` field, until canonical encoding
-is supported for it. The fallback is implemented once where the data is held: in the base class
+A network class that contains data of a higher-level module in a `google.protobuf.Any` keeps the
+received `Any` and encodes it per purpose. The `DEFAULT` and `SIGNATURE` purposes contain the kept
+`Any` in a `compose` field with `DistributedDataAny.SCHEMA`: the type URL and the exact value bytes. The
+`STORAGE_KEY` purpose contains the protobuf serialization for hashes in an `encodedMessage` field, until
+canonical encoding is supported for the data: the `Any` that `toAny(true)` returns, with the type URL
+and the `serializeForHash()` bytes. Both are implemented once where the data is held: in the base class
 `AuthenticatedData` for `DistributedData`, and in `AddAppendOnlyDataRequest` for `AppendOnlyData`. The
-nested bytes are the `Any` that `toAny(true)` returns: the type URL and the `serializeForHash()` bytes.
-The rules and the rationale are in [`canonical-encoding.md`](canonical-encoding.md#data-of-other-modules).
+rules and the rationale are in [`canonical-encoding.md`](canonical-encoding.md#data-of-other-modules)
+and in
+[`../network/distributed-data-payload-bytes.md`](../network/distributed-data-payload-bytes.md).
 
 ## Delegation
 

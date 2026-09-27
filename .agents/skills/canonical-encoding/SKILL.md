@@ -1,6 +1,6 @@
 ---
 name: canonical-encoding
-description: Create, change, or review canonical encodings in Bisq 2 - CanonicalSchema definitions and Canonical.encodeCanonical implementations (package bisq.common.encoding.canonical). Use this skill whenever a Bisq model class must produce deterministic bytes for a hash, a signature, a storage key, or a proof of work payload; when a class implements Canonical or defines a DEFAULT_SCHEMA; when adding a field, a subclass, or a DataRequest type to the network storage classes; when replacing serializeForHash() in a hash or signature path; or when canonical bytes must be compared with protobuf output. Covers composition, inheritance, polymorphic fields (canonical field), envelopes (EnvelopePayloadMessage, DataRequest), data of other modules (canonical for lower-level modules, encodedMessage fallback behind Any), sint32/sint64, encoding purposes, and parity tests.
+description: Create, change, or review canonical encodings in Bisq 2 - CanonicalSchema definitions and Canonical.encodeCanonical implementations (package bisq.common.encoding.canonical). Use this skill whenever a Bisq model class must produce deterministic bytes for a hash, a signature, a storage key, or a proof of work payload; when a class implements Canonical or defines a DEFAULT_SCHEMA; when adding a field, a subclass, or a DataRequest type to the network storage classes; when replacing serializeForHash() in a hash or signature path; or when canonical bytes must be compared with protobuf output. Covers composition, inheritance, polymorphic fields (canonical field), envelopes (EnvelopePayloadMessage, DataRequest), data of other modules (canonical for lower-level modules, kept Any bytes and the encodedMessage storage-key fallback for higher-level modules), sint32/sint64, encoding purposes, and parity tests.
 ---
 
 # Canonical encoding in Bisq 2
@@ -156,7 +156,7 @@ developer. The exclusions exist only for byte parity with older nodes.
 | `repeated Foo foos = n;` | `repeatedCompose(n, getter, Foo.DEFAULT_SCHEMA)`; a purpose-specific schema of the parent references the element schema for the same purpose | - |
 | Base message with `oneof message { Sub sub = n; ... }` | Base builder method plus `extend(n, sub -> sub, subtype builder)` | `AuthenticatedData` with `DefaultAuthenticatedData` (10), `AuthorizedData` (11) |
 | Field whose declared type has several implementations | `canonical(n, getter)`: the runtime type encodes itself | `AuthenticatedSequentialData.authenticatedData` |
-| `google.protobuf.Any` with data of a higher-level module | `encodedMessage(n, x -> x.data.toAny(true).toByteArray())` in the class that holds it, with the "not yet supported" comment | `AuthenticatedData.distributedData`, `AddAppendOnlyDataRequest.appendOnlyData` |
+| `google.protobuf.Any` with data of a higher-level module | The class that holds it keeps the received `Any` (`DistributedDataAny.retain` in `fromProto`) and writes it in `toProto(false)`. `DEFAULT` and `SIGNATURE`: `compose(n, x -> x.dataAny, DistributedDataAny.SCHEMA)`. `STORAGE_KEY`: `encodedMessage(n, x -> x.data.toAny(true).toByteArray())` with the "not yet supported" comment | `AuthenticatedData.distributedData`, `AddAppendOnlyDataRequest.appendOnlyData` |
 | Message type of a lower-level module (for example `security.ConfidentialData`) | implement `Canonical` in that class and use `canonical(n, getter)` | `ConfidentialMessage.confidentialData` |
 | `toProto` returns `EnvelopePayloadMessage` with a `DataRequest` | `DataRequest.createCanonicalSchema(requestFieldNumber, requestBuilder)` | the six storage requests |
 | `toProto` returns another envelope | `CanonicalSchema.oneof("EnvelopePayloadMessage", n, builder)`, plus a bare `DEFAULT_VALUE_SCHEMA` if a parent embeds the bare message | `ConfidentialMessage` |
@@ -170,7 +170,9 @@ message. The name says where the bytes come from and which role the field has.
 - **Do not switch a hash, signature, proof of work, or inventory call site** from `serializeForHash()` to
   canonical encoding without byte identity or an agreed activation. The default encodings of
   `AuthorizedData`, `MailboxData`, and the remove, refresh, and mailbox requests differ from
-  `serializeForHash()`. The hash purposes equal it, except for `AuthorizedData`.
+  `serializeForHash()`. `STORAGE_KEY` equals it, except for `AuthorizedData`. `SIGNATURE` equals it,
+  except for `AuthorizedData` and for the holders of data of higher-level modules, whose `SIGNATURE`
+  encoding contains the exact bytes of that data.
 - **Adding a protobuf field** to a canonical class: add it to the schemas in the same change.
 - **Adding or changing an `@ExcludeForHash` annotation**: update the hash schemas of the class in the same
   change.
@@ -197,10 +199,13 @@ message. The name says where the bytes come from and which role the field has.
 - **Envelope or bare message.** `ConfidentialMessage.DEFAULT_SCHEMA` includes the
   `EnvelopePayloadMessage` envelope; `MailboxData` embeds the bare message and must use
   `ConfidentialMessage.DEFAULT_VALUE_SCHEMA`.
-- **Data of higher-level modules** (behind `DistributedData` or `AppendOnlyData` in an `Any`). Use the
-  protobuf hash serialization in the network class that holds the data. Do not add a fallback
-  `encodeCanonical` to the external classes or to their interfaces, and keep the `Any` (with the type
-  URL). A class of a lower-level module, such as `ConfidentialData`, implements `Canonical` instead.
+- **Data of higher-level modules** (behind `DistributedData` or `AppendOnlyData` in an `Any`). The
+  network class that holds the data keeps the received `Any` and never rebuilds it from the decoded
+  object, which would drop the fields that the node does not know. `DEFAULT` and `SIGNATURE` encode the
+  kept `Any` with `DistributedDataAny.SCHEMA`; `STORAGE_KEY` uses the protobuf hash serialization (the
+  `Any` of `toAny(true)`, with the type URL). Do not add a fallback `encodeCanonical` to the external
+  classes or to their interfaces. A class of a lower-level module, such as `ConfidentialData`,
+  implements `Canonical` instead. See `docs/specifications/network/distributed-data-payload-bytes.md`.
 - **Always pass the encoding purpose on.** Call `canonicalEncoder.encode(this, schema, encodingPurpose)`
   with the received purpose, never with a fixed purpose. Encode a nested `Canonical` object with
   `canonical(n, getter)`, not with `compose(n, getter, Foo.DEFAULT_SCHEMA)`: a `compose` field uses the
@@ -218,14 +223,17 @@ message. The name says where the bytes come from and which role the field has.
 ## Definition of done
 
 - Every non-transient field is in the schema, with the protobuf field number and type.
-- Classes of lower-level modules implement `Canonical`. Data of higher-level modules uses the
-  documented fallback with the "not yet supported" comment.
+- Classes of lower-level modules implement `Canonical`. Data of higher-level modules uses the kept `Any`
+  for `DEFAULT` and `SIGNATURE`, and the documented hash-serialization fallback with the "not yet
+  supported" comment for `STORAGE_KEY`.
 - `encodeCanonical` selects the schema with a `switch` over all purposes and passes the received
   purpose to the encoder. Nested `Canonical` objects use `canonical` fields.
 - `@ExcludeForHash` fields are left out of the hash schemas, with a comment.
 - Tests show that the default encoding equals `serialize()`, that external data uses its hash
-  serialization, that differences to `serializeForHash()` are known, and that the hash purposes equal
-  `serializeForHash()`, also for versions inside and outside `excludeOnlyInVersions`.
+  serialization for `STORAGE_KEY` and its exact bytes for `SIGNATURE`, that external data keeps fields
+  which the node does not know, that differences to `serializeForHash()` are known, and that the hash
+  purposes equal `serializeForHash()` where documented, also for versions inside and outside
+  `excludeOnlyInVersions`.
 - No hash, signature, proof of work, or inventory call site changed its bytes without an agreed
   activation.
 - The specification is updated when a framework feature or a documented rule changed.

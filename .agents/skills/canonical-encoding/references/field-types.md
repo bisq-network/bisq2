@@ -25,7 +25,7 @@ Allowed numbers: `1..536870911`, except `19000..19999`.
 | subclass alternative of the base message's `oneof` | `extend(n, sub -> sub, schemaOrBuilder)` | `Function<T, N>` | getter returns `null` |
 | envelope alternative | `oneof(n, getter, schemaOrBuilder)` | `Function<T, N>` | getter returns `null` |
 | field whose declared type has several implementations | `canonical(n, getter)`; the runtime type selects the encoding | `Function<T, ? extends Canonical>` | getter returns `null` |
-| `google.protobuf.Any` with data of a higher-level module | `encodedMessage(n, getter)` | `Function<T, byte[]>` | getter returns `null` |
+| `google.protobuf.Any` with data of a higher-level module | `DEFAULT` and `SIGNATURE`: `compose(n, getter, DistributedDataAny.SCHEMA)` with the kept `Any`; `STORAGE_KEY`: `encodedMessage(n, getter)` | `Function<T, Any>`; `Function<T, byte[]>` | getter returns `null` |
 | `repeated string x = n;` | `repeatedString(n, getter)` | `Function<T, List<String>>` | empty list |
 | `repeated int32 x = n;` (packed) | `packedRepeatedInt32(n, getter)` | `Function<T, List<Integer>>` | empty list |
 | `repeated Foo x = n;` | `repeatedCompose(n, getter, Foo.DEFAULT_SCHEMA)` | `Function<T, ? extends List<N>>` | empty list |
@@ -59,13 +59,13 @@ not the Java field type.
 | `optionalBytes.ifPresent(v -> builder.setX(ByteString.copyFrom(v)))` for `optional bytes` | `bytes(n, o -> o.optionalBytes.orElse(null))`; only correct when a present value is never empty | `AuthorizedData.signature` |
 | `setX(nested.toProto(serializeForHash))` for a network class | `canonical(n, o -> o.nested)` | `MailboxData.metaData` |
 | `setX(nested.toProto(...).getBareMessage())` (bare message of an envelope class) | `compose(n, o -> o.nested, Nested.DEFAULT_VALUE_SCHEMA)` | `MailboxData.confidentialMessage` |
-| `setX(distributedData.toAny(serializeForHash))` with data of a higher-level module | `encodedMessage(n, o -> o.distributedData.toAny(true).toByteArray())` | `AuthenticatedData.distributedData` |
+| `setX(serializeForHash ? distributedData.toAny(true) : distributedDataAny)` with data of a higher-level module | `DEFAULT` and `SIGNATURE`: `compose(n, o -> o.distributedDataAny, DistributedDataAny.SCHEMA)`; `STORAGE_KEY`: `encodedMessage(n, o -> o.distributedData.toAny(true).toByteArray())` | `AuthenticatedData.distributedData` |
 | `setX(lowerLevel.toProto(serializeForHash))` with a class of a lower-level module | `canonical(n, o -> o.lowerLevel)`; the class implements `Canonical` | `ConfidentialMessage.confidentialData` |
 | `setX(javaEnum.toProtoEnum())` | `enumField(n, o -> o.javaEnum)`; the enum implements `CanonicalEnum` | - |
 | field annotated with `@ExcludeForHash` | in `DEFAULT_SCHEMA`; left out of the hash schemas. With `excludeOnlyInVersions`, the hash schemas use a getter that returns `null` in the listed versions | `MailboxData.metaData`, `MailboxData.version` |
 
-The `Any` row always needs the comment that canonical encoding is not yet supported for that
-type (see `AuthenticatedData.getAuthenticatedDataSchemaBuilder()`).
+The `STORAGE_KEY` variant of the `Any` row always needs the comment that canonical encoding is not yet
+supported for that type (see `AuthenticatedData.getStorageKeySchemaBuilder()`).
 
 ### Enums
 

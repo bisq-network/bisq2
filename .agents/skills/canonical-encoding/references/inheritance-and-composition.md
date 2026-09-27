@@ -10,7 +10,7 @@ normative rules are in `docs/specifications/encoding/canonical-model-mapping.md`
 2. Composition: a field holds another network object
 3. Subtype message: the base message has a `oneof` with one message per subclass
 4. Polymorphic fields: the `canonical` field
-5. Data of other modules: `canonical` or the `encodedMessage` fallback
+5. Data of other modules: `canonical`, or the kept `Any` and the `encodedMessage` fallback
 6. Envelope messages: `EnvelopePayloadMessage` and `DataRequest`
 7. Delegation by hand
 8. Static initialization and builder reuse
@@ -82,14 +82,21 @@ The base class provides the base fields in a generic static builder method. Each
 alternative with `extend` and an identity getter:
 
 ```java
-// AuthenticatedData (abstract, implements StorageData, Canonical)
+// AuthenticatedData (abstract, implements StorageData, Canonical). Two base builders, because the
+// payload is encoded differently per purpose (see section 5).
 protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getAuthenticatedDataSchemaBuilder() {
+    return CanonicalSchema.<T>newBuilder()
+            .compose(1, authenticatedData -> authenticatedData.distributedDataAny, DistributedDataAny.SCHEMA);
+}
+
+protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getStorageKeySchemaBuilder() {
     return CanonicalSchema.<T>newBuilder()
             // Canonical encoding is not yet supported for DistributedData, ... (see section 5)
             .encodedMessage(1, authenticatedData -> authenticatedData.distributedData.toAny(true).toByteArray());
 }
 
-// DefaultAuthenticatedData: the subclass message has no fields, but it is present (tag 10, length 0)
+// DefaultAuthenticatedData: the subclass message has no fields, but it is present (tag 10, length 0).
+// STORAGE_KEY_SCHEMA is the same with getStorageKeySchemaBuilder().
 public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
         DefaultAuthenticatedData.<DefaultAuthenticatedData>getAuthenticatedDataSchemaBuilder()
                 .extend(10,
@@ -97,15 +104,18 @@ public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
                         CanonicalSchema.newBuilder())
                 .build();
 
-// AuthorizedData: the signature is included, also in the hash purposes, although serializeForHash() omits it
+// AuthorizedData: the signature is included, also in the hash purposes, although serializeForHash() omits it.
+// The subtype builder is a method, so that DEFAULT_SCHEMA and STORAGE_KEY_SCHEMA each get a new builder.
 public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
         AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
-                .extend(11,
-                        authorizedData -> authorizedData,
-                        CanonicalSchema.<AuthorizedData>newBuilder()
-                                .bytes(1, authorizedData -> authorizedData.signature.orElse(null))
-                                .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes))
+                .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
                 .build();
+
+private static CanonicalSchema.Builder<AuthorizedData> getAuthorizedDataSchemaBuilder() {
+    return CanonicalSchema.<AuthorizedData>newBuilder()
+            .bytes(1, authorizedData -> authorizedData.signature.orElse(null))
+            .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes);
+}
 ```
 
 Points to check:
@@ -145,7 +155,7 @@ Bisq 1 uses schemas with one `instanceof`-based alternative per subtype instead
 (`Proposal.getProposalSchemaBuilder()`). They fail silently when a subtype is not registered or matches
 twice. Prefer the `canonical` field in Bisq 2.
 
-## 5. Data of other modules: `canonical` or the `encodedMessage` fallback
+## 5. Data of other modules: `canonical`, or the kept `Any` and the `encodedMessage` fallback
 
 A class of a **lower-level module** (a module that the network module depends on, such as `security`)
 that a network class contains directly implements `Canonical` itself, with a `DEFAULT_SCHEMA` and the
@@ -160,22 +170,43 @@ the encoding purpose:
 Classes of **higher-level modules** (offers, user profiles, chat messages, ...) do not support canonical
 encoding yet. The network module knows them only through interfaces (`DistributedData`,
 `AppendOnlyData`) and holds them in a `google.protobuf.Any`. The network class that holds such data
-writes its protobuf hash serialization, once, where the data is held, with a comment:
+keeps the received `Any` and writes it unchanged, so that fields which the node does not know are not
+lost (`docs/specifications/network/distributed-data-payload-bytes.md`):
 
 ```java
-// AuthenticatedData base class: the protobuf field is google.protobuf.Any
-.encodedMessage(1, authenticatedData -> authenticatedData.distributedData.toAny(true).toByteArray());
+// fromProto: keep the received Any, decode the data from the received instance
+Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
+DistributedData distributedData = DistributedData.fromAny(proto.getDistributedData());
 
-// AddAppendOnlyDataRequest: the protobuf field is google.protobuf.Any
-.encodedMessage(1, request -> request.appendOnlyData.toAny(true).toByteArray())
+// Data created by this node: serialize it once, when the holder is created
+this(distributedData, distributedData.toAny(false));
+
+// getBuilder: the kept Any, except for the hash serialization
+.setDistributedData(serializeForHash ? distributedData.toAny(true) : distributedDataAny)
 ```
 
-The comment in the code states: canonical encoding is not yet supported for this type, because it is
-defined outside the network module; the protobuf serialization for hashes is used instead.
+The schemas encode the data per purpose, once, where the data is held:
 
-- For an `Any` field, keep the `Any`: `toAny(true)` contains the type URL and the `serializeForHash()`
-  bytes, exactly as the protobuf hash serialization of the holder contains it. Writing only
-  `serializeForHash()` would drop the type from the preimage.
+```java
+// DEFAULT and SIGNATURE (AuthenticatedData base class, AddAppendOnlyDataRequest)
+.compose(1, authenticatedData -> authenticatedData.distributedDataAny, DistributedDataAny.SCHEMA)
+
+// STORAGE_KEY: the protobuf hash serialization, with the comment
+.encodedMessage(1, authenticatedData -> authenticatedData.distributedData.toAny(true).toByteArray())
+```
+
+The comment at the `STORAGE_KEY` fallback states: canonical encoding is not yet supported for this
+type, because it is defined outside the network module; the protobuf serialization for hashes is used
+instead.
+
+- `DistributedDataAny.SCHEMA` writes the type URL and the value bytes unchanged. The `SIGNATURE`
+  purpose therefore contains every field of the data, including `@ExcludeForHash` fields and fields that
+  the node does not know.
+- For the `STORAGE_KEY` fallback, keep the `Any`: `toAny(true)` contains the type URL and the
+  `serializeForHash()` bytes, exactly as the protobuf hash serialization of the holder contains it.
+  Writing only `serializeForHash()` would drop the type from the preimage.
+- Never rebuild the written `Any` from the decoded object (`toAny(false)`) outside the creation of local
+  data.
 - Do not add a fallback `encodeCanonical` to the external classes or to their interfaces
   (`DistributedData`, `AppendOnlyData`, `MailboxMessage`). They would appear to have a canonical
   encoding while they return protobuf bytes, and a later real encoding would silently change the bytes
