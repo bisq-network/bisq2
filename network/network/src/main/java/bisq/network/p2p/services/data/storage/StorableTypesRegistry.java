@@ -17,16 +17,24 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Holds every storable type, which is every type that the network storage accepts, together with its local MetaData.
  * The key is the simple class name of the type, which is also the key of its store.
+ * <p>
+ * Each type belongs to exactly one store type, which the registry derives from the Java type: a MailboxMessage to the
+ * mailbox store, an AppendOnlyData to the append-only store and any other DistributedData to the authenticated data
+ * store. A store accepts only class names of its own store type.
  * <p>
  * Remove requests, refresh requests and mailbox data do not contain the stored object, or contain it only encrypted.
  * They carry the class name of the stored type instead. The storage layer uses that class name only as the key for
@@ -36,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * which is not registered.
  */
 public final class StorableTypesRegistry {
-    private record Registration(Class<?> storableType, MetaData metaData) {
+    private record Registration(Class<?> storableType, StoreType storeType, MetaData metaData) {
     }
 
     private static final Map<String, Registration> registrationByClassName = new ConcurrentHashMap<>();
@@ -47,7 +55,8 @@ public final class StorableTypesRegistry {
     /**
      * Registering the same type with the same MetaData again has no effect.
      *
-     * @throws IllegalArgumentException if the className of the MetaData is not the simple name of the type, or if
+     * @throws IllegalArgumentException if the type is neither a MailboxMessage nor a DistributedData, or is both, if
+     *                                  the className of the MetaData is not the simple name of the type, or if
      *                                  another type or another MetaData is registered already for that class name.
      */
     public static void register(Class<?> storableType, MetaData metaData) {
@@ -55,7 +64,7 @@ public final class StorableTypesRegistry {
         checkArgument(className.equals(metaData.getClassName()),
                 "The className of the MetaData must be the simple name of the type. type=%s; className=%s",
                 storableType.getName(), metaData.getClassName());
-        Registration registration = new Registration(storableType, metaData);
+        Registration registration = new Registration(storableType, toStoreType(storableType), metaData);
         Registration existing = registrationByClassName.putIfAbsent(className, registration);
         checkArgument(existing == null || existing.equals(registration),
                 "Another registration exists already for className %s. existing=%s; new=%s",
@@ -86,11 +95,35 @@ public final class StorableTypesRegistry {
         return findMetaData(className).map(MetaData::getCostFactor).orElse(0d);
     }
 
-    public static boolean isRegistered(String className) {
-        return registrationByClassName.containsKey(className);
+    public static boolean isRegistered(String className, StoreType storeType) {
+        Registration registration = registrationByClassName.get(className);
+        return registration != null && registration.storeType() == storeType;
     }
 
     public static Set<String> getClassNames() {
         return Set.copyOf(registrationByClassName.keySet());
+    }
+
+    public static Set<String> getClassNames(StoreType storeType) {
+        return registrationByClassName.entrySet().stream()
+                .filter(entry -> entry.getValue().storeType() == storeType)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    // Mailbox data and remove requests carry only the class name, and the signature does not cover it. The store type
+    // prevents that such a request names a type of another store and so gets its MetaData, e.g. a longer time to live.
+    private static StoreType toStoreType(Class<?> storableType) {
+        boolean isMailboxMessage = MailboxMessage.class.isAssignableFrom(storableType);
+        boolean isDistributedData = DistributedData.class.isAssignableFrom(storableType);
+        checkArgument(isMailboxMessage != isDistributedData,
+                "A storable type must be either a MailboxMessage or a DistributedData. type=%s",
+                storableType.getName());
+        if (isMailboxMessage) {
+            return StoreType.MAILBOX_DATA_STORE;
+        }
+        return AppendOnlyData.class.isAssignableFrom(storableType)
+                ? StoreType.APPEND_ONLY_DATA_STORE
+                : StoreType.AUTHENTICATED_DATA_STORE;
     }
 }

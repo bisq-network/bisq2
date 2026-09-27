@@ -101,7 +101,7 @@ public class StorageService {
             String authStoreName = AUTHENTICATED_DATA_STORE.getStoreName();
             Path dirPath = subPath.resolve(authStoreName);
             if (Files.exists(dirPath)) {
-                getExistingStoreKeys(dirPath)
+                getExistingStoreKeys(dirPath, AUTHENTICATED_DATA_STORE)
                         .forEach(storeKey -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey);
                             AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
@@ -146,7 +146,7 @@ public class StorageService {
             String mailboxStoreName = MAILBOX_DATA_STORE.getStoreName();
             dirPath = subPath.resolve(mailboxStoreName);
             if (Files.exists(dirPath)) {
-                getExistingStoreKeys(dirPath)
+                getExistingStoreKeys(dirPath, MAILBOX_DATA_STORE)
                         .forEach(storeKey -> {
                             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, pruneExpiredEntriesService, mailboxStoreName, storeKey);
                             MailboxDataStorageService.Listener listener = new MailboxDataStorageService.Listener() {
@@ -181,7 +181,7 @@ public class StorageService {
             String appendStoreName = APPEND_ONLY_DATA_STORE.getStoreName();
             dirPath = subPath.resolve(appendStoreName);
             if (Files.exists(dirPath)) {
-                getExistingStoreKeys(dirPath)
+                getExistingStoreKeys(dirPath, APPEND_ONLY_DATA_STORE)
                         .forEach(storeKey -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, storeKey);
                             AppendOnlyDataStorageService.Listener listener = appendOnlyData -> listeners.forEach(l -> {
@@ -413,7 +413,7 @@ public class StorageService {
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeKey) {
-        if (isStoreKeyNotAllowed(storeKey)) {
+        if (isStoreKeyNotAllowed(storeKey, AUTHENTICATED_DATA_STORE)) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
         }
         if (!authenticatedDataStores.containsKey(storeKey)) {
@@ -457,7 +457,7 @@ public class StorageService {
     }
 
     public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeKey) {
-        if (isStoreKeyNotAllowed(storeKey)) {
+        if (isStoreKeyNotAllowed(storeKey, MAILBOX_DATA_STORE)) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
         }
         if (!mailboxStores.containsKey(storeKey)) {
@@ -503,7 +503,7 @@ public class StorageService {
     }
 
     public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeKey) {
-        if (isStoreKeyNotAllowed(storeKey)) {
+        if (isStoreKeyNotAllowed(storeKey, APPEND_ONLY_DATA_STORE)) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
         }
         if (!appendOnlyDataStores.containsKey(storeKey)) {
@@ -622,13 +622,14 @@ public class StorageService {
 
     // A store holds the data of one type, and its key is the class name of that type. The storage layer takes the
     // MetaData of a store only from the StorableTypesRegistry, so it does not accept a type which is not registered
-    // there.
-    private static boolean isStoreKeyNotAllowed(String storeKey) {
-        return !StorableTypesRegistry.isRegistered(storeKey);
+    // there. It also does not accept a type which is registered for another store type. Otherwise a mailbox request
+    // could name a DistributedData type and get its MetaData.
+    private static boolean isStoreKeyNotAllowed(String storeKey, StoreType storeType) {
+        return !StorableTypesRegistry.isRegistered(storeKey, storeType);
     }
 
-    private Set<String> getExistingStoreKeys(Path dirPath) {
-        return StorableTypesRegistry.getClassNames().stream()
+    private Set<String> getExistingStoreKeys(Path dirPath, StoreType storeType) {
+        return StorableTypesRegistry.getClassNames(storeType).stream()
                 .filter(className -> {
                     String storageFileName = StringUtils.camelCaseToSnakeCase(className + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
                     return Files.exists(dirPath.resolve(storageFileName));

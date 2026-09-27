@@ -36,8 +36,9 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * The storage layer cannot decrypt the message. It uses the class name to select the store of the message type and
  * to look up the MetaData of that type in the StorableTypesRegistry. The signature does not cover the class name, so a
- * relay can change it to the name of another registered type. That moves the data into the store of the other type.
- * It cannot make a node use MetaData values which are not registered for a type.
+ * relay can change it to the name of another registered MailboxMessage type. That moves the data into the store of the
+ * other type. It cannot make a node use MetaData values which are not registered for a MailboxMessage type, because the
+ * mailbox store accepts only class names of MailboxMessage types.
  */
 @EqualsAndHashCode
 @Getter

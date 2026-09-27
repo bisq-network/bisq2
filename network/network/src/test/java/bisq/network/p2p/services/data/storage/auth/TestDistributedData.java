@@ -28,8 +28,8 @@ import lombok.Getter;
  */
 @Getter
 @EqualsAndHashCode
-final class TestDistributedData implements DistributedData {
-    static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, TestDistributedData.class.getSimpleName());
+public final class TestDistributedData implements DistributedData {
+    public static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, TestDistributedData.class.getSimpleName());
 
     private final String content;
 
