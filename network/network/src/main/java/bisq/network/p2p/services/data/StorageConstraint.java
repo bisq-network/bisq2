@@ -30,10 +30,6 @@ public interface StorageConstraint {
         return getMetaData().getPriority();
     }
 
-    default int getMaxMapSize() {
-        return getMetaData().getMaxMapSize();
-    }
-
     default String getClassName() {
         return getMetaData().getClassName();
     }

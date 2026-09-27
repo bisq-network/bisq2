@@ -27,11 +27,11 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -40,7 +40,6 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Optional;
 
 // Data size about 200-250 bytes
 @Slf4j
@@ -60,9 +59,12 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 publicKeyEncoded,
                 publicKey,
                 signature,
-                created);
+                created,
+                mailboxData.getClassName());
     }
 
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node only
+    // serializes the received value again. It never uses it for a decision (see getMetaData()).
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
     private final byte[] hash;
@@ -72,8 +74,10 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @ExcludeForHash
     private final int version;
     private final transient PublicKey receiverPublicKey;
-    @Setter
-    private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
+    // Simple class name of the removed MailboxMessage. It selects the store.
+    // Excluded from the hash, so it does not change the proof of work payload.
+    @ExcludeForHash
+    private final String className;
 
     // Receiver is owner for remove request
     private RemoveMailboxRequest(int version,
@@ -82,7 +86,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                                  byte[] receiverPublicKeyBytes,
                                  PublicKey receiverPublicKey,
                                  byte[] signature,
-                                 long created) {
+                                 long created,
+                                 String className) {
         this.version = version;
         this.metaData = metaData;
         this.hash = hash;
@@ -90,6 +95,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         this.receiverPublicKey = receiverPublicKey;
         this.signature = signature;
         this.created = created;
+        this.className = className;
 
         verify();
     }
@@ -119,27 +125,34 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public bisq.network.protobuf.RemoveMailboxRequest.Builder getValueBuilder(boolean serializeForHash) {
+        //noinspection deprecation
         return bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
                 .setVersion(version)
                 .setMetaData(metaData.toProto(serializeForHash))
                 .setHash(ByteString.copyFrom(hash))
                 .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
                 .setSignature(ByteString.copyFrom(signature))
-                .setCreated(created);
+                .setCreated(created)
+                .setClassName(className);
     }
 
     public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto) {
         byte[] receiverPublicKeyBytes = proto.getReceiverPublicKeyBytes().toByteArray();
         try {
             PublicKey receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
+            //noinspection deprecation
+            MetaData metaData = MetaData.fromProto(proto.getMetaData());
+            // Nodes of earlier versions do not send className.
+            String className = proto.getClassName().isEmpty() ? metaData.getClassName() : proto.getClassName();
             return new RemoveMailboxRequest(
                     proto.getVersion(),
-                    MetaData.fromProto(proto.getMetaData()),
+                    metaData,
                     proto.getHash().toByteArray(),
                     receiverPublicKeyBytes,
                     receiverPublicKey,
                     proto.getSignature().toByteArray(),
-                    proto.getCreated()
+                    proto.getCreated(),
+                    className
             );
         } catch (GeneralSecurityException e) {
             log.error("Failed to generate public key");
@@ -161,8 +174,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     // Canonical
     /* --------------------------------------------------------------------- */
 
-    // Contains metaData and version, which serializeForHash() omits (metaData only in versions 1 to 3), as the
-    // default encoding contains all non-transient fields.
+    // Contains metaData, version and className, which serializeForHash() omits (metaData only in versions 1 to 3), as
+    // the default encoding contains all non-transient fields.
     public static final CanonicalSchema<RemoveMailboxRequest> DEFAULT_SCHEMA =
             bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
                     CanonicalSchema.<RemoveMailboxRequest>newBuilder()
@@ -171,12 +184,13 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                             .bytes(3, request -> request.receiverPublicKeyBytes)
                             .bytes(4, request -> request.signature)
                             .sint64(5, request -> request.created)
-                            .sint32(6, request -> request.version));
+                            .sint32(6, request -> request.version)
+                            .string(7, request -> request.className));
     public static final CanonicalSchema<RemoveMailboxRequest> SIGNATURE_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<RemoveMailboxRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
-    // 1 to 3, and version (field 6).
+    // 1 to 3, version (field 6) and className (field 7).
     private static CanonicalSchema<RemoveMailboxRequest> createSchemaForHash() {
         return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
                 CanonicalSchema.<RemoveMailboxRequest>newBuilder()
@@ -210,7 +224,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
+        return MathUtils.bounded(0.1, 0.3, StorableTypesRegistry.getCostFactor(className));
     }
 
 
@@ -275,7 +289,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
 
@@ -283,13 +297,22 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     // StorageConstraint
     /* --------------------------------------------------------------------- */
 
+    // The MetaData of the removed type, from the StorableTypesRegistry.
+    // Throws if the type is not registered. StorageService does not accept such requests.
     @Override
     public MetaData getMetaData() {
-        return metaDataFromDistributedData.orElse(metaData);
+        return StorableTypesRegistry.getMetaData(className);
     }
 
-    public MetaData getMetaDataFromProto() {
-        return metaData;
+    // The time to live of the type, limited by MailboxData.MAX_TTL.
+    @Override
+    public long getTtl() {
+        return Math.min(MailboxData.MAX_TTL, getMetaData().getTtl());
+    }
+
+    @Override
+    public String getClassName() {
+        return className;
     }
 
 
@@ -300,14 +323,13 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public String toString() {
         return "RemoveMailboxRequest{" +
-                "metaData=" + metaData +
-                ", metaDataFromDistributedData=" + metaDataFromDistributedData +
-                ", version=" + version +
+                "version=" + version +
                 ", hash=" + Hex.encode(hash) +
                 ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +
                 ", signature=" + Hex.encode(signature) +
                 ", created=" + new Date(created) + " (" + created + ")" +
                 ", receiverPublicKey=" + receiverPublicKey +
+                ", className=" + className +
                 '}';
     }
 
@@ -319,8 +341,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 Arrays.equals(hash, that.hash) &&
                 Arrays.equals(receiverPublicKeyBytes, that.receiverPublicKeyBytes) &&
                 Arrays.equals(signature, that.signature) &&
-                Objects.equals(receiverPublicKey, that.receiverPublicKey) &&
-                Objects.equals(metaDataFromDistributedData, that.metaDataFromDistributedData);
+                Objects.equals(receiverPublicKey, that.receiverPublicKey);
     }
 
     @Override
@@ -330,7 +351,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         result = 31 * result + Arrays.hashCode(signature);
         result = 31 * result + Long.hashCode(created);
         result = 31 * result + Objects.hashCode(receiverPublicKey);
-        result = 31 * result + Objects.hashCode(metaDataFromDistributedData);
         return result;
     }
 }

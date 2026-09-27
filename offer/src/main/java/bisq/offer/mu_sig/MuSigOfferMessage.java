@@ -34,7 +34,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @Getter
 @EqualsAndHashCode
 public final class MuSigOfferMessage implements DistributedData {
-    private transient final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_2_DAYS, MuSigOfferMessage.class.getSimpleName());
     private final MuSigOffer offer;
 
     public MuSigOfferMessage(MuSigOffer offer) {
@@ -70,6 +70,11 @@ public final class MuSigOfferMessage implements DistributedData {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

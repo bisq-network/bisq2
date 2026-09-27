@@ -43,8 +43,7 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
     public static final int LEGACY_VERSION = 1;
     public static final int CURRENT_VERSION = 2;
     public static final int MAX_ACCOUNT_INPUT_LENGTH = 4096;
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, AuthorizeAccountAgeRequest.class.getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String hashAsHex;
     private final long date;
@@ -148,6 +147,11 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

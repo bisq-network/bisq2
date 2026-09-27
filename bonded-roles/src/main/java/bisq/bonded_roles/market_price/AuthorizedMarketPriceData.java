@@ -48,8 +48,7 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     private static final int VERSION = 1;
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL, DEFAULT_PRIORITY, AuthorizedMarketPriceData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -120,6 +119,11 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

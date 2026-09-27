@@ -33,7 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * Meta data for storage properties per DistributedData
+ * Storage properties of a storable type. Each type declares one MetaData, and the storage layer takes it only from the
+ * StorableTypesRegistry by class name. See docs/specifications/network/storage-metadata.md.
  */
 @Slf4j
 @EqualsAndHashCode
@@ -65,7 +66,7 @@ public final class MetaData implements NetworkProto, Canonical {
     private final long ttl;
     // Used for inventory request priority of delivery if inventory size exceeds limit
     private final int priority;
-    // Max file size of the storage file
+    // Input of the cost factor for the proof of work. Not used as limit of the store (see DataStorageService.MAX_MAP_SIZE).
     private final int maxMapSize;
     // Used for name of storage file, for lookup of the store for a given distributedData object and for logging
     private final String className;

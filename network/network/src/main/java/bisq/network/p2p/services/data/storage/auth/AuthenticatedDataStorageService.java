@@ -25,7 +25,6 @@ import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -33,7 +32,6 @@ import bisq.persistence.PersistenceService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -82,6 +80,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult add(AddAuthenticatedDataRequest request) {
         maybeLogMapState("add", persistableStore);
+
+        if (isClassNameInvalid(request.getDistributedData().getClass().getSimpleName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
 
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
         // Detect them before the signature verification, which is the most expensive check. The check is
@@ -160,6 +162,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public DataStorageResult remove(RemoveAuthenticatedDataRequest request) {
         maybeLogMapState("remove ", persistableStore);
 
+        if (isClassNameInvalid(request.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
         if (request.isExpired()) {
             return DataStorageResult.failed().expired();
         }
@@ -216,21 +222,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
-
-            // As metaData from distributedData is taken from the users current code base but the one from RemoveAuthenticatedDataRequest
-            // is from the senders version (taken from senders distributedData) it could be different if both users had
-            // different versions and metaData has changed between those versions.
-            // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
-            MetaData metaDataFromDistributedData = addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData();
-            if (!request.getFallbackMetaData().equals(metaDataFromDistributedData)) {
-                request.setMetaDataFromDistributedData(Optional.of(metaDataFromDistributedData));
-                log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
-                                "metadata with the one we have from the associated distributed data." +
-                                "{} vs. {}",
-                        request.getFallbackMetaData(),
-                        metaDataFromDistributedData);
-            }
-
             map.put(storageKey, request);
         }
 
@@ -250,6 +241,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult refresh(RefreshAuthenticatedDataRequest refreshRequest) {
         maybeLogMapState("refresh ", persistableStore);
+
+        if (isClassNameInvalid(refreshRequest.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
 
         if (refreshRequest.isExpired()) {
             return DataStorageResult.failed().expired();
@@ -428,7 +423,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     removed.size(),
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
-                    getMaxMapSize());
+                    MAX_MAP_SIZE);
             boolean showDetails = false;
             if (showDetails) {
                 long now = System.currentTimeMillis();

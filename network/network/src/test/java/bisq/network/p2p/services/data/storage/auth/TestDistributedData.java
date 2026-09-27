@@ -28,9 +28,10 @@ import lombok.Getter;
  */
 @Getter
 @EqualsAndHashCode
-final class TestDistributedData implements DistributedData {
+public final class TestDistributedData implements DistributedData {
+    public static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, TestDistributedData.class.getSimpleName());
+
     private final String content;
-    private final MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, getClass().getSimpleName());
 
     TestDistributedData(String content) {
         this.content = content;
@@ -48,6 +49,11 @@ final class TestDistributedData implements DistributedData {
     @Override
     public bisq.network.protobuf.MetaData toProto(boolean serializeForHash) {
         return unsafeToProto(serializeForHash);
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

@@ -18,6 +18,7 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyRejectTradeMessage extends BisqEasyTradeMessage {
+    public static final MetaData META_DATA = createMetaData(BisqEasyRejectTradeMessage.class);
+
 
     public BisqEasyRejectTradeMessage(String id,
                                       String tradeId,
@@ -66,6 +69,11 @@ public final class BisqEasyRejectTradeMessage extends BisqEasyTradeMessage {
                 proto.getProtocolVersion(),
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()));
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

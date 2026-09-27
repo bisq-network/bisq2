@@ -68,8 +68,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
     }
 
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;
@@ -207,6 +206,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
                         .map(BisqEasyOpenTradeMessageReaction::fromProto)
                         .collect(Collectors.toSet())
         );
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

@@ -55,8 +55,7 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return "MediationRequest" + "." + tradeId;
     }
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyMediationRequest.class.getSimpleName());
     private final BisqEasyContract contract;
     private final String tradeId;
 
@@ -173,6 +172,11 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

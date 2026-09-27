@@ -18,6 +18,8 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
@@ -29,12 +31,17 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthenticatedDataStorageServiceTest {
+    // A store holds the data of one type. Its key is the class name of that type.
+    private static final String STORE_KEY = TestDistributedData.class.getSimpleName();
+
     @TempDir
     Path tempDir;
 
@@ -45,10 +52,11 @@ class AuthenticatedDataStorageServiceTest {
 
     @BeforeEach
     void setUp() {
+        StorableTypesRegistry.register(TestDistributedData.class, TestDistributedData.META_DATA);
         PersistenceService persistenceService = new PersistenceService(tempDir);
         PruneExpiredEntriesService pruneExpiredEntriesService = new PruneExpiredEntriesService();
-        ownerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "test", "OwnerStore");
-        peerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "test", "PeerStore");
+        ownerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "owner", STORE_KEY);
+        peerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "peer", STORE_KEY);
         ownerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
     }
@@ -86,7 +94,7 @@ class AuthenticatedDataStorageServiceTest {
                 .get(refreshRequest.getStorageKey());
 
         AuthenticatedDataStorageService newNodeStore = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
-                new PruneExpiredEntriesService(), "test", "NewNodeStore");
+                new PruneExpiredEntriesService(), "newNode", STORE_KEY);
         DataStorageResult result = newNodeStore.add(refreshedEntry);
 
         assertTrue(result.isSuccess(), result.toString());
@@ -159,6 +167,69 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isSuccess(), result.toString());
         assertTrue(result.isNoEntry());
         assertTrue(peerStore.getPersistableStore().getMap().containsKey(removeRequest.getStorageKey()));
+    }
+
+    @Test
+    void removeRequestWithoutEntryExpiresAfterTtlOfRegisteredMetaData() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        // The signature covers only the hash of the data, so a relay can change metaData and created.
+        // TestDistributedData has a time to live of 10 days. The forged MetaData claims 100 days.
+        //noinspection deprecation
+        RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder()
+                        .setMetaData(new MetaData(MetaData.TTL_100_DAYS, TestDistributedData.class.getSimpleName()).toProto(false))
+                        .setCreated(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11))
+                        .build());
+
+        assertSame(TestDistributedData.META_DATA, forgedRequest.getMetaData());
+        DataStorageResult result = peerStore.remove(forgedRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isExpired(), result.toString());
+        assertFalse(peerStore.getPersistableStore().getMap().containsKey(removeRequest.getStorageKey()));
+    }
+
+    @Test
+    void removeRequestUsesRegisteredMetaDataForCostFactor() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        //noinspection deprecation
+        RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder()
+                        .setMetaData(new MetaData(MetaData.TTL_2_DAYS, MetaData.HIGHEST_PRIORITY,
+                                TestDistributedData.class.getSimpleName(), 0).toProto(false))
+                        .build());
+
+        assertEquals(removeRequest.getCostFactor(), forgedRequest.getCostFactor());
+        assertEquals(TestDistributedData.META_DATA.getPriority(), forgedRequest.getPriority());
+    }
+
+    @Test
+    void storeRejectsRequestsOfOtherType() throws GeneralSecurityException {
+        AuthenticatedDataStorageService storeOfOtherType = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService(), "other", "OtherDistributedData");
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+
+        assertTrue(storeOfOtherType.add(addRequest).isClassNameInvalid());
+        assertTrue(storeOfOtherType.remove(removeRequest).isClassNameInvalid());
+        assertTrue(storeOfOtherType.refresh(refreshRequest).isClassNameInvalid());
+        assertTrue(storeOfOtherType.getPersistableStore().getMap().isEmpty());
+    }
+
+    @Test
+    void removeRequestWithClassNameOfOtherTypeIsRejected() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        // A relay can change className, because the signature does not cover it
+        RemoveAuthenticatedDataRequest requestWithOtherClassName = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder()
+                        .setClassName("OtherDistributedData")
+                        .build());
+
+        DataStorageResult result = peerStore.remove(requestWithOtherClassName);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isClassNameInvalid(), result.toString());
     }
 
     private void addToOwnerAndPeer() throws GeneralSecurityException {

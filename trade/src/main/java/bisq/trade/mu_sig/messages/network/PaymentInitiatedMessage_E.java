@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,6 +30,8 @@ import java.util.Arrays;
 @ToString(callSuper = true)
 @Getter
 public final class PaymentInitiatedMessage_E extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(PaymentInitiatedMessage_E.class);
+
     private final byte[] swapTxInputPartialSignature;
 
     public PaymentInitiatedMessage_E(String id,
@@ -73,6 +76,11 @@ public final class PaymentInitiatedMessage_E extends MuSigTradeMessage {
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 muSigMessageProto.getSwapTxInputPartialSignature().toByteArray());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

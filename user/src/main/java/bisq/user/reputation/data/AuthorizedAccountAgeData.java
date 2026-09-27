@@ -47,8 +47,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     public static final int VERSION = 2;
     public static final long TTL = TTL_30_DAYS;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, HIGHEST_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL, HIGHEST_PRIORITY, AuthorizedAccountAgeData.class.getSimpleName());
     @ExcludeForHash(excludeOnlyInVersions = {0, 1})
     private final int version;
     private final String profileId;
@@ -133,6 +132,11 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

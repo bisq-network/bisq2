@@ -40,9 +40,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     public static final long COMMON_PUBLIC_CHAT_MESSAGE_TTL = TTL_10_DAYS;
 
     // MetaData needs to be symmetric with CommonPublicChatMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes.
-    // Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(COMMON_PUBLIC_CHAT_MESSAGE_TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(COMMON_PUBLIC_CHAT_MESSAGE_TTL, LOW_PRIORITY, CommonPublicChatMessage.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 
     public CommonPublicChatMessage(ChatChannelDomain chatChannelDomain,
                                    String channelId,
@@ -127,6 +125,11 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     @Override
     public String getChannelId() {
         return CommonPublicChatChannel.Migration.migrateChannelId(channelId);
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

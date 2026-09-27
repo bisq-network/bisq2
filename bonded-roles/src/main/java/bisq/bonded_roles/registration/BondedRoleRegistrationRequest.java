@@ -44,8 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class BondedRoleRegistrationRequest implements MailboxMessage, ExternalNetworkMessage {
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, BondedRoleRegistrationRequest.class.getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
@@ -146,6 +145,11 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

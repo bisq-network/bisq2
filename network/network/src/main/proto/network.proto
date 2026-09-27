@@ -248,28 +248,37 @@ message AddAuthenticatedDataRequest {
   bytes ownerPublicKeyBytes = 3;
 }
 message RemoveAuthenticatedDataRequest {
-  MetaData metaData = 1;
+  // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+  MetaData metaData = 1 [deprecated = true];
   bytes hash = 2;
   bytes ownerPublicKeyBytes = 3;
   sint32 sequenceNumber = 4;
   bytes signature = 5;
   sint64 created = 6;
   sint32 version = 7;
+  // Simple class name of the stored type. Excluded from the hash, so the signature does not cover it.
+  string className = 8;
 }
 message RefreshAuthenticatedDataRequest {
-  MetaData metaData = 1;
+  // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+  MetaData metaData = 1 [deprecated = true];
   bytes hash = 2;
   bytes ownerPublicKeyBytes = 3;
   sint32 sequenceNumber = 4;
   bytes signature = 5;
   sint32 version = 6;
   sint64 created = 7;
+  // Simple class name of the stored type. Excluded from the hash, so the signature does not cover it.
+  string className = 8;
 }
 
 message MailboxData {
   ConfidentialMessage confidentialMessage = 1;
-  MetaData metaData = 2;
+  // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+  MetaData metaData = 2 [deprecated = true];
   sint32 version = 3;
+  // Simple class name of the stored type. Excluded from the hash, so the signature does not cover it.
+  string className = 4;
 }
 message MailboxSequentialData {
   MailboxData mailboxData = 1;
@@ -285,12 +294,15 @@ message AddMailboxRequest {
   bytes senderPublicKeyBytes = 3;
 }
 message RemoveMailboxRequest {
-  MetaData metaData = 1;
+  // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+  MetaData metaData = 1 [deprecated = true];
   bytes hash = 2;
   bytes receiverPublicKeyBytes = 3;
   bytes signature = 4;
   sint64 created = 5;
   sint32 version = 6;
+  // Simple class name of the stored type. Excluded from the hash, so the signature does not cover it.
+  string className = 7;
 }
 
 message AddAppendOnlyDataRequest {

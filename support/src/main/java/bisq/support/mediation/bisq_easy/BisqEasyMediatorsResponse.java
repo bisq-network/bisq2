@@ -55,8 +55,7 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
     public static final boolean IS_SENDER_NETWORK_ID_VERIFICATION_ACTIVATED =
             new Date().after(SENDER_NETWORK_ID_VERIFICATION_ACTIVATION_DATE);
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyMediatorsResponse.class.getSimpleName());
 
     private final String tradeId;
     @ExcludeForHash(excludeOnlyInVersions = {0, 1})
@@ -115,6 +114,11 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

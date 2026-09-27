@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
+    public static final MetaData META_DATA = createMetaData(BisqEasyBtcAddressMessage.class);
+
     public final static int MAX_LENGTH = 1000;
 
     private final String bitcoinPaymentData;
@@ -86,6 +89,11 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyBtcAddressMessage.getBitcoinPaymentData(),
                 BisqEasyOffer.fromProto(bisqEasyBtcAddressMessage.getBisqEasyOffer()));
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

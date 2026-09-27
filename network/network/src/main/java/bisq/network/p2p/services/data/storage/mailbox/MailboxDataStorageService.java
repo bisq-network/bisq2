@@ -23,13 +23,11 @@ import bisq.common.formatter.DataSizeFormatter;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -71,6 +69,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public DataStorageResult add(AddMailboxRequest request) {
         maybeLogMapState("add", persistableStore);
+
+        // The message is encrypted, so the class name comes from MailboxData
+        if (isClassNameInvalid(request.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
 
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
         // Detect them before the signature verification, which is the most expensive check. The check is
@@ -134,6 +137,10 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
 
+        if (isClassNameInvalid(request.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
         if (request.isExpired()) {
             return DataStorageResult.failed().expired();
         }
@@ -180,20 +187,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             if (request.isSignaturePubKeyHashInvalid(sequentialDataFromMap.getReceiversPublicKeyHash())) {
                 // Hash of pubKey of data does not match provided one
                 return DataStorageResult.failed().publicKeyHashInvalid();
-            }
-
-            // As metaData from mailboxData is taken from the users current code base but the one from RemoveMailboxRequest
-            // is from the senders version (taken from senders mailboxData) it could be different if both users had
-            // different versions and metaData has changed between those versions.
-            // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
-            MetaData metaDataFromMailboxData = sequentialDataFromMap.getMailboxData().getMetaData();
-            if (!request.getMetaDataFromProto().equals(metaDataFromMailboxData)) {
-                request.setMetaDataFromDistributedData(Optional.of(metaDataFromMailboxData));
-                log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
-                                "metadata with the one we have from the associated mailbox data." +
-                                "{} vs. {}",
-                        request.getMetaDataFromProto(),
-                        metaDataFromMailboxData);
             }
 
             map.put(storageKey, request);
@@ -266,7 +259,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     removed.size(),
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
-                    getMaxMapSize());
+                    MAX_MAP_SIZE);
 
             boolean showDetails = false;
             if (showDetails) {
