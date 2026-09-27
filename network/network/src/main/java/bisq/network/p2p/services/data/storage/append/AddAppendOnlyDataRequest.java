@@ -110,14 +110,17 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
                             .compose(1, request -> request.appendOnlyDataAny, DistributedDataAny.SCHEMA));
 
     // Reproduces serializeForHash(): nodes of all versions must compute the same storage key.
-    public static final CanonicalSchema<AddAppendOnlyDataRequest> STORAGE_KEY_SCHEMA =
-            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
-                    CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
-                            // Canonical encoding is not yet supported for AppendOnlyData, as its implementations are
-                            // defined outside the network module. We use the protobuf serialization for hashes
-                            // instead: the Any with the type URL and the serializeForHash() bytes, as
-                            // getValueBuilder(true) writes it.
-                            .encodedMessage(1, request -> request.appendOnlyData.toAny(true).toByteArray()));
+    public static final CanonicalSchema<AddAppendOnlyDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+
+    private static CanonicalSchema<AddAppendOnlyDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
+                CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
+                        // Canonical encoding is not yet supported for AppendOnlyData, as its implementations are
+                        // defined outside the network module. We use the protobuf serialization for hashes instead:
+                        // the Any with the type URL and the serializeForHash() bytes, as getValueBuilder(true) writes
+                        // it.
+                        .encodedMessage(1, request -> request.appendOnlyData.toAny(true).toByteArray()));
+    }
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {

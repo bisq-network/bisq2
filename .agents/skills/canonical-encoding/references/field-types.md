@@ -65,7 +65,7 @@ not the Java field type.
 | field annotated with `@ExcludeForHash` | in `DEFAULT_SCHEMA` and `SIGNATURE_V2_SCHEMA`; left out of `STORAGE_KEY_SCHEMA`. With `excludeOnlyInVersions`, the `STORAGE_KEY` schema uses a getter that returns `null` in the listed versions | `MailboxData.version`, `MailboxData.className` |
 
 The `STORAGE_KEY` variant of the `Any` row always needs the comment that canonical encoding is not yet
-supported for that type (see `AuthenticatedData.getStorageKeySchemaBuilder()`).
+supported for that type (see `AuthenticatedData.getSchemaBuilderForHash()`).
 
 ### Enums
 

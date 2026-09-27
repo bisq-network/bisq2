@@ -89,14 +89,14 @@ protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getAut
             .compose(1, authenticatedData -> authenticatedData.distributedDataAny, DistributedDataAny.SCHEMA);
 }
 
-protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getStorageKeySchemaBuilder() {
+protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getSchemaBuilderForHash() {
     return CanonicalSchema.<T>newBuilder()
             // Canonical encoding is not yet supported for DistributedData, ... (see section 5)
             .encodedMessage(1, authenticatedData -> authenticatedData.distributedData.toAny(true).toByteArray());
 }
 
 // DefaultAuthenticatedData: the subclass message has no fields, but it is present (tag 10, length 0).
-// STORAGE_KEY_SCHEMA is the same with getStorageKeySchemaBuilder().
+// STORAGE_KEY_SCHEMA is the same with getSchemaBuilderForHash().
 public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
         DefaultAuthenticatedData.<DefaultAuthenticatedData>getAuthenticatedDataSchemaBuilder()
                 .extend(10,

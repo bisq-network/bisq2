@@ -77,7 +77,7 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
 
     // Same as DEFAULT_SCHEMA, but with the DistributedData in its hash serialization, as serializeForHash() writes it
     public static final CanonicalSchema<DefaultAuthenticatedData> STORAGE_KEY_SCHEMA =
-            DefaultAuthenticatedData.<DefaultAuthenticatedData>getStorageKeySchemaBuilder()
+            DefaultAuthenticatedData.<DefaultAuthenticatedData>getSchemaBuilderForHash()
                     .extend(10,
                             defaultAuthenticatedData -> defaultAuthenticatedData,
                             CanonicalSchema.newBuilder())

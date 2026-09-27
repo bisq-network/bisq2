@@ -171,7 +171,7 @@ public final class AuthorizedData extends AuthenticatedData {
                     .build();
 
     public static final CanonicalSchema<AuthorizedData> STORAGE_KEY_SCHEMA =
-            AuthorizedData.<AuthorizedData>getStorageKeySchemaBuilder()
+            AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
                     .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
                     .build();
 
