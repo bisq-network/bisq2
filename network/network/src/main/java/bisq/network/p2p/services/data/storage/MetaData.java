@@ -22,7 +22,6 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
-import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -66,7 +65,8 @@ public final class MetaData implements NetworkProto, Canonical {
     private final long ttl;
     // Used for inventory request priority of delivery if inventory size exceeds limit
     private final int priority;
-    // Input of the cost factor for the proof of work. Not used as limit of the store (see DataStorageService.MAX_MAP_SIZE).
+    // Input of the storage cost factor (see MessageCostPolicy). Not used as limit of the store (see
+    // DataStorageService.MAX_MAP_SIZE).
     private final int maxMapSize;
     // Used for name of storage file, for lookup of the store for a given distributedData object and for logging
     private final String className;
@@ -142,12 +142,5 @@ public final class MetaData implements NetworkProto, Canonical {
             case STORAGE_KEY -> DEFAULT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
-    }
-
-    public double getCostFactor() {
-        double ttlImpact = MathUtils.bounded(0, 1, ttl / (double) TTL_100_DAYS);
-        double mapSizeImpact = MathUtils.bounded(0, 1, maxMapSize / (double) MAX_MAP_SIZE_10_000);
-        double impact = ttlImpact + mapSizeImpact;
-        return MathUtils.bounded(0, 1, impact);
     }
 }

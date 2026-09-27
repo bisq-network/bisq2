@@ -25,6 +25,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.DigestUtil;
@@ -225,7 +226,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @Override
     public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, StorableTypesRegistry.getCostFactor(getClassName()));
+        return MathUtils.bounded(0.1, 0.3, MessageCostPolicy.getStorageCostFactor(getClassName()));
     }
 
 
