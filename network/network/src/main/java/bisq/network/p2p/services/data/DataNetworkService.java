@@ -53,6 +53,8 @@ public class DataNetworkService implements Node.Listener {
     // Node.Listener
     /* --------------------------------------------------------------------- */
 
+    // TODO Received RefreshAuthenticatedDataRequests are dropped here, although their owner broadcasts them. See
+    //  "Known defects" in docs/specifications/network/storage-metadata.md.
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof AddDataRequest) {

@@ -33,7 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * Meta data for storage properties per DistributedData
+ * Storage properties of a storable type. Each type declares one MetaData, and the storage layer takes it only from the
+ * StorableTypesRegistry by class name. See docs/specifications/network/storage-metadata.md.
  */
 @Slf4j
 @EqualsAndHashCode

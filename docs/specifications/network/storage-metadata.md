@@ -1,0 +1,152 @@
+# Storage MetaData
+
+This specification defines where the network storage takes the MetaData of stored data from, and how nodes of
+different versions stay compatible.
+
+## Terms
+
+- **Storable type**: a type whose objects the network storage stores, for example a `DistributedData` or a
+  `MailboxMessage`.
+- **MetaData**: the storage properties of a storable type:
+  - `className`: the simple class name of the type. It selects the store and the name of the store file.
+  - `ttl`: the time after which an entry expires.
+  - `priority`: the order of entries in an inventory response.
+  - `maxMapSize`: an input of the cost factor for the proof of work (see [Size limit](#size-limit)).
+- **Store**: the storage of one storable type. Its key is the class name of the type.
+
+## Rules
+
+### MetaData belongs to the type
+
+1. Each storable type declares exactly one MetaData. The `className` of that MetaData is the simple class name of the
+   type.
+2. At startup, the application registers every storable type with its MetaData in the storable types registry. The
+   key of the registry is the class name.
+3. The storage layer does not accept data of a type which is not registered. An empty registry accepts no type. A
+   store also rejects a registered type of another store type (rule 9).
+
+Reason: MetaData is a property of the type, not of a single object. A local table from type to MetaData lets a node
+decide without trusting values from the network.
+
+### A node uses only its own MetaData
+
+4. For expiry, priority, size limit and cost factor, a node uses only the MetaData which it registered for the class
+   name of the data. It never uses MetaData values received from the network for these decisions.
+5. The class name is the only value which a node takes from a message for this purpose. It is the key into the
+   registry.
+
+Reason: for mailbox data, remove requests and refresh requests the receiver does not have the payload in readable
+form. Earlier versions took the MetaData from the message. The sender or any relay chose it, and neither the
+signature nor the hash covered it. So they could choose the time to live, the priority and the cost factor.
+
+### Where the class name comes from
+
+6. Authenticated data and append-only data: the class name of the deserialized payload.
+7. `MailboxData`, `RemoveMailboxRequest`, `RemoveAuthenticatedDataRequest` and `RefreshAuthenticatedDataRequest`: the
+   field `className`.
+
+### A store holds only its own type
+
+8. A store rejects a request whose class name differs from the store key. For authenticated and append-only data it
+   compares the runtime class of the payload.
+
+9. Each storable type belongs to exactly one store type: a `MailboxMessage` to the mailbox store, an `AppendOnlyData`
+    to the append-only store, and any other `DistributedData` to the authenticated data store. A type which is both a
+    `MailboxMessage` and a `DistributedData`, or neither, cannot be registered. A store accepts only class names of its
+    own store type. This also applies when a node loads its persisted stores at startup.
+
+Reason: all entries of a store then use the MetaData of the store type. A type which returned the MetaData of another
+type would otherwise put its data into the store of that other type. For rule 9: mailbox data and remove requests
+carry only a class name, which the signature does not cover. Without rule 9, a sender or relay could name a
+`DistributedData` type in a mailbox request. The request would then get the MetaData of that type, for example a time
+to live of 100 days instead of at most 15 days, and an expired mailbox entry would become valid again.
+
+### Expiry
+
+10. An entry expires when the time since its `created` date is longer than the `ttl` of the registered MetaData.
+    Mailbox data and mailbox remove requests expire at the latest after 15 days, even if their MailboxMessage type
+    declares a longer `ttl`.
+
+Reason for the upper bound: the mailbox store keeps encrypted data of receivers which are offline. Its retention is a
+policy of the network storage. It must not grow because a new or changed MailboxMessage type declares a longer `ttl`.
+
+### Size limit
+
+11. A store accepts at most 100 000 entries. `MetaData.maxMapSize` is not used as limit.
+
+Reason: until this rule, the code intended to read the limit from the first entry of the store, with a lower bound of
+10 000. It cached the result on the first call, which happens while the map is still empty. So the effective limit of
+all stores was 100 000. Enforcing `maxMapSize` would lower the limit to at most 10 000 and could remove entries from
+existing stores. Whether stores need per-type limits is an open decision, see [Open points](#open-points).
+
+### Cost factor
+
+12. The cost factor of mailbox data, remove requests and refresh requests uses the registered MetaData of the class
+    name.
+13. If the class name is not registered, the MetaData part of the cost factor is 0. The proof of work check runs
+    before the storage layer checks the class name. A type added in a later version must not make the check fail. The
+    storage layer does not store such data.
+
+## Compatibility
+
+- The field `metaData` of `MailboxData`, `RemoveMailboxRequest`, `RemoveAuthenticatedDataRequest` and
+  `RefreshAuthenticatedDataRequest` is deprecated. New nodes still set it to the registered MetaData of the type,
+  because nodes of earlier versions use it for store selection, expiry and cost factor. A node that relays or persists
+  a received message keeps the received value.
+- `className` is excluded from the hash. Signature preimages, storage keys, proof of work payloads and the order of
+  inventory entries are computed without it. Nodes of earlier versions drop the unknown field and compute the same
+  bytes.
+- If `className` is empty, the class name of `metaData` is used. This covers messages from nodes of earlier versions,
+  messages relayed by such nodes, and data persisted by them.
+- `className` is not validated when a message is parsed. The store accepts only registered class names. Parsing stays
+  as lenient as in earlier versions, because a parse failure of one entry makes a node drop a whole inventory
+  response.
+- Each node applies its own MetaData. If two versions have different MetaData for a type, their entries can expire at
+  different times, and they expect different proof of work for the same message. The proof of work check tolerates a
+  difference of 50 000 at a target difficulty of 65 536, so a difference in the cost factor makes it fail only with a
+  high network load and a high difficulty adjustment factor. The same was already true for authenticated data.
+- A node of an earlier version which relays a message with forged MetaData mints the proof of work for the forged cost
+  factor. A new node expects the cost factor of its registered MetaData. The difference in the MetaData part is at most
+  0.2 for the registered mailbox types. With the tolerance above, the check fails only if the load multiplied by the
+  difficulty adjustment factor is above about 3.8.
+
+## Known limitations
+
+- The signature does not cover `className`. A relay can change it to the class name of another registered type of the
+  same store type (rule 9). The data then goes into the store of that type and uses its MetaData. A remove request then
+  does not find its add entry and is stored in the other store without an add entry. Including `className` in the
+  signature removes this. The developers decided to do this together with the planned change of the signatures of these
+  messages.
+- Nodes of earlier versions still use the MetaData from the network until they update.
+
+## Known defects
+
+- Receivers do not process `RefreshAuthenticatedDataRequest`. The owner applies a refresh to its own store and
+  broadcasts it, for example for user profiles and MuSig offers. A receiving node checks the proof of work and then
+  drops the message, because it handles only add and remove requests. Its copy keeps the old `created` date and
+  expires after the time to live, unless it receives the refreshed add request again through an inventory request.
+  The fix is to process received refresh requests in the storage layer and to relay them. The developers decided to
+  fix this in a later change.
+- The expected proof of work of a message depends on class definitions of the receiver's version. The receiver
+  computes the cost factor with its own code: the MetaData constant of the class (`ttl`, `maxMapSize`) and the
+  `getCostFactor()` implementation of the class. If sender and receiver run versions in which these differ for a
+  class, they compute different difficulties. A difference above the tolerance of 50 000 fails the check, and the
+  receiver closes the connection. How large the difference may be depends on the network load and the difficulty
+  adjustment factor (see [Compatibility](#compatibility)).
+  - This existed before this specification for authenticated data, append-only data and messages sent directly to a
+    peer, because the receiver deserializes the payload and uses its own class.
+  - It did not exist for mailbox data and remove and refresh requests, because both sides used the MetaData on the
+    wire. That value was chosen by the sender, which was worse. Since rule 4 these messages use the registered
+    MetaData of the receiver, so the defect now applies to them too.
+  - Consequence: changing the MetaData or the cost factor of an existing type can break the exchange of that type
+    with nodes of other versions under high load.
+  - The developers decided to address this in a separate change, together with the question which inputs the cost
+    factor should have (see [Open points](#open-points)).
+
+## Open points
+
+- Whether stores need per-type size limits, and which values. This needs the sizes of real stores.
+- Which inputs the proof of work cost factor of messages should have. For mailbox data and remove and refresh
+  requests the receiver cannot read the payload. Their cost factor depends on the class name, which the sender
+  chooses, so the sender can lower it within the range of the registered types. One option is to use one value per
+  store type instead of a value per class for these messages.
