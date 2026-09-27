@@ -19,6 +19,11 @@ package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.ECPointUtil;
@@ -41,6 +46,7 @@ import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 public class KeyGeneration {
     public static final String ECDH = "ECDH";
@@ -49,6 +55,15 @@ public class KeyGeneration {
 
     static final String CURVE = "secp256k1";
     private static final String ECDSA = "ECDSA";
+
+    // Many network entries carry the same public key, and a decoded key is heavy: once used for signature
+    // verification it retains BouncyCastle's point precomputation, several KB. We share one instance per encoding.
+    // Weak values let keys no entry references be collected, so the size is only a ceiling.
+    private static final int MAX_CACHED_PUBLIC_KEYS = 50_000;
+    private static final Cache<PublicKeyCacheKey, PublicKey> PUBLIC_KEY_CACHE = CacheBuilder.newBuilder()
+            .weakValues()
+            .maximumSize(MAX_CACHED_PUBLIC_KEYS)
+            .build();
 
     static {
         if (java.security.Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -77,8 +92,30 @@ public class KeyGeneration {
         }
     }
 
+    /**
+     * WARNING: The returned key is one instance shared by every caller that decodes the same bytes, across all
+     * network data and all threads. NEVER mutate it, e.g. with BouncyCastle's ECPointEncoder.setPointFormat().
+     * A mutation silently changes getEncoded() for every holder at once: key ids, profile ids, serialized data and
+     * the hashes that signatures are computed over all change, so signature verification, ownership checks and
+     * deduplication fail for unrelated data that happens to carry the same key.
+     */
     public static PublicKey generatePublic(byte[] encodedKey) throws GeneralSecurityException {
-        return generatePublic(encodedKey, ECDH);
+        // Before the cache lookup, which hashes and copies the bytes
+        checkEcPublicKeySize(encodedKey);
+        PublicKey cachedPublicKey = PUBLIC_KEY_CACHE.getIfPresent(new PublicKeyCacheKey(encodedKey));
+        if (cachedPublicKey != null) {
+            return cachedPublicKey;
+        }
+
+        // The cache key must not alias the caller's array, as a later mutation would map other bytes to this key
+        byte[] encodedKeyCopy = encodedKey.clone();
+        PublicKey publicKey = generatePublic(encodedKeyCopy, ECDH);
+        // BouncyCastle fills its encoding cache lazily without synchronization. Filling it before the cache publishes
+        // the key makes the bytes visible to every thread sharing the instance.
+        publicKey.getEncoded();
+        PublicKey existingPublicKey = PUBLIC_KEY_CACHE.asMap()
+                .putIfAbsent(new PublicKeyCacheKey(encodedKeyCopy), publicKey);
+        return existingPublicKey != null ? existingPublicKey : publicKey;
     }
 
     /**
@@ -89,8 +126,8 @@ public class KeyGeneration {
      * example DSA keys of Bisq 1 accounts, have other sizes; their callers check the size.
      */
     public static PublicKey generatePublic(byte[] encodedKey, String algorithm) throws GeneralSecurityException {
-        if (isEcAlgorithm(algorithm) && !NetworkDataValidation.isECPubKeySizeValid(encodedKey)) {
-            throw new InvalidKeySpecException("EC public key not of the expected size. size=" + encodedKey.length);
+        if (isEcAlgorithm(algorithm)) {
+            checkEcPublicKeySize(encodedKey);
         }
         EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
         return KeyFactory.getInstance(algorithm).generatePublic(keySpec);
@@ -98,6 +135,12 @@ public class KeyGeneration {
 
     private static boolean isEcAlgorithm(String algorithm) {
         return algorithm.equals(EC) || algorithm.equals(ECDH) || algorithm.equals(ECDSA);
+    }
+
+    private static void checkEcPublicKeySize(byte[] encodedKey) throws InvalidKeySpecException {
+        if (!NetworkDataValidation.isECPubKeySizeValid(encodedKey)) {
+            throw new InvalidKeySpecException("EC public key not of the expected size. size=" + encodedKey.length);
+        }
     }
 
     public static PublicKey generatePublicFromCompressed(byte[] compressedKey) throws GeneralSecurityException {
@@ -149,5 +192,38 @@ public class KeyGeneration {
         var q = params.getG().multiply(ecPrivateKey.getD());
         var pubSpec = new ECPublicKeySpec(q, params);
         return KeyFactory.getInstance("EC", "BC").generatePublic(pubSpec);
+    }
+
+    // Encodings come from peers, and colliding Arrays.hashCode values are trivial to build for them, which would turn
+    // a cache bucket into a linear scan. A per-process secret hash prevents that. Equality still compares the exact
+    // bytes, so a hash collision costs only a comparison and never returns a wrong key.
+    @VisibleForTesting
+    static final class PublicKeyCacheKey {
+        private static final HashFunction HASH_FUNCTION = newSecretHashFunction();
+
+        private final byte[] encodedKey;
+        private final int hash;
+
+        PublicKeyCacheKey(byte[] encodedKey) {
+            this.encodedKey = encodedKey;
+            this.hash = HASH_FUNCTION.hashBytes(encodedKey).asInt();
+        }
+
+        private static HashFunction newSecretHashFunction() {
+            SecureRandom random = new SecureRandom();
+            return Hashing.sipHash24(random.nextLong(), random.nextLong());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof PublicKeyCacheKey that)) return false;
+
+            return Arrays.equals(encodedKey, that.encodedKey);
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
     }
 }
