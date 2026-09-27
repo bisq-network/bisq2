@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.storage;
 
 
 import bisq.common.data.ByteArray;
-import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
@@ -621,13 +620,15 @@ public class StorageService {
                 .filter(store -> storeKey.equals(store.getStoreKey()));
     }
 
+    // A store holds the data of one type, and its key is the class name of that type. The storage layer takes the
+    // MetaData of a store only from the StorableTypesRegistry, so it does not accept a type which is not registered
+    // there.
     private static boolean isStoreKeyNotAllowed(String storeKey) {
-        Set<String> allowed = NetworkStorageWhiteList.getClassNames();
-        return !allowed.isEmpty() && !allowed.contains(storeKey);
+        return !StorableTypesRegistry.isRegistered(storeKey);
     }
 
     private Set<String> getExistingStoreKeys(Path dirPath) {
-        return NetworkStorageWhiteList.getClassNames().stream()
+        return StorableTypesRegistry.getClassNames().stream()
                 .filter(className -> {
                     String storageFileName = StringUtils.camelCaseToSnakeCase(className + DataStorageService.STORE_POST_FIX) + Persistence.EXTENSION;
                     return Files.exists(dirPath.resolve(storageFileName));

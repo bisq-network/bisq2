@@ -18,12 +18,15 @@
 package bisq.application;
 
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -61,5 +64,32 @@ class StorableTypeMetaDataTest {
             }
         }
         assertEquals(List.of(), errors);
+    }
+
+    /**
+     * The network storage does not accept a type which is missing in the StorableTypesRegistry. A type which is added
+     * to the code but not to ResolverConfig could not be stored.
+     */
+    @Test
+    void resolverConfigRegistersEveryStorableTypeWithItsMetaData() throws Exception {
+        ResolverConfig.config();
+
+        List<Class<?>> storableTypes = StorableTypes.find();
+        List<String> errors = new ArrayList<>();
+        for (Class<?> type : storableTypes) {
+            MetaData metaData = (MetaData) type.getDeclaredField("META_DATA").get(null);
+            if (StorableTypesRegistry.findMetaData(type.getSimpleName()).orElse(null) != metaData) {
+                errors.add(type.getName() + " is not registered with its META_DATA");
+            }
+        }
+        assertEquals(List.of(), errors);
+
+        Set<String> storableClassNames = storableTypes.stream()
+                .map(Class::getSimpleName)
+                .collect(Collectors.toSet());
+        Set<String> registeredWithoutStorableType = StorableTypesRegistry.getClassNames().stream()
+                .filter(className -> !storableClassNames.contains(className))
+                .collect(Collectors.toSet());
+        assertEquals(Set.of(), registeredWithoutStorableType);
     }
 }
