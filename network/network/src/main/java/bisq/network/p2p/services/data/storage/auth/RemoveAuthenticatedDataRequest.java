@@ -18,6 +18,9 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
@@ -71,15 +74,14 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
-
-    @ExcludeForHash
-    private final int version;
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
     private final transient PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;
     private final long created;
+    @ExcludeForHash
+    private final int version;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 
@@ -167,6 +169,56 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public int getVersion() {
         return version;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // Contains metaData and version, which serializeForHash() omits (metaData only in versions 1 to 3), as the
+    // default encoding contains all non-transient fields.
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> DEFAULT_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
+                    CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
+                            .canonical(1, request -> request.metaData)
+                            .bytes(2, request -> request.hash)
+                            .bytes(3, request -> request.ownerPublicKeyBytes)
+                            .sint32(4, request -> request.sequenceNumber)
+                            .bytes(5, request -> request.signature)
+                            .sint64(6, request -> request.created)
+                            .sint32(7, request -> request.version));
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> SIGNATURE_SCHEMA =
+            createSchemaForHash();
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
+    // 1 to 3, and version (field 7).
+    private static CanonicalSchema<RemoveAuthenticatedDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
+                CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
+                        // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+                        .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
+                        .bytes(2, request -> request.hash)
+                        .bytes(3, request -> request.ownerPublicKeyBytes)
+                        .sint32(4, request -> request.sequenceNumber)
+                        .bytes(5, request -> request.signature)
+                        .sint64(6, request -> request.created));
+    }
+
+    // Same versions as the @ExcludeForHash annotation of metaData
+    private static boolean isMetaDataExcludedForHash(int version) {
+        return version == 1 || version == 2 || version == 3;
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<RemoveAuthenticatedDataRequest> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
 

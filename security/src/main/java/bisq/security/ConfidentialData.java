@@ -18,6 +18,10 @@
 package bisq.security;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
@@ -30,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public final class ConfidentialData implements NetworkProto {
+public final class ConfidentialData implements NetworkProto, Canonical {
     private static final int MAX_SIZE_CIPHERTEXT = 20_000;
 
     private final byte[] senderPublicKey;
@@ -82,6 +86,29 @@ public final class ConfidentialData implements NetworkProto {
                 proto.getIv().toByteArray(),
                 proto.getCipherText().toByteArray(),
                 proto.getSignature().toByteArray());
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<ConfidentialData> DEFAULT_SCHEMA =
+            CanonicalSchema.<ConfidentialData>newBuilder()
+                    .bytes(1, ConfidentialData::getSenderPublicKey)
+                    .bytes(2, ConfidentialData::getIv)
+                    .bytes(3, ConfidentialData::getCipherText)
+                    .bytes(4, ConfidentialData::getSignature)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<ConfidentialData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     public double getCostFactor() {

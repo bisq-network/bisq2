@@ -18,6 +18,9 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
@@ -62,13 +65,12 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
-
-    @ExcludeForHash
-    private final int version;
     private final byte[] hash;
     private final byte[] receiverPublicKeyBytes;
     private final byte[] signature;
     private final long created;
+    @ExcludeForHash
+    private final int version;
     private final transient PublicKey receiverPublicKey;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
@@ -152,6 +154,53 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public int getVersion() {
         return version;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // Contains metaData and version, which serializeForHash() omits (metaData only in versions 1 to 3), as the
+    // default encoding contains all non-transient fields.
+    public static final CanonicalSchema<RemoveMailboxRequest> DEFAULT_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
+                    CanonicalSchema.<RemoveMailboxRequest>newBuilder()
+                            .canonical(1, request -> request.metaData)
+                            .bytes(2, request -> request.hash)
+                            .bytes(3, request -> request.receiverPublicKeyBytes)
+                            .bytes(4, request -> request.signature)
+                            .sint64(5, request -> request.created)
+                            .sint32(6, request -> request.version));
+    public static final CanonicalSchema<RemoveMailboxRequest> SIGNATURE_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<RemoveMailboxRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
+    // 1 to 3, and version (field 6).
+    private static CanonicalSchema<RemoveMailboxRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
+                CanonicalSchema.<RemoveMailboxRequest>newBuilder()
+                        // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+                        .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
+                        .bytes(2, request -> request.hash)
+                        .bytes(3, request -> request.receiverPublicKeyBytes)
+                        .bytes(4, request -> request.signature)
+                        .sint64(5, request -> request.created));
+    }
+
+    // Same versions as the @ExcludeForHash annotation of metaData
+    private static boolean isMetaDataExcludedForHash(int version) {
+        return version == 1 || version == 2 || version == 3;
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<RemoveMailboxRequest> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
 

@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -32,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @EqualsAndHashCode
-public abstract class AuthenticatedData implements StorageData {
+public abstract class AuthenticatedData implements StorageData, Canonical {
     @Getter
     protected final DistributedData distributedData;
 
@@ -54,6 +56,19 @@ public abstract class AuthenticatedData implements StorageData {
             case AUTHORIZEDDATA -> AuthorizedData.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
         };
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getAuthenticatedDataSchemaBuilder() {
+        return CanonicalSchema.<T>newBuilder()
+                // Canonical encoding is not yet supported for DistributedData, as its implementations are defined
+                // outside the network module. We use the protobuf serialization for hashes instead: the Any with the
+                // type URL and the serializeForHash() bytes, as getAuthenticatedDataBuilder(true) writes it.
+                .encodedMessage(1, authenticatedData -> authenticatedData.distributedData.toAny(true).toByteArray());
     }
 
     // We delegate the delivery of MetaData to the distributedData.

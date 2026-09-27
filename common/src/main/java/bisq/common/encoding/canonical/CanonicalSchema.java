@@ -89,6 +89,8 @@ public final class CanonicalSchema<T> {
         COMPOSE,
         EXTEND,
         ONEOF,
+        CANONICAL,
+        ENCODED_MESSAGE,
         REPEATED_COMPOSE,
         PACKED_REPEATED_INT32,
         REPEATED_STRING,
@@ -331,6 +333,26 @@ public final class CanonicalSchema<T> {
                                     Function<T, N> getter,
                                     Builder<N> schemaBuilder) {
             return add(number, FieldType.ONEOF, Rule.OMIT_NULL, getter, schemaBuilder);
+        }
+
+        /**
+         * Nested message whose bytes are the canonical encoding of the value itself, for the encoding purpose of the
+         * enclosing object ({@link Canonical#encodeCanonical(CanonicalEncoder, EncodingPurpose)}). Use it for a field
+         * that holds another {@link Canonical} object: the object selects its own encoding for the purpose. When the
+         * declared type of the field has several implementations, the runtime type selects the encoding, so no
+         * implementation can be left out of a schema.
+         */
+        public Builder<T> canonical(int number, Function<T, ? extends Canonical> getter) {
+            return add(number, FieldType.CANONICAL, Rule.OMIT_NULL, getter);
+        }
+
+        /**
+         * Nested message whose bytes are produced outside the canonical encoding, for example the protobuf
+         * serialization of a type which does not support canonical encoding yet. The bytes are written unchanged.
+         * They are only as deterministic as the code which produces them.
+         */
+        public Builder<T> encodedMessage(int number, Function<T, byte[]> getter) {
+            return add(number, FieldType.ENCODED_MESSAGE, Rule.OMIT_NULL, getter);
         }
 
         public <N> Builder<T> repeatedCompose(int number,

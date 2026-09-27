@@ -24,6 +24,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CanonicalSchemaTest {
@@ -42,6 +43,30 @@ public class CanonicalSchemaTest {
         assertEquals(CanonicalSchema.FieldType.SINT64, longField.getType());
         assertEquals(CanonicalSchema.Rule.OMIT_DEFAULT, longField.getRule());
         assertEquals(Long.MIN_VALUE, longField.getValue(new Object()));
+    }
+
+    @Test
+    public void canonicalFieldDeclaresOmitNullWithoutNestedSchema() {
+        CanonicalSchema<Object> schema = CanonicalSchema.<Object>newBuilder()
+                .canonical(1, ignored -> null)
+                .build();
+
+        CanonicalSchema.Field<Object> canonicalField = schema.getFields().get(0);
+        assertEquals(CanonicalSchema.FieldType.CANONICAL, canonicalField.getType());
+        assertEquals(CanonicalSchema.Rule.OMIT_NULL, canonicalField.getRule());
+        assertNull(canonicalField.getSchema());
+    }
+
+    @Test
+    public void encodedMessageFieldDeclaresOmitNullWithoutNestedSchema() {
+        CanonicalSchema<Object> schema = CanonicalSchema.<Object>newBuilder()
+                .encodedMessage(1, ignored -> new byte[0])
+                .build();
+
+        CanonicalSchema.Field<Object> encodedMessageField = schema.getFields().get(0);
+        assertEquals(CanonicalSchema.FieldType.ENCODED_MESSAGE, encodedMessageField.getType());
+        assertEquals(CanonicalSchema.Rule.OMIT_NULL, encodedMessageField.getRule());
+        assertNull(encodedMessageField.getSchema());
     }
 
     @Test

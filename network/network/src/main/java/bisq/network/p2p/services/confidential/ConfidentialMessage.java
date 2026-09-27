@@ -17,6 +17,10 @@
 
 package bisq.network.p2p.services.confidential;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -35,7 +39,7 @@ import java.util.Arrays;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class ConfidentialMessage implements EnvelopePayloadMessage, DistributedData {
+public final class ConfidentialMessage implements EnvelopePayloadMessage, DistributedData, Canonical {
     private final ConfidentialData confidentialData;
     private final String receiverKeyId;
 
@@ -73,6 +77,33 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
                 ConfidentialData.fromProto(proto.getConfidentialData()),
                 proto.getReceiverKeyId()
         );
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // The complete encoding, with the EnvelopePayloadMessage envelope that serialize() writes
+    public static final CanonicalSchema<ConfidentialMessage> DEFAULT_SCHEMA =
+            CanonicalSchema.oneof("EnvelopePayloadMessage", 8, getValueSchemaBuilder());
+    // The ConfidentialMessage message without envelope, as MailboxData contains it
+    public static final CanonicalSchema<ConfidentialMessage> DEFAULT_VALUE_SCHEMA = getValueSchemaBuilder().build();
+
+    private static CanonicalSchema.Builder<ConfidentialMessage> getValueSchemaBuilder() {
+        return CanonicalSchema.<ConfidentialMessage>newBuilder()
+                .canonical(1, confidentialMessage -> confidentialMessage.confidentialData)
+                .string(2, confidentialMessage -> confidentialMessage.receiverKeyId);
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<ConfidentialMessage> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     @Override

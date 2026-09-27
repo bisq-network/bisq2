@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CanonicalEncoderTest {
@@ -79,7 +81,9 @@ public class CanonicalEncoderTest {
                 protobuf.flush();
 
                 assertArrayEquals(output.toByteArray(),
-                        CanonicalEncoder.DEFAULT.encode(new SignedNumbers(intValue, longValue), schema),
+                        CanonicalEncoder.DEFAULT.encode(new SignedNumbers(intValue, longValue),
+                                schema,
+                                EncodingPurpose.DEFAULT),
                         "integer schema parity for " + intValue + ", " + longValue);
             }
         }
@@ -101,7 +105,7 @@ public class CanonicalEncoderTest {
                         0x00,
                         0x01,
                         0x80, 0x01),
-                CanonicalEncoder.DEFAULT.encode(container, schema));
+                CanonicalEncoder.DEFAULT.encode(container, schema, EncodingPurpose.DEFAULT));
     }
 
     @Test
@@ -139,7 +143,7 @@ public class CanonicalEncoderTest {
                         0x1a, 0x02, 0x08, 0x02,
                         0x22, 0x0a, 0x0a, 0x01, 0x61, 0x12, 0x05, 0x66, 0x69, 0x72, 0x73, 0x74,
                         0x22, 0x0b, 0x0a, 0x01, 0x62, 0x12, 0x06, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64),
-                CanonicalEncoder.DEFAULT.encode(container, schema));
+                CanonicalEncoder.DEFAULT.encode(container, schema, EncodingPurpose.DEFAULT));
     }
 
     @Test
@@ -151,9 +155,9 @@ public class CanonicalEncoderTest {
         assertArrayEquals(bytes(
                         0x22, 0x02,
                         0x08, 0x01),
-                CanonicalEncoder.DEFAULT.encode(new OneofContainer(new Value(1)), schema));
+                CanonicalEncoder.DEFAULT.encode(new OneofContainer(new Value(1)), schema, EncodingPurpose.DEFAULT));
         assertArrayEquals(bytes(),
-                CanonicalEncoder.DEFAULT.encode(new OneofContainer(null), schema));
+                CanonicalEncoder.DEFAULT.encode(new OneofContainer(null), schema, EncodingPurpose.DEFAULT));
     }
 
     @Test
@@ -167,8 +171,8 @@ public class CanonicalEncoderTest {
                         .int32(1, Value::getValue));
         Value value = new Value(1);
 
-        assertArrayEquals(CanonicalEncoder.DEFAULT.encode(value, legacyShape),
-                CanonicalEncoder.DEFAULT.encode(value, wrapperShape));
+        assertArrayEquals(CanonicalEncoder.DEFAULT.encode(value, legacyShape, EncodingPurpose.DEFAULT),
+                CanonicalEncoder.DEFAULT.encode(value, wrapperShape, EncodingPurpose.DEFAULT));
     }
 
     @Test
@@ -187,7 +191,7 @@ public class CanonicalEncoderTest {
         assertArrayEquals(bytes(
                         0x0a, 0x07, 0x0a, 0x01, 0x61, 0x12, 0x02, 0x08, 0x01,
                         0x0a, 0x07, 0x0a, 0x01, 0x62, 0x12, 0x02, 0x08, 0x02),
-                CanonicalEncoder.DEFAULT.encode(new Container(values), schema));
+                CanonicalEncoder.DEFAULT.encode(new Container(values), schema, EncodingPurpose.DEFAULT));
     }
 
     @Test
@@ -208,7 +212,7 @@ public class CanonicalEncoderTest {
         assertArrayEquals(bytes(
                         0x0a, 0x07, 0x0a, 0x01, 0x61, 0x12, 0x02, 0x08, 0x01,
                         0x0a, 0x07, 0x0a, 0x01, 0x62, 0x12, 0x02, 0x08, 0x02),
-                CanonicalEncoder.DEFAULT.encode(new MappedContainer(values), schema));
+                CanonicalEncoder.DEFAULT.encode(new MappedContainer(values), schema, EncodingPurpose.DEFAULT));
     }
 
     @Test
@@ -224,7 +228,7 @@ public class CanonicalEncoderTest {
                 .build();
 
         assertEquals(JAVA_11_HASH_MAP_ORDER,
-                readMapKeys(CanonicalEncoder.DEFAULT.encode(new Container(values), schema)));
+                readMapKeys(CanonicalEncoder.DEFAULT.encode(new Container(values), schema, EncodingPurpose.DEFAULT)));
     }
 
     @Test
@@ -240,12 +244,13 @@ public class CanonicalEncoderTest {
                         TreeMapIterator.naturalOrder())
                 .build();
 
-        byte[] first = CanonicalEncoder.DEFAULT.encode(new Container(values), schema);
+        byte[] first = CanonicalEncoder.DEFAULT.encode(new Container(values), schema, EncodingPurpose.DEFAULT);
         assertEquals(2, values.entryCacheReads);
         assertEquals(2, values.entryCacheWrites);
         assertEquals(1, values.mapCacheWrites);
 
-        assertArrayEquals(first, CanonicalEncoder.DEFAULT.encode(new Container(values), schema));
+        assertArrayEquals(first,
+                CanonicalEncoder.DEFAULT.encode(new Container(values), schema, EncodingPurpose.DEFAULT));
         assertEquals(1, values.mapCacheHits);
         assertEquals(2, values.entryCacheReads);
         assertEquals(2, values.entryCacheWrites);
@@ -253,7 +258,7 @@ public class CanonicalEncoderTest {
 
         values.put("b", new Value(3));
 
-        CanonicalEncoder.DEFAULT.encode(new Container(values), schema);
+        CanonicalEncoder.DEFAULT.encode(new Container(values), schema, EncodingPurpose.DEFAULT);
         assertEquals(4, values.entryCacheReads);
         assertEquals(3, values.entryCacheWrites);
         assertEquals(2, values.mapCacheWrites);
@@ -275,7 +280,103 @@ public class CanonicalEncoderTest {
                 .build();
 
         assertThrows(IllegalArgumentException.class,
-                () -> CanonicalEncoder.DEFAULT.encode(new MappedContainer(values), schema));
+                () -> CanonicalEncoder.DEFAULT.encode(new MappedContainer(values), schema, EncodingPurpose.DEFAULT));
+    }
+
+    @Test
+    public void encodedMessageFieldWritesBytesUnchanged() {
+        CanonicalSchema<EncodedMessageHolder> schema = CanonicalSchema.<EncodedMessageHolder>newBuilder()
+                .encodedMessage(1, EncodedMessageHolder::getEncodedMessage)
+                .int32(2, EncodedMessageHolder::getNumber)
+                .build();
+
+        assertArrayEquals(bytes(
+                        0x0a, 0x02, 0x08, 0x01,
+                        0x10, 0x07),
+                CanonicalEncoder.DEFAULT.encode(new EncodedMessageHolder(bytes(0x08, 0x01), 7),
+                        schema,
+                        EncodingPurpose.DEFAULT));
+        // An empty message is still present, as with a nested message whose schema writes no fields
+        assertArrayEquals(bytes(
+                        0x0a, 0x00,
+                        0x10, 0x07),
+                CanonicalEncoder.DEFAULT.encode(new EncodedMessageHolder(bytes(), 7), schema, EncodingPurpose.DEFAULT));
+        assertArrayEquals(bytes(0x10, 0x07),
+                CanonicalEncoder.DEFAULT.encode(new EncodedMessageHolder(null, 7), schema, EncodingPurpose.DEFAULT));
+    }
+
+    @Test
+    public void canonicalFieldPassesEncodingPurposeToNestedObject() {
+        CanonicalSchema<CanonicalHolder> schema = CanonicalSchema.<CanonicalHolder>newBuilder()
+                .int32(1, CanonicalHolder::getNumber)
+                .canonical(2, CanonicalHolder::getNested)
+                .build();
+        CanonicalEncoder canonicalEncoder = new CanonicalEncoder();
+
+        for (EncodingPurpose encodingPurpose : EncodingPurpose.values()) {
+            PurposeRecordingCanonical nested = new PurposeRecordingCanonical();
+
+            assertArrayEquals(bytes(
+                            0x08, 0x05,
+                            0x12, 0x02, 0x08, 0x2a + encodingPurpose.ordinal()),
+                    canonicalEncoder.encode(new CanonicalHolder(5, nested), schema, encodingPurpose));
+            assertSame(canonicalEncoder, nested.lastCanonicalEncoder);
+            assertEquals(List.of(encodingPurpose), nested.encodingPurposes);
+        }
+        assertArrayEquals(bytes(0x08, 0x05),
+                canonicalEncoder.encode(new CanonicalHolder(5, null), schema, EncodingPurpose.DEFAULT));
+    }
+
+    @Test
+    public void nestedSchemasPassEncodingPurposeToCanonicalFields() {
+        CanonicalSchema<CanonicalHolder> holderSchema = CanonicalSchema.<CanonicalHolder>newBuilder()
+                .canonical(1, CanonicalHolder::getNested)
+                .build();
+        CanonicalSchema<NestedHolders> schema = CanonicalSchema.<NestedHolders>newBuilder()
+                .compose(1, NestedHolders::getHolder, holderSchema)
+                .extend(2, NestedHolders::getHolder, holderSchema)
+                .oneof(3, NestedHolders::getHolder, holderSchema)
+                .repeatedCompose(4, NestedHolders::getHolders, holderSchema)
+                .mapStringToCompose(5, NestedHolders::getHoldersByKey, holderSchema, TreeMapIterator.naturalOrder())
+                .build();
+
+        for (EncodingPurpose encodingPurpose : EncodingPurpose.values()) {
+            PurposeRecordingCanonical nested = new PurposeRecordingCanonical();
+
+            CanonicalEncoder.DEFAULT.encode(new NestedHolders(new CanonicalHolder(0, nested)), schema, encodingPurpose);
+
+            // One call for each of the five nested schemas
+            assertEquals(Collections.nCopies(5, encodingPurpose), nested.encodingPurposes);
+        }
+    }
+
+    @Test
+    public void mapStringToComposeUsesMapEntryCacheOnlyForDefaultPurpose() {
+        CountingCacheMap values = new CountingCacheMap();
+        values.put("b", new Value(2));
+        values.put("a", new Value(1));
+
+        CanonicalSchema<Container> schema = CanonicalSchema.<Container>newBuilder()
+                .mapStringToCompose(1,
+                        Container::getValues,
+                        VALUE_SCHEMA,
+                        TreeMapIterator.naturalOrder())
+                .build();
+
+        byte[] defaultBytes = CanonicalEncoder.DEFAULT.encode(new Container(values), schema, EncodingPurpose.DEFAULT);
+        assertEquals(2, values.entryCacheReads);
+        assertEquals(2, values.entryCacheWrites);
+        assertEquals(1, values.mapCacheWrites);
+
+        // The value schema has no purpose-specific part, so the bytes are equal. The cached bytes are not used.
+        assertArrayEquals(defaultBytes,
+                CanonicalEncoder.DEFAULT.encode(new Container(values), schema, EncodingPurpose.SIGNATURE));
+        assertArrayEquals(defaultBytes,
+                CanonicalEncoder.DEFAULT.encode(new Container(values), schema, EncodingPurpose.STORAGE_KEY));
+        assertEquals(0, values.mapCacheHits);
+        assertEquals(2, values.entryCacheReads);
+        assertEquals(2, values.entryCacheWrites);
+        assertEquals(1, values.mapCacheWrites);
     }
 
     private static List<String> readMapKeys(byte[] bytes) {
@@ -518,6 +619,75 @@ public class CanonicalEncoderTest {
 
         private int getValue() {
             return value;
+        }
+    }
+
+    private static final class EncodedMessageHolder {
+        private final byte[] encodedMessage;
+        private final int number;
+
+        private EncodedMessageHolder(byte[] encodedMessage, int number) {
+            this.encodedMessage = encodedMessage;
+            this.number = number;
+        }
+
+        private byte[] getEncodedMessage() {
+            return encodedMessage;
+        }
+
+        private int getNumber() {
+            return number;
+        }
+    }
+
+    private static final class CanonicalHolder {
+        private final int number;
+        private final PurposeRecordingCanonical nested;
+
+        private CanonicalHolder(int number, PurposeRecordingCanonical nested) {
+            this.number = number;
+            this.nested = nested;
+        }
+
+        private int getNumber() {
+            return number;
+        }
+
+        private PurposeRecordingCanonical getNested() {
+            return nested;
+        }
+    }
+
+    private static final class NestedHolders {
+        private final CanonicalHolder holder;
+
+        private NestedHolders(CanonicalHolder holder) {
+            this.holder = holder;
+        }
+
+        private CanonicalHolder getHolder() {
+            return holder;
+        }
+
+        private List<CanonicalHolder> getHolders() {
+            return List.of(holder);
+        }
+
+        private Map<String, CanonicalHolder> getHoldersByKey() {
+            return Map.of("key", holder);
+        }
+    }
+
+    private static final class PurposeRecordingCanonical implements Canonical {
+        private final List<EncodingPurpose> encodingPurposes = new ArrayList<>();
+        private CanonicalEncoder lastCanonicalEncoder;
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+            lastCanonicalEncoder = canonicalEncoder;
+            encodingPurposes.add(encodingPurpose);
+            // Different bytes for each purpose, like an object with purpose-specific encodings
+            return bytes(0x08, 0x2a + encodingPurpose.ordinal());
         }
     }
 }

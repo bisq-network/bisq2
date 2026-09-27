@@ -18,6 +18,10 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorageData;
@@ -36,9 +40,11 @@ import java.util.concurrent.TimeUnit;
  */
 @EqualsAndHashCode
 @Getter
-public final class MailboxData implements StorageData {
+public final class MailboxData implements StorageData, Canonical {
     private static final int VERSION = 1;
     public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
+
+    private final ConfidentialMessage confidentialMessage;
 
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
@@ -47,7 +53,6 @@ public final class MailboxData implements StorageData {
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
-    private final ConfidentialMessage confidentialMessage;
 
     public MailboxData(MetaData metaData, ConfidentialMessage confidentialMessage) {
         this(VERSION, metaData, confidentialMessage);
@@ -83,6 +88,52 @@ public final class MailboxData implements StorageData {
                 proto.getVersion(),
                 MetaData.fromProto(proto.getMetaData()),
                 ConfidentialMessage.fromProto(proto.getConfidentialMessage()));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // Contains metaData and version, which serializeForHash() omits (metaData only in versions 1 to 3), as the
+    // default encoding contains all non-transient fields.
+    public static final CanonicalSchema<MailboxData> DEFAULT_SCHEMA = CanonicalSchema.<MailboxData>newBuilder()
+            // ConfidentialMessage.encodeCanonical writes the EnvelopePayloadMessage envelope, but MailboxData contains
+            // the bare message. The value schema is therefore referenced directly, and a purpose-specific schema of
+            // MailboxData must reference the value schema of ConfidentialMessage for the same purpose.
+            .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
+            .canonical(2, MailboxData::getMetaData)
+            .sint32(3, MailboxData::getVersion)
+            .build();
+    public static final CanonicalSchema<MailboxData> SIGNATURE_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<MailboxData> STORAGE_KEY_SCHEMA = createSchemaForHash();
+
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 2) in versions
+    // 1 to 3, and version (field 3).
+    private static CanonicalSchema<MailboxData> createSchemaForHash() {
+        return CanonicalSchema.<MailboxData>newBuilder()
+                // ConfidentialMessage uses its default value schema for every purpose
+                .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
+                // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+                .canonical(2, mailboxData -> isMetaDataExcludedForHash(mailboxData.version) ?
+                        null :
+                        mailboxData.metaData)
+                .build();
+    }
+
+    // Same versions as the @ExcludeForHash annotation of metaData
+    private static boolean isMetaDataExcludedForHash(int version) {
+        return version == 1 || version == 2 || version == 3;
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<MailboxData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     public String getClassName() {

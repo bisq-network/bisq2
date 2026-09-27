@@ -18,6 +18,9 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -146,6 +149,28 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
             log.error("Failed to generate public key");
             throw new RuntimeException(e);
         }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<AddAuthenticatedDataRequest> DEFAULT_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(1,
+                    CanonicalSchema.<AddAuthenticatedDataRequest>newBuilder()
+                            .canonical(1, AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                            .bytes(2, request -> request.signature)
+                            .bytes(3, request -> request.ownerPublicKeyBytes));
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<AddAuthenticatedDataRequest> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
 

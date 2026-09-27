@@ -17,6 +17,9 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -48,6 +51,28 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
 
     public static DefaultAuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
         return new DefaultAuthenticatedData(DistributedData.fromAny(proto.getDistributedData()));
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
+            DefaultAuthenticatedData.<DefaultAuthenticatedData>getAuthenticatedDataSchemaBuilder()
+                    .extend(10,
+                            defaultAuthenticatedData -> defaultAuthenticatedData,
+                            CanonicalSchema.newBuilder())
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<DefaultAuthenticatedData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     @Override

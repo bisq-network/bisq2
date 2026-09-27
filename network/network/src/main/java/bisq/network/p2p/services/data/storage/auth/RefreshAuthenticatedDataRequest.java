@@ -18,6 +18,9 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
@@ -61,14 +64,13 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @ExcludeForHash
     private final MetaData metaData;
-
-    @ExcludeForHash
-    private final int version;
     private final byte[] hash; // of authenticatedData
     private final byte[] ownerPublicKeyBytes; // 442 bytes
     private final transient PublicKey ownerPublicKey;
     private final int sequenceNumber;
     private final byte[] signature;         // 47 bytes
+    @ExcludeForHash
+    private final int version;
     private final long created;
 
     private RefreshAuthenticatedDataRequest(int version,
@@ -153,6 +155,49 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     @Override
     public int getVersion() {
         return version;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // Contains metaData and version, which serializeForHash() omits, as the default encoding contains all
+    // non-transient fields.
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> DEFAULT_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
+                    CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
+                            .canonical(1, request -> request.metaData)
+                            .bytes(2, request -> request.hash)
+                            .bytes(3, request -> request.ownerPublicKeyBytes)
+                            .sint32(4, request -> request.sequenceNumber)
+                            .bytes(5, request -> request.signature)
+                            .sint32(6, request -> request.version)
+                            .sint64(7, request -> request.created));
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> SIGNATURE_SCHEMA =
+            createSchemaForHash();
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) and version
+    // (field 6).
+    private static CanonicalSchema<RefreshAuthenticatedDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
+                CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
+                        .bytes(2, request -> request.hash)
+                        .bytes(3, request -> request.ownerPublicKeyBytes)
+                        .sint32(4, request -> request.sequenceNumber)
+                        .bytes(5, request -> request.signature)
+                        .sint64(7, request -> request.created));
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<RefreshAuthenticatedDataRequest> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
 
