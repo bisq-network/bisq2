@@ -26,6 +26,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -162,7 +163,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public double getCostFactor() {
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
-        double metaDataImpact = mailboxData.getMetaData().getCostFactor();
+        double metaDataImpact = StorableTypesRegistry.getCostFactor(mailboxData.getClassName());
         double dataImpact = mailboxData.getConfidentialMessage().getCostFactor();
         double impact = metaDataImpact + dataImpact;
         return MathUtils.bounded(0.25, 1, impact);
@@ -231,7 +232,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
 
@@ -242,6 +243,17 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public MetaData getMetaData() {
         return mailboxSequentialData.getMailboxData().getMetaData();
+    }
+
+    // The time to live of the type, limited by MailboxData.MAX_TTL.
+    @Override
+    public long getTtl() {
+        return Math.min(MailboxData.MAX_TTL, getMetaData().getTtl());
+    }
+
+    @Override
+    public String getClassName() {
+        return mailboxSequentialData.getMailboxData().getClassName();
     }
 
 

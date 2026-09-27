@@ -75,6 +75,17 @@ public final class StorableTypesRegistry {
                 new IllegalStateException("No MetaData registered for className " + className));
     }
 
+    /**
+     * The proof of work check needs the cost factor of a request before StorageService checks the class name. A type
+     * which is not registered (e.g. added in a later version) is not stored, so its MetaData has no impact on the
+     * cost. Otherwise the check could reject messages of newer nodes.
+     *
+     * @return the cost factor of the registered MetaData, or 0 if the class name is not registered.
+     */
+    public static double getCostFactor(String className) {
+        return findMetaData(className).map(MetaData::getCostFactor).orElse(0d);
+    }
+
     public static boolean isRegistered(String className) {
         return registrationByClassName.containsKey(className);
     }

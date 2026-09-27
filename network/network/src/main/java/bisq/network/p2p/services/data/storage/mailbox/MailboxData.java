@@ -24,29 +24,33 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.StorageData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 
-// We want to have fine-grained control over mailbox messages.
-// As the data is encrypted we could not use it's metaData, and we would merge all mailbox proto into one storage file.
-// To allow more fine-grained control we add the metaData to the MailboxData, though this is untrusted data. 
-// For TTL we set an upper bound with MAX_TLL.
-
 /**
- * Holds the ConfidentialMessage and metaData providing information about the message type.
+ * Holds the ConfidentialMessage and the class name of the encrypted MailboxMessage.
+ * <p>
+ * The storage layer cannot decrypt the message. It uses the class name to select the store of the message type and
+ * to look up the MetaData of that type in the StorableTypesRegistry. The signature does not cover the class name, so a
+ * relay can change it to the name of another registered type. That moves the data into the store of the other type.
+ * It cannot make a node use MetaData values which are not registered for a type.
  */
 @EqualsAndHashCode
 @Getter
 public final class MailboxData implements StorageData, Canonical {
     private static final int VERSION = 1;
-    public final static long MAX_TLL = TimeUnit.DAYS.toMillis(15);
+    // Upper bound for the time to live of mailbox data and mailbox remove requests in the network storage, independent
+    // of the time to live which the type of the MailboxMessage declares.
+    public static final long MAX_TTL = TimeUnit.DAYS.toMillis(15);
 
     private final ConfidentialMessage confidentialMessage;
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node only
+    // serializes the received value again. It never uses it for a decision (see getMetaData()).
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
@@ -117,7 +121,8 @@ public final class MailboxData implements StorageData, Canonical {
             // the bare message. The value schema is therefore referenced directly, and a purpose-specific schema of
             // MailboxData must reference the value schema of ConfidentialMessage for the same purpose.
             .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
-            .canonical(2, MailboxData::getMetaData)
+            // The received metaData, not the MetaData from the registry which getMetaData() returns
+            .canonical(2, mailboxData -> mailboxData.metaData)
             .sint32(3, MailboxData::getVersion)
             .string(4, MailboxData::getClassName)
             .build();
@@ -150,6 +155,13 @@ public final class MailboxData implements StorageData, Canonical {
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
+    }
+
+    // The MetaData of the type of the encrypted MailboxMessage, from the StorableTypesRegistry.
+    // Throws if the type is not registered. StorageService does not accept such data.
+    @Override
+    public MetaData getMetaData() {
+        return StorableTypesRegistry.getMetaData(className);
     }
 
     @Override

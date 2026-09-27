@@ -18,9 +18,12 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;
@@ -37,11 +40,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  * change these bytes, and a message without className must still be accepted.
  */
 class MailboxClassNameTest {
-    private static final String CLASS_NAME = "TestMailboxMessage";
-    private static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, CLASS_NAME);
+    private static final String CLASS_NAME = AckMessage.class.getSimpleName();
+    private static final MetaData META_DATA = AckMessage.META_DATA;
 
     private final KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
     private final KeyPair receiverKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+
+    @BeforeAll
+    static void registerMetaData() {
+        StorableTypesRegistry.register(AckMessage.class, AckMessage.META_DATA);
+    }
 
     @Test
     void mailboxDataSendsClassNameAndMetaData() {

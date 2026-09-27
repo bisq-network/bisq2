@@ -27,11 +27,11 @@ import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -40,7 +40,6 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Optional;
 
 // Data size about 200-250 bytes
 @Slf4j
@@ -64,7 +63,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 mailboxData.getClassName());
     }
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node only
+    // serializes the received value again. It never uses it for a decision (see getMetaData()).
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
     private final byte[] hash;
@@ -78,8 +78,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     // Excluded from the hash, so it does not change the proof of work payload.
     @ExcludeForHash
     private final String className;
-    @Setter
-    private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 
     // Receiver is owner for remove request
     private RemoveMailboxRequest(int version,
@@ -226,7 +224,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, getMetaData().getCostFactor());
+        return MathUtils.bounded(0.1, 0.3, StorableTypesRegistry.getCostFactor(className));
     }
 
 
@@ -291,7 +289,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public boolean isExpired() {
-        return (System.currentTimeMillis() - getCreated()) > Math.min(MailboxData.MAX_TLL, getTtl());
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
 
@@ -299,13 +297,17 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     // StorageConstraint
     /* --------------------------------------------------------------------- */
 
+    // The MetaData of the removed type, from the StorableTypesRegistry.
+    // Throws if the type is not registered. StorageService does not accept such requests.
     @Override
     public MetaData getMetaData() {
-        return metaDataFromDistributedData.orElse(metaData);
+        return StorableTypesRegistry.getMetaData(className);
     }
 
-    public MetaData getMetaDataFromProto() {
-        return metaData;
+    // The time to live of the type, limited by MailboxData.MAX_TTL.
+    @Override
+    public long getTtl() {
+        return Math.min(MailboxData.MAX_TTL, getMetaData().getTtl());
     }
 
     @Override
@@ -322,7 +324,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     public String toString() {
         return "RemoveMailboxRequest{" +
                 "metaData=" + metaData +
-                ", metaDataFromDistributedData=" + metaDataFromDistributedData +
                 ", version=" + version +
                 ", hash=" + Hex.encode(hash) +
                 ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +
@@ -341,8 +342,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 Arrays.equals(hash, that.hash) &&
                 Arrays.equals(receiverPublicKeyBytes, that.receiverPublicKeyBytes) &&
                 Arrays.equals(signature, that.signature) &&
-                Objects.equals(receiverPublicKey, that.receiverPublicKey) &&
-                Objects.equals(metaDataFromDistributedData, that.metaDataFromDistributedData);
+                Objects.equals(receiverPublicKey, that.receiverPublicKey);
     }
 
     @Override
@@ -352,7 +352,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         result = 31 * result + Arrays.hashCode(signature);
         result = 31 * result + Long.hashCode(created);
         result = 31 * result + Objects.hashCode(receiverPublicKey);
-        result = 31 * result + Objects.hashCode(metaDataFromDistributedData);
         return result;
     }
 }

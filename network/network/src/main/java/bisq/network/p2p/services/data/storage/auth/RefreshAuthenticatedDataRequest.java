@@ -26,6 +26,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -63,7 +64,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node only
+    // serializes the received value again. It never uses it for a decision (see getMetaData()).
     @ExcludeForHash
     private final MetaData metaData;
     private final byte[] hash; // of authenticatedData
@@ -223,7 +225,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @Override
     public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, metaData.getCostFactor());
+        return MathUtils.bounded(0.1, 0.3, StorableTypesRegistry.getCostFactor(getClassName()));
     }
 
 
@@ -307,9 +309,11 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // StorageConstraint
     /* --------------------------------------------------------------------- */
 
+    // The MetaData of the refreshed type, from the StorableTypesRegistry.
+    // Throws if the type is not registered. A store exists only for registered types.
     @Override
     public MetaData getMetaData() {
-        return metaData;
+        return StorableTypesRegistry.getMetaData(getClassName());
     }
 
     @Override

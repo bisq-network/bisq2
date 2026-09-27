@@ -18,6 +18,8 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
@@ -29,9 +31,11 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthenticatedDataStorageServiceTest {
@@ -45,6 +49,7 @@ class AuthenticatedDataStorageServiceTest {
 
     @BeforeEach
     void setUp() {
+        StorableTypesRegistry.register(TestDistributedData.class, TestDistributedData.META_DATA);
         PersistenceService persistenceService = new PersistenceService(tempDir);
         PruneExpiredEntriesService pruneExpiredEntriesService = new PruneExpiredEntriesService();
         ownerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "test", "OwnerStore");
@@ -159,6 +164,40 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isSuccess(), result.toString());
         assertTrue(result.isNoEntry());
         assertTrue(peerStore.getPersistableStore().getMap().containsKey(removeRequest.getStorageKey()));
+    }
+
+    @Test
+    void removeRequestWithoutEntryExpiresAfterTtlOfRegisteredMetaData() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        // The signature covers only the hash of the data, so a relay can change metaData and created.
+        // TestDistributedData has a time to live of 10 days. The forged MetaData claims 100 days.
+        //noinspection deprecation
+        RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder()
+                        .setMetaData(new MetaData(MetaData.TTL_100_DAYS, TestDistributedData.class.getSimpleName()).toProto(false))
+                        .setCreated(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11))
+                        .build());
+
+        assertSame(TestDistributedData.META_DATA, forgedRequest.getMetaData());
+        DataStorageResult result = peerStore.remove(forgedRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isExpired(), result.toString());
+        assertFalse(peerStore.getPersistableStore().getMap().containsKey(removeRequest.getStorageKey()));
+    }
+
+    @Test
+    void removeRequestUsesRegisteredMetaDataForCostFactor() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        //noinspection deprecation
+        RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder()
+                        .setMetaData(new MetaData(MetaData.TTL_2_DAYS, MetaData.HIGHEST_PRIORITY,
+                                TestDistributedData.class.getSimpleName(), 0).toProto(false))
+                        .build());
+
+        assertEquals(removeRequest.getCostFactor(), forgedRequest.getCostFactor());
+        assertEquals(TestDistributedData.META_DATA.getPriority(), forgedRequest.getPriority());
     }
 
     private void addToOwnerAndPeer() throws GeneralSecurityException {
