@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class SetupTradeMessage_D extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(SetupTradeMessage_D.class);
+
     private final PartialSignatures partialSignatures;
 
     public SetupTradeMessage_D(String id,
@@ -73,6 +76,11 @@ public final class SetupTradeMessage_D extends MuSigTradeMessage {
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()));
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

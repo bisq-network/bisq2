@@ -57,8 +57,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     private static final int PROPOSAL_KEY_DATA_VERSION = 2;
     private static final int CURRENT_DATA_VERSION = PROPOSAL_KEY_DATA_VERSION;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, AuthorizedBondedRole.class.getSimpleName(), MAX_MAP_SIZE_100);
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final int version;
@@ -271,6 +270,11 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     }
 
     @Override
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
+
+    @Override
     public double getCostFactor() {
         return 0.5;
     }
@@ -324,7 +328,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    registrationProtocolVersion=" + registrationProtocolVersion +
                 ",\r\n                    proposalTxId='" + proposalTxId + '\'' +
                 ",\r\n                    lockupTxId='" + lockupTxId + '\'' +
-                ",\r\n                    metaData=" + metaData +
+                ",\r\n                    metaData=" + META_DATA +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

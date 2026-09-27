@@ -34,8 +34,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode(callSuper = true)
 public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements DistributedData {
     // Metadata needs to be symmetric with BisqEasyOfferbookMessage.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, LOW_PRIORITY, BisqEasyOfferbookMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 
     public BisqEasyOfferbookMessageReaction(String id,
                                             String userProfileId,
@@ -65,6 +64,11 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
         // verified as well, so we can be sure it's the sender of the message. This check prevents against
         // impersonation attack.
         return !userProfileId.equals(Hex.encode(pubKeyHash));
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

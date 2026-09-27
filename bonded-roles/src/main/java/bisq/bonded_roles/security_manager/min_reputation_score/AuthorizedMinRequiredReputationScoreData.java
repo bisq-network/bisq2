@@ -45,8 +45,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 public final class AuthorizedMinRequiredReputationScoreData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, AuthorizedMinRequiredReputationScoreData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -126,6 +125,11 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

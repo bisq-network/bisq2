@@ -52,8 +52,7 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
         return MuSigMediationRequest.class.getSimpleName() + "." + tradeId;
     }
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigMediationRequest.class.getSimpleName());
     private final MuSigContract contract;
     private final String tradeId;
 
@@ -162,6 +161,11 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

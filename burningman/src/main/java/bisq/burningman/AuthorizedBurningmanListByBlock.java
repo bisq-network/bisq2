@@ -52,10 +52,9 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
 
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
     // We use a rather long TTL to ensure in case the oracle nodes have issues to still have BM data in the network.
     // Oracle nodes remove BM data which are older than a certain number of blocks (e.g. 144 blocks or 1 day)
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, AuthorizedBurningmanListByBlock.class.getSimpleName());
 
     @ExcludeForHash
     private final int version;
@@ -125,6 +124,11 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
     }
 
     @Override
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
+
+    @Override
     public double getCostFactor() {
         return 0.5;
     }
@@ -161,7 +165,7 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
                 .collect(Collectors.joining("\n")) +
                 "\nversion=" + version +
                 ", staticPublicKeysProvided=" + staticPublicKeysProvided +
-                ", metaData=" + metaData +
+                ", metaData=" + META_DATA +
                 '}';
     }
 }

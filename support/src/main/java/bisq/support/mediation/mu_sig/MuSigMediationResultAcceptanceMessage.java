@@ -37,7 +37,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class MuSigMediationResultAcceptanceMessage implements MailboxMessage, ExternalNetworkMessage {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigMediationResultAcceptanceMessage.class.getSimpleName());
     private final String tradeId;
     private final boolean mediationResultAccepted;
     private final String senderUserProfileId;
@@ -81,6 +81,11 @@ public final class MuSigMediationResultAcceptanceMessage implements MailboxMessa
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

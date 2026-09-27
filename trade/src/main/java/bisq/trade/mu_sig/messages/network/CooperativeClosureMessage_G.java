@@ -19,6 +19,7 @@ package bisq.trade.mu_sig.messages.network;
 
 import bisq.common.data.ByteArray;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class CooperativeClosureMessage_G extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(CooperativeClosureMessage_G.class);
+
     private final ByteArray peerOutputPrvKeyShare;
 
     public CooperativeClosureMessage_G(String id,
@@ -73,6 +76,11 @@ public final class CooperativeClosureMessage_G extends MuSigTradeMessage {
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 ByteArray.fromProto(muSigMessageProto.getPeerOutputPrvKeyShare()));
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

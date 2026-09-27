@@ -20,6 +20,7 @@ package bisq.trade.mu_sig.messages.network;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
 import lombok.EqualsAndHashCode;
@@ -32,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class SetupTradeMessage_B extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(SetupTradeMessage_B.class);
+
     private final MuSigContract contract;
     private final ContractSignatureData contractSignatureData;
     private final PubKeyShares pubKeyShares;
@@ -91,6 +94,11 @@ public final class SetupTradeMessage_B extends MuSigTradeMessage {
                 ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()),
                 PubKeyShares.fromProto(muSigMessageProto.getPubKeyShares()),
                 NonceShares.fromProto(muSigMessageProto.getNonceShares()));
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

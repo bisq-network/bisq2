@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class PaymentReceivedMessage_F extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(PaymentReceivedMessage_F.class);
+
     private final SwapTxSignature swapTxSignature;
 
     public PaymentReceivedMessage_F(String id,
@@ -73,6 +76,11 @@ public final class PaymentReceivedMessage_F extends MuSigTradeMessage {
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 SwapTxSignature.fromProto(muSigMessageProto.getSwapTxSignature()));
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

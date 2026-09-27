@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,6 +32,8 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
+    public static final MetaData META_DATA = createMetaData(BisqEasyConfirmBtcSentMessage.class);
+
     private final Optional<String> paymentProof;
 
     public BisqEasyConfirmBtcSentMessage(String id,
@@ -80,6 +83,11 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
                 NetworkId.fromProto(proto.getSender()),
                 NetworkId.fromProto(proto.getReceiver()),
                 bisqEasyConfirmBtcSentMessage.hasPaymentProof() ? Optional.of(bisqEasyConfirmBtcSentMessage.getPaymentProof()) : Optional.empty());
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
