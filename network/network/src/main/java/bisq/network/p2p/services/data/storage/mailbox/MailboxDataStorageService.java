@@ -259,7 +259,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     removed.size(),
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
-                    getMaxMapSize());
+                    MAX_MAP_SIZE);
 
             boolean showDetails = false;
             if (showDetails) {

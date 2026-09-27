@@ -423,7 +423,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     removed.size(),
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
-                    getMaxMapSize());
+                    MAX_MAP_SIZE);
             boolean showDetails = false;
             if (showDetails) {
                 long now = System.currentTimeMillis();

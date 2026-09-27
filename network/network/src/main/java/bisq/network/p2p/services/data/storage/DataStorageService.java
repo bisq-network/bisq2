@@ -30,12 +30,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
     public static final String STORE_POST_FIX = "Store";
+    // Maximum number of entries of a store. This was the effective limit of all stores so far. MetaData.maxMapSize
+    // is not used as limit, because its values are at most 10 000 and enforcing them could remove entries from
+    // existing stores. MetaData.maxMapSize is only an input of the cost factor for the proof of work.
+    public static final int MAX_MAP_SIZE = 100_000;
 
     @Getter
     protected final Persistence<DataStore<T>> persistence;
@@ -47,7 +50,6 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     protected final Path subDirPath;
     @Getter
     protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
-    protected Optional<Integer> maxMapSize = Optional.empty();
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
         super();
@@ -65,7 +67,6 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
     public void shutdown() {
         prunedAndExpiredDataRequests.clear();
-        maxMapSize = Optional.empty();
     }
 
     @Override
@@ -75,7 +76,6 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             return persisted;
         }
 
-        int maxSize = getMaxMapSize();
         Map<ByteArray, T> pruned = map.entrySet().stream()
                 .filter(entry -> {
                     T dataRequest = entry.getValue();
@@ -86,7 +86,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                     return !isExpired;
                 })
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
-                .limit(maxSize)
+                .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(pruned);
@@ -103,37 +103,15 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         return true;
     }
 
-    protected int getMaxMapSize() {
-        if (maxMapSize.isEmpty()) {
-            int size = persistableStore.getMap().values().stream()
-                    .map(DataRequest::getMaxMapSize)
-                    .findFirst()
-                    .orElse(100_000);
-            // Until the too low values in some MetaData are fixed we use 10000 as min size
-            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_10_000, size));
-        }
-        return maxMapSize.get();
-    }
-
     protected boolean isExceedingMapSize() {
         int size = persistableStore.getMap().size();
-        boolean isExceeding = size > getMaxMapSize();
+        boolean isExceeding = size > MAX_MAP_SIZE;
         if (isExceeding) {
-            String className = getClassNameOfFirstEntry();
-            log.warn("Max. map size reached for {}. map.size()={}, getMaxMapSize={}",
-                    className, size, getMaxMapSize());
+            log.warn("Max. map size reached for {}. map.size()={}, MAX_MAP_SIZE={}", storeKey, size, MAX_MAP_SIZE);
         }
         if (size > 20_000) {
-            String className = getClassNameOfFirstEntry();
-            log.info("Map size for {} reached > 20 000 entries. map.size()={}", className, size);
+            log.info("Map size for {} reached > 20 000 entries. map.size()={}", storeKey, size);
         }
         return isExceeding;
-    }
-
-    private String getClassNameOfFirstEntry() {
-        return persistableStore.getMap().values().stream()
-                .findFirst()
-                .map(DataRequest::getClassName)
-                .orElse("N/A");
     }
 }

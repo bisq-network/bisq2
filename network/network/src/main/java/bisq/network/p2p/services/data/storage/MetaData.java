@@ -65,7 +65,7 @@ public final class MetaData implements NetworkProto, Canonical {
     private final long ttl;
     // Used for inventory request priority of delivery if inventory size exceeds limit
     private final int priority;
-    // Max file size of the storage file
+    // Input of the cost factor for the proof of work. Not used as limit of the store (see DataStorageService.MAX_MAP_SIZE).
     private final int maxMapSize;
     // Used for name of storage file, for lookup of the store for a given distributedData object and for logging
     private final String className;
