@@ -151,9 +151,4 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
     public MetaData getMetaData() {
         return META_DATA;
     }
-
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
-    }
 }

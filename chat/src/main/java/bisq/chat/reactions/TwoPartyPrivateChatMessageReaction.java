@@ -88,9 +88,4 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
     public MetaData getMetaData() {
         return META_DATA;
     }
-
-    @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
 }

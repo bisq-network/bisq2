@@ -153,11 +153,6 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }

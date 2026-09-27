@@ -23,7 +23,6 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
-import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -64,8 +63,9 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node only
-    // serializes the received value again. It never uses it for a decision (see getMetaData()).
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
+    // registered MetaData of the class name (see fromProto) and never uses the field for a decision (see
+    // getMetaData()).
     @ExcludeForHash
     private final MetaData metaData;
     private final byte[] hash; // of authenticatedData
@@ -145,9 +145,15 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         try {
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
             //noinspection deprecation
-            MetaData metaData = MetaData.fromProto(proto.getMetaData());
+            MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
             // Nodes of earlier versions do not send className.
-            String className = proto.getClassName().isEmpty() ? metaData.getClassName() : proto.getClassName();
+            String className = proto.getClassName().isEmpty() ?
+                    receivedMetaData.getClassName() :
+                    proto.getClassName();
+            // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or
+            // relay chose. serializeForHash() never contains metaData, so the proof of work payload does not change.
+            // The signature and the storage key never contain it either.
+            MetaData metaData = StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData);
             return new RefreshAuthenticatedDataRequest(
                     proto.getVersion(),
                     metaData,
@@ -216,16 +222,6 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // CostBearingMessage implementation
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, StorableTypesRegistry.getCostFactor(getClassName()));
     }
 
 
@@ -314,6 +310,17 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     @Override
     public MetaData getMetaData() {
         return StorableTypesRegistry.getMetaData(getClassName());
+    }
+
+    // The MetaData which this message carries in the deprecated field metaData for nodes of earlier versions. This node
+    // does not use it for its own decisions.
+    public MetaData getMetaDataForEarlierVersions() {
+        return metaData;
+    }
+
+    // serializeForHash() never contains the field metaData.
+    public boolean isMetaDataCoveredByHash() {
+        return false;
     }
 
     @Override

@@ -205,11 +205,6 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.3;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
     }

@@ -190,11 +190,6 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
-
-    @Override
     public boolean staticPublicKeysProvided() {
         return staticPublicKeysProvided;
     }

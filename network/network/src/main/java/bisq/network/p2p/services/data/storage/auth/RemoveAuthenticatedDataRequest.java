@@ -23,7 +23,6 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
-import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -72,8 +71,9 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 authenticatedData.getClassName());
     }
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node only
-    // serializes the received value again. It never uses it for a decision (see getMetaData()).
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
+    // registered MetaData of the class name (see fromProto) and never uses the field for a decision (see
+    // getMetaData()).
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
     private final byte[] hash;
@@ -155,9 +155,18 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         try {
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
             //noinspection deprecation
-            MetaData metaData = MetaData.fromProto(proto.getMetaData());
+            MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
             // Nodes of earlier versions do not send className.
-            String className = proto.getClassName().isEmpty() ? metaData.getClassName() : proto.getClassName();
+            String className = proto.getClassName().isEmpty() ?
+                    receivedMetaData.getClassName() :
+                    proto.getClassName();
+            // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or
+            // relay chose. In these versions serializeForHash() does not contain metaData, so the proof of work payload
+            // does not change. The signature and the storage key never contain it: both use only the hash of the
+            // stored data.
+            MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
+                    StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
+                    receivedMetaData;
             return new RemoveAuthenticatedDataRequest(
                     proto.getVersion(),
                     metaData,
@@ -237,16 +246,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
 
     /* --------------------------------------------------------------------- */
-    // CostBearingMessage implementation
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.1, 0.3, StorableTypesRegistry.getCostFactor(className));
-    }
-
-
-    /* --------------------------------------------------------------------- */
     // DataRequest implementation
     /* --------------------------------------------------------------------- */
 
@@ -320,6 +319,19 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public MetaData getMetaData() {
         return StorableTypesRegistry.getMetaData(className);
+    }
+
+    // The MetaData which this message carries in the deprecated field metaData for nodes of earlier versions. This node
+    // does not use it for its own decisions.
+    public MetaData getMetaDataForEarlierVersions() {
+        return metaData;
+    }
+
+    // In version 0 serializeForHash() contains the field metaData, so the proof of work payload covers it. The
+    // signature covers only the hash of the stored data, so a relay can change the field, but then pays the proof of
+    // work for the changed request.
+    public boolean isMetaDataCoveredByHash() {
+        return !isMetaDataExcludedForHash(version);
     }
 
     @Override

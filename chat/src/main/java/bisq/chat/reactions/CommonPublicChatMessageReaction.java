@@ -70,11 +70,6 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
-
-    @Override
     public bisq.chat.protobuf.ChatMessageReaction.Builder getBuilder(boolean serializeForHash) {
         return getChatMessageReactionBuilder(serializeForHash)
                 .setCommonPublicChatMessageReaction(toCommonPublicChatMessageReactionProto(serializeForHash));

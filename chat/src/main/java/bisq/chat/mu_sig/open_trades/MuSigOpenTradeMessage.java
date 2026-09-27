@@ -197,11 +197,6 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
-    }
-
-    @Override
     public boolean canShowReactions() {
         return true;
     }

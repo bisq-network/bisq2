@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -33,6 +34,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -189,8 +191,51 @@ class AuthenticatedDataStorageServiceTest {
         assertFalse(peerStore.getPersistableStore().getMap().containsKey(removeRequest.getStorageKey()));
     }
 
+    // Nodes of earlier versions compute expiry, priority and cost factor from the field metaData. A relay sends them the
+    // registered MetaData. The hash does not cover the field, so the signature and the storage key stay the same.
     @Test
-    void removeRequestUsesRegisteredMetaDataForCostFactor() throws GeneralSecurityException {
+    void relayedRemoveAndRefreshRequestsCarryTheRegisteredMetaData() throws GeneralSecurityException {
+        MetaData forgedMetaData = new MetaData(MetaData.TTL_2_DAYS, MetaData.HIGHEST_PRIORITY,
+                TestDistributedData.class.getSimpleName(), 0);
+
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        //noinspection deprecation
+        RemoveAuthenticatedDataRequest forgedRemoveRequest = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder().setMetaData(forgedMetaData.toProto(false)).build());
+        //noinspection deprecation
+        assertEquals(TestDistributedData.META_DATA.toProto(false), forgedRemoveRequest.toValueProto(false).getMetaData());
+        assertArrayEquals(removeRequest.serializeForHash(), forgedRemoveRequest.serializeForHash());
+
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair);
+        //noinspection deprecation
+        RefreshAuthenticatedDataRequest forgedRefreshRequest = RefreshAuthenticatedDataRequest.fromProto(
+                refreshRequest.toValueProto(false).toBuilder().setMetaData(forgedMetaData.toProto(false)).build());
+        //noinspection deprecation
+        assertEquals(TestDistributedData.META_DATA.toProto(false), forgedRefreshRequest.toValueProto(false).getMetaData());
+        assertArrayEquals(refreshRequest.serializeForHash(), forgedRefreshRequest.serializeForHash());
+    }
+
+    // Nodes of earlier versions compute the cost factor from the field metaData, which carries the registered
+    // MetaData. If the registered MetaData differs from the values of the policy, the sender pays the higher value.
+    @Test
+    void senderPaysTheCostFactorWhichEarlierVersionsComputeFromMetaData() throws GeneralSecurityException {
+        // The policy has no values for TestDistributedData. Its registered MetaData has a time to live of 10 days and
+        // a maximum map size of 1000, which gives a storage cost factor of 0.1 + 0.1.
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair);
+        assertEquals(0.1, MessageCostPolicy.getCostFactor(removeRequest));
+        assertEquals(0.2, MessageCostPolicy.getCostFactorToPay(removeRequest), 1e-9);
+
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair);
+        assertEquals(0.1, MessageCostPolicy.getCostFactor(refreshRequest));
+        assertEquals(0.2, MessageCostPolicy.getCostFactorToPay(refreshRequest), 1e-9);
+    }
+
+    @Test
+    void forgedMetaDataOfRemoveRequestChangesNeitherCostFactorNorPriority() throws GeneralSecurityException {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         //noinspection deprecation
         RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
@@ -199,7 +244,7 @@ class AuthenticatedDataStorageServiceTest {
                                 TestDistributedData.class.getSimpleName(), 0).toProto(false))
                         .build());
 
-        assertEquals(removeRequest.getCostFactor(), forgedRequest.getCostFactor());
+        assertEquals(MessageCostPolicy.getCostFactor(removeRequest), MessageCostPolicy.getCostFactor(forgedRequest));
         assertEquals(TestDistributedData.META_DATA.getPriority(), forgedRequest.getPriority());
     }
 

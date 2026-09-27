@@ -18,12 +18,11 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.proto.NetworkProto;
-import bisq.network.p2p.message.CostBearingMessage;
 import com.google.protobuf.Any;
 
 // Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
 // like Offer, ChatMessage,...
-public interface DistributedData extends NetworkProto, CostBearingMessage {
+public interface DistributedData extends NetworkProto {
     static DistributedData fromAny(Any any) {
         return DistributedDataResolver.fromAny(any);
     }

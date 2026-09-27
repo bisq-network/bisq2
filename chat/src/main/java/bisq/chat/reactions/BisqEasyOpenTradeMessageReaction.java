@@ -87,9 +87,4 @@ public class BisqEasyOpenTradeMessageReaction extends PrivateChatMessageReaction
     public MetaData getMetaData() {
         return META_DATA;
     }
-
-    @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
 }

@@ -161,11 +161,6 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
         return META_DATA;
     }
 
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
-    }
-
     public byte[] getAccountInputDataWithSalt() {
         return accountInputDataWithSalt.clone();
     }

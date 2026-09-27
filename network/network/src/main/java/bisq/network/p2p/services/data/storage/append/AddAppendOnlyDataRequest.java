@@ -21,7 +21,6 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
-import bisq.common.util.MathUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
@@ -128,16 +127,6 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // CostBearingMessage implementation
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.5, 1, appendOnlyData.getCostFactor());
     }
 
 

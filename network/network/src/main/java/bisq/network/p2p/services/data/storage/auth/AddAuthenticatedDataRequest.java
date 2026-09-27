@@ -22,7 +22,6 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.encoding.Hex;
-import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -171,20 +170,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
             case STORAGE_KEY -> DEFAULT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // CostBearingMessage implementation
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public double getCostFactor() {
-        DistributedData distributedData = authenticatedSequentialData.getDistributedData();
-        double metaDataImpact = distributedData.getMetaData().getCostFactor();
-        double dataImpact = distributedData.getCostFactor();
-        double impact = metaDataImpact + dataImpact;
-        return MathUtils.bounded(0.25, 0.75, impact);
     }
 
 

@@ -84,11 +84,6 @@ public final class PaymentInitiatedMessage_E extends MuSigTradeMessage {
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (!(o instanceof PaymentInitiatedMessage_E that)) return false;
         if (!super.equals(o)) return false;

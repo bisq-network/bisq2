@@ -107,9 +107,4 @@ public final class ReportToModeratorMessage implements MailboxMessage, ExternalN
     public MetaData getMetaData() {
         return META_DATA;
     }
-
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
-    }
 }

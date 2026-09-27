@@ -179,11 +179,6 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return META_DATA;
     }
 
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
-    }
-
     private List<BisqEasyOpenTradeMessage> maybePrune(List<BisqEasyOpenTradeMessage> chatMessages) {
         StringBuilder sb = new StringBuilder();
         List<BisqEasyOpenTradeMessage> result = chatMessages.stream()

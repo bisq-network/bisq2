@@ -37,7 +37,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     public static final String STORE_POST_FIX = "Store";
     // Maximum number of entries of a store. This was the effective limit of all stores so far. MetaData.maxMapSize
     // is not used as limit, because its values are at most 10 000 and enforcing them could remove entries from
-    // existing stores. MetaData.maxMapSize is only an input of the cost factor for the proof of work.
+    // existing stores. Nodes of earlier versions use MetaData.maxMapSize as an input of the cost factor of messages.
     public static final int MAX_MAP_SIZE = 100_000;
 
     @Getter

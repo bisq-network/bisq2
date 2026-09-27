@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -29,6 +30,7 @@ import java.security.KeyPair;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -73,7 +75,7 @@ class MailboxMetaDataTest {
         assertFalse(request.isSignatureInvalid());
         assertSame(AckMessage.META_DATA, request.getMetaData());
         assertEquals(AckMessage.META_DATA.getPriority(), request.getPriority());
-        assertEquals(createAddMailboxRequest().getCostFactor(), request.getCostFactor());
+        assertEquals(MessageCostPolicy.getCostFactor(createAddMailboxRequest()), MessageCostPolicy.getCostFactor(request));
     }
 
     @Test
@@ -96,7 +98,7 @@ class MailboxMetaDataTest {
 
         assertFalse(forgedRequest.isSignatureInvalid());
         assertSame(AckMessage.META_DATA, forgedRequest.getMetaData());
-        assertEquals(request.getCostFactor(), forgedRequest.getCostFactor());
+        assertEquals(MessageCostPolicy.getCostFactor(request), MessageCostPolicy.getCostFactor(forgedRequest));
         assertTrue(forgedRequest.isExpired());
     }
 
@@ -131,9 +133,99 @@ class MailboxMetaDataTest {
         assertEquals("NotRegisteredMailboxMessage", requestOfUnknownType.getClassName());
         assertThrows(IllegalStateException.class, requestOfUnknownType::getMetaData);
         // The proof of work check must not fail for types added in later versions. Such data is not stored.
-        double confidentialMessageImpact = request.getMailboxSequentialData().getMailboxData()
-                .getConfidentialMessage().getCostFactor();
-        assertEquals(Math.max(0.25, confidentialMessageImpact), requestOfUnknownType.getCostFactor());
+        double confidentialMessageImpact = MessageCostPolicy.getCostFactor(request.getMailboxSequentialData()
+                .getMailboxData().getConfidentialMessage());
+        assertEquals(Math.max(0.25, confidentialMessageImpact), MessageCostPolicy.getCostFactor(requestOfUnknownType));
+    }
+
+    // Nodes of earlier versions compute expiry, priority and cost factor from the field metaData. A relay sends them the
+    // registered MetaData. The hash does not cover the field, so the signature and the storage key stay the same.
+    @Test
+    void relayedMailboxRequestsCarryTheRegisteredMetaData() throws GeneralSecurityException {
+        AddMailboxRequest addRequest = createAddMailboxRequest();
+        AddMailboxRequest forgedAddRequest = withForgedMetaData(addRequest);
+        //noinspection deprecation
+        assertEquals(AckMessage.META_DATA.toProto(false),
+                forgedAddRequest.toValueProto(false).getMailboxSequentialData().getMailboxData().getMetaData());
+        assertArrayEquals(addRequest.serializeForHash(), forgedAddRequest.serializeForHash());
+
+        RemoveMailboxRequest removeRequest = createRemoveMailboxRequest();
+        //noinspection deprecation
+        RemoveMailboxRequest forgedRemoveRequest = RemoveMailboxRequest.fromProto(removeRequest.toValueProto(false)
+                .toBuilder()
+                .setMetaData(FORGED_META_DATA.toProto(false))
+                .build());
+        //noinspection deprecation
+        assertEquals(AckMessage.META_DATA.toProto(false), forgedRemoveRequest.toValueProto(false).getMetaData());
+        assertArrayEquals(removeRequest.serializeForHash(), forgedRemoveRequest.serializeForHash());
+    }
+
+    @Test
+    void mailboxDataKeepsTheReceivedMetaDataIfTheTypeIsNotRegistered() {
+        MetaData metaDataOfUnknownType = new MetaData(MetaData.TTL_10_DAYS, "NotRegisteredMailboxMessage");
+        MailboxData mailboxData = MailboxData.fromProto(
+                new MailboxData(metaDataOfUnknownType, createConfidentialMessage(senderKeyPair)).toProto(false));
+
+        //noinspection deprecation
+        assertEquals(metaDataOfUnknownType.toProto(false), mailboxData.toProto(false).getMetaData());
+    }
+
+    @Test
+    void mailboxDataKeepsTheReceivedMetaDataIfTheHashCoversIt() {
+        // In version 0 serializeForHash() contains metaData. Another value would change the signature and the storage
+        // key of the AddMailboxRequest and the proof of work payload.
+        bisq.network.protobuf.MailboxData proto = new MailboxData(FORGED_META_DATA,
+                createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
+                .setVersion(0)
+                .build();
+
+        assertEquals(proto, MailboxData.fromProto(proto).toProto(false));
+    }
+
+    // Nodes of earlier versions compute the cost factor from the field metaData, which carries the registered
+    // MetaData. If the registered MetaData differs from the values of the policy, the sender pays the higher value.
+    @Test
+    void senderPaysTheCostFactorWhichEarlierVersionsComputeFromMetaData() throws GeneralSecurityException {
+        // The registered MetaData of AckMessage has the values of the policy
+        AddMailboxRequest ackRequest = createAddMailboxRequest();
+        assertEquals(MessageCostPolicy.getCostFactor(ackRequest), MessageCostPolicy.getCostFactorToPay(ackRequest));
+
+        // The policy has no values for LongLivedMailboxMessage. Its registered MetaData has a time to live of 30 days
+        // and a maximum map size of 1000, which gives a storage cost factor of 0.3 + 0.1. The cipher text adds 0.1.
+        MailboxData mailboxData = new MailboxData(LongLivedMailboxMessage.META_DATA,
+                createConfidentialMessage(senderKeyPair));
+        AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        assertEquals(0.25, MessageCostPolicy.getCostFactor(addRequest));
+        assertEquals(0.5, MessageCostPolicy.getCostFactorToPay(addRequest), 1e-9);
+
+        RemoveMailboxRequest removeRequest = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        assertEquals(0.1, MessageCostPolicy.getCostFactor(removeRequest));
+        assertEquals(0.3, MessageCostPolicy.getCostFactorToPay(removeRequest));
+    }
+
+    // In version 0 serializeForHash() contains metaData, so the proof of work payload contains it and no node replaces
+    // it. Relays pay the cost factor which nodes of earlier versions compute from it. The receiver expects the same, so
+    // that a sender cannot make relays pay more than it paid. The signature of the AddMailboxRequest covers the field
+    // of MailboxData; the signature of the RemoveMailboxRequest does not cover its own field.
+    @Test
+    void receiverExpectsTheCostFactorOfMetaDataWhichTheHashCovers() throws GeneralSecurityException {
+        // FORGED_META_DATA has a time to live of 100 days, which gives a storage cost factor of 1
+        MailboxData mailboxData = MailboxData.fromProto(new MailboxData(FORGED_META_DATA,
+                createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
+                .setVersion(0)
+                .build());
+        AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        assertEquals(1, MessageCostPolicy.getCostFactor(addRequest));
+        assertEquals(1, MessageCostPolicy.getCostFactorToPay(addRequest));
+
+        //noinspection deprecation
+        RemoveMailboxRequest removeRequest = RemoveMailboxRequest.fromProto(createRemoveMailboxRequest()
+                .toValueProto(false).toBuilder()
+                .setVersion(0)
+                .setMetaData(FORGED_META_DATA.toProto(false))
+                .build());
+        assertEquals(0.3, MessageCostPolicy.getCostFactor(removeRequest));
+        assertEquals(0.3, MessageCostPolicy.getCostFactorToPay(removeRequest));
     }
 
     private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException {

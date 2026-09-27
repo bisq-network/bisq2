@@ -91,9 +91,4 @@ public final class SendAccountPayloadAndDepositTxMessage extends MuSigTradeMessa
     public MetaData getMetaData() {
         return META_DATA;
     }
-
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
-    }
 }

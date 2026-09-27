@@ -132,11 +132,6 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
-
-    @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
             return AuthorizedPubKeys.DEV_PUB_KEYS;

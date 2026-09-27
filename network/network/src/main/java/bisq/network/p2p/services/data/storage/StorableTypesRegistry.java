@@ -76,23 +76,24 @@ public final class StorableTypesRegistry {
     }
 
     /**
+     * Mailbox data, remove requests and refresh requests carry the deprecated field metaData for nodes of earlier
+     * versions. Those nodes use it for store selection, expiry and the cost factor of the message. A node sends the
+     * MetaData which it registered for the class name, also when it relays a message which a sender or another relay
+     * filled with other values.
+     *
+     * @return the registered MetaData of the class name, or the received MetaData if the class name is not registered.
+     */
+    public static MetaData getMetaDataForEarlierVersions(String className, MetaData receivedMetaData) {
+        return findMetaData(className).orElse(receivedMetaData);
+    }
+
+    /**
      * For code paths which the storage layer reaches only after it has accepted the class name (see
      * StorageService). A missing registration there is a programming error.
      */
     public static MetaData getMetaData(String className) {
         return findMetaData(className).orElseThrow(() ->
                 new IllegalStateException("No MetaData registered for className " + className));
-    }
-
-    /**
-     * The proof of work check needs the cost factor of a request before StorageService checks the class name. A type
-     * which is not registered (e.g. added in a later version) is not stored, so its MetaData has no impact on the
-     * cost. Otherwise the check could reject messages of newer nodes.
-     *
-     * @return the cost factor of the registered MetaData, or 0 if the class name is not registered.
-     */
-    public static double getCostFactor(String className) {
-        return findMetaData(className).map(MetaData::getCostFactor).orElse(0d);
     }
 
     public static boolean isRegistered(String className, StoreType storeType) {
