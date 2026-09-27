@@ -133,11 +133,6 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.3;
-    }
-
-    @Override
     public boolean canShowReactions() {
         return true;
     }

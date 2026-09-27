@@ -72,11 +72,6 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
-
-    @Override
     public bisq.chat.protobuf.ChatMessageReaction.Builder getBuilder(boolean serializeForHash) {
         return getChatMessageReactionBuilder(serializeForHash)
                 .setBisqEasyOfferbookMessageReaction(toBisqEasyOfferbookMessageReactionProto(serializeForHash));

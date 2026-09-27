@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -190,7 +191,7 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void removeRequestUsesRegisteredMetaDataForCostFactor() throws GeneralSecurityException {
+    void forgedMetaDataOfRemoveRequestChangesNeitherCostFactorNorPriority() throws GeneralSecurityException {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         //noinspection deprecation
         RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
@@ -199,7 +200,7 @@ class AuthenticatedDataStorageServiceTest {
                                 TestDistributedData.class.getSimpleName(), 0).toProto(false))
                         .build());
 
-        assertEquals(removeRequest.getCostFactor(), forgedRequest.getCostFactor());
+        assertEquals(MessageCostPolicy.getCostFactor(removeRequest), MessageCostPolicy.getCostFactor(forgedRequest));
         assertEquals(TestDistributedData.META_DATA.getPriority(), forgedRequest.getPriority());
     }
 

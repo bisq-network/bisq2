@@ -89,9 +89,4 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
     public MetaData getMetaData() {
         return META_DATA;
     }
-
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
-    }
 }

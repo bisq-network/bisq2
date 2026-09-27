@@ -154,11 +154,6 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
         return META_DATA;
     }
 
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
-    }
-
     public byte[] getAccountInputDataWithSalt() {
         return accountInputDataWithSalt.clone();
     }

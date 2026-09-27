@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -73,7 +74,7 @@ class MailboxMetaDataTest {
         assertFalse(request.isSignatureInvalid());
         assertSame(AckMessage.META_DATA, request.getMetaData());
         assertEquals(AckMessage.META_DATA.getPriority(), request.getPriority());
-        assertEquals(createAddMailboxRequest().getCostFactor(), request.getCostFactor());
+        assertEquals(MessageCostPolicy.getCostFactor(createAddMailboxRequest()), MessageCostPolicy.getCostFactor(request));
     }
 
     @Test
@@ -96,7 +97,7 @@ class MailboxMetaDataTest {
 
         assertFalse(forgedRequest.isSignatureInvalid());
         assertSame(AckMessage.META_DATA, forgedRequest.getMetaData());
-        assertEquals(request.getCostFactor(), forgedRequest.getCostFactor());
+        assertEquals(MessageCostPolicy.getCostFactor(request), MessageCostPolicy.getCostFactor(forgedRequest));
         assertTrue(forgedRequest.isExpired());
     }
 
@@ -131,9 +132,9 @@ class MailboxMetaDataTest {
         assertEquals("NotRegisteredMailboxMessage", requestOfUnknownType.getClassName());
         assertThrows(IllegalStateException.class, requestOfUnknownType::getMetaData);
         // The proof of work check must not fail for types added in later versions. Such data is not stored.
-        double confidentialMessageImpact = request.getMailboxSequentialData().getMailboxData()
-                .getConfidentialMessage().getCostFactor();
-        assertEquals(Math.max(0.25, confidentialMessageImpact), requestOfUnknownType.getCostFactor());
+        double confidentialMessageImpact = MessageCostPolicy.getCostFactor(request.getMailboxSequentialData()
+                .getMailboxData().getConfidentialMessage());
+        assertEquals(Math.max(0.25, confidentialMessageImpact), MessageCostPolicy.getCostFactor(requestOfUnknownType));
     }
 
     private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException {

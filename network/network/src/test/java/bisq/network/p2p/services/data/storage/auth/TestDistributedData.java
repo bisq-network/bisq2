@@ -60,9 +60,4 @@ public final class TestDistributedData implements DistributedData {
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }
-
-    @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
 }

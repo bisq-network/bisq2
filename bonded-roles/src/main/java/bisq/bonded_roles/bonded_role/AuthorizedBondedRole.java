@@ -275,11 +275,6 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         // Can be removed after I2P is activated
         if (!AuthorizedData.IS_I2P_ACTIVATED ) {

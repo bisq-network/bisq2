@@ -411,11 +411,6 @@ public class StorageCanonicalEncoderTest {
         public boolean isDataInvalid(byte[] pubKeyHash) {
             return false;
         }
-
-        @Override
-        public double getCostFactor() {
-            return 0.5;
-        }
     }
 
     // AuthenticatedData which records the encoding purposes it receives

@@ -129,11 +129,6 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         // Can be removed after 2.1.7 is not used anymore
         if (!IS_BM_ACTIVATED) {

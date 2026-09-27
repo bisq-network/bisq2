@@ -22,9 +22,7 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.encoding.Hex;
-import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
@@ -153,20 +151,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     private byte[] getStoragePreImage() {
         return mailboxSequentialData.getMailboxData().serializeForHash();
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // CostBearingMessage implementation
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public double getCostFactor() {
-        MailboxData mailboxData = mailboxSequentialData.getMailboxData();
-        double metaDataImpact = MessageCostPolicy.getStorageCostFactor(mailboxData.getClassName());
-        double dataImpact = mailboxData.getConfidentialMessage().getCostFactor();
-        double impact = metaDataImpact + dataImpact;
-        return MathUtils.bounded(0.25, 1, impact);
     }
 
 

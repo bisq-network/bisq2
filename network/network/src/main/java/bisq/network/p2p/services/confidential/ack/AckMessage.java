@@ -61,11 +61,6 @@ public final class AckMessage implements MailboxMessage, Response {
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.05, 0.1);
-    }
-
-    @Override
     public String getRequestId() {
         return id;
     }

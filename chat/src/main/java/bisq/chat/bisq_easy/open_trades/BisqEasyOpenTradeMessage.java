@@ -214,11 +214,6 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
-    }
-
-    @Override
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
     }

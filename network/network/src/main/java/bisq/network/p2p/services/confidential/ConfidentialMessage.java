@@ -21,7 +21,6 @@ import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
-import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -104,11 +103,6 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
             case STORAGE_KEY -> DEFAULT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
-    }
-
-    @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.1, 1, confidentialData.getCostFactor());
     }
 
     @Override

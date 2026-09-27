@@ -38,7 +38,7 @@ import com.google.protobuf.Message;
 /**
  * Interface for any message sent as payload in NetworkEnvelope
  */
-public interface EnvelopePayloadMessage extends NetworkProto, CostBearingMessage {
+public interface EnvelopePayloadMessage extends NetworkProto {
     default bisq.network.protobuf.EnvelopePayloadMessage.Builder newEnvelopePayloadMessageBuilder() {
         return bisq.network.protobuf.EnvelopePayloadMessage.newBuilder();
     }

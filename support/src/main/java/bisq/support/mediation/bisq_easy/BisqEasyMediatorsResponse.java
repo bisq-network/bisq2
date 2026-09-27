@@ -121,11 +121,6 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
         return META_DATA;
     }
 
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.2);
-    }
-
 
     @Override
     public PublicKey getSenderPublicKey() {

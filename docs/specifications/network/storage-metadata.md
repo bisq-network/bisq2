@@ -11,7 +11,8 @@ different versions stay compatible.
   - `className`: the simple class name of the type. It selects the store and the name of the store file.
   - `ttl`: the time after which an entry expires.
   - `priority`: the order of entries in an inventory response.
-  - `maxMapSize`: an input of the cost factor for the proof of work (see [Size limit](#size-limit)).
+  - `maxMapSize`: not used by this version. Nodes of earlier versions use it as an input of the cost factor of
+    messages (see [Message cost](message-cost.md) and [Size limit](#size-limit)).
 - **Store**: the storage of one storable type. Its key is the class name of the type.
 
 ## Rules
@@ -30,8 +31,9 @@ decide without trusting values from the network.
 
 ### A node uses only its own MetaData
 
-4. For expiry, priority, size limit and cost factor, a node uses only the MetaData which it registered for the class
-   name of the data. It never uses MetaData values received from the network for these decisions.
+4. For expiry, priority and size limit, a node uses only the MetaData which it registered for the class name of the
+   data. It never uses MetaData values received from the network for these decisions. The cost factor of messages
+   does not depend on MetaData (see [Message cost](message-cost.md)).
 5. The class name is the only value which a node takes from a message for this purpose. It is the key into the
    registry.
 
@@ -79,14 +81,6 @@ Reason: until this rule, the code intended to read the limit from the first entr
 all stores was 100 000. Enforcing `maxMapSize` would lower the limit to at most 10 000 and could remove entries from
 existing stores. Whether stores need per-type limits is an open decision, see [Open points](#open-points).
 
-### Cost factor
-
-12. The cost factor of mailbox data, remove requests and refresh requests uses the registered MetaData of the class
-    name.
-13. If the class name is not registered, the MetaData part of the cost factor is 0. The proof of work check runs
-    before the storage layer checks the class name. A type added in a later version must not make the check fail. The
-    storage layer does not store such data.
-
 ## Compatibility
 
 - The field `metaData` of `MailboxData`, `RemoveMailboxRequest`, `RemoveAuthenticatedDataRequest` and
@@ -102,13 +96,8 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   as lenient as in earlier versions, because a parse failure of one entry makes a node drop a whole inventory
   response.
 - Each node applies its own MetaData. If two versions have different MetaData for a type, their entries can expire at
-  different times, and they expect different proof of work for the same message. The proof of work check tolerates a
-  difference of 50 000 at a target difficulty of 65 536, so a difference in the cost factor makes it fail only with a
-  high network load and a high difficulty adjustment factor. The same was already true for authenticated data.
-- A node of an earlier version which relays a message with forged MetaData mints the proof of work for the forged cost
-  factor. A new node expects the cost factor of its registered MetaData. The difference in the MetaData part is at most
-  0.2 for the registered mailbox types. With the tolerance above, the check fails only if the load multiplied by the
-  difficulty adjustment factor is above about 3.8.
+  different times. The cost factor of messages does not depend on MetaData. Nodes of earlier versions compute it
+  from the MetaData in the message (see [Message cost](message-cost.md#compatibility)).
 
 ## Known limitations
 
@@ -127,26 +116,7 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   expires after the time to live, unless it receives the refreshed add request again through an inventory request.
   The fix is to process received refresh requests in the storage layer and to relay them. The developers decided to
   fix this in a later change.
-- The expected proof of work of a message depends on class definitions of the receiver's version. The receiver
-  computes the cost factor with its own code: the MetaData constant of the class (`ttl`, `maxMapSize`) and the
-  `getCostFactor()` implementation of the class. If sender and receiver run versions in which these differ for a
-  class, they compute different difficulties. A difference above the tolerance of 50 000 fails the check, and the
-  receiver closes the connection. How large the difference may be depends on the network load and the difficulty
-  adjustment factor (see [Compatibility](#compatibility)).
-  - This existed before this specification for authenticated data, append-only data and messages sent directly to a
-    peer, because the receiver deserializes the payload and uses its own class.
-  - It did not exist for mailbox data and remove and refresh requests, because both sides used the MetaData on the
-    wire. That value was chosen by the sender, which was worse. Since rule 4 these messages use the registered
-    MetaData of the receiver, so the defect now applies to them too.
-  - Consequence: changing the MetaData or the cost factor of an existing type can break the exchange of that type
-    with nodes of other versions under high load.
-  - The developers decided to address this in a separate change, together with the question which inputs the cost
-    factor should have (see [Open points](#open-points)).
 
 ## Open points
 
 - Whether stores need per-type size limits, and which values. This needs the sizes of real stores.
-- Which inputs the proof of work cost factor of messages should have. For mailbox data and remove and refresh
-  requests the receiver cannot read the payload. Their cost factor depends on the class name, which the sender
-  chooses, so the sender can lower it within the range of the registered types. One option is to use one value per
-  store type instead of a value per class for these messages.

@@ -78,11 +78,6 @@ public final class MuSigOfferMessage implements DistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.3;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }

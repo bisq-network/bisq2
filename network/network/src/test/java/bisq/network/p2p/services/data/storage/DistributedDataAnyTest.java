@@ -505,11 +505,6 @@ public class DistributedDataAnyTest {
         public boolean isDataInvalid(byte[] pubKeyHash) {
             return false;
         }
-
-        @Override
-        public double getCostFactor() {
-            return 0.5;
-        }
     }
 
     // DistributedData of a higher-level module as this node knows it. It serializes as common.StringLongPair. value is
@@ -559,11 +554,6 @@ public class DistributedDataAnyTest {
         @Override
         public boolean isDataInvalid(byte[] pubKeyHash) {
             return false;
-        }
-
-        @Override
-        public double getCostFactor() {
-            return 0.5;
         }
     }
 }

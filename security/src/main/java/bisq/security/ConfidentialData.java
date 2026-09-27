@@ -111,10 +111,6 @@ public final class ConfidentialData implements NetworkProto, Canonical {
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
-    public double getCostFactor() {
-        return cipherText.length / (double) MAX_SIZE_CIPHERTEXT;
-    }
-
     @Override
     public String toString() {
         return "ConfidentialData{" +

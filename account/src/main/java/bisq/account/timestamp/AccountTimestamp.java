@@ -90,11 +90,6 @@ public final class AccountTimestamp implements DistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.2;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }

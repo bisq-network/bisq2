@@ -94,11 +94,6 @@ public final class AuthorizeAccountTimestampV1Request implements MailboxMessage,
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (!(o instanceof AuthorizeAccountTimestampV1Request that)) return false;
 

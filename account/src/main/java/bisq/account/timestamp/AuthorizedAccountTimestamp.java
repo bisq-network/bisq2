@@ -115,11 +115,6 @@ public final class AuthorizedAccountTimestamp implements AuthorizedDistributedDa
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.2;
-    }
-
-    @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }

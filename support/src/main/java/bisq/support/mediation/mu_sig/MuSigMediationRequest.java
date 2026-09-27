@@ -168,11 +168,6 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
         return META_DATA;
     }
 
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
-    }
-
     private List<MuSigOpenTradeMessage> maybePrune(List<MuSigOpenTradeMessage> chatMessages) {
         StringBuilder sb = new StringBuilder();
         List<MuSigOpenTradeMessage> result = chatMessages.stream()
