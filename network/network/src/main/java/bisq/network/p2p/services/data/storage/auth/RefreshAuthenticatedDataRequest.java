@@ -216,16 +216,20 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                             .string(8, request -> request.className)
                             .bytes(9, request -> request.signatureV2));
 
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1), version
     // (field 6), className (field 8) and signatureV2 (field 9).
-    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> STORAGE_KEY_SCHEMA =
-            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
-                    CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
-                            .bytes(2, request -> request.hash)
-                            .bytes(3, request -> request.ownerPublicKeyBytes)
-                            .sint32(4, request -> request.sequenceNumber)
-                            .bytes(5, request -> request.signature)
-                            .sint64(7, request -> request.created));
+    private static CanonicalSchema<RefreshAuthenticatedDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
+                CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
+                        .bytes(2, request -> request.hash)
+                        .bytes(3, request -> request.ownerPublicKeyBytes)
+                        .sint32(4, request -> request.sequenceNumber)
+                        .bytes(5, request -> request.signature)
+                        .sint64(7, request -> request.created));
+    }
 
     // No signature covers the refresh request itself: both signatures cover the AddAuthenticatedDataRequest which the
     // receiver rebuilds (see getPreImageV1()). The SIGNATURE purpose therefore has no own schema and uses the default
@@ -236,6 +240,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

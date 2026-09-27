@@ -228,14 +228,18 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                             .bytes(4, request -> request.signatureV2)
                             .sint32(5, request -> request.version));
 
+    public static final CanonicalSchema<AddAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<AddAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: signatureV2 (field 4) and
     // version (field 5).
-    public static final CanonicalSchema<AddAuthenticatedDataRequest> STORAGE_KEY_SCHEMA =
-            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(1,
-                    CanonicalSchema.<AddAuthenticatedDataRequest>newBuilder()
-                            .canonical(1, AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
-                            .bytes(2, request -> request.signature)
-                            .bytes(3, request -> request.ownerPublicKeyBytes));
+    private static CanonicalSchema<AddAuthenticatedDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(1,
+                CanonicalSchema.<AddAuthenticatedDataRequest>newBuilder()
+                        .canonical(1, AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                        .bytes(2, request -> request.signature)
+                        .bytes(3, request -> request.ownerPublicKeyBytes));
+    }
 
     // The preimage of signature V2. It is a new message, not the protobuf message: a domain separation tag, then every
     // field except signatureV2 itself. The @ExcludeForHash annotations do not apply. The nested objects receive the
@@ -255,6 +259,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

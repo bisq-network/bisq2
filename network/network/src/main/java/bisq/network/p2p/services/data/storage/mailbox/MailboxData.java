@@ -147,16 +147,21 @@ public final class MailboxData implements StorageData, Canonical {
             .compose(3, MailboxData::getConfidentialMessage, ConfidentialMessage.SIGNATURE_VALUE_SCHEMA)
             .build();
 
+    public static final CanonicalSchema<MailboxData> STORAGE_KEY_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<MailboxData> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 2) in versions
     // 1 to 3, version (field 3) and className (field 4).
-    public static final CanonicalSchema<MailboxData> STORAGE_KEY_SCHEMA = CanonicalSchema.<MailboxData>newBuilder()
-            // ConfidentialMessage uses its default value schema for every purpose
-            .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
-            // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-            .canonical(2, mailboxData -> isMetaDataExcludedForHash(mailboxData.version) ?
-                    null :
-                    mailboxData.metaData)
-            .build();
+    private static CanonicalSchema<MailboxData> createSchemaForHash() {
+        return CanonicalSchema.<MailboxData>newBuilder()
+                // ConfidentialMessage uses its default value schema for every purpose
+                .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
+                // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+                .canonical(2, mailboxData -> isMetaDataExcludedForHash(mailboxData.version) ?
+                        null :
+                        mailboxData.metaData)
+                .build();
+    }
 
     // Same versions as the @ExcludeForHash annotation of metaData
     private static boolean isMetaDataExcludedForHash(int version) {
@@ -169,6 +174,7 @@ public final class MailboxData implements StorageData, Canonical {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

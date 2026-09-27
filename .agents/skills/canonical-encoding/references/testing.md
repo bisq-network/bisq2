@@ -26,7 +26,7 @@ A schema is correct only when tests prove its bytes. Code review cannot find a w
 - **External data per purpose.** Use an external-data stub with a field annotated with
   `@ExcludeForHash` (see `ExternalData` in `StorageCanonicalEncoderTest`: it serializes as
   `network.MetaData`, so no resolver is needed, and its `priority` is excluded from the hash). With a
-  non-default value in that field, the `STORAGE_KEY` bytes equal `serializeForHash()`, and the `DEFAULT`
+  non-default value in that field, the `STORAGE_KEY` and `PROOF_OF_WORK` bytes equal `serializeForHash()`, and the `DEFAULT`
   and `SIGNATURE` bytes equal `serialize()`.
 - **External data with a field unknown to the node.** Build the `Any` as a newer node sends it, with an
   unknown field in the value, and decode the holder with `fromProto` (see `DistributedDataAnyTest`: its
@@ -35,11 +35,13 @@ A schema is correct only when tests prove its bytes. Code review cannot find a w
 - **Differences to `serializeForHash()`.** Assert them (`assertFalse(Arrays.equals(...))`) for classes
   with `@ExcludeForHash` fields or a custom `serializeForHash()`, so that a change on either side is
   noticed.
-- **Hash purposes.** `encodeCanonical(STORAGE_KEY)` must equal `serializeForHash()`, and so must
-  `encodeCanonical(SIGNATURE)` for classes without signature V2 (see `hashPurposesMatchSerializeForHash`
-  in `StorageCanonicalEncoderTest`). For `excludeOnlyInVersions`, test versions inside and outside the
-  list. Assert documented differences (`AuthorizedData`, and the `SIGNATURE` bytes of holders of
-  external data with an excluded field).
+- **Hash purposes.** `encodeCanonical(STORAGE_KEY)` and `encodeCanonical(PROOF_OF_WORK)` must equal
+  `serializeForHash()`, and so must `encodeCanonical(SIGNATURE)` for classes without signature V2 (see
+  `hashPurposesMatchSerializeForHash` in `StorageCanonicalEncoderTest`). For every message type,
+  `PROOF_OF_WORK` must equal `serializeForHash()` of the message, also with `AuthorizedData` and with
+  external data that has an excluded field (see `proofOfWorkPurposeMatchesProofOfWorkPayloadOfEveryMessage`).
+  For `excludeOnlyInVersions`, test versions inside and outside the list. Assert documented differences
+  (`AuthorizedData`, and the `SIGNATURE` bytes of holders of external data with an excluded field).
 - **Signature V2 preimages.** Test the layout with bytes written independently by protobuf's
   `CodedOutputStream`, and test that a changed field makes the signature invalid (see
   `AuthenticatedDataSignatureV2Test` and `MailboxSignatureV2Test`).

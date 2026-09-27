@@ -161,19 +161,24 @@ public final class AuthorizedData extends AuthenticatedData {
 
     // Unlike serializeForHash(), which omits the signature so that republishing keeps the storage key, the default
     // encoding contains all non-transient fields, including the signature. The SIGNATURE purpose uses the default
-    // schema: it contains the DistributedData with its exact bytes. The STORAGE_KEY schema differs only in the
-    // DistributedData, which it contains in its hash serialization. Both contain the signature: it is not annotated
-    // with @ExcludeForHash, and serializeForHash() omits it only where AuthorizedData is the root of the preimage (see
-    // docs/specifications/encoding).
+    // schema: it contains the DistributedData with its exact bytes. The STORAGE_KEY and PROOF_OF_WORK schemas differ
+    // only in the DistributedData, which they contain in its hash serialization. All contain the signature: it is not
+    // annotated with @ExcludeForHash, and serializeForHash() omits it only where AuthorizedData is the root of the
+    // preimage (see docs/specifications/encoding). In a proof of work payload, AuthorizedData is always nested in a
+    // request.
     public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
             AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
                     .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
                     .build();
 
-    public static final CanonicalSchema<AuthorizedData> STORAGE_KEY_SCHEMA =
-            AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
-                    .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
-                    .build();
+    public static final CanonicalSchema<AuthorizedData> STORAGE_KEY_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<AuthorizedData> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+
+    private static CanonicalSchema<AuthorizedData> createSchemaForHash() {
+        return AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
+                .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
+                .build();
+    }
 
     private static CanonicalSchema.Builder<AuthorizedData> getAuthorizedDataSchemaBuilder() {
         return CanonicalSchema.<AuthorizedData>newBuilder()
@@ -187,6 +192,7 @@ public final class AuthorizedData extends AuthenticatedData {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

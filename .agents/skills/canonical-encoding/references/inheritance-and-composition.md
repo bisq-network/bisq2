@@ -96,7 +96,7 @@ protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getSch
 }
 
 // DefaultAuthenticatedData: the subclass message has no fields, but it is present (tag 10, length 0).
-// STORAGE_KEY_SCHEMA is the same with getSchemaBuilderForHash().
+// STORAGE_KEY_SCHEMA and PROOF_OF_WORK_SCHEMA are the same with getSchemaBuilderForHash().
 public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
         DefaultAuthenticatedData.<DefaultAuthenticatedData>getAuthenticatedDataSchemaBuilder()
                 .extend(10,
@@ -105,7 +105,7 @@ public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
                 .build();
 
 // AuthorizedData: the signature is included, also in the hash purposes, although serializeForHash() omits it.
-// The subtype builder is a method, so that DEFAULT_SCHEMA and STORAGE_KEY_SCHEMA each get a new builder.
+// The subtype builder is a method, so that each schema gets a new builder.
 public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
         AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
                 .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
@@ -191,7 +191,7 @@ The schemas encode the data per purpose, once, where the data is held:
 // DEFAULT and SIGNATURE (AuthenticatedData base class, AddAppendOnlyDataRequest)
 .compose(1, authenticatedData -> authenticatedData.distributedDataAny, DistributedDataAny.SCHEMA)
 
-// STORAGE_KEY: the protobuf hash serialization, with the comment
+// STORAGE_KEY and PROOF_OF_WORK: the protobuf hash serialization, with the comment
 .encodedMessage(1, authenticatedData -> authenticatedData.distributedData.toAny(true).toByteArray())
 ```
 

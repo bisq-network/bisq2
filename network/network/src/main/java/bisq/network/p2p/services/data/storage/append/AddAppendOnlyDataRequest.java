@@ -109,8 +109,10 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
                     CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
                             .compose(1, request -> request.appendOnlyDataAny, DistributedDataAny.SCHEMA));
 
-    // Reproduces serializeForHash(): nodes of all versions must compute the same storage key.
+    // STORAGE_KEY and PROOF_OF_WORK reproduce serializeForHash(): nodes of all versions must compute the same storage
+    // key and proof of work payload.
     public static final CanonicalSchema<AddAppendOnlyDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<AddAppendOnlyDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
 
     private static CanonicalSchema<AddAppendOnlyDataRequest> createSchemaForHash() {
         return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
@@ -128,6 +130,7 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

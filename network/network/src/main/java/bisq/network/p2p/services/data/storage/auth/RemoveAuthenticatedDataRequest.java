@@ -263,18 +263,22 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                             .string(8, request -> request.className)
                             .bytes(9, request -> request.signatureV2));
 
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
     // 1 to 3, version (field 7), className (field 8) and signatureV2 (field 9).
-    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> STORAGE_KEY_SCHEMA =
-            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
-                    CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
-                            // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-                            .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
-                            .bytes(2, request -> request.hash)
-                            .bytes(3, request -> request.ownerPublicKeyBytes)
-                            .sint32(4, request -> request.sequenceNumber)
-                            .bytes(5, request -> request.signature)
-                            .sint64(6, request -> request.created));
+    private static CanonicalSchema<RemoveAuthenticatedDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
+                CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
+                        // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+                        .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
+                        .bytes(2, request -> request.hash)
+                        .bytes(3, request -> request.ownerPublicKeyBytes)
+                        .sint32(4, request -> request.sequenceNumber)
+                        .bytes(5, request -> request.signature)
+                        .sint64(6, request -> request.created));
+    }
 
     // The preimage of signature V2. It is a new message, not the protobuf message: a domain separation tag, then every
     // field except signatureV2 itself and the deprecated metaData. No node uses the received metaData for a decision
@@ -302,6 +306,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
