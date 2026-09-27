@@ -61,6 +61,10 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
 
     public DataStorageResult add(AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
         AppendOnlyData appendOnlyData = addAppendOnlyDataRequest.getAppendOnlyData();
+        if (isClassNameInvalid(appendOnlyData.getClass().getSimpleName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
         Map<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             if (isExceedingMapSize()) {

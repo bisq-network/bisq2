@@ -70,6 +70,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     public DataStorageResult add(AddMailboxRequest request) {
         maybeLogMapState("add", persistableStore);
 
+        // The message is encrypted, so the class name comes from MailboxData
+        if (isClassNameInvalid(request.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
         // Detect them before the signature verification, which is the most expensive check. The check is
         // repeated inside the lock because the map can change in between.
@@ -131,6 +136,10 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
+
+        if (isClassNameInvalid(request.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
 
         if (request.isExpired()) {
             return DataStorageResult.failed().expired();

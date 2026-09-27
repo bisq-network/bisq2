@@ -23,7 +23,8 @@ import lombok.Getter;
 public class DataStorageResult {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
-            dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid;
+            dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid,
+            classNameInvalid;
     private StorageData removedData;
 
     public static DataStorageResult success() {
@@ -72,6 +73,14 @@ public class DataStorageResult {
 
     public DataStorageResult metaDataInvalid() {
         metaDataInvalid = true;
+        return this;
+    }
+
+    // The class name of the data does not match the key of the store. StorageService selects the store by the class
+    // name, so this indicates a bug, e.g. a type which returns the MetaData of another type.
+    public DataStorageResult classNameInvalid() {
+        classNameInvalid = true;
+        isSevereFailure = true;
         return this;
     }
 
@@ -124,6 +133,7 @@ public class DataStorageResult {
                 ", maxMapSizeReached=" + maxMapSizeReached +
                 ", isSevereFailure=" + isSevereFailure +
                 ", metaDataInvalid=" + metaDataInvalid +
+                ", classNameInvalid=" + classNameInvalid +
                 ", removedData=" + removedData +
                 '}';
     }

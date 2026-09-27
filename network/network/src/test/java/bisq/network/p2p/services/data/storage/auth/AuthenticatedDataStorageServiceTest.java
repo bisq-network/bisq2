@@ -39,6 +39,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthenticatedDataStorageServiceTest {
+    // A store holds the data of one type. Its key is the class name of that type.
+    private static final String STORE_KEY = TestDistributedData.class.getSimpleName();
+
     @TempDir
     Path tempDir;
 
@@ -52,8 +55,8 @@ class AuthenticatedDataStorageServiceTest {
         StorableTypesRegistry.register(TestDistributedData.class, TestDistributedData.META_DATA);
         PersistenceService persistenceService = new PersistenceService(tempDir);
         PruneExpiredEntriesService pruneExpiredEntriesService = new PruneExpiredEntriesService();
-        ownerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "test", "OwnerStore");
-        peerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "test", "PeerStore");
+        ownerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "owner", STORE_KEY);
+        peerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "peer", STORE_KEY);
         ownerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
     }
@@ -91,7 +94,7 @@ class AuthenticatedDataStorageServiceTest {
                 .get(refreshRequest.getStorageKey());
 
         AuthenticatedDataStorageService newNodeStore = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
-                new PruneExpiredEntriesService(), "test", "NewNodeStore");
+                new PruneExpiredEntriesService(), "newNode", STORE_KEY);
         DataStorageResult result = newNodeStore.add(refreshedEntry);
 
         assertTrue(result.isSuccess(), result.toString());
@@ -198,6 +201,35 @@ class AuthenticatedDataStorageServiceTest {
 
         assertEquals(removeRequest.getCostFactor(), forgedRequest.getCostFactor());
         assertEquals(TestDistributedData.META_DATA.getPriority(), forgedRequest.getPriority());
+    }
+
+    @Test
+    void storeRejectsRequestsOfOtherType() throws GeneralSecurityException {
+        AuthenticatedDataStorageService storeOfOtherType = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService(), "other", "OtherDistributedData");
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+
+        assertTrue(storeOfOtherType.add(addRequest).isClassNameInvalid());
+        assertTrue(storeOfOtherType.remove(removeRequest).isClassNameInvalid());
+        assertTrue(storeOfOtherType.refresh(refreshRequest).isClassNameInvalid());
+        assertTrue(storeOfOtherType.getPersistableStore().getMap().isEmpty());
+    }
+
+    @Test
+    void removeRequestWithClassNameOfOtherTypeIsRejected() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        // A relay can change className, because the signature does not cover it
+        RemoveAuthenticatedDataRequest requestWithOtherClassName = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder()
+                        .setClassName("OtherDistributedData")
+                        .build());
+
+        DataStorageResult result = peerStore.remove(requestWithOtherClassName);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isClassNameInvalid(), result.toString());
     }
 
     private void addToOwnerAndPeer() throws GeneralSecurityException {

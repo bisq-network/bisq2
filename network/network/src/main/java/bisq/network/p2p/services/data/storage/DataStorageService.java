@@ -93,6 +93,16 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         return persisted;
     }
 
+    // A store holds the data of one type, and its key is the simple class name of that type. The store takes the
+    // MetaData of its entries from the StorableTypesRegistry by that class name.
+    protected boolean isClassNameInvalid(String className) {
+        if (storeKey.equals(className)) {
+            return false;
+        }
+        log.warn("Class name {} does not match the store {}", className, storeKey);
+        return true;
+    }
+
     protected int getMaxMapSize() {
         if (maxMapSize.isEmpty()) {
             int size = persistableStore.getMap().values().stream()
