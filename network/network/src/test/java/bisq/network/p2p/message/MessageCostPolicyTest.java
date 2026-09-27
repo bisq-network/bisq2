@@ -139,6 +139,17 @@ class MessageCostPolicyTest {
     }
 
     @Test
+    void senderPaysTheCostFactorOfThePolicyForMessagesWithoutMetaDataField() throws GeneralSecurityException {
+        Ping ping = new Ping(1);
+        assertEquals(MessageCostPolicy.getCostFactor(ping), MessageCostPolicy.getCostFactorToPay(ping));
+        AddAuthenticatedDataRequest addRequest = createAddRequest("UserProfile");
+        assertEquals(MessageCostPolicy.getCostFactor(addRequest), MessageCostPolicy.getCostFactorToPay(addRequest));
+        ConfidentialMessage confidentialMessage = createConfidentialMessage(10_000);
+        assertEquals(MessageCostPolicy.getCostFactor(confidentialMessage),
+                MessageCostPolicy.getCostFactorToPay(confidentialMessage));
+    }
+
+    @Test
     void messageTypeWithoutRuleHasTheHighestCostFactor() {
         // Peers send a MailboxMessage only inside a ConfidentialMessage or an AddMailboxRequest
         assertEquals(1, MessageCostPolicy.getCostFactor(new AckMessage("id")));

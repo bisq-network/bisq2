@@ -107,8 +107,8 @@ public final class MailboxData implements StorageData, Canonical {
                 receivedMetaData.getClassName() :
                 proto.getClassName();
         // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or relay
-        // chose. The hash does not cover metaData in these versions, so the signature and the storage key do not
-        // change.
+        // chose. In these versions serializeForHash() does not contain metaData, so the signature and the storage key
+        // of the AddMailboxRequest and the proof of work payload do not change.
         MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
                 StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
                 receivedMetaData;
@@ -172,6 +172,18 @@ public final class MailboxData implements StorageData, Canonical {
     @Override
     public MetaData getMetaData() {
         return StorableTypesRegistry.getMetaData(className);
+    }
+
+    // The MetaData which this message carries in the deprecated field metaData for nodes of earlier versions. This node
+    // does not use it for its own decisions.
+    public MetaData getMetaDataForEarlierVersions() {
+        return metaData;
+    }
+
+    // In version 0 serializeForHash() contains the field metaData. Then the signature and the storage key of the
+    // AddMailboxRequest and the proof of work payload cover it, so a relay cannot change it.
+    public boolean isMetaDataCoveredByHash() {
+        return !isMetaDataExcludedForHash(version);
     }
 
     @Override

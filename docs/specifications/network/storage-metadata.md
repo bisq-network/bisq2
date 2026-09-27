@@ -88,10 +88,11 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   because nodes of earlier versions use it for store selection, expiry and cost factor.
 - When a node receives such a message, it replaces the received `metaData` by the MetaData which it registered for the
   class name. It then relays and persists the message with the registered values. It keeps the received value if the
-  class name is not registered, or if the hash of the message covers `metaData`. The hash does not cover it in
-  versions 1 to 3 of `MailboxData`, `RemoveMailboxRequest` and `RemoveAuthenticatedDataRequest`, and in all versions of
-  `RefreshAuthenticatedDataRequest`. So the replacement changes neither the signature, the storage key nor the proof of
-  work payload.
+  class name is not registered, or if `serializeForHash()` of the message contains `metaData`. It does not contain it
+  in versions 1 to 3 of `MailboxData`, `RemoveMailboxRequest` and `RemoveAuthenticatedDataRequest`, and in all
+  versions of `RefreshAuthenticatedDataRequest`. So the replacement changes neither the signature, the storage key nor
+  the proof of work payload. The signatures and storage keys of remove and refresh requests never contain their own
+  `metaData`.
 
   Reason: otherwise a node forwards values which a sender or relay chose, and which it does not use itself. A node of
   an earlier version would use them for store selection, expiry and cost factor. It would then expect another cost

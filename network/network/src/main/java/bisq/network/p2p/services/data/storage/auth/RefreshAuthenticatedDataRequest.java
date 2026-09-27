@@ -151,7 +151,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                     receivedMetaData.getClassName() :
                     proto.getClassName();
             // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or
-            // relay chose. The hash does not cover metaData, so the signature and the storage key do not change.
+            // relay chose. serializeForHash() never contains metaData, so the proof of work payload does not change.
+            // The signature and the storage key never contain it either.
             MetaData metaData = StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData);
             return new RefreshAuthenticatedDataRequest(
                     proto.getVersion(),
@@ -309,6 +310,17 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     @Override
     public MetaData getMetaData() {
         return StorableTypesRegistry.getMetaData(getClassName());
+    }
+
+    // The MetaData which this message carries in the deprecated field metaData for nodes of earlier versions. This node
+    // does not use it for its own decisions.
+    public MetaData getMetaDataForEarlierVersions() {
+        return metaData;
+    }
+
+    // serializeForHash() never contains the field metaData.
+    public boolean isMetaDataCoveredByHash() {
+        return false;
     }
 
     @Override

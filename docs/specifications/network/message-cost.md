@@ -22,10 +22,11 @@ different versions compute the same value.
 
 ### The policy defines the value
 
-1. The cost factor of a message depends only on
+1. The cost factor of a message, which the policy defines, depends only on
    - the type of the message,
-   - values which the receiver reads from the message: the class name of the stored type and the size of the cipher
-     text of an encrypted message,
+   - values which the receiver reads from the message: the class name of the stored type, the size of the cipher
+     text of an encrypted message, and the MetaData which version 0 of some requests contains in its proof of work
+     payload (rule 9),
    - the values of the policy.
 
    It does not depend on other definitions of a node, for example the MetaData of a type or the size limits of
@@ -61,6 +62,23 @@ definitions, for example a longer time to live for storage reasons, changed the 
    `m` is the cost factor of its `ConfidentialMessage` (rule 5).
 9. `RemoveAuthenticatedDataRequest`, `RefreshAuthenticatedDataRequest` and `RemoveMailboxRequest`:
    `bounded(0.1, 0.3, storage(c))`, where `c` is the field `className` of the request.
+
+   In rules 8 and 9, if `serializeForHash()` of the message contains its deprecated field `metaData`, `storage(c)` is
+   the higher of the value of the policy and the unrounded storage cost factor of this MetaData (formula of rule 10).
+   `serializeForHash()` contains the field in version 0 of `MailboxData`, `RemoveMailboxRequest` and
+   `RemoveAuthenticatedDataRequest`.
+
+   Reason: in version 0, `serializeForHash()` of the message contains this MetaData, so the proof of work payload
+   contains it. A node does not replace it when it parses the message: its payload would then differ from the payload
+   which the sender paid for, and the proof of work check would fail. Relays forward the field and pay the cost factor
+   which nodes of earlier versions compute from it (rule 15). If the receiver expected only the value of the policy, a
+   sender could create a request with a high MetaData, pay the low value of the policy, and make each relay pay up to
+   four times more.
+
+   A signature covers this MetaData only for `MailboxData`: the signature of `AddMailboxRequest`. The signatures of
+   `RemoveMailboxRequest` and `RemoveAuthenticatedDataRequest` cover only the hash of the stored data, not their own
+   field `metaData`. A relay can change the field of a removal request. It then pays the proof of work for the changed
+   request, and the next receiver expects the cost factor of the changed MetaData.
 10. The storage cost factor of a type is a constant of the policy with two decimal places. Its value is the result
     of the formula which versions up to 2.1.13 apply to the MetaData of the type,
     `bounded(0, 1, bounded(0, 1, ttl / 100 days) + bounded(0, 1, n / 10 000))`, rounded half up to two decimal places.
@@ -79,6 +97,22 @@ definitions, for example a longer time to live for storage reasons, changed the 
 
 `bounded(a, b, x)` is `x`, limited to the range from `a` to `b`. The class names and the values of rules 10 and 11 are
 listed in `MessageCostPolicy`.
+
+### Sender and receiver
+
+14. The receiver of a message expects the cost factor of the policy. It accepts a higher cost.
+15. The sender of a message pays at least the cost factor of the policy. For `AddMailboxRequest`,
+    `RemoveMailboxRequest`, `RemoveAuthenticatedDataRequest` and `RefreshAuthenticatedDataRequest` it pays the higher
+    of two values: the cost factor of the policy, and the cost factor of rules 8 and 9 with the storage cost factor of
+    the MetaData in the deprecated field `metaData` of the message. That storage cost factor uses the formula of rule
+    10 with the `ttl` and the maximum map size of this MetaData, without rounding.
+
+    Reason: nodes of versions up to 2.1.13 compute the storage cost factor of these requests from the field `metaData`,
+    not from the class name. A node of this version fills the field with its registered MetaData of the type (see
+    [Storage MetaData](storage-metadata.md#compatibility)). Today the storage cost factor of this MetaData equals the
+    value of the policy before rounding. If the MetaData of such a type changes, for example its time to live, nodes of
+    earlier versions expect another cost factor than the policy. The sender pays the higher value, so that receivers of
+    all versions accept the message.
 
 ## Changing a value
 
@@ -101,17 +135,20 @@ This mechanism does not exist yet, because no second version exists.
 - The rounding changes one value noticeably: `AuthorizedMarketPriceData` (time to live 10 minutes) has 0.1 instead of
   0.10007. The other values change by less than 10^-15. For an `AddAuthenticatedDataRequest` of this type, a node of
   an earlier version expects a difficulty which is at most 0.012 % higher than a node of this version pays. At the
-  highest difficulty of 1 048 576 this is about 120, far below the tolerance of 50 000 of the proof of work check.
+  highest difficulty of 1 048 576 this is about 120, far below the tolerance of 50 000 of the proof of work check. For
+  mailbox, remove and refresh requests the sender pays the unrounded value (rule 15).
 - Nodes of earlier versions compute the storage cost factor of `AddMailboxRequest`, `RemoveMailboxRequest`,
   `RemoveAuthenticatedDataRequest` and `RefreshAuthenticatedDataRequest` from the deprecated field `metaData` of the
   request, not from the class name. The signature does not cover this field, so a sender or relay can change it.
   - A node of an earlier version which relays a request with changed MetaData pays the cost factor of that MetaData.
     A node of this version expects the value of the policy. The difference in the storage cost factor is at most 0.2
-    for the types of this version.
+    for the types of this version. With the proof of work, which tolerates a difference of 50 000 at a target
+    difficulty of 65 536, the check fails only if the network load multiplied by the difficulty adjustment factor is
+    above about 3.8. The receiver then closes the connection to the relay. This ends when the nodes of earlier versions
+    have updated.
   - A node of this version sends its registered MetaData in this field, also when it relays a request (see
-    [Storage MetaData](storage-metadata.md#compatibility)). Today the registered MetaData of each type has the time to
-    live and maximum map size which the policy keeps, so a node of an earlier version expects the value of the
-    policy.
+    [Storage MetaData](storage-metadata.md#compatibility)), and pays at least the cost factor which follows from this
+    MetaData (rule 15). So a node of an earlier version accepts the request.
 
 ## Known limitations
 

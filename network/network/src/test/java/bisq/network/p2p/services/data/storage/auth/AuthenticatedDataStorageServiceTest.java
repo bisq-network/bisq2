@@ -217,6 +217,23 @@ class AuthenticatedDataStorageServiceTest {
         assertArrayEquals(refreshRequest.serializeForHash(), forgedRefreshRequest.serializeForHash());
     }
 
+    // Nodes of earlier versions compute the cost factor from the field metaData, which carries the registered
+    // MetaData. If the registered MetaData differs from the values of the policy, the sender pays the higher value.
+    @Test
+    void senderPaysTheCostFactorWhichEarlierVersionsComputeFromMetaData() throws GeneralSecurityException {
+        // The policy has no values for TestDistributedData. Its registered MetaData has a time to live of 10 days and
+        // a maximum map size of 1000, which gives a storage cost factor of 0.1 + 0.1.
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair);
+        assertEquals(0.1, MessageCostPolicy.getCostFactor(removeRequest));
+        assertEquals(0.2, MessageCostPolicy.getCostFactorToPay(removeRequest), 1e-9);
+
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair);
+        assertEquals(0.1, MessageCostPolicy.getCostFactor(refreshRequest));
+        assertEquals(0.2, MessageCostPolicy.getCostFactorToPay(refreshRequest), 1e-9);
+    }
+
     @Test
     void forgedMetaDataOfRemoveRequestChangesNeitherCostFactorNorPriority() throws GeneralSecurityException {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);

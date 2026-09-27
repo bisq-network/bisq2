@@ -48,7 +48,8 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                                      String peerAddress,
                                      int messageCounter) {
         long ts = System.currentTimeMillis();
-        double difficulty = calculateDifficulty(message, networkLoad);
+        double costFactor = MessageCostPolicy.getCostFactorToPay(message);
+        double difficulty = calculateDifficulty(costFactor, networkLoad);
         byte[] challenge = getChallenge(peerAddress, messageCounter);
         byte[] payload = getPayload(message);
         ProofOfWork proofOfWork = proofOfWorkService.mint(payload, challenge, difficulty);
@@ -62,7 +63,7 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                         "\nnetworkLoad={}" +
                         "\nhashCashToken={}",
                 message.getClass().getSimpleName(), duration,
-                MessageCostPolicy.getCostFactor(message),
+                costFactor,
                 Hex.encode(payload),
                 networkLoad,
                 token);
@@ -146,14 +147,15 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                                         double proofOfWorkDifficulty,
                                         NetworkLoad currentNetworkLoad,
                                         Optional<NetworkLoad> previousNetworkLoad) {
+        double costFactor = MessageCostPolicy.getCostFactor(message);
         log.debug("isDifficultyInvalid/currentNetworkLoad: costFactor={}, networkLoad.getValue()={}",
-                MessageCostPolicy.getCostFactor(message), currentNetworkLoad.getLoad());
-        double expectedDifficulty = calculateDifficulty(message, currentNetworkLoad);
+                costFactor, currentNetworkLoad.getLoad());
+        double expectedDifficulty = calculateDifficulty(costFactor, currentNetworkLoad);
         if (proofOfWorkDifficulty >= expectedDifficulty) {
             // We don't want to call calculateDifficulty with the previousNetworkLoad if we are not in dev mode.
             if (DevMode.isDevMode() && proofOfWorkDifficulty > expectedDifficulty && previousNetworkLoad.isPresent()) {
                 // Might be that the difficulty was using the previous network load
-                double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad.get());
+                double expectedPreviousDifficulty = calculateDifficulty(costFactor, previousNetworkLoad.get());
                 if (proofOfWorkDifficulty != expectedPreviousDifficulty) {
                     log.warn("Unexpected high difficulty provided. This might be a bug (but valid as provided difficulty is larger as expected): " +
                                     "expectedDifficulty={}; expectedPreviousDifficulty={}; proofOfWorkDifficulty={}",
@@ -182,8 +184,8 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
         }
 
         log.debug("isDifficultyInvalid/previousNetworkLoad: costFactor={}, networkLoad.getValue()={}",
-                MessageCostPolicy.getCostFactor(message), previousNetworkLoad.get().getLoad());
-        double expectedPreviousDifficulty = calculateDifficulty(message, previousNetworkLoad.get());
+                costFactor, previousNetworkLoad.get().getLoad());
+        double expectedPreviousDifficulty = calculateDifficulty(costFactor, previousNetworkLoad.get());
         if (proofOfWorkDifficulty >= expectedPreviousDifficulty) {
             log.debug("Difficulty of previous network load is correct");
             if (proofOfWorkDifficulty > expectedPreviousDifficulty) {
@@ -226,8 +228,8 @@ public class HashCashTokenService extends AuthorizationTokenService<HashCashToke
                 BigInteger.valueOf(messageCounter).toByteArray()));
     }
 
-    private double calculateDifficulty(EnvelopePayloadMessage message, NetworkLoad networkLoad) {
-        double messageCostFactor = MathUtils.bounded(MIN_MESSAGE_COST, 1, MessageCostPolicy.getCostFactor(message));
+    private double calculateDifficulty(double costFactor, NetworkLoad networkLoad) {
+        double messageCostFactor = MathUtils.bounded(MIN_MESSAGE_COST, 1, costFactor);
         double load = MathUtils.bounded(MIN_LOAD, 1, networkLoad.getLoad());
         double difficulty = TARGET_DIFFICULTY * messageCostFactor * load * networkLoad.getDifficultyAdjustmentFactor();
         return MathUtils.bounded(MIN_DIFFICULTY, MAX_DIFFICULTY, difficulty);
