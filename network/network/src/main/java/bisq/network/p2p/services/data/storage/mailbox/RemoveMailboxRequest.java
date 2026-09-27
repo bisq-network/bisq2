@@ -60,9 +60,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 publicKeyEncoded,
                 publicKey,
                 signature,
-                created);
+                created,
+                mailboxData.getClassName());
     }
 
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
     private final byte[] hash;
@@ -72,6 +74,10 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @ExcludeForHash
     private final int version;
     private final transient PublicKey receiverPublicKey;
+    // Simple class name of the removed MailboxMessage. It selects the store.
+    // Excluded from the hash, so it does not change the proof of work payload.
+    @ExcludeForHash
+    private final String className;
     @Setter
     private transient Optional<MetaData> metaDataFromDistributedData = Optional.empty();
 
@@ -82,7 +88,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                                  byte[] receiverPublicKeyBytes,
                                  PublicKey receiverPublicKey,
                                  byte[] signature,
-                                 long created) {
+                                 long created,
+                                 String className) {
         this.version = version;
         this.metaData = metaData;
         this.hash = hash;
@@ -90,6 +97,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         this.receiverPublicKey = receiverPublicKey;
         this.signature = signature;
         this.created = created;
+        this.className = className;
 
         verify();
     }
@@ -119,27 +127,34 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     @Override
     public bisq.network.protobuf.RemoveMailboxRequest.Builder getValueBuilder(boolean serializeForHash) {
+        //noinspection deprecation
         return bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
                 .setVersion(version)
                 .setMetaData(metaData.toProto(serializeForHash))
                 .setHash(ByteString.copyFrom(hash))
                 .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
                 .setSignature(ByteString.copyFrom(signature))
-                .setCreated(created);
+                .setCreated(created)
+                .setClassName(className);
     }
 
     public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto) {
         byte[] receiverPublicKeyBytes = proto.getReceiverPublicKeyBytes().toByteArray();
         try {
             PublicKey receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
+            //noinspection deprecation
+            MetaData metaData = MetaData.fromProto(proto.getMetaData());
+            // Nodes of earlier versions do not send className.
+            String className = proto.getClassName().isEmpty() ? metaData.getClassName() : proto.getClassName();
             return new RemoveMailboxRequest(
                     proto.getVersion(),
-                    MetaData.fromProto(proto.getMetaData()),
+                    metaData,
                     proto.getHash().toByteArray(),
                     receiverPublicKeyBytes,
                     receiverPublicKey,
                     proto.getSignature().toByteArray(),
-                    proto.getCreated()
+                    proto.getCreated(),
+                    className
             );
         } catch (GeneralSecurityException e) {
             log.error("Failed to generate public key");
@@ -161,8 +176,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     // Canonical
     /* --------------------------------------------------------------------- */
 
-    // Contains metaData and version, which serializeForHash() omits (metaData only in versions 1 to 3), as the
-    // default encoding contains all non-transient fields.
+    // Contains metaData, version and className, which serializeForHash() omits (metaData only in versions 1 to 3), as
+    // the default encoding contains all non-transient fields.
     public static final CanonicalSchema<RemoveMailboxRequest> DEFAULT_SCHEMA =
             bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
                     CanonicalSchema.<RemoveMailboxRequest>newBuilder()
@@ -171,12 +186,13 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                             .bytes(3, request -> request.receiverPublicKeyBytes)
                             .bytes(4, request -> request.signature)
                             .sint64(5, request -> request.created)
-                            .sint32(6, request -> request.version));
+                            .sint32(6, request -> request.version)
+                            .string(7, request -> request.className));
     public static final CanonicalSchema<RemoveMailboxRequest> SIGNATURE_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<RemoveMailboxRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
-    // 1 to 3, and version (field 6).
+    // 1 to 3, version (field 6) and className (field 7).
     private static CanonicalSchema<RemoveMailboxRequest> createSchemaForHash() {
         return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
                 CanonicalSchema.<RemoveMailboxRequest>newBuilder()
@@ -292,6 +308,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         return metaData;
     }
 
+    @Override
+    public String getClassName() {
+        return className;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Misc
@@ -308,6 +329,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 ", signature=" + Hex.encode(signature) +
                 ", created=" + new Date(created) + " (" + created + ")" +
                 ", receiverPublicKey=" + receiverPublicKey +
+                ", className=" + className +
                 '}';
     }
 

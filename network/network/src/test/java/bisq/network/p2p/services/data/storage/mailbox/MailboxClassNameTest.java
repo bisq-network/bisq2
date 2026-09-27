@@ -1,0 +1,133 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.network.p2p.services.data.storage.mailbox;
+
+import bisq.network.p2p.services.confidential.ConfidentialMessage;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.ByteString;
+import org.junit.jupiter.api.Test;
+
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+/**
+ * MailboxData and RemoveMailboxRequest carry the class name of the MailboxMessage in the field className. Nodes of
+ * earlier versions do not know the field. They drop it when they parse, relay or persist a message, and they
+ * compute signature preimages, storage keys and proof of work payloads without it. Therefore className must not
+ * change these bytes, and a message without className must still be accepted.
+ */
+class MailboxClassNameTest {
+    private static final String CLASS_NAME = "TestMailboxMessage";
+    private static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, CLASS_NAME);
+
+    private final KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+    private final KeyPair receiverKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+
+    @Test
+    void mailboxDataSendsClassNameAndMetaData() {
+        MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
+
+        bisq.network.protobuf.MailboxData proto = mailboxData.toProto(false);
+
+        assertEquals(CLASS_NAME, mailboxData.getClassName());
+        assertEquals(CLASS_NAME, proto.getClassName());
+        //noinspection deprecation
+        assertEquals(META_DATA.toProto(false), proto.getMetaData());
+        assertEquals("", mailboxData.toProto(true).getClassName());
+    }
+
+    @Test
+    void mailboxDataWithoutClassNameUsesClassNameOfMetaData() {
+        bisq.network.protobuf.MailboxData proto = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair))
+                .toProto(false).toBuilder()
+                .clearClassName()
+                .build();
+
+        assertEquals(CLASS_NAME, MailboxData.fromProto(proto).getClassName());
+    }
+
+    @Test
+    void mailboxDataUsesClassNameFieldIfPresent() {
+        bisq.network.protobuf.MailboxData proto = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair))
+                .toProto(false).toBuilder()
+                .setClassName("OtherMailboxMessage")
+                .build();
+
+        assertEquals("OtherMailboxMessage", MailboxData.fromProto(proto).getClassName());
+    }
+
+    @Test
+    void addMailboxRequestWithoutClassNameHasSameSignatureStorageKeyAndProofOfWorkPayload()
+            throws GeneralSecurityException {
+        MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
+        AddMailboxRequest request = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        bisq.network.protobuf.AddMailboxRequest.Builder builder = request.toValueProto(false).toBuilder();
+        builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder().clearClassName();
+
+        AddMailboxRequest requestWithoutClassName = AddMailboxRequest.fromProto(builder.build());
+
+        assertFalse(requestWithoutClassName.isSignatureInvalid());
+        assertEquals(request.getStorageKey(), requestWithoutClassName.getStorageKey());
+        assertArrayEquals(request.serializeForHash(), requestWithoutClassName.serializeForHash());
+        assertEquals(CLASS_NAME, requestWithoutClassName.getMailboxSequentialData().getMailboxData().getClassName());
+    }
+
+    @Test
+    void removeMailboxRequestSendsClassNameAndMetaData() throws GeneralSecurityException {
+        MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
+        RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+
+        bisq.network.protobuf.RemoveMailboxRequest proto = request.toValueProto(false);
+
+        assertEquals(CLASS_NAME, request.getClassName());
+        assertEquals(CLASS_NAME, proto.getClassName());
+        //noinspection deprecation
+        assertEquals(CLASS_NAME, proto.getMetaData().getClassName());
+        assertEquals("", request.toValueProto(true).getClassName());
+    }
+
+    @Test
+    void removeMailboxRequestWithoutClassNameHasSameProofOfWorkPayload() throws GeneralSecurityException {
+        MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
+        RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+
+        RemoveMailboxRequest requestWithoutClassName = RemoveMailboxRequest.fromProto(
+                request.toValueProto(false).toBuilder().clearClassName().build());
+
+        assertEquals(CLASS_NAME, requestWithoutClassName.getClassName());
+        assertFalse(requestWithoutClassName.isSignatureInvalid());
+        assertArrayEquals(request.serializeForHash(), requestWithoutClassName.serializeForHash());
+    }
+
+    static ConfidentialMessage createConfidentialMessage(KeyPair senderKeyPair) {
+        // The storage layer does not decrypt the message, so the content does not need to be valid cipher text.
+        return ConfidentialMessage.fromProto(bisq.network.protobuf.ConfidentialMessage.newBuilder()
+                .setConfidentialData(bisq.security.protobuf.ConfidentialData.newBuilder()
+                        .setSenderPublicKey(ByteString.copyFrom(senderKeyPair.getPublic().getEncoded()))
+                        .setIv(ByteString.copyFrom(new byte[16]))
+                        .setCipherText(ByteString.copyFrom(new byte[32]))
+                        .setSignature(ByteString.copyFrom(new byte[70])))
+                .setReceiverKeyId("receiverKeyId")
+                .build());
+    }
+}

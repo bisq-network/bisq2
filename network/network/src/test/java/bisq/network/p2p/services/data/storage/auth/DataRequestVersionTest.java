@@ -76,19 +76,74 @@ class DataRequestVersionTest {
     }
 
     @Test
+    void removeAuthenticatedDataRequestExcludesClassNameFromHash() throws InvalidProtocolBufferException {
+        RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.fromProto(
+                removeAuthenticatedDataRequestProto().setClassName("TestDistributedData").build());
+
+        assertEquals("TestDistributedData", request.getClassName());
+        assertEquals("", parse(request.serializeForHash()).getRemoveAuthenticatedDataRequest().getClassName());
+        assertEquals("TestDistributedData", parse(request.serialize()).getRemoveAuthenticatedDataRequest().getClassName());
+    }
+
+    @Test
+    void removeAuthenticatedDataRequestWithoutClassNameUsesClassNameOfMetaData() {
+        // Nodes of earlier versions send no className
+        RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.fromProto(
+                removeAuthenticatedDataRequestProto().build());
+
+        assertEquals("TestDistributedData", request.getClassName());
+    }
+
+    @Test
     void refreshAuthenticatedDataRequestReportsVersion() {
         RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.fromProto(
-                bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
-                        .setVersion(1)
-                        .setMetaData(META_DATA)
-                        .setHash(HASH)
-                        .setOwnerPublicKeyBytes(PUBLIC_KEY)
-                        .setSequenceNumber(2)
-                        .setSignature(SIGNATURE)
-                        .setCreated(System.currentTimeMillis())
-                        .build());
+                refreshAuthenticatedDataRequestProto().build());
 
         assertEquals(1, request.getVersion());
+    }
+
+    @Test
+    void refreshAuthenticatedDataRequestExcludesClassNameFromHash() throws InvalidProtocolBufferException {
+        RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.fromProto(
+                refreshAuthenticatedDataRequestProto().setClassName("TestDistributedData").build());
+
+        assertEquals("TestDistributedData", request.getClassName());
+        assertEquals("", parse(request.serializeForHash()).getRefreshAuthenticatedDataRequest().getClassName());
+        assertEquals("TestDistributedData",
+                parse(request.serialize()).getRefreshAuthenticatedDataRequest().getClassName());
+    }
+
+    @Test
+    void refreshAuthenticatedDataRequestWithoutClassNameUsesClassNameOfMetaData() {
+        // Nodes of earlier versions send no className
+        RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.fromProto(
+                refreshAuthenticatedDataRequestProto().build());
+
+        assertEquals("TestDistributedData", request.getClassName());
+    }
+
+    private static bisq.network.protobuf.RefreshAuthenticatedDataRequest.Builder refreshAuthenticatedDataRequestProto() {
+        //noinspection deprecation
+        return bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
+                .setVersion(1)
+                .setMetaData(META_DATA)
+                .setHash(HASH)
+                .setOwnerPublicKeyBytes(PUBLIC_KEY)
+                .setSequenceNumber(2)
+                .setSignature(SIGNATURE)
+                .setCreated(System.currentTimeMillis());
+    }
+
+    private static bisq.network.protobuf.RemoveAuthenticatedDataRequest.Builder removeAuthenticatedDataRequestProto() {
+        //noinspection deprecation
+        return bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
+                .setVersion(1)
+                .setMetaData(META_DATA)
+                .setHash(HASH)
+                .setOwnerPublicKeyBytes(PUBLIC_KEY)
+                .setSequenceNumber(1)
+                .setSignature(SIGNATURE)
+                .setCreated(System.currentTimeMillis());
     }
 
     private static bisq.network.protobuf.DataRequest parse(byte[] envelopePayloadMessage) throws InvalidProtocolBufferException {

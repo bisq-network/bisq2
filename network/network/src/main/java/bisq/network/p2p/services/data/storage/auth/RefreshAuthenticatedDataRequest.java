@@ -58,10 +58,12 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 addAuthenticatedDataRequest.getSignaturePublicKey(),
                 addAuthenticatedDataRequest.getSequenceNumber(),
                 addAuthenticatedDataRequest.getSignature(),
-                addAuthenticatedDataRequest.getCreated());
+                addAuthenticatedDataRequest.getCreated(),
+                authenticatedData.getClassName());
     }
 
 
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
     @ExcludeForHash
     private final MetaData metaData;
     private final byte[] hash; // of authenticatedData
@@ -72,6 +74,10 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     @ExcludeForHash
     private final int version;
     private final long created;
+    // Simple class name of the refreshed DistributedData. It selects the store.
+    // Excluded from the hash, so it does not change the proof of work payload.
+    @ExcludeForHash
+    private final String className;
 
     private RefreshAuthenticatedDataRequest(int version,
                                             MetaData metaData,
@@ -80,7 +86,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                                             PublicKey ownerPublicKey,
                                             int sequenceNumber,
                                             byte[] signature,
-                                            long created) {
+                                            long created,
+                                            String className) {
         this.version = version;
         this.metaData = metaData;
         this.hash = hash;
@@ -89,6 +96,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.created = created;
+        this.className = className;
 
         verify();
     }
@@ -118,6 +126,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
 
     @Override
     public bisq.network.protobuf.RefreshAuthenticatedDataRequest.Builder getValueBuilder(boolean serializeForHash) {
+        //noinspection deprecation
         return bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
                 .setVersion(version)
                 .setMetaData(metaData.toProto(serializeForHash))
@@ -125,22 +134,28 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
                 .setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature))
-                .setCreated(created);
+                .setCreated(created)
+                .setClassName(className);
     }
 
     public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto) {
         byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
         try {
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
+            //noinspection deprecation
+            MetaData metaData = MetaData.fromProto(proto.getMetaData());
+            // Nodes of earlier versions do not send className.
+            String className = proto.getClassName().isEmpty() ? metaData.getClassName() : proto.getClassName();
             return new RefreshAuthenticatedDataRequest(
                     proto.getVersion(),
-                    MetaData.fromProto(proto.getMetaData()),
+                    metaData,
                     proto.getHash().toByteArray(),
                     ownerPublicKeyBytes,
                     ownerPublicKey,
                     proto.getSequenceNumber(),
                     proto.getSignature().toByteArray(),
-                    proto.getCreated()
+                    proto.getCreated(),
+                    className
             );
         } catch (GeneralSecurityException e) {
             log.error("Failed to generate public key");
@@ -162,7 +177,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // Canonical
     /* --------------------------------------------------------------------- */
 
-    // Contains metaData and version, which serializeForHash() omits, as the default encoding contains all
+    // Contains metaData, version and className, which serializeForHash() omits, as the default encoding contains all
     // non-transient fields.
     public static final CanonicalSchema<RefreshAuthenticatedDataRequest> DEFAULT_SCHEMA =
             bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
@@ -173,13 +188,14 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                             .sint32(4, request -> request.sequenceNumber)
                             .bytes(5, request -> request.signature)
                             .sint32(6, request -> request.version)
-                            .sint64(7, request -> request.created));
+                            .sint64(7, request -> request.created)
+                            .string(8, request -> request.className));
     public static final CanonicalSchema<RefreshAuthenticatedDataRequest> SIGNATURE_SCHEMA =
             createSchemaForHash();
     public static final CanonicalSchema<RefreshAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
 
-    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) and version
-    // (field 6).
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1), version
+    // (field 6) and className (field 8).
     private static CanonicalSchema<RefreshAuthenticatedDataRequest> createSchemaForHash() {
         return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
                 CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
@@ -296,6 +312,11 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         return metaData;
     }
 
+    @Override
+    public String getClassName() {
+        return className;
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Misc
@@ -311,6 +332,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 ",\r\n     sequenceNumber=" + sequenceNumber +
                 ",\r\n     signature=" + Hex.encode(signature) +
                 ",\r\n     created=" + new Date(created) + " (" + created + ")" +
+                ",\r\n     className=" + className +
                 "\r\n}";
     }
 
