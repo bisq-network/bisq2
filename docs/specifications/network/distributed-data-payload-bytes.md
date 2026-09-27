@@ -50,6 +50,28 @@ other bytes than the signer.
   the same sequence number but different payload bytes, a node keeps the copy that it received first:
   the sequence number check rejects the second copy.
 
+### Retained payload size
+
+The retained payload value may be at most **10,240 bytes larger** than the complete protobuf serialization
+of the decoded distributed data. Reject a holder that exceeds this limit before it can enter storage
+or be relayed. The same rule applies when loading persisted holders. Accepted bytes stay unchanged;
+the size check must not truncate or rebuild the retained payload.
+
+The reference is the complete serialization, including known fields annotated with `@ExcludeForHash`,
+not the hash serialization. The allowance applies once to the whole payload, including extra bytes in
+nested messages. It measures retained byte overhead, not the size of an individual `UnknownFieldSet`:
+repeated encodings of known singular fields and other redundant wire encodings can also disappear
+during decoding. Checking only unknown fields would leave these ways to enlarge a stored entry open.
+
+Rationale: domain validation and cost factors constrain the decoded data. Retaining an unbounded
+amount of additional data bypasses those constraints and can create an entry larger than an entire
+inventory response. The limit bounds the additional resource use introduced by retention. Existing
+domain limits still govern known data; this rule is not a total message-size limit or authentication.
+
+Compatibility: a newer node's payload is rejected by this node if the extra bytes exceed the allowance,
+even when the newer node considers them valid fields. Previously persisted oversized payloads are also
+rejected during decoding. No bytes, storage keys, or signature preimages change for accepted data.
+
 ## Preimages
 
 | Preimage | Payload bytes in it | Reason |
@@ -94,8 +116,8 @@ supported, or accept a field that no signature protects.
    payload bytes that the decoded object does not contain are not authenticated. A relay can add, change,
    or remove such fields without invalidating `signatureV1`, the storage key, or the proof of work. Nodes
    of this version keep and relay the change, but do not interpret it. A later version that defines such a
-   field must rely on it only when a signature over the `SIGNATURE` preimage verifies. The size of such
-   fields is limited only by the message size limits: the cost factor and the proof of work payload are
+   field must rely on it only when a signature over the `SIGNATURE` preimage verifies. Retained payload
+   overhead is bounded by the size rule above; the cost factor and the proof of work payload are still
    computed from the decoded object. Cause: no required signature covers the kept bytes. A required
    signature over the `SIGNATURE` preimage removes it (for example `signatureV2` of the add request); the
    developers decide its activation.
@@ -124,6 +146,10 @@ supported, or accept a field that no signature protects.
   the field.
 - Tests show that type URLs other than the one of `Any.pack` are rejected, and that unknown fields of the
   `Any` message are not kept.
+- Tests cover the retained-byte allowance at its boundary and above it for default authenticated,
+  authorized, and append-only data, including nested unknown fields and redundant known fields.
+  Oversized requests must fail during decoding, including when restored from a data store. Accepted
+  payloads must retain their exact bytes and their existing hash serialization.
 
 ## Related documents and code
 

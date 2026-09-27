@@ -56,6 +56,7 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     // For received data: appendOnlyData must be decoded from the type URL and value of appendOnlyDataAny, which
     // DistributedDataAny.retain() returns.
     private AddAppendOnlyDataRequest(AppendOnlyData appendOnlyData, Any appendOnlyDataAny) {
+        DistributedDataAny.validateSize(appendOnlyDataAny, appendOnlyData);
         this.appendOnlyData = appendOnlyData;
         this.appendOnlyDataAny = appendOnlyDataAny;
 

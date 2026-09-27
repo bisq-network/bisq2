@@ -52,6 +52,7 @@ public abstract class AuthenticatedData implements StorageData, Canonical {
     // For received data: distributedData must be decoded from the type URL and value of distributedDataAny, which
     // DistributedDataAny.retain() returns.
     protected AuthenticatedData(DistributedData distributedData, Any distributedDataAny) {
+        DistributedDataAny.validateSize(distributedDataAny, distributedData);
         this.distributedData = distributedData;
         this.distributedDataAny = distributedDataAny;
     }

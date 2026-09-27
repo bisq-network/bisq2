@@ -34,6 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * therefore not lost. See docs/specifications/network/distributed-data-payload-bytes.md.
  */
 public final class DistributedDataAny {
+    public static final int MAX_EXTRA_PAYLOAD_BYTES = 10 * 1024;
     private static final String TYPE_URL_PREFIX = "type.googleapis.com/";
 
     /**
@@ -57,7 +58,8 @@ public final class DistributedDataAny {
      * <p>
      * The returned Any is a new instance. Decode the DistributedData from the received Any, not from the returned one:
      * {@link Any#unpack} caches the decoded protobuf message in the Any instance, and the retained instance would keep
-     * that message in memory.
+     * that message in memory. The holder must call {@link #validateSize(Any, DistributedData)} with the decoded data
+     * before accepting the retained Any.
      *
      * @throws IllegalArgumentException if the type URL is not the one that {@link Any#pack} creates for the type
      */
@@ -69,6 +71,17 @@ public final class DistributedDataAny {
                 .setTypeUrl(typeUrl)
                 .setValue(receivedAny.getValue())
                 .build();
+    }
+
+    /**
+     * Bounds the extra bytes that a holder retains beyond its decoded model. Checking only a protobuf
+     * UnknownFieldSet would miss nested unknown fields and redundant encodings of known fields that decoding drops.
+     * The complete serialization is the reference: known fields excluded from hashes still belong to the payload.
+     */
+    public static void validateSize(Any retainedAny, DistributedData distributedData) {
+        int extraBytes = retainedAny.getValue().size() - distributedData.toProto(false).getSerializedSize();
+        checkArgument(extraBytes <= MAX_EXTRA_PAYLOAD_BYTES,
+                "Distributed data exceeds the extra payload byte limit: %s > %s", extraBytes, MAX_EXTRA_PAYLOAD_BYTES);
     }
 
     private DistributedDataAny() {

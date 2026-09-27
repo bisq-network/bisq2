@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.locale.Region;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.Inventory;
@@ -36,12 +37,14 @@ import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.UnknownFieldSet;
 import lombok.EqualsAndHashCode;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Arrays;
@@ -73,6 +76,7 @@ public class DistributedDataAnyTest {
     @BeforeAll
     static void registerResolver() {
         DistributedDataResolver.addResolver("common.StringLongPair", PayloadData::fromAny);
+        DistributedDataResolver.addResolver("common.Country", NestedPayloadData::fromAny);
     }
 
     @Test
@@ -246,6 +250,134 @@ public class DistributedDataAnyTest {
         assertEquals(newerAny, received.toProto(false).getDistributedData());
     }
 
+    @Test
+    public void holdersKeepPayloadAtExtraByteLimit() throws InvalidProtocolBufferException {
+        // Field 3 has a one-byte tag and a two-byte length prefix.
+        Any any = getNewerAny("x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES - 3));
+        assertEquals(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES,
+                any.unpack(bisq.common.protobuf.StringLongPair.class).getUnknownFields().getSerializedSize());
+
+        assertAllHoldersKeep(any);
+        AuthenticatedData received = AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any));
+        assertArrayEquals(getDefaultAuthenticatedDataProto(getHashSerializationAny()).toByteArray(),
+                received.serializeForHash());
+    }
+
+    @Test
+    public void holdersRejectPayloadAboveExtraByteLimit() {
+        assertAllHoldersReject(getNewerAny("x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES - 2)));
+        assertAllHoldersReject(getNewerAny("x".repeat(3_000_000)));
+    }
+
+    @Test
+    public void extraByteLimitIncludesNestedUnknownFields() {
+        bisq.common.protobuf.Country country = getCountryProto();
+        UnknownFieldSet unknownFields = getUnknownBytes(6000);
+        assertTrue(unknownFields.getSerializedSize() < DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES);
+        bisq.common.protobuf.Country nestedOnly = country.toBuilder()
+                .setRegion(country.getRegion().toBuilder().setUnknownFields(unknownFields))
+                .build();
+        assertAllHoldersKeep(Any.pack(nestedOnly));
+
+        // Both individual unknown-field sets fit, but their combined retained overhead does not.
+        assertAllHoldersReject(Any.pack(nestedOnly.toBuilder().setUnknownFields(unknownFields).build()));
+        assertAllHoldersReject(Any.pack(country.toBuilder()
+                .setRegion(country.getRegion().toBuilder()
+                        .setUnknownFields(getUnknownBytes(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES)))
+                .build()));
+    }
+
+    @Test
+    public void knownFieldsExcludedFromHashesDoNotConsumeExtraByteAllowance() {
+        Any any = Any.pack(getCountryProto().toBuilder()
+                .setName("x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES + 1)).build());
+        assertTrue(any.getValue().size() > DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES);
+
+        assertAllHoldersKeep(any);
+    }
+
+    @Test
+    public void holdersRejectRedundantKnownFieldsWithoutUnknownFields() throws Exception {
+        Any original = new PayloadData(KEY, VALUE).toAny(false);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        CodedOutputStream protobuf = CodedOutputStream.newInstance(output);
+        // A singular string is overwritten by its last occurrence, so this large first value is lost on decoding.
+        protobuf.writeString(1, "x".repeat(3_000_000));
+        protobuf.writeRawBytes(original.getValue());
+        protobuf.flush();
+        Any padded = original.toBuilder().setValue(ByteString.copyFrom(output.toByteArray())).build();
+        bisq.common.protobuf.StringLongPair decoded = padded.unpack(bisq.common.protobuf.StringLongPair.class);
+        assertEquals(KEY, decoded.getKey());
+        assertEquals(0, decoded.getUnknownFields().getSerializedSize());
+
+        assertAllHoldersReject(padded);
+    }
+
+    @Test
+    public void oversizedSignedRequestIsRejectedAndSkippedOnRestore() throws Exception {
+        bisq.network.protobuf.DataRequest original = getAddAuthenticatedDataRequestProto(getNewerAny("new field"));
+        AddAuthenticatedDataRequest received = (AddAuthenticatedDataRequest) DataRequest.fromProto(original);
+        assertFalse(received.isSignatureInvalid());
+        bisq.network.protobuf.AddAuthenticatedDataRequest addRequest = original.getAddAuthenticatedDataRequest();
+        bisq.network.protobuf.AuthenticatedSequentialData sequentialData = addRequest.getAuthenticatedSequentialData();
+        bisq.network.protobuf.DataRequest padded = original.toBuilder()
+                .setAddAuthenticatedDataRequest(addRequest.toBuilder()
+                        .setAuthenticatedSequentialData(sequentialData.toBuilder()
+                                .setAuthenticatedData(sequentialData.getAuthenticatedData().toBuilder()
+                                        .setDistributedData(getNewerAny("x".repeat(
+                                                DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES - 2))))))
+                .build();
+        assertEquals(addRequest.getSignature(), padded.getAddAuthenticatedDataRequest().getSignature());
+        assertThrows(IllegalArgumentException.class, () -> DataRequest.fromProto(padded));
+
+        ByteArray oversizedKey = new ByteArray(filledBytes(20, 0x77));
+        bisq.network.protobuf.DataStore store = bisq.network.protobuf.DataStore.newBuilder()
+                .addMapEntries(bisq.network.protobuf.DataStore.MapEntry.newBuilder()
+                        .setKey(received.getStorageKey().toProto(false)).setValue(original))
+                .addMapEntries(bisq.network.protobuf.DataStore.MapEntry.newBuilder()
+                        .setKey(oversizedKey.toProto(false)).setValue(padded))
+                .build();
+        DataStore<?> restored = (DataStore<?>) DataStore.fromProto(
+                bisq.network.protobuf.DataStore.parseFrom(store.toByteArray()));
+        assertEquals(1, restored.getMap().size());
+        assertFalse(restored.getMap().containsKey(oversizedKey));
+        assertArrayEquals(received.serialize(), restored.getMap().get(received.getStorageKey()).serialize());
+    }
+
+    private static void assertAllHoldersKeep(Any any) {
+        for (bisq.network.protobuf.AuthenticatedData proto : List.of(getDefaultAuthenticatedDataProto(any),
+                getAuthorizedDataProto(any))) {
+            AuthenticatedData received = AuthenticatedData.fromProto(proto);
+            assertEquals(any, received.toProto(false).getDistributedData());
+            assertArrayEquals(received.serialize(), received.encodeCanonical(EncodingPurpose.SIGNATURE));
+        }
+        AddAppendOnlyDataRequest received = AddAppendOnlyDataRequest.fromProto(
+                bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder().setAppendOnlyData(any).build());
+        assertEquals(any, received.toValueProto(false).getAppendOnlyData());
+    }
+
+    private static void assertAllHoldersReject(Any any) {
+        assertThrows(IllegalArgumentException.class,
+                () -> AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any)));
+        assertThrows(IllegalArgumentException.class,
+                () -> AuthenticatedData.fromProto(getAuthorizedDataProto(any)));
+        assertThrows(IllegalArgumentException.class, () -> AddAppendOnlyDataRequest.fromProto(
+                bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder().setAppendOnlyData(any).build()));
+    }
+
+    private static UnknownFieldSet getUnknownBytes(int length) {
+        return UnknownFieldSet.newBuilder()
+                .addField(10, UnknownFieldSet.Field.newBuilder()
+                        .addLengthDelimited(ByteString.copyFrom(new byte[length])).build())
+                .build();
+    }
+
+    private static bisq.common.protobuf.Country getCountryProto() {
+        return bisq.common.protobuf.Country.newBuilder().setCode("DE").setName("Germany")
+                .setRegion(bisq.common.protobuf.Region.newBuilder().setCode("EU").setName("Europe"))
+                .build();
+    }
+
     // The payload as a newer node sends it: with field 3, which this node does not know
     private static Any getNewerAny(String field3) {
         UnknownFieldSet newField = UnknownFieldSet.newBuilder()
@@ -331,6 +463,53 @@ public class DistributedDataAnyTest {
         byte[] bytes = new byte[length];
         Arrays.fill(bytes, (byte) value);
         return bytes;
+    }
+
+    // Uses a nested model whose decoder drops unknown fields, as production payload models do.
+    private static final class NestedPayloadData implements AuthorizedDistributedData, AppendOnlyData {
+        private final String code;
+        @ExcludeForHash
+        private final String name;
+        private final Region region;
+
+        private NestedPayloadData(bisq.common.protobuf.Country proto) {
+            code = proto.getCode();
+            name = proto.getName();
+            region = Region.fromProto(proto.getRegion());
+        }
+
+        private static NestedPayloadData fromAny(Any any) {
+            try {
+                return new NestedPayloadData(any.unpack(bisq.common.protobuf.Country.class));
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        }
+
+        @Override
+        public void verify() {
+        }
+
+        @Override
+        public bisq.common.protobuf.Country.Builder getBuilder(boolean serializeForHash) {
+            return bisq.common.protobuf.Country.newBuilder().setCode(code).setName(name)
+                    .setRegion(region.toProto(serializeForHash));
+        }
+
+        @Override
+        public MetaData getMetaData() {
+            return new MetaData(MetaData.TTL_10_DAYS, "NestedPayloadData");
+        }
+
+        @Override
+        public boolean isDataInvalid(byte[] pubKeyHash) {
+            return false;
+        }
+
+        @Override
+        public double getCostFactor() {
+            return 0.5;
+        }
     }
 
     // DistributedData of a higher-level module as this node knows it. It serializes as common.StringLongPair. value is
