@@ -34,6 +34,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -188,6 +189,32 @@ class AuthenticatedDataStorageServiceTest {
         assertFalse(result.isSuccess());
         assertTrue(result.isExpired(), result.toString());
         assertFalse(peerStore.getPersistableStore().getMap().containsKey(removeRequest.getStorageKey()));
+    }
+
+    // Nodes of earlier versions compute expiry, priority and cost factor from the field metaData. A relay sends them the
+    // registered MetaData. The hash does not cover the field, so the signature and the storage key stay the same.
+    @Test
+    void relayedRemoveAndRefreshRequestsCarryTheRegisteredMetaData() throws GeneralSecurityException {
+        MetaData forgedMetaData = new MetaData(MetaData.TTL_2_DAYS, MetaData.HIGHEST_PRIORITY,
+                TestDistributedData.class.getSimpleName(), 0);
+
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        //noinspection deprecation
+        RemoveAuthenticatedDataRequest forgedRemoveRequest = RemoveAuthenticatedDataRequest.fromProto(
+                removeRequest.toValueProto(false).toBuilder().setMetaData(forgedMetaData.toProto(false)).build());
+        //noinspection deprecation
+        assertEquals(TestDistributedData.META_DATA.toProto(false), forgedRemoveRequest.toValueProto(false).getMetaData());
+        assertArrayEquals(removeRequest.serializeForHash(), forgedRemoveRequest.serializeForHash());
+
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair);
+        //noinspection deprecation
+        RefreshAuthenticatedDataRequest forgedRefreshRequest = RefreshAuthenticatedDataRequest.fromProto(
+                refreshRequest.toValueProto(false).toBuilder().setMetaData(forgedMetaData.toProto(false)).build());
+        //noinspection deprecation
+        assertEquals(TestDistributedData.META_DATA.toProto(false), forgedRefreshRequest.toValueProto(false).getMetaData());
+        assertArrayEquals(refreshRequest.serializeForHash(), forgedRefreshRequest.serializeForHash());
     }
 
     @Test

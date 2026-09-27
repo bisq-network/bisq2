@@ -71,8 +71,9 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 authenticatedData.getClassName());
     }
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node only
-    // serializes the received value again. It never uses it for a decision (see getMetaData()).
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
+    // registered MetaData of the class name (see fromProto) and never uses the field for a decision (see
+    // getMetaData()).
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
     private final byte[] hash;
@@ -154,9 +155,17 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         try {
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
             //noinspection deprecation
-            MetaData metaData = MetaData.fromProto(proto.getMetaData());
+            MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
             // Nodes of earlier versions do not send className.
-            String className = proto.getClassName().isEmpty() ? metaData.getClassName() : proto.getClassName();
+            String className = proto.getClassName().isEmpty() ?
+                    receivedMetaData.getClassName() :
+                    proto.getClassName();
+            // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or
+            // relay chose. The hash does not cover metaData in these versions, so the signature and the storage key do
+            // not change.
+            MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
+                    StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
+                    receivedMetaData;
             return new RemoveAuthenticatedDataRequest(
                     proto.getVersion(),
                     metaData,

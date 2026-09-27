@@ -76,6 +76,18 @@ public final class StorableTypesRegistry {
     }
 
     /**
+     * Mailbox data, remove requests and refresh requests carry the deprecated field metaData for nodes of earlier
+     * versions. Those nodes use it for store selection, expiry and the cost factor of the message. A node sends the
+     * MetaData which it registered for the class name, also when it relays a message which a sender or another relay
+     * filled with other values.
+     *
+     * @return the registered MetaData of the class name, or the received MetaData if the class name is not registered.
+     */
+    public static MetaData getMetaDataForEarlierVersions(String className, MetaData receivedMetaData) {
+        return findMetaData(className).orElse(receivedMetaData);
+    }
+
+    /**
      * For code paths which the storage layer reaches only after it has accepted the class name (see
      * StorageService). A missing registration there is a programming error.
      */

@@ -85,8 +85,18 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
 
 - The field `metaData` of `MailboxData`, `RemoveMailboxRequest`, `RemoveAuthenticatedDataRequest` and
   `RefreshAuthenticatedDataRequest` is deprecated. New nodes still set it to the registered MetaData of the type,
-  because nodes of earlier versions use it for store selection, expiry and cost factor. A node that relays or persists
-  a received message keeps the received value.
+  because nodes of earlier versions use it for store selection, expiry and cost factor.
+- When a node receives such a message, it replaces the received `metaData` by the MetaData which it registered for the
+  class name. It then relays and persists the message with the registered values. It keeps the received value if the
+  class name is not registered, or if the hash of the message covers `metaData`. The hash does not cover it in
+  versions 1 to 3 of `MailboxData`, `RemoveMailboxRequest` and `RemoveAuthenticatedDataRequest`, and in all versions of
+  `RefreshAuthenticatedDataRequest`. So the replacement changes neither the signature, the storage key nor the proof of
+  work payload.
+
+  Reason: otherwise a node forwards values which a sender or relay chose, and which it does not use itself. A node of
+  an earlier version would use them for store selection, expiry and cost factor. It would then expect another cost
+  factor than the relay paid (see [Message cost](message-cost.md#compatibility)), and select another store if
+  `className` and `metaData` name different types.
 - `className` is excluded from the hash. Signature preimages, storage keys, proof of work payloads and the order of
   inventory entries are computed without it. Nodes of earlier versions drop the unknown field and compute the same
   bytes.

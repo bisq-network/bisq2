@@ -30,6 +30,7 @@ import java.security.KeyPair;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -135,6 +136,49 @@ class MailboxMetaDataTest {
         double confidentialMessageImpact = MessageCostPolicy.getCostFactor(request.getMailboxSequentialData()
                 .getMailboxData().getConfidentialMessage());
         assertEquals(Math.max(0.25, confidentialMessageImpact), MessageCostPolicy.getCostFactor(requestOfUnknownType));
+    }
+
+    // Nodes of earlier versions compute expiry, priority and cost factor from the field metaData. A relay sends them the
+    // registered MetaData. The hash does not cover the field, so the signature and the storage key stay the same.
+    @Test
+    void relayedMailboxRequestsCarryTheRegisteredMetaData() throws GeneralSecurityException {
+        AddMailboxRequest addRequest = createAddMailboxRequest();
+        AddMailboxRequest forgedAddRequest = withForgedMetaData(addRequest);
+        //noinspection deprecation
+        assertEquals(AckMessage.META_DATA.toProto(false),
+                forgedAddRequest.toValueProto(false).getMailboxSequentialData().getMailboxData().getMetaData());
+        assertArrayEquals(addRequest.serializeForHash(), forgedAddRequest.serializeForHash());
+
+        RemoveMailboxRequest removeRequest = createRemoveMailboxRequest();
+        //noinspection deprecation
+        RemoveMailboxRequest forgedRemoveRequest = RemoveMailboxRequest.fromProto(removeRequest.toValueProto(false)
+                .toBuilder()
+                .setMetaData(FORGED_META_DATA.toProto(false))
+                .build());
+        //noinspection deprecation
+        assertEquals(AckMessage.META_DATA.toProto(false), forgedRemoveRequest.toValueProto(false).getMetaData());
+        assertArrayEquals(removeRequest.serializeForHash(), forgedRemoveRequest.serializeForHash());
+    }
+
+    @Test
+    void mailboxDataKeepsTheReceivedMetaDataIfTheTypeIsNotRegistered() {
+        MetaData metaDataOfUnknownType = new MetaData(MetaData.TTL_10_DAYS, "NotRegisteredMailboxMessage");
+        MailboxData mailboxData = MailboxData.fromProto(
+                new MailboxData(metaDataOfUnknownType, createConfidentialMessage(senderKeyPair)).toProto(false));
+
+        //noinspection deprecation
+        assertEquals(metaDataOfUnknownType.toProto(false), mailboxData.toProto(false).getMetaData());
+    }
+
+    @Test
+    void mailboxDataKeepsTheReceivedMetaDataIfTheHashCoversIt() {
+        // In version 0 the hash covers metaData. Another value would change the signature and the storage key.
+        bisq.network.protobuf.MailboxData proto = new MailboxData(FORGED_META_DATA,
+                createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
+                .setVersion(0)
+                .build();
+
+        assertEquals(proto, MailboxData.fromProto(proto).toProto(false));
     }
 
     private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException {

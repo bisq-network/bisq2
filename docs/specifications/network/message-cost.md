@@ -108,9 +108,10 @@ This mechanism does not exist yet, because no second version exists.
   - A node of an earlier version which relays a request with changed MetaData pays the cost factor of that MetaData.
     A node of this version expects the value of the policy. The difference in the storage cost factor is at most 0.2
     for the types of this version.
-  - A node of this version which relays such a request keeps the received MetaData, but pays the value of the
-    policy. A node of an earlier version expects the cost factor of the MetaData. For an `AddMailboxRequest` the
-    difference can reach 0.75.
+  - A node of this version sends its registered MetaData in this field, also when it relays a request (see
+    [Storage MetaData](storage-metadata.md#compatibility)). Today the registered MetaData of each type has the time to
+    live and maximum map size which the policy keeps, so a node of an earlier version expects the value of the
+    policy.
 
 ## Known limitations
 

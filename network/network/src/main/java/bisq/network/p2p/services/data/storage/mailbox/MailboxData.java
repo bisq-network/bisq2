@@ -50,8 +50,9 @@ public final class MailboxData implements StorageData, Canonical {
 
     private final ConfidentialMessage confidentialMessage;
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node only
-    // serializes the received value again. It never uses it for a decision (see getMetaData()).
+    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
+    // registered MetaData of the class name (see fromProto) and never uses the field for a decision (see
+    // getMetaData()).
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
     private final MetaData metaData;
@@ -100,9 +101,17 @@ public final class MailboxData implements StorageData, Canonical {
 
     public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) {
         //noinspection deprecation
-        MetaData metaData = MetaData.fromProto(proto.getMetaData());
+        MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
         // Nodes of earlier versions do not send className.
-        String className = proto.getClassName().isEmpty() ? metaData.getClassName() : proto.getClassName();
+        String className = proto.getClassName().isEmpty() ?
+                receivedMetaData.getClassName() :
+                proto.getClassName();
+        // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or relay
+        // chose. The hash does not cover metaData in these versions, so the signature and the storage key do not
+        // change.
+        MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
+                StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
+                receivedMetaData;
         return new MailboxData(
                 proto.getVersion(),
                 metaData,
@@ -122,7 +131,7 @@ public final class MailboxData implements StorageData, Canonical {
             // the bare message. The value schema is therefore referenced directly, and a purpose-specific schema of
             // MailboxData must reference the value schema of ConfidentialMessage for the same purpose.
             .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
-            // The received metaData, not the MetaData from the registry which getMetaData() returns
+            // The field metaData, not the MetaData which getMetaData() returns
             .canonical(2, mailboxData -> mailboxData.metaData)
             .sint32(3, MailboxData::getVersion)
             .string(4, MailboxData::getClassName)
