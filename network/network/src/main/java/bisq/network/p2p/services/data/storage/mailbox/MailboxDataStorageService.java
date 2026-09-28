@@ -116,6 +116,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return DataStorageResult.failed().requestAlreadyReceived();
             }
 
+            // Mailbox adds have sequence 1; removals always have MAX_VALUE, including V1 removals.
             if (requestFromMap != null && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
@@ -170,9 +171,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
-                // We have had the entry already removed.
-                if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
-                    // We update the request, so we have the latest sequence number.
+                // Signature V1 does not cover created, so a relay can shorten the lifetime of a V1 removal.
+                // A verified V2 removal replaces it. Otherwise the stored removal stays unchanged.
+                if (request.isSignatureV2Present() && !requestFromMap.isSignatureV2Present()) {
                     map.put(storageKey, request);
                     persist();
                 }

@@ -23,10 +23,13 @@ import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -36,6 +39,7 @@ import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTes
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * A mailbox store holds the messages of one MailboxMessage type. The message is encrypted, so the store checks the
@@ -65,6 +69,90 @@ class MailboxDataStorageServiceTest {
                 "mailbox",
                 STORE_KEY);
         mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
+    }
+
+    @AfterEach
+    void waitForPendingWrites() {
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+    void removalPreventsLaterAdd(boolean legacy, boolean addFirst) throws GeneralSecurityException {
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        RemoveMailboxRequest remove = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        if (legacy) {
+            remove = RemoveMailboxRequest.fromProto(remove.toValueProto(false).toBuilder()
+                    .setVersion(1).clearSignatureV2().build());
+        }
+        if (addFirst) {
+            assertTrue(store.add(add).isSuccess());
+        }
+        assertTrue(store.remove(remove).isSuccess());
+
+        DataStorageResult result = store.add(add);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(remove, store.getPersistableStore().getMap().get(add.getStorageKey()));
+        assertTrue(store.remove(remove).isAlreadyRemoved());
+        assertSame(remove, store.getPersistableStore().getMap().get(add.getStorageKey()));
+    }
+
+    @Test
+    void v2RemovalReplacesLegacyRemoval() throws GeneralSecurityException {
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        RemoveMailboxRequest legacy = toLegacy(verified);
+        assertTrue(store.remove(legacy).isSuccess());
+
+        assertTrue(store.remove(verified).isAlreadyRemoved());
+
+        assertSame(verified, store.getPersistableStore().getMap().get(add.getStorageKey()));
+        assertTrue(store.add(add).isSequenceNrInvalid());
+        assertSame(verified, store.getPersistableStore().getMap().get(add.getStorageKey()));
+    }
+
+    @Test
+    void legacyRemovalDoesNotReplaceV2Removal() throws GeneralSecurityException {
+        RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        assertTrue(store.remove(verified).isSuccess());
+
+        assertTrue(store.remove(toLegacy(verified)).isAlreadyRemoved());
+
+        assertSame(verified, store.getPersistableStore().getMap().get(verified.getStorageKey()));
+    }
+
+    @Test
+    void secondV2RemovalDoesNotReplaceFirst() throws GeneralSecurityException {
+        RemoveMailboxRequest first = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        assertTrue(store.remove(first).isSuccess());
+        RemoveMailboxRequest second = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        while (second.getCreated() == first.getCreated()) {
+            second = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        }
+
+        assertTrue(store.remove(second).isAlreadyRemoved());
+
+        assertSame(first, store.getPersistableStore().getMap().get(first.getStorageKey()));
+    }
+
+    @Test
+    void invalidSignatureV2CannotReplaceLegacyRemoval() throws GeneralSecurityException {
+        RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        RemoveMailboxRequest legacy = toLegacy(verified);
+        assertTrue(store.remove(legacy).isSuccess());
+        // Signature V2 covers created
+        RemoveMailboxRequest invalid = RemoveMailboxRequest.fromProto(verified.toValueProto(false).toBuilder()
+                .setCreated(verified.getCreated() + 1).build());
+
+        assertTrue(store.remove(invalid).isSignatureInvalid());
+
+        assertSame(legacy, store.getPersistableStore().getMap().get(legacy.getStorageKey()));
+    }
+
+    private static RemoveMailboxRequest toLegacy(RemoveMailboxRequest request) {
+        return RemoveMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
+                .setVersion(1).clearSignatureV2().build());
     }
 
     // The sender of the confidential message must sign the add request (see
