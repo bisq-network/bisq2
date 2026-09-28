@@ -18,8 +18,8 @@ For each field of the protobuf message, the canonical field contains the value t
 builder receives, converted in the same way. A Java field that is `transient` is not part of the
 canonical message. A field annotated with `@ExcludeForHash` is part of it: the canonical default
 encoding contains all non-transient fields (see
-[`canonical-encoding.md`](canonical-encoding.md#complete-encoding)). The `SIGNATURE` and
-`STORAGE_KEY` schemas leave such a field out, as `serializeForHash()` does (see
+[`canonical-encoding.md`](canonical-encoding.md#complete-encoding)). The `STORAGE_KEY` schemas leave
+such a field out, as `serializeForHash()` does; the `SIGNATURE` schemas contain it (see
 [`canonical-encoding.md`](canonical-encoding.md#encoding-purpose)).
 
 ## Composition

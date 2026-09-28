@@ -35,10 +35,14 @@ A schema is correct only when tests prove its bytes. Code review cannot find a w
 - **Differences to `serializeForHash()`.** Assert them (`assertFalse(Arrays.equals(...))`) for classes
   with `@ExcludeForHash` fields or a custom `serializeForHash()`, so that a change on either side is
   noticed.
-- **Hash purposes.** `encodeCanonical(SIGNATURE)` and `encodeCanonical(STORAGE_KEY)` must
-  equal `serializeForHash()` (see `hashPurposesMatchSerializeForHash` in `StorageCanonicalEncoderTest`).
-  For `excludeOnlyInVersions`, test versions inside and outside the list. Assert documented differences
-  (`AuthorizedData`, and the `SIGNATURE` bytes of holders of external data with an excluded field).
+- **Hash purposes.** `encodeCanonical(STORAGE_KEY)` must equal `serializeForHash()`, and so must
+  `encodeCanonical(SIGNATURE)` for classes without signature V2 (see `hashPurposesMatchSerializeForHash`
+  in `StorageCanonicalEncoderTest`). For `excludeOnlyInVersions`, test versions inside and outside the
+  list. Assert documented differences (`AuthorizedData`, and the `SIGNATURE` bytes of holders of
+  external data with an excluded field).
+- **Signature V2 preimages.** Test the layout with bytes written independently by protobuf's
+  `CodedOutputStream`, and test that a changed field makes the signature invalid (see
+  `AuthenticatedDataSignatureV2Test` and `MailboxSignatureV2Test`).
 - **The purpose reaches nested objects.** Bytes show it where a nested class has a purpose-specific
   schema, for example `MailboxSequentialData` with `MailboxData` in the hash-purpose test. Otherwise use a
   nested object that records the purposes it receives, as `PurposeRecordingAuthenticatedData` in

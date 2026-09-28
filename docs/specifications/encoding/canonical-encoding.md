@@ -22,15 +22,19 @@ other modules) map to canonical messages is specified in
   `AuthenticatedSequentialData`, `MailboxData`, `MailboxSequentialData`, `ConfidentialMessage`, and all
   `DataRequest` types. `ConfidentialData` of the security module, which `ConfidentialMessage` contains,
   implements it as well.
-- The classes with fields annotated with `@ExcludeForHash` (`MailboxData`,
-  `RemoveAuthenticatedDataRequest`, `RefreshAuthenticatedDataRequest`, `RemoveMailboxRequest`) leave
-  these fields out of their `SIGNATURE` and `STORAGE_KEY` schemas. Because the purpose reaches
-  nested objects, the `STORAGE_KEY` encodings of all these classes equal their `serializeForHash()`,
-  except for `AuthorizedData`. The `SIGNATURE` encodings equal it as well, except for `AuthorizedData`
-  and for data of higher-level modules, which the `SIGNATURE` purpose contains with its exact bytes.
-- No production call site uses canonical encoding yet. Storage keys, signature preimages, proof of work
-  payloads, and the inventory order still use `serializeForHash()`. Switching a call site is a protocol
-  change; see [Changing an encoding](#changing-an-encoding).
+- The classes with fields annotated with `@ExcludeForHash` (`MailboxData`, the add, remove, and
+  refresh requests of authenticated data, and the add and remove requests of mailbox data) leave
+  these fields out of their `STORAGE_KEY` schemas. Because the purpose reaches nested objects, the
+  `STORAGE_KEY` encodings of all storage classes equal their `serializeForHash()`, except for
+  `AuthorizedData`.
+- The `SIGNATURE` purpose of the add and remove requests is the preimage of signature V2 (see
+  [`../network/storage-request-signatures.md`](../network/storage-request-signatures.md)). These
+  requests and `MailboxData` have a `SIGNATURE_V2_SCHEMA` that contains their `@ExcludeForHash`
+  fields. The other classes use their default schema for `SIGNATURE`, which contains data of
+  higher-level modules with its exact bytes.
+- Signature V2 is the only production call site of canonical encoding. Storage keys, the preimages of
+  signature V1, proof of work payloads, and the inventory order still use `serializeForHash()`.
+  Switching such a call site is a protocol change; see [Changing an encoding](#changing-an-encoding).
 - Classes of higher-level modules (for example offers, user profiles, chat messages) have no canonical
   encoding yet. The network classes hold them in a `google.protobuf.Any` and keep the received bytes of
   that `Any`. The `DEFAULT` and `SIGNATURE` purposes contain these bytes; the `STORAGE_KEY` purpose
@@ -82,8 +86,7 @@ The default encoding is not identical to `serializeForHash()`:
 
 - `serializeForHash()` omits fields annotated with `@ExcludeForHash` (for example `metaData` and
   `version` of the remove, refresh, and mailbox classes). The default encoding contains them. The
-  `SIGNATURE` and `STORAGE_KEY` encodings leave them out (see
-  [Encoding purpose](#encoding-purpose)).
+  `STORAGE_KEY` encodings leave them out (see [Encoding purpose](#encoding-purpose)).
 - `AuthorizedData.serializeForHash()` omits the signature, so that republishing keeps the storage key.
   All canonical encodings of `AuthorizedData` contain the signature (see
   [Unresolved questions](#unresolved-questions)).
@@ -109,11 +112,11 @@ therefore have no purpose with identical bytes yet (see
 [Unresolved questions](#unresolved-questions)). A call site without such a purpose needs a new
 purpose-specific schema or an activation.
 
-The `SIGNATURE` encodings contain the exact bytes of data of higher-level modules. For the classes that
-hold such data, directly or nested (`AuthenticatedData`, `AuthenticatedSequentialData`,
-`AddAuthenticatedDataRequest`, `AddAppendOnlyDataRequest`), they are therefore not identical to the
-preimage of the existing signatures. These signatures keep `serializeForHash()`. The `SIGNATURE` purpose
-of these classes is the preimage of a new signature, which needs an activation.
+The `SIGNATURE` encodings contain the exact bytes of data of higher-level modules and the
+`@ExcludeForHash` fields of the network classes. They are therefore not identical to the preimages of
+signature V1, which keep `serializeForHash()`. The `SIGNATURE` purpose is the preimage of signature V2,
+a new signature without legacy bytes (see
+[`../network/storage-request-signatures.md`](../network/storage-request-signatures.md)).
 
 ### Preimages without legacy bytes
 
@@ -293,11 +296,11 @@ different purpose.
 | Purpose | Preimage |
 | --- | --- |
 | `DEFAULT` | The complete encoding of an object, with all its encoded fields. Used when no specific purpose applies. |
-| `SIGNATURE` | The bytes that are signed and verified, for example the `AuthenticatedSequentialData` of an `AddAuthenticatedDataRequest`. The existing signatures do not use it yet (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
+| `SIGNATURE` | The bytes that are signed and verified: the preimage of signature V2 of the storage requests. Signature V1 does not use it (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
 | `STORAGE_KEY` | The bytes that are hashed to the storage key of an object, for example the `AuthenticatedData` of an `AddAuthenticatedDataRequest`. |
 
 `SIGNATURE` and `STORAGE_KEY` are the hash purposes: their preimages are hashed or signed. Nodes
-compute the existing preimages with `serializeForHash()`.
+compute the storage keys and the preimages of signature V1 with `serializeForHash()`.
 
 Rules:
 
@@ -318,11 +321,15 @@ Rules:
 - An implementation selects its schema with a `switch` over all purposes, without a `default` branch.
   A new purpose then does not compile until every class has decided its encoding for it. A class
   without a specific encoding for a purpose uses its default schema.
-- Fields annotated with `@ExcludeForHash` are left out of the `SIGNATURE` and `STORAGE_KEY`
-  schemas, as `serializeForHash()` leaves them out. The `DEFAULT` schema contains them. A comment at the
-  schema names the left-out fields and their annotation. An annotation with `excludeOnlyInVersions` is
+- Fields annotated with `@ExcludeForHash` are left out of the `STORAGE_KEY` schemas, as
+  `serializeForHash()` leaves them out. The `DEFAULT` schema contains them. A comment at the schema
+  names the left-out fields and their annotation. An annotation with `excludeOnlyInVersions` is
   reproduced with the same version condition, based on the version that `getVersion()` of the object
-  returns. With these schemas, the hash purposes reproduce the existing hash preimages.
+  returns. With these schemas, the `STORAGE_KEY` purpose reproduces the existing storage keys.
+- The `SIGNATURE` purpose is the preimage of signature V2, which has no legacy bytes. Its schemas
+  contain the fields annotated with `@ExcludeForHash`. A `SIGNATURE_V2_SCHEMA` may leave out a field
+  only for a stated reason, named in a comment at the schema, and never the signature that the preimage
+  is signed for.
 - Exception: data of higher-level modules. Its fields cannot be left out of the kept bytes without
   decoding and encoding the data again, which loses the fields that the node does not know. The
   `SIGNATURE` purpose contains the kept bytes completely; the `STORAGE_KEY` purpose uses the hash
@@ -339,7 +346,7 @@ Rationale:
 - A purpose applies to the whole preimage, and the data that a purpose leaves out can be at any depth.
   The existing hash serialization works this way: `toProto(serializeForHash)` passes the flag to the
   `toProto` calls of nested objects, and each level clears its own `@ExcludeForHash` fields. For
-  example, the signature preimage of `AddMailboxRequest` (`MailboxSequentialData.serializeForHash()`)
+  example, the preimage of signature V1 of `AddMailboxRequest` (`MailboxSequentialData.serializeForHash()`)
   does not contain the `version` of the nested `MailboxData`. A canonical encoding can reproduce such a
   preimage only if the nested objects receive the purpose.
 - If the purpose applied only to the root object, a parent would have to select the encoding of each
@@ -356,17 +363,19 @@ Rationale:
 
 Security note on `@ExcludeForHash`: a field that a hash purpose leaves out is not protected by a hash
 or signature of that purpose. The annotation keeps hashes compatible with nodes that do not know a
-field, and the hash purposes reproduce it only for byte parity. In `MailboxData`,
-`RemoveAuthenticatedDataRequest`, and `RemoveMailboxRequest`, the unprotected `version` also decides
-whether `metaData` is left out, so in versions 1 to 3 neither is protected. A preimage without legacy
-bytes must not repeat such exclusions without a reason.
+field, and the `STORAGE_KEY` purpose reproduces it only for byte parity. In `MailboxData`,
+`RemoveAuthenticatedDataRequest`, and `RemoveMailboxRequest`, the `version` also decides whether
+`metaData` is left out, so in versions 1 to 3 signature V1 protects neither. Signature V2 covers
+`version`. A preimage without legacy bytes must not repeat such exclusions without a reason.
 
-Current state: `MailboxData`, `RemoveAuthenticatedDataRequest`, `RefreshAuthenticatedDataRequest`, and
-`RemoveMailboxRequest` use `SIGNATURE_SCHEMA` and `STORAGE_KEY_SCHEMA` without their
-`@ExcludeForHash` fields. `DefaultAuthenticatedData`, `AuthorizedData`, and `AddAppendOnlyDataRequest`
-use `DEFAULT_SCHEMA` for `DEFAULT` and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA` with the hash
-serialization of the data of the higher-level module. All other implementations use `DEFAULT_SCHEMA` for
-all three purposes. Every implementation passes the purpose on.
+Current state: `MailboxData`, `AddAuthenticatedDataRequest`, `RemoveAuthenticatedDataRequest`,
+`AddMailboxRequest`, and `RemoveMailboxRequest` use a `SIGNATURE_V2_SCHEMA` for `SIGNATURE` and a
+`STORAGE_KEY_SCHEMA` without their `@ExcludeForHash` fields. `RefreshAuthenticatedDataRequest` has no
+preimage of its own; it uses `DEFAULT_SCHEMA` for `DEFAULT` and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA`.
+`DefaultAuthenticatedData`, `AuthorizedData`, and `AddAppendOnlyDataRequest` use `DEFAULT_SCHEMA` for
+`DEFAULT` and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA` with the hash serialization of the data of the
+higher-level module. All other implementations use `DEFAULT_SCHEMA` for all three purposes. Every
+implementation passes the purpose on.
 
 ## Schema metadata without effect on the bytes
 
@@ -444,9 +453,11 @@ Canonical bytes become part of the protocol as soon as a call site uses them.
 - Differences to `serializeForHash()` must be asserted by tests, so that a change of either side is
   noticed.
 - Tests must show the bytes of every purpose: the default encoding equals `serialize()`, and the
-  `SIGNATURE` and `STORAGE_KEY` encodings equal `serializeForHash()`, for versions inside and
-  outside every `excludeOnlyInVersions` list. Documented differences (`AuthorizedData`, and the
-  `SIGNATURE` encoding of external data) are asserted.
+  `STORAGE_KEY` encodings equal `serializeForHash()`, for versions inside and outside every
+  `excludeOnlyInVersions` list. The `SIGNATURE` encodings equal `serializeForHash()` for the classes
+  without signature V2 and without external data. Documented differences (`AuthorizedData`, and the
+  `SIGNATURE` encoding of external data) are asserted. The preimages of signature V2 have tests with
+  a fixed layout.
 - Tests must show that the purpose reaches nested objects: in the framework for the `canonical` field
   and for every field type with a nested schema, and in the model for a chain of nested classes, with a
   nested object that records the purposes it receives.
@@ -509,13 +520,6 @@ the first schema that uses the feature, and an update of this specification.
   purpose contains the kept bytes. The `STORAGE_KEY` purpose still uses the protobuf serialization for
   hashes. Replacing it changes storage keys, unless the canonical bytes reproduce the protobuf hash
   serialization.
-- **`@ExcludeForHash` fields of network classes in the `SIGNATURE` purpose.** The `SIGNATURE` schemas of
-  `MailboxData`, `RemoveAuthenticatedDataRequest`, `RefreshAuthenticatedDataRequest`, and
-  `RemoveMailboxRequest` leave these fields out, to reproduce `serializeForHash()`. The `SIGNATURE`
-  purpose of the holders of data of higher-level modules is now the preimage of a new signature. For a
-  new signature, the security note above applies: a preimage without legacy bytes must not repeat such
-  exclusions without a reason. Before a new signature uses these schemas, the exclusions need a
-  decision.
 - **Explicit presence.** `optional` fields whose present value can be the default need framework
   support.
 - **Enforcement of `oneof` alternatives.** The framework cannot express that a group of fields is a
