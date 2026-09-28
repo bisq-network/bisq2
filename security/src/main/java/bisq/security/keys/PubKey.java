@@ -96,11 +96,13 @@ public final class PubKey implements NetworkProto {
         return id;
     }
 
-    // Whether the string is an ID which getId() creates: the lower-case hex encoding of a hash. Other strings, for
-    // example with upper-case letters, are no ID, so that a hash has only one ID.
+    // Whether the string is an ID which getId() creates: the lower-case hex encoding of a hash, which has 20 bytes.
+    // Other strings, for example with upper-case letters, are no ID, so that a hash has only one ID.
     public static boolean isId(String id) {
         try {
-            return Hex.encode(Hex.decode(id)).equals(id);
+            byte[] hash = Hex.decode(id);
+            NetworkDataValidation.validateHash(hash);
+            return Hex.encode(hash).equals(id);
         } catch (IllegalArgumentException e) {
             return false;
         }

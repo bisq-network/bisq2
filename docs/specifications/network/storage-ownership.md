@@ -49,7 +49,7 @@ compare both before it accepts the data.
    | append-only data | none: it is not signed and cannot be removed |
 
 2. A profile ID names the owner hash only if it is the lower-case hex encoding of the hash, as `PubKey.getId()` creates
-   it. Data with another profile ID is invalid (`isDataInvalid()`).
+   it: 40 characters for the 20 bytes of the hash. Data with another profile ID is invalid (`isDataInvalid()`).
 
    Reason: one hash must have only one ID. Earlier versions compared the ID with the hex encoding of the publisher's
    hash as strings, so they also accept only this encoding.
@@ -208,7 +208,8 @@ After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then
 - A mailbox add request of another sender is rejected.
 - With the real MuSig offerbook: a copy of an offer which another user signs is rejected, the removal of that user does
   not remove the offer, and the maker can remove it.
-- `PubKey.findHashFromId` accepts only IDs which `PubKey.getId()` creates.
+- `PubKey.isId` and `PubKey.getHashFromId` accept only IDs which `PubKey.getId()` creates, also not hex encodings of
+  another length.
 
 ## Related documents and code
 
