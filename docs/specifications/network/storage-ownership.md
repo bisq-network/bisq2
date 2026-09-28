@@ -49,7 +49,7 @@ compare both before it accepts the data.
    | append-only data | none: it is not signed and cannot be removed |
 
 2. A profile ID names the owner hash only if it is the lower-case hex encoding of the hash, as `PubKey.getId()` creates
-   it. Otherwise the data names no owner.
+   it. Data with another profile ID is invalid (`isDataInvalid()`).
 
    Reason: one hash must have only one ID. Earlier versions compared the ID with the hex encoding of the publisher's
    hash as strings, so they also accept only this encoding.
@@ -72,7 +72,9 @@ compare both before it accepts the data.
 ### Admission
 
 5. The authenticated data store accepts an add request only if the publisher is the owner of the data. Otherwise the
-   result is `ownerInvalid`. The only exception is the transition rule below.
+   result is `ownerInvalid`. The only exception is the transition rule below. The store checks the content of the data
+   (`isDataInvalid()`, result `dataInvalid`) before the owner, because the owner can only be read from valid data, for
+   example from a valid profile ID.
 6. The mailbox store accepts an add request only if the sender is the owner of the confidential message. Otherwise the
    result is `ownerInvalid`. The receiver removes mailbox data; storage key V2 of mailbox data contains the key of the
    receiver (see [`storage-keys.md`](storage-keys.md)).

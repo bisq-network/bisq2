@@ -100,14 +100,15 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
+        // The owner check needs valid data, for example a valid profile ID as the author of a chat message
+        if (authenticatedData.isDataInvalid()) {
+            log.warn("AuthenticatedData is invalid at add. request={}", request);
+            return DataStorageResult.failed().dataInvalid();
+        }
         if (authenticatedSequentialData.isOwnerInvalid()) {
             log.warn("The publisher is not the owner of the data at add. request={}",
                     StringUtils.truncate(request.toString(), 1500));
             return DataStorageResult.failed().ownerInvalid();
-        }
-        if (authenticatedData.isDataInvalid()) {
-            log.warn("AuthenticatedData is invalid at add. request={}", request);
-            return DataStorageResult.failed().dataInvalid();
         }
         if (authenticatedData instanceof AuthorizedData authorizedData && authorizedData.isNotAuthorized()) {
             log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));

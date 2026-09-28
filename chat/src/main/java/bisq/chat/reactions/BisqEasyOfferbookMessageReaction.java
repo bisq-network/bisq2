@@ -58,9 +58,10 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
         return unsafeToProto(serializeForHash);
     }
 
+    // The profile ID must be the ID of a public key, so that it names the reacting user (see getOwnerPubKeyHash())
     @Override
     public boolean isDataInvalid() {
-        return false;
+        return !PubKey.isId(userProfileId);
     }
 
     // The reacting user owns the reaction. The profile ID is the ID of the public key of the user (PubKey.getId()).

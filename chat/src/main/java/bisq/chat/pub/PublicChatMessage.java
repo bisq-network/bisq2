@@ -63,9 +63,10 @@ public abstract class PublicChatMessage extends ChatMessage implements OwnedDist
 
     abstract public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash);
 
+    // The profile ID must be the ID of a public key, so that it names the author (see getOwnerPubKeyHash())
     @Override
     public boolean isDataInvalid() {
-        return false;
+        return !PubKey.isId(authorUserProfileId);
     }
 
     // The author owns the message. The profile ID is the ID of the public key of the author (PubKey.getId()).
