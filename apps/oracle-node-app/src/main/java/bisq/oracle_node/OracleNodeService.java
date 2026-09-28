@@ -192,7 +192,6 @@ public class OracleNodeService implements Service {
         Bisq1BridgeService.Config bisq1BridgeConfig = Bisq1BridgeService.Config.from(config.getBisq1Bridge());
         bisq1BridgeService = new Bisq1BridgeService(bisq1BridgeConfig,
                 persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,

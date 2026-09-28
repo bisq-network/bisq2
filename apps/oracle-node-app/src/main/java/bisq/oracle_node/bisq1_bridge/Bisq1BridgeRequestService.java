@@ -36,7 +36,6 @@ import bisq.common.data.Result;
 import bisq.common.encoding.Hex;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -91,7 +90,6 @@ public class Bisq1BridgeRequestService implements Service,
     private final AccountAgeWitnessGrpcService accountAgeWitnessGrpcService;
     private final SignedWitnessGrpcService signedWitnessGrpcService;
     private final AccountTimestampGrpcService accountTimestampGrpcService;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedOracleNode myAuthorizedOracleNode;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -108,7 +106,6 @@ public class Bisq1BridgeRequestService implements Service,
     private ExecutorService revalidationExecutor;
 
     public Bisq1BridgeRequestService(PersistenceService persistenceService,
-                                     IdentityService identityService,
                                      NetworkService networkService,
                                      AuthorizedBondedRolesService authorizedBondedRolesService,
                                      PrivateKey authorizedPrivateKey,
@@ -118,7 +115,6 @@ public class Bisq1BridgeRequestService implements Service,
                                      AuthorizedOracleNode myAuthorizedOracleNode,
                                      GrpcClient grpcClient) {
         this(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
@@ -132,7 +128,6 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     Bisq1BridgeRequestService(PersistenceService persistenceService,
-                              IdentityService identityService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
@@ -143,7 +138,6 @@ public class Bisq1BridgeRequestService implements Service,
                               GrpcClient grpcClient,
                               BondedRoleGrpcService bondedRoleGrpcService) {
         this(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
@@ -159,7 +153,6 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     Bisq1BridgeRequestService(PersistenceService persistenceService,
-                              IdentityService identityService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
@@ -171,7 +164,6 @@ public class Bisq1BridgeRequestService implements Service,
                               BondedRoleGrpcService bondedRoleGrpcService,
                               AccountAgeWitnessGrpcService accountAgeWitnessGrpcService,
                               SignedWitnessGrpcService signedWitnessGrpcService) {
-        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.authorizedPrivateKey = authorizedPrivateKey;
