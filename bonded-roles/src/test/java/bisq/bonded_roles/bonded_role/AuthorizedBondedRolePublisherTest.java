@@ -63,6 +63,7 @@ class AuthorizedBondedRolePublisherTest {
     private DataService dataService;
     private AuthenticatedDataStorageService store;
     private AuthorizedBondedRolesService authorizedBondedRolesService;
+    private AuthorizedBondedRole oracleRole;
     private AuthorizedBondedRole mediatorRole;
     private AuthorizedData authorizedMediatorRole;
 
@@ -80,7 +81,7 @@ class AuthorizedBondedRolePublisherTest {
         when(networkService.getDataService()).thenReturn(Optional.of(dataService));
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, false);
         // The oracle node whose authorized key authorizes the mediator role
-        AuthorizedBondedRole oracleRole = new AuthorizedBondedRole("a".repeat(40),
+        oracleRole = new AuthorizedBondedRole("a".repeat(40),
                 Hex.encode(authorizedKeyPair.getPublic().getEncoded()),
                 BondedRoleType.ORACLE_NODE,
                 "oracle",
@@ -158,6 +159,45 @@ class AuthorizedBondedRolePublisherTest {
         assertThat(store.add(createEntryOf(KeyGeneration.generateDefaultEcKeyPair())).isSuccess()).isTrue();
 
         assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).doesNotContain(mediatorRole);
+    }
+
+    // After a restart, with the startup of the bonded role service, the node still holds the remove request of the
+    // oracle node. It rejects a replay of the removed entry, which a node which missed the removal can send.
+    @Test
+    void restartKeepsTheRemovalOfTheRole() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authorizedMediatorRole,
+                authorizedKeyPair);
+        assertThat(store.add(addRequest).isSuccess()).isTrue();
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store,
+                authorizedMediatorRole,
+                authorizedKeyPair);
+        assertThat(store.remove(removeRequest).isSuccess()).isTrue();
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+
+        PersistenceService persistenceServiceAfterRestart = new PersistenceService(tempDir);
+        DataService dataServiceAfterRestart = new DataService(persistenceServiceAfterRestart);
+        assertThat(persistenceServiceAfterRestart.readAllPersisted().join()).isTrue();
+        AuthenticatedDataStorageService storeAfterRestart = dataServiceAfterRestart.getStorageService()
+                .getOrCreateAuthenticatedDataStore(AuthorizedBondedRole.class.getSimpleName())
+                .join();
+        assertThat(storeAfterRestart.getPersistableStore().getMap()).containsValue(removeRequest);
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.getDataService()).thenReturn(Optional.of(dataServiceAfterRestart));
+        AuthorizedBondedRolesService authorizedBondedRolesServiceAfterRestart =
+                new AuthorizedBondedRolesService(networkService, false);
+        authorizedBondedRolesServiceAfterRestart.getBondedRoles().add(new BondedRole(oracleRole));
+        authorizedBondedRolesServiceAfterRestart.initialize().join();
+        dataServiceAfterRestart.addListener(authorizedBondedRolesServiceAfterRestart);
+
+        try {
+            assertThat(storeAfterRestart.add(addRequest).isSequenceNrInvalid()).isTrue();
+            assertThat(authorizedBondedRolesServiceAfterRestart.getAuthorizedBondedRoleStream())
+                    .doesNotContain(mediatorRole);
+        } finally {
+            authorizedBondedRolesServiceAfterRestart.shutdown().join();
+            storeAfterRestart.getPersistence().persistAsync(storeAfterRestart.getPersistableStore().getClone()).join();
+            dataServiceAfterRestart.shutdown();
+        }
     }
 
     // The entry which the oracle node of the earlier version published with the key pair of its network identity

@@ -46,7 +46,6 @@ public class ReputationService implements Service {
     private final Observable<String> userProfileIdWithScoreChange = new Observable<>();
     private final ObservableHashMap<String, Long> scoreByUserProfileId = new ObservableHashMap<>();
     private final ProfileAgeService profileAgeService;
-    private final NetworkService networkService;
 
     public ReputationService(PersistenceService persistenceService,
                              NetworkService networkService,
@@ -54,7 +53,6 @@ public class ReputationService implements Service {
                              UserProfileService userProfileService,
                              BannedUserService bannedUserService,
                              AuthorizedBondedRolesService authorizedBondedRolesService) {
-        this.networkService = networkService;
         proofOfBurnService = new ProofOfBurnService(networkService,
                 userIdentityService,
                 userProfileService,
@@ -101,8 +99,6 @@ public class ReputationService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-
-        ReputationDataUtil.cleanupMap(networkService);
 
         return proofOfBurnService.initialize()
                 .thenCompose(r -> bondedReputationService.initialize())

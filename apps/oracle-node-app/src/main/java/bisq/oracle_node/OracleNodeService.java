@@ -39,7 +39,6 @@ import bisq.oracle_node.market_price.MarketPricePropagationService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
-import bisq.user.reputation.ReputationDataUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -174,8 +173,6 @@ public class OracleNodeService implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-
-        ReputationDataUtil.cleanupMap(networkService);
 
         Identity identity = identityService.getOrCreateDefaultIdentity();
         NetworkId networkId = identity.getNetworkId();

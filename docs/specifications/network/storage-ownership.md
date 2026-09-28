@@ -202,6 +202,8 @@ After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then
   entry of the network identity. It runs once, does not publish data again which the owner removed, and ignores entries
   of other publishers, data of other authorities and expired entries. Oracle nodes remove bonded roles only with their
   authorized key pair.
+- After a restart with the startup of the bonded role service, a node still holds the remove request of the owner and
+  rejects a replay of the removed entry.
 - Persisted entries of another publisher are removed when a store is loaded. A refresh of such an entry is rejected.
 - A mailbox add request of another sender is rejected.
 - With the real MuSig offerbook: a copy of an offer which another user signs is rejected, the removal of that user does

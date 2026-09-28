@@ -32,8 +32,6 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
@@ -42,7 +40,6 @@ import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Files;
@@ -51,13 +48,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -531,71 +526,6 @@ public class StorageService {
                 });
             }
         };
-    }
-
-    public <T extends AuthorizedDistributedData> void cleanupMap(String storeKey,
-                                                                 Function<AuthorizedDistributedData, Optional<T>> typeFilter) {
-        try {
-            AuthenticatedDataStorageService authenticatedDataStorageService = getOrCreateAuthenticatedDataStore(storeKey).join();
-            Map<ByteArray, AuthenticatedDataRequest> map = authenticatedDataStorageService.getPersistableStore().getMap();
-            // We create a map with the distributedData as key. The duplicated entries will get filtered by data and sequence number, so the most recent and highest seq nr is used.
-            Map<T, Map.Entry<ByteArray, AuthenticatedDataRequest>> entryByDistributedData = map.entrySet().stream()
-                    .filter(entry -> entry.getValue() instanceof AddAuthenticatedDataRequest) // We have only polluted AddAuthenticatedDataRequest, so we can ignore the RemoveAuthenticatedDataRequest
-                    .filter(entry -> {
-                        AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) entry.getValue();
-                        return addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData() instanceof AuthorizedData;
-                    })
-                    .map(entry -> {
-                        AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) entry.getValue();
-                        AuthorizedData authorizedData = (AuthorizedData) addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData();
-                        return typeFilter.apply(authorizedData.getAuthorizedDistributedData())
-                                .map(distributedData -> Maps.immutableEntry(distributedData, entry))
-                                .orElse(null);
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toMap(Map.Entry::getKey,
-                            Map.Entry::getValue,
-                            (oldValue, newValue) -> {
-                                if (newValue.getValue().getSequenceNumber() > oldValue.getValue().getSequenceNumber()) {
-                                    return newValue;
-                                }
-                                if (newValue.getValue().getSequenceNumber() == oldValue.getValue().getSequenceNumber()) {
-                                    if (newValue.getValue().getCreated() > oldValue.getValue().getCreated()) {
-                                        return newValue;
-                                    } else {
-                                        return oldValue;
-                                    }
-                                } else {
-                                    return oldValue;
-                                }
-                            }));
-
-            Map<ByteArray, AuthenticatedDataRequest> cleaned = entryByDistributedData.values().stream()
-                    .map(entry -> Maps.immutableEntry(entry.getKey(), entry.getValue()))
-                    .collect(Collectors.toMap(Map.Entry::getKey,
-                            Map.Entry::getValue,
-                            (oldValue, newValue) -> {
-                                // We should not have merge conflicts
-                                if (newValue.getSequenceNumber() > oldValue.getSequenceNumber()) {
-                                    return newValue;
-                                }
-                                if (newValue.getSequenceNumber() == oldValue.getSequenceNumber()) {
-                                    if (newValue.getCreated() > oldValue.getCreated()) {
-                                        return newValue;
-                                    } else {
-                                        return oldValue;
-                                    }
-                                } else {
-                                    return oldValue;
-                                }
-                            }));
-            log.info("cleanupMap for {}: size of cleaned map {}; size of original map={}", storeKey, cleaned.size(), map.size());
-            map.clear();
-            map.putAll(cleaned);
-            authenticatedDataStorageService.persist();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 
