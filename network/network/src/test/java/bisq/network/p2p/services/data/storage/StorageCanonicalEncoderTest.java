@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
@@ -196,6 +197,18 @@ public class StorageCanonicalEncoderTest {
 
         AddAppendOnlyDataRequest withoutExcludedField = new AddAppendOnlyDataRequest(new ExternalData("content", 0));
         assertArrayEquals(withoutExcludedField.serialize(), withoutExcludedField.encodeCanonical());
+    }
+
+    // AppendOnlyData supports canonical encoding: the bare message, without the Any in which the request carries it
+    @Test
+    public void appendOnlyDataHashPurposesMatchSerializeForHash() {
+        ExternalData withExcludedField = new ExternalData("content", 7);
+        assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical());
+        assertArrayEquals(withExcludedField.serializeForHash(),
+                withExcludedField.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+        assertArrayEquals(withExcludedField.serializeForHash(),
+                withExcludedField.encodeCanonical(EncodingPurpose.PROOF_OF_WORK));
+        assertFalse(Arrays.equals(withExcludedField.serialize(), withExcludedField.serializeForHash()));
     }
 
     // The SIGNATURE, STORAGE_KEY and PROOF_OF_WORK purposes leave out the fields annotated with @ExcludeForHash, also
@@ -499,6 +512,28 @@ public class StorageCanonicalEncoderTest {
         @Override
         public boolean isDataInvalid(byte[] pubKeyHash) {
             return false;
+        }
+
+
+        private static final CanonicalSchema<ExternalData> DEFAULT_SCHEMA = CanonicalSchema.<ExternalData>newBuilder()
+                .sint32(2, data -> data.priority)
+                .string(4, data -> data.content)
+                .build();
+
+        // Leaves out priority (field 2), which is annotated with @ExcludeForHash, as serializeForHash() does
+        private static final CanonicalSchema<ExternalData> SCHEMA_FOR_HASH = CanonicalSchema.<ExternalData>newBuilder()
+                .string(4, data -> data.content)
+                .build();
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+            CanonicalSchema<ExternalData> schema = switch (encodingPurpose) {
+                case DEFAULT -> DEFAULT_SCHEMA;
+                case SIGNATURE -> DEFAULT_SCHEMA;
+                case STORAGE_KEY -> SCHEMA_FOR_HASH;
+                case PROOF_OF_WORK -> SCHEMA_FOR_HASH;
+            };
+            return canonicalEncoder.encode(this, schema, encodingPurpose);
         }
     }
 

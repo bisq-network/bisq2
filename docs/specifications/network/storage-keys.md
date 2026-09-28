@@ -63,9 +63,8 @@ one variable part at the end, so no field tags or lengths are needed.
 ### Data hash
 
 The data hash is `RIPEMD160(SHA256(data.encodeCanonical(STORAGE_KEY)))`, the canonical `STORAGE_KEY` encoding of
-the stored data (`AuthenticatedData`, `MailboxData`). The requests and the sequential data
-(`AuthenticatedSequentialData`, `MailboxSequentialData`) have no `STORAGE_KEY` encoding. `AppendOnlyData` has no
-canonical encoding yet: its data hash is `RIPEMD160(SHA256(appendOnlyData.serializeForHash()))`.
+the stored data (`AuthenticatedData`, `MailboxData`, `AppendOnlyData`). The requests and the sequential data
+(`AuthenticatedSequentialData`, `MailboxSequentialData`) have no `STORAGE_KEY` encoding.
 
 For authenticated and mailbox data, the data hash is also the hash which remove and refresh requests carry. Nodes of
 earlier versions create these requests with `RIPEMD160(SHA256(data.serializeForHash()))`, so the `STORAGE_KEY`
@@ -83,7 +82,7 @@ Reason for a 20-byte data hash for all stores, also for append-only data, which 
 of authenticated and mailbox data needs the fixed length for an unambiguous layout, and one rule for all stores is
 simpler. A SHA256 data hash would not make the key stronger: the key itself is a 160-bit RIPEMD160 hash.
 
-The hash serialization of append-only data uses the decoded object, not the kept `Any` bytes (see [`distributed-data-payload-bytes.md`](distributed-data-payload-bytes.md)): fields annotated with
+The `STORAGE_KEY` encoding of append-only data uses the decoded object, not the kept `Any` bytes (see [`distributed-data-payload-bytes.md`](distributed-data-payload-bytes.md)): fields annotated with
 `@ExcludeForHash` and fields which the node does not know are not part of the key. Otherwise anyone could create
 several keys for the same data by adding such fields, and the store would hold each variant.
 

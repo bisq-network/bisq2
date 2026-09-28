@@ -169,7 +169,8 @@ of. The preimage of a request starts with a domain separation tag (see `RemoveMa
 | `repeated Foo foos = n;` | `repeatedCompose(n, getter, Foo.DEFAULT_SCHEMA)`; a purpose-specific schema of the parent references the element schema for the same purpose | - |
 | Base message with `oneof message { Sub sub = n; ... }` | Base builder method plus `extend(n, sub -> sub, subtype builder)` | `AuthenticatedData` with `DefaultAuthenticatedData` (10), `AuthorizedData` (11) |
 | Field whose declared type has several implementations | `canonical(n, getter)`: the runtime type encodes itself | `AuthenticatedSequentialData.authenticatedData` |
-| `google.protobuf.Any` with data of a higher-level module | The class that holds it keeps the received `Any` (`DistributedDataAny.retain` in `fromProto`) and writes it in `toProto(false)`. `DEFAULT` and `SIGNATURE`: `compose(n, x -> x.dataAny, DistributedDataAny.SCHEMA)`. `STORAGE_KEY` and `PROOF_OF_WORK`: `encodedMessage(n, x -> x.data.toAny(true).toByteArray())` with the "not yet supported" comment | `AuthenticatedData.distributedData`, `AddAppendOnlyDataRequest.appendOnlyData` |
+| `google.protobuf.Any` with data of a higher-level module | The class that holds it keeps the received `Any` (`DistributedDataAny.retain` in `fromProto`) and writes it in `toProto(false)`. `DEFAULT` and `SIGNATURE`: `compose(n, x -> x.dataAny, DistributedDataAny.SCHEMA)`. `STORAGE_KEY` and `PROOF_OF_WORK`: `encodedMessage(n, x -> x.data.toAny(true).toByteArray())` with the "not yet supported" comment | `AuthenticatedData.distributedData` |
+| `google.protobuf.Any` with `AppendOnlyData` | Kept `Any` as above for `DEFAULT` and `SIGNATURE`. `AppendOnlyData` extends `Canonical`: `PROOF_OF_WORK` is an `Any` with the kept type URL and the data's `PROOF_OF_WORK` encoding; storage key V2 hashes the data's `STORAGE_KEY` encoding | `AddAppendOnlyDataRequest.appendOnlyData` |
 | Message type of a lower-level module (for example `security.ConfidentialData`) | implement `Canonical` in that class and use `canonical(n, getter)` | `ConfidentialMessage.confidentialData` |
 | `toProto` returns `EnvelopePayloadMessage` with a `DataRequest` | `DataRequest.createCanonicalSchema(requestFieldNumber, requestBuilder)` | the six storage requests |
 | `toProto` returns another envelope | `CanonicalSchema.oneof("EnvelopePayloadMessage", n, builder)`, plus a bare `DEFAULT_VALUE_SCHEMA` if a parent embeds the bare message | `ConfidentialMessage` |
@@ -222,8 +223,11 @@ message. The name says where the bytes come from and which role the field has.
   object, which would drop the fields that the node does not know. `DEFAULT` and `SIGNATURE` encode the
   kept `Any` with `DistributedDataAny.SCHEMA`; `STORAGE_KEY` and `PROOF_OF_WORK` use the protobuf hash serialization (the
   `Any` of `toAny(true)`, with the type URL). Do not add a fallback `encodeCanonical` to the external
-  classes or to their interfaces. A class of a lower-level module, such as `ConfidentialData`,
-  implements `Canonical` instead. See `docs/specifications/network/distributed-data-payload-bytes.md`.
+  classes or to their interfaces. `AppendOnlyData` is the exception: it extends `Canonical`, and every
+  implementation defines a real encoding of its bare message (`DEFAULT` equals `serialize()`, `STORAGE_KEY`
+  and `PROOF_OF_WORK` equal `serializeForHash()`); see `docs/specifications/encoding/canonical-encoding.md`.
+  A class of a lower-level module, such as `ConfidentialData`, implements `Canonical` instead. See
+  `docs/specifications/network/distributed-data-payload-bytes.md`.
 - **Always pass the encoding purpose on.** Call `canonicalEncoder.encode(this, schema, encodingPurpose)`
   with the received purpose, never with a fixed purpose. Encode a nested `Canonical` object with
   `canonical(n, getter)`, not with `compose(n, getter, Foo.DEFAULT_SCHEMA)`: a `compose` field uses the

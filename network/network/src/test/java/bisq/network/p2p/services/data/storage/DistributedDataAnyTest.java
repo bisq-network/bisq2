@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.canonical.EncodingPurpose;
@@ -200,7 +202,8 @@ public class DistributedDataAnyTest {
         assertArrayEquals(proto.toByteArray(), relay(received).toDataRequestProto(false).toByteArray());
         AddAppendOnlyDataRequest createdFromModel = new AddAppendOnlyDataRequest(new PayloadData(KEY, VALUE));
         assertEquals(createdFromModel.getStorageKeyV1(), received.getStorageKeyV1());
-        // Storage key V2 uses the hash serialization of the model: a field unknown to this node does not change it
+        // Storage key V2 uses the canonical STORAGE_KEY encoding of the model: a field unknown to this node does not
+        // change it
         assertEquals(createdFromModel.getStorageKey(), received.getStorageKey());
         assertArrayEquals(received.serialize(), received.encodeCanonical(EncodingPurpose.SIGNATURE));
         assertArrayEquals(received.serializeForHash(), received.encodeCanonical(EncodingPurpose.PROOF_OF_WORK));
@@ -511,6 +514,35 @@ public class DistributedDataAnyTest {
         public boolean isDataInvalid(byte[] pubKeyHash) {
             return false;
         }
+
+        // common.proto: message Region { string code = 1; string name = 2; }
+        private static final CanonicalSchema<Region> REGION_SCHEMA = CanonicalSchema.<Region>newBuilder()
+                .string(1, Region::getCode)
+                .string(2, Region::getName)
+                .build();
+
+        private static final CanonicalSchema<NestedPayloadData> DEFAULT_SCHEMA = CanonicalSchema.<NestedPayloadData>newBuilder()
+                .string(1, data -> data.code)
+                .string(2, data -> data.name)
+                .compose(3, data -> data.region, REGION_SCHEMA)
+                .build();
+
+        // Leaves out name (field 2), which is annotated with @ExcludeForHash, as serializeForHash() does
+        private static final CanonicalSchema<NestedPayloadData> SCHEMA_FOR_HASH = CanonicalSchema.<NestedPayloadData>newBuilder()
+                .string(1, data -> data.code)
+                .compose(3, data -> data.region, REGION_SCHEMA)
+                .build();
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+            CanonicalSchema<NestedPayloadData> schema = switch (encodingPurpose) {
+                case DEFAULT -> DEFAULT_SCHEMA;
+                case SIGNATURE -> DEFAULT_SCHEMA;
+                case STORAGE_KEY -> SCHEMA_FOR_HASH;
+                case PROOF_OF_WORK -> SCHEMA_FOR_HASH;
+            };
+            return canonicalEncoder.encode(this, schema, encodingPurpose);
+        }
     }
 
     // DistributedData of a higher-level module as this node knows it. It serializes as common.StringLongPair. value is
@@ -560,6 +592,27 @@ public class DistributedDataAnyTest {
         @Override
         public boolean isDataInvalid(byte[] pubKeyHash) {
             return false;
+        }
+
+        private static final CanonicalSchema<PayloadData> DEFAULT_SCHEMA = CanonicalSchema.<PayloadData>newBuilder()
+                .string(1, payloadData -> payloadData.key)
+                .sint64(2, payloadData -> payloadData.value)
+                .build();
+
+        // Leaves out value (field 2), which is annotated with @ExcludeForHash, as serializeForHash() does
+        private static final CanonicalSchema<PayloadData> SCHEMA_FOR_HASH = CanonicalSchema.<PayloadData>newBuilder()
+                .string(1, payloadData -> payloadData.key)
+                .build();
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+            CanonicalSchema<PayloadData> schema = switch (encodingPurpose) {
+                case DEFAULT -> DEFAULT_SCHEMA;
+                case SIGNATURE -> DEFAULT_SCHEMA;
+                case STORAGE_KEY -> SCHEMA_FOR_HASH;
+                case PROOF_OF_WORK -> SCHEMA_FOR_HASH;
+            };
+            return canonicalEncoder.encode(this, schema, encodingPurpose);
         }
     }
 }

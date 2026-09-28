@@ -40,9 +40,11 @@ other modules) map to canonical messages is specified in
   (see [`../network/storage-keys.md`](../network/storage-keys.md)). Storage key V1, the preimages of
   signature V1, proof of work payloads, and the inventory order still use `serializeForHash()`.
   Switching such a call site is a protocol change; see [Changing an encoding](#changing-an-encoding).
-- Classes of higher-level modules (for example offers, user profiles, chat messages) have no canonical
-  encoding yet. The network classes hold them in a `google.protobuf.Any` and keep the received bytes of
-  that `Any`. The `DEFAULT` and `SIGNATURE` purposes contain these bytes; the `STORAGE_KEY` and
+- `AppendOnlyData` extends `Canonical`: its implementations must support canonical encoding (see
+  [Data of other modules](#data-of-other-modules)).
+- Other classes of higher-level modules (for example offers, user profiles, chat messages) have no
+  canonical encoding yet. The network classes hold them in a `google.protobuf.Any` and keep the received
+  bytes of that `Any`. The `DEFAULT` and `SIGNATURE` purposes contain these bytes; the `STORAGE_KEY` and
   `PROOF_OF_WORK` purposes contain the protobuf serialization for hashes; see
   [Data of other modules](#data-of-other-modules).
 
@@ -275,7 +277,7 @@ A network class can contain data of two kinds of other modules:
 - **Higher-level modules**, which depend on the network module, for example offers, user profiles, and
   chat messages. The network module knows such data only through interfaces (`DistributedData`,
   `AppendOnlyData`) and holds it in a `google.protobuf.Any`. Canonical encoding is not yet supported for
-  it.
+  `DistributedData`. `AppendOnlyData` supports it (see [Append-only data](#append-only-data)).
 
 The network class keeps the `google.protobuf.Any` of such data with the received bytes, and writes it
 unchanged (see
@@ -294,14 +296,36 @@ encodes the data per purpose:
   storage key and proof of work payload.
 
 Both encodings are implemented once where the data is held: in the base class `AuthenticatedData` for
-`DistributedData` (for `DefaultAuthenticatedData` and `AuthorizedData`), and in
-`AddAppendOnlyDataRequest` for `AppendOnlyData`.
+`DistributedData` (for `DefaultAuthenticatedData` and `AuthorizedData`). `AddAppendOnlyDataRequest`
+uses the first one for `AppendOnlyData`, and the canonical encoding of the data for the hash purposes.
 
 The protobuf serialization for hashes is only as deterministic as the protobuf serialization of the
 external class. The fallback lives in the network class that holds the external data, not in the
 external classes: an external class must not appear to have a canonical encoding while it returns
 protobuf bytes, and a future canonical encoding of an external class changes the bytes of its holders,
 which must be an explicit change of the holder.
+
+### Append-only data
+
+`AppendOnlyData` extends `Canonical`. Every implementation defines the canonical encoding of its bare
+message, without the `google.protobuf.Any` in which `AddAppendOnlyDataRequest` carries it:
+
+- `DEFAULT` and `SIGNATURE`: all non-transient fields. The bytes equal `serialize()`.
+- `STORAGE_KEY` and `PROOF_OF_WORK`: without the fields annotated with `@ExcludeForHash`. The bytes
+  equal `serializeForHash()`.
+
+`AddAppendOnlyDataRequest` uses it as follows:
+
+- `DEFAULT` and `SIGNATURE`: the kept `Any`, as for all data of higher-level modules.
+- `PROOF_OF_WORK`: an `Any` with the kept type URL and the `PROOF_OF_WORK` encoding of the data as
+  value. The kept type URL is the one that `Any.pack` creates, so the bytes equal the `Any` of
+  `toAny(true)`, and nodes of all versions compute the same proof of work payload.
+- Storage key V2 hashes the `STORAGE_KEY` encoding of the data (see
+  [`../network/storage-keys.md`](../network/storage-keys.md)). The request itself has no
+  `STORAGE_KEY` encoding.
+
+The canonical encoding of an append-only data type is part of the proof of work payload and of storage
+key V2. Changing it is a protocol change.
 
 ## Encoding purpose
 
@@ -313,7 +337,7 @@ different purpose.
 | --- | --- |
 | `DEFAULT` | The complete encoding of an object, with all its encoded fields. Used when no specific purpose applies. |
 | `SIGNATURE` | The bytes that are signed and verified: the preimage of signature V2 of the storage requests. Signature V1 does not use it (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
-| `STORAGE_KEY` | The bytes of the stored data (`AuthenticatedData`, `MailboxData`) that are hashed to the data hash of storage key V2. The requests and the sequential data have no `STORAGE_KEY` encoding. |
+| `STORAGE_KEY` | The bytes of the stored data (`AuthenticatedData`, `MailboxData`, `AppendOnlyData`) that are hashed to the data hash of storage key V2. The requests and the sequential data have no `STORAGE_KEY` encoding. |
 | `PROOF_OF_WORK` | The bytes of a network message to which the proof of work of the message's authorization token is bound, for example an `AddAuthenticatedDataRequest` with its `EnvelopePayloadMessage` envelope. The proof of work does not use it yet (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
 
 `SIGNATURE`, `STORAGE_KEY`, and `PROOF_OF_WORK` are the hash purposes: their preimages are hashed or
@@ -398,7 +422,7 @@ and `SIGNATURE`, and a `PROOF_OF_WORK_SCHEMA`. The requests have no `STORAGE_KEY
 this purpose fails. `DefaultAuthenticatedData` and `AuthorizedData` use `DEFAULT_SCHEMA` for `DEFAULT`
 and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA` and a `PROOF_OF_WORK_SCHEMA` with the hash serialization of
 the data of the higher-level module. `AddAppendOnlyDataRequest` uses `DEFAULT_SCHEMA` for `DEFAULT` and
-`SIGNATURE`, and a `PROOF_OF_WORK_SCHEMA` with the hash serialization of the `AppendOnlyData`. All other
+`SIGNATURE`, and a `PROOF_OF_WORK_SCHEMA` with the canonical encoding of the `AppendOnlyData`. All other
 implementations use `DEFAULT_SCHEMA` for all purposes. Every implementation passes the purpose on.
 
 ## Schema metadata without effect on the bytes
@@ -538,8 +562,8 @@ the first schema that uses the feature, and an update of this specification.
   the signature, which is correct only while `STORAGE_KEY` is used for the data hash of storage keys
   alone, where `AuthorizedData` is the root. The inventory order has no purpose yet.
 - **Canonical encoding of data of higher-level modules.** Signatures do not need it: the `SIGNATURE`
-  purpose contains the kept bytes. The `STORAGE_KEY` and `PROOF_OF_WORK` purposes still use the
-  protobuf serialization for hashes.
+  purpose contains the kept bytes. `AppendOnlyData` supports it. For `DistributedData`, the
+  `STORAGE_KEY` and `PROOF_OF_WORK` purposes still use the protobuf serialization for hashes.
   Replacing it changes storage keys and proof of work payloads, unless the canonical bytes reproduce
   the protobuf hash serialization.
 - **Explicit presence.** `optional` fields whose present value can be the default need framework

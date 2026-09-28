@@ -112,20 +112,18 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
                             .compose(1, request -> request.appendOnlyDataAny, DistributedDataAny.SCHEMA));
 
     // PROOF_OF_WORK reproduces serializeForHash(): nodes of all versions must compute the same proof of work payload.
-    // It differs from DEFAULT_SCHEMA only in the value of the Any: the hash serialization of the decoded
+    // It differs from DEFAULT_SCHEMA only in the value of the Any: the PROOF_OF_WORK encoding of the decoded
     // AppendOnlyData instead of the kept bytes. It equals the Any of toAny(true), which getValueBuilder(true) writes.
     public static final CanonicalSchema<AddAppendOnlyDataRequest> PROOF_OF_WORK_SCHEMA =
             bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
                     CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
                             .compose(1, AddAppendOnlyDataRequest::getAppendOnlyDataAnyForProofOfWork, DistributedDataAny.SCHEMA));
 
-    // The kept type URL is the one that Any.pack creates (DistributedDataAny.retain checks it). Canonical encoding is
-    // not yet supported for AppendOnlyData, as its implementations are defined outside the network module. We use the
-    // protobuf serialization for hashes instead.
+    // The kept type URL is the one that Any.pack creates (DistributedDataAny.retain checks it)
     private Any getAppendOnlyDataAnyForProofOfWork() {
         return Any.newBuilder()
                 .setTypeUrl(appendOnlyDataAny.getTypeUrl())
-                .setValue(ByteString.copyFrom(appendOnlyData.serializeForHash()))
+                .setValue(ByteString.copyFrom(appendOnlyData.encodeCanonical(EncodingPurpose.PROOF_OF_WORK)))
                 .build();
     }
 
@@ -152,13 +150,12 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
         return new ByteArray(DigestUtil.hash(appendOnlyData.serializeForHash()));
     }
 
-    // The data hash uses the hash serialization of the decoded AppendOnlyData, as canonical encoding is not yet
-    // supported for it. It leaves out the fields annotated with @ExcludeForHash and the fields which this node does
-    // not know, so that such fields cannot create several storage keys for the same data. The kept Any bytes are
-    // therefore not used.
+    // The data hash uses the STORAGE_KEY encoding of the decoded AppendOnlyData. It leaves out the fields annotated
+    // with @ExcludeForHash and the fields which this node does not know, so that such fields cannot create several
+    // storage keys for the same data. The kept Any bytes are therefore not used.
     @Override
     public byte[] getStorageKeyPreImageV2() {
-        byte[] appendOnlyDataHash = DigestUtil.hash(appendOnlyData.serializeForHash());
+        byte[] appendOnlyDataHash = DigestUtil.hash(appendOnlyData.encodeCanonical(EncodingPurpose.STORAGE_KEY));
         return StorageKeyV2.createPreImage(StorageKeyV2.APPEND_ONLY_DATA_TAG, appendOnlyDataHash);
     }
 

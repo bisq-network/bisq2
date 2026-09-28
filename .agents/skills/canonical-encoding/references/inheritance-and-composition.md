@@ -208,8 +208,10 @@ instead.
   Writing only `serializeForHash()` would drop the type from the preimage.
 - Never rebuild the written `Any` from the decoded object (`toAny(false)`) outside the creation of local
   data.
+- `AppendOnlyData` extends `Canonical`, and its implementations define a real canonical encoding.
+  `AddAppendOnlyDataRequest` uses it for `PROOF_OF_WORK` and for storage key V2 instead of the fallback.
 - Do not add a fallback `encodeCanonical` to the external classes or to their interfaces
-  (`DistributedData`, `AppendOnlyData`, `MailboxMessage`). They would appear to have a canonical
+  (`DistributedData`, `MailboxMessage`). They would appear to have a canonical
   encoding while they return protobuf bytes, and a later real encoding would silently change the bytes
   of all holders.
 - The fallback is only as deterministic as the protobuf serialization of the external class.
