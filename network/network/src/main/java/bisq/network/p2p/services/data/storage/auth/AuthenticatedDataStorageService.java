@@ -136,7 +136,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().requestAlreadyReceived();
             }
 
-            if (requestFromMap != null && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+            // Add sequence numbers are signed in both versions; only V1 removals have an untrusted sequence.
+            boolean isRequestFromMapWasAdd = requestFromMap instanceof AddAuthenticatedDataRequest;
+            boolean isRequestFromMapWasRemoveAndV2 = requestFromMap instanceof RemoveAuthenticatedDataRequest && requestFromMap.isSignatureV2Present();
+            if ((isRequestFromMapWasAdd || isRequestFromMapWasRemoveAndV2) &&
+                    request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
@@ -201,9 +205,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                // log.debug("Already removed. request={}, map={}", request, map);
-                // We have had the entry already removed.
-                if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+                // A verified V2 removal supersedes an untrusted V1 sequence. Once upgraded, keep only
+                // higher signed sequences so a V1 request cannot discard the trusted ordering information.
+                if (request.isSignatureV2Present() &&
+                        (!requestFromMap.isSignatureV2Present() || !request.isSequenceNrInvalid(requestFromMap.getSequenceNumber()))) {
                     // We update the map with the new request with the fresh sequence number.
                     map.put(storageKey, request);
                     persist();

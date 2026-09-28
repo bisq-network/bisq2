@@ -1,0 +1,55 @@
+# Ordering of storage requests
+
+These rules govern replacement of requests under the same [storage key](storage-keys.md).
+Signature verification follows [storage-request-signatures.md](storage-request-signatures.md).
+All incoming requests must pass the applicable signature, ownership, type, and expiry checks before replacement.
+
+## Authenticated add requests
+
+A stored authenticated add request has a trustworthy sequence number with either signature version.
+A new add, remove, or refresh request must have a strictly greater sequence number to replace it.
+An identical add is a duplicate and does not change the stored entry or notify listeners.
+
+A refresh produces a stored add request with the refreshed sequence number and creation date. Replaying an older
+add must not undo that refresh. The same ordering rule applies after removal and republication of the data.
+
+## Authenticated removals during signature migration
+
+Signature V1 of an authenticated removal does not cover its sequence number. A relay can change that number without
+invalidating the signature. Signature V2 covers it. These rules apply to an already stored authenticated removal:
+
+- An incoming removal with a verified signature V2 replaces a V1 removal regardless of their sequence numbers.
+  Comparing against the V1 number would let a relay prevent the upgrade by choosing `Integer.MAX_VALUE`.
+- A stored V2 removal is replaced by another removal only when the incoming removal has a verified signature V2 and
+  a strictly greater sequence number. A V1 removal must not discard the stored authenticated ordering information.
+- An incoming V1 removal leaves any stored removal unchanged. Repeated removals are reported as already removed;
+  only the allowed replacements change the stored entry.
+- An add must exceed a stored V2 removal's sequence number. A stored V1 removal's untrusted sequence number does
+  not block an otherwise valid add.
+
+These rules govern replacement, not signature verification: an invalid signature V2 cannot upgrade a legacy entry.
+Mailbox removals use the separate terminal rule below.
+
+The protocol still accepts V1 requests for compatibility. These transition rules do not remove the signature-stripping
+limitation described in [storage-request-signatures.md](storage-request-signatures.md#known-limitations).
+
+## Mailbox requests
+
+Mailbox add requests have sequence number 1. A mailbox removal has the fixed sequence number `Integer.MAX_VALUE`,
+regardless of signature version. This value is derived locally, not supplied by a peer.
+
+While the removal remains stored, no add for that storage key may replace it. This applies whether the removal
+arrives before or after the add, and whether the removal has signature V1 only or signature V2.
+No mailbox removal can have a higher sequence number.
+Different add requests with the same sequence number must not replace each other either.
+
+A later removal replaces a stored removal only in one case: the stored removal has only signature V1, and the incoming
+removal has a verified signature V2. All other removals leave the stored removal unchanged; this includes a V1 removal
+after a V2 removal and a second V2 removal.
+
+Reason for the upgrade: signature V1 does not cover `created`. A relay can strip signature V2 and move `created`
+back, so that the stored removal expires and is pruned early. After pruning, a replayed add which has not expired
+would be accepted again. The V2 removal restores the lifetime which the receiver signed. Only the receiver can create
+it, because the storage key contains the receiver's public key (see [storage-keys.md](storage-keys.md#storage-key-v2)).
+This does not help a node which receives only the modified V1 removal; that remains part of the limitation described
+in [storage-request-signatures.md](storage-request-signatures.md#known-limitations).
