@@ -104,40 +104,7 @@ public class StorageService {
                 getExistingStoreKeys(dirPath, AUTHENTICATED_DATA_STORE)
                         .forEach(storeKey -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey);
-                            AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
-                                @Override
-                                public void onAdded(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onAdded(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onAdded at listener {} failed", listener, e);
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void onRemoved(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onRemoved(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void onRefreshed(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onRefreshed(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onRefresh at listener {} failed", listener, e);
-                                        }
-                                    });
-                                }
-                            };
+                            AuthenticatedDataStorageService.Listener listener = createAuthenticatedDataStoreListener();
                             dataStore.addListener(listener);
                             authenticatedDataStoresListeners.put(storeKey, listener);
                             authenticatedDataStores.put(storeKey, dataStore);
@@ -422,30 +389,7 @@ public class StorageService {
                     AUTHENTICATED_DATA_STORE.getStoreName(),
                     storeKey);
 
-            AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
-                @Override
-                public void onAdded(AuthenticatedData authenticatedData) {
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onAdded(authenticatedData);
-                        } catch (Exception e) {
-                            log.error("Calling onAdded at listener {} failed", listener, e);
-                        }
-                    });
-                }
-
-                @Override
-                public void onRemoved(AuthenticatedData authenticatedData) {
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onRemoved(authenticatedData);
-                        } catch (Exception e) {
-                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                        }
-                    });
-                }
-            };
-
+            AuthenticatedDataStorageService.Listener listener = createAuthenticatedDataStoreListener();
             storageService.addListener(listener);
             authenticatedDataStoresListeners.put(storeKey, listener);
             authenticatedDataStores.put(storeKey, storageService);
@@ -527,6 +471,44 @@ public class StorageService {
         } else {
             return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeKey));
         }
+    }
+
+    // Forwards the events of an authenticated data store to the listeners of this service
+    private AuthenticatedDataStorageService.Listener createAuthenticatedDataStoreListener() {
+        return new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData) {
+                listeners.forEach(listener -> {
+                    try {
+                        listener.onAdded(authenticatedData);
+                    } catch (Exception e) {
+                        log.error("Calling onAdded at listener {} failed", listener, e);
+                    }
+                });
+            }
+
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData) {
+                listeners.forEach(listener -> {
+                    try {
+                        listener.onRemoved(authenticatedData);
+                    } catch (Exception e) {
+                        log.error("Calling onRemoved at listener {} failed", listener, e);
+                    }
+                });
+            }
+
+            @Override
+            public void onRefreshed(AuthenticatedData authenticatedData) {
+                listeners.forEach(listener -> {
+                    try {
+                        listener.onRefreshed(authenticatedData);
+                    } catch (Exception e) {
+                        log.error("Calling onRefresh at listener {} failed", listener, e);
+                    }
+                });
+            }
+        };
     }
 
     public <T extends AuthorizedDistributedData> void cleanupMap(String storeKey,
