@@ -48,9 +48,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Mailbox data and remove requests carry only a class name, and the signature does not cover it. A store must accept
- * only class names of its own store type. Otherwise a mailbox request could name a DistributedData type and get its
- * MetaData, for example a longer time to live.
+ * Mailbox data and remove requests carry only a class name. Signature V2 covers it, but signature V1 does not, and
+ * nodes accept requests with only signature V1 from nodes of earlier versions. A relay can therefore remove signature
+ * V2 and change the class name. A store must accept only class names of its own store type. Otherwise a mailbox
+ * request could name a DistributedData type and get its MetaData, for example a longer time to live.
  */
 class StoreTypeAdmissionTest {
     private static final String MAILBOX_TYPE = AckMessage.class.getSimpleName();
@@ -115,7 +116,8 @@ class StoreTypeAdmissionTest {
                 receiverKeyPair.getPublic()).toValueProto(false).toBuilder();
         AddMailboxRequest request = AddMailboxRequest.fromProto(builder.build());
         builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setClassName(DISTRIBUTED_DATA_TYPE);
-        AddMailboxRequest redirected = AddMailboxRequest.fromProto(builder.build());
+        assertTrue(AddMailboxRequest.fromProto(builder.build()).isSignatureInvalid());
+        AddMailboxRequest redirected = AddMailboxRequest.fromProto(builder.clearSignatureV2().clearVersion().build());
         assertFalse(redirected.isSignatureInvalid());
 
         assertThrows(CompletionException.class, () -> storageService.onAddDataRequest(redirected).join());
@@ -125,10 +127,10 @@ class StoreTypeAdmissionTest {
     @Test
     void removeMailboxRequestNamingDistributedDataTypeIsRejected() throws Exception {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
-        RemoveMailboxRequest redirected = RemoveMailboxRequest.fromProto(
-                RemoveMailboxRequest.from(mailboxData, receiverKeyPair).toValueProto(false).toBuilder()
-                        .setClassName(DISTRIBUTED_DATA_TYPE)
-                        .build());
+        bisq.network.protobuf.RemoveMailboxRequest.Builder builder = RemoveMailboxRequest.from(mailboxData,
+                receiverKeyPair).toValueProto(false).toBuilder().setClassName(DISTRIBUTED_DATA_TYPE);
+        assertTrue(RemoveMailboxRequest.fromProto(builder.build()).isSignatureInvalid());
+        RemoveMailboxRequest redirected = RemoveMailboxRequest.fromProto(builder.clearSignatureV2().build());
         assertFalse(redirected.isSignatureInvalid());
 
         assertThrows(CompletionException.class, () -> storageService.onRemoveDataRequest(redirected).join());

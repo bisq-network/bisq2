@@ -53,8 +53,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * The default canonical encoding of the storage classes contains all non-transient fields, with the envelopes that
- * serialize() writes. The SIGNATURE and STORAGE_KEY purposes leave out the fields annotated with @ExcludeForHash, as
- * serializeForHash() does. Every class passes the encoding purpose on to its nested objects.
+ * serialize() writes. The STORAGE_KEY purpose leaves out the fields annotated with @ExcludeForHash, as
+ * serializeForHash() does. The SIGNATURE purpose does the same, except for the classes with signature V2
+ * (SignatureV2Test covers their preimages). Every class passes the encoding purpose on to its nested objects.
  * Data of higher-level modules, which the storage classes hold in a google.protobuf.Any, is encoded with the retained
  * bytes of the Any in the DEFAULT and SIGNATURE purposes, and with its protobuf serialization for hashes in the
  * STORAGE_KEY purpose. The external data stub therefore has a field that is excluded from the hash: with it, the
@@ -67,6 +68,7 @@ public class StorageCanonicalEncoderTest {
     private static final byte[] HASH = filledBytes(20, 0x11);
     private static final byte[] OTHER_HASH = filledBytes(20, 0x55);
     private static final byte[] SIGNATURE = filledBytes(70, 0x22);
+    private static final byte[] SIGNATURE_V2 = filledBytes(70, 0x66);
     private static final long CREATED = System.currentTimeMillis() - 60_000;
     private static final List<EncodingPurpose> HASH_PURPOSES = List.of(EncodingPurpose.SIGNATURE,
             EncodingPurpose.STORAGE_KEY);
@@ -128,11 +130,10 @@ public class StorageCanonicalEncoderTest {
                     CREATED);
             assertArrayEquals(sequentialData.serialize(), sequentialData.encodeCanonical());
 
-            AddAuthenticatedDataRequest request = new AddAuthenticatedDataRequest(sequentialData,
-                    SIGNATURE,
-                    PUBLIC_KEY_BYTES,
-                    KEY_PAIR.getPublic());
+            AddAuthenticatedDataRequest request = getAddAuthenticatedDataRequest(sequentialData);
             assertArrayEquals(request.serialize(), request.encodeCanonical());
+            // serializeForHash() omits signatureV2 and version
+            assertFalse(Arrays.equals(request.serializeForHash(), request.encodeCanonical()));
         }
     }
 
@@ -140,7 +141,7 @@ public class StorageCanonicalEncoderTest {
     public void removeAndRefreshAuthenticatedDataRequestsContainFieldsExcludedFromHash() {
         RemoveAuthenticatedDataRequest removeRequest = getRemoveAuthenticatedDataRequest();
         assertArrayEquals(removeRequest.serialize(), removeRequest.encodeCanonical());
-        // serializeForHash() omits metaData and version
+        // serializeForHash() omits metaData, version, className and signatureV2
         assertFalse(Arrays.equals(removeRequest.serializeForHash(), removeRequest.encodeCanonical()));
 
         RefreshAuthenticatedDataRequest refreshRequest = getRefreshAuthenticatedDataRequest();
@@ -171,6 +172,8 @@ public class StorageCanonicalEncoderTest {
 
         AddMailboxRequest addRequest = getAddMailboxRequest();
         assertArrayEquals(addRequest.serialize(), addRequest.encodeCanonical());
+        // serializeForHash() omits signatureV2 and version
+        assertFalse(Arrays.equals(addRequest.serializeForHash(), addRequest.encodeCanonical()));
 
         RemoveMailboxRequest removeRequest = getRemoveMailboxRequest();
         assertArrayEquals(removeRequest.serialize(), removeRequest.encodeCanonical());
@@ -193,8 +196,10 @@ public class StorageCanonicalEncoderTest {
     // The SIGNATURE and STORAGE_KEY purposes leave out the fields annotated with @ExcludeForHash, also in nested
     // objects, so they give the bytes of serializeForHash(). The versions cover the
     // @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3}) annotations. AuthorizedData is an exception, see
-    // authorizedDataContainsSignatureUnlikeHashSerialization(). Data of higher-level modules is the other exception:
-    // the SIGNATURE purpose contains its exact bytes, with the fields excluded from the hash.
+    // authorizedDataContainsSignatureUnlikeHashSerialization(). Data of higher-level modules is the second exception:
+    // the SIGNATURE purpose contains its exact bytes, with the fields excluded from the hash. The classes with
+    // signature V2, and the classes which contain one of them, are the third exception: their SIGNATURE purpose is the
+    // preimage of signature V2, so only their STORAGE_KEY purpose equals serializeForHash().
     @Test
     public void hashPurposesMatchSerializeForHash() {
         assertHashPurposesMatchSerializeForHash(getMetaData(), "");
@@ -205,10 +210,7 @@ public class StorageCanonicalEncoderTest {
                     HASH,
                     CREATED);
             assertHashPurposesMatchSerializeForHash(sequentialData, "");
-            assertHashPurposesMatchSerializeForHash(new AddAuthenticatedDataRequest(sequentialData,
-                    SIGNATURE,
-                    PUBLIC_KEY_BYTES,
-                    KEY_PAIR.getPublic()), "");
+            assertStorageKeyPurposeMatchesSerializeForHash(getAddAuthenticatedDataRequest(sequentialData), "");
         }
         assertHashPurposesMatchSerializeForHash(ConfidentialMessage.fromProto(getConfidentialMessageProto()), "");
         assertStorageKeyMatchesSerializeForHash(new AddAppendOnlyDataRequest(new ExternalData("content", 7)));
@@ -217,13 +219,16 @@ public class StorageCanonicalEncoderTest {
             String description = "version " + version;
             MailboxData mailboxData = getMailboxData(version);
             MailboxSequentialData mailboxSequentialData = getMailboxSequentialData(mailboxData);
-            assertHashPurposesMatchSerializeForHash(mailboxData, description);
-            // MailboxSequentialData and AddMailboxRequest have no own excluded fields: the purpose reaches MailboxData
-            assertHashPurposesMatchSerializeForHash(mailboxSequentialData, description);
-            assertHashPurposesMatchSerializeForHash(getAddMailboxRequest(mailboxSequentialData), description);
-            assertHashPurposesMatchSerializeForHash(getRemoveMailboxRequest(version), description);
-            assertHashPurposesMatchSerializeForHash(getRemoveAuthenticatedDataRequest(version), description);
-            assertHashPurposesMatchSerializeForHash(getRefreshAuthenticatedDataRequest(version), description);
+            assertStorageKeyPurposeMatchesSerializeForHash(mailboxData, description);
+            // The purpose reaches MailboxData
+            assertStorageKeyPurposeMatchesSerializeForHash(mailboxSequentialData, description);
+            assertStorageKeyPurposeMatchesSerializeForHash(getAddMailboxRequest(mailboxSequentialData), description);
+            assertStorageKeyPurposeMatchesSerializeForHash(getRemoveMailboxRequest(version), description);
+            assertStorageKeyPurposeMatchesSerializeForHash(getRemoveAuthenticatedDataRequest(version), description);
+            // The refresh request has no preimage of its own. Its SIGNATURE purpose is the default encoding.
+            RefreshAuthenticatedDataRequest refreshRequest = getRefreshAuthenticatedDataRequest(version);
+            assertStorageKeyPurposeMatchesSerializeForHash(refreshRequest, description);
+            assertArrayEquals(refreshRequest.serialize(), refreshRequest.encodeCanonical(EncodingPurpose.SIGNATURE));
         }
     }
 
@@ -231,11 +236,8 @@ public class StorageCanonicalEncoderTest {
     public void addAuthenticatedDataRequestPassesEncodingPurposeToAuthenticatedData() {
         for (EncodingPurpose encodingPurpose : EncodingPurpose.values()) {
             PurposeRecordingAuthenticatedData authenticatedData = new PurposeRecordingAuthenticatedData();
-            AddAuthenticatedDataRequest request = new AddAuthenticatedDataRequest(
-                    new AuthenticatedSequentialData(authenticatedData, 1, HASH, CREATED),
-                    SIGNATURE,
-                    PUBLIC_KEY_BYTES,
-                    KEY_PAIR.getPublic());
+            AddAuthenticatedDataRequest request = getAddAuthenticatedDataRequest(
+                    new AuthenticatedSequentialData(authenticatedData, 1, HASH, CREATED));
 
             request.encodeCanonical(encodingPurpose);
 
@@ -249,6 +251,12 @@ public class StorageCanonicalEncoderTest {
             assertArrayEquals(value.serializeForHash(), value.encodeCanonical(encodingPurpose),
                     value.getClass().getSimpleName() + " " + encodingPurpose + " " + description);
         }
+    }
+
+    private static <T extends Proto & Canonical> void assertStorageKeyPurposeMatchesSerializeForHash(T value,
+                                                                                                   String description) {
+        assertArrayEquals(value.serializeForHash(), value.encodeCanonical(EncodingPurpose.STORAGE_KEY),
+                value.getClass().getSimpleName() + " " + description);
     }
 
     // For a holder of external data with a field excluded from the hash
@@ -271,6 +279,16 @@ public class StorageCanonicalEncoderTest {
         return new AuthorizedData(new ExternalData("content", 0), Optional.of(SIGNATURE), KEY_PAIR.getPublic());
     }
 
+    // With signature V2 and version 2, as nodes of this version create it
+    private static AddAuthenticatedDataRequest getAddAuthenticatedDataRequest(AuthenticatedSequentialData sequentialData) {
+        return new AddAuthenticatedDataRequest(sequentialData,
+                SIGNATURE,
+                PUBLIC_KEY_BYTES,
+                KEY_PAIR.getPublic(),
+                SIGNATURE_V2,
+                2);
+    }
+
     private static RemoveAuthenticatedDataRequest getRemoveAuthenticatedDataRequest() {
         return getRemoveAuthenticatedDataRequest(1);
     }
@@ -284,6 +302,7 @@ public class StorageCanonicalEncoderTest {
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setCreated(CREATED)
                 .setVersion(version)
+                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
                 .build());
     }
 
@@ -300,6 +319,7 @@ public class StorageCanonicalEncoderTest {
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setVersion(version)
                 .setCreated(CREATED)
+                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
                 .build());
     }
 
@@ -349,6 +369,8 @@ public class StorageCanonicalEncoderTest {
                 .setMailboxSequentialData(mailboxSequentialData.toProto(false))
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setSenderPublicKeyBytes(ByteString.copyFrom(PUBLIC_KEY_BYTES))
+                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
+                .setVersion(2)
                 .build());
     }
 
@@ -364,6 +386,7 @@ public class StorageCanonicalEncoderTest {
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setCreated(CREATED)
                 .setVersion(version)
+                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
                 .build());
     }
 

@@ -18,11 +18,11 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
+import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
-import bisq.common.data.ByteArray;
-import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -37,29 +37,65 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 // Data size about 200-250 bytes
 @Slf4j
 public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     public static RemoveMailboxRequest from(MailboxData mailboxData, KeyPair receiverKeyPair)
             throws GeneralSecurityException {
         long created = System.currentTimeMillis();
-        PublicKey publicKey = receiverKeyPair.getPublic();
-        byte[] publicKeyEncoded = publicKey.getEncoded();
-        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        byte[] signature = SignatureUtil.sign(hash, receiverKeyPair.getPrivate());
-        return new RemoveMailboxRequest(VERSION,
-                mailboxData.getMetaData(),
-                hash,
-                publicKeyEncoded,
-                publicKey,
-                signature,
+        int version = VERSION;
+        MetaData metaData = mailboxData.getMetaData();
+        String className = metaData.getClassName();
+        PublicKey receiverPublicKey = receiverKeyPair.getPublic();
+        byte[] receiverPublicKeyEncoded = receiverPublicKey.getEncoded();
+        byte[] mailboxDataHash = DigestUtil.hash(mailboxData.serializeForHash());
+
+        byte[] signatureV1 = SignatureUtil.sign(mailboxDataHash, receiverKeyPair.getPrivate());
+
+        RemoveMailboxRequest requestToSign = RemoveMailboxRequest.withoutSignatureV2(version,
+                metaData,
+                mailboxDataHash,
+                receiverPublicKeyEncoded,
+                receiverPublicKey,
+                signatureV1,
+                className,
+                created);
+        byte[] preImageV2 = requestToSign.getPreImageV2();
+        byte[] signatureV2 = SignatureUtil.sign(preImageV2, receiverKeyPair.getPrivate());
+
+        return new RemoveMailboxRequest(version,
+                metaData,
+                mailboxDataHash,
+                receiverPublicKeyEncoded,
+                receiverPublicKey,
+                signatureV1,
                 created,
-                mailboxData.getClassName());
+                className,
+                signatureV2);
+    }
+
+    private static RemoveMailboxRequest withoutSignatureV2(int version,
+                                                           MetaData metaData,
+                                                           byte[] mailboxDataHash,
+                                                           byte[] receiverPublicKeyEncoded,
+                                                           PublicKey receiverPublicKey,
+                                                           byte[] signatureV1,
+                                                           String className,
+                                                           long created) {
+        return new RemoveMailboxRequest(version,
+                metaData,
+                mailboxDataHash,
+                receiverPublicKeyEncoded,
+                receiverPublicKey,
+                signatureV1,
+                created,
+                className,
+                new byte[]{});
     }
 
     // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
@@ -75,9 +111,13 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     private final int version;
     private final transient PublicKey receiverPublicKey;
     // Simple class name of the removed MailboxMessage. It selects the store.
-    // Excluded from the hash, so it does not change the proof of work payload.
+    // Excluded from the hash, so it does not change the proof of work payload. Signature V2 covers it.
     @ExcludeForHash
     private final String className;
+    // Added in v2.1.14. Empty if received from nodes of earlier versions. Excluded from the hash, so that the proof of
+    // work payload stays the same as that of nodes of earlier versions.
+    @ExcludeForHash
+    private final byte[] signatureV2;
 
     // Receiver is owner for remove request
     private RemoveMailboxRequest(int version,
@@ -87,7 +127,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                                  PublicKey receiverPublicKey,
                                  byte[] signature,
                                  long created,
-                                 String className) {
+                                 String className,
+                                 byte[] signatureV2) {
         this.version = version;
         this.metaData = metaData;
         this.hash = hash;
@@ -96,6 +137,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         this.signature = signature;
         this.created = created;
         this.className = className;
+        this.signatureV2 = signatureV2;
 
         verify();
     }
@@ -105,7 +147,14 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(receiverPublicKeyBytes);
         NetworkDataValidation.validateDate(created);
-        NetworkDataValidation.validateECSignature(signature);
+        if (signature.length > 0) {
+            NetworkDataValidation.validateECSignature(signature);
+        }
+        if (signatureV2.length > 0) {
+            NetworkDataValidation.validateECSignature(signatureV2);
+        }
+        checkArgument(signature.length > 0 || signatureV2.length > 0,
+                "No signature found");
     }
 
 
@@ -133,7 +182,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 .setReceiverPublicKeyBytes(ByteString.copyFrom(receiverPublicKeyBytes))
                 .setSignature(ByteString.copyFrom(signature))
                 .setCreated(created)
-                .setClassName(className);
+                .setClassName(className)
+                .setSignatureV2(ByteString.copyFrom(signatureV2));
     }
 
     public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto) {
@@ -161,7 +211,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                     receiverPublicKey,
                     proto.getSignature().toByteArray(),
                     proto.getCreated(),
-                    className
+                    className,
+                    proto.getSignatureV2().toByteArray()
             );
         } catch (GeneralSecurityException e) {
             log.error("Failed to generate public key");
@@ -183,8 +234,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     // Canonical
     /* --------------------------------------------------------------------- */
 
-    // Contains metaData, version and className, which serializeForHash() omits (metaData only in versions 1 to 3), as
-    // the default encoding contains all non-transient fields.
+    // Contains metaData, version, className and signatureV2, which serializeForHash() omits (metaData only in versions
+    // 1 to 3), as the default encoding contains all non-transient fields.
     public static final CanonicalSchema<RemoveMailboxRequest> DEFAULT_SCHEMA =
             bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
                     CanonicalSchema.<RemoveMailboxRequest>newBuilder()
@@ -194,22 +245,34 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                             .bytes(4, request -> request.signature)
                             .sint64(5, request -> request.created)
                             .sint32(6, request -> request.version)
-                            .string(7, request -> request.className));
-    public static final CanonicalSchema<RemoveMailboxRequest> SIGNATURE_SCHEMA = createSchemaForHash();
-    public static final CanonicalSchema<RemoveMailboxRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+                            .string(7, request -> request.className)
+                            .bytes(8, request -> request.signatureV2));
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
-    // 1 to 3, version (field 6) and className (field 7).
-    private static CanonicalSchema<RemoveMailboxRequest> createSchemaForHash() {
-        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
-                CanonicalSchema.<RemoveMailboxRequest>newBuilder()
-                        // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-                        .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
-                        .bytes(2, request -> request.hash)
-                        .bytes(3, request -> request.receiverPublicKeyBytes)
-                        .bytes(4, request -> request.signature)
-                        .sint64(5, request -> request.created));
-    }
+    // 1 to 3, version (field 6), className (field 7) and signatureV2 (field 8).
+    public static final CanonicalSchema<RemoveMailboxRequest> STORAGE_KEY_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(5,
+                    CanonicalSchema.<RemoveMailboxRequest>newBuilder()
+                            // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+                            .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
+                            .bytes(2, request -> request.hash)
+                            .bytes(3, request -> request.receiverPublicKeyBytes)
+                            .bytes(4, request -> request.signature)
+                            .sint64(5, request -> request.created));
+
+    // The preimage of signature V2. It is a new message, not the protobuf message: a domain separation tag, then every
+    // field except signatureV2 itself and the deprecated metaData. No node uses the received metaData for a decision
+    // (see getMetaData()). The @ExcludeForHash annotations do not apply.
+    public static final CanonicalSchema<RemoveMailboxRequest> SIGNATURE_V2_SCHEMA =
+            CanonicalSchema.<RemoveMailboxRequest>newBuilder()
+                    .string(1, ignore -> "bisq.RemoveMailboxRequest.signatureV2")
+                    .sint32(2, request -> request.version)
+                    .string(3, request -> request.className)
+                    .sint64(4, request -> request.created)
+                    .bytes(5, request -> request.hash)
+                    .bytes(6, request -> request.receiverPublicKeyBytes)
+                    .bytes(7, request -> request.signature)
+                    .build();
 
     // Same versions as the @ExcludeForHash annotation of metaData
     private static boolean isMetaDataExcludedForHash(int version) {
@@ -220,7 +283,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<RemoveMailboxRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
-            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -246,6 +309,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
     @Override
+    public byte[] getPreImageV2() {
+        return encodeCanonical(EncodingPurpose.SIGNATURE);
+    }
+
+    @Override
     public PublicKey getSignaturePublicKey() {
         return receiverPublicKey;
     }
@@ -253,6 +321,11 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     @Override
     public byte[] getSignatureV1() {
         return signature;
+    }
+
+    @Override
+    public byte[] getSignatureV2() {
+        return signatureV2;
     }
 
 
@@ -333,36 +406,43 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     /* --------------------------------------------------------------------- */
 
     @Override
-    public String toString() {
-        return "RemoveMailboxRequest{" +
-                "version=" + version +
-                ", hash=" + Hex.encode(hash) +
-                ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +
-                ", signature=" + Hex.encode(signature) +
-                ", created=" + new Date(created) + " (" + created + ")" +
-                ", receiverPublicKey=" + receiverPublicKey +
-                ", className=" + className +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (!(o instanceof RemoveMailboxRequest that)) return false;
 
         return created == that.created &&
+                version == that.version &&
+                metaData.equals(that.metaData) &&
                 Arrays.equals(hash, that.hash) &&
                 Arrays.equals(receiverPublicKeyBytes, that.receiverPublicKeyBytes) &&
                 Arrays.equals(signature, that.signature) &&
-                Objects.equals(receiverPublicKey, that.receiverPublicKey);
+                className.equals(that.className) &&
+                Arrays.equals(signatureV2, that.signatureV2);
     }
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode(hash);
+        int result = metaData.hashCode();
+        result = 31 * result + Arrays.hashCode(hash);
         result = 31 * result + Arrays.hashCode(receiverPublicKeyBytes);
         result = 31 * result + Arrays.hashCode(signature);
         result = 31 * result + Long.hashCode(created);
-        result = 31 * result + Objects.hashCode(receiverPublicKey);
+        result = 31 * result + version;
+        result = 31 * result + className.hashCode();
+        result = 31 * result + Arrays.hashCode(signatureV2);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "RemoveMailboxRequest{" +
+                "metaData=" + metaData +
+                ", hash=" + Hex.encode(hash) +
+                ", receiverPublicKeyBytes=" + Hex.encode(receiverPublicKeyBytes) +
+                ", signature=" + Hex.encode(signature) +
+                ", created=" + created +
+                ", version=" + version +
+                ", className='" + className + '\'' +
+                ", signatureV2=" + Hex.encode(signatureV2) +
+                '}';
     }
 }

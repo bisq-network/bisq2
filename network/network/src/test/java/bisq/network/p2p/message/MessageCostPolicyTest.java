@@ -318,8 +318,9 @@ class MessageCostPolicyTest {
         AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(
                 new DefaultAuthenticatedData(new PayloadOfType(metaData)), 1, pubKeyHash, System.currentTimeMillis());
         byte[] signature = SignatureUtil.sign(DigestUtil.hash(sequentialData.serializeForHash()), keyPair.getPrivate());
+        // Without signature V2 and with version 0, as nodes of earlier versions send it
         return new AddAuthenticatedDataRequest(sequentialData, signature, keyPair.getPublic().getEncoded(),
-                keyPair.getPublic());
+                keyPair.getPublic(), new byte[]{}, 0);
     }
 
     private RemoveAuthenticatedDataRequest createRemoveRequest(String className) {

@@ -18,11 +18,11 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
+import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
-import bisq.common.data.ByteArray;
-import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -38,37 +38,72 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Data size about 200-250 bytes
 @Slf4j
 public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
                                                       AuthenticatedData authenticatedData,
                                                       KeyPair keyPair)
             throws GeneralSecurityException {
+        int version = VERSION;
         PublicKey publicKey = keyPair.getPublic();
         byte[] publicKeyEncoded = publicKey.getEncoded();
         long created = System.currentTimeMillis();
         MetaData metaData = authenticatedData.getMetaData();
-        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        ByteArray storageKey = new ByteArray(hash);
+        String className = metaData.getClassName();
+        byte[] authenticatedDataHash = DigestUtil.hash(authenticatedData.serializeForHash());
+        ByteArray storageKey = new ByteArray(authenticatedDataHash);
         int sequenceNumber = store.getNextSequenceNumber(storageKey);
-        byte[] signature = SignatureUtil.sign(hash, keyPair.getPrivate());
-        return new RemoveAuthenticatedDataRequest(VERSION,
+
+        byte[] signatureV1 = SignatureUtil.sign(authenticatedDataHash, keyPair.getPrivate());
+
+        RemoveAuthenticatedDataRequest requestToSign = RemoveAuthenticatedDataRequest.withoutSignatureV2(version,
                 metaData,
-                hash,
+                authenticatedDataHash,
                 publicKeyEncoded,
                 publicKey,
                 sequenceNumber,
-                signature,
+                signatureV1,
                 created,
-                authenticatedData.getClassName());
+                className);
+        byte[] signatureV2 = SignatureUtil.sign(requestToSign.getPreImageV2(), keyPair.getPrivate());
+
+        return new RemoveAuthenticatedDataRequest(version,
+                metaData,
+                authenticatedDataHash,
+                publicKeyEncoded,
+                publicKey,
+                sequenceNumber,
+                signatureV1,
+                created,
+                className,
+                signatureV2);
+    }
+
+    private static RemoveAuthenticatedDataRequest withoutSignatureV2(int version,
+                                                                     MetaData metaData,
+                                                                     byte[] authenticatedDataHash,
+                                                                     byte[] publicKeyEncoded,
+                                                                     PublicKey publicKey,
+                                                                     int sequenceNumber,
+                                                                     byte[] signatureV1,
+                                                                     long created,
+                                                                     String className) {
+        return new RemoveAuthenticatedDataRequest(version,
+                metaData,
+                authenticatedDataHash,
+                publicKeyEncoded,
+                publicKey,
+                sequenceNumber,
+                signatureV1,
+                created,
+                className,
+                new byte[]{});
     }
 
     // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
@@ -85,9 +120,13 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @ExcludeForHash
     private final int version;
     // Simple class name of the removed DistributedData. It selects the store.
-    // Excluded from the hash, so it does not change the proof of work payload.
+    // Excluded from the hash, so it does not change the proof of work payload. Signature V2 covers it.
     @ExcludeForHash
     private final String className;
+    // Added in v2.1.14. Empty if received from nodes of earlier versions. Excluded from the hash, so that the proof of
+    // work payload stays the same as that of nodes of earlier versions.
+    @ExcludeForHash
+    private final byte[] signatureV2;
 
     private RemoveAuthenticatedDataRequest(int version,
                                            MetaData metaData,
@@ -97,7 +136,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                                            int sequenceNumber,
                                            byte[] signature,
                                            long created,
-                                           String className) {
+                                           String className,
+                                           byte[] signatureV2) {
         this.version = version;
         this.metaData = metaData;
         this.hash = hash;
@@ -107,6 +147,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         this.signature = signature;
         this.created = created;
         this.className = className;
+        this.signatureV2 = signatureV2;
 
         verify();
     }
@@ -118,7 +159,14 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         checkArgument(sequenceNumber > 0,
                 "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateDate(created);
-        NetworkDataValidation.validateECSignature(signature);
+        if (signature.length > 0) {
+            NetworkDataValidation.validateECSignature(signature);
+        }
+        if (signatureV2.length > 0) {
+            NetworkDataValidation.validateECSignature(signatureV2);
+        }
+        checkArgument(signature.length > 0 || signatureV2.length > 0,
+                "No signature found");
     }
 
 
@@ -147,7 +195,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 .setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature))
                 .setCreated(created)
-                .setClassName(className);
+                .setClassName(className)
+                .setSignatureV2(ByteString.copyFrom(signatureV2));
     }
 
     public static RemoveAuthenticatedDataRequest fromProto(bisq.network.protobuf.RemoveAuthenticatedDataRequest proto) {
@@ -176,7 +225,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                     proto.getSequenceNumber(),
                     proto.getSignature().toByteArray(),
                     proto.getCreated(),
-                    className
+                    className,
+                    proto.getSignatureV2().toByteArray()
             );
         } catch (GeneralSecurityException e) {
             log.error("Failed to generate public key");
@@ -198,8 +248,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     // Canonical
     /* --------------------------------------------------------------------- */
 
-    // Contains metaData, version and className, which serializeForHash() omits (metaData only in versions 1 to 3), as
-    // the default encoding contains all non-transient fields.
+    // Contains metaData, version, className and signatureV2, which serializeForHash() omits (metaData only in versions
+    // 1 to 3), as the default encoding contains all non-transient fields.
     public static final CanonicalSchema<RemoveAuthenticatedDataRequest> DEFAULT_SCHEMA =
             bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
                     CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
@@ -210,24 +260,36 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                             .bytes(5, request -> request.signature)
                             .sint64(6, request -> request.created)
                             .sint32(7, request -> request.version)
-                            .string(8, request -> request.className));
-    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> SIGNATURE_SCHEMA =
-            createSchemaForHash();
-    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+                            .string(8, request -> request.className)
+                            .bytes(9, request -> request.signatureV2));
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
-    // 1 to 3, version (field 7) and className (field 8).
-    private static CanonicalSchema<RemoveAuthenticatedDataRequest> createSchemaForHash() {
-        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
-                CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
-                        // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-                        .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
-                        .bytes(2, request -> request.hash)
-                        .bytes(3, request -> request.ownerPublicKeyBytes)
-                        .sint32(4, request -> request.sequenceNumber)
-                        .bytes(5, request -> request.signature)
-                        .sint64(6, request -> request.created));
-    }
+    // 1 to 3, version (field 7), className (field 8) and signatureV2 (field 9).
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> STORAGE_KEY_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
+                    CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
+                            // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+                            .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
+                            .bytes(2, request -> request.hash)
+                            .bytes(3, request -> request.ownerPublicKeyBytes)
+                            .sint32(4, request -> request.sequenceNumber)
+                            .bytes(5, request -> request.signature)
+                            .sint64(6, request -> request.created));
+
+    // The preimage of signature V2. It is a new message, not the protobuf message: a domain separation tag, then every
+    // field except signatureV2 itself and the deprecated metaData. No node uses the received metaData for a decision
+    // (see getMetaData()). The @ExcludeForHash annotations do not apply.
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> SIGNATURE_V2_SCHEMA =
+            CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
+                    .string(1, ignore -> "bisq.RemoveAuthenticatedDataRequest.signatureV2")
+                    .sint32(2, request -> request.version)
+                    .string(3, request -> request.className)
+                    .sint64(4, request -> request.created)
+                    .sint32(5, request -> request.sequenceNumber)
+                    .bytes(6, request -> request.hash)
+                    .bytes(7, request -> request.ownerPublicKeyBytes)
+                    .bytes(8, request -> request.signature)
+                    .build();
 
     // Same versions as the @ExcludeForHash annotation of metaData
     private static boolean isMetaDataExcludedForHash(int version) {
@@ -238,7 +300,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<RemoveAuthenticatedDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
-            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -265,6 +327,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     }
 
     @Override
+    public byte[] getPreImageV2() {
+        return encodeCanonical(EncodingPurpose.SIGNATURE);
+    }
+
+    @Override
     public PublicKey getSignaturePublicKey() {
         return ownerPublicKey;
     }
@@ -272,6 +339,11 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public byte[] getSignatureV1() {
         return signature;
+    }
+
+    @Override
+    public byte[] getSignatureV2() {
+        return signatureV2;
     }
 
 
@@ -345,39 +417,45 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     /* --------------------------------------------------------------------- */
 
     @Override
-    public String toString() {
-        return "RemoveAuthenticatedDataRequest{" +
-                "\r\n     version=" + version +
-                ",\r\n     hash=" + Hex.encode(hash) +
-                ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
-                ",\r\n     ownerPublicKey=" + ownerPublicKey +
-                ",\r\n     sequenceNumber=" + sequenceNumber +
-                ",\r\n     signature=" + Hex.encode(signature) +
-                ",\r\n     created=" + new Date(created) + " (" + created + ")" +
-                ",\r\n     className=" + className +
-                "\r\n}";
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (!(o instanceof RemoveAuthenticatedDataRequest that)) return false;
 
         return sequenceNumber == that.sequenceNumber &&
                 created == that.created &&
+                version == that.version && metaData.equals(that.metaData) &&
                 Arrays.equals(hash, that.hash) &&
                 Arrays.equals(ownerPublicKeyBytes, that.ownerPublicKeyBytes) &&
-                Objects.equals(ownerPublicKey, that.ownerPublicKey) &&
-                Arrays.equals(signature, that.signature);
+                Arrays.equals(signature, that.signature) &&
+                className.equals(that.className) &&
+                Arrays.equals(signatureV2, that.signatureV2);
     }
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode(hash);
+        int result = metaData.hashCode();
+        result = 31 * result + Arrays.hashCode(hash);
         result = 31 * result + Arrays.hashCode(ownerPublicKeyBytes);
-        result = 31 * result + Objects.hashCode(ownerPublicKey);
         result = 31 * result + sequenceNumber;
         result = 31 * result + Arrays.hashCode(signature);
         result = 31 * result + Long.hashCode(created);
+        result = 31 * result + version;
+        result = 31 * result + className.hashCode();
+        result = 31 * result + Arrays.hashCode(signatureV2);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "RemoveAuthenticatedDataRequest{" +
+                "metaData=" + metaData +
+                ", hash=" + Hex.encode(hash) +
+                ", ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
+                ", sequenceNumber=" + sequenceNumber +
+                ", signature=" + Hex.encode(signature) +
+                ", created=" + created +
+                ", version=" + version +
+                ", className='" + className + '\'' +
+                ", signatureV2=" + Hex.encode(signatureV2) +
+                '}';
     }
 }

@@ -17,11 +17,12 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.annotation.ExcludeForHash;
 import bisq.common.data.ByteArray;
+import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
-import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -36,15 +37,18 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
+    private final static int VERSION = 2;
 
     public static AddMailboxRequest from(MailboxData mailboxData,
                                          KeyPair senderKeyPair,
                                          PublicKey receiverPublicKey)
             throws GeneralSecurityException {
+        int version = VERSION;
         long created = System.currentTimeMillis();
         PublicKey senderPublicKey = senderKeyPair.getPublic();
         byte[] senderPublicKeyEncoded = senderPublicKey.getEncoded();
@@ -59,9 +63,37 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                 receiverPublicKeyEncoded,
                 created,
                 sequenceNumber);
-        byte[] preImage = mailboxSequentialData.serializeForHash();
-        byte[] signature = SignatureUtil.sign(preImage, senderKeyPair.getPrivate());
-        return new AddMailboxRequest(mailboxSequentialData, signature, senderPublicKeyEncoded, senderPublicKey);
+
+        byte[] preImageV1 = mailboxSequentialData.serializeForHash();
+        byte[] signatureV1 = SignatureUtil.sign(preImageV1, senderKeyPair.getPrivate());
+
+        AddMailboxRequest requestToSign = AddMailboxRequest.withoutSignatureV2(mailboxSequentialData,
+                signatureV1,
+                senderPublicKeyEncoded,
+                senderPublicKey,
+                version);
+        byte[] preImageV2 = requestToSign.getPreImageV2();
+        byte[] signatureV2 = SignatureUtil.sign(preImageV2, senderKeyPair.getPrivate());
+
+        return new AddMailboxRequest(mailboxSequentialData,
+                signatureV1,
+                senderPublicKeyEncoded,
+                senderPublicKey,
+                signatureV2,
+                version);
+    }
+
+    private static AddMailboxRequest withoutSignatureV2(MailboxSequentialData mailboxSequentialData,
+                                                        byte[] signatureV1,
+                                                        byte[] senderPublicKeyEncoded,
+                                                        PublicKey senderPublicKey,
+                                                        int version) {
+        return new AddMailboxRequest(mailboxSequentialData,
+                signatureV1,
+                senderPublicKeyEncoded,
+                senderPublicKey,
+                new byte[]{},
+                version);
     }
 
     @Getter
@@ -69,15 +101,27 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     private final byte[] signature;
     private final byte[] senderPublicKeyBytes;
     private final transient PublicKey senderPublicKey;
+    // Added in v2.1.14. Empty if received from nodes of earlier versions. Excluded from the hash, so that the proof of
+    // work payload stays the same as that of nodes of earlier versions.
+    @ExcludeForHash
+    private final byte[] signatureV2;
+    // Added in v2.1.14. 0 if received from nodes of earlier versions. Version 2 is the first version with signature V2.
+    // Excluded from the hash for the same reason as signatureV2.
+    @ExcludeForHash
+    private final int version;
 
     private AddMailboxRequest(MailboxSequentialData mailboxSequentialData,
                               byte[] signature,
                               byte[] senderPublicKeyBytes,
-                              PublicKey senderPublicKey) {
+                              PublicKey senderPublicKey,
+                              byte[] signatureV2,
+                              int version) {
         this.mailboxSequentialData = mailboxSequentialData;
         this.signature = signature;
         this.senderPublicKeyBytes = senderPublicKeyBytes;
         this.senderPublicKey = senderPublicKey;
+        this.signatureV2 = signatureV2;
+        this.version = version;
 
         verify();
     }
@@ -85,7 +129,14 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public void verify() {
         NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
-        NetworkDataValidation.validateECSignature(signature);
+        if (signature.length > 0) {
+            NetworkDataValidation.validateECSignature(signature);
+        }
+        if (signatureV2.length > 0) {
+            NetworkDataValidation.validateECSignature(signatureV2);
+        }
+        checkArgument(signature.length > 0 || signatureV2.length > 0,
+                "No signature found");
     }
 
 
@@ -108,7 +159,9 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         return bisq.network.protobuf.AddMailboxRequest.newBuilder()
                 .setMailboxSequentialData(mailboxSequentialData.toProto(serializeForHash))
                 .setSignature(ByteString.copyFrom(signature))
-                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes));
+                .setSenderPublicKeyBytes(ByteString.copyFrom(senderPublicKeyBytes))
+                .setSignatureV2(ByteString.copyFrom(signatureV2))
+                .setVersion(version);
     }
 
     public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto) {
@@ -119,17 +172,27 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                     MailboxSequentialData.fromProto(proto.getMailboxSequentialData()),
                     proto.getSignature().toByteArray(),
                     senderPublicKeyBytes,
-                    senderPublicKey
+                    senderPublicKey,
+                    proto.getSignatureV2().toByteArray(),
+                    proto.getVersion()
             );
         } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key");
+            log.error("Failed to generate public key", e);
             throw new RuntimeException(e);
         }
     }
 
+    // Overrides Proto.getVersion(). Proto uses it to resolve @ExcludeForHash(excludeOnlyInVersions = ...), so it
+    // determines the result of serializeForHash(), which is the payload of the proof of work. It must return the
+    // version of the message.
+    @Override
+    public int getVersion() {
+        return version;
+    }
+
 
     /* --------------------------------------------------------------------- */
-    // Canonical
+    // Canonical implementation
     /* --------------------------------------------------------------------- */
 
     public static final CanonicalSchema<AddMailboxRequest> DEFAULT_SCHEMA =
@@ -137,20 +200,39 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                     CanonicalSchema.<AddMailboxRequest>newBuilder()
                             .canonical(1, AddMailboxRequest::getMailboxSequentialData)
                             .bytes(2, request -> request.signature)
+                            .bytes(3, request -> request.senderPublicKeyBytes)
+                            .bytes(4, request -> request.signatureV2)
+                            .sint32(5, request -> request.version));
+
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: signatureV2 (field 4) and
+    // version (field 5).
+    public static final CanonicalSchema<AddMailboxRequest> STORAGE_KEY_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(4,
+                    CanonicalSchema.<AddMailboxRequest>newBuilder()
+                            .canonical(1, AddMailboxRequest::getMailboxSequentialData)
+                            .bytes(2, request -> request.signature)
                             .bytes(3, request -> request.senderPublicKeyBytes));
+
+    // The preimage of signature V2. It is a new message, not the protobuf message: a domain separation tag, then every
+    // field except signatureV2 itself. The @ExcludeForHash annotations do not apply. The nested objects receive the
+    // SIGNATURE purpose, so MailboxData contributes its version and className (see MailboxData.SIGNATURE_V2_SCHEMA).
+    public static final CanonicalSchema<AddMailboxRequest> SIGNATURE_V2_SCHEMA =
+            CanonicalSchema.<AddMailboxRequest>newBuilder()
+                    .string(1, ignore -> "bisq.AddMailboxRequest.signatureV2")
+                    .sint32(2, request -> request.version)
+                    .canonical(3, AddMailboxRequest::getMailboxSequentialData)
+                    .bytes(4, request -> request.senderPublicKeyBytes)
+                    .bytes(5, request -> request.signature)
+                    .build();
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<AddMailboxRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
-            case SIGNATURE -> DEFAULT_SCHEMA;
-            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case SIGNATURE -> SIGNATURE_V2_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
-    }
-
-    private byte[] getStoragePreImage() {
-        return mailboxSequentialData.getMailboxData().serializeForHash();
     }
 
 
@@ -164,6 +246,10 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         return new ByteArray(hash);
     }
 
+    private byte[] getStoragePreImage() {
+        return mailboxSequentialData.getMailboxData().serializeForHash();
+    }
+
 
     /* --------------------------------------------------------------------- */
     // SignedRequest implementation
@@ -175,6 +261,11 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
+    public byte[] getPreImageV2() {
+        return encodeCanonical(EncodingPurpose.SIGNATURE);
+    }
+
+    @Override
     public PublicKey getSignaturePublicKey() {
         return senderPublicKey;
     }
@@ -182,6 +273,11 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public byte[] getSignatureV1() {
         return signature;
+    }
+
+    @Override
+    public byte[] getSignatureV2() {
+        return signatureV2;
     }
 
 
@@ -246,31 +342,34 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     /* --------------------------------------------------------------------- */
 
     @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AddMailboxRequest that)) return false;
+
+        return version == that.version &&
+                mailboxSequentialData.equals(that.mailboxSequentialData) &&
+                Arrays.equals(signature, that.signature) &&
+                Arrays.equals(senderPublicKeyBytes, that.senderPublicKeyBytes) &&
+                Arrays.equals(signatureV2, that.signatureV2);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = mailboxSequentialData.hashCode();
+        result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + Arrays.hashCode(senderPublicKeyBytes);
+        result = 31 * result + Arrays.hashCode(signatureV2);
+        result = 31 * result + version;
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "AddMailboxRequest{" +
                 "mailboxSequentialData=" + mailboxSequentialData +
                 ", signature=" + Hex.encode(signature) +
                 ", senderPublicKeyBytes=" + Hex.encode(senderPublicKeyBytes) +
-                ", senderPublicKey=" + Hex.encode(senderPublicKey.getEncoded()) +
+                ", signatureV2=" + Hex.encode(signatureV2) +
+                ", version=" + version +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof AddMailboxRequest that)) return false;
-
-        return Objects.equals(mailboxSequentialData, that.mailboxSequentialData) &&
-                Arrays.equals(signature, that.signature) &&
-                Arrays.equals(senderPublicKeyBytes, that.senderPublicKeyBytes) &&
-                Objects.equals(senderPublicKey, that.senderPublicKey);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hashCode(mailboxSequentialData);
-        result = 31 * result + Arrays.hashCode(signature);
-        result = 31 * result + Arrays.hashCode(senderPublicKeyBytes);
-        result = 31 * result + Objects.hashCode(senderPublicKey);
-        return result;
     }
 }

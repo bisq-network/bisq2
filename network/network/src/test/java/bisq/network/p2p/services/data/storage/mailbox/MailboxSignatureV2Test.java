@@ -1,0 +1,177 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.network.p2p.services.data.storage.mailbox;
+
+import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.CodedOutputStream;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+
+import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Signature V2 of the mailbox requests covers every field of the request except itself and the deprecated metaData,
+ * including the version and className of the nested MailboxData. Nodes of earlier versions know neither signatureV2
+ * nor the version of the add request. Both are excluded from the hash, so the proof of work payload is the same for
+ * nodes of all versions.
+ */
+class MailboxSignatureV2Test {
+    private static final String CLASS_NAME = AckMessage.class.getSimpleName();
+
+    private final KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+    private final KeyPair receiverKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+
+    @BeforeAll
+    static void registerMetaData() {
+        StorableTypesRegistry.register(AckMessage.class, AckMessage.META_DATA);
+    }
+
+    @Test
+    void addMailboxRequestHasValidSignaturesAfterProtobufRoundTrip() throws GeneralSecurityException {
+        AddMailboxRequest request = createAddMailboxRequest();
+        AddMailboxRequest received = AddMailboxRequest.fromProto(request.toValueProto(false));
+
+        assertEquals(2, received.getVersion());
+        assertTrue(received.isSignatureV2Present());
+        assertFalse(received.isSignatureV2Invalid());
+        assertFalse(received.isSignatureV1Invalid());
+        assertFalse(received.isSignatureInvalid());
+    }
+
+    @Test
+    void addMailboxRequestWithChangedFieldIsRejected() throws GeneralSecurityException {
+        bisq.network.protobuf.AddMailboxRequest proto = createAddMailboxRequest().toValueProto(false);
+
+        // Signature V1 does not cover the version and className of MailboxData. Signature V2 covers them.
+        bisq.network.protobuf.AddMailboxRequest.Builder changedClassName = proto.toBuilder();
+        changedClassName.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setClassName("OtherType");
+        assertTrue(AddMailboxRequest.fromProto(changedClassName.build()).isSignatureInvalid());
+
+        bisq.network.protobuf.AddMailboxRequest.Builder changedDataVersion = proto.toBuilder();
+        changedDataVersion.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setVersion(4);
+        assertTrue(AddMailboxRequest.fromProto(changedDataVersion.build()).isSignatureInvalid());
+
+        assertTrue(AddMailboxRequest.fromProto(proto.toBuilder().setVersion(3).build()).isSignatureInvalid());
+    }
+
+    @Test
+    void addMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1() throws GeneralSecurityException {
+        AddMailboxRequest request = createAddMailboxRequest();
+
+        AddMailboxRequest asFromEarlierVersion = AddMailboxRequest.fromProto(
+                request.toValueProto(false).toBuilder().clearSignatureV2().clearVersion().build());
+
+        assertFalse(asFromEarlierVersion.isSignatureV2Present());
+        assertFalse(asFromEarlierVersion.isSignatureInvalid());
+        assertArrayEquals(request.serializeForHash(), asFromEarlierVersion.serializeForHash());
+    }
+
+    @Test
+    void removeMailboxRequestHasValidSignaturesAfterProtobufRoundTrip() throws GeneralSecurityException {
+        RemoveMailboxRequest request = createRemoveMailboxRequest();
+        RemoveMailboxRequest received = RemoveMailboxRequest.fromProto(request.toValueProto(false));
+
+        assertTrue(received.isSignatureV2Present());
+        assertFalse(received.isSignatureV2Invalid());
+        assertFalse(received.isSignatureV1Invalid());
+        assertFalse(received.isSignatureInvalid());
+    }
+
+    @Test
+    void removeMailboxRequestWithChangedFieldIsRejected() throws GeneralSecurityException {
+        bisq.network.protobuf.RemoveMailboxRequest proto = createRemoveMailboxRequest().toValueProto(false);
+
+        // Signature V1 covers only the hash. Signature V2 covers these fields as well.
+        assertTrue(RemoveMailboxRequest.fromProto(proto.toBuilder().setClassName("OtherType").build())
+                .isSignatureInvalid());
+        assertTrue(RemoveMailboxRequest.fromProto(proto.toBuilder().setCreated(proto.getCreated() - 1).build())
+                .isSignatureInvalid());
+        assertTrue(RemoveMailboxRequest.fromProto(proto.toBuilder().setVersion(3).build())
+                .isSignatureInvalid());
+    }
+
+    @Test
+    void removeMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1() throws GeneralSecurityException {
+        RemoveMailboxRequest request = createRemoveMailboxRequest();
+
+        RemoveMailboxRequest withoutSignatureV2 = RemoveMailboxRequest.fromProto(
+                request.toValueProto(false).toBuilder().clearSignatureV2().build());
+
+        assertFalse(withoutSignatureV2.isSignatureInvalid());
+        assertArrayEquals(request.serializeForHash(), withoutSignatureV2.serializeForHash());
+    }
+
+    // The preimages of signature V2 are new messages. Their layout is written here independently with protobuf's
+    // CodedOutputStream.
+    @Test
+    void removeMailboxRequestSignatureV2PreimageHasFixedLayout() throws GeneralSecurityException, IOException {
+        RemoveMailboxRequest request = createRemoveMailboxRequest();
+        bisq.network.protobuf.RemoveMailboxRequest proto = request.toValueProto(false);
+
+        ByteArrayOutputStream expected = new ByteArrayOutputStream();
+        CodedOutputStream output = CodedOutputStream.newInstance(expected);
+        output.writeString(1, "bisq.RemoveMailboxRequest.signatureV2");
+        output.writeSInt32(2, 2);
+        output.writeString(3, CLASS_NAME);
+        output.writeSInt64(4, proto.getCreated());
+        output.writeBytes(5, proto.getHash());
+        output.writeBytes(6, proto.getReceiverPublicKeyBytes());
+        output.writeBytes(7, proto.getSignature());
+        output.flush();
+
+        assertArrayEquals(expected.toByteArray(), request.getPreImageV2());
+    }
+
+    // The SIGNATURE encoding of MailboxData is part of the preimage of signature V2 of AddMailboxRequest. Like the
+    // preimages, it has its own field numbers, not those of the protobuf message MailboxData. It has no metaData.
+    @Test
+    void mailboxDataSignatureEncodingHasFixedLayout() throws IOException {
+        MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
+
+        ByteArrayOutputStream expected = new ByteArrayOutputStream();
+        CodedOutputStream output = CodedOutputStream.newInstance(expected);
+        output.writeSInt32(1, mailboxData.getVersion());
+        output.writeString(2, CLASS_NAME);
+        output.writeBytes(3, mailboxData.getConfidentialMessage().toValueProto(false).toByteString());
+        output.flush();
+
+        assertArrayEquals(expected.toByteArray(), mailboxData.encodeCanonical(EncodingPurpose.SIGNATURE));
+    }
+
+    private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException {
+        MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
+        return AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+    }
+
+    private RemoveMailboxRequest createRemoveMailboxRequest() throws GeneralSecurityException {
+        MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
+        return RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+    }
+}
