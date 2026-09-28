@@ -34,12 +34,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class HashSetFilterService extends FilterService<HashSetFilter> {
+    // Fixed per instance, so that requests of both types can be served concurrently
     private final InventoryFilterType inventoryFilterType;
 
     public HashSetFilterService(StorageService storageService, int maxSize, InventoryFilterType inventoryFilterType) {
         super(storageService, maxSize);
+        checkArgument(inventoryFilterType.isHashSet(), "Invalid inventoryFilterType %s", inventoryFilterType);
         this.inventoryFilterType = inventoryFilterType;
     }
 
@@ -80,10 +84,21 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
         return !filter.getFilterEntriesAsSet().contains(toFilterEntry(mapEntry));
     }
 
+    // Used for the filter which we send and for the comparison with a received filter, so both use the same key
     private HashSetFilterEntry toFilterEntry(Map.Entry<ByteArray, ? extends DataRequest> mapEntry) {
-        byte[] hash = mapEntry.getKey().getBytes();
+        byte[] hash = getStorageKey(mapEntry).getBytes();
         // AddAppendOnlyDataRequest does not use a seq nr., therefore it is not Sequential.
         int sequenceNumber = mapEntry.getValue() instanceof Sequential sequential ? sequential.getSequenceNumber() : 0;
         return new HashSetFilterEntry(hash, sequenceNumber);
+    }
+
+    // The stores hold every request under storage key V2 (DataStorageService.preProcessPersisted re-keys persisted
+    // entries), so the map key is storage key V2. Storage key V1 is derived from the request.
+    private ByteArray getStorageKey(Map.Entry<ByteArray, ? extends DataRequest> mapEntry) {
+        return switch (inventoryFilterType) {
+            case HASH_SET -> mapEntry.getValue().getStorageKeyV1();
+            case HASH_SET_V2 -> mapEntry.getKey();
+            case MINI_SKETCH -> throw new IllegalStateException("Not a hash set filter type " + inventoryFilterType);
+        };
     }
 }

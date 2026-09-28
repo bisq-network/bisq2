@@ -95,20 +95,14 @@ creation date. This happens only if the persisted keys were not the keys of thei
 
 ## Compatibility
 
-- Storage keys are local to a node, with one exception: the inventory filter (see below). No other message contains
-  them. Nodes of different versions therefore can use different keys.
+- Storage keys are local to a node, with one exception: the inventory filter. Its type defines which storage key it
+  contains (see [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md)). No other message contains them. Nodes
+  of different versions therefore can use different keys.
 - Remove and refresh requests of earlier versions carry the V1 data hash and the owner key. A node of this version
   computes the V2 key from them.
 
 ## Unresolved questions
 
-- **Inventory filter.** An inventory request contains the storage keys of the requests which the requester already
-  has. The responder leaves out the requests whose keys are in the filter. Nodes of earlier versions send V1 keys, and
-  nodes of this version store their requests under V2 keys. Between nodes of different versions no key matches, so
-  the responder sends all requests up to the size limit of the inventory, and the requester may miss requests beyond
-  that limit. Options: keep V1 keys in the filter until nodes of earlier versions are no longer supported, or send both
-  keys. A V1 filter does not distinguish owners, so a requester which has a copy of the data from another owner would
-  not receive the copy of the owner. The developers decide the option.
 - **Encoding of the owner key.** The same public key has several valid encodings (for example a compressed and an
   uncompressed point). For add requests, the owner key must match the signed `pubKeyHash`, so a relay cannot change its
   encoding. For remove requests without a stored entry, signature V1 does not cover the key. A relay can then store

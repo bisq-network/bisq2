@@ -78,7 +78,7 @@ rejected during decoding. No bytes, storage keys, or signature preimages change 
 | --- | --- | --- |
 | Complete serialization (`serialize()`), canonical `DEFAULT` purpose | The kept `Any` | Relay and persistence without loss. |
 | Canonical `SIGNATURE` purpose | The kept `Any`: type URL and exact value bytes | A signature over it covers every field of the payload, including fields that the verifier does not know and fields annotated with `@ExcludeForHash`. |
-| Hash serialization (`serializeForHash()`), canonical `STORAGE_KEY` and `PROOF_OF_WORK` purposes | The `Any` rebuilt from the decoded object without the fields annotated with `@ExcludeForHash`, as before this rule | Nodes of all versions must compute the same storage key, `signatureV1` preimage, proof of work payload, and inventory order. |
+| Hash serialization (`serializeForHash()`), canonical `STORAGE_KEY` and `PROOF_OF_WORK` purposes | The `Any` rebuilt from the decoded object without the fields annotated with `@ExcludeForHash`, as before this rule | Nodes of all versions must compute the same data hash of the storage key (see [`storage-keys.md`](storage-keys.md)), `signatureV1` preimage, proof of work payload, and inventory order. |
 
 In the canonical encoding, the kept `Any` is the message `string type_url = 1; bytes value = 2` with the
 kept values. The type URL binds the type of the payload.

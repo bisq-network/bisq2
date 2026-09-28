@@ -26,13 +26,17 @@ import bisq.network.p2p.node.Feature;
 import java.util.Optional;
 
 public enum InventoryFilterType implements ProtoEnum {
+    // Hash set filter with storage key V1
     HASH_SET,
-    MINI_SKETCH;
+    MINI_SKETCH,
+    // Hash set filter with storage key V2
+    HASH_SET_V2;
 
     public static Optional<InventoryFilterType> fromFeature(Feature feature) {
         return switch (feature) {
             case INVENTORY_HASH_SET -> Optional.of(HASH_SET);
             case INVENTORY_MINI_SKETCH -> Optional.of(MINI_SKETCH);
+            case INVENTORY_HASH_SET_V2 -> Optional.of(HASH_SET_V2);
             default -> Optional.empty();
         };
     }
@@ -50,5 +54,9 @@ public enum InventoryFilterType implements ProtoEnum {
         } catch (UnresolvableProtobufEnumException e) {
             throw new UnresolvableProtobufMessageException(e);
         }
+    }
+
+    public boolean isHashSet() {
+        return this == HASH_SET || this == HASH_SET_V2;
     }
 }

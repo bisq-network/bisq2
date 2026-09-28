@@ -47,6 +47,8 @@ public final class HashSetFilter extends InventoryFilter {
     // As creating the HashSet at each request costs resources we cache it.
     private transient Set<HashSetFilterEntry> filterEntriesAsSet;
 
+    // The type defines which storage key the filter entries contain: HASH_SET storage key V1, HASH_SET_V2 storage
+    // key V2.
     public HashSetFilter(InventoryFilterType inventoryFilterType, List<HashSetFilterEntry> filterEntries) {
         super(inventoryFilterType);
 
@@ -59,7 +61,7 @@ public final class HashSetFilter extends InventoryFilter {
 
     @Override
     public void verify() {
-        checkArgument(inventoryFilterType == InventoryFilterType.HASH_SET);
+        checkArgument(inventoryFilterType.isHashSet(), "Invalid inventoryFilterType %s", inventoryFilterType);
         checkArgument(filterEntries.size() < MAX_ENTRIES);
     }
 
