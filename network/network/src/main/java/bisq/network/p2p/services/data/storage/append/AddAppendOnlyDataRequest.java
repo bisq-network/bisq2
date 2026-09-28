@@ -25,9 +25,11 @@ import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -109,27 +111,32 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
                     CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
                             .compose(1, request -> request.appendOnlyDataAny, DistributedDataAny.SCHEMA));
 
-    // STORAGE_KEY and PROOF_OF_WORK reproduce serializeForHash(): nodes of all versions must compute the same storage
-    // key and proof of work payload.
-    public static final CanonicalSchema<AddAppendOnlyDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
-    public static final CanonicalSchema<AddAppendOnlyDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    // PROOF_OF_WORK reproduces serializeForHash(): nodes of all versions must compute the same proof of work payload.
+    // It differs from DEFAULT_SCHEMA only in the value of the Any: the hash serialization of the decoded
+    // AppendOnlyData instead of the kept bytes. It equals the Any of toAny(true), which getValueBuilder(true) writes.
+    public static final CanonicalSchema<AddAppendOnlyDataRequest> PROOF_OF_WORK_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
+                    CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
+                            .compose(1, AddAppendOnlyDataRequest::getAppendOnlyDataAnyForProofOfWork, DistributedDataAny.SCHEMA));
 
-    private static CanonicalSchema<AddAppendOnlyDataRequest> createSchemaForHash() {
-        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
-                CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
-                        // Canonical encoding is not yet supported for AppendOnlyData, as its implementations are
-                        // defined outside the network module. We use the protobuf serialization for hashes instead:
-                        // the Any with the type URL and the serializeForHash() bytes, as getValueBuilder(true) writes
-                        // it.
-                        .encodedMessage(1, request -> request.appendOnlyData.toAny(true).toByteArray()));
+    // The kept type URL is the one that Any.pack creates (DistributedDataAny.retain checks it). Canonical encoding is
+    // not yet supported for AppendOnlyData, as its implementations are defined outside the network module. We use the
+    // protobuf serialization for hashes instead.
+    private Any getAppendOnlyDataAnyForProofOfWork() {
+        return Any.newBuilder()
+                .setTypeUrl(appendOnlyDataAny.getTypeUrl())
+                .setValue(ByteString.copyFrom(appendOnlyData.serializeForHash()))
+                .build();
     }
 
+    // The storage key does not use an encoding of the request (see getStorageKeyPreImageV2).
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<AddAppendOnlyDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
-            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for AddAppendOnlyDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -141,13 +148,18 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
     /* --------------------------------------------------------------------- */
 
     @Override
-    public ByteArray getStorageKey() {
-        byte[] hash = DigestUtil.hash(getStoragePreImage());
-        return new ByteArray(hash);
+    public ByteArray getStorageKeyV1() {
+        return new ByteArray(DigestUtil.hash(appendOnlyData.serializeForHash()));
     }
 
-    private byte[] getStoragePreImage() {
-        return appendOnlyData.serializeForHash();
+    // The data hash uses the hash serialization of the decoded AppendOnlyData, as canonical encoding is not yet
+    // supported for it. It leaves out the fields annotated with @ExcludeForHash and the fields which this node does
+    // not know, so that such fields cannot create several storage keys for the same data. The kept Any bytes are
+    // therefore not used.
+    @Override
+    public byte[] getStorageKeyPreImageV2() {
+        byte[] appendOnlyDataHash = DigestUtil.hash(appendOnlyData.serializeForHash());
+        return StorageKeyV2.createPreImage(StorageKeyV2.APPEND_ONLY_DATA_TAG, appendOnlyDataHash);
     }
 
 

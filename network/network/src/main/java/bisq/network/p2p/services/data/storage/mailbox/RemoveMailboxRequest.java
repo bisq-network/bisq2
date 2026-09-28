@@ -27,7 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
-import bisq.security.DigestUtil;
+import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -53,7 +53,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         String className = metaData.getClassName();
         PublicKey receiverPublicKey = receiverKeyPair.getPublic();
         byte[] receiverPublicKeyEncoded = receiverPublicKey.getEncoded();
-        byte[] mailboxDataHash = DigestUtil.hash(mailboxData.serializeForHash());
+        byte[] mailboxDataHash = AddMailboxRequest.getMailboxDataHash(mailboxData);
 
         byte[] signatureV1 = SignatureUtil.sign(mailboxDataHash, receiverKeyPair.getPrivate());
 
@@ -248,7 +248,6 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                             .string(7, request -> request.className)
                             .bytes(8, request -> request.signatureV2));
 
-    public static final CanonicalSchema<RemoveMailboxRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<RemoveMailboxRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
@@ -288,7 +287,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         CanonicalSchema<RemoveMailboxRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
-            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RemoveMailboxRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -298,9 +297,15 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     /* --------------------------------------------------------------------- */
     // DataRequest implementation
     /* --------------------------------------------------------------------- */
+
     @Override
-    public ByteArray getStorageKey() {
+    public ByteArray getStorageKeyV1() {
         return new ByteArray(hash);
+    }
+
+    @Override
+    public byte[] getStorageKeyPreImageV2() {
+        return StorageKeyV2.createPreImage(StorageKeyV2.MAILBOX_DATA_TAG, hash, receiverPublicKeyBytes);
     }
 
 

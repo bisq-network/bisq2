@@ -50,7 +50,6 @@ import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -119,7 +118,11 @@ public class DistributedDataAnyTest {
 
         // The signature covers the hash serialization, which this node computes from its model
         assertFalse(received.isSignatureInvalid());
-        assertEquals(getStorageKeyOfNodesWhichKnowOnlyTheModel(), received.getStorageKey());
+        assertEquals(getStorageKeyOfNodesWhichKnowOnlyTheModel(), received.getStorageKeyV1());
+        // Storage key V2 contains the hash of the model as well: a field unknown to this node does not change it
+        AddAuthenticatedDataRequest createdFromModel = AddAuthenticatedDataRequest.fromProto(
+                getAddAuthenticatedDataRequestProto(getHashSerializationAny()).getAddAuthenticatedDataRequest());
+        assertEquals(createdFromModel.getStorageKey(), received.getStorageKey());
 
         // Relay
         assertArrayEquals(proto.toByteArray(), received.toDataRequestProto(false).toByteArray());
@@ -177,9 +180,10 @@ public class DistributedDataAnyTest {
                 signature,
                 KEY_PAIR.getPublic()));
 
-        // The STORAGE_KEY encoding is the hash serialization
-        assertArrayEquals(sequentialData.serializeForHash(),
-                sequentialData.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+        // The STORAGE_KEY encoding of the stored data is its hash serialization
+        AuthenticatedData authenticatedData = sequentialData.getAuthenticatedData();
+        assertArrayEquals(authenticatedData.serializeForHash(),
+                authenticatedData.encodeCanonical(EncodingPurpose.STORAGE_KEY));
     }
 
     @Test
@@ -194,10 +198,12 @@ public class DistributedDataAnyTest {
         assertEquals(new PayloadData(KEY, VALUE), received.getAppendOnlyData());
         assertArrayEquals(proto.toByteArray(), received.toDataRequestProto(false).toByteArray());
         assertArrayEquals(proto.toByteArray(), relay(received).toDataRequestProto(false).toByteArray());
-        assertEquals(new AddAppendOnlyDataRequest(new PayloadData(KEY, VALUE)).getStorageKey(),
-                received.getStorageKey());
+        AddAppendOnlyDataRequest createdFromModel = new AddAppendOnlyDataRequest(new PayloadData(KEY, VALUE));
+        assertEquals(createdFromModel.getStorageKeyV1(), received.getStorageKeyV1());
+        // Storage key V2 uses the hash serialization of the model: a field unknown to this node does not change it
+        assertEquals(createdFromModel.getStorageKey(), received.getStorageKey());
         assertArrayEquals(received.serialize(), received.encodeCanonical(EncodingPurpose.SIGNATURE));
-        assertArrayEquals(received.serializeForHash(), received.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+        assertArrayEquals(received.serializeForHash(), received.encodeCanonical(EncodingPurpose.PROOF_OF_WORK));
     }
 
     @Test

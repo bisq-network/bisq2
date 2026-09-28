@@ -106,7 +106,9 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
         CanonicalSchema<AuthenticatedSequentialData> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
-            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            // Only the stored data has a storage key encoding (see docs/specifications/network/storage-keys.md)
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for AuthenticatedSequentialData");
             case PROOF_OF_WORK -> DEFAULT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);

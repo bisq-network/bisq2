@@ -26,6 +26,7 @@ import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
@@ -204,7 +205,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                             .bytes(4, request -> request.signatureV2)
                             .sint32(5, request -> request.version));
 
-    public static final CanonicalSchema<AddMailboxRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<AddMailboxRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: signatureV2 (field 4) and
@@ -234,7 +234,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
         CanonicalSchema<AddMailboxRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
-            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for AddMailboxRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -246,13 +246,23 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     /* --------------------------------------------------------------------- */
 
     @Override
-    public ByteArray getStorageKey() {
-        byte[] hash = DigestUtil.hash(getStoragePreImage());
-        return new ByteArray(hash);
+    public ByteArray getStorageKeyV1() {
+        return new ByteArray(DigestUtil.hash(mailboxSequentialData.getMailboxData().serializeForHash()));
     }
 
-    private byte[] getStoragePreImage() {
-        return mailboxSequentialData.getMailboxData().serializeForHash();
+    // The data hash must be the one which remove requests carry (see getMailboxDataHash). The receiver owns the entry:
+    // only the receiver can remove it.
+    @Override
+    public byte[] getStorageKeyPreImageV2() {
+        return StorageKeyV2.createPreImage(StorageKeyV2.MAILBOX_DATA_TAG,
+                getMailboxDataHash(mailboxSequentialData.getMailboxData()),
+                mailboxSequentialData.getReceiversPubKeyBytes());
+    }
+
+    // The hash which remove requests carry. The STORAGE_KEY encoding of MailboxData equals its serializeForHash(), so
+    // nodes of earlier versions compute the same hash.
+    static byte[] getMailboxDataHash(MailboxData mailboxData) {
+        return DigestUtil.hash(mailboxData.encodeCanonical(EncodingPurpose.STORAGE_KEY));
     }
 
 

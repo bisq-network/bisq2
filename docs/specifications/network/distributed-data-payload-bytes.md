@@ -122,10 +122,11 @@ supported, or accept a field that no signature protects.
    computed from the decoded object. Cause: no required signature covers the kept bytes. A required
    signature over the `SIGNATURE` preimage removes it (for example `signatureV2` of the add request); the
    developers decide its activation.
-3. **Append-only data** has no signature, and its storage key covers only the hash serialization. Payload
-   fields that the node does not know are not protected by any mechanism. A storage key or a signature
-   over the exact bytes removes this limitation. A new storage key changes the identity of stored data and
-   needs its own activation; the developers decide it.
+3. **Append-only data** has no signature, and its storage key covers only the decoded object (see
+   [`storage-keys.md`](storage-keys.md)). Payload fields that the node does not know are not protected by
+   any mechanism. A signature over the exact bytes removes this limitation. A storage key over the exact
+   bytes does not: it would store each variant of the bytes as a separate entry, instead of rejecting the
+   variant.
 4. **Authorization signature.** The signature of authorized data (`AuthorizedData.signature`) covers only
    the hash serialization of the distributed data. Fields annotated with `@ExcludeForHash` and fields that
    the verifier does not know are not covered. An authorization signature over the `SIGNATURE` preimage of

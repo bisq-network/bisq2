@@ -104,7 +104,8 @@ public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
                         CanonicalSchema.newBuilder())
                 .build();
 
-// AuthorizedData: the signature is included, also in the hash purposes, although serializeForHash() omits it.
+// AuthorizedData: the signature is included, also in SIGNATURE and PROOF_OF_WORK. Only STORAGE_KEY omits it, as
+// serializeForHash() does where AuthorizedData is the root of the preimage (the data hash of the storage key).
 // The subtype builder is a method, so that each schema gets a new builder.
 public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
         AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()

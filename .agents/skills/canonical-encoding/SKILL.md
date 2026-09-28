@@ -23,11 +23,12 @@ rules are in the specifications; read them before non-trivial work:
    Fields annotated with `@ExcludeForHash` are included in `DEFAULT_SCHEMA` and in the
    `SIGNATURE_V2_SCHEMA` of the storage requests; `STORAGE_KEY_SCHEMA` and `PROOF_OF_WORK_SCHEMA` leave
    them out, as `serializeForHash()` does.
-3. **No silent change of hashed bytes.** The only production call site of canonical encoding is signature
-   V2 of the storage requests (`docs/specifications/network/storage-request-signatures.md`). Storage
-   keys, signature V1, proof of work payloads, and the inventory order use `serializeForHash()`. Switching
-   a call site is a protocol change: the bytes must be identical to what older nodes compute, or the
-   developers must plan an activation. Do not switch a call site on your own.
+3. **No silent change of hashed bytes.** The production call sites of canonical encoding are signature
+   V2 of the storage requests (`docs/specifications/network/storage-request-signatures.md`) and the data
+   hash of storage key V2 (`docs/specifications/network/storage-keys.md`). Storage key V1, signature V1,
+   proof of work payloads, and the inventory order use `serializeForHash()`. Switching a call site is a
+   protocol change: the bytes must be identical to what older nodes compute, or the developers must plan
+   an activation. Do not switch a call site on your own.
 
 The framework is not a general protobuf encoder. It supports only what Bisq's preimages use. If a field
 needs a missing feature (for example `uint64`, `float`, repeated `int64`, maps with non-string keys, or
@@ -182,8 +183,10 @@ message. The name says where the bytes come from and which role the field has.
 - **Do not switch a hash, signature, proof of work, or inventory call site** from `serializeForHash()` to
   canonical encoding without byte identity or an agreed activation. The default encodings of
   `AuthorizedData`, `MailboxData`, and the remove, refresh, and mailbox requests differ from
-  `serializeForHash()`. `STORAGE_KEY` equals it, except for `AuthorizedData`. `PROOF_OF_WORK` of a
-  message (a `DataRequest` or `ConfidentialMessage`) equals it without exception. `SIGNATURE` equals it,
+  `serializeForHash()`. `STORAGE_KEY` equals it for the stored data, including `AuthorizedData`, whose
+  `STORAGE_KEY` schema omits the signature; the `DataRequest` types and the sequential data have no
+  `STORAGE_KEY` encoding. `PROOF_OF_WORK` of a message (a `DataRequest` or `ConfidentialMessage`)
+  equals it without exception. `SIGNATURE` equals it,
   except for `AuthorizedData`, for the holders of data of higher-level modules, whose `SIGNATURE`
   encoding contains the exact bytes of that data, and for the classes with a `SIGNATURE_V2_SCHEMA` and
   the classes that contain them.

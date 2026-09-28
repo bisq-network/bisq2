@@ -161,24 +161,27 @@ public final class AuthorizedData extends AuthenticatedData {
 
     // Unlike serializeForHash(), which omits the signature so that republishing keeps the storage key, the default
     // encoding contains all non-transient fields, including the signature. The SIGNATURE purpose uses the default
-    // schema: it contains the DistributedData with its exact bytes. The STORAGE_KEY and PROOF_OF_WORK schemas differ
-    // only in the DistributedData, which they contain in its hash serialization. All contain the signature: it is not
-    // annotated with @ExcludeForHash, and serializeForHash() omits it only where AuthorizedData is the root of the
-    // preimage (see docs/specifications/encoding). In a proof of work payload, AuthorizedData is always nested in a
-    // request.
+    // schema: it contains the DistributedData with its exact bytes. The STORAGE_KEY and PROOF_OF_WORK schemas contain
+    // the DistributedData in its hash serialization. serializeForHash() omits the signature only where AuthorizedData
+    // is the root of the preimage (see docs/specifications/encoding):
+    // - STORAGE_KEY is the preimage of the data hash of the storage key, where AuthorizedData is always the root. It
+    //   omits the signature, as serializeForHash() does.
+    // - PROOF_OF_WORK: AuthorizedData is always nested in a request, whose hash serialization contains the signature.
     public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
             AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
                     .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
                     .build();
 
-    public static final CanonicalSchema<AuthorizedData> STORAGE_KEY_SCHEMA = createSchemaForHash();
-    public static final CanonicalSchema<AuthorizedData> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<AuthorizedData> STORAGE_KEY_SCHEMA =
+            AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
+                    .extend(11, authorizedData -> authorizedData, CanonicalSchema.<AuthorizedData>newBuilder()
+                            .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes))
+                    .build();
 
-    private static CanonicalSchema<AuthorizedData> createSchemaForHash() {
-        return AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
-                .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
-                .build();
-    }
+    public static final CanonicalSchema<AuthorizedData> PROOF_OF_WORK_SCHEMA =
+            AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
+                    .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
+                    .build();
 
     private static CanonicalSchema.Builder<AuthorizedData> getAuthorizedDataSchemaBuilder() {
         return CanonicalSchema.<AuthorizedData>newBuilder()

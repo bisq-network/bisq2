@@ -35,8 +35,10 @@ A schema is correct only when tests prove its bytes. Code review cannot find a w
 - **Differences to `serializeForHash()`.** Assert them (`assertFalse(Arrays.equals(...))`) for classes
   with `@ExcludeForHash` fields or a custom `serializeForHash()`, so that a change on either side is
   noticed.
-- **Hash purposes.** `encodeCanonical(STORAGE_KEY)` and `encodeCanonical(PROOF_OF_WORK)` must equal
-  `serializeForHash()`, and so must `encodeCanonical(SIGNATURE)` for classes without signature V2 (see
+- **Hash purposes.** `encodeCanonical(STORAGE_KEY)` of the stored data (also `AuthorizedData` with a
+  signature) and `encodeCanonical(PROOF_OF_WORK)` must equal `serializeForHash()`. Requests and sequential
+  data must reject `STORAGE_KEY`. `encodeCanonical(SIGNATURE)` must equal it for classes without
+  signature V2 (see
   `hashPurposesMatchSerializeForHash` in `StorageCanonicalEncoderTest`). For every message type,
   `PROOF_OF_WORK` must equal `serializeForHash()` of the message, also with `AuthorizedData` and with
   external data that has an excluded field (see `proofOfWorkPurposeMatchesProofOfWorkPayloadOfEveryMessage`).

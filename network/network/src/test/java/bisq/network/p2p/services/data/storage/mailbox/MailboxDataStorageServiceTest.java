@@ -34,6 +34,7 @@ import java.security.KeyPair;
 
 import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -76,6 +77,9 @@ class MailboxDataStorageServiceTest {
 
         assertTrue(addResult.isSuccess(), addResult.toString());
         assertTrue(removeResult.isSuccess(), removeResult.toString());
+        // The remove request carries only the hash of the mailbox data. It must find the entry of the add request.
+        assertEquals(addRequest.getStorageKey(), removeRequest.getStorageKey());
+        assertFalse(removeResult.isNoEntry(), removeResult.toString());
     }
 
     @Test

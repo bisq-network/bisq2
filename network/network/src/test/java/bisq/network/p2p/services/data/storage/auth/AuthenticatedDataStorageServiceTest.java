@@ -148,6 +148,8 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isSuccess(), result.toString());
     }
 
+    // Storage key V2 contains the public key of the owner. A refresh signed with another key therefore does not find
+    // the entry of the owner.
     @Test
     void refreshSignedWithOtherKeyIsRejected() throws GeneralSecurityException {
         addToOwnerAndPeer();
@@ -158,7 +160,7 @@ class AuthenticatedDataStorageServiceTest {
         DataStorageResult result = peerStore.refresh(refreshRequest);
 
         assertFalse(result.isSuccess());
-        assertTrue(result.isPublicKeyHashInvalid(), result.toString());
+        assertTrue(result.isNoEntry(), result.toString());
     }
 
     @Test
