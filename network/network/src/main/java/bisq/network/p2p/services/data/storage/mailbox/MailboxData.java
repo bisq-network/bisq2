@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Getter
 public final class MailboxData implements StorageData, Canonical {
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
     // Upper bound for the time to live of mailbox data and mailbox remove requests in the network storage, independent
     // of the time to live which the type of the MailboxMessage declares.
     public static final long MAX_TTL = TimeUnit.DAYS.toMillis(15);
