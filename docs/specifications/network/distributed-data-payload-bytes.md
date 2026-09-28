@@ -78,7 +78,7 @@ rejected during decoding. No bytes, storage keys, or signature preimages change 
 | --- | --- | --- |
 | Complete serialization (`serialize()`), canonical `DEFAULT` purpose | The kept `Any` | Relay and persistence without loss. |
 | Canonical `SIGNATURE` purpose | The kept `Any`: type URL and exact value bytes | A signature over it covers every field of the payload, including fields that the verifier does not know and fields annotated with `@ExcludeForHash`. |
-| Hash serialization (`serializeForHash()`), canonical `STORAGE_KEY` and `PROOF_OF_WORK` purposes | The `Any` rebuilt from the decoded object without the fields annotated with `@ExcludeForHash`, as before this rule | Nodes of all versions must compute the same storage key, `signatureV1` preimage, proof of work payload, and inventory order. |
+| Hash serialization (`serializeForHash()`), canonical `STORAGE_KEY` and `PROOF_OF_WORK` purposes | The `Any` rebuilt from the decoded object without the fields annotated with `@ExcludeForHash`, as before this rule | Nodes of all versions must compute the same data hash of the storage key (see [`storage-keys.md`](storage-keys.md)), `signatureV1` preimage, proof of work payload, and inventory order. |
 
 In the canonical encoding, the kept `Any` is the message `string type_url = 1; bytes value = 2` with the
 kept values. The type URL binds the type of the payload.
@@ -122,10 +122,11 @@ supported, or accept a field that no signature protects.
    computed from the decoded object. Cause: no required signature covers the kept bytes. A required
    signature over the `SIGNATURE` preimage removes it (for example `signatureV2` of the add request); the
    developers decide its activation.
-3. **Append-only data** has no signature, and its storage key covers only the hash serialization. Payload
-   fields that the node does not know are not protected by any mechanism. A storage key or a signature
-   over the exact bytes removes this limitation. A new storage key changes the identity of stored data and
-   needs its own activation; the developers decide it.
+3. **Append-only data** has no signature, and its storage key covers only the decoded object (see
+   [`storage-keys.md`](storage-keys.md)). Payload fields that the node does not know are not protected by
+   any mechanism. A signature over the exact bytes removes this limitation. A storage key over the exact
+   bytes does not: it would store each variant of the bytes as a separate entry, instead of rejecting the
+   variant.
 4. **Authorization signature.** The signature of authorized data (`AuthorizedData.signature`) covers only
    the hash serialization of the distributed data. Fields annotated with `@ExcludeForHash` and fields that
    the verifier does not know are not covered. An authorization signature over the `SIGNATURE` preimage of

@@ -27,8 +27,8 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.protobuf.DataRequest;
-import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -56,8 +56,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         long created = System.currentTimeMillis();
         MetaData metaData = authenticatedData.getMetaData();
         String className = metaData.getClassName();
-        byte[] authenticatedDataHash = DigestUtil.hash(authenticatedData.serializeForHash());
-        ByteArray storageKey = new ByteArray(authenticatedDataHash);
+        byte[] authenticatedDataHash = AddAuthenticatedDataRequest.getAuthenticatedDataHash(authenticatedData);
+        ByteArray storageKey = AddAuthenticatedDataRequest.getStorageKey(authenticatedDataHash, publicKeyEncoded);
         int sequenceNumber = store.getNextSequenceNumber(storageKey);
 
         byte[] signatureV1 = SignatureUtil.sign(authenticatedDataHash, keyPair.getPrivate());
@@ -263,7 +263,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                             .string(8, request -> request.className)
                             .bytes(9, request -> request.signatureV2));
 
-    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<RemoveAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
@@ -305,7 +304,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         CanonicalSchema<RemoveAuthenticatedDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
-            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RemoveAuthenticatedDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -317,8 +316,13 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     /* --------------------------------------------------------------------- */
 
     @Override
-    public ByteArray getStorageKey() {
+    public ByteArray getStorageKeyV1() {
         return new ByteArray(hash);
+    }
+
+    @Override
+    public byte[] getStorageKeyPreImageV2() {
+        return StorageKeyV2.createPreImage(StorageKeyV2.AUTHENTICATED_DATA_TAG, hash, ownerPublicKeyBytes);
     }
 
 

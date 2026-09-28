@@ -23,11 +23,12 @@ rules are in the specifications; read them before non-trivial work:
    Fields annotated with `@ExcludeForHash` are included in `DEFAULT_SCHEMA` and in the
    `SIGNATURE_V2_SCHEMA` of the storage requests; `STORAGE_KEY_SCHEMA` and `PROOF_OF_WORK_SCHEMA` leave
    them out, as `serializeForHash()` does.
-3. **No silent change of hashed bytes.** The only production call site of canonical encoding is signature
-   V2 of the storage requests (`docs/specifications/network/storage-request-signatures.md`). Storage
-   keys, signature V1, proof of work payloads, and the inventory order use `serializeForHash()`. Switching
-   a call site is a protocol change: the bytes must be identical to what older nodes compute, or the
-   developers must plan an activation. Do not switch a call site on your own.
+3. **No silent change of hashed bytes.** The production call sites of canonical encoding are signature
+   V2 of the storage requests (`docs/specifications/network/storage-request-signatures.md`) and the data
+   hash of storage key V2 (`docs/specifications/network/storage-keys.md`). Storage key V1, signature V1,
+   proof of work payloads, and the inventory order use `serializeForHash()`. Switching a call site is a
+   protocol change: the bytes must be identical to what older nodes compute, or the developers must plan
+   an activation. Do not switch a call site on your own.
 
 The framework is not a general protobuf encoder. It supports only what Bisq's preimages use. If a field
 needs a missing feature (for example `uint64`, `float`, repeated `int64`, maps with non-string keys, or
@@ -168,7 +169,8 @@ of. The preimage of a request starts with a domain separation tag (see `RemoveMa
 | `repeated Foo foos = n;` | `repeatedCompose(n, getter, Foo.DEFAULT_SCHEMA)`; a purpose-specific schema of the parent references the element schema for the same purpose | - |
 | Base message with `oneof message { Sub sub = n; ... }` | Base builder method plus `extend(n, sub -> sub, subtype builder)` | `AuthenticatedData` with `DefaultAuthenticatedData` (10), `AuthorizedData` (11) |
 | Field whose declared type has several implementations | `canonical(n, getter)`: the runtime type encodes itself | `AuthenticatedSequentialData.authenticatedData` |
-| `google.protobuf.Any` with data of a higher-level module | The class that holds it keeps the received `Any` (`DistributedDataAny.retain` in `fromProto`) and writes it in `toProto(false)`. `DEFAULT` and `SIGNATURE`: `compose(n, x -> x.dataAny, DistributedDataAny.SCHEMA)`. `STORAGE_KEY` and `PROOF_OF_WORK`: `encodedMessage(n, x -> x.data.toAny(true).toByteArray())` with the "not yet supported" comment | `AuthenticatedData.distributedData`, `AddAppendOnlyDataRequest.appendOnlyData` |
+| `google.protobuf.Any` with data of a higher-level module | The class that holds it keeps the received `Any` (`DistributedDataAny.retain` in `fromProto`) and writes it in `toProto(false)`. `DEFAULT` and `SIGNATURE`: `compose(n, x -> x.dataAny, DistributedDataAny.SCHEMA)`. `STORAGE_KEY` and `PROOF_OF_WORK`: `encodedMessage(n, x -> x.data.toAny(true).toByteArray())` with the "not yet supported" comment | `AuthenticatedData.distributedData` |
+| `google.protobuf.Any` with `AppendOnlyData` | Kept `Any` as above for `DEFAULT` and `SIGNATURE`. `AppendOnlyData` extends `Canonical`: `PROOF_OF_WORK` is an `Any` with the kept type URL and the data's `PROOF_OF_WORK` encoding; storage key V2 hashes the data's `STORAGE_KEY` encoding | `AddAppendOnlyDataRequest.appendOnlyData` |
 | Message type of a lower-level module (for example `security.ConfidentialData`) | implement `Canonical` in that class and use `canonical(n, getter)` | `ConfidentialMessage.confidentialData` |
 | `toProto` returns `EnvelopePayloadMessage` with a `DataRequest` | `DataRequest.createCanonicalSchema(requestFieldNumber, requestBuilder)` | the six storage requests |
 | `toProto` returns another envelope | `CanonicalSchema.oneof("EnvelopePayloadMessage", n, builder)`, plus a bare `DEFAULT_VALUE_SCHEMA` if a parent embeds the bare message | `ConfidentialMessage` |
@@ -182,8 +184,10 @@ message. The name says where the bytes come from and which role the field has.
 - **Do not switch a hash, signature, proof of work, or inventory call site** from `serializeForHash()` to
   canonical encoding without byte identity or an agreed activation. The default encodings of
   `AuthorizedData`, `MailboxData`, and the remove, refresh, and mailbox requests differ from
-  `serializeForHash()`. `STORAGE_KEY` equals it, except for `AuthorizedData`. `PROOF_OF_WORK` of a
-  message (a `DataRequest` or `ConfidentialMessage`) equals it without exception. `SIGNATURE` equals it,
+  `serializeForHash()`. `STORAGE_KEY` equals it for the stored data, including `AuthorizedData`, whose
+  `STORAGE_KEY` schema omits the signature; the `DataRequest` types and the sequential data have no
+  `STORAGE_KEY` encoding. `PROOF_OF_WORK` of a message (a `DataRequest` or `ConfidentialMessage`)
+  equals it without exception. `SIGNATURE` equals it,
   except for `AuthorizedData`, for the holders of data of higher-level modules, whose `SIGNATURE`
   encoding contains the exact bytes of that data, and for the classes with a `SIGNATURE_V2_SCHEMA` and
   the classes that contain them.
@@ -219,8 +223,11 @@ message. The name says where the bytes come from and which role the field has.
   object, which would drop the fields that the node does not know. `DEFAULT` and `SIGNATURE` encode the
   kept `Any` with `DistributedDataAny.SCHEMA`; `STORAGE_KEY` and `PROOF_OF_WORK` use the protobuf hash serialization (the
   `Any` of `toAny(true)`, with the type URL). Do not add a fallback `encodeCanonical` to the external
-  classes or to their interfaces. A class of a lower-level module, such as `ConfidentialData`,
-  implements `Canonical` instead. See `docs/specifications/network/distributed-data-payload-bytes.md`.
+  classes or to their interfaces. `AppendOnlyData` is the exception: it extends `Canonical`, and every
+  implementation defines a real encoding of its bare message (`DEFAULT` equals `serialize()`, `STORAGE_KEY`
+  and `PROOF_OF_WORK` equal `serializeForHash()`); see `docs/specifications/encoding/canonical-encoding.md`.
+  A class of a lower-level module, such as `ConfidentialData`, implements `Canonical` instead. See
+  `docs/specifications/network/distributed-data-payload-bytes.md`.
 - **Always pass the encoding purpose on.** Call `canonicalEncoder.encode(this, schema, encodingPurpose)`
   with the received purpose, never with a fixed purpose. Encode a nested `Canonical` object with
   `canonical(n, getter)`, not with `compose(n, getter, Foo.DEFAULT_SCHEMA)`: a `compose` field uses the

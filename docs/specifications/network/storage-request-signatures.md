@@ -105,7 +105,8 @@ Reason for rule 1: signature V2 covers signature V1. A second verification would
   nodes of this version.
 - Nodes of earlier versions ignore `signatureV2` and verify signature V1. Nodes of this version still create signature
   V1 for them.
-- The storage keys do not change.
+- Signature V2 does not change the storage keys. The storage keys are specified in
+  [`storage-keys.md`](storage-keys.md).
 
 ## Known limitations
 

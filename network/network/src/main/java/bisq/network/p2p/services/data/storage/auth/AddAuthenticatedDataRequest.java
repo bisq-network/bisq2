@@ -27,6 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -56,10 +57,9 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                                                    KeyPair keyPair)
             throws GeneralSecurityException {
         int version = VERSION;
-        byte[] authenticatedDataHash = DigestUtil.hash(authenticatedData.serializeForHash());
-        ByteArray storageKey = new ByteArray(authenticatedDataHash);
         PublicKey publicKey = keyPair.getPublic();
         byte[] publicKeyEncoded = publicKey.getEncoded();
+        ByteArray storageKey = getStorageKey(getAuthenticatedDataHash(authenticatedData), publicKeyEncoded);
         byte[] pubKeyHash = DigestUtil.hash(publicKeyEncoded);
         int sequenceNumber = store.getNextSequenceNumber(storageKey);
         long created = System.currentTimeMillis();
@@ -228,7 +228,6 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                             .bytes(4, request -> request.signatureV2)
                             .sint32(5, request -> request.version));
 
-    public static final CanonicalSchema<AddAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<AddAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: signatureV2 (field 4) and
@@ -258,7 +257,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         CanonicalSchema<AddAuthenticatedDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
-            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for AddAuthenticatedDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -270,13 +269,26 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     /* --------------------------------------------------------------------- */
 
     @Override
-    public ByteArray getStorageKey() {
-        byte[] hash = DigestUtil.hash(getStoragePreImage());
-        return new ByteArray(hash);
+    public ByteArray getStorageKeyV1() {
+        return new ByteArray(DigestUtil.hash(authenticatedSequentialData.getAuthenticatedData().serializeForHash()));
     }
 
-    private byte[] getStoragePreImage() {
-        return authenticatedSequentialData.getAuthenticatedData().serializeForHash();
+    // The data hash must be the one which remove and refresh requests carry (see getAuthenticatedDataHash).
+    @Override
+    public byte[] getStorageKeyPreImageV2() {
+        return StorageKeyV2.createPreImage(StorageKeyV2.AUTHENTICATED_DATA_TAG,
+                getAuthenticatedDataHash(authenticatedSequentialData.getAuthenticatedData()),
+                ownerPublicKeyBytes);
+    }
+
+    // The hash which remove and refresh requests carry. The STORAGE_KEY encoding of AuthenticatedData equals its
+    // serializeForHash(), so nodes of earlier versions compute the same hash.
+    static byte[] getAuthenticatedDataHash(AuthenticatedData authenticatedData) {
+        return DigestUtil.hash(authenticatedData.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+    }
+
+    static ByteArray getStorageKey(byte[] authenticatedDataHash, byte[] ownerPublicKeyBytes) {
+        return StorageKeyV2.create(StorageKeyV2.AUTHENTICATED_DATA_TAG, authenticatedDataHash, ownerPublicKeyBytes);
     }
 
 

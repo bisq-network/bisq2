@@ -18,15 +18,15 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
+import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
-import bisq.common.data.ByteArray;
-import bisq.common.encoding.Hex;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
-import bisq.security.DigestUtil;
+import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                                                        AuthenticatedData authenticatedData,
                                                        KeyPair keyPair)
             throws GeneralSecurityException {
-        byte[] authenticatedDataHash = DigestUtil.hash(authenticatedData.serializeForHash());
+        byte[] authenticatedDataHash = AddAuthenticatedDataRequest.getAuthenticatedDataHash(authenticatedData);
 
         // We use the AddAuthenticatedDataRequest for signing and then copy the data we need for RefreshAuthenticatedDataRequest.
         // The version is copied as well: the receiver rebuilds the AddAuthenticatedDataRequest with it, and signature V2
@@ -216,7 +216,6 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                             .string(8, request -> request.className)
                             .bytes(9, request -> request.signatureV2));
 
-    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<RefreshAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1), version
@@ -239,7 +238,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         CanonicalSchema<RefreshAuthenticatedDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
-            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RefreshAuthenticatedDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -251,8 +250,13 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     /* --------------------------------------------------------------------- */
 
     @Override
-    public ByteArray getStorageKey() {
+    public ByteArray getStorageKeyV1() {
         return new ByteArray(hash);
+    }
+
+    @Override
+    public byte[] getStorageKeyPreImageV2() {
+        return StorageKeyV2.createPreImage(StorageKeyV2.AUTHENTICATED_DATA_TAG, hash, ownerPublicKeyBytes);
     }
 
 

@@ -104,7 +104,8 @@ public static final CanonicalSchema<DefaultAuthenticatedData> DEFAULT_SCHEMA =
                         CanonicalSchema.newBuilder())
                 .build();
 
-// AuthorizedData: the signature is included, also in the hash purposes, although serializeForHash() omits it.
+// AuthorizedData: the signature is included, also in SIGNATURE and PROOF_OF_WORK. Only STORAGE_KEY omits it, as
+// serializeForHash() does where AuthorizedData is the root of the preimage (the data hash of the storage key).
 // The subtype builder is a method, so that each schema gets a new builder.
 public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
         AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
@@ -207,8 +208,10 @@ instead.
   Writing only `serializeForHash()` would drop the type from the preimage.
 - Never rebuild the written `Any` from the decoded object (`toAny(false)`) outside the creation of local
   data.
+- `AppendOnlyData` extends `Canonical`, and its implementations define a real canonical encoding.
+  `AddAppendOnlyDataRequest` uses it for `PROOF_OF_WORK` and for storage key V2 instead of the fallback.
 - Do not add a fallback `encodeCanonical` to the external classes or to their interfaces
-  (`DistributedData`, `AppendOnlyData`, `MailboxMessage`). They would appear to have a canonical
+  (`DistributedData`, `MailboxMessage`). They would appear to have a canonical
   encoding while they return protobuf bytes, and a later real encoding would silently change the bytes
   of all holders.
 - The fallback is only as deterministic as the protobuf serialization of the external class.

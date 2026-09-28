@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
@@ -50,6 +51,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * The default canonical encoding of the storage classes contains all non-transient fields, with the envelopes that
@@ -106,11 +108,14 @@ public class StorageCanonicalEncoderTest {
         assertArrayEquals(withoutSignature.serialize(), withoutSignature.encodeCanonical());
         assertArrayEquals(withoutSignature.serializeForHash(), withoutSignature.encodeCanonical());
 
-        // The hash purposes contain the signature: it is not annotated with @ExcludeForHash. Without a field excluded
-        // from the hash in the external data, they equal the default encoding.
-        for (EncodingPurpose encodingPurpose : HASH_PURPOSES) {
-            assertArrayEquals(withSignature.encodeCanonical(), withSignature.encodeCanonical(encodingPurpose));
-        }
+        // SIGNATURE and PROOF_OF_WORK contain the signature: AuthorizedData is nested in their preimages, where
+        // serializeForHash() contains it. Without a field excluded from the hash in the external data, they equal the
+        // default encoding.
+        assertArrayEquals(withSignature.encodeCanonical(), withSignature.encodeCanonical(EncodingPurpose.SIGNATURE));
+        assertArrayEquals(withSignature.encodeCanonical(), withSignature.encodeCanonical(EncodingPurpose.PROOF_OF_WORK));
+        // STORAGE_KEY is the preimage of the data hash of the storage key, with AuthorizedData as root. Like
+        // serializeForHash(), it omits the signature, so that republishing keeps the storage key.
+        assertArrayEquals(withSignature.serializeForHash(), withSignature.encodeCanonical(EncodingPurpose.STORAGE_KEY));
 
         // The STORAGE_KEY purpose contains the external data in its hash serialization, the SIGNATURE purpose with its
         // exact bytes
@@ -182,16 +187,28 @@ public class StorageCanonicalEncoderTest {
     }
 
     @Test
-    public void addAppendOnlyDataRequestEncodesExternalDataWithHashSerializationOnlyForStorageKey() {
+    public void addAppendOnlyDataRequestEncodesExternalDataWithHashSerializationOnlyForProofOfWork() {
         AddAppendOnlyDataRequest withExcludedField = new AddAppendOnlyDataRequest(new ExternalData("content", 7));
         assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical());
         assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical(EncodingPurpose.SIGNATURE));
         assertArrayEquals(withExcludedField.serializeForHash(),
-                withExcludedField.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+                withExcludedField.encodeCanonical(EncodingPurpose.PROOF_OF_WORK));
         assertFalse(Arrays.equals(withExcludedField.serialize(), withExcludedField.serializeForHash()));
 
         AddAppendOnlyDataRequest withoutExcludedField = new AddAppendOnlyDataRequest(new ExternalData("content", 0));
         assertArrayEquals(withoutExcludedField.serialize(), withoutExcludedField.encodeCanonical());
+    }
+
+    // AppendOnlyData supports canonical encoding: the bare message, without the Any in which the request carries it
+    @Test
+    public void appendOnlyDataHashPurposesMatchSerializeForHash() {
+        ExternalData withExcludedField = new ExternalData("content", 7);
+        assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical());
+        assertArrayEquals(withExcludedField.serializeForHash(),
+                withExcludedField.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+        assertArrayEquals(withExcludedField.serializeForHash(),
+                withExcludedField.encodeCanonical(EncodingPurpose.PROOF_OF_WORK));
+        assertFalse(Arrays.equals(withExcludedField.serialize(), withExcludedField.serializeForHash()));
     }
 
     // The SIGNATURE, STORAGE_KEY and PROOF_OF_WORK purposes leave out the fields annotated with @ExcludeForHash, also
@@ -206,15 +223,23 @@ public class StorageCanonicalEncoderTest {
         assertHashPurposesMatchSerializeForHash(getMetaData(), "");
         assertStorageKeyMatchesSerializeForHash(new DefaultAuthenticatedData(new ExternalData("content", 7)));
         for (AuthenticatedData authenticatedData : List.of(getDefaultAuthenticatedData(), getAuthorizedData())) {
+            // The data hash of the storage key, which remove and refresh requests of all versions carry
+            assertArrayEquals(authenticatedData.serializeForHash(),
+                    authenticatedData.encodeCanonical(EncodingPurpose.STORAGE_KEY),
+                    authenticatedData.getClass().getSimpleName());
             AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authenticatedData,
                     3,
                     HASH,
                     CREATED);
-            assertHashPurposesMatchSerializeForHash(sequentialData, "");
-            assertStorageKeyAndProofOfWorkPurposesMatchSerializeForHash(getAddAuthenticatedDataRequest(sequentialData), "");
+            assertArrayEquals(sequentialData.serializeForHash(), sequentialData.encodeCanonical(EncodingPurpose.SIGNATURE));
+            assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(sequentialData, "");
+            assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(getAddAuthenticatedDataRequest(sequentialData), "");
         }
         assertHashPurposesMatchSerializeForHash(ConfidentialMessage.fromProto(getConfidentialMessageProto()), "");
-        assertStorageKeyMatchesSerializeForHash(new AddAppendOnlyDataRequest(new ExternalData("content", 7)));
+        AddAppendOnlyDataRequest addAppendOnlyDataRequest = new AddAppendOnlyDataRequest(new ExternalData("content", 7));
+        assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(addAppendOnlyDataRequest, "");
+        assertArrayEquals(addAppendOnlyDataRequest.serialize(),
+                addAppendOnlyDataRequest.encodeCanonical(EncodingPurpose.SIGNATURE));
 
         for (int version = 0; version <= 4; version++) {
             String description = "version " + version;
@@ -222,13 +247,13 @@ public class StorageCanonicalEncoderTest {
             MailboxSequentialData mailboxSequentialData = getMailboxSequentialData(mailboxData);
             assertStorageKeyAndProofOfWorkPurposesMatchSerializeForHash(mailboxData, description);
             // The purpose reaches MailboxData
-            assertStorageKeyAndProofOfWorkPurposesMatchSerializeForHash(mailboxSequentialData, description);
-            assertStorageKeyAndProofOfWorkPurposesMatchSerializeForHash(getAddMailboxRequest(mailboxSequentialData), description);
-            assertStorageKeyAndProofOfWorkPurposesMatchSerializeForHash(getRemoveMailboxRequest(version), description);
-            assertStorageKeyAndProofOfWorkPurposesMatchSerializeForHash(getRemoveAuthenticatedDataRequest(version), description);
+            assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(mailboxSequentialData, description);
+            assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(getAddMailboxRequest(mailboxSequentialData), description);
+            assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(getRemoveMailboxRequest(version), description);
+            assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(getRemoveAuthenticatedDataRequest(version), description);
             // The refresh request has no preimage of its own. Its SIGNATURE purpose is the default encoding.
             RefreshAuthenticatedDataRequest refreshRequest = getRefreshAuthenticatedDataRequest(version);
-            assertStorageKeyAndProofOfWorkPurposesMatchSerializeForHash(refreshRequest, description);
+            assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(refreshRequest, description);
             assertArrayEquals(refreshRequest.serialize(), refreshRequest.encodeCanonical(EncodingPurpose.SIGNATURE));
         }
     }
@@ -269,7 +294,10 @@ public class StorageCanonicalEncoderTest {
 
     @Test
     public void addAuthenticatedDataRequestPassesEncodingPurposeToAuthenticatedData() {
-        for (EncodingPurpose encodingPurpose : EncodingPurpose.values()) {
+        // A request has no STORAGE_KEY encoding, see assertProofOfWorkMatchesSerializeForHashWithoutStorageKey
+        for (EncodingPurpose encodingPurpose : List.of(EncodingPurpose.DEFAULT,
+                EncodingPurpose.SIGNATURE,
+                EncodingPurpose.PROOF_OF_WORK)) {
             PurposeRecordingAuthenticatedData authenticatedData = new PurposeRecordingAuthenticatedData();
             AddAuthenticatedDataRequest request = getAddAuthenticatedDataRequest(
                     new AuthenticatedSequentialData(authenticatedData, 1, HASH, CREATED));
@@ -294,6 +322,17 @@ public class StorageCanonicalEncoderTest {
         assertArrayEquals(value.serializeForHash(), value.encodeCanonical(EncodingPurpose.STORAGE_KEY),
                 value.getClass().getSimpleName() + " " + description);
         assertArrayEquals(value.serializeForHash(), value.encodeCanonical(EncodingPurpose.PROOF_OF_WORK),
+                value.getClass().getSimpleName() + " " + description);
+    }
+
+    // Only the stored data has a STORAGE_KEY encoding (see StorageKeyV2). The requests and the sequential data which
+    // contain it have none.
+    private static <T extends Proto & Canonical> void assertProofOfWorkMatchesSerializeForHashWithoutStorageKey(
+            T value,
+            String description) {
+        assertArrayEquals(value.serializeForHash(), value.encodeCanonical(EncodingPurpose.PROOF_OF_WORK),
+                value.getClass().getSimpleName() + " " + description);
+        assertThrows(IllegalArgumentException.class, () -> value.encodeCanonical(EncodingPurpose.STORAGE_KEY),
                 value.getClass().getSimpleName() + " " + description);
     }
 
@@ -473,6 +512,28 @@ public class StorageCanonicalEncoderTest {
         @Override
         public boolean isDataInvalid(byte[] pubKeyHash) {
             return false;
+        }
+
+
+        private static final CanonicalSchema<ExternalData> DEFAULT_SCHEMA = CanonicalSchema.<ExternalData>newBuilder()
+                .sint32(2, data -> data.priority)
+                .string(4, data -> data.content)
+                .build();
+
+        // Leaves out priority (field 2), which is annotated with @ExcludeForHash, as serializeForHash() does
+        private static final CanonicalSchema<ExternalData> SCHEMA_FOR_HASH = CanonicalSchema.<ExternalData>newBuilder()
+                .string(4, data -> data.content)
+                .build();
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+            CanonicalSchema<ExternalData> schema = switch (encodingPurpose) {
+                case DEFAULT -> DEFAULT_SCHEMA;
+                case SIGNATURE -> DEFAULT_SCHEMA;
+                case STORAGE_KEY -> SCHEMA_FOR_HASH;
+                case PROOF_OF_WORK -> SCHEMA_FOR_HASH;
+            };
+            return canonicalEncoder.encode(this, schema, encodingPurpose);
         }
     }
 

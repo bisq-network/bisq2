@@ -96,6 +96,7 @@ class MailboxClassNameTest {
         AddMailboxRequest requestWithoutClassName = AddMailboxRequest.fromProto(builder.build());
 
         assertFalse(requestWithoutClassName.isSignatureInvalid());
+        assertEquals(request.getStorageKeyV1(), requestWithoutClassName.getStorageKeyV1());
         assertEquals(request.getStorageKey(), requestWithoutClassName.getStorageKey());
         assertArrayEquals(request.serializeForHash(), requestWithoutClassName.serializeForHash());
         assertEquals(CLASS_NAME, requestWithoutClassName.getMailboxSequentialData().getMailboxData().getClassName());

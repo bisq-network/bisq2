@@ -29,6 +29,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,39 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
     public void shutdown() {
         prunedAndExpiredDataRequests.clear();
+    }
+
+    // Earlier versions persisted the entries under storage key V1. The storage services look entries up with the
+    // storage key of the received request, so every entry must be stored under that key. We recompute it from the
+    // persisted request instead of trusting the persisted key.
+    @Override
+    public DataStore<T> preProcessPersisted(DataStore<T> persisted) {
+        Map<ByteArray, T> map = persisted.getMap();
+        if (map.isEmpty()) {
+            return persisted;
+        }
+
+        Map<ByteArray, T> rekeyed = new HashMap<>();
+        map.values().forEach(dataRequest -> {
+            try {
+                rekeyed.merge(dataRequest.getStorageKey(), dataRequest, DataStorageService::selectNewer);
+            } catch (Exception e) {
+                log.warn("Could not compute storage key of persisted entry {}. We drop it.", dataRequest, e);
+            }
+        });
+        map.clear();
+        map.putAll(rekeyed);
+        return persisted;
+    }
+
+    // Two persisted requests only get the same key if the persisted keys were not the keys of their requests. Then we
+    // keep the request which the store would keep: the higher sequence number, else the later creation date.
+    private static <T extends DataRequest> T selectNewer(T existing, T candidate) {
+        if (existing instanceof Sequential existingSequential && candidate instanceof Sequential candidateSequential &&
+                existingSequential.getSequenceNumber() != candidateSequential.getSequenceNumber()) {
+            return candidateSequential.getSequenceNumber() > existingSequential.getSequenceNumber() ? candidate : existing;
+        }
+        return candidate.getCreated() > existing.getCreated() ? candidate : existing;
     }
 
     @Override
