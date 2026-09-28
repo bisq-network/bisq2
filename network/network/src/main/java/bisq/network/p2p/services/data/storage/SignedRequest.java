@@ -23,15 +23,40 @@ import org.slf4j.LoggerFactory;
 import java.security.PublicKey;
 
 public interface SignedRequest {
-    byte[] getPreImage();
+    byte[] getPreImageV1();
+
+    byte[] getPreImageV2();
 
     PublicKey getSignaturePublicKey();
 
-    byte[] getSignature();
+    byte[] getSignatureV1();
+
+    byte[] getSignatureV2();
 
     default boolean isSignatureInvalid() {
+        if (isSignatureV2Present()) {
+            return isSignatureV2Invalid();
+        } else {
+            return isSignatureV1Invalid();
+        }
+    }
+
+    default boolean isSignatureV2Present() {
+        return getSignatureV2().length > 0;
+    }
+
+    default boolean isSignatureV1Invalid() {
         try {
-            return !SignatureUtil.verify(getPreImage(), getSignature(), getSignaturePublicKey());
+            return !SignatureUtil.verify(getPreImageV1(), getSignatureV1(), getSignaturePublicKey());
+        } catch (Exception e) {
+            LoggerFactory.getLogger(getClass()).warn("Verifying signature failed", e);
+            return true;
+        }
+    }
+
+    default boolean isSignatureV2Invalid() {
+        try {
+            return !SignatureUtil.verify(getPreImageV2(), getSignatureV2(), getSignaturePublicKey());
         } catch (Exception e) {
             LoggerFactory.getLogger(getClass()).warn("Verifying signature failed", e);
             return true;

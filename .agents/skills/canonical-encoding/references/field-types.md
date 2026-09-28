@@ -62,7 +62,7 @@ not the Java field type.
 | `setX(serializeForHash ? distributedData.toAny(true) : distributedDataAny)` with data of a higher-level module | `DEFAULT` and `SIGNATURE`: `compose(n, o -> o.distributedDataAny, DistributedDataAny.SCHEMA)`; `STORAGE_KEY`: `encodedMessage(n, o -> o.distributedData.toAny(true).toByteArray())` | `AuthenticatedData.distributedData` |
 | `setX(lowerLevel.toProto(serializeForHash))` with a class of a lower-level module | `canonical(n, o -> o.lowerLevel)`; the class implements `Canonical` | `ConfidentialMessage.confidentialData` |
 | `setX(javaEnum.toProtoEnum())` | `enumField(n, o -> o.javaEnum)`; the enum implements `CanonicalEnum` | - |
-| field annotated with `@ExcludeForHash` | in `DEFAULT_SCHEMA`; left out of the hash schemas. With `excludeOnlyInVersions`, the hash schemas use a getter that returns `null` in the listed versions | `MailboxData.metaData`, `MailboxData.version` |
+| field annotated with `@ExcludeForHash` | in `DEFAULT_SCHEMA` and `SIGNATURE_V2_SCHEMA`; left out of `STORAGE_KEY_SCHEMA`. With `excludeOnlyInVersions`, the `STORAGE_KEY` schema uses a getter that returns `null` in the listed versions | `MailboxData.version`, `MailboxData.className` |
 
 The `STORAGE_KEY` variant of the `Any` row always needs the comment that canonical encoding is not yet
 supported for that type (see `AuthenticatedData.getStorageKeySchemaBuilder()`).

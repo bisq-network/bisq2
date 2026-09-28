@@ -118,6 +118,37 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
+    void refreshWithModifiedVersionIsRejected() throws GeneralSecurityException {
+        addToOwnerAndPeer();
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RefreshAuthenticatedDataRequest modifiedRefreshRequest = RefreshAuthenticatedDataRequest.fromProto(
+                refreshRequest.toValueProto(false).toBuilder()
+                        .setVersion(refreshRequest.getVersion() + 1)
+                        .build());
+
+        DataStorageResult result = peerStore.refresh(modifiedRefreshRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isSignatureInvalid(), result.toString());
+    }
+
+    @Test
+    void refreshWithoutSignatureV2IsVerifiedWithSignatureV1() throws GeneralSecurityException {
+        addToOwnerAndPeer();
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        // A node of an earlier version sends version 1 and no signature V2
+        RefreshAuthenticatedDataRequest asFromEarlierVersion = RefreshAuthenticatedDataRequest.fromProto(
+                refreshRequest.toValueProto(false).toBuilder()
+                        .setVersion(1)
+                        .clearSignatureV2()
+                        .build());
+
+        DataStorageResult result = peerStore.refresh(asFromEarlierVersion);
+
+        assertTrue(result.isSuccess(), result.toString());
+    }
+
+    @Test
     void refreshSignedWithOtherKeyIsRejected() throws GeneralSecurityException {
         addToOwnerAndPeer();
         RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore,
@@ -174,13 +205,15 @@ class AuthenticatedDataStorageServiceTest {
     @Test
     void removeRequestWithoutEntryExpiresAfterTtlOfRegisteredMetaData() throws GeneralSecurityException {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
-        // The signature covers only the hash of the data, so a relay can change metaData and created.
-        // TestDistributedData has a time to live of 10 days. The forged MetaData claims 100 days.
+        // Signature V1 covers only the hash of the data. Signature V2 also covers created, but a relay can remove
+        // signature V2, because nodes accept requests of earlier versions. A relay can therefore change metaData and
+        // created. TestDistributedData has a time to live of 10 days. The forged MetaData claims 100 days.
         //noinspection deprecation
         RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
                 removeRequest.toValueProto(false).toBuilder()
                         .setMetaData(new MetaData(MetaData.TTL_100_DAYS, TestDistributedData.class.getSimpleName()).toProto(false))
                         .setCreated(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11))
+                        .clearSignatureV2()
                         .build());
 
         assertSame(TestDistributedData.META_DATA, forgedRequest.getMetaData());

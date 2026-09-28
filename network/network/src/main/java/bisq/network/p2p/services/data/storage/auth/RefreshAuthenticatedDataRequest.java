@@ -35,31 +35,32 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataRequest {
-    private static final int VERSION = 1;
 
     public static RefreshAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
                                                        AuthenticatedData authenticatedData,
                                                        KeyPair keyPair)
             throws GeneralSecurityException {
-        MetaData metaData = authenticatedData.getMetaData();
         byte[] authenticatedDataHash = DigestUtil.hash(authenticatedData.serializeForHash());
 
-        // We use the AddAuthenticatedDataRequest for signing and then copy out the data we need for RefreshAuthenticatedDataRequest
+        // We use the AddAuthenticatedDataRequest for signing and then copy the data we need for RefreshAuthenticatedDataRequest.
+        // The version is copied as well: the receiver rebuilds the AddAuthenticatedDataRequest with it, and signature V2
+        // covers it.
         AddAuthenticatedDataRequest addAuthenticatedDataRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, keyPair);
-        return new RefreshAuthenticatedDataRequest(VERSION,
-                metaData,
+        return new RefreshAuthenticatedDataRequest(addAuthenticatedDataRequest.getVersion(),
+                addAuthenticatedDataRequest.getMetaData(),
                 authenticatedDataHash,
                 addAuthenticatedDataRequest.getSignaturePubKeyEncoded(),
                 addAuthenticatedDataRequest.getSignaturePublicKey(),
                 addAuthenticatedDataRequest.getSequenceNumber(),
-                addAuthenticatedDataRequest.getSignature(),
+                addAuthenticatedDataRequest.getSignatureV1(),
                 addAuthenticatedDataRequest.getCreated(),
-                authenticatedData.getClassName());
+                addAuthenticatedDataRequest.getClassName(),
+                addAuthenticatedDataRequest.getSignatureV2());
     }
 
 
@@ -80,6 +81,10 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // Excluded from the hash, so it does not change the proof of work payload.
     @ExcludeForHash
     private final String className;
+    // Added in v2.1.14. Empty if received from nodes of earlier versions. Excluded from the hash, so that the proof of
+    // work payload stays the same as that of nodes of earlier versions.
+    @ExcludeForHash
+    private final byte[] signatureV2;
 
     private RefreshAuthenticatedDataRequest(int version,
                                             MetaData metaData,
@@ -89,7 +94,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                                             int sequenceNumber,
                                             byte[] signature,
                                             long created,
-                                            String className) {
+                                            String className,
+                                            byte[] signatureV2) {
         this.version = version;
         this.metaData = metaData;
         this.hash = hash;
@@ -99,6 +105,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         this.signature = signature;
         this.created = created;
         this.className = className;
+        this.signatureV2 = signatureV2;
 
         verify();
     }
@@ -108,7 +115,14 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
         NetworkDataValidation.validateDate(created);
-        NetworkDataValidation.validateECSignature(signature);
+        if (signature.length > 0) {
+            NetworkDataValidation.validateECSignature(signature);
+        }
+        if (signatureV2.length > 0) {
+            NetworkDataValidation.validateECSignature(signatureV2);
+        }
+        checkArgument(signature.length > 0 || signatureV2.length > 0,
+                "No signature found");
     }
 
 
@@ -137,7 +151,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 .setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature))
                 .setCreated(created)
-                .setClassName(className);
+                .setClassName(className)
+                .setSignatureV2(ByteString.copyFrom(signatureV2));
     }
 
     public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto) {
@@ -163,7 +178,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                     proto.getSequenceNumber(),
                     proto.getSignature().toByteArray(),
                     proto.getCreated(),
-                    className
+                    className,
+                    proto.getSignatureV2().toByteArray()
             );
         } catch (GeneralSecurityException e) {
             log.error("Failed to generate public key");
@@ -185,8 +201,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // Canonical
     /* --------------------------------------------------------------------- */
 
-    // Contains metaData, version and className, which serializeForHash() omits, as the default encoding contains all
-    // non-transient fields.
+    // Contains metaData, version, className and signatureV2, which serializeForHash() omits, as the default encoding
+    // contains all non-transient fields.
     public static final CanonicalSchema<RefreshAuthenticatedDataRequest> DEFAULT_SCHEMA =
             bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
                     CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
@@ -197,28 +213,28 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                             .bytes(5, request -> request.signature)
                             .sint32(6, request -> request.version)
                             .sint64(7, request -> request.created)
-                            .string(8, request -> request.className));
-    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> SIGNATURE_SCHEMA =
-            createSchemaForHash();
-    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+                            .string(8, request -> request.className)
+                            .bytes(9, request -> request.signatureV2));
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1), version
-    // (field 6) and className (field 8).
-    private static CanonicalSchema<RefreshAuthenticatedDataRequest> createSchemaForHash() {
-        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
-                CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
-                        .bytes(2, request -> request.hash)
-                        .bytes(3, request -> request.ownerPublicKeyBytes)
-                        .sint32(4, request -> request.sequenceNumber)
-                        .bytes(5, request -> request.signature)
-                        .sint64(7, request -> request.created));
-    }
+    // (field 6), className (field 8) and signatureV2 (field 9).
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> STORAGE_KEY_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(3,
+                    CanonicalSchema.<RefreshAuthenticatedDataRequest>newBuilder()
+                            .bytes(2, request -> request.hash)
+                            .bytes(3, request -> request.ownerPublicKeyBytes)
+                            .sint32(4, request -> request.sequenceNumber)
+                            .bytes(5, request -> request.signature)
+                            .sint64(7, request -> request.created));
 
+    // No signature covers the refresh request itself: both signatures cover the AddAuthenticatedDataRequest which the
+    // receiver rebuilds (see getPreImageV1()). The SIGNATURE purpose therefore has no own schema and uses the default
+    // schema.
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<RefreshAuthenticatedDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
-            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
@@ -243,14 +259,14 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // It can only be verified on that request, which the receiver rebuilds from its stored entry with
     // AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest). The refresh request alone has no pre-image.
     @Override
-    public byte[] getPreImage() {
+    public byte[] getPreImageV1() {
         throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest has no pre-image. " +
                 "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
     }
 
     @Override
-    public boolean isSignatureInvalid() {
-        throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest cannot be verified alone. " +
+    public byte[] getPreImageV2() {
+        throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest has no pre-image. " +
                 "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
     }
 
@@ -260,8 +276,19 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
     @Override
-    public byte[] getSignature() {
+    public byte[] getSignatureV1() {
         return signature;
+    }
+
+    @Override
+    public byte[] getSignatureV2() {
+        return signatureV2;
+    }
+
+    @Override
+    public boolean isSignatureInvalid() {
+        throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest cannot be verified alone. " +
+                "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
     }
 
 
@@ -334,38 +361,46 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     /* --------------------------------------------------------------------- */
 
     @Override
-    public String toString() {
-        return "RefreshAuthenticatedDataRequest{" +
-                "\r\n     version=" + version +
-                ",\r\n     hash=" + Hex.encode(hash) +
-                ",\r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
-                ",\r\n     sequenceNumber=" + sequenceNumber +
-                ",\r\n     signature=" + Hex.encode(signature) +
-                ",\r\n     created=" + new Date(created) + " (" + created + ")" +
-                ",\r\n     className=" + className +
-                "\r\n}";
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (!(o instanceof RefreshAuthenticatedDataRequest that)) return false;
 
         return sequenceNumber == that.sequenceNumber &&
+                version == that.version &&
                 created == that.created &&
+                metaData.equals(that.metaData) &&
                 Arrays.equals(hash, that.hash) &&
                 Arrays.equals(ownerPublicKeyBytes, that.ownerPublicKeyBytes) &&
-                Objects.equals(ownerPublicKey, that.ownerPublicKey) &&
-                Arrays.equals(signature, that.signature);
+                Arrays.equals(signature, that.signature) &&
+                className.equals(that.className) &&
+                Arrays.equals(signatureV2, that.signatureV2);
     }
 
     @Override
     public int hashCode() {
-        int result = Arrays.hashCode(hash);
+        int result = metaData.hashCode();
+        result = 31 * result + Arrays.hashCode(hash);
         result = 31 * result + Arrays.hashCode(ownerPublicKeyBytes);
-        result = 31 * result + Objects.hashCode(ownerPublicKey);
         result = 31 * result + sequenceNumber;
         result = 31 * result + Arrays.hashCode(signature);
+        result = 31 * result + version;
         result = 31 * result + Long.hashCode(created);
+        result = 31 * result + className.hashCode();
+        result = 31 * result + Arrays.hashCode(signatureV2);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "RefreshAuthenticatedDataRequest{" +
+                "metaData=" + metaData +
+                ", hash=" + Hex.encode(hash) +
+                ", ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
+                ", sequenceNumber=" + sequenceNumber +
+                ", signature=" + Hex.encode(signature) +
+                ", version=" + version +
+                ", created=" + created +
+                ", className='" + className + '\'' +
+                ", signatureV2=" + Hex.encode(signatureV2) +
+                '}';
     }
 }

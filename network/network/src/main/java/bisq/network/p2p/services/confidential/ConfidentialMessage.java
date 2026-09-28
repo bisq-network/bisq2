@@ -88,6 +88,7 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
             CanonicalSchema.oneof("EnvelopePayloadMessage", 8, getValueSchemaBuilder());
     // The ConfidentialMessage message without envelope, as MailboxData contains it
     public static final CanonicalSchema<ConfidentialMessage> DEFAULT_VALUE_SCHEMA = getValueSchemaBuilder().build();
+    public static final CanonicalSchema<ConfidentialMessage> SIGNATURE_VALUE_SCHEMA = DEFAULT_VALUE_SCHEMA;
 
     private static CanonicalSchema.Builder<ConfidentialMessage> getValueSchemaBuilder() {
         return CanonicalSchema.<ConfidentialMessage>newBuilder()

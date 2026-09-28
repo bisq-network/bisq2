@@ -21,7 +21,7 @@ The canonical message mirrors what `serialize()` writes (`toProto(false)`), incl
 that `toProto` adds. The Java class structure matters only through the way the protobuf messages model
 it. Always start from the `.proto` definition and from `getBuilder`/`getValueBuilder`, not from the Java
 class diagram. All non-transient fields are encoded in `DEFAULT_SCHEMA`, including `@ExcludeForHash`
-fields; the hash schemas leave those out (see `SKILL.md`).
+fields; the `STORAGE_KEY` schemas leave those out (see `SKILL.md`).
 
 ## 2. Composition: a field holds another network object
 

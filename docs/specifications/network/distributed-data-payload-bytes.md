@@ -83,9 +83,10 @@ rejected during decoding. No bytes, storage keys, or signature preimages change 
 In the canonical encoding, the kept `Any` is the message `string type_url = 1; bytes value = 2` with the
 kept values. The type URL binds the type of the payload.
 
-No signature uses the `SIGNATURE` purpose yet. A signature whose preimage uses it, for example a new
-version of the signature of the add request, needs its own activation (see
-[`../encoding/canonical-encoding.md`](../encoding/canonical-encoding.md#changing-an-encoding)).
+Signature V2 of `AddAuthenticatedDataRequest` uses the `SIGNATURE` purpose (see
+[`storage-request-signatures.md`](storage-request-signatures.md)). Receivers still accept requests with only
+`signatureV1`. Signature V2 therefore protects the payload bytes only after an activation that makes it required
+(see [`storage-request-signatures.md`](storage-request-signatures.md#known-limitations)).
 
 ## Adding a field to a `DistributedData` type
 

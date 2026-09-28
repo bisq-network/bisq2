@@ -36,8 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * MailboxData and RemoveMailboxRequest carry the class name of the MailboxMessage in the field className. Nodes of
  * earlier versions do not know the field. They drop it when they parse, relay or persist a message, and they
- * compute signature preimages, storage keys and proof of work payloads without it. Therefore className must not
- * change these bytes, and a message without className must still be accepted.
+ * compute signature V1 preimages, storage keys and proof of work payloads without it. Therefore className must not
+ * change these bytes, and a message without className must still be accepted. Signature V2 covers className; a
+ * receiver takes it from metaData if the field is missing.
  */
 class MailboxClassNameTest {
     private static final String CLASS_NAME = AckMessage.class.getSimpleName();

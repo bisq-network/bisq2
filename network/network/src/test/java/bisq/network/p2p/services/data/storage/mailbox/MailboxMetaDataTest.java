@@ -91,10 +91,13 @@ class MailboxMetaDataTest {
     void removeMailboxRequestUsesRegisteredMetaData() throws GeneralSecurityException {
         RemoveMailboxRequest request = createRemoveMailboxRequest();
         //noinspection deprecation
-        RemoveMailboxRequest forgedRequest = RemoveMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
+        bisq.network.protobuf.RemoveMailboxRequest.Builder forgedBuilder = request.toValueProto(false).toBuilder()
                 .setMetaData(FORGED_META_DATA.toProto(false))
-                .setCreated(System.currentTimeMillis() - SIX_DAYS)
-                .build());
+                .setCreated(System.currentTimeMillis() - SIX_DAYS);
+        // Signature V2 covers created. Signature V1 covers neither metaData nor created, and a relay can remove
+        // signature V2.
+        assertTrue(RemoveMailboxRequest.fromProto(forgedBuilder.build()).isSignatureInvalid());
+        RemoveMailboxRequest forgedRequest = RemoveMailboxRequest.fromProto(forgedBuilder.clearSignatureV2().build());
 
         assertFalse(forgedRequest.isSignatureInvalid());
         assertSame(AckMessage.META_DATA, forgedRequest.getMetaData());

@@ -246,6 +246,12 @@ message AddAuthenticatedDataRequest {
   AuthenticatedSequentialData authenticatedSequentialData = 1;
   bytes signature = 2;
   bytes ownerPublicKeyBytes = 3;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 4;
+  // 0 in requests of nodes of earlier versions. Excluded from the hash, so it does not change the proof of work
+  // payload.
+  sint32 version = 5;
 }
 message RemoveAuthenticatedDataRequest {
   // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
@@ -256,8 +262,12 @@ message RemoveAuthenticatedDataRequest {
   bytes signature = 5;
   sint64 created = 6;
   sint32 version = 7;
-  // Simple class name of the stored type. Excluded from the hash, so the signature does not cover it.
+  // Simple class name of the stored type. Excluded from the hash, so signature V1 does not cover it. Signature V2
+  // covers it.
   string className = 8;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 9;
 }
 message RefreshAuthenticatedDataRequest {
   // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
@@ -268,8 +278,12 @@ message RefreshAuthenticatedDataRequest {
   bytes signature = 5;
   sint32 version = 6;
   sint64 created = 7;
-  // Simple class name of the stored type. Excluded from the hash, so the signature does not cover it.
+  // Simple class name of the stored type. Excluded from the hash. No signature covers it: it only selects the store,
+  // and a store of another type has no entry with the hash.
   string className = 8;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 9;
 }
 
 message MailboxData {
@@ -277,7 +291,8 @@ message MailboxData {
   // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
   MetaData metaData = 2 [deprecated = true];
   sint32 version = 3;
-  // Simple class name of the stored type. Excluded from the hash, so the signature does not cover it.
+  // Simple class name of the stored type. Excluded from the hash, so signature V1 does not cover it. Signature V2
+  // of AddMailboxRequest covers it.
   string className = 4;
 }
 message MailboxSequentialData {
@@ -292,6 +307,12 @@ message AddMailboxRequest {
   MailboxSequentialData mailboxSequentialData = 1;
   bytes signature = 2;
   bytes senderPublicKeyBytes = 3;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 4;
+  // 0 in requests of nodes of earlier versions. Excluded from the hash, so it does not change the proof of work
+  // payload.
+  sint32 version = 5;
 }
 message RemoveMailboxRequest {
   // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
@@ -301,8 +322,12 @@ message RemoveMailboxRequest {
   bytes signature = 4;
   sint64 created = 5;
   sint32 version = 6;
-  // Simple class name of the stored type. Excluded from the hash, so the signature does not cover it.
+  // Simple class name of the stored type. Excluded from the hash, so signature V1 does not cover it. Signature V2
+  // covers it.
   string className = 7;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 8;
 }
 
 message AddAppendOnlyDataRequest {

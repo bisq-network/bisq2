@@ -62,7 +62,8 @@ public final class MailboxData implements StorageData, Canonical {
     private final int version;
 
     // Simple class name of the encrypted MailboxMessage. It selects the store.
-    // Excluded from the hash, so it does not change the signature, the storage key or the proof of work payload.
+    // Excluded from the hash, so it does not change signature V1, the storage key or the proof of work payload.
+    // Signature V2 of AddMailboxRequest covers it (see SIGNATURE_V2_SCHEMA).
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final String className;
@@ -136,21 +137,26 @@ public final class MailboxData implements StorageData, Canonical {
             .sint32(3, MailboxData::getVersion)
             .string(4, MailboxData::getClassName)
             .build();
-    public static final CanonicalSchema<MailboxData> SIGNATURE_SCHEMA = createSchemaForHash();
-    public static final CanonicalSchema<MailboxData> STORAGE_KEY_SCHEMA = createSchemaForHash();
+
+    // Part of the preimage of signature V2 of AddMailboxRequest. Contains version and className although they are
+    // annotated with @ExcludeForHash: className selects the store, and signature V2 has no legacy bytes to reproduce.
+    // Leaves out the deprecated metaData (field 2): no node uses the received value for a decision (see getMetaData()).
+    public static final CanonicalSchema<MailboxData> SIGNATURE_V2_SCHEMA = CanonicalSchema.<MailboxData>newBuilder()
+            .sint32(1, MailboxData::getVersion)
+            .string(2, MailboxData::getClassName)
+            .compose(3, MailboxData::getConfidentialMessage, ConfidentialMessage.SIGNATURE_VALUE_SCHEMA)
+            .build();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 2) in versions
     // 1 to 3, version (field 3) and className (field 4).
-    private static CanonicalSchema<MailboxData> createSchemaForHash() {
-        return CanonicalSchema.<MailboxData>newBuilder()
-                // ConfidentialMessage uses its default value schema for every purpose
-                .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
-                // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-                .canonical(2, mailboxData -> isMetaDataExcludedForHash(mailboxData.version) ?
-                        null :
-                        mailboxData.metaData)
-                .build();
-    }
+    public static final CanonicalSchema<MailboxData> STORAGE_KEY_SCHEMA = CanonicalSchema.<MailboxData>newBuilder()
+            // ConfidentialMessage uses its default value schema for every purpose
+            .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
+            // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+            .canonical(2, mailboxData -> isMetaDataExcludedForHash(mailboxData.version) ?
+                    null :
+                    mailboxData.metaData)
+            .build();
 
     // Same versions as the @ExcludeForHash annotation of metaData
     private static boolean isMetaDataExcludedForHash(int version) {
@@ -161,7 +167,7 @@ public final class MailboxData implements StorageData, Canonical {
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
         CanonicalSchema<MailboxData> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
-            case SIGNATURE -> SIGNATURE_SCHEMA;
+            case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
