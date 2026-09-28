@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
+import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
@@ -138,6 +139,43 @@ class AuthenticatedDataSignatureV2Test {
 
         assertFalse(withoutSignatureV2.isSignatureInvalid());
         assertArrayEquals(request.serializeForHash(), withoutSignatureV2.serializeForHash());
+    }
+
+    // Nodes of this version sign in low-S form. A relay can create the high-S form of a signature without the private
+    // key. Signature V2 accepts only the low-S form, signature V1 accepts both (nodes of earlier versions create both).
+    @Test
+    void addRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        bisq.network.protobuf.AddAuthenticatedDataRequest proto = request.toValueProto(false);
+
+        AddAuthenticatedDataRequest highSSignatureV2 = fromProto(proto.toBuilder()
+                .setSignatureV2(EcdsaSignatureVariants.toOtherS(proto.getSignatureV2(), ownerKeyPair.getPublic()))
+                .build(), request);
+        assertTrue(highSSignatureV2.isSignatureInvalid());
+
+        AddAuthenticatedDataRequest highSSignatureV1 = fromProto(proto.toBuilder()
+                .clearSignatureV2()
+                .clearVersion()
+                .setSignature(EcdsaSignatureVariants.toOtherS(proto.getSignature(), ownerKeyPair.getPublic()))
+                .build(), request);
+        assertFalse(highSSignatureV1.isSignatureInvalid());
+    }
+
+    @Test
+    void removeRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        bisq.network.protobuf.RemoveAuthenticatedDataRequest proto = request.toValueProto(false);
+
+        assertTrue(RemoveAuthenticatedDataRequest.fromProto(proto.toBuilder()
+                        .setSignatureV2(EcdsaSignatureVariants.toOtherS(proto.getSignatureV2(), ownerKeyPair.getPublic()))
+                        .build())
+                .isSignatureInvalid());
+
+        assertFalse(RemoveAuthenticatedDataRequest.fromProto(proto.toBuilder()
+                        .clearSignatureV2()
+                        .setSignature(EcdsaSignatureVariants.toOtherS(proto.getSignature(), ownerKeyPair.getPublic()))
+                        .build())
+                .isSignatureInvalid());
     }
 
     @Test

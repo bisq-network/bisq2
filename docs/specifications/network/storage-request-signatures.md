@@ -93,8 +93,15 @@ has no entry with the hash of the request, so a changed value makes the refresh 
    versions.
 3. A request must contain at least one non-empty signature. Each non-empty signature must have a valid EC signature
    encoding.
+4. Signature V2 must be in low-S form. Signature V1 may be in either form. The rules are defined in
+   [`../security/ecdsa-signature-encoding.md`](../security/ecdsa-signature-encoding.md).
 
 Reason for rule 1: signature V2 covers signature V1. A second verification would not protect more fields.
+
+Reason for rule 4: a relay can change the S value of a signature without the private key. If signature V2 accepted
+both forms, a request would have two valid encodings of signature V2. Signature V1 accepts both forms because nodes of
+earlier versions create high-S signatures in about half of all cases. Nodes of this version create both signatures in
+low-S form.
 
 ## Compatibility
 
@@ -121,6 +128,11 @@ Reason for rule 1: signature V2 covers signature V1. A second verification would
   - What removes it: an activation after which nodes reject requests without signature V2, for example at a fixed date
     or when the network requires a minimum version. After the activation, signature V1 can be dropped.
   - Who decides: the developers, when they plan the activation.
+- **Signature V1 is malleable in requests without signature V2.** A relay can replace the S value of signature V1
+  (verification rule 4). The request stays valid and has the same storage key and sequence number, so a node which
+  stores the original rejects the changed copy. In requests with signature V2, the change invalidates signature V2,
+  because signature V2 covers signature V1. The cause and the activation which removes it are the same as for the
+  first limitation.
 - **Signature V1 is not verified when signature V2 is present.** The owner can create a request with a valid signature
   V2 and an invalid signature V1. Nodes of this version accept it; nodes of earlier versions reject it. Only the owner
   can do this, and it affects only the owner's own data.
