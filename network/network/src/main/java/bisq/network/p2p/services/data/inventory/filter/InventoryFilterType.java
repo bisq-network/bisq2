@@ -26,7 +26,8 @@ import bisq.network.p2p.node.Feature;
 import java.util.Optional;
 
 public enum InventoryFilterType implements ProtoEnum {
-    // Hash set filter with storage key V1
+    // Hash set filter with storage key V1. Only for responses to nodes of earlier versions. Replaced by HASH_SET_V2.
+    @Deprecated(since = "2.1.14")
     HASH_SET,
     MINI_SKETCH,
     // Hash set filter with storage key V2

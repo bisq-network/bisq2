@@ -143,7 +143,7 @@ class MessageCostPolicyTest {
                 Arguments.of(new NetworkLoadExchangeResponse(1, networkLoad), 0.05),
                 Arguments.of(new PeerExchangeRequest(1, new ArrayList<>()), 0.1),
                 Arguments.of(new PeerExchangeResponse(1, new ArrayList<>()), 0.1),
-                Arguments.of(new InventoryRequest(new HashSetFilter(InventoryFilterType.HASH_SET, new ArrayList<>()), 1), 0.25),
+                Arguments.of(new InventoryRequest(new HashSetFilter(InventoryFilterType.HASH_SET_V2, new ArrayList<>()), 1), 0.25),
                 Arguments.of(new InventoryResponse(new Inventory(List.of(), false), 1), 0.1),
                 Arguments.of(new ReportRequest("request"), 0.5),
                 Arguments.of(new ReportResponse("request", report), 0.2));

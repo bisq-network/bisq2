@@ -9,6 +9,8 @@ import java.util.Set;
  * like HashCash or EquiHash algorithms for proof of work, or different implementations for requesting inventory data.
  */
 public enum Feature implements ProtoEnum {
+    // Replaced by INVENTORY_HASH_SET_V2. Still advertised, so that nodes of earlier versions can request inventory.
+    @Deprecated(since = "2.1.14")
     INVENTORY_HASH_SET,
     INVENTORY_MINI_SKETCH,
     AUTHORIZATION_HASH_CASH,

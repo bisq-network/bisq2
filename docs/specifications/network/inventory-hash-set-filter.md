@@ -19,6 +19,9 @@ The filter type defines which key the entries contain:
 
 Both types use the same protobuf message. Only the filter type distinguishes them.
 
+`HASH_SET` and `INVENTORY_HASH_SET` are deprecated since 2.1.14. Nodes keep supporting them only for nodes of earlier
+versions: to answer their requests, and to request inventory from them (see [Configuration](#configuration)).
+
 Requirements:
 
 1. The responder computes the entries of its own requests with the key of the received filter type. The filter type
