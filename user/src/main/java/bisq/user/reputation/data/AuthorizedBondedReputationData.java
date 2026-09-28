@@ -175,7 +175,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
     }
 

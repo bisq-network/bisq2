@@ -18,7 +18,6 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.keys.PubKey;
@@ -60,11 +59,8 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against
-        // impersonation attack.
-        return !userProfileId.equals(Hex.encode(pubKeyHash));
+    public boolean isDataInvalid() {
+        return false;
     }
 
     // The reacting user owns the reaction. The profile ID is the ID of the public key of the user (PubKey.getId()).

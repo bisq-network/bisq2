@@ -22,7 +22,6 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
-import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.security.keys.PubKey;
@@ -64,11 +63,8 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
     abstract public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash);
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against 
-        // impersonation attack.
-        return !authorUserProfileId.equals(Hex.encode(pubKeyHash));
+    public boolean isDataInvalid() {
+        return false;
     }
 
     // The author owns the message. The profile ID is the ID of the public key of the author (PubKey.getId()).

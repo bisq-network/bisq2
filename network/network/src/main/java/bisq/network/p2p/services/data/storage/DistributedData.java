@@ -39,7 +39,9 @@ public interface DistributedData extends NetworkProto {
         return getMetaData().getClassName();
     }
 
-    boolean isDataInvalid(byte[] pubKeyHash);
+    // Validates the content of the data. The storage checks separately whether the publisher is the owner (see
+    // findOwnerPubKeyHash()).
+    boolean isDataInvalid();
 
     // The hash of the public key of the owner, if the data names its owner in its own fields, for example the author
     // of a chat message or the maker of an offer. Only the owner can publish the data in the network storage, and in

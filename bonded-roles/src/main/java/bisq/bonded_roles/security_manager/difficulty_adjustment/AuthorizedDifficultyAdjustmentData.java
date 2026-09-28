@@ -146,7 +146,7 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
     }
 }

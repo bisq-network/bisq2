@@ -206,8 +206,8 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
+    public boolean isDataInvalid() {
+        return false;
     }
 
     // The profile is owned by the key of its network ID

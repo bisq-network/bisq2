@@ -230,8 +230,8 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
-        return distributedData.isDataInvalid(ownerPubKeyHash);
+    public boolean isDataInvalid() {
+        return distributedData.isDataInvalid();
     }
 
     // The owner which the distributed data names, else the authorized key. The authorization signature does not cover

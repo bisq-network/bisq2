@@ -147,7 +147,7 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
     }
 }

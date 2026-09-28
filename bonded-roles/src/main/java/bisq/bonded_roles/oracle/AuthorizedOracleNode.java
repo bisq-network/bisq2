@@ -34,7 +34,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 
@@ -152,14 +151,14 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         // Can be removed after I2P is activated
         if (!AuthorizedData.IS_I2P_ACTIVATED && networkId.getAddressByTransportTypeMap().containsKey(TransportType.I2P)) {
             log.warn("AuthorizedOracleNode considered invalid as it contains an I2PAddress address and we have not yet activated I2P.\n" +
                     "networkId={}", networkId);
             return true;
         }
-        return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
+        return false;
     }
 
     // The oracle node publishes its own data with the key of its network ID, not with its authorized key

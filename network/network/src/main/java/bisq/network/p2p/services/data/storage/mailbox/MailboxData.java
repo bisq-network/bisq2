@@ -199,8 +199,8 @@ public final class MailboxData implements StorageData, Canonical {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
-        return confidentialMessage.isDataInvalid(ownerPubKeyHash);
+    public boolean isDataInvalid() {
+        return confidentialMessage.isDataInvalid();
     }
 
     @Override

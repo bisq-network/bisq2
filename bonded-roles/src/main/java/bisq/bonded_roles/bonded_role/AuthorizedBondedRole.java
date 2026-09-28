@@ -275,7 +275,7 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         // Can be removed after I2P is activated
         if (!AuthorizedData.IS_I2P_ACTIVATED ) {
             if (networkId.getAddressByTransportTypeMap().containsKey(TransportType.I2P)) {

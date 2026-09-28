@@ -113,7 +113,7 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
     }
 

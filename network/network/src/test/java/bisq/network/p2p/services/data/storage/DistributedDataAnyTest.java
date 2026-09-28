@@ -512,7 +512,7 @@ public class DistributedDataAnyTest {
         }
 
         @Override
-        public boolean isDataInvalid(byte[] pubKeyHash) {
+        public boolean isDataInvalid() {
             return false;
         }
 
@@ -597,7 +597,7 @@ public class DistributedDataAnyTest {
         }
 
         @Override
-        public boolean isDataInvalid(byte[] pubKeyHash) {
+        public boolean isDataInvalid() {
             return false;
         }
 

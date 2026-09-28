@@ -80,7 +80,7 @@ public final class MuSigOfferMessage implements DistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
     }
 

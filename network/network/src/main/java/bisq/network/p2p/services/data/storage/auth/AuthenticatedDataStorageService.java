@@ -105,7 +105,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     StringUtils.truncate(request.toString(), 1500));
             return DataStorageResult.failed().ownerInvalid();
         }
-        if (authenticatedData.isDataInvalid(authenticatedSequentialData.getPubKeyHash())) {
+        if (authenticatedData.isDataInvalid()) {
             log.warn("AuthenticatedData is invalid at add. request={}", request);
             return DataStorageResult.failed().dataInvalid();
         }

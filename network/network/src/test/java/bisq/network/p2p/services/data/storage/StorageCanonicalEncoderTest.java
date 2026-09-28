@@ -510,7 +510,7 @@ public class StorageCanonicalEncoderTest {
         }
 
         @Override
-        public boolean isDataInvalid(byte[] pubKeyHash) {
+        public boolean isDataInvalid() {
             return false;
         }
 
@@ -573,7 +573,7 @@ public class StorageCanonicalEncoderTest {
         }
 
         @Override
-        public boolean isDataInvalid(byte[] ownerPubKeyHash) {
+        public boolean isDataInvalid() {
             return false;
         }
 

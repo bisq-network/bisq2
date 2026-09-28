@@ -115,7 +115,7 @@ public final class AuthorizedAccountTimestamp implements AuthorizedDistributedDa
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
     }
 

@@ -245,10 +245,10 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         // Can be removed after I2P is activated
         if (!AuthorizedData.IS_I2P_ACTIVATED ) {
-            Boolean isBannedRoleInvalid = bannedRole.map(node -> node.isDataInvalid(pubKeyHash)).orElse(false);
+            Boolean isBannedRoleInvalid = bannedRole.map(node -> node.isDataInvalid()).orElse(false);
             if(isBannedRoleInvalid){
                 log.warn("AuthorizedAlertData considered invalid as bannedRole is invalid.\n" +
                         "bannedRole={}", bannedRole);

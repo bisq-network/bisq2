@@ -127,7 +127,7 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
     }
 

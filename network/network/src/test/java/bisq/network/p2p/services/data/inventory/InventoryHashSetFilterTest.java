@@ -335,7 +335,7 @@ class InventoryHashSetFilterTest {
         }
 
         @Override
-        public boolean isDataInvalid(byte[] pubKeyHash) {
+        public boolean isDataInvalid() {
             return false;
         }
 
@@ -380,7 +380,7 @@ class InventoryHashSetFilterTest {
         }
 
         @Override
-        public boolean isDataInvalid(byte[] pubKeyHash) {
+        public boolean isDataInvalid() {
             return false;
         }
 
