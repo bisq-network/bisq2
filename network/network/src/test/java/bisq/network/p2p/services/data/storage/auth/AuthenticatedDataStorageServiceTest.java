@@ -35,6 +35,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -328,6 +330,133 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isClassNameInvalid(), result.toString());
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void staleAddCannotReplaceRefreshedEntry(boolean legacy) throws GeneralSecurityException {
+        AddAuthenticatedDataRequest original = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.add(original).isSuccess());
+        assertTrue(peerStore.add(original).isSuccess());
+        RefreshAuthenticatedDataRequest refresh = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        if (legacy) {
+            refresh = RefreshAuthenticatedDataRequest.fromProto(refresh.toValueProto(false).toBuilder()
+                    .setVersion(1).clearSignatureV2().build());
+        }
+        assertTrue(peerStore.refresh(refresh).isSuccess());
+        AuthenticatedDataRequest refreshed = peerStore.getPersistableStore().getMap().get(original.getStorageKey());
+
+        DataStorageResult result = peerStore.add(original);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(refreshed, peerStore.getPersistableStore().getMap().get(original.getStorageKey()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void staleAddCannotReplaceRepublishedEntry(boolean legacy) throws GeneralSecurityException {
+        AddAuthenticatedDataRequest original = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.add(original).isSuccess());
+        assertTrue(peerStore.add(original).isSuccess());
+        RemoveAuthenticatedDataRequest remove = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.remove(remove).isSuccess());
+        assertTrue(peerStore.remove(remove).isSuccess());
+        AddAuthenticatedDataRequest republished = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        if (legacy) {
+            republished = withoutSignatureV2(republished);
+        }
+        assertTrue(peerStore.add(republished).isSuccess());
+
+        DataStorageResult result = peerStore.add(original);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(republished, peerStore.getPersistableStore().getMap().get(original.getStorageKey()));
+    }
+
+    @Test
+    void differentAddWithEqualSequenceCannotReplaceEntry() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest original = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.add(original).isSuccess());
+        AddAuthenticatedDataRequest legacy = withoutSignatureV2(original);
+
+        DataStorageResult result = peerStore.add(legacy);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(original, peerStore.getPersistableStore().getMap().get(original.getStorageKey()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, Integer.MAX_VALUE})
+    void verifiedRemovalReplacesLegacyRemovalRegardlessOfLegacySequence(int legacySequence) throws GeneralSecurityException {
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.add(add).isSuccess());
+        RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertEquals(2, verified.getSequenceNumber());
+        RemoveAuthenticatedDataRequest legacy = RemoveAuthenticatedDataRequest.fromProto(verified.toValueProto(false).toBuilder()
+                .setVersion(1).clearSignatureV2().setSequenceNumber(legacySequence).build());
+        assertTrue(peerStore.remove(legacy).isSuccess());
+
+        assertTrue(peerStore.remove(verified).isSuccess());
+
+        assertSame(verified, peerStore.getPersistableStore().getMap().get(verified.getStorageKey()));
+        assertTrue(peerStore.add(add).isSequenceNrInvalid());
+        assertSame(verified, peerStore.getPersistableStore().getMap().get(verified.getStorageKey()));
+    }
+
+    @Test
+    void verifiedRemovalRequiresHigherVerifiedSequenceForReplacement() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest first = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.remove(first).isSuccess());
+        RemoveAuthenticatedDataRequest second = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.remove(second).isSuccess());
+        RemoveAuthenticatedDataRequest third = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.remove(second).isSuccess());
+
+        assertTrue(peerStore.remove(first).isAlreadyRemoved());
+        assertSame(second, peerStore.getPersistableStore().getMap().get(second.getStorageKey()));
+        assertTrue(peerStore.remove(second).isAlreadyRemoved());
+        assertSame(second, peerStore.getPersistableStore().getMap().get(second.getStorageKey()));
+        assertTrue(peerStore.remove(third).isAlreadyRemoved());
+        assertSame(third, peerStore.getPersistableStore().getMap().get(third.getStorageKey()));
+    }
+
+    @Test
+    void legacyRemovalCannotDiscardVerifiedRemoval() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.remove(verified).isSuccess());
+        RemoveAuthenticatedDataRequest legacy = RemoveAuthenticatedDataRequest.fromProto(verified.toValueProto(false).toBuilder()
+                .setVersion(1).clearSignatureV2().setSequenceNumber(Integer.MAX_VALUE).build());
+
+        assertTrue(peerStore.remove(legacy).isAlreadyRemoved());
+
+        assertSame(verified, peerStore.getPersistableStore().getMap().get(verified.getStorageKey()));
+    }
+
+    @Test
+    void invalidSignatureV2CannotReplaceLegacyRemoval() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest legacy = RemoveAuthenticatedDataRequest.fromProto(verified.toValueProto(false).toBuilder()
+                .setVersion(1).clearSignatureV2().build());
+        assertTrue(peerStore.remove(legacy).isSuccess());
+        RemoveAuthenticatedDataRequest invalid = RemoveAuthenticatedDataRequest.fromProto(verified.toValueProto(false).toBuilder()
+                .setSequenceNumber(verified.getSequenceNumber() + 1).build());
+
+        assertTrue(peerStore.remove(invalid).isSignatureInvalid());
+
+        assertSame(legacy, peerStore.getPersistableStore().getMap().get(legacy.getStorageKey()));
+    }
+
+    @Test
+    void legacyRemovalCannotBlockAddWithForgedSequence() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest remove = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest legacy = RemoveAuthenticatedDataRequest.fromProto(remove.toValueProto(false).toBuilder()
+                .setVersion(1).clearSignatureV2().setSequenceNumber(Integer.MAX_VALUE).build());
+        assertTrue(peerStore.remove(legacy).isSuccess());
+
+        assertTrue(peerStore.add(add).isSuccess());
+
+        assertSame(add, peerStore.getPersistableStore().getMap().get(add.getStorageKey()));
+    }
+
     // A user must not publish the data of another user. The user could remove the copy, and the application would
     // remove the data of the owner (see docs/specifications/network/storage-ownership.md).
     @Test
@@ -454,6 +583,15 @@ class AuthenticatedDataStorageServiceTest {
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private AddAuthenticatedDataRequest withoutSignatureV2(AddAuthenticatedDataRequest request) {
+        return new AddAuthenticatedDataRequest(request.getAuthenticatedSequentialData(),
+                request.getSignatureV1(),
+                request.getSignaturePubKeyEncoded(),
+                request.getSignaturePublicKey(),
+                new byte[0],
+                0);
     }
 
     private void addToOwnerAndPeer() throws GeneralSecurityException {

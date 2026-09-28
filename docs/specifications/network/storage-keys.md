@@ -9,6 +9,8 @@ A store holds at most one request per storage key. The key decides:
 - which requests are duplicates;
 - which sequence number a new request of an owner must exceed.
 
+Replacement rules are defined in [Ordering of storage requests](storage-request-ordering.md).
+
 ## Storage key V1
 
 Storage key V1 is the key of earlier versions. It is the hash of the stored data:
