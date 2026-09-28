@@ -24,7 +24,7 @@ import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.security.ConfidentialData;
 import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class ConfidentialMessage implements EnvelopePayloadMessage, OwnedDistributedData, Canonical {
+public final class ConfidentialMessage implements EnvelopePayloadMessage, OwnershipVerifiableData, Canonical {
     private final ConfidentialData confidentialData;
     private final String receiverKeyId;
 

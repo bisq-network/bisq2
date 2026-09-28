@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,7 +32,7 @@ import java.security.PublicKey;
  */
 @Getter
 @EqualsAndHashCode
-public final class TestDistributedData implements OwnedDistributedData {
+public final class TestDistributedData implements OwnershipVerifiableData {
     public static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, TestDistributedData.class.getSimpleName());
 
     private final String content;

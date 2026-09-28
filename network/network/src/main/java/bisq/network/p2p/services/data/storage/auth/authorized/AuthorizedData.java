@@ -25,7 +25,7 @@ import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -240,8 +240,8 @@ public final class AuthorizedData extends AuthenticatedData {
     // a copy of it.
     @Override
     public boolean isOwner(byte[] pubKeyHash) {
-        byte[] ownerPubKeyHash = distributedData instanceof OwnedDistributedData ownedDistributedData
-                ? ownedDistributedData.getOwnerPubKeyHash()
+        byte[] ownerPubKeyHash = distributedData instanceof OwnershipVerifiableData ownershipVerifiableData
+                ? ownershipVerifiableData.getOwnerPubKeyHash()
                 : DigestUtil.hash(authorizedPublicKeyBytes);
         return Arrays.equals(ownerPubKeyHash, pubKeyHash);
     }

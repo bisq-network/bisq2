@@ -22,7 +22,7 @@ import bisq.common.encoding.Hex;
 import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -463,7 +463,7 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     // Authorized data which names its owner, like AuthorizedOracleNode
-    private static final class AuthorizedDataWithOwner implements AuthorizedDistributedData, OwnedDistributedData {
+    private static final class AuthorizedDataWithOwner implements AuthorizedDistributedData, OwnershipVerifiableData {
         private static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS,
                 AuthorizedDataWithOwner.class.getSimpleName());
 

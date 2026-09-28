@@ -22,7 +22,7 @@ package bisq.network.p2p.services.data.storage;
 // an offer. Only the owner can publish the data in the network storage, and in the authenticated data store only the
 // owner can refresh and remove it. The authenticated data store accepts distributed data which does not name its owner
 // only as authorized data, which its authorized key owns (see docs/specifications/network/storage-ownership.md).
-public interface OwnedDistributedData extends DistributedData {
+public interface OwnershipVerifiableData extends DistributedData {
     // The hash of the public key of the owner, as PubKey.getHash() computes it
     byte[] getOwnerPubKeyHash();
 }

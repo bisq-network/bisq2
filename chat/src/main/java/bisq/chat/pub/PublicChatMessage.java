@@ -23,8 +23,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,7 +39,7 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PublicChatMessage extends ChatMessage implements OwnedDistributedData {
+public abstract class PublicChatMessage extends ChatMessage implements OwnershipVerifiableData {
     protected transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
 
     protected PublicChatMessage(String messageId,

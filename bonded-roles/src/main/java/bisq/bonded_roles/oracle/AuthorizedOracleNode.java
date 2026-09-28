@@ -27,7 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -44,7 +44,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedOracleNode implements AuthorizedDistributedData, OwnedDistributedData {
+public final class AuthorizedOracleNode implements AuthorizedDistributedData, OwnershipVerifiableData {
     private static final int VERSION = 1;
 
     public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, AuthorizedOracleNode.class.getSimpleName(), MAX_MAP_SIZE_100);

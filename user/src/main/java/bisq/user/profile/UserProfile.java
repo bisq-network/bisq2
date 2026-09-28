@@ -29,7 +29,7 @@ import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
@@ -57,7 +57,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
-public final class UserProfile implements OwnedDistributedData, PublishDateAware {
+public final class UserProfile implements OwnershipVerifiableData, PublishDateAware {
     public static final long TTL = TTL_15_DAYS;
     public static final int VERSION = 1;
     public static final int MAX_LENGTH_NICK_NAME = 100;

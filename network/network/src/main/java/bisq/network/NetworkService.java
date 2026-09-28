@@ -52,7 +52,7 @@ import bisq.network.p2p.services.confidential.resend.ResendMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
@@ -329,22 +329,22 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
     // AuthenticatedData
     /* --------------------------------------------------------------------- */
 
-    // Default authenticated data needs distributed data which names its owner (see OwnedDistributedData)
-    public CompletableFuture<BroadcastResult> publishAuthenticatedData(OwnedDistributedData distributedData,
+    // Default authenticated data needs distributed data which names its owner (see OwnershipVerifiableData)
+    public CompletableFuture<BroadcastResult> publishAuthenticatedData(OwnershipVerifiableData distributedData,
                                                                        KeyPair keyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when publishAuthenticatedData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().addAuthenticatedData(authenticatedData, keyPair);
     }
 
-    public CompletableFuture<BroadcastResult> refreshAuthenticatedData(OwnedDistributedData distributedData,
+    public CompletableFuture<BroadcastResult> refreshAuthenticatedData(OwnershipVerifiableData distributedData,
                                                                        KeyPair keyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when refreshAuthenticatedData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
         return dataService.get().refreshAuthenticatedData(authenticatedData, keyPair);
     }
 
-    public CompletableFuture<BroadcastResult> removeAuthenticatedData(OwnedDistributedData distributedData,
+    public CompletableFuture<BroadcastResult> removeAuthenticatedData(OwnershipVerifiableData distributedData,
                                                                       KeyPair ownerKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when removeAuthenticatedData is called.");
         DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);

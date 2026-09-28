@@ -21,7 +21,7 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,7 +34,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @ToString
 @Getter
 @EqualsAndHashCode
-public final class MuSigOfferMessage implements OwnedDistributedData {
+public final class MuSigOfferMessage implements OwnershipVerifiableData {
     public static final MetaData META_DATA = new MetaData(TTL_2_DAYS, MuSigOfferMessage.class.getSimpleName());
     private final MuSigOffer offer;
 

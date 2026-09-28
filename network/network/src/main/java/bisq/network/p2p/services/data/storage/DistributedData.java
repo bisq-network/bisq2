@@ -38,6 +38,6 @@ public interface DistributedData extends NetworkProto {
     }
 
     // Validates the content of the data. The storage checks separately whether the publisher is the owner (see
-    // OwnedDistributedData).
+    // OwnershipVerifiableData).
     boolean isDataInvalid();
 }

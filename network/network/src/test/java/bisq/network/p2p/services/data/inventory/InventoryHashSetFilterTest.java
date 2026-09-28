@@ -31,7 +31,7 @@ import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilter;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterEntry;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterService;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.Sequential;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -303,7 +303,7 @@ class InventoryHashSetFilterTest {
     }
 
     // The owner is not serialized, so data of different owners can have the same storage key V1
-    private static final class InventoryTestData implements OwnedDistributedData {
+    private static final class InventoryTestData implements OwnershipVerifiableData {
         private static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS,
                 InventoryTestData.class.getSimpleName());
 

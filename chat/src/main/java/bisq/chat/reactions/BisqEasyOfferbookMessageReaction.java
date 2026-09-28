@@ -19,7 +19,7 @@ package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,7 +32,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements OwnedDistributedData {
+public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
     // Metadata needs to be symmetric with BisqEasyOfferbookMessage.
     public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, LOW_PRIORITY, BisqEasyOfferbookMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 

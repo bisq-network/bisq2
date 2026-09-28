@@ -31,10 +31,10 @@ compare both before it accepts the data.
 
 ### The data names its owner
 
-1. A `DistributedData` type whose data names its owner in its own fields implements `OwnedDistributedData`. Its
+1. A `DistributedData` type whose data names its owner in its own fields implements `OwnershipVerifiableData`. Its
    method `getOwnerPubKeyHash()` returns the owner hash. Types whose data names no owner do not implement it.
    The methods of `NetworkService` which publish, refresh and remove default authenticated data accept only
-   `OwnedDistributedData`, so the compiler rejects a type which cannot have an owner there.
+   `OwnershipVerifiableData`, so the compiler rejects a type which cannot have an owner there.
 
    | Data | Owner |
    | --- | --- |
@@ -181,5 +181,5 @@ After the cutoff date plus 100 days, rule 11 accepts no valid data anymore. Then
 
 - [`storage-keys.md`](storage-keys.md): the storage keys, which contain the key of the publisher.
 - [`storage-request-signatures.md`](storage-request-signatures.md): the signatures of the requests.
-- `OwnedDistributedData.getOwnerPubKeyHash()`, `AuthenticatedData.isOwner()`,
+- `OwnershipVerifiableData.getOwnerPubKeyHash()`, `AuthenticatedData.isOwner()`,
   `AuthenticatedSequentialData.isOwnerInvalid()`, `MailboxSequentialData.isSenderInvalid()`.
