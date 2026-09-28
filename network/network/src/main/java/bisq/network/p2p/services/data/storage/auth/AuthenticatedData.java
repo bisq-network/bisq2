@@ -30,6 +30,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 /**
  * Base class for AuthenticatedData or AuthorizedData. Holds DistributedData.
  * We use Any for wrapping the external implementation of the distributedData instance (e.g. Offer).
@@ -107,6 +109,17 @@ public abstract class AuthenticatedData implements StorageData, Canonical {
 
     public String getClassName() {
         return distributedData.getClassName();
+    }
+
+    // The hash of the public key of the owner. Only the owner can add, refresh and remove the data in the authenticated
+    // data store (see docs/specifications/network/storage-ownership.md). Empty if the data has no owner; the store
+    // rejects such data.
+    public abstract Optional<byte[]> findOwnerPubKeyHash();
+
+    // Whether data created at the given date can have another owner than findOwnerPubKeyHash() returns. Only a
+    // transition rule of authorized data allows it (see AuthorizedData).
+    public boolean isOtherOwnerAccepted(long created) {
+        return false;
     }
 
     @Override

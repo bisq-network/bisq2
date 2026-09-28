@@ -25,6 +25,7 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -68,6 +69,12 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
         // verified as well, so we can be sure it's the sender of the message. This check prevents against 
         // impersonation attack.
         return !authorUserProfileId.equals(Hex.encode(pubKeyHash));
+    }
+
+    // The author owns the message. The profile ID is the ID of the public key of the author (PubKey.getId()).
+    @Override
+    public Optional<byte[]> findOwnerPubKeyHash() {
+        return PubKey.findHashFromId(authorUserProfileId);
     }
 
     @Override

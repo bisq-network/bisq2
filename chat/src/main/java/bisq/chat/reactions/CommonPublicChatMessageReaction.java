@@ -21,10 +21,13 @@ import bisq.chat.ChatChannelDomain;
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 @Slf4j
 @Getter
@@ -62,6 +65,12 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
         // verified as well, so we can be sure it's the sender of the message. This check prevents against
         // impersonation attack.
         return !userProfileId.equals(Hex.encode(pubKeyHash));
+    }
+
+    // The reacting user owns the reaction. The profile ID is the ID of the public key of the user (PubKey.getId()).
+    @Override
+    public Optional<byte[]> findOwnerPubKeyHash() {
+        return PubKey.findHashFromId(userProfileId);
     }
 
     @Override

@@ -21,6 +21,8 @@ import bisq.common.encoding.canonical.Canonical;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageData;
 
+import java.util.Optional;
+
 /**
  * Interface for AppendOnlyData implementations like AccountAgeWitnessData
  * <p>
@@ -34,4 +36,9 @@ import bisq.network.p2p.services.data.storage.StorageData;
  * </ul>
  */
 public interface AppendOnlyData extends DistributedData, StorageData, Canonical {
+    // Append-only data is not signed and cannot be removed, so it has no owner
+    @Override
+    default Optional<byte[]> findOwnerPubKeyHash() {
+        return Optional.empty();
+    }
 }

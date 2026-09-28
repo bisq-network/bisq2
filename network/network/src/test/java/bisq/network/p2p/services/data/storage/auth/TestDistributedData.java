@@ -19,12 +19,17 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.security.PublicKey;
+import java.util.Optional;
+
 /**
  * Minimal DistributedData for storage tests. The content is serialized as a MetaData protobuf message, which is
- * sufficient because the tests do not deserialize the payload.
+ * sufficient because the tests do not deserialize the payload. The owner is not serialized, so data of different
+ * owners can have the same data hash.
  */
 @Getter
 @EqualsAndHashCode
@@ -32,9 +37,18 @@ public final class TestDistributedData implements DistributedData {
     public static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, TestDistributedData.class.getSimpleName());
 
     private final String content;
+    @EqualsAndHashCode.Exclude
+    private final Optional<byte[]> ownerPubKeyHash;
 
+    // Data without owner, which the authenticated data store does not accept
     TestDistributedData(String content) {
         this.content = content;
+        this.ownerPubKeyHash = Optional.empty();
+    }
+
+    TestDistributedData(String content, PublicKey owner) {
+        this.content = content;
+        this.ownerPubKeyHash = Optional.of(DigestUtil.hash(owner.getEncoded()));
     }
 
     @Override
@@ -59,5 +73,10 @@ public final class TestDistributedData implements DistributedData {
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
+    }
+
+    @Override
+    public Optional<byte[]> findOwnerPubKeyHash() {
+        return ownerPubKeyHash;
     }
 }

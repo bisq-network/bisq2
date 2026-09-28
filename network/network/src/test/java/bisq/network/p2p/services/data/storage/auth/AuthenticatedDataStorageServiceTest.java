@@ -17,12 +17,16 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.data.ByteArray;
 import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
+import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +36,8 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -49,18 +55,24 @@ class AuthenticatedDataStorageServiceTest {
 
     private AuthenticatedDataStorageService ownerStore;
     private AuthenticatedDataStorageService peerStore;
+    private AuthenticatedDataStorageService authorizedDataStore;
     private KeyPair ownerKeyPair;
+    private KeyPair authorizedKeyPair;
     private AuthenticatedData authenticatedData;
 
     @BeforeEach
     void setUp() {
         StorableTypesRegistry.register(TestDistributedData.class, TestDistributedData.META_DATA);
+        StorableTypesRegistry.register(TestAuthorizedDistributedData.class, TestAuthorizedDistributedData.META_DATA);
         PersistenceService persistenceService = new PersistenceService(tempDir);
         PruneExpiredEntriesService pruneExpiredEntriesService = new PruneExpiredEntriesService();
         ownerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "owner", STORE_KEY);
         peerStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, "peer", STORE_KEY);
+        authorizedDataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService,
+                "authorized", TestAuthorizedDistributedData.class.getSimpleName());
         ownerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+        authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content", ownerKeyPair.getPublic()));
     }
 
     // The stores write asynchronously, on the single thread of the persistence executor. JUnit deletes tempDir after
@@ -310,6 +322,134 @@ class AuthenticatedDataStorageServiceTest {
 
         assertFalse(result.isSuccess());
         assertTrue(result.isClassNameInvalid(), result.toString());
+    }
+
+    // A user must not publish the data of another user. The user could remove the copy, and the application would
+    // remove the data of the owner (see docs/specifications/network/storage-ownership.md).
+    @Test
+    void addSignedByAnotherKeyThanTheOwnerIsRejected() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest ownerRequest = AddAuthenticatedDataRequest.from(peerStore, authenticatedData,
+                ownerKeyPair);
+        assertTrue(peerStore.add(ownerRequest).isSuccess());
+        AddAuthenticatedDataRequest copy = AddAuthenticatedDataRequest.from(peerStore, authenticatedData,
+                KeyGeneration.generateDefaultEcKeyPair());
+        assertFalse(copy.isSignatureInvalid());
+
+        DataStorageResult result = peerStore.add(copy);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isOwnerInvalid(), result.toString());
+        assertEquals(Map.of(ownerRequest.getStorageKey(), ownerRequest), peerStore.getPersistableStore().getMap());
+    }
+
+    @Test
+    void defaultAuthenticatedDataWithoutOwnerIsRejected() throws GeneralSecurityException {
+        AuthenticatedData dataWithoutOwner = new DefaultAuthenticatedData(new TestDistributedData("content"));
+
+        DataStorageResult result = peerStore.add(AddAuthenticatedDataRequest.from(peerStore, dataWithoutOwner,
+                ownerKeyPair));
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isOwnerInvalid(), result.toString());
+    }
+
+    // The authorization signature does not cover the key which signs the add request. The authorized key therefore
+    // owns the data. Default authenticated data with an authorized payload has no owner, so it cannot skip the
+    // authorization check.
+    @Test
+    void authorizedDataIsOwnedByTheAuthorizedKey() throws GeneralSecurityException {
+        AuthorizedData authorizedData = authorize(new TestAuthorizedDistributedData("content"));
+        AddAuthenticatedDataRequest ownerRequest = AddAuthenticatedDataRequest.from(authorizedDataStore,
+                authorizedData, authorizedKeyPair);
+        assertTrue(authorizedDataStore.add(ownerRequest).isSuccess());
+
+        DataStorageResult resultOfCopy = authorizedDataStore.add(AddAuthenticatedDataRequest.from(authorizedDataStore,
+                authorizedData, ownerKeyPair));
+        DefaultAuthenticatedData withoutAuthorization = new DefaultAuthenticatedData(authorizedData.getDistributedData());
+        DataStorageResult resultWithoutAuthorization = authorizedDataStore.add(AddAuthenticatedDataRequest.from(
+                authorizedDataStore, withoutAuthorization, authorizedKeyPair));
+
+        assertTrue(resultOfCopy.isOwnerInvalid(), resultOfCopy.toString());
+        assertTrue(resultWithoutAuthorization.isOwnerInvalid(), resultWithoutAuthorization.toString());
+        assertEquals(Map.of(ownerRequest.getStorageKey(), ownerRequest),
+                authorizedDataStore.getPersistableStore().getMap());
+    }
+
+    // For example AuthorizedOracleNode, which the key of its network ID owns
+    @Test
+    void authorizedDataWhichNamesItsOwnerIsOwnedByThatOwner() throws GeneralSecurityException {
+        AuthorizedData authorizedData = authorize(TestAuthorizedDistributedData.withOwner("content",
+                ownerKeyPair.getPublic()));
+
+        DataStorageResult resultOfAuthorizedKey = authorizedDataStore.add(AddAuthenticatedDataRequest.from(
+                authorizedDataStore, authorizedData, authorizedKeyPair));
+        DataStorageResult resultOfOwner = authorizedDataStore.add(AddAuthenticatedDataRequest.from(
+                authorizedDataStore, authorizedData, ownerKeyPair));
+
+        assertTrue(resultOfAuthorizedKey.isOwnerInvalid(), resultOfAuthorizedKey.toString());
+        assertTrue(resultOfOwner.isSuccess(), resultOfOwner.toString());
+    }
+
+    // Oracle nodes of earlier versions published some types with the key of their network identity. Data of these
+    // types can have another owner if it was created before the cutoff date.
+    @Test
+    void otherOwnerIsAcceptedOnlyForLegacyTypesCreatedBeforeTheCutoffDate() {
+        long cutoffDate = AuthorizedData.LEGACY_OWNER_CUTOFF_DATE.getTime();
+        AuthorizedData legacyType = authorize(TestAuthorizedDistributedData.withLegacyOwners("content"));
+        AuthorizedData otherType = authorize(new TestAuthorizedDistributedData("content"));
+
+        assertTrue(legacyType.isOtherOwnerAccepted(cutoffDate - 1));
+        assertFalse(legacyType.isOtherOwnerAccepted(cutoffDate));
+        assertFalse(otherType.isOtherOwnerAccepted(cutoffDate - 1));
+        assertFalse(authenticatedData.isOtherOwnerAccepted(cutoffDate - 1));
+
+        // A request can have a creation date before the cutoff date, but not in the future
+        long created = Math.min(System.currentTimeMillis(), cutoffDate - 1);
+        byte[] otherPubKeyHash = DigestUtil.hash(ownerKeyPair.getPublic().getEncoded());
+        assertFalse(new AuthenticatedSequentialData(legacyType, 1, otherPubKeyHash, created).isOwnerInvalid());
+        assertTrue(new AuthenticatedSequentialData(otherType, 1, otherPubKeyHash, created).isOwnerInvalid());
+    }
+
+    // A refresh replaces the creation date, on which the transition rule for authorized data depends. So the store
+    // checks the owner of the refreshed entry again.
+    @Test
+    void refreshOfEntryOfAnotherOwnerIsRejected() throws GeneralSecurityException {
+        KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        AddAuthenticatedDataRequest copy = AddAuthenticatedDataRequest.from(peerStore, authenticatedData, otherKeyPair);
+        // An entry which the store did not check, as earlier versions stored it
+        peerStore.getPersistableStore().getMap().put(copy.getStorageKey(), copy);
+
+        DataStorageResult result = peerStore.refresh(RefreshAuthenticatedDataRequest.from(peerStore, authenticatedData,
+                otherKeyPair));
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isOwnerInvalid(), result.toString());
+        assertSame(copy, peerStore.getPersistableStore().getMap().get(copy.getStorageKey()));
+    }
+
+    // Earlier versions did not check the owner at add. The store removes such entries when it loads its data.
+    @Test
+    void persistedDataOfAnotherOwnerIsRemovedAtLoad() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest ownerRequest = AddAuthenticatedDataRequest.from(peerStore, authenticatedData,
+                ownerKeyPair);
+        AddAuthenticatedDataRequest copy = AddAuthenticatedDataRequest.from(peerStore, authenticatedData,
+                KeyGeneration.generateDefaultEcKeyPair());
+        Map<ByteArray, AuthenticatedDataRequest> map = peerStore.getPersistableStore().getMap();
+        map.put(ownerRequest.getStorageKey(), ownerRequest);
+        map.put(copy.getStorageKey(), copy);
+
+        peerStore.onPersistedApplied(peerStore.getPersistableStore());
+
+        assertEquals(Map.of(ownerRequest.getStorageKey(), ownerRequest), map);
+    }
+
+    private AuthorizedData authorize(TestAuthorizedDistributedData data) {
+        try {
+            byte[] signature = SignatureUtil.sign(data.serializeForHash(), authorizedKeyPair.getPrivate());
+            return new AuthorizedData(data, Optional.of(signature), authorizedKeyPair.getPublic());
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void addToOwnerAndPeer() throws GeneralSecurityException {

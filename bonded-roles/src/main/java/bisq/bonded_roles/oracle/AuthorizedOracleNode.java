@@ -35,6 +35,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
@@ -159,6 +160,12 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
             return true;
         }
         return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
+    }
+
+    // The oracle node publishes its own data with the key of its network ID, not with its authorized key
+    @Override
+    public Optional<byte[]> findOwnerPubKeyHash() {
+        return Optional.of(networkId.getPubKey().getHash());
     }
 
     @Override

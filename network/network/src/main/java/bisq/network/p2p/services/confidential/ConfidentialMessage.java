@@ -33,6 +33,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 @Slf4j
 @ToString
@@ -119,5 +120,12 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
         return confidentialData == null ||
                 receiverKeyId == null ||
                 !Arrays.equals(DigestUtil.hash(confidentialData.getSenderPublicKey()), pubKeyHash);
+    }
+
+    // The sender owns the message. In the mailbox store, the sender signs the add request.
+    @Override
+    public Optional<byte[]> findOwnerPubKeyHash() {
+        return Optional.ofNullable(confidentialData)
+                .map(data -> DigestUtil.hash(data.getSenderPublicKey()));
     }
 }

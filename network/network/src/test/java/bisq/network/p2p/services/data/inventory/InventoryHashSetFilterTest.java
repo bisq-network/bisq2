@@ -42,6 +42,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageServi
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -160,9 +161,8 @@ class InventoryHashSetFilterTest {
     // Two owners with the same data have the same storage key V1, but different storage keys V2
     @Test
     void filterV2OfOneOwnerDoesNotHideTheEntryOfAnotherOwner() throws Exception {
-        InventoryTestData data = new InventoryTestData("shared");
-        AddAuthenticatedDataRequest requestA = add(data, ownerA);
-        AddAuthenticatedDataRequest requestB = add(data, ownerB);
+        AddAuthenticatedDataRequest requestA = add(new InventoryTestData("shared", ownerA), ownerA);
+        AddAuthenticatedDataRequest requestB = add(new InventoryTestData("shared", ownerB), ownerB);
         assertEquals(requestA.getStorageKeyV1(), requestB.getStorageKeyV1());
         assertEquals(requestA.getSequenceNumber(), requestB.getSequenceNumber());
 
@@ -256,9 +256,9 @@ class InventoryHashSetFilterTest {
 
     // An authenticated data entry of owner A, a remove request of owner B without entry, and append-only data
     private void addStoreContent() throws Exception {
-        add(new InventoryTestData("a"), ownerA);
+        add(new InventoryTestData("a", ownerA), ownerA);
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(authenticatedDataStore,
-                new DefaultAuthenticatedData(new InventoryTestData("removed")),
+                new DefaultAuthenticatedData(new InventoryTestData("removed", ownerB)),
                 ownerB);
         assertTrue(storageService.onRemoveDataRequest(removeRequest).join().isEmpty());
         assertTrue(storageService.onAddDataRequest(new AddAppendOnlyDataRequest(new InventoryTestAppendOnlyData("x")))
@@ -302,14 +302,17 @@ class InventoryHashSetFilterTest {
         return new HashSetFilterService(storageService, MAX_SIZE, type);
     }
 
+    // The owner is not serialized, so data of different owners can have the same storage key V1
     private static final class InventoryTestData implements DistributedData {
         private static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS,
                 InventoryTestData.class.getSimpleName());
 
         private final String content;
+        private final byte[] ownerPubKeyHash;
 
-        private InventoryTestData(String content) {
+        private InventoryTestData(String content, KeyPair owner) {
             this.content = content;
+            this.ownerPubKeyHash = DigestUtil.hash(owner.getPublic().getEncoded());
         }
 
         @Override
@@ -334,6 +337,11 @@ class InventoryHashSetFilterTest {
         @Override
         public boolean isDataInvalid(byte[] pubKeyHash) {
             return false;
+        }
+
+        @Override
+        public Optional<byte[]> findOwnerPubKeyHash() {
+            return Optional.of(ownerPubKeyHash);
         }
     }
 

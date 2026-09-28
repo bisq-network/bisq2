@@ -43,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
@@ -207,6 +208,12 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
+    }
+
+    // The profile is owned by the key of its network ID
+    @Override
+    public Optional<byte[]> findOwnerPubKeyHash() {
+        return Optional.of(networkId.getPubKey().getHash());
     }
 
     public boolean isDataInvalid() {

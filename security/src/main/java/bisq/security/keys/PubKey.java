@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Optional;
 
 @Slf4j
 @EqualsAndHashCode
@@ -92,5 +93,16 @@ public final class PubKey implements NetworkProto {
             id = Hex.encode(getHash());
         }
         return id;
+    }
+
+    // The hash from an ID which getId() created. Empty for any other string, for example with upper case letters, so
+    // that a hash has only one ID.
+    public static Optional<byte[]> findHashFromId(String id) {
+        try {
+            byte[] hash = Hex.decode(id);
+            return Hex.encode(hash).equals(id) ? Optional.of(hash) : Optional.empty();
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 }

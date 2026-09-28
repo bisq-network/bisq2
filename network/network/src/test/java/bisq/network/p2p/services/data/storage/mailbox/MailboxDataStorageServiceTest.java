@@ -67,6 +67,21 @@ class MailboxDataStorageServiceTest {
         mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
     }
 
+    // The sender of the confidential message must sign the add request (see
+    // docs/specifications/network/storage-ownership.md)
+    @Test
+    void addRequestOfAnotherSenderIsRejected() throws GeneralSecurityException {
+        AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, KeyGeneration.generateDefaultEcKeyPair(),
+                receiverKeyPair.getPublic());
+        assertFalse(addRequest.isSignatureInvalid());
+
+        DataStorageResult result = store.add(addRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isOwnerInvalid(), result.toString());
+        assertTrue(store.getPersistableStore().getMap().isEmpty());
+    }
+
     @Test
     void addAndRemoveRequestsOfStoreTypeAreAccepted() throws GeneralSecurityException {
         AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());

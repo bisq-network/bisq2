@@ -131,6 +131,12 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
         return false;
     }
 
+    // Oracle nodes of earlier versions published it with the key of their network ID
+    @Override
+    public boolean isLegacyOwnerAccepted() {
+        return true;
+    }
+
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {

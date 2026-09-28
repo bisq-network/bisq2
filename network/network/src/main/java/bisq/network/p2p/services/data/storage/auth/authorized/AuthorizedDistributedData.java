@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.auth.authorized;
 import bisq.network.p2p.services.data.storage.DistributedData;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public interface AuthorizedDistributedData extends DistributedData {
@@ -28,6 +29,20 @@ public interface AuthorizedDistributedData extends DistributedData {
     }
 
     default boolean staticPublicKeysProvided() {
+        return false;
+    }
+
+    // Authorized data is owned by its authorized key (see AuthorizedData), unless it names another owner.
+    @Override
+    default Optional<byte[]> findOwnerPubKeyHash() {
+        return Optional.empty();
+    }
+
+    // Oracle and seed nodes of earlier versions published data of some types with the key pair of their network
+    // identity instead of their authorized key pair. For these types, data created before
+    // AuthorizedData.LEGACY_OWNER_CUTOFF_DATE can have another owner than its authorized key. Can be removed when no
+    // such data is valid anymore (see docs/specifications/network/storage-ownership.md).
+    default boolean isLegacyOwnerAccepted() {
         return false;
     }
 }

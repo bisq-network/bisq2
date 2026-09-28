@@ -27,6 +27,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 
 @Slf4j
@@ -80,5 +82,12 @@ public final class MuSigOfferMessage implements DistributedData {
     @Override
     public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
+    }
+
+    // The maker owns the offer. Otherwise another user could publish a copy of the offer and remove it, and the
+    // offerbook would remove the offer of the maker (see docs/specifications/network/storage-ownership.md).
+    @Override
+    public Optional<byte[]> findOwnerPubKeyHash() {
+        return Optional.of(offer.getMakerNetworkId().getPubKey().getHash());
     }
 }
