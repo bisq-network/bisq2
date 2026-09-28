@@ -87,6 +87,13 @@ The hash serialization of append-only data uses the decoded object, not the kept
 `@ExcludeForHash` and fields which the node does not know are not part of the key. Otherwise anyone could create
 several keys for the same data by adding such fields, and the store would hold each variant.
 
+## Persisted data
+
+Earlier versions persisted the stores with storage key V1. When a node loads a store, it computes the key of every
+persisted request again and stores the request under it. It does not trust the persisted key. If two persisted requests
+have the same key, the node keeps the one which the store would keep: the higher sequence number, else the later
+creation date. This happens only if the persisted keys were not the keys of their requests.
+
 ## Compatibility
 
 - Storage keys are local to a node, with one exception: the inventory filter (see below). No other message contains

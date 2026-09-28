@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
 import bisq.common.util.ByteArrayUtils;
+import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -38,6 +39,7 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -141,6 +143,19 @@ class StorageKeyV2Test {
         assertTrue(result.isSuccess(), result.toString());
         assertFalse(result.isNoEntry(), result.toString());
         assertSame(removeRequest, store.getPersistableStore().getMap().get(removeRequest.getStorageKey()));
+    }
+
+    // Earlier versions persisted the entries under storage key V1
+    @Test
+    void persistedEntriesAreStoredUnderTheirCurrentStorageKey() throws GeneralSecurityException {
+        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        DataStore<AuthenticatedDataRequest> persisted = store.getPersistableStore();
+        persisted.getMap().put(addRequest.getStorageKeyV1(), addRequest);
+
+        DataStore<AuthenticatedDataRequest> preProcessed = store.preProcessPersisted(persisted);
+
+        assertEquals(Map.of(addRequest.getStorageKey(), addRequest), preProcessed.getMap());
     }
 
     private AuthorizedData getAuthorizedDataWithSignature() {
