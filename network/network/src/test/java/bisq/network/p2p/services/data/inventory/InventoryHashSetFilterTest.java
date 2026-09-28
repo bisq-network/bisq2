@@ -54,6 +54,7 @@ import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -205,6 +206,52 @@ class InventoryHashSetFilterTest {
         assertTrue(factory.createInventoryForResponse(new InventoryRequest(legacyFilter, 1)).getEntries().isEmpty());
         HashSetFilter emptyLegacyFilter = new HashSetFilter(InventoryFilterType.HASH_SET, new ArrayList<>());
         assertFalse(factory.createInventoryForResponse(new InventoryRequest(emptyLegacyFilter, 1)).getEntries().isEmpty());
+    }
+
+    // With the preference list of the app configurations, a node uses HASH_SET_V2 if the peer supports it, and falls back
+    // to HASH_SET for peers of earlier versions. The order of the list decides, not the order of the peer's features.
+    @Test
+    void factoryPrefersV2AndFallsBackToV1ForPeersOfEarlierVersions() throws Exception {
+        addStoreContent();
+        InventoryFilterFactory factory = new InventoryFilterFactory(
+                Set.of(Feature.INVENTORY_HASH_SET, Feature.INVENTORY_HASH_SET_V2),
+                dataService,
+                new InventoryService.Config(2000, 600_000, 3, 8, 7, 4, 3,
+                        List.of(InventoryFilterType.HASH_SET_V2, InventoryFilterType.HASH_SET)));
+
+        List<Feature> featuresOfThisVersion = List.of(Feature.INVENTORY_HASH_SET, Feature.INVENTORY_HASH_SET_V2);
+        assertEquals(Optional.of(InventoryFilterType.HASH_SET_V2), factory.getPreferredFilterType(featuresOfThisVersion));
+        assertEquals(Optional.of(InventoryFilterType.HASH_SET_V2),
+                factory.getPreferredFilterType(List.of(Feature.INVENTORY_HASH_SET_V2, Feature.INVENTORY_HASH_SET)));
+        assertEquals(Optional.of(InventoryFilterType.HASH_SET_V2),
+                factory.getPreferredFilterType(List.of(Feature.INVENTORY_HASH_SET_V2)));
+
+        List<Feature> featuresOfEarlierVersion = List.of(Feature.INVENTORY_HASH_SET, Feature.AUTHORIZATION_HASH_CASH);
+        assertEquals(Optional.of(InventoryFilterType.HASH_SET), factory.getPreferredFilterType(featuresOfEarlierVersion));
+        assertTrue(factory.getPreferredFilterType(List.of(Feature.AUTHORIZATION_HASH_CASH)).isEmpty());
+
+        // The V1 filter contains storage key V1, which a responder of an earlier version uses as map key
+        InventoryFilter legacyFilter = factory.createInventoryFilterForRequest(featuresOfEarlierVersion);
+        assertEquals(InventoryFilterType.HASH_SET, legacyFilter.getInventoryFilterType());
+        assertSameFilter(createFilterOfRequester(InventoryFilterType.HASH_SET, DataRequest::getStorageKeyV1),
+                (HashSetFilter) legacyFilter);
+
+        InventoryFilter filterV2 = factory.createInventoryFilterForRequest(featuresOfThisVersion);
+        assertEquals(InventoryFilterType.HASH_SET_V2, filterV2.getInventoryFilterType());
+        assertSameFilter(createFilterOfRequester(InventoryFilterType.HASH_SET_V2, DataRequest::getStorageKeyV2),
+                (HashSetFilter) filterV2);
+    }
+
+    // The fallback needs the service of the type: a node registers services only for the features it advertises
+    @Test
+    void factoryDoesNotFallBackToTypeWithoutFeature() {
+        InventoryFilterFactory factory = new InventoryFilterFactory(
+                Set.of(Feature.INVENTORY_HASH_SET_V2),
+                dataService,
+                new InventoryService.Config(2000, 600_000, 3, 8, 7, 4, 3,
+                        List.of(InventoryFilterType.HASH_SET_V2, InventoryFilterType.HASH_SET)));
+
+        assertTrue(factory.getPreferredFilterType(List.of(Feature.INVENTORY_HASH_SET)).isEmpty());
     }
 
     // An authenticated data entry of owner A, a remove request of owner B without entry, and append-only data

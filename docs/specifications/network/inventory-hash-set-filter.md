@@ -37,7 +37,38 @@ Reason: a filter entry is only meaningful together with the key it contains. Nod
 under storage key V2, nodes of earlier versions under V1. If both used one filter type, no entry would match between
 the versions, and the responder would send all requests up to the size limit of the inventory.
 
+## Configuration
+
+Nodes of this version support both filter types, prefer `HASH_SET_V2` and fall back to `HASH_SET`:
+
+- Features: `INVENTORY_HASH_SET` and `INVENTORY_HASH_SET_V2`. Both are needed: a node uses only types whose feature it
+  advertises.
+- Preferred filter types: `HASH_SET_V2`, then `HASH_SET`.
+
+| Requester | Responder | Result |
+| --- | --- | --- |
+| this version | this version | `HASH_SET_V2`, storage key V2 |
+| earlier version | this version | `HASH_SET`, the responder derives storage key V1 from its requests |
+| this version | earlier version | `HASH_SET`, the requester derives storage key V1 from its requests |
+| earlier version | earlier version | unchanged |
+
+Reason for the fallback: as long as the seed nodes and most peers run earlier versions, a node which requests only
+`HASH_SET_V2` finds no responder and receives no inventory. The fallback keeps nodes of this version synchronized
+during the update of the network. Its cost is described in [Limitations](#limitations).
+
 ## Limitations
+
+- **Requests of this version with `HASH_SET`.** Against a responder of an earlier version, a node of this version
+  sends a `HASH_SET` filter and gets the ownership semantics of storage key V1: an entry `(K1, n)` hides the requests
+  of all owners with sequence number `n` for the same data. The node can miss the request of one owner while it holds
+  the request of another owner. It receives the missing request with a later `HASH_SET_V2` request. The selection of
+  peers for inventory requests does not prefer peers which support `HASH_SET_V2`, so such a request can also go to a
+  peer of an earlier version while a peer of this version is connected.
+  - Why it is accepted now: without the fallback, nodes of this version receive no inventory until the seed nodes and
+    enough peers are updated.
+  - What removes it: removing `HASH_SET` from the preferred list when enough nodes support `HASH_SET_V2`. Preferring
+    peers which support `HASH_SET_V2` in the peer selection reduces it earlier.
+  - Who decides: the developers.
 
 - **Several owners with one storage key V1.** Requests of different owners for the same data have the same storage
   key V1 and different storage keys V2. A `HASH_SET` filter cannot tell them apart: an entry `(K1, n)` hides the
