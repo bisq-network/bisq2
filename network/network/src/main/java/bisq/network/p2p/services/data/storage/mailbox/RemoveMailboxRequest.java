@@ -241,7 +241,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     /* --------------------------------------------------------------------- */
 
     @Override
-    public byte[] getPreImage() {
+    public byte[] getPreImageV1() {
         return hash;
     }
 
@@ -251,7 +251,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
     }
 
     @Override
-    public byte[] getSignature() {
+    public byte[] getSignatureV1() {
         return signature;
     }
 

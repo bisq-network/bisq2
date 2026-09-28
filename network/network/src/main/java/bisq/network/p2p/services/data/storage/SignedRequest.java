@@ -23,15 +23,15 @@ import org.slf4j.LoggerFactory;
 import java.security.PublicKey;
 
 public interface SignedRequest {
-    byte[] getPreImage();
+    byte[] getPreImageV1();
 
     PublicKey getSignaturePublicKey();
 
-    byte[] getSignature();
+    byte[] getSignatureV1();
 
     default boolean isSignatureInvalid() {
         try {
-            return !SignatureUtil.verify(getPreImage(), getSignature(), getSignaturePublicKey());
+            return !SignatureUtil.verify(getPreImageV1(), getSignatureV1(), getSignaturePublicKey());
         } catch (Exception e) {
             LoggerFactory.getLogger(getClass()).warn("Verifying signature failed", e);
             return true;

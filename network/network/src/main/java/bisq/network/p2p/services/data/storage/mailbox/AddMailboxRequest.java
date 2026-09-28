@@ -170,7 +170,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     /* --------------------------------------------------------------------- */
 
     @Override
-    public byte[] getPreImage() {
+    public byte[] getPreImageV1() {
         return mailboxSequentialData.serializeForHash();
     }
 
@@ -180,7 +180,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     }
 
     @Override
-    public byte[] getSignature() {
+    public byte[] getSignatureV1() {
         return signature;
     }
 

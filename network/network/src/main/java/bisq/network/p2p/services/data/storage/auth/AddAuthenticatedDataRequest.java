@@ -72,7 +72,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                                                    RefreshAuthenticatedDataRequest refreshRequest) {
         long newTimestamp = refreshRequest.getCreated();
         int newSequenceNumber = refreshRequest.getSequenceNumber();
-        byte[] newSignature = refreshRequest.getSignature();
+        byte[] newSignature = refreshRequest.getSignatureV1();
 
         AuthenticatedSequentialData sequentialDataFromMap = requestFromMap.getAuthenticatedSequentialData();
         AuthenticatedSequentialData newSequentialData = new AuthenticatedSequentialData(
@@ -193,12 +193,12 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     /* --------------------------------------------------------------------- */
 
     @Override
-    public byte[] getPreImage() {
+    public byte[] getPreImageV1() {
         return authenticatedSequentialData.serializeForHash();
     }
 
     @Override
-    public byte[] getSignature() {
+    public byte[] getSignatureV1() {
         return signature;
     }
 

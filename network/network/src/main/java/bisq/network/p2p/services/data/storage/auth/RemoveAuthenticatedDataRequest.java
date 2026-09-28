@@ -260,7 +260,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     /* --------------------------------------------------------------------- */
 
     @Override
-    public byte[] getPreImage() {
+    public byte[] getPreImageV1() {
         return hash;
     }
 
@@ -270,7 +270,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     }
 
     @Override
-    public byte[] getSignature() {
+    public byte[] getSignatureV1() {
         return signature;
     }
 

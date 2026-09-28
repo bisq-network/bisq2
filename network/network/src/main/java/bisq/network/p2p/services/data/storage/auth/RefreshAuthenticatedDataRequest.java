@@ -57,7 +57,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 addAuthenticatedDataRequest.getSignaturePubKeyEncoded(),
                 addAuthenticatedDataRequest.getSignaturePublicKey(),
                 addAuthenticatedDataRequest.getSequenceNumber(),
-                addAuthenticatedDataRequest.getSignature(),
+                addAuthenticatedDataRequest.getSignatureV1(),
                 addAuthenticatedDataRequest.getCreated(),
                 authenticatedData.getClassName());
     }
@@ -243,7 +243,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // It can only be verified on that request, which the receiver rebuilds from its stored entry with
     // AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest). The refresh request alone has no pre-image.
     @Override
-    public byte[] getPreImage() {
+    public byte[] getPreImageV1() {
         throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest has no pre-image. " +
                 "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
     }
@@ -260,7 +260,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
     @Override
-    public byte[] getSignature() {
+    public byte[] getSignatureV1() {
         return signature;
     }
 
