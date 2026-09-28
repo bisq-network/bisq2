@@ -59,7 +59,8 @@ signature nor the hash covered it. So they could choose the time to live, the pr
 
 Reason: all entries of a store then use the MetaData of the store type. A type which returned the MetaData of another
 type would otherwise put its data into the store of that other type. For rule 9: mailbox data and remove requests
-carry only a class name, which the signature does not cover. Without rule 9, a sender or relay could name a
+carry only a class name. Signature V1 does not cover it, and a relay can remove signature V2 (see
+[`storage-request-signatures.md`](storage-request-signatures.md#known-limitations)). Without rule 9, a sender or relay could name a
 `DistributedData` type in a mailbox request. The request would then get the MetaData of that type, for example a time
 to live of 100 days instead of at most 15 days, and an expired mailbox entry would become valid again.
 
@@ -90,17 +91,19 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   class name. It then relays and persists the message with the registered values. It keeps the received value if the
   class name is not registered, or if `serializeForHash()` of the message contains `metaData`. It does not contain it
   in versions 1 to 3 of `MailboxData`, `RemoveMailboxRequest` and `RemoveAuthenticatedDataRequest`, and in all
-  versions of `RefreshAuthenticatedDataRequest`. So the replacement changes neither the signature, the storage key nor
-  the proof of work payload. The signatures and storage keys of remove and refresh requests never contain their own
+  versions of `RefreshAuthenticatedDataRequest`. So the replacement changes neither signature V1, the storage key nor
+  the proof of work payload. The preimage of signature V2 never contains `metaData` (see
+  [`storage-request-signatures.md`](storage-request-signatures.md#requirements-for-signature-v2)), so the replacement
+  does not change it either. The signatures and storage keys of remove and refresh requests never contain their own
   `metaData`.
 
   Reason: otherwise a node forwards values which a sender or relay chose, and which it does not use itself. A node of
   an earlier version would use them for store selection, expiry and cost factor. It would then expect another cost
   factor than the relay paid (see [Message cost](message-cost.md#compatibility)), and select another store if
   `className` and `metaData` name different types.
-- `className` is excluded from the hash. Signature preimages, storage keys, proof of work payloads and the order of
-  inventory entries are computed without it. Nodes of earlier versions drop the unknown field and compute the same
-  bytes.
+- `className` is excluded from the hash. Preimages of signature V1, storage keys, proof of work payloads and the order
+  of inventory entries are computed without it. Nodes of earlier versions drop the unknown field and compute the same
+  bytes. The preimage of signature V2 contains it; nodes of earlier versions do not verify signature V2.
 - If `className` is empty, the class name of `metaData` is used. This covers messages from nodes of earlier versions,
   messages relayed by such nodes, and data persisted by them.
 - `className` is not validated when a message is parsed. The store accepts only registered class names. Parsing stays
@@ -112,11 +115,12 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
 
 ## Known limitations
 
-- The signature does not cover `className`. A relay can change it to the class name of another registered type of the
-  same store type (rule 9). The data then goes into the store of that type and uses its MetaData. A remove request then
-  does not find its add entry and is stored in the other store without an add entry. Including `className` in the
-  signature removes this. The developers decided to do this together with the planned change of the signatures of these
-  messages.
+- Signature V1 does not cover `className`. Signature V2 covers it for mailbox data and remove requests, but a relay can
+  remove signature V2 while receivers accept requests with only signature V1 (see
+  [`storage-request-signatures.md`](storage-request-signatures.md#known-limitations)). Until then, a relay can change
+  `className` to the class name of another registered type of the same store type (rule 9). The data then goes into
+  the store of that type and uses its MetaData. A remove request then does not find its add entry and is stored in the
+  other store without an add entry. The activation which makes signature V2 required removes this.
 - Nodes of earlier versions still use the MetaData from the network until they update.
 
 ## Known defects
