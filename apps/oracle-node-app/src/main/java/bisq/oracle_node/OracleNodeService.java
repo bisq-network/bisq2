@@ -116,7 +116,7 @@ public class OracleNodeService implements Service {
 
     private Bisq1BridgeService bisq1BridgeService;
     @Nullable
-    private Scheduler startupScheduler, scheduler;
+    private Scheduler startupScheduler, scheduler, migrationScheduler;
     @Nullable
     private Pin bondedRolesPin;
 
@@ -200,6 +200,16 @@ public class OracleNodeService implements Service {
                 staticPublicKeysProvided,
                 myAuthorizedOracleNode);
 
+        // Oracle nodes of earlier versions published their authorized data with the key pair of their network identity.
+        // Applications use only data which its owner published, so we publish it again with our authorized key pair
+        // (see docs/specifications/network/storage-ownership.md). Repeated like the publishing at startup, because our
+        // data can also arrive with the inventory.
+        migrationScheduler = Scheduler.run(() -> networkService.migratePublisherOfAuthorizedData(keyPair,
+                        authorizedKeyPair))
+                .host(this)
+                .runnableName("migratePublisherOfAuthorizedData")
+                .repeated(10, 60, TimeUnit.SECONDS, 3);
+
         // We only self-publish if we are a root oracle
         if (staticPublicKeysProvided) {
             AuthorizedBondedRole authorizedBondedRole = new AuthorizedBondedRole(profileId,
@@ -272,6 +282,10 @@ public class OracleNodeService implements Service {
         if (startupScheduler != null) {
             startupScheduler.stop();
             startupScheduler = null;
+        }
+        if (migrationScheduler != null) {
+            migrationScheduler.stop();
+            migrationScheduler = null;
         }
 
         if (bondedRolesPin != null) {

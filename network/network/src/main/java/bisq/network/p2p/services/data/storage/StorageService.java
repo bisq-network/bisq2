@@ -30,6 +30,7 @@ import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -219,8 +220,19 @@ public class StorageService {
         // todo use getClone once tested enough on main
         return store.getPersistableStore().getMutableClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
-                .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData());
+                .map(e -> ((AddAuthenticatedDataRequest) e).getAuthenticatedSequentialData())
+                .filter(sequentialData -> isPublishedByOwner(sequentialData.getAuthenticatedData(),
+                        sequentialData.getPubKeyHash()))
+                .map(AuthenticatedSequentialData::getAuthenticatedData);
+    }
+
+    // Applications get only the data of entries which the owner of the data published (see
+    // docs/specifications/network/storage-ownership.md). During the transition of the publisher of authorized data, a
+    // store also holds entries of other publishers. Applications identify data without its publisher. So the removal
+    // or expiry of such an entry would remove the data of the owner from them. The stores still hold and relay these
+    // entries.
+    private static boolean isPublishedByOwner(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+        return authenticatedData.isOwner(publisherPubKeyHash);
     }
 
 
@@ -473,11 +485,15 @@ public class StorageService {
         }
     }
 
-    // Forwards the events of an authenticated data store to the listeners of this service
+    // Forwards the events of an authenticated data store to the listeners of this service, for data which its owner
+    // published
     private AuthenticatedDataStorageService.Listener createAuthenticatedDataStoreListener() {
         return new AuthenticatedDataStorageService.Listener() {
             @Override
             public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                if (!isPublishedByOwner(authenticatedData, publisherPubKeyHash)) {
+                    return;
+                }
                 listeners.forEach(listener -> {
                     try {
                         listener.onAdded(authenticatedData);
@@ -489,6 +505,9 @@ public class StorageService {
 
             @Override
             public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                if (!isPublishedByOwner(authenticatedData, publisherPubKeyHash)) {
+                    return;
+                }
                 listeners.forEach(listener -> {
                     try {
                         listener.onRemoved(authenticatedData);
@@ -500,6 +519,9 @@ public class StorageService {
 
             @Override
             public void onRefreshed(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                if (!isPublishedByOwner(authenticatedData, publisherPubKeyHash)) {
+                    return;
+                }
                 listeners.forEach(listener -> {
                     try {
                         listener.onRefreshed(authenticatedData);
