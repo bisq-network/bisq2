@@ -18,9 +18,9 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,7 +32,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements DistributedData {
+public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
     // Metadata needs to be symmetric with BisqEasyOfferbookMessage.
     public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, LOW_PRIORITY, BisqEasyOfferbookMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 
@@ -58,12 +58,16 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
         return unsafeToProto(serializeForHash);
     }
 
+    // The profile ID must be the ID of a public key, so that it names the reacting user (see getOwnerPubKeyHash())
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against
-        // impersonation attack.
-        return !userProfileId.equals(Hex.encode(pubKeyHash));
+    public boolean isDataInvalid() {
+        return !PubKey.isId(userProfileId);
+    }
+
+    // The reacting user owns the reaction. The profile ID is the ID of the public key of the user (PubKey.getId()).
+    @Override
+    public byte[] getOwnerPubKeyHash() {
+        return PubKey.getHashFromId(userProfileId);
     }
 
     @Override

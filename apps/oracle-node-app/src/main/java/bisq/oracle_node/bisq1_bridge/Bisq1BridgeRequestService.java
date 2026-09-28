@@ -64,6 +64,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -820,19 +821,26 @@ public class Bisq1BridgeRequestService implements Service,
         persist();
     }
 
+    // The authorized key owns the authorized data which this node publishes (see
+    // docs/specifications/network/storage-ownership.md)
     private CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData data) {
-        Identity identity = identityService.getOrCreateDefaultIdentity();
-        return networkService.publishAuthorizedData(data,
-                identity.getNetworkIdWithKeyPair().getKeyPair(),
-                authorizedPrivateKey,
-                authorizedPublicKey);
+        return networkService.publishAuthorizedData(data, getAuthorizedKeyPair());
     }
 
     private CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedBondedRole authorizedDistributedData) {
+        // Oracle nodes of earlier versions published it with the key pair of their network identity. Until no such data
+        // is valid anymore (AuthorizedData.LEGACY_OWNER_CUTOFF_DATE plus its TTL), we remove that copy as well.
         Identity identity = identityService.getOrCreateDefaultIdentity();
-        return networkService.removeAuthorizedData(authorizedDistributedData,
+        CompletableFuture<BroadcastResult> removalOfLegacyCopy = networkService.removeAuthorizedData(
+                authorizedDistributedData,
                 identity.getNetworkIdWithKeyPair().getKeyPair(),
                 authorizedPublicKey);
+        return networkService.removeAuthorizedData(authorizedDistributedData, getAuthorizedKeyPair())
+                .thenCombine(removalOfLegacyCopy, (broadcastResult, broadcastResultOfLegacyCopy) -> broadcastResult);
+    }
+
+    private KeyPair getAuthorizedKeyPair() {
+        return new KeyPair(authorizedPublicKey, authorizedPrivateKey);
     }
 
 

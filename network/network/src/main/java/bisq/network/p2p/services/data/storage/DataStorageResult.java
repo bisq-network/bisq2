@@ -24,7 +24,7 @@ public class DataStorageResult {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
             dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid,
-            classNameInvalid;
+            classNameInvalid, ownerInvalid;
     private StorageData removedData;
 
     public static DataStorageResult success() {
@@ -95,6 +95,14 @@ public class DataStorageResult {
         return this;
     }
 
+    // The key which signed the add request is not the owner of the data (see
+    // docs/specifications/network/storage-ownership.md)
+    public DataStorageResult ownerInvalid() {
+        ownerInvalid = true;
+        isSevereFailure = true;
+        return this;
+    }
+
     public DataStorageResult isNotAuthorized() {
         isNotAuthorized = true;
         isSevereFailure = true;
@@ -134,6 +142,7 @@ public class DataStorageResult {
                 ", isSevereFailure=" + isSevereFailure +
                 ", metaDataInvalid=" + metaDataInvalid +
                 ", classNameInvalid=" + classNameInvalid +
+                ", ownerInvalid=" + ownerInvalid +
                 ", removedData=" + removedData +
                 '}';
     }

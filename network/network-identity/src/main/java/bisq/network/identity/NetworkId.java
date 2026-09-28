@@ -69,6 +69,10 @@ public final class NetworkId implements NetworkProto {
         return pubKey.getKeyId();
     }
 
+    public byte[] getPubKeyHash() {
+        return pubKey.getHash();
+    }
+
     public String getInfo(TransportType transportType) {
         String address = StringUtils.truncate(addressByTransportTypeMap.getAddress(transportType).map(Address::getFullAddress).orElse("N/A"), 8);
         return transportType.name() + " - " + address

@@ -195,7 +195,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return !Version.isValid(versionString) || releaseNotes.length() > MAX_MESSAGE_LENGTH;
     }
 }

@@ -68,6 +68,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
         maybeLogMapState("onPersistedApplied", persisted);
         pruneInvalidAuthorizedData();
+        pruneDataOfOtherOwners();
         handlePersistedPublishDateAware(persisted);
     }
 
@@ -99,9 +100,15 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
-        if (authenticatedData.isDataInvalid(authenticatedSequentialData.getPubKeyHash())) {
+        // The owner check needs valid data, for example a valid profile ID as the author of a chat message
+        if (authenticatedData.isDataInvalid()) {
             log.warn("AuthenticatedData is invalid at add. request={}", request);
             return DataStorageResult.failed().dataInvalid();
+        }
+        if (authenticatedSequentialData.isOwnerInvalid()) {
+            log.warn("The publisher is not the owner of the data at add. request={}",
+                    StringUtils.truncate(request.toString(), 1500));
+            return DataStorageResult.failed().ownerInvalid();
         }
         if (authenticatedData instanceof AuthorizedData authorizedData && authorizedData.isNotAuthorized()) {
             log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
@@ -292,6 +299,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().signatureInvalid();
             }
 
+            // The refresh changes the creation date, on which the transition rule for the owner of authorized data
+            // depends (see docs/specifications/network/storage-ownership.md)
+            if (updatedAddRequest.getAuthenticatedSequentialData().isOwnerInvalid()) {
+                log.warn("The publisher is not the owner of the data at refresh. request={}", refreshRequest);
+                return DataStorageResult.failed().ownerInvalid();
+            }
+
             if (sequentialDataFromMap.getDistributedData() instanceof PublishDateAware publishDateAware) {
                 publishDateAware.setPublishDate(updatedAddRequest.getCreated());
             }
@@ -382,6 +396,23 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                         StringUtils.truncate(value.toString(), 3000));
                 persistableStore.getMap().remove(key);
             });
+            persist();
+        }
+    }
+
+    // Earlier versions did not check at add whether the publisher is the owner of the data. Remove and refresh
+    // requests of the publisher would affect the application objects of the owner (see
+    // docs/specifications/network/storage-ownership.md).
+    private void pruneDataOfOtherOwners() {
+        Set<ByteArray> storageKeys = persistableStore.getMap().entrySet().stream()
+                .filter(entry -> entry.getValue() instanceof AddAuthenticatedDataRequest addRequest &&
+                        addRequest.getAuthenticatedSequentialData().isOwnerInvalid())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+        if (!storageKeys.isEmpty()) {
+            log.warn("We prune {} AddAuthenticatedDataRequests which were not published by the owner of their data",
+                    storageKeys.size());
+            storageKeys.forEach(storageKey -> persistableStore.getMap().remove(storageKey));
             persist();
         }
     }

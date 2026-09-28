@@ -90,8 +90,12 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
 
-        if (mailboxData.isDataInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
+        // The sender check needs valid data, for example a confidential message with confidential data
+        if (mailboxData.isDataInvalid()) {
             return DataStorageResult.failed().dataInvalid();
+        }
+        if (mailboxSequentialData.isSenderInvalid()) {
+            return DataStorageResult.failed().ownerInvalid();
         }
         if (request.isSignaturePubKeyHashInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
             return DataStorageResult.failed().publicKeyHashInvalid();

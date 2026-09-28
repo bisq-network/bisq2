@@ -30,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 @EqualsAndHashCode
 @ToString
@@ -92,5 +94,21 @@ public final class PubKey implements NetworkProto {
             id = Hex.encode(getHash());
         }
         return id;
+    }
+
+    // Whether the string is an ID which getId() creates: the lower-case hex encoding of a hash. Other strings, for
+    // example with upper-case letters, are no ID, so that a hash has only one ID.
+    public static boolean isId(String id) {
+        try {
+            return Hex.encode(Hex.decode(id)).equals(id);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // The hash from an ID which getId() created
+    public static byte[] getHashFromId(String id) {
+        checkArgument(isId(id), "Not the ID of a public key. id=%s", id);
+        return Hex.decode(id);
     }
 }

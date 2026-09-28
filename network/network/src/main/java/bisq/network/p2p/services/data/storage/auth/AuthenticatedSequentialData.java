@@ -118,6 +118,17 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
         return authenticatedData.getDistributedData();
     }
 
+    // pubKeyHash is the hash of the key which signed the request. It must be the owner of the data (see
+    // docs/specifications/network/storage-ownership.md).
+    public boolean isOwnerInvalid() {
+        try {
+            return !authenticatedData.isOwner(pubKeyHash) && !authenticatedData.isOtherOwnerAccepted(created);
+        } catch (Exception e) {
+            log.warn("Checking the owner failed", e);
+            return true;
+        }
+    }
+
     @Override
     public String toString() {
         return "AuthenticatedSequentialData{" +

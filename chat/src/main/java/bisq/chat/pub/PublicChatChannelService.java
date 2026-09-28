@@ -30,7 +30,7 @@ import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.PersistableStore;
 import bisq.user.UserService;
@@ -159,19 +159,19 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         }
 
         R chatMessageReaction = createChatMessageReaction(message, reaction, userIdentity);
-        checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
+        checkArgument(chatMessageReaction instanceof OwnershipVerifiableData, "A public chat message reaction needs to implement OwnershipVerifiableData.");
 
         // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
         addMessageReaction(chatMessageReaction, message);
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        return networkService.publishAuthenticatedData((DistributedData) chatMessageReaction, keyPair);
+        return networkService.publishAuthenticatedData((OwnershipVerifiableData) chatMessageReaction, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction,
                                                                         NetworkIdWithKeyPair networkIdWithKeyPair) {
-        checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
-        return networkService.removeAuthenticatedData((DistributedData) chatMessageReaction, networkIdWithKeyPair.getKeyPair());
+        checkArgument(chatMessageReaction instanceof OwnershipVerifiableData, "A public chat message reaction needs to implement OwnershipVerifiableData.");
+        return networkService.removeAuthenticatedData((OwnershipVerifiableData) chatMessageReaction, networkIdWithKeyPair.getKeyPair());
     }
 
     @Override

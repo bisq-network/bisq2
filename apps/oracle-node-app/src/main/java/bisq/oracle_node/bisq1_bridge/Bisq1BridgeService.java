@@ -26,7 +26,6 @@ import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -113,6 +112,9 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
+    // The authorized key owns the authorized data which this node publishes (see
+    // docs/specifications/network/storage-ownership.md)
+    private final KeyPair authorizedKeyPair;
     private final BsqBlockGrpcService bsqBlockGrpcService;
     private final BurningmanGrpcService burningmanGrpcService;
     private final AuthorizedOracleNode myAuthorizedOracleNode;
@@ -121,8 +123,6 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
     private final Set<ByteArray> userProfileProofOfBurnHashes = new ObservableSet<>();
     private final Set<ByteArray> userProfileBondedReputationHashes = new ObservableSet<>();
 
-    @Nullable
-    private KeyPair keyPair;
     @Nullable
     private volatile ScheduledExecutorService executor;
     private final Object executorLock = new Object();
@@ -145,6 +145,7 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         this.myAuthorizedOracleNode = myAuthorizedOracleNode;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
+        authorizedKeyPair = new KeyPair(authorizedPublicKey, authorizedPrivateKey);
 
         burningmanGrpcService = new BurningmanGrpcService(staticPublicKeysProvided, grpcClient);
 
@@ -375,15 +376,7 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
     }
 
     private void publishAuthorizedData(AuthorizedDistributedData data) {
-        if (keyPair == null) {
-            Identity identity = identityService.getOrCreateDefaultIdentity();
-            keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
-        }
-
-        networkService.publishAuthorizedData(data,
-                keyPair,
-                authorizedPrivateKey,
-                authorizedPublicKey);
+        networkService.publishAuthorizedData(data, authorizedKeyPair);
     }
 
     private void handleUserProfileAdded(UserProfile userProfile) {

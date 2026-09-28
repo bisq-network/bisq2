@@ -55,7 +55,8 @@ Requirements:
 
 Reason for the owner key: entries of different owners with the same data do not share a key. A request signed with
 another key cannot find, replace, or block the entry of the owner. For example, a remove request signed with another
-key creates its own entry, and the entry of the owner stays.
+key creates its own entry, and the entry of the owner stays. The owner key does not decide which key may publish the
+data; [`storage-ownership.md`](storage-ownership.md) defines that rule.
 
 Reason for a byte concatenation instead of a canonical schema of the request: the preimage has only fixed parts and
 one variable part at the end, so no field tags or lengths are needed.

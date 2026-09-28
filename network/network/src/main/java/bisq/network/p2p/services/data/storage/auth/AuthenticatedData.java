@@ -23,12 +23,15 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Arrays;
 
 /**
  * Base class for AuthenticatedData or AuthorizedData. Holds DistributedData.
@@ -107,6 +110,20 @@ public abstract class AuthenticatedData implements StorageData, Canonical {
 
     public String getClassName() {
         return distributedData.getClassName();
+    }
+
+    // Whether the key with this hash owns the data. Only the owner can add, refresh and remove the data in the
+    // authenticated data store (see docs/specifications/network/storage-ownership.md). The owner is the one which the
+    // distributed data names (OwnershipVerifiableData). Other data has no owner, so the store rejects it.
+    public boolean isOwner(byte[] pubKeyHash) {
+        return distributedData instanceof OwnershipVerifiableData ownershipVerifiableData &&
+                Arrays.equals(ownershipVerifiableData.getOwnerPubKeyHash(), pubKeyHash);
+    }
+
+    // Whether data created at the given date can have another owner than isOwner() accepts. Only a transition rule of
+    // authorized data allows it (see AuthorizedData).
+    public boolean isOtherOwnerAccepted(long created) {
+        return false;
     }
 
     @Override

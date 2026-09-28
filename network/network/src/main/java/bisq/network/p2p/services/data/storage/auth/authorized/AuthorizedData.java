@@ -25,7 +25,9 @@ import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.Any;
@@ -52,6 +54,12 @@ public final class AuthorizedData extends AuthenticatedData {
     // Can be removed after I2P is activated
     public static final Date I2P_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.DECEMBER, 1);
     public static final boolean IS_I2P_ACTIVATED = new Date().after(I2P_ACTIVATION_DATE);
+
+    // Oracle and seed nodes of earlier versions published data of some types with the key pair of their network
+    // identity (see AuthorizedDistributedData.isLegacyOwnerAccepted). Their data created before this date is accepted
+    // with another owner than the authorized key. The date must be after all oracle and seed nodes publish with their
+    // authorized key pair (see docs/specifications/network/storage-ownership.md).
+    public static final Date LEGACY_OWNER_CUTOFF_DATE = DateUtils.getUTCDate(2027, GregorianCalendar.JANUARY, 1);
 
 
     private final Optional<byte[]> signature;
@@ -223,8 +231,24 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
-        return distributedData.isDataInvalid(ownerPubKeyHash);
+    public boolean isDataInvalid() {
+        return distributedData.isDataInvalid();
+    }
+
+    // The owner which the distributed data names, else the authorized key. The authorization signature does not cover
+    // the owner of the add request, so the authorized key must own the data: otherwise anyone could publish and remove
+    // a copy of it.
+    @Override
+    public boolean isOwner(byte[] pubKeyHash) {
+        byte[] ownerPubKeyHash = distributedData instanceof OwnershipVerifiableData ownershipVerifiableData
+                ? ownershipVerifiableData.getOwnerPubKeyHash()
+                : DigestUtil.hash(authorizedPublicKeyBytes);
+        return Arrays.equals(ownerPubKeyHash, pubKeyHash);
+    }
+
+    @Override
+    public boolean isOtherOwnerAccepted(long created) {
+        return getAuthorizedDistributedData().isLegacyOwnerAccepted() && created < LEGACY_OWNER_CUTOFF_DATE.getTime();
     }
 
     @Override

@@ -29,6 +29,7 @@ import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
@@ -56,7 +57,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
-public final class UserProfile implements DistributedData, PublishDateAware {
+public final class UserProfile implements OwnershipVerifiableData, PublishDateAware {
     public static final long TTL = TTL_15_DAYS;
     public static final int VERSION = 1;
     public static final int MAX_LENGTH_NICK_NAME = 100;
@@ -205,11 +206,17 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
+    public boolean isDataInvalid() {
+        return false;
     }
 
-    public boolean isDataInvalid() {
+    // The profile is owned by the key of its network ID
+    @Override
+    public byte[] getOwnerPubKeyHash() {
+        return getPubKeyHash();
+    }
+
+    public boolean isProofOfWorkInvalid() {
         return !Arrays.equals(proofOfWork.getPayload(), getPubKeyHash());
     }
 
@@ -218,7 +225,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     public byte[] getPubKeyHash() {
-        return networkId.getPubKey().getHash();
+        return networkId.getPubKeyHash();
     }
 
     public String getPubKeyAsHex() {

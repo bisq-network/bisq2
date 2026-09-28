@@ -20,12 +20,10 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.data.ByteArray;
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.p2p.services.data.storage.DataStore;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
@@ -101,7 +99,8 @@ class StorageKeyV2Test {
     // refresh requests hash, does not. Both authenticated data types must give the same key for all request types.
     @Test
     void addRemoveAndRefreshRequestsOfOneOwnerHaveTheSameStorageKey() throws GeneralSecurityException {
-        for (AuthenticatedData authenticatedData : List.of(new DefaultAuthenticatedData(new TestDistributedData("content")),
+        for (AuthenticatedData authenticatedData : List.of(
+                new DefaultAuthenticatedData(new TestDistributedData("content", ownerKeyPair.getPublic())),
                 getAuthorizedDataWithSignature())) {
             AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
             RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
@@ -117,7 +116,8 @@ class StorageKeyV2Test {
 
     @Test
     void storageKeyContainsTheOwnerPublicKey() throws GeneralSecurityException {
-        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content",
+                ownerKeyPair.getPublic()));
         AddAuthenticatedDataRequest ownerRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         AddAuthenticatedDataRequest otherRequest = AddAuthenticatedDataRequest.from(store,
                 authenticatedData,
@@ -130,7 +130,8 @@ class StorageKeyV2Test {
     // The requests find the sequence number of the stored entry under the key with which the store holds it
     @Test
     void republishAndRemoveUseTheNextSequenceNumberOfTheStoredEntry() throws GeneralSecurityException {
-        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content",
+                ownerKeyPair.getPublic()));
         assertTrue(store.add(AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair)).isSuccess());
 
         AddAuthenticatedDataRequest republished = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
@@ -148,7 +149,8 @@ class StorageKeyV2Test {
     // Earlier versions persisted the entries under storage key V1
     @Test
     void persistedEntriesAreStoredUnderTheirCurrentStorageKey() throws GeneralSecurityException {
-        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content",
+                ownerKeyPair.getPublic()));
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         DataStore<AuthenticatedDataRequest> persisted = store.getPersistableStore();
         persisted.getMap().put(addRequest.getStorageKeyV1(), addRequest);
@@ -162,37 +164,5 @@ class StorageKeyV2Test {
         return new AuthorizedData(new TestAuthorizedDistributedData("content"),
                 Optional.of(new byte[70]),
                 ownerKeyPair.getPublic());
-    }
-
-    private static final class TestAuthorizedDistributedData implements AuthorizedDistributedData {
-        private final String content;
-
-        private TestAuthorizedDistributedData(String content) {
-            this.content = content;
-        }
-
-        @Override
-        public void verify() {
-        }
-
-        @Override
-        public bisq.network.protobuf.MetaData.Builder getBuilder(boolean serializeForHash) {
-            return bisq.network.protobuf.MetaData.newBuilder().setClassName(content);
-        }
-
-        @Override
-        public bisq.network.protobuf.MetaData toProto(boolean serializeForHash) {
-            return unsafeToProto(serializeForHash);
-        }
-
-        @Override
-        public MetaData getMetaData() {
-            return TestDistributedData.META_DATA;
-        }
-
-        @Override
-        public boolean isDataInvalid(byte[] pubKeyHash) {
-            return false;
-        }
     }
 }

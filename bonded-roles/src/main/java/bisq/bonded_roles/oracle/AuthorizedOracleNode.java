@@ -27,6 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -34,7 +35,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
@@ -44,7 +44,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedOracleNode implements AuthorizedDistributedData {
+public final class AuthorizedOracleNode implements AuthorizedDistributedData, OwnershipVerifiableData {
     private static final int VERSION = 1;
 
     public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, AuthorizedOracleNode.class.getSimpleName(), MAX_MAP_SIZE_100);
@@ -151,14 +151,20 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         // Can be removed after I2P is activated
         if (!AuthorizedData.IS_I2P_ACTIVATED && networkId.getAddressByTransportTypeMap().containsKey(TransportType.I2P)) {
             log.warn("AuthorizedOracleNode considered invalid as it contains an I2PAddress address and we have not yet activated I2P.\n" +
                     "networkId={}", networkId);
             return true;
         }
-        return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
+        return false;
+    }
+
+    // The oracle node publishes its own data with the key of its network ID, not with its authorized key
+    @Override
+    public byte[] getOwnerPubKeyHash() {
+        return networkId.getPubKeyHash();
     }
 
     @Override

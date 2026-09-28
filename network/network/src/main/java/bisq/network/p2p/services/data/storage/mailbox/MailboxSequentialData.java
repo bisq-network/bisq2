@@ -141,6 +141,16 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
+    // The sender must be the owner of the confidential message (see docs/specifications/network/storage-ownership.md)
+    public boolean isSenderInvalid() {
+        try {
+            return !Arrays.equals(mailboxData.getConfidentialMessage().getOwnerPubKeyHash(), senderPublicKeyHash);
+        } catch (Exception e) {
+            log.warn("Checking the sender failed", e);
+            return true;
+        }
+    }
+
     @Override
     public String toString() {
         return "MailboxSequentialData{" +

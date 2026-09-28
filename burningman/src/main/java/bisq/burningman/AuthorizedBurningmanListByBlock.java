@@ -129,12 +129,18 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         // Can be removed after 2.1.7 is not used anymore
         if (!IS_BM_ACTIVATED) {
             return true;
         }
         return false;
+    }
+
+    // Oracle nodes of earlier versions published it with the key of their network ID
+    @Override
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override

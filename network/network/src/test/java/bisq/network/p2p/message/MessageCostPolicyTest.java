@@ -409,7 +409,7 @@ class MessageCostPolicyTest {
         }
 
         @Override
-        public boolean isDataInvalid(byte[] pubKeyHash) {
+        public boolean isDataInvalid() {
             return false;
         }
 
