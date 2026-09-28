@@ -247,12 +247,6 @@ public class OracleNodeService implements Service {
             public void onRemoved(Object element) {
                 if (element instanceof BondedRole bondedRole) {
                     networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(), authorizedKeyPair);
-                    // Oracle nodes of earlier versions published it with the key pair of their network identity. Until
-                    // no such data is valid anymore (AuthorizedData.LEGACY_OWNER_CUTOFF_DATE plus its TTL), we
-                    // remove that copy as well.
-                    networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
-                            keyPair,
-                            authorizedPublicKey);
                 }
             }
 

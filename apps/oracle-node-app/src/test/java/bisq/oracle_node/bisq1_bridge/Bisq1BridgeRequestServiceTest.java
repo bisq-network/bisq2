@@ -66,7 +66,6 @@ import static bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRolesVerificatio
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -443,8 +442,6 @@ class Bisq1BridgeRequestServiceTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.removeAuthorizedData(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        when(networkService.removeAuthorizedData(any(), any(), any()))
-                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
         IdentityService identityService = mock(IdentityService.class);
         Identity identity = mock(Identity.class);
         when(identity.getNetworkIdWithKeyPair()).thenReturn(
@@ -493,8 +490,6 @@ class Bisq1BridgeRequestServiceTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.removeAuthorizedData(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        when(networkService.removeAuthorizedData(any(), any(), any()))
-                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
         IdentityService identityService = mock(IdentityService.class);
         Identity identity = mock(Identity.class);
         KeyPair identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -511,7 +506,7 @@ class Bisq1BridgeRequestServiceTest {
         service.onConfidentialMessage(cancellation, KeyGeneration.generateDefaultEcKeyPair().getPublic());
 
         verify(bondedRoleGrpcService).requestBondedRoleVerification(any(), any());
-        verifyRemovalWithAuthorizedAndIdentityKeyPair(networkService, authorizedKeyPair, identityKeyPair);
+        verifyRemovalWithAuthorizedKeyPair(networkService, authorizedKeyPair);
         assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).isEmpty();
     }
 
@@ -558,8 +553,6 @@ class Bisq1BridgeRequestServiceTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.removeAuthorizedData(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        when(networkService.removeAuthorizedData(any(), any(), any()))
-                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
         IdentityService identityService = mock(IdentityService.class);
         Identity identity = mock(Identity.class);
         KeyPair identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -574,7 +567,7 @@ class Bisq1BridgeRequestServiceTest {
 
         service.revalidateBondedRolesNow();
 
-        verifyRemovalWithAuthorizedAndIdentityKeyPair(networkService, authorizedKeyPair, identityKeyPair);
+        verifyRemovalWithAuthorizedKeyPair(networkService, authorizedKeyPair);
         assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).containsExactly(valid);
     }
 
@@ -708,14 +701,13 @@ class Bisq1BridgeRequestServiceTest {
         return Math.floorDiv(date, bucketSize) * bucketSize;
     }
 
-    // The authorized key owns the data. Oracle nodes of earlier versions published it with the key pair of their network
-    // identity, so that copy is removed as well (see docs/specifications/network/storage-ownership.md).
-    private static void verifyRemovalWithAuthorizedAndIdentityKeyPair(NetworkService networkService,
-                                                                     KeyPair authorizedKeyPair,
-                                                                     KeyPair identityKeyPair) {
+    // The authorized key owns the data. The entries which oracle nodes of earlier versions published with the key pair
+    // of their network identity are removed by the migration at startup, not with each removal (see
+    // docs/specifications/network/storage-ownership.md).
+    private static void verifyRemovalWithAuthorizedKeyPair(NetworkService networkService, KeyPair authorizedKeyPair) {
         verify(networkService).removeAuthorizedData(any(),
                 argThat((KeyPair keyPair) -> keyPair.getPublic().equals(authorizedKeyPair.getPublic())));
-        verify(networkService).removeAuthorizedData(any(), eq(identityKeyPair), eq(authorizedKeyPair.getPublic()));
+        verify(networkService, never()).removeAuthorizedData(any(), any(), any());
     }
 
     private static void useDirectExecutor(Bisq1BridgeRequestService service) {

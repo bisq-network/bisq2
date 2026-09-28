@@ -36,7 +36,6 @@ import bisq.common.data.Result;
 import bisq.common.encoding.Hex;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -828,15 +827,7 @@ public class Bisq1BridgeRequestService implements Service,
     }
 
     private CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedBondedRole authorizedDistributedData) {
-        // Oracle nodes of earlier versions published it with the key pair of their network identity. Until no such data
-        // is valid anymore (AuthorizedData.LEGACY_OWNER_CUTOFF_DATE plus its TTL), we remove that copy as well.
-        Identity identity = identityService.getOrCreateDefaultIdentity();
-        CompletableFuture<BroadcastResult> removalOfLegacyCopy = networkService.removeAuthorizedData(
-                authorizedDistributedData,
-                identity.getNetworkIdWithKeyPair().getKeyPair(),
-                authorizedPublicKey);
-        return networkService.removeAuthorizedData(authorizedDistributedData, getAuthorizedKeyPair())
-                .thenCombine(removalOfLegacyCopy, (broadcastResult, broadcastResultOfLegacyCopy) -> broadcastResult);
+        return networkService.removeAuthorizedData(authorizedDistributedData, getAuthorizedKeyPair());
     }
 
     private KeyPair getAuthorizedKeyPair() {

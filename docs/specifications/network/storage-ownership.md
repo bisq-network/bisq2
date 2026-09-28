@@ -127,18 +127,16 @@ identity, not with their authorized key pair:
     request was created before the cutoff date `AuthorizedData.LEGACY_OWNER_CUTOFF_DATE` (2027-01-01 UTC).
 13. The cutoff date must be later than the date at which all oracle and seed nodes publish with their authorized key
     pair. Updated nodes reject data which an oracle node of an earlier version creates after the cutoff date.
-14. Until no data of rule 12 is valid anymore, oracle nodes remove a bonded role also with the key pair of their network
-    identity.
-15. At startup, oracle and seed nodes publish the data which they published with the key pair of their network identity
+14. At startup, oracle and seed nodes publish the data which they published with the key pair of their network identity
     again with their authorized key pair, and they remove the entries of their network identity. The remove request
     gets the next sequence number after the entry, the new entry a higher one. They do not publish data again whose
     owner has a remove request in the store, and they ignore expired entries.
-16. Oracle and seed nodes update to this version before the users. Applications of updated nodes do not get data which
+15. Oracle and seed nodes update to this version before the users. Applications of updated nodes do not get data which
     an oracle or seed node has not published with its authorized key pair yet (rule 11).
 
 Reasons:
 
-- Rule 12: oracle and seed nodes publish their data again from their own stores (rule 15). Some of this data has no
+- Rule 12: oracle and seed nodes publish their data again from their own stores (rule 14). Some of this data has no
   other source: oracle nodes do not publish timestamps, account age and signed witness data again, and they publish
   bonded roles again from their store. So the stores keep these entries until they expire. Applications do not use
   them (rule 11).
@@ -147,18 +145,18 @@ Reasons:
   latest at the cutoff date plus the time to live of its type.
 - The other authorized types (alerts, difficulty adjustment, minimum reputation score, release notifications, banned
   user profiles) have no transition: their publishers already use the authorized key pair.
-- Rule 14: nodes of earlier versions store one entry per data hash (storage key V1) and apply only a remove request of
-  the publisher of that entry.
-- Rule 15: without it, applications of updated nodes would miss the data of an oracle node until the oracle node
+- Rule 14: without it, applications of updated nodes would miss the data of an oracle node until the oracle node
   publishes it again: timestamps, account age and signed witness data only when users request them again. Nodes of
-  earlier versions accept for the same data hash only a higher sequence number. With the higher sequence number, they
-  replace the entry of the network identity with the one of the authorized key, in any order of arrival. Then they
-  also apply later remove requests of the authorized key. The remove request of the network identity stays in the
-  stores, so a replay of the removed entry is rejected.
-- Rule 16: the developers and operators control the oracle and seed nodes. So the migration of rule 15 can run before
+  earlier versions store one entry per data hash (storage key V1) and accept for it only a higher sequence number. With
+  the higher sequence number, they replace the entry of the network identity with the one of the authorized key, in
+  any order of arrival. Then they also apply later remove requests of the authorized key, so oracle nodes remove data
+  only with their authorized key pair. The remove request of the network identity stays in the stores, so a replay of
+  the removed entry is rejected, and nodes of earlier versions which missed the migration receive it with the
+  inventory.
+- Rule 15: the developers and operators control the oracle and seed nodes. So the migration of rule 14 can run before
   the users update.
 
-After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then rules 12 to 16,
+After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then rules 12 to 15,
 `isLegacyOwnerAccepted()` and `AuthorizedDataPublisherMigration` can be removed.
 
 ## Compatibility
@@ -170,7 +168,7 @@ After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then
   key. Applications use only the one of the authorized key (rule 11).
 - Nodes of earlier versions store authenticated data under storage key V1, which contains no owner key. They accept an
   add request of the authorized key only if its sequence number is higher than the one of the stored entry of the
-  network identity key. The migration (rule 15) gives it a higher one, so they replace the entry of the earlier
+  network identity key. The migration (rule 14) gives it a higher one, so they replace the entry of the earlier
   version.
 - An oracle node of an earlier version which publishes after the cutoff date is not accepted by updated nodes.
 
@@ -180,7 +178,7 @@ After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then
   of data of the transition types with a creation date before the cutoff date: for bonded roles until about
   2027-04-11. Updated nodes store and relay such copies until they expire, but applications do not use them (rule 11).
   - Why it cannot be removed now: the stores keep the entries of earlier versions until oracle and seed nodes have
-    migrated them (rule 15), and a store cannot tell these entries apart from copies.
+    migrated them (rule 14), and a store cannot tell these entries apart from copies.
   - What removes it: the cutoff date. After all oracle and seed nodes have migrated their data, an earlier cutoff date
     is possible.
   - Who decides: the developers, together with the operators of oracle and seed nodes.
@@ -202,7 +200,8 @@ After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then
   expiry.
 - The migration publishes the data again with the authorized key pair and a higher sequence number and removes the
   entry of the network identity. It runs once, does not publish data again which the owner removed, and ignores entries
-  of other publishers, data of other authorities and expired entries.
+  of other publishers, data of other authorities and expired entries. Oracle nodes remove bonded roles only with their
+  authorized key pair.
 - Persisted entries of another publisher are removed when a store is loaded. A refresh of such an entry is rejected.
 - A mailbox add request of another sender is rejected.
 - With the real MuSig offerbook: a copy of an offer which another user signs is rejected, the removal of that user does
@@ -215,4 +214,4 @@ After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then
 - [`storage-request-signatures.md`](storage-request-signatures.md): the signatures of the requests.
 - `OwnershipVerifiableData.getOwnerPubKeyHash()`, `AuthenticatedData.isOwner()`,
   `AuthenticatedSequentialData.isOwnerInvalid()`, `MailboxSequentialData.isSenderInvalid()`.
-- `StorageService` (rule 11), `AuthorizedDataPublisherMigration` (rule 15).
+- `StorageService` (rule 11), `AuthorizedDataPublisherMigration` (rule 14).
