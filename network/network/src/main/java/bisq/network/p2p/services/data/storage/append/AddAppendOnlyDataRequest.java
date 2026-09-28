@@ -109,15 +109,20 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
                     CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
                             .compose(1, request -> request.appendOnlyDataAny, DistributedDataAny.SCHEMA));
 
-    // Reproduces serializeForHash(): nodes of all versions must compute the same storage key.
-    public static final CanonicalSchema<AddAppendOnlyDataRequest> STORAGE_KEY_SCHEMA =
-            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
-                    CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
-                            // Canonical encoding is not yet supported for AppendOnlyData, as its implementations are
-                            // defined outside the network module. We use the protobuf serialization for hashes
-                            // instead: the Any with the type URL and the serializeForHash() bytes, as
-                            // getValueBuilder(true) writes it.
-                            .encodedMessage(1, request -> request.appendOnlyData.toAny(true).toByteArray()));
+    // STORAGE_KEY and PROOF_OF_WORK reproduce serializeForHash(): nodes of all versions must compute the same storage
+    // key and proof of work payload.
+    public static final CanonicalSchema<AddAppendOnlyDataRequest> STORAGE_KEY_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<AddAppendOnlyDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+
+    private static CanonicalSchema<AddAppendOnlyDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
+                CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
+                        // Canonical encoding is not yet supported for AppendOnlyData, as its implementations are
+                        // defined outside the network module. We use the protobuf serialization for hashes instead:
+                        // the Any with the type URL and the serializeForHash() bytes, as getValueBuilder(true) writes
+                        // it.
+                        .encodedMessage(1, request -> request.appendOnlyData.toAny(true).toByteArray()));
+    }
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
@@ -125,6 +130,7 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

@@ -35,4 +35,9 @@ public enum EncodingPurpose {
      * The preimage of a storage key: the bytes that are hashed to the key under which an object is stored.
      */
     STORAGE_KEY,
+    /**
+     * The preimage of the proof of work payload of a network message: the bytes of the message that the proof of work
+     * of the message's authorization token binds to the message.
+     */
+    PROOF_OF_WORK,
 }

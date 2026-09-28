@@ -24,9 +24,10 @@ other modules) map to canonical messages is specified in
   implements it as well.
 - The classes with fields annotated with `@ExcludeForHash` (`MailboxData`, the add, remove, and
   refresh requests of authenticated data, and the add and remove requests of mailbox data) leave
-  these fields out of their `STORAGE_KEY` schemas. Because the purpose reaches nested objects, the
-  `STORAGE_KEY` encodings of all storage classes equal their `serializeForHash()`, except for
-  `AuthorizedData`.
+  these fields out of their `STORAGE_KEY` and `PROOF_OF_WORK` schemas. Because the purpose reaches
+  nested objects, the `STORAGE_KEY` encodings of all storage classes equal their `serializeForHash()`,
+  except for `AuthorizedData`. The `PROOF_OF_WORK` encodings of the messages (all `DataRequest` types
+  and `ConfidentialMessage`) equal their `serializeForHash()` without exception.
 - The `SIGNATURE` purpose of the add and remove requests is the preimage of signature V2 (see
   [`../network/storage-request-signatures.md`](../network/storage-request-signatures.md)). These
   requests and `MailboxData` have a `SIGNATURE_V2_SCHEMA` that contains their `@ExcludeForHash`
@@ -37,8 +38,9 @@ other modules) map to canonical messages is specified in
   Switching such a call site is a protocol change; see [Changing an encoding](#changing-an-encoding).
 - Classes of higher-level modules (for example offers, user profiles, chat messages) have no canonical
   encoding yet. The network classes hold them in a `google.protobuf.Any` and keep the received bytes of
-  that `Any`. The `DEFAULT` and `SIGNATURE` purposes contain these bytes; the `STORAGE_KEY` purpose
-  contains the protobuf serialization for hashes; see [Data of other modules](#data-of-other-modules).
+  that `Any`. The `DEFAULT` and `SIGNATURE` purposes contain these bytes; the `STORAGE_KEY` and
+  `PROOF_OF_WORK` purposes contain the protobuf serialization for hashes; see
+  [Data of other modules](#data-of-other-modules).
 
 Out of scope: protobuf serialization of network messages and persisted data, and preimages built by
 explicit byte concatenation. Persisted containers get no canonical encoding, because no hash or
@@ -71,8 +73,8 @@ The bytes must not depend on the protobuf runtime, on the iteration order of an 
 on object identity, on caches, or on the thread, locale, or time. Data of higher-level modules is the
 exception (see [Data of other modules](#data-of-other-modules)): its kept bytes are part of the object
 state and are written unchanged, but they were produced by a protobuf serialization, and the
-`STORAGE_KEY` purpose uses its protobuf serialization for hashes until those classes support canonical
-encoding.
+`STORAGE_KEY` and `PROOF_OF_WORK` purposes use its protobuf serialization for hashes until those
+classes support canonical encoding.
 
 ### Complete encoding
 
@@ -86,7 +88,7 @@ The default encoding is not identical to `serializeForHash()`:
 
 - `serializeForHash()` omits fields annotated with `@ExcludeForHash` (for example `metaData` and
   `version` of the remove, refresh, and mailbox classes). The default encoding contains them. The
-  `STORAGE_KEY` encodings leave them out (see [Encoding purpose](#encoding-purpose)).
+  `STORAGE_KEY` and `PROOF_OF_WORK` encodings leave them out (see [Encoding purpose](#encoding-purpose)).
 - `AuthorizedData.serializeForHash()` omits the signature, so that republishing keeps the storage key.
   All canonical encodings of `AuthorizedData` contain the signature (see
   [Unresolved questions](#unresolved-questions)).
@@ -107,10 +109,16 @@ Other nodes compare these hashes and verify these signatures; one differing byte
 verification, storage keys, and proof of work verification between node versions.
 
 The `STORAGE_KEY` encodings of the storage classes equal their `serializeForHash()`, except for
-`AuthorizedData`. The storage key of `AuthorizedData`, the proof of work payload, and the inventory order
-therefore have no purpose with identical bytes yet (see
-[Unresolved questions](#unresolved-questions)). A call site without such a purpose needs a new
-purpose-specific schema or an activation.
+`AuthorizedData`. The storage key of `AuthorizedData` and the inventory order therefore have no purpose
+with identical bytes yet (see [Unresolved questions](#unresolved-questions)). A call site without such a
+purpose needs a new purpose-specific schema or an activation.
+
+The `PROOF_OF_WORK` encoding of a message equals `serializeForHash()` of the message, which is the
+proof of work payload that nodes of all versions compute. `AuthorizedData` is no exception here: in a
+proof of work payload it is always nested in a request, where `toProto(true)` contains its signature.
+Only the messages of the data storage and `ConfidentialMessage` have a canonical encoding. The proof of
+work call site can therefore switch to canonical encoding only after all other network message types
+have one, or for these messages alone.
 
 The `SIGNATURE` encodings contain the exact bytes of data of higher-level modules and the
 `@ExcludeForHash` fields of the network classes. They are therefore not identical to the preimages of
@@ -272,10 +280,11 @@ encodes the data per purpose:
   writes. They contain the fields annotated with `@ExcludeForHash` and the fields that the node does not
   know. A signature over them therefore covers every field of the data, and a node that does not know a
   field computes the same bytes as the signer. The type URL keeps the type of the data in the preimage.
-- `STORAGE_KEY`: the protobuf serialization for hashes, in an `encodedMessage` field, with a comment
-  that canonical encoding is not yet supported: the `google.protobuf.Any` that `toAny(true)` returns. It
-  contains the type URL and the `serializeForHash()` bytes, exactly as the protobuf hash serialization
-  of the holder contains it. Nodes of all versions must compute the same storage key.
+- `STORAGE_KEY` and `PROOF_OF_WORK`: the protobuf serialization for hashes, in an `encodedMessage`
+  field, with a comment that canonical encoding is not yet supported: the `google.protobuf.Any` that
+  `toAny(true)` returns. It contains the type URL and the `serializeForHash()` bytes, exactly as the
+  protobuf hash serialization of the holder contains it. Nodes of all versions must compute the same
+  storage key and proof of work payload.
 
 Both encodings are implemented once where the data is held: in the base class `AuthenticatedData` for
 `DistributedData` (for `DefaultAuthenticatedData` and `AuthorizedData`), and in
@@ -298,9 +307,11 @@ different purpose.
 | `DEFAULT` | The complete encoding of an object, with all its encoded fields. Used when no specific purpose applies. |
 | `SIGNATURE` | The bytes that are signed and verified: the preimage of signature V2 of the storage requests. Signature V1 does not use it (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
 | `STORAGE_KEY` | The bytes that are hashed to the storage key of an object, for example the `AuthenticatedData` of an `AddAuthenticatedDataRequest`. |
+| `PROOF_OF_WORK` | The bytes of a network message to which the proof of work of the message's authorization token is bound, for example an `AddAuthenticatedDataRequest` with its `EnvelopePayloadMessage` envelope. The proof of work does not use it yet (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
 
-`SIGNATURE` and `STORAGE_KEY` are the hash purposes: their preimages are hashed or signed. Nodes
-compute the storage keys and the preimages of signature V1 with `serializeForHash()`.
+`SIGNATURE`, `STORAGE_KEY`, and `PROOF_OF_WORK` are the hash purposes: their preimages are hashed or
+signed. Nodes compute the storage keys, the preimages of signature V1, and the proof of work payloads
+with `serializeForHash()`.
 
 Rules:
 
@@ -321,9 +332,9 @@ Rules:
 - An implementation selects its schema with a `switch` over all purposes, without a `default` branch.
   A new purpose then does not compile until every class has decided its encoding for it. A class
   without a specific encoding for a purpose uses its default schema.
-- Fields annotated with `@ExcludeForHash` are left out of the `STORAGE_KEY` schemas, as
-  `serializeForHash()` leaves them out. The `DEFAULT` schema contains them. A comment at the schema
-  names the left-out fields and their annotation. An annotation with `excludeOnlyInVersions` is
+- Fields annotated with `@ExcludeForHash` are left out of the `STORAGE_KEY` and `PROOF_OF_WORK`
+  schemas, as `serializeForHash()` leaves them out. The `DEFAULT` schema contains them. A comment at
+  the schema names the left-out fields and their annotation. An annotation with `excludeOnlyInVersions` is
   reproduced with the same version condition, based on the version that `getVersion()` of the object
   returns. With these schemas, the `STORAGE_KEY` purpose reproduces the existing storage keys.
 - The `SIGNATURE` purpose is the preimage of signature V2, which has no legacy bytes. Its schemas
@@ -332,8 +343,8 @@ Rules:
   is signed for.
 - Exception: data of higher-level modules. Its fields cannot be left out of the kept bytes without
   decoding and encoding the data again, which loses the fields that the node does not know. The
-  `SIGNATURE` purpose contains the kept bytes completely; the `STORAGE_KEY` purpose uses the hash
-  serialization (see [Data of other modules](#data-of-other-modules)).
+  `SIGNATURE` purpose contains the kept bytes completely; the `STORAGE_KEY` and `PROOF_OF_WORK`
+  purposes use the hash serialization (see [Data of other modules](#data-of-other-modules)).
 - The encoding of an object for a purpose applies wherever the object appears in a preimage for that
   purpose, also as a nested object. It may therefore leave out only data that no preimage of that
   purpose must protect. In particular, it must not leave out the object's own signature if an enclosing
@@ -363,18 +374,23 @@ Rationale:
 
 Security note on `@ExcludeForHash`: a field that a hash purpose leaves out is not protected by a hash
 or signature of that purpose. The annotation keeps hashes compatible with nodes that do not know a
-field, and the `STORAGE_KEY` purpose reproduces it only for byte parity. In `MailboxData`,
-`RemoveAuthenticatedDataRequest`, and `RemoveMailboxRequest`, the `version` also decides whether
-`metaData` is left out, so in versions 1 to 3 signature V1 protects neither. Signature V2 covers
-`version`. A preimage without legacy bytes must not repeat such exclusions without a reason.
+field, and the `STORAGE_KEY` and `PROOF_OF_WORK` purposes reproduce it only for byte parity. In
+`MailboxData`, `RemoveAuthenticatedDataRequest`, and `RemoveMailboxRequest`, the `version` also decides
+whether `metaData` is left out, so in versions 1 to 3 signature V1 protects neither. Signature V2
+covers `version`. The proof of work payload does not bind the `@ExcludeForHash` fields either: a proof
+of work stays valid when they change. The receiver computes the expected cost from the message that it
+received ([`../network/message-cost.md`](../network/message-cost.md)), so a change does not lower the
+cost that the receiver expects. A preimage without legacy bytes must not repeat such exclusions without
+a reason.
 
 Current state: `MailboxData`, `AddAuthenticatedDataRequest`, `RemoveAuthenticatedDataRequest`,
-`AddMailboxRequest`, and `RemoveMailboxRequest` use a `SIGNATURE_V2_SCHEMA` for `SIGNATURE` and a
-`STORAGE_KEY_SCHEMA` without their `@ExcludeForHash` fields. `RefreshAuthenticatedDataRequest` has no
-preimage of its own; it uses `DEFAULT_SCHEMA` for `DEFAULT` and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA`.
-`DefaultAuthenticatedData`, `AuthorizedData`, and `AddAppendOnlyDataRequest` use `DEFAULT_SCHEMA` for
-`DEFAULT` and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA` with the hash serialization of the data of the
-higher-level module. All other implementations use `DEFAULT_SCHEMA` for all three purposes. Every
+`AddMailboxRequest`, and `RemoveMailboxRequest` use a `SIGNATURE_V2_SCHEMA` for `SIGNATURE`, and a
+`STORAGE_KEY_SCHEMA` and a `PROOF_OF_WORK_SCHEMA` without their `@ExcludeForHash` fields.
+`RefreshAuthenticatedDataRequest` has no preimage of its own; it uses `DEFAULT_SCHEMA` for `DEFAULT`
+and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA` and a `PROOF_OF_WORK_SCHEMA`. `DefaultAuthenticatedData`,
+`AuthorizedData`, and `AddAppendOnlyDataRequest` use `DEFAULT_SCHEMA` for `DEFAULT` and `SIGNATURE`,
+and a `STORAGE_KEY_SCHEMA` and a `PROOF_OF_WORK_SCHEMA` with the hash serialization of the data of the
+higher-level module. All other implementations use `DEFAULT_SCHEMA` for all purposes. Every
 implementation passes the purpose on.
 
 ## Schema metadata without effect on the bytes
@@ -507,19 +523,20 @@ the first schema that uses the feature, and an update of this specification.
 
 - **Purpose-specific schemas for the existing call sites.** Before a storage key, signature, proof of
   work payload, or inventory order uses canonical encoding, it needs a purpose whose encoding reproduces
-  the bytes of `serializeForHash()`, or an activation of new bytes. The hash purposes reproduce
-  `serializeForHash()` for the storage classes, except for `AuthorizedData`. Because the purpose is
-  passed to nested objects, the schema of a class for a purpose applies at every depth.
+  the bytes of `serializeForHash()`, or an activation of new bytes. The `STORAGE_KEY` purpose
+  reproduces `serializeForHash()` for the storage classes, except for `AuthorizedData`, and the
+  `PROOF_OF_WORK` purpose reproduces it for every message. Because the purpose is passed to nested
+  objects, the schema of a class for a purpose applies at every depth.
   `AuthorizedData.serializeForHash()` leaves out the signature only where `AuthorizedData` is the root
   of the preimage (the storage key). Where it is nested (the signature preimage of
   `AddAuthenticatedDataRequest`, the proof of work payload, the inventory order), `toProto(true)`
   contains the signature. A `STORAGE_KEY` schema of `AuthorizedData` without the signature is
   therefore correct only while `STORAGE_KEY` is used for storage keys alone. The proof of work payload
-  and the inventory order have no purpose yet.
+  has the `PROOF_OF_WORK` purpose. The inventory order has no purpose yet.
 - **Canonical encoding of data of higher-level modules.** Signatures do not need it: the `SIGNATURE`
-  purpose contains the kept bytes. The `STORAGE_KEY` purpose still uses the protobuf serialization for
-  hashes. Replacing it changes storage keys, unless the canonical bytes reproduce the protobuf hash
-  serialization.
+  purpose contains the kept bytes. The `STORAGE_KEY` and `PROOF_OF_WORK` purposes still use the
+  protobuf serialization for hashes. Replacing it changes storage keys and proof of work payloads,
+  unless the canonical bytes reproduce the protobuf hash serialization.
 - **Explicit presence.** `optional` fields whose present value can be the default need framework
   support.
 - **Enforcement of `oneof` alternatives.** The framework cannot express that a group of fields is a

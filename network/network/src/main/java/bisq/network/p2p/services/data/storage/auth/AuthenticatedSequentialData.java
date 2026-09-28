@@ -107,6 +107,7 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> DEFAULT_SCHEMA;
             case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case PROOF_OF_WORK -> DEFAULT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
