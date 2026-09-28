@@ -403,6 +403,15 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
     }
 
 
+    // Oracle and seed nodes of earlier versions published their authorized data with the key pair of their network
+    // identity. This publishes it again with the authorized key pair (see
+    // docs/specifications/network/storage-ownership.md). Only for oracle and seed nodes.
+    public void migratePublisherOfAuthorizedData(KeyPair earlierPublisherKeyPair, KeyPair authorizedKeyPair) {
+        dataService.ifPresent(dataService ->
+                dataService.migratePublisherOfAuthorizedData(earlierPublisherKeyPair, authorizedKeyPair));
+    }
+
+
     /* --------------------------------------------------------------------- */
     // AppendOnlyData
     /* --------------------------------------------------------------------- */
