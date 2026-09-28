@@ -137,8 +137,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             // Add sequence numbers are signed in both versions; only V1 removals have an untrusted sequence.
-            if (requestFromMap != null &&
-                    (requestFromMap instanceof AddAuthenticatedDataRequest || requestFromMap.isSignatureV2Present()) &&
+            boolean isRequestFromMapWasAdd = requestFromMap instanceof AddAuthenticatedDataRequest;
+            boolean isRequestFromMapWasRemoveAndV2 = requestFromMap instanceof RemoveAuthenticatedDataRequest && requestFromMap.isSignatureV2Present();
+            if ((isRequestFromMapWasAdd || isRequestFromMapWasRemoveAndV2) &&
                     request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
