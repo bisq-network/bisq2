@@ -55,7 +55,8 @@ class InventoryFilterFactory {
                 .forEach(inventoryFilterType -> {
                     switch (inventoryFilterType) {
                         case HASH_SET:
-                            mySupportedFilterServices.put(inventoryFilterType, new HashSetFilterService(storageService, maxSize));
+                            mySupportedFilterServices.put(inventoryFilterType,
+                                    new HashSetFilterService(storageService, maxSize, inventoryFilterType));
                             break;
                         case MINI_SKETCH:
                             //  map.put(inventoryFilterType, new MiniSketchFilterService(storageService, maxSize));

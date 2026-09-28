@@ -47,11 +47,7 @@ public final class HashSetFilter extends InventoryFilter {
     // As creating the HashSet at each request costs resources we cache it.
     private transient Set<HashSetFilterEntry> filterEntriesAsSet;
 
-    public HashSetFilter(List<HashSetFilterEntry> filterEntries) {
-        this(InventoryFilterType.HASH_SET, filterEntries);
-    }
-
-    private HashSetFilter(InventoryFilterType inventoryFilterType, List<HashSetFilterEntry> filterEntries) {
+    public HashSetFilter(InventoryFilterType inventoryFilterType, List<HashSetFilterEntry> filterEntries) {
         super(inventoryFilterType);
 
         this.filterEntries = filterEntries;

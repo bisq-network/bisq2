@@ -31,6 +31,7 @@ import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.inventory.InventoryRequest;
 import bisq.network.p2p.services.data.inventory.InventoryResponse;
+import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilter;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -142,7 +143,7 @@ class MessageCostPolicyTest {
                 Arguments.of(new NetworkLoadExchangeResponse(1, networkLoad), 0.05),
                 Arguments.of(new PeerExchangeRequest(1, new ArrayList<>()), 0.1),
                 Arguments.of(new PeerExchangeResponse(1, new ArrayList<>()), 0.1),
-                Arguments.of(new InventoryRequest(new HashSetFilter(new ArrayList<>()), 1), 0.25),
+                Arguments.of(new InventoryRequest(new HashSetFilter(InventoryFilterType.HASH_SET, new ArrayList<>()), 1), 0.25),
                 Arguments.of(new InventoryResponse(new Inventory(List.of(), false), 1), 0.1),
                 Arguments.of(new ReportRequest("request"), 0.5),
                 Arguments.of(new ReportResponse("request", report), 0.2));

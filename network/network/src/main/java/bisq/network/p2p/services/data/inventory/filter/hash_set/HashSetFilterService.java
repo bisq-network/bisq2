@@ -36,8 +36,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class HashSetFilterService extends FilterService<HashSetFilter> {
-    public HashSetFilterService(StorageService storageService, int maxSize) {
+    private final InventoryFilterType inventoryFilterType;
+
+    public HashSetFilterService(StorageService storageService, int maxSize, InventoryFilterType inventoryFilterType) {
         super(storageService, maxSize);
+        this.inventoryFilterType = inventoryFilterType;
     }
 
     public HashSetFilter getFilter() {
@@ -50,13 +53,13 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
             log.warn("We limited the number of filter entries we send in our inventory request to {}",
                     HashSetFilter.MAX_ENTRIES);
         }
-        return new HashSetFilter(filterEntries);
+        return new HashSetFilter(inventoryFilterType, filterEntries);
     }
 
     @Override
     protected HashSetFilter safeCast(InventoryFilter inventoryFilter) {
         if (inventoryFilter instanceof HashSetFilter
-                && inventoryFilter.getInventoryFilterType() == InventoryFilterType.HASH_SET) {
+                && inventoryFilter.getInventoryFilterType() == inventoryFilterType) {
             return (HashSetFilter) inventoryFilter;
         }
         throw new IllegalArgumentException("InventoryFilter not of expected type. inventoryFilter=" + inventoryFilter);
