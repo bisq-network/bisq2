@@ -21,13 +21,12 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 
@@ -35,7 +34,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @ToString
 @Getter
 @EqualsAndHashCode
-public final class MuSigOfferMessage implements DistributedData {
+public final class MuSigOfferMessage implements OwnedDistributedData {
     public static final MetaData META_DATA = new MetaData(TTL_2_DAYS, MuSigOfferMessage.class.getSimpleName());
     private final MuSigOffer offer;
 
@@ -87,7 +86,7 @@ public final class MuSigOfferMessage implements DistributedData {
     // The maker owns the offer. Otherwise another user could publish a copy of the offer and remove it, and the
     // offerbook would remove the offer of the maker (see docs/specifications/network/storage-ownership.md).
     @Override
-    public Optional<byte[]> findOwnerPubKeyHash() {
-        return Optional.of(offer.getMakerNetworkId().getPubKey().getHash());
+    public byte[] getOwnerPubKeyHash() {
+        return offer.getMakerPubKeyHash();
     }
 }

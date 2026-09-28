@@ -24,6 +24,7 @@ import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.OwnedDistributedData;
 import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,7 +40,7 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
+public abstract class PublicChatMessage extends ChatMessage implements OwnedDistributedData {
     protected transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
 
     protected PublicChatMessage(String messageId,
@@ -69,8 +70,8 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
 
     // The author owns the message. The profile ID is the ID of the public key of the author (PubKey.getId()).
     @Override
-    public Optional<byte[]> findOwnerPubKeyHash() {
-        return PubKey.findHashFromId(authorUserProfileId);
+    public byte[] getOwnerPubKeyHash() {
+        return PubKey.getHashFromId(authorUserProfileId);
     }
 
     @Override

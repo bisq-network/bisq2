@@ -27,8 +27,6 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
@@ -104,12 +102,5 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
     @Override
     public boolean isDataInvalid() {
         return distributedData.isDataInvalid();
-    }
-
-    // The owner which the distributed data names. Data which does not name its owner, like authorized data, cannot be
-    // stored as default authenticated data.
-    @Override
-    public Optional<byte[]> findOwnerPubKeyHash() {
-        return distributedData.findOwnerPubKeyHash();
     }
 }

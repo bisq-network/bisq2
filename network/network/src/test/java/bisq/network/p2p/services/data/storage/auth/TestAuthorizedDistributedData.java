@@ -19,16 +19,12 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.security.PublicKey;
-import java.util.Optional;
-
 /**
- * Minimal AuthorizedDistributedData for storage tests, serialized like TestDistributedData. The owner which the data
- * names is not serialized.
+ * Minimal AuthorizedDistributedData for storage tests, serialized like TestDistributedData. It names no owner, so its
+ * authorized key owns it.
  */
 @EqualsAndHashCode
 public final class TestAuthorizedDistributedData implements AuthorizedDistributedData {
@@ -38,29 +34,20 @@ public final class TestAuthorizedDistributedData implements AuthorizedDistribute
     @Getter
     private final String content;
     @EqualsAndHashCode.Exclude
-    private final Optional<byte[]> ownerPubKeyHash;
-    @EqualsAndHashCode.Exclude
     private final boolean legacyOwnerAccepted;
 
-    // Data which its authorized key owns
     TestAuthorizedDistributedData(String content) {
-        this(content, Optional.empty(), false);
+        this(content, false);
     }
 
-    private TestAuthorizedDistributedData(String content, Optional<byte[]> ownerPubKeyHash, boolean legacyOwnerAccepted) {
+    private TestAuthorizedDistributedData(String content, boolean legacyOwnerAccepted) {
         this.content = content;
-        this.ownerPubKeyHash = ownerPubKeyHash;
         this.legacyOwnerAccepted = legacyOwnerAccepted;
-    }
-
-    // Data which names its owner, like AuthorizedOracleNode
-    static TestAuthorizedDistributedData withOwner(String content, PublicKey owner) {
-        return new TestAuthorizedDistributedData(content, Optional.of(DigestUtil.hash(owner.getEncoded())), false);
     }
 
     // Data of a type which oracle nodes of earlier versions published with the key of their network identity
     static TestAuthorizedDistributedData withLegacyOwners(String content) {
-        return new TestAuthorizedDistributedData(content, Optional.empty(), true);
+        return new TestAuthorizedDistributedData(content, true);
     }
 
     @Override
@@ -85,11 +72,6 @@ public final class TestAuthorizedDistributedData implements AuthorizedDistribute
     @Override
     public boolean isDataInvalid() {
         return false;
-    }
-
-    @Override
-    public Optional<byte[]> findOwnerPubKeyHash() {
-        return ownerPubKeyHash;
     }
 
     @Override

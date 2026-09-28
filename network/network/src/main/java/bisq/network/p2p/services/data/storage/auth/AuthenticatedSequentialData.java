@@ -122,10 +122,7 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
     // docs/specifications/network/storage-ownership.md).
     public boolean isOwnerInvalid() {
         try {
-            boolean isOwner = authenticatedData.findOwnerPubKeyHash()
-                    .map(ownerPubKeyHash -> Arrays.equals(ownerPubKeyHash, pubKeyHash))
-                    .orElse(false);
-            return !isOwner && !authenticatedData.isOtherOwnerAccepted(created);
+            return !authenticatedData.isOwner(pubKeyHash) && !authenticatedData.isOtherOwnerAccepted(created);
         } catch (Exception e) {
             log.warn("Checking the owner failed", e);
             return true;

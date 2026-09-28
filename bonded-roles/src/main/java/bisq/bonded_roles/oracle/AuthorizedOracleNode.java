@@ -27,6 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnedDistributedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -34,7 +35,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
@@ -44,7 +44,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedOracleNode implements AuthorizedDistributedData {
+public final class AuthorizedOracleNode implements AuthorizedDistributedData, OwnedDistributedData {
     private static final int VERSION = 1;
 
     public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, AuthorizedOracleNode.class.getSimpleName(), MAX_MAP_SIZE_100);
@@ -163,8 +163,8 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
 
     // The oracle node publishes its own data with the key of its network ID, not with its authorized key
     @Override
-    public Optional<byte[]> findOwnerPubKeyHash() {
-        return Optional.of(networkId.getPubKey().getHash());
+    public byte[] getOwnerPubKeyHash() {
+        return networkId.getPubKeyHash();
     }
 
     @Override

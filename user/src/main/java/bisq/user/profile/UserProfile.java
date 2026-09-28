@@ -29,6 +29,7 @@ import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnedDistributedData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
@@ -43,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
@@ -57,7 +57,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
-public final class UserProfile implements DistributedData, PublishDateAware {
+public final class UserProfile implements OwnedDistributedData, PublishDateAware {
     public static final long TTL = TTL_15_DAYS;
     public static final int VERSION = 1;
     public static final int MAX_LENGTH_NICK_NAME = 100;
@@ -212,8 +212,8 @@ public final class UserProfile implements DistributedData, PublishDateAware {
 
     // The profile is owned by the key of its network ID
     @Override
-    public Optional<byte[]> findOwnerPubKeyHash() {
-        return Optional.of(networkId.getPubKey().getHash());
+    public byte[] getOwnerPubKeyHash() {
+        return getPubKeyHash();
     }
 
     public boolean isProofOfWorkInvalid() {
@@ -225,7 +225,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     public byte[] getPubKeyHash() {
-        return networkId.getPubKey().getHash();
+        return networkId.getPubKeyHash();
     }
 
     public String getPubKeyAsHex() {

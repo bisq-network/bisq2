@@ -61,7 +61,8 @@ class AuthenticatedDataSignatureV2Test {
                 "owner",
                 STORE_KEY);
         ownerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+        authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content",
+                ownerKeyPair.getPublic()));
     }
 
     @Test

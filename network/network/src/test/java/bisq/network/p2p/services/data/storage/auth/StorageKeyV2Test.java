@@ -99,7 +99,8 @@ class StorageKeyV2Test {
     // refresh requests hash, does not. Both authenticated data types must give the same key for all request types.
     @Test
     void addRemoveAndRefreshRequestsOfOneOwnerHaveTheSameStorageKey() throws GeneralSecurityException {
-        for (AuthenticatedData authenticatedData : List.of(new DefaultAuthenticatedData(new TestDistributedData("content")),
+        for (AuthenticatedData authenticatedData : List.of(
+                new DefaultAuthenticatedData(new TestDistributedData("content", ownerKeyPair.getPublic())),
                 getAuthorizedDataWithSignature())) {
             AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
             RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
@@ -115,7 +116,8 @@ class StorageKeyV2Test {
 
     @Test
     void storageKeyContainsTheOwnerPublicKey() throws GeneralSecurityException {
-        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content",
+                ownerKeyPair.getPublic()));
         AddAuthenticatedDataRequest ownerRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         AddAuthenticatedDataRequest otherRequest = AddAuthenticatedDataRequest.from(store,
                 authenticatedData,
@@ -147,7 +149,8 @@ class StorageKeyV2Test {
     // Earlier versions persisted the entries under storage key V1
     @Test
     void persistedEntriesAreStoredUnderTheirCurrentStorageKey() throws GeneralSecurityException {
-        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content"));
+        AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content",
+                ownerKeyPair.getPublic()));
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         DataStore<AuthenticatedDataRequest> persisted = store.getPersistableStore();
         persisted.getMap().put(addRequest.getStorageKeyV1(), addRequest);

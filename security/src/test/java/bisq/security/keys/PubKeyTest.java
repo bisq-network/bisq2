@@ -22,19 +22,23 @@ import org.junit.jupiter.api.Test;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PubKeyTest {
-    // Chat messages name their author by the ID of the author's public key. The storage compares the hash, so the ID
-    // of a hash must be unique.
+    // Chat messages name their author by the ID of the author's public key. The storage compares the hash, so a hash
+    // must have only one ID.
     @Test
-    void findHashFromIdAcceptsOnlyIdsWhichGetIdCreates() {
+    void onlyIdsWhichGetIdCreatesAreIds() {
         PubKey pubKey = new PubKey(KeyGeneration.generateDefaultEcKeyPair().getPublic(), "keyId");
         String id = pubKey.getId();
 
-        assertArrayEquals(pubKey.getHash(), PubKey.findHashFromId(id).orElseThrow());
-        assertTrue(PubKey.findHashFromId(id.toUpperCase(Locale.ROOT)).isEmpty());
-        assertTrue(PubKey.findHashFromId(id.substring(1)).isEmpty());
-        assertTrue(PubKey.findHashFromId("z" + id.substring(1)).isEmpty());
+        assertTrue(PubKey.isId(id));
+        assertArrayEquals(pubKey.getHash(), PubKey.getHashFromId(id));
+        assertFalse(PubKey.isId(id.toUpperCase(Locale.ROOT)));
+        assertFalse(PubKey.isId(id.substring(1)));
+        assertFalse(PubKey.isId("z" + id.substring(1)));
+        assertThrows(IllegalArgumentException.class, () -> PubKey.getHashFromId(id.toUpperCase(Locale.ROOT)));
     }
 }

@@ -20,8 +20,6 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.proto.NetworkProto;
 import com.google.protobuf.Any;
 
-import java.util.Optional;
-
 // Interface for any data which gets distributed to the P2P network. Usually data from outside the network module 
 // like Offer, ChatMessage,...
 public interface DistributedData extends NetworkProto {
@@ -40,13 +38,6 @@ public interface DistributedData extends NetworkProto {
     }
 
     // Validates the content of the data. The storage checks separately whether the publisher is the owner (see
-    // findOwnerPubKeyHash()).
+    // OwnedDistributedData).
     boolean isDataInvalid();
-
-    // The hash of the public key of the owner, if the data names its owner in its own fields, for example the author
-    // of a chat message or the maker of an offer. Only the owner can publish the data in the network storage, and in
-    // the authenticated data store only the owner can refresh and remove it. The authenticated data store accepts data
-    // without an owner only as authorized data, which its authorized key owns
-    // (see docs/specifications/network/storage-ownership.md).
-    Optional<byte[]> findOwnerPubKeyHash();
 }

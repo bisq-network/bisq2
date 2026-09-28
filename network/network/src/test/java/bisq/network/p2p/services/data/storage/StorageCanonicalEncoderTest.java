@@ -514,12 +514,6 @@ public class StorageCanonicalEncoderTest {
             return false;
         }
 
-        // Both interfaces declare a default
-        @Override
-        public Optional<byte[]> findOwnerPubKeyHash() {
-            return Optional.empty();
-        }
-
 
         private static final CanonicalSchema<ExternalData> DEFAULT_SCHEMA = CanonicalSchema.<ExternalData>newBuilder()
                 .sint32(2, data -> data.priority)
@@ -575,11 +569,6 @@ public class StorageCanonicalEncoderTest {
         @Override
         public boolean isDataInvalid() {
             return false;
-        }
-
-        @Override
-        public Optional<byte[]> findOwnerPubKeyHash() {
-            return Optional.empty();
         }
     }
 }

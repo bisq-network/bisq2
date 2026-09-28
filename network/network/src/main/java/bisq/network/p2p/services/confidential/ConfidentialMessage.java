@@ -23,8 +23,8 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnedDistributedData;
 import bisq.security.ConfidentialData;
 import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
@@ -32,13 +32,11 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class ConfidentialMessage implements EnvelopePayloadMessage, DistributedData, Canonical {
+public final class ConfidentialMessage implements EnvelopePayloadMessage, OwnedDistributedData, Canonical {
     private final ConfidentialData confidentialData;
     private final String receiverKeyId;
 
@@ -121,8 +119,7 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
 
     // The sender owns the message. In the mailbox store, the sender signs the add request.
     @Override
-    public Optional<byte[]> findOwnerPubKeyHash() {
-        return Optional.ofNullable(confidentialData)
-                .map(data -> DigestUtil.hash(data.getSenderPublicKey()));
+    public byte[] getOwnerPubKeyHash() {
+        return DigestUtil.hash(confidentialData.getSenderPublicKey());
     }
 }

@@ -52,7 +52,6 @@ import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -516,12 +515,6 @@ public class DistributedDataAnyTest {
             return false;
         }
 
-        // Both interfaces declare a default
-        @Override
-        public Optional<byte[]> findOwnerPubKeyHash() {
-            return Optional.empty();
-        }
-
         // common.proto: message Region { string code = 1; string name = 2; }
         private static final CanonicalSchema<Region> REGION_SCHEMA = CanonicalSchema.<Region>newBuilder()
                 .string(1, Region::getCode)
@@ -599,12 +592,6 @@ public class DistributedDataAnyTest {
         @Override
         public boolean isDataInvalid() {
             return false;
-        }
-
-        // Both interfaces declare a default
-        @Override
-        public Optional<byte[]> findOwnerPubKeyHash() {
-            return Optional.empty();
         }
 
         private static final CanonicalSchema<PayloadData> DEFAULT_SCHEMA = CanonicalSchema.<PayloadData>newBuilder()

@@ -25,6 +25,7 @@ import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
+import bisq.network.p2p.services.data.storage.OwnedDistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -238,9 +239,11 @@ public final class AuthorizedData extends AuthenticatedData {
     // the owner of the add request, so the authorized key must own the data: otherwise anyone could publish and remove
     // a copy of it.
     @Override
-    public Optional<byte[]> findOwnerPubKeyHash() {
-        return distributedData.findOwnerPubKeyHash()
-                .or(() -> Optional.of(DigestUtil.hash(authorizedPublicKeyBytes)));
+    public boolean isOwner(byte[] pubKeyHash) {
+        byte[] ownerPubKeyHash = distributedData instanceof OwnedDistributedData ownedDistributedData
+                ? ownedDistributedData.getOwnerPubKeyHash()
+                : DigestUtil.hash(authorizedPublicKeyBytes);
+        return Arrays.equals(ownerPubKeyHash, pubKeyHash);
     }
 
     @Override

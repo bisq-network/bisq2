@@ -31,8 +31,10 @@ compare both before it accepts the data.
 
 ### The data names its owner
 
-1. Each `DistributedData` type declares the owner hash of the data if the data names its owner in its own fields
-   (`findOwnerPubKeyHash()`). A type must decide this; there is no default for `DistributedData`.
+1. A `DistributedData` type whose data names its owner in its own fields implements `OwnedDistributedData`. Its
+   method `getOwnerPubKeyHash()` returns the owner hash. Types whose data names no owner do not implement it.
+   The methods of `NetworkService` which publish, refresh and remove default authenticated data accept only
+   `OwnedDistributedData`, so the compiler rejects a type which cannot have an owner there.
 
    | Data | Owner |
    | --- | --- |
@@ -44,6 +46,7 @@ compare both before it accepts the data.
    | `AuthorizedOracleNode` | the key of its network ID |
    | other authorized data | none: the authorized key is the owner (rule 4) |
    | `AccountTimestamp` | none: it is published only inside `AuthorizedAccountTimestamp` |
+   | append-only data | none: it is not signed and cannot be removed |
 
 2. A profile ID names the owner hash only if it is the lower-case hex encoding of the hash, as `PubKey.getId()` creates
    it. Otherwise the data names no owner.
@@ -176,5 +179,5 @@ After the cutoff date plus 100 days, rule 11 accepts no valid data anymore. Then
 
 - [`storage-keys.md`](storage-keys.md): the storage keys, which contain the key of the publisher.
 - [`storage-request-signatures.md`](storage-request-signatures.md): the signatures of the requests.
-- `DistributedData.findOwnerPubKeyHash()`, `AuthenticatedData.findOwnerPubKeyHash()`,
+- `OwnedDistributedData.getOwnerPubKeyHash()`, `AuthenticatedData.isOwner()`,
   `AuthenticatedSequentialData.isOwnerInvalid()`, `MailboxSequentialData.isSenderInvalid()`.
