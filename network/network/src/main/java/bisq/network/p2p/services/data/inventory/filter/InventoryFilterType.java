@@ -19,6 +19,8 @@ package bisq.network.p2p.services.data.inventory.filter;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufEnumException;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.Feature;
 
 import java.util.Optional;
@@ -40,7 +42,13 @@ public enum InventoryFilterType implements ProtoEnum {
         return bisq.network.protobuf.InventoryFilterType.valueOf(getProtobufEnumPrefix() + name());
     }
 
+    // The type defines which storage key the filter entries contain. An unknown type must not be read as another
+    // type, so we reject it instead of using a fallback.
     public static InventoryFilterType fromProto(bisq.network.protobuf.InventoryFilterType proto) {
-        return ProtobufUtils.enumFromProto(InventoryFilterType.class, proto.name(), HASH_SET);
+        try {
+            return ProtobufUtils.enumFromProto(InventoryFilterType.class, proto.name());
+        } catch (UnresolvableProtobufEnumException e) {
+            throw new UnresolvableProtobufMessageException(e);
+        }
     }
 }
