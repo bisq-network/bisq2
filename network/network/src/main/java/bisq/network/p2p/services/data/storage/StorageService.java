@@ -477,7 +477,7 @@ public class StorageService {
     private AuthenticatedDataStorageService.Listener createAuthenticatedDataStoreListener() {
         return new AuthenticatedDataStorageService.Listener() {
             @Override
-            public void onAdded(AuthenticatedData authenticatedData) {
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
                 listeners.forEach(listener -> {
                     try {
                         listener.onAdded(authenticatedData);
@@ -488,7 +488,7 @@ public class StorageService {
             }
 
             @Override
-            public void onRemoved(AuthenticatedData authenticatedData) {
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
                 listeners.forEach(listener -> {
                     try {
                         listener.onRemoved(authenticatedData);
@@ -499,7 +499,7 @@ public class StorageService {
             }
 
             @Override
-            public void onRefreshed(AuthenticatedData authenticatedData) {
+            public void onRefreshed(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
                 listeners.forEach(listener -> {
                     try {
                         listener.onRefreshed(authenticatedData);

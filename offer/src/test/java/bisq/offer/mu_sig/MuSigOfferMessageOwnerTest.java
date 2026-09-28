@@ -77,12 +77,12 @@ class MuSigOfferMessageOwnerTest {
         offerbook = new MuSigOfferbookService(null, null);
         store.addListener(new AuthenticatedDataStorageService.Listener() {
             @Override
-            public void onAdded(AuthenticatedData authenticatedData) {
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
                 offerbook.onAuthenticatedDataAdded(authenticatedData);
             }
 
             @Override
-            public void onRemoved(AuthenticatedData authenticatedData) {
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
                 offerbook.onAuthenticatedDataRemoved(authenticatedData);
             }
         });
