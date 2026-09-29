@@ -54,9 +54,14 @@ public class NetworkDataValidation {
                 "Hash must be 20 bytes");
     }
 
-    // Signature are usually 71 - 73 chars
+    // The DER encoding of an ECDSA signature usually has 70 to 72 bytes. It is shorter if r or s has leading zero bytes.
+    // Nodes of all versions reject a signature outside of this range, so a node must not create one (see
+    // SignatureUtil.sign).
+    public static final int MIN_EC_SIGNATURE_LENGTH = 68;
+    public static final int MAX_EC_SIGNATURE_LENGTH = 74;
+
     public static void validateECSignature(byte[] signature) {
-        checkArgument(signature.length >= 68 && signature.length <= 74,
+        checkArgument(signature.length >= MIN_EC_SIGNATURE_LENGTH && signature.length <= MAX_EC_SIGNATURE_LENGTH,
                 "Signature not of the expected size. signature=" + Arrays.toString(signature));
     }
 
