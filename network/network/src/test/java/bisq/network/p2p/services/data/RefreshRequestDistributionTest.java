@@ -220,7 +220,7 @@ class RefreshRequestDistributionTest {
         assertEquals(2, refreshedAddRequest.getSequenceNumber());
         DataService dataServiceOfOtherNode = new DataService(new PersistenceService(peerDir.resolve("otherNode")));
         try {
-            assertTrue(dataServiceOfOtherNode.getStorageService().onAddDataRequest(refreshedAddRequest).join().isPresent());
+            assertTrue(dataServiceOfOtherNode.getStorageService().onAddDataRequest(refreshedAddRequest).join().isSuccess());
         } finally {
             dataServiceOfOtherNode.shutdown();
         }
