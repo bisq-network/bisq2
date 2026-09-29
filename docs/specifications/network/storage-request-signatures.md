@@ -89,11 +89,21 @@ one of the owner, and the refresh fails.
 The `className` of a refresh request is not covered by a signature. It only selects the store. A store of another type
 has no entry with the hash of the request, so a changed value makes the refresh fail.
 
+A refresh request needs signature V2, also before the cutoff date of signature V1. The receiver verifies signature V2
+of the rebuilt request.
+
+Reason: a node of a version up to 2.1.13 signs only the hash of the data in a refresh request. This signature covers
+neither the sequence number nor the creation date, and it does not verify for the rebuilt request. Nodes of these
+versions also do not relay refresh requests. So only a relay which removes signature V2 on purpose creates a refresh
+request without signature V2 whose signature V1 verifies. Accepting such a request would let this relay replace a
+stored add request with signature V2 by one without it.
+
 ## Verification
 
 1. If `signatureV2` is not empty, the receiver verifies only signature V2.
 2. If `signatureV2` is empty, the receiver verifies signature V1, but only before the cutoff date of signature V1
-   (rule 5). This accepts requests from nodes of earlier versions.
+   (rule 5). This accepts add and remove requests from nodes of earlier versions. It does not apply to refresh
+   requests, which need signature V2 (see [Refresh requests](#refresh-requests)).
 3. A request must contain at least one non-empty signature. Each non-empty signature must have a valid EC signature
    encoding.
 4. Signature V2 must be in low-S form. Signature V1 may be in either form. The rules are defined in
@@ -112,8 +122,9 @@ The cutoff date is 2027-01-01 00:00 UTC (`SignedRequest.SIGNATURE_V1_CUTOFF_DATE
 requests without signature V2, so that nodes of earlier versions can take part in the network.
 
 5. From the cutoff date on, a node accepts a request only if it has signature V2. The node rejects a request without
-   signature V2 and does not verify signature V1. The result is `signatureV2Missing`. The rule applies to add, remove
-   and refresh requests, from broadcasts and from inventory responses.
+   signature V2 and does not verify signature V1. The result is `signatureV2Missing`. The rule applies to add and
+   remove requests, from broadcasts and from inventory responses. A refresh request needs signature V2 also before
+   the cutoff date (see [Refresh requests](#refresh-requests)).
 6. The node compares the cutoff date with its own time. The creation date of the request is not used.
 7. A node of this version creates both signatures also after the cutoff date.
 8. A node parses a request without signature V2 as before. Only the stores reject it.
