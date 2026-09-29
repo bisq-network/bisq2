@@ -28,6 +28,8 @@ example in a hash, a storage key, a duplicate check, or the preimage of another 
 5. **Verification of new signature formats.** A signature format which is introduced together with, or after, low-S
    signing accepts only the low-S form. With rules 3 and 5, each signature of such a format has exactly one valid
    encoding.
+6. **Length.** The DER encoding of an ECDSA signature which a node creates has at least 68 and at most 74 bytes. If the
+   encoding is shorter, the node signs again. A low-S signature has at most 71 bytes.
 
 Formats which follow rule 5:
 
@@ -35,7 +37,13 @@ Formats which follow rule 5:
 
 ## Reasons
 
-- Rule 1 has no compatibility cost: every verifier accepts both forms.
+- Rule 1: every verifier accepts both forms. But in the low-S form, s never needs a leading zero byte for its sign. So a
+  low-S signature is shorter than 68 bytes about twice as often as a signature of an earlier version: about 1 of 8
+  million signatures instead of 1 of 17 million. Rule 6 prevents such signatures.
+- Rule 6: the encoding is shorter than 68 bytes if r or s has leading zero bytes. Nodes of all versions check this
+  length when they parse a message with such a signature, for example a storage request, authorized data or
+  confidential data. They cannot parse a message with a shorter signature, and the node which creates it fails to
+  create the message. The signing function uses a random nonce, so a new signature has another length.
 - Rule 2: whether a signature must be converted depends on the algorithm and its encoding. The provider accepts many
   names for the same algorithm, and several ECDSA variants (other hash functions, deterministic ECDSA, PLAIN and CVC
   encodings). A signing function which accepts arbitrary names would have to classify each of them correctly. If it
