@@ -25,6 +25,7 @@ import lombok.ToString;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @EqualsAndHashCode
@@ -41,11 +42,11 @@ public final class Transaction {
     private final long amount;
     private final boolean incoming;
 
-    public static Transaction fromProto(bisq.wallet.protobuf.Transaction tx) {
+    public static Transaction fromProto(bisq.wallet.protobuf.Transaction tx, Set<String> ownAddresses) {
         return new Transaction(
                 tx.getTxId(),
                 tx.getInputsList().stream().map(TransactionInput::fromProto).toList(),
-                tx.getOutputsList().stream().map(TransactionOutput::fromProto).toList(),
+                tx.getOutputsList().stream().map(output -> TransactionOutput.fromProto(output, ownAddresses)).toList(),
                 tx.getLockTime(),
                 tx.getBlockHeight(),
                 Date.from(Instant.ofEpochSecond(tx.getDate())),
