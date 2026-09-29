@@ -130,7 +130,9 @@ identity, not with their authorized key pair:
 14. At startup, oracle and seed nodes publish the data which they published with the key pair of their network identity
     again with their authorized key pair, and they remove the entries of their network identity. The remove request
     gets the next sequence number after the entry, the new entry a higher one. They do not publish data again whose
-    owner has a remove request in the store, and they ignore expired entries.
+    owner has a remove request in the store, and they ignore expired entries. They remove an entry of their network
+    identity only if their store accepted the new entry, or if the owner removed the data. If the store rejects the
+    new entry, for example because it is full, the entry stays for a later run of the migration.
 15. Oracle and seed nodes update to this version before the users. Applications of updated nodes do not get data which
     an oracle or seed node has not published with its authorized key pair yet (rule 11).
 
@@ -207,8 +209,9 @@ earlier creation date, which are the copies described in [Known limitations](#kn
   expiry.
 - The migration publishes the data again with the authorized key pair and a higher sequence number and removes the
   entry of the network identity. It runs once, does not publish data again which the owner removed, and ignores entries
-  of other publishers, data of other authorities and expired entries. Oracle nodes remove bonded roles only with their
-  authorized key pair.
+  of other publishers, data of other authorities and expired entries. If the store rejects the new entry, the entry of
+  the network identity stays, and a later run migrates it. Oracle nodes remove bonded roles only with their authorized
+  key pair.
 - After a restart with the startup of the bonded role service, a node still holds the remove request of the owner and
   rejects a replay of the removed entry.
 - Persisted entries of another publisher are removed when a store is loaded. A refresh of such an entry is rejected.

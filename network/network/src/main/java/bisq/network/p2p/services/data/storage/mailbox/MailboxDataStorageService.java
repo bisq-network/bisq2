@@ -197,8 +197,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 if (request.isSignatureV2Present() && !requestFromMap.isSignatureV2Present()) {
                     map.put(storageKey, request);
                     persist();
+                    return DataStorageResult.success().alreadyRemoved();
                 }
-                return DataStorageResult.success().alreadyRemoved();
+                return DataStorageResult.failed().alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddMailboxRequest
@@ -229,7 +230,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         });
 
         maybeLogMapState("remove success", persistableStore);
-        return DataStorageResult.success().removedData(sequentialDataFromMap.getMailboxData());
+        return DataStorageResult.success();
     }
 
     public void addListener(Listener listener) {

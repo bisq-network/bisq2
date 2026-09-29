@@ -19,13 +19,14 @@ package bisq.network.p2p.services.data.storage;
 
 import lombok.Getter;
 
+// success: the store accepted the request and stored it. A request which leaves the store unchanged fails, also if it is
+// valid, for example a request which the store holds already (requestAlreadyReceived, alreadyRemoved).
 @Getter
 public class DataStorageResult {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
             dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid,
             classNameInvalid, ownerInvalid, signatureV2Missing;
-    private StorageData removedData;
 
     public static DataStorageResult success() {
         return new DataStorageResult(true);
@@ -121,13 +122,9 @@ public class DataStorageResult {
         return this;
     }
 
+    // The store holds a removal of the data. With success, the request replaced that removal.
     public DataStorageResult alreadyRemoved() {
         alreadyRemoved = true;
-        return this;
-    }
-
-    public DataStorageResult removedData(StorageData removedData) {
-        this.removedData = removedData;
         return this;
     }
 
@@ -151,7 +148,6 @@ public class DataStorageResult {
                 ", classNameInvalid=" + classNameInvalid +
                 ", ownerInvalid=" + ownerInvalid +
                 ", signatureV2Missing=" + signatureV2Missing +
-                ", removedData=" + removedData +
                 '}';
     }
 }

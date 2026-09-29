@@ -17,18 +17,17 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
-import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.keys.KeyGeneration;
-import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
+import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -127,17 +126,5 @@ class MailboxClassNameTest {
         assertEquals(CLASS_NAME, requestWithoutClassName.getClassName());
         assertFalse(requestWithoutClassName.isSignatureInvalid());
         assertArrayEquals(request.serializeForHash(), requestWithoutClassName.serializeForHash());
-    }
-
-    static ConfidentialMessage createConfidentialMessage(KeyPair senderKeyPair) {
-        // The storage layer does not decrypt the message, so the content does not need to be valid cipher text.
-        return ConfidentialMessage.fromProto(bisq.network.protobuf.ConfidentialMessage.newBuilder()
-                .setConfidentialData(bisq.security.protobuf.ConfidentialData.newBuilder()
-                        .setSenderPublicKey(ByteString.copyFrom(senderKeyPair.getPublic().getEncoded()))
-                        .setIv(ByteString.copyFrom(new byte[16]))
-                        .setCipherText(ByteString.copyFrom(new byte[32]))
-                        .setSignature(ByteString.copyFrom(new byte[70])))
-                .setReceiverKeyId("receiverKeyId")
-                .build());
     }
 }

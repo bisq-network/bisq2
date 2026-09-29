@@ -19,10 +19,12 @@ package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.inventory.filter.FilterService;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.data.storage.Sequential;
+import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
@@ -38,6 +40,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class HashSetFilterService extends FilterService<HashSetFilter> {
+    // The sequence number in the entry of a request without a signed sequence number. The other stored requests have
+    // positive sequence numbers.
+    static final int NO_SIGNED_SEQUENCE_NUMBER = 0;
+
     // Fixed per instance, so that requests of both types can be served concurrently
     private final InventoryFilterType inventoryFilterType;
 
@@ -87,9 +93,21 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
     // Used for the filter which we send and for the comparison with a received filter, so both use the same key
     private HashSetFilterEntry toFilterEntry(Map.Entry<ByteArray, ? extends DataRequest> mapEntry) {
         byte[] hash = getStorageKey(mapEntry).getBytes();
-        // AddAppendOnlyDataRequest does not use a seq nr., therefore it is not Sequential.
-        int sequenceNumber = mapEntry.getValue() instanceof Sequential sequential ? sequential.getSequenceNumber() : 0;
-        return new HashSetFilterEntry(hash, sequenceNumber);
+        return new HashSetFilterEntry(hash, getSequenceNumber(mapEntry.getValue()));
+    }
+
+    // AddAppendOnlyDataRequest does not use a seq nr., therefore it is not Sequential. In HASH_SET_V2, a removal
+    // without signature V2 has no signed sequence number either, because signature V1 does not cover it. A relay of an
+    // earlier version removes signature V2 and keeps the number. The entry of that copy must differ from the entry of
+    // the removal with signature V2, which replaces it (see docs/specifications/network/inventory-hash-set-filter.md).
+    private int getSequenceNumber(DataRequest dataRequest) {
+        boolean isRemovalWithoutSignatureV2 = dataRequest instanceof RemoveDataRequest &&
+                dataRequest instanceof SignedRequest signedRequest &&
+                !signedRequest.isSignatureV2Present();
+        if (inventoryFilterType == InventoryFilterType.HASH_SET_V2 && isRemovalWithoutSignatureV2) {
+            return NO_SIGNED_SEQUENCE_NUMBER;
+        }
+        return dataRequest instanceof Sequential sequential ? sequential.getSequenceNumber() : NO_SIGNED_SEQUENCE_NUMBER;
     }
 
     // The stores hold every request under storage key V2 (DataStorageService.preProcessPersisted re-keys persisted

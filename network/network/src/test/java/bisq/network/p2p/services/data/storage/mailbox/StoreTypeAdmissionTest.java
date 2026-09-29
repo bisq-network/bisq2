@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -40,10 +41,11 @@ import java.security.KeyPair;
 import java.util.concurrent.CompletionException;
 
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
+import static bisq.network.p2p.services.data.storage.StoreType.ALL;
 import static bisq.network.p2p.services.data.storage.StoreType.APPEND_ONLY_DATA_STORE;
 import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DATA_STORE;
 import static bisq.network.p2p.services.data.storage.StoreType.MAILBOX_DATA_STORE;
-import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
+import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -76,9 +78,16 @@ class StoreTypeAdmissionTest {
         storageService = new StorageService(new PersistenceService(appDataDir));
     }
 
+    // The stores write asynchronously. JUnit deletes appDataDir after the test, and fails if a write still creates
+    // files in it. A write queued now completes after all earlier ones.
     @AfterEach
     void tearDown() {
+        storageService.getStoresByStoreType(ALL).forEach(StoreTypeAdmissionTest::waitForPendingWrites);
         storageService.shutdown();
+    }
+
+    private static <T extends DataRequest> void waitForPendingWrites(DataStorageService<T> store) {
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
     }
 
     @Test
@@ -123,7 +132,7 @@ class StoreTypeAdmissionTest {
         assertFalse(redirected.isSignatureInvalid(BEFORE_CUTOFF));
 
         assertThrows(CompletionException.class, () -> storageService.onAddDataRequest(redirected).join());
-        assertTrue(storageService.onAddDataRequest(request).join().isPresent());
+        assertTrue(storageService.onAddDataRequest(request).join().isSuccess());
     }
 
     @Test

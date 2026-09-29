@@ -40,6 +40,55 @@ Reason: a filter entry is only meaningful together with the key it contains. Nod
 under storage key V2, nodes of earlier versions under V1. If both used one filter type, no entry would match between
 the versions, and the responder would send all requests up to the size limit of the inventory.
 
+## Removals without signature V2
+
+5. In a `HASH_SET_V2` filter, the entry of a removal without signature V2 has sequence number 0, as the entry of
+   append-only data. This applies to the removals of authenticated data and of mailbox data. In a `HASH_SET` filter, the
+   entry keeps the sequence number of the removal, as nodes of earlier versions compute it.
+
+Reasons:
+
+- A relay of an earlier version removes signature V2 from a removal and keeps its sequence number. With the sequence
+  number, the copy and the removal with signature V2 would have the same entry. A responder with the removal with
+  signature V2 would then not send it to a requester with the copy. But the removal with signature V2 replaces the copy
+  (see [`storage-request-ordering.md`](storage-request-ordering.md)): it restores the sequence number or the creation
+  date which the owner signed, and which a relay can change in the copy. With 0, the entries differ, and the responder
+  sends it.
+- Signature V1 does not cover the sequence number of a removal, so the number identifies nothing. Two copies have equal
+  entries also if a relay changed the number of one of them. A copy never replaces a stored removal, so a responder
+  does not need to send it to a requester which holds a copy.
+- The signed sequence numbers of stored requests are positive, so no other entry with the same key has sequence
+  number 0.
+
+Cost: a requester which holds the removal with signature V2 receives the copy from a responder which holds only the
+copy, and rejects it. This ends when the responder gets the removal with signature V2 from any peer, and at the latest
+when the copy expires or the store removes it at the cutoff date of signature V1 (see
+[`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
+
+## Repeated requests
+
+A response has a size limit. A response which reached it has the flag `maxSizeReached`: the responder has more
+requests which the requester does not have. During the initial requests, the requester then asks the same peer again.
+Its next filter also lists the requests which it stored from the response, so the next response contains other
+requests.
+
+6. If the stores of the requester accepted none of the requests of a response which reached the size limit, the
+   requester does not request inventory from that peer anymore. During the initial requests it asks another peer, and
+   periodic requests do not select that peer.
+
+Reason: the filter lists only the requests which the requester stored. If the requester rejects all requests of a full
+response, its next filter is the same, and the peer sends the same response again. Without rule 6, the requester would
+repeat the request without end, and the requests after that response would never arrive from that peer. This happens
+in ordinary cases, for example:
+
+- The requester holds a removal, and the responder missed it and still holds the earlier add request. The requester
+  rejects the add request.
+- The responder is a node of an earlier version, and the requester is a node of this version after the cutoff date of
+  signature V1. The requester rejects every request without signature V2.
+
+Limitation: the requester does not get the requests after that response from that peer. It gets them from other peers,
+or by broadcast. A requester of an earlier version does not follow rule 6.
+
 ## Configuration
 
 Nodes of this version support both filter types, prefer `HASH_SET_V2` and fall back to `HASH_SET`:
@@ -79,7 +128,8 @@ during the update of the network. Its cost is described in [Limitations](#limita
   the requester of the earlier version, which may not be able to store it, for example a remove request of another
   owner for data which the requester holds. The requester's filter then does not change, and it can receive the same
   request again with the next response. If such requests fill a response up to the size limit, repeated requests do
-  not make progress. This follows from the code paths; it is not reproduced in a test.
+  not make progress. This follows from the code paths; it is not reproduced in a test. A requester of this version
+  stops such requests ([rule 6](#repeated-requests)); a requester of an earlier version does not.
   - Why it cannot be removed now: the filter of a node of an earlier version contains no owner, and its code cannot be
     changed. The responder cannot know which owner's request the requester holds.
   - What removes it: ending the support of `HASH_SET` when nodes of earlier versions are no longer supported.

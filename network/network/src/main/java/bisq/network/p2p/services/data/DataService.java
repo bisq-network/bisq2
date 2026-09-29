@@ -417,22 +417,29 @@ public class DataService implements StorageService.Listener {
     // Private
     /* --------------------------------------------------------------------- */
 
-    public void processAddDataRequest(AddDataRequest addDataRequest, boolean allowReBroadcast) {
-        storageService.onAddDataRequest(addDataRequest)
-                .whenComplete((optionalData, throwable) -> optionalData.ifPresent(storageData -> {
-                    if (allowReBroadcast) {
+    // The result tells whether the store accepted the request
+    public CompletableFuture<DataStorageResult> processAddDataRequest(AddDataRequest addDataRequest,
+                                                                      boolean allowReBroadcast) {
+        return storageService.onAddDataRequest(addDataRequest)
+                .thenApply(dataStorageResult -> {
+                    if (allowReBroadcast && dataStorageResult.isSuccess()) {
                         broadcasters.forEach(e -> e.reBroadcast(addDataRequest));
                     }
-                }));
+                    return dataStorageResult;
+                });
     }
 
-    public void processRemoveDataRequest(RemoveDataRequest removeDataRequest, boolean allowReBroadcast) {
-        storageService.onRemoveDataRequest(removeDataRequest)
-                .whenComplete((optionalData, throwable) -> optionalData.ifPresent(storageData -> {
-                    if (allowReBroadcast) {
+    // We relay every removal which the store accepted, also if it removed no data (see
+    // docs/specifications/network/storage-request-relay.md)
+    public CompletableFuture<DataStorageResult> processRemoveDataRequest(RemoveDataRequest removeDataRequest,
+                                                                         boolean allowReBroadcast) {
+        return storageService.onRemoveDataRequest(removeDataRequest)
+                .thenApply(dataStorageResult -> {
+                    if (allowReBroadcast && dataStorageResult.isSuccess()) {
                         broadcasters.forEach(e -> e.reBroadcast(removeDataRequest));
                     }
-                }));
+                    return dataStorageResult;
+                });
     }
 
     // A node relays a refresh request only if it applied it. A copy which arrives from another peer is not applied

@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
@@ -59,6 +60,8 @@ class AuthorizedDataPublisherMigrationTest {
     // The key pair of the network identity of the oracle node, with which earlier versions published the data
     private KeyPair identityKeyPair;
     private AuthorizedData authorizedData;
+    // A full store accepts no entry for a new storage key
+    private boolean isStoreFull;
 
     @BeforeEach
     void setUp() throws GeneralSecurityException {
@@ -67,7 +70,12 @@ class AuthorizedDataPublisherMigrationTest {
                 new PruneExpiredEntriesService(),
                 "migration",
                 TestAuthorizedDistributedData.class.getSimpleName(),
-                CLOCK_BEFORE_CUTOFF);
+                CLOCK_BEFORE_CUTOFF) {
+            @Override
+            protected boolean isExceedingMapSize() {
+                return isStoreFull || super.isExceedingMapSize();
+            }
+        };
         authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         authorizedData = authorize("content", authorizedKeyPair);
@@ -108,6 +116,32 @@ class AuthorizedDataPublisherMigrationTest {
         assertEquals(2, AuthorizedDataPublisherMigration.migrate(store, identityKeyPair, authorizedKeyPair).size());
 
         assertTrue(AuthorizedDataPublisherMigration.migrate(store, identityKeyPair, authorizedKeyPair).isEmpty());
+    }
+
+    // The entry of the earlier key pair is the source of the data. The migration keeps it until the store accepts the
+    // entry of the authorized key pair.
+    @Test
+    void entryOfEarlierKeyPairStaysIfStoreRejectsNewEntry() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest entryOfEarlierVersion = createRequestOfEarlierVersion(authorizedData, 1);
+        assertTrue(store.add(entryOfEarlierVersion).isSuccess());
+        isStoreFull = true;
+
+        List<AuthenticatedDataRequest> requestsOfFullStore = AuthorizedDataPublisherMigration.migrate(store,
+                identityKeyPair, authorizedKeyPair);
+
+        assertTrue(requestsOfFullStore.isEmpty());
+        assertEquals(Map.of(entryOfEarlierVersion.getStorageKey(), entryOfEarlierVersion),
+                store.getPersistableStore().getMap());
+
+        isStoreFull = false;
+        List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.migrate(store, identityKeyPair,
+                authorizedKeyPair);
+
+        assertEquals(2, requests.size());
+        AddAuthenticatedDataRequest addRequest = assertInstanceOf(AddAuthenticatedDataRequest.class, requests.get(0));
+        assertEquals(addRequest, store.getPersistableStore().getMap().get(addRequest.getStorageKey()));
+        assertInstanceOf(RemoveAuthenticatedDataRequest.class,
+                store.getPersistableStore().getMap().get(entryOfEarlierVersion.getStorageKey()));
     }
 
     // For example, the oracle node removed a bonded role with its authorized key pair before the migration ran
