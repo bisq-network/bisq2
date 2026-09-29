@@ -252,5 +252,14 @@ class WalletServiceTest {
         assertEquals(addressBalances.size(), uniqueAddressCount, 
                 "All addresses in result should be unique (no duplicates)");
     }
+
+    @Test
+    void mockMarksTheOutputsOfIncomingTransactionsAsMine() throws ExecutionException, InterruptedException {
+        var transactions = walletService.requestTransactions().get();
+
+        assertFalse(transactions.isEmpty());
+        transactions.forEach(transaction -> transaction.getOutputs().forEach(output ->
+                assertEquals(transaction.isIncoming(), output.isMine(), transaction.getTxId())));
+    }
 }
 

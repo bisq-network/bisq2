@@ -23,6 +23,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Set;
+
 @Getter
 @EqualsAndHashCode
 @ToString
@@ -31,14 +33,18 @@ public final class TransactionOutput {
     private final long value;
     private final String address;
     private final byte[] scriptPubKey;
+    // The daemon does not say whether an output belongs to the wallet, so this is derived from the wallet's addresses
+    private final boolean mine;
 
-    public static TransactionOutput fromProto(bisq.wallet.protobuf.TransactionOutput output)
+    public static TransactionOutput fromProto(bisq.wallet.protobuf.TransactionOutput output, Set<String> ownAddresses)
             throws UnresolvableProtobufException {
         try {
+            String address = output.getAddress().getAddress();
             return new TransactionOutput(
                     output.getValue(),
-                    output.getAddress().getAddress(),
-                    output.getScriptPubKey().toByteArray()
+                    address,
+                    output.getScriptPubKey().toByteArray(),
+                    !address.isEmpty() && ownAddresses.contains(address)
             );
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
