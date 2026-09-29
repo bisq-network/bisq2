@@ -422,12 +422,14 @@ public class DataService implements StorageService.Listener {
                 }));
     }
 
+    // We relay every removal which the store accepted, also if it removed no data (see
+    // docs/specifications/network/storage-request-relay.md)
     public void processRemoveDataRequest(RemoveDataRequest removeDataRequest, boolean allowReBroadcast) {
         storageService.onRemoveDataRequest(removeDataRequest)
-                .whenComplete((optionalData, throwable) -> optionalData.ifPresent(storageData -> {
-                    if (allowReBroadcast) {
+                .thenAccept(dataStorageResult -> {
+                    if (allowReBroadcast && dataStorageResult.isSuccess()) {
                         broadcasters.forEach(e -> e.reBroadcast(removeDataRequest));
                     }
-                }));
+                });
     }
 }

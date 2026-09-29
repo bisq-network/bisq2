@@ -260,7 +260,7 @@ class InventoryHashSetFilterTest {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(authenticatedDataStore,
                 new DefaultAuthenticatedData(new InventoryTestData("removed", ownerB)),
                 ownerB);
-        assertTrue(storageService.onRemoveDataRequest(removeRequest).join().isEmpty());
+        assertTrue(storageService.onRemoveDataRequest(removeRequest).join().isNoEntry());
         assertTrue(storageService.onAddDataRequest(new AddAppendOnlyDataRequest(new InventoryTestAppendOnlyData("x")))
                 .join().isPresent());
         assertEquals(3, storageService.getAllDataRequestMapEntries().count());

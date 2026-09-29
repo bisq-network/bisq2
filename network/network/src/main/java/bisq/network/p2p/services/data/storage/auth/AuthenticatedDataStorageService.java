@@ -236,8 +236,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     // We update the map with the new request with the fresh sequence number.
                     map.put(storageKey, request);
                     persist();
+                    return DataStorageResult.success().alreadyRemoved();
                 }
-                return DataStorageResult.success().alreadyRemoved();
+                return DataStorageResult.failed().alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddProtectedDataRequest
@@ -273,7 +274,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         });
 
         maybeLogMapState("remove success", persistableStore);
-        return DataStorageResult.success().removedData(authenticatedDataFromMap);
+        return DataStorageResult.success();
     }
 
     public DataStorageResult refresh(RefreshAuthenticatedDataRequest refreshRequest) {

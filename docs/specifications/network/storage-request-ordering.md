@@ -3,6 +3,8 @@
 These rules govern replacement of requests under the same [storage key](storage-keys.md).
 Signature verification follows [storage-request-signatures.md](storage-request-signatures.md).
 All incoming requests must pass the applicable signature, ownership, type, and expiry checks before replacement.
+A node relays a received request only if these rules let it change the stored entry (see
+[storage-request-relay.md](storage-request-relay.md)).
 
 ## Authenticated add requests
 

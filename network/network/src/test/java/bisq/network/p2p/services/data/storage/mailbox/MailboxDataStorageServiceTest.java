@@ -156,6 +156,34 @@ class MailboxDataStorageServiceTest {
         assertSame(first, store.getPersistableStore().getMap().get(first.getStorageKey()));
     }
 
+    // The store accepts a removal only if it stores it. A node relays the removals which its store accepts (see
+    // docs/specifications/network/storage-request-relay.md).
+    @Test
+    void removalIsAcceptedOnlyIfTheStoreStoresIt() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        RemoveMailboxRequest legacy = toLegacy(verified);
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        MailboxDataStorageService storeWithAdd = new MailboxDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService(), "mailboxWithAdd", STORE_KEY, () -> time);
+        assertTrue(storeWithAdd.add(add).isSuccess());
+
+        DataStorageResult withoutEntry = store.remove(legacy);
+        DataStorageResult replacement = store.remove(verified);
+        DataStorageResult repetition = store.remove(verified);
+        DataStorageResult legacyAfterReplacement = store.remove(legacy);
+        DataStorageResult removalOfData = storeWithAdd.remove(verified);
+
+        assertTrue(withoutEntry.isSuccess() && withoutEntry.isNoEntry(), withoutEntry.toString());
+        assertTrue(replacement.isSuccess() && replacement.isAlreadyRemoved(), replacement.toString());
+        assertFalse(repetition.isSuccess(), repetition.toString());
+        assertTrue(repetition.isAlreadyRemoved(), repetition.toString());
+        assertFalse(legacyAfterReplacement.isSuccess(), legacyAfterReplacement.toString());
+        assertSame(verified, store.getPersistableStore().getMap().get(verified.getStorageKey()));
+        assertTrue(removalOfData.isSuccess() && !removalOfData.isAlreadyRemoved(), removalOfData.toString());
+        storeWithAdd.getPersistence().persistAsync(storeWithAdd.getPersistableStore().getClone()).join();
+    }
+
     @Test
     void invalidSignatureV2CannotReplaceLegacyRemoval() throws GeneralSecurityException {
         time = BEFORE_CUTOFF;

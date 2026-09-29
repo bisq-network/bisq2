@@ -313,7 +313,9 @@ public class StorageService {
     // Remove data
     /* --------------------------------------------------------------------- */
 
-    public CompletableFuture<Optional<StorageData>> onRemoveDataRequest(RemoveDataRequest removeDataRequest) {
+    // A removal can be stored without removing data: when it arrives before the add request, and when it replaces a
+    // stored removal. The store listeners report only removed data to the applications.
+    public CompletableFuture<DataStorageResult> onRemoveDataRequest(RemoveDataRequest removeDataRequest) {
         if (removeDataRequest instanceof RemoveMailboxRequest) {
             return onRemoveMailboxRequest((RemoveMailboxRequest) removeDataRequest);
         } else if (removeDataRequest instanceof RemoveAuthenticatedDataRequest) {
@@ -325,33 +327,25 @@ public class StorageService {
         }
     }
 
-    private CompletableFuture<Optional<StorageData>> onRemoveMailboxRequest(RemoveMailboxRequest request) {
+    private CompletableFuture<DataStorageResult> onRemoveMailboxRequest(RemoveMailboxRequest request) {
         return getOrCreateMailboxDataStore(request.getClassName())
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.remove(request);
-                    if (dataStorageResult.isSuccess()) {
-                        return Optional.ofNullable(dataStorageResult.getRemovedData());
-                    } else {
-                        if (dataStorageResult.isSevereFailure()) {
-                            log.info("RemoveMailboxRequest was not added to store. Result={}", dataStorageResult);
-                        }
-                        return Optional.empty();
+                    if (dataStorageResult.isSevereFailure()) {
+                        log.info("RemoveMailboxRequest was not added to store. Result={}", dataStorageResult);
                     }
+                    return dataStorageResult;
                 });
     }
 
-    private CompletableFuture<Optional<StorageData>> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
+    private CompletableFuture<DataStorageResult> onRemoveAuthenticatedDataRequest(RemoveAuthenticatedDataRequest request) {
         return getOrCreateAuthenticatedDataStore(request.getClassName())
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.remove(request);
-                    if (dataStorageResult.isSuccess()) {
-                        return Optional.ofNullable(dataStorageResult.getRemovedData());
-                    } else {
-                        if (dataStorageResult.isSevereFailure()) {
-                            log.info("RemoveAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
-                        }
-                        return Optional.empty();
+                    if (dataStorageResult.isSevereFailure()) {
+                        log.info("RemoveAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
                     }
+                    return dataStorageResult;
                 });
     }
 

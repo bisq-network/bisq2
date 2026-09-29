@@ -440,6 +440,32 @@ class AuthenticatedDataStorageServiceTest {
         assertSame(third, peerStore.getPersistableStore().getMap().get(third.getStorageKey()));
     }
 
+    // The store accepts a removal only if it stores it. A node relays the removals which its store accepts (see
+    // docs/specifications/network/storage-request-relay.md).
+    @Test
+    void removalIsAcceptedOnlyIfTheStoreStoresIt() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.add(add).isSuccess());
+        RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        RemoveAuthenticatedDataRequest legacy = withoutSignatureV2(verified, verified.getSequenceNumber());
+
+        DataStorageResult withoutEntry = peerStore.remove(legacy);
+        DataStorageResult replacement = peerStore.remove(verified);
+        DataStorageResult repetition = peerStore.remove(verified);
+        DataStorageResult legacyAfterReplacement = peerStore.remove(legacy);
+        DataStorageResult removalOfData = ownerStore.remove(verified);
+
+        assertTrue(withoutEntry.isSuccess() && withoutEntry.isNoEntry(), withoutEntry.toString());
+        assertTrue(replacement.isSuccess() && replacement.isAlreadyRemoved(), replacement.toString());
+        assertFalse(repetition.isSuccess(), repetition.toString());
+        assertTrue(repetition.isAlreadyRemoved(), repetition.toString());
+        assertFalse(legacyAfterReplacement.isSuccess(), legacyAfterReplacement.toString());
+        assertSame(verified, peerStore.getPersistableStore().getMap().get(verified.getStorageKey()));
+        assertTrue(removalOfData.isSuccess() && !removalOfData.isAlreadyRemoved(), removalOfData.toString());
+    }
+
     @Test
     void legacyRemovalCannotDiscardVerifiedRemoval() throws GeneralSecurityException {
         time = BEFORE_CUTOFF;
