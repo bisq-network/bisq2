@@ -37,6 +37,23 @@ Before the cutoff date of signature V1, the protocol accepts V1 requests for com
 not remove the signature-stripping limitation described in
 [storage-request-signatures.md](storage-request-signatures.md#known-limitations). The cutoff date removes it.
 
+## Sequence number of a new authenticated request
+
+The owner creates a new add, remove, or refresh request with the sequence number of the entry in its own store plus
+one. It uses 1 if its store holds no entry for the storage key, or a removal without signature V2.
+
+Reason: a relay can set the sequence number of a V1 removal, for example to `Integer.MAX_VALUE`, and the owner's store
+can hold such a removal. If the owner continued from that number, it could not create any request for the data
+anymore, or its own signed requests would carry a number which the relay chose. The rules above accept a request with
+any sequence number in place of a V1 removal, so nodes of this version accept the request with sequence number 1.
+
+Consequences, until the cutoff date of signature V1:
+
+- A node of an earlier version compares with the sequence number of the V1 removal which it holds. It rejects the new
+  add of the owner until that removal expires.
+- If the V1 removal replaced an add of the owner in the owner's store, a node which still holds that add rejects each
+  new request of the owner whose sequence number is not higher, until that add expires.
+
 ## Mailbox requests
 
 Mailbox add requests have sequence number 1. A mailbox removal has the fixed sequence number `Integer.MAX_VALUE`,

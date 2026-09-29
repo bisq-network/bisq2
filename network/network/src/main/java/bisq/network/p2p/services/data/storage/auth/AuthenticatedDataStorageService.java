@@ -157,11 +157,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().requestAlreadyReceived();
             }
 
-            // Add sequence numbers are signed in both versions; only V1 removals have an untrusted sequence.
-            boolean isRequestFromMapWasAdd = requestFromMap instanceof AddAuthenticatedDataRequest;
-            boolean isRequestFromMapWasRemoveAndV2 = requestFromMap instanceof RemoveAuthenticatedDataRequest && requestFromMap.isSignatureV2Present();
-            if ((isRequestFromMapWasAdd || isRequestFromMapWasRemoveAndV2) &&
-                    request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+            if (isSequenceNumberSigned(requestFromMap) && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
@@ -376,16 +372,26 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         listeners.remove(listener);
     }
 
+    // The sequence number for the next request of the owner. A relay can change the sequence number of a removal without
+    // signature V2, so it is not used. Such a removal does not reject a request of any sequence number (see
+    // docs/specifications/network/storage-request-ordering.md).
     public int getNextSequenceNumber(ByteArray storageKey) {
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(storageKey);
-            if (requestFromMap == null) {
+            if (!isSequenceNumberSigned(requestFromMap)) {
                 return 1;
-            } else {
-                return Math.incrementExact(map.get(storageKey).getSequenceNumber());
             }
+            return Math.incrementExact(requestFromMap.getSequenceNumber());
         }
+    }
+
+    // Both signature versions of an add request cover its sequence number. Only signature V2 of a removal covers it.
+    private static boolean isSequenceNumberSigned(AuthenticatedDataRequest requestFromMap) {
+        boolean isAdd = requestFromMap instanceof AddAuthenticatedDataRequest;
+        boolean isRemoveWithSignatureV2 = requestFromMap instanceof RemoveAuthenticatedDataRequest &&
+                requestFromMap.isSignatureV2Present();
+        return isAdd || isRemoveWithSignatureV2;
     }
 
     // Removes the entries which have expired, and those without signature V2 when the node requires it (see isToPrune)

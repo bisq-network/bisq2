@@ -482,6 +482,51 @@ class AuthenticatedDataStorageServiceTest {
         assertSame(add, peerStore.getPersistableStore().getMap().get(add.getStorageKey()));
     }
 
+    // The owner creates its requests with its own store. A relay can set the sequence number of a removal without
+    // signature V2 to Integer.MAX_VALUE. If the owner continued from that number, it could not create any request for
+    // the data anymore.
+    @Test
+    void ownerRepublishesDataAfterLegacyRemovalWithForgedSequence() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.add(add).isSuccess());
+        RemoveAuthenticatedDataRequest forged = withoutSignatureV2(
+                RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair), Integer.MAX_VALUE);
+        assertTrue(ownerStore.remove(forged).isSuccess());
+        assertTrue(peerStore.remove(forged).isSuccess());
+
+        AddAuthenticatedDataRequest republished = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+
+        assertEquals(1, republished.getSequenceNumber());
+        assertTrue(ownerStore.add(republished).isSuccess());
+        assertTrue(peerStore.add(republished).isSuccess());
+        RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        assertEquals(2, removal.getSequenceNumber());
+        assertTrue(peerStore.remove(removal).isSuccess());
+        assertSame(removal, peerStore.getPersistableStore().getMap().get(removal.getStorageKey()));
+    }
+
+    // Also a removal without signature V2 which the store of an earlier version holds. A removal with signature V2
+    // replaces it regardless of the sequence numbers, and the owner continues from the signed number.
+    @Test
+    void ownerReplacesPersistedLegacyRemovalWithForgedSequence() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        RemoveAuthenticatedDataRequest forged = withoutSignatureV2(
+                RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair), Integer.MAX_VALUE);
+        ownerStore.getPersistableStore().getMap().put(forged.getStorageKey(), forged);
+
+        RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+
+        assertEquals(1, removal.getSequenceNumber());
+        assertTrue(ownerStore.remove(removal).isSuccess());
+        assertSame(removal, ownerStore.getPersistableStore().getMap().get(removal.getStorageKey()));
+        assertEquals(2, AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair)
+                .getSequenceNumber());
+    }
+
     // From the cutoff date of signature V1 on, a node accepts only requests with signature V2 (see
     // docs/specifications/network/storage-request-signatures.md). The same request is accepted before that date.
     @Test
@@ -881,6 +926,17 @@ class AuthenticatedDataStorageServiceTest {
                 request.getSignaturePublicKey(),
                 new byte[0],
                 0);
+    }
+
+    // A removal as a relay can change it: without signature V2, and with a sequence number which signature V1 does not
+    // cover
+    private static RemoveAuthenticatedDataRequest withoutSignatureV2(RemoveAuthenticatedDataRequest request,
+                                                                     int sequenceNumber) {
+        return RemoveAuthenticatedDataRequest.fromProto(request.toValueProto(false).toBuilder()
+                .setVersion(1)
+                .clearSignatureV2()
+                .setSequenceNumber(sequenceNumber)
+                .build());
     }
 
     private void addToOwnerAndPeer() throws GeneralSecurityException {
