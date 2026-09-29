@@ -120,8 +120,8 @@ public class StorageCanonicalEncoderTest {
         assertArrayEquals(withoutSignature.serializeForHash(), withoutSignature.encodeCanonical());
 
         // SIGNATURE, PROOF_OF_WORK and TRADE_CONTRACT contain the signature: AuthorizedData is nested in their
-        // preimages, where serializeForHash() contains it. Without a field excluded from the hash in the external data,
-        // they equal the default encoding.
+        // preimages, where the hash serialization of the enclosing message contains it. Without a field excluded from
+        // the hash in the external data, they equal the default encoding.
         assertArrayEquals(withSignature.encodeCanonical(), withSignature.encodeCanonical(EncodingPurpose.SIGNATURE));
         assertArrayEquals(withSignature.encodeCanonical(), withSignature.encodeCanonical(EncodingPurpose.PROOF_OF_WORK));
         assertArrayEquals(withSignature.encodeCanonical(), withSignature.encodeCanonical(EncodingPurpose.TRADE_CONTRACT));
@@ -137,6 +137,15 @@ public class StorageCanonicalEncoderTest {
         assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical(EncodingPurpose.SIGNATURE));
         assertFalse(Arrays.equals(withExcludedField.encodeCanonical(),
                 withExcludedField.encodeCanonical(EncodingPurpose.STORAGE_KEY)));
+        // PROOF_OF_WORK and TRADE_CONTRACT equal the nested hash serialization toProto(true), not serializeForHash()
+        for (EncodingPurpose encodingPurpose : NESTED_HASH_SERIALIZATION_PURPOSES) {
+            assertArrayEquals(withExcludedField.toProto(true).toByteArray(),
+                    withExcludedField.encodeCanonical(encodingPurpose),
+                    encodingPurpose.name());
+            assertFalse(Arrays.equals(withExcludedField.serializeForHash(),
+                    withExcludedField.encodeCanonical(encodingPurpose)),
+                    encodingPurpose.name());
+        }
     }
 
     @Test

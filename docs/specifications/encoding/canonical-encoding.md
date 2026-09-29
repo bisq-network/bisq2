@@ -143,8 +143,12 @@ contract hash, and the contract hash of a persisted trade must not change. Every
 contains therefore leaves its `@ExcludeForHash` fields out of its `TRADE_CONTRACT` schema, with the
 same version conditions, and a nested `AuthorizedData` keeps its signature, as `toProto(true)` does.
 No contract class has a canonical encoding yet, so the contract hash call site cannot switch yet. The
-existing implementations, which a contract does not contain, select an encoding for `TRADE_CONTRACT`
-that equals their `serializeForHash()` as well.
+existing implementations, which a contract does not contain, select for `TRADE_CONTRACT` the encoding
+that reproduces their bytes inside the hash serialization of an enclosing message, as for
+`PROOF_OF_WORK`. For most of them, these bytes equal their `serializeForHash()`. `AuthorizedData` is the
+exception: its `TRADE_CONTRACT` encoding contains the signature and equals
+`toProto(true).toByteArray()`. Its `serializeForHash()` omits the signature, because it defines the
+preimage in which `AuthorizedData` is the root (the data hash of the storage key).
 
 The `SIGNATURE` encodings contain the exact bytes of data of higher-level modules and the
 `@ExcludeForHash` fields of the network classes. They are therefore not identical to the preimages of

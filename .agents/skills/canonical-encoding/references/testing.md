@@ -37,7 +37,10 @@ A schema is correct only when tests prove its bytes. Code review cannot find a w
   noticed.
 - **Hash purposes.** `encodeCanonical(STORAGE_KEY)` of the stored data (also `AuthorizedData` with a
   signature), `encodeCanonical(PROOF_OF_WORK)`, and `encodeCanonical(TRADE_CONTRACT)` must equal
-  `serializeForHash()`. Requests and sequential data must reject `STORAGE_KEY`.
+  `serializeForHash()`. The exception is `AuthorizedData` with a signature: its `PROOF_OF_WORK` and
+  `TRADE_CONTRACT` bytes contain the signature and equal `toProto(true).toByteArray()` (see
+  `authorizedDataContainsSignatureUnlikeHashSerialization`). Requests and sequential data must reject
+  `STORAGE_KEY`.
   `encodeCanonical(SIGNATURE)` must equal it for classes without signature V2 (see
   `hashPurposesMatchSerializeForHash` in `StorageCanonicalEncoderTest`). For every message type,
   `PROOF_OF_WORK` must equal `serializeForHash()` of the message, also with `AuthorizedData` and with
