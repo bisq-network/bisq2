@@ -223,8 +223,10 @@ The following weaknesses can be removed by a change of other rules. The develope
     the complete requests before the cutoff date.
 - **Inventory requests to nodes of earlier versions.** All requests which a node of an earlier version serves are
   without signature V2. From the cutoff date on, a node of this version rejects all of them, but it still sends
-  inventory requests to such nodes (see [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md)). It can count
-  such a response as a completed inventory request.
+  inventory requests to such nodes (see [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md)). After a
+  response which reached the size limit, it does not ask that node again (rule 6 of
+  [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#repeated-requests)). A response below the size limit
+  can still count as a completed inventory request.
   - What removes it: from the cutoff date on, a node sends inventory requests only to peers which support the filter
     type `HASH_SET_V2`.
 - **Remove requests without signature V2 in inventory responses.** Until they expire, the mailbox stores serve their
