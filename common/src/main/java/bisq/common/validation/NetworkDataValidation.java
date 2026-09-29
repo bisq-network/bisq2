@@ -23,7 +23,6 @@ import bisq.common.util.DateUtils;
 import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -58,10 +57,6 @@ public class NetworkDataValidation {
     public static void validateECPubKey(byte[] pubKey) {
         checkArgument(pubKey.length > 50 && pubKey.length < 100,
                 "Public key not of the expected size. pubKey=" + Arrays.toString(pubKey));
-    }
-
-    public static void validateECPubKey(PublicKey publicKey) {
-        validateECPubKey(publicKey.getEncoded());
     }
 
 

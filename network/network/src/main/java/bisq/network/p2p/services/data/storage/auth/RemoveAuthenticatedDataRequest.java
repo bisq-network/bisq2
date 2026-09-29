@@ -30,6 +30,7 @@ import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -155,7 +156,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     @Override
     public void verify() {
         NetworkDataValidation.validateHash(hash);
-        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        EcPublicKeyValidation.validate(ownerPublicKeyBytes);
         checkArgument(sequenceNumber > 0,
                 "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateDate(created);

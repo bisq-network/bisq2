@@ -17,8 +17,14 @@
 
 package bisq.security.keys;
 
+import com.google.protobuf.ByteString;
+import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.security.PublicKey;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -51,5 +57,30 @@ class PubKeyTest {
         assertFalse(PubKey.isId(id.substring(2)));
         assertFalse(PubKey.isId(id + "00"));
         assertThrows(IllegalArgumentException.class, () -> PubKey.getHashFromId(id.substring(2)));
+    }
+
+    // The hash and the serialized form use getEncoded(). Parsing does not make this encoding canonical for a key of
+    // another curve, so the key object itself must be checked.
+    @Test
+    void keyOfAnotherCurveIsRejected() {
+        PublicKey otherCurve = KeyGeneration.generateKeyPair("secp256r1", KeyGeneration.EC).getPublic();
+
+        assertThrows(IllegalArgumentException.class, () -> new PubKey(otherCurve, "keyId"));
+    }
+
+    // A received key in another encoding of the same point is encoded again in canonical encoding.
+    @Test
+    void receivedCompressedKeyIsEncodedCanonically() throws IOException {
+        PublicKey publicKey = KeyGeneration.generateDefaultEcKeyPair().getPublic();
+        byte[] compressedPoint = ((ECPublicKey) publicKey).getQ().getEncoded(true);
+        byte[] compressed = new SubjectPublicKeyInfo(
+                SubjectPublicKeyInfo.getInstance(publicKey.getEncoded()).getAlgorithm(),
+                compressedPoint).getEncoded(ASN1Encoding.DER);
+        bisq.security.protobuf.PubKey proto = bisq.security.protobuf.PubKey.newBuilder()
+                .setPublicKey(ByteString.copyFrom(compressed))
+                .setKeyId("keyId")
+                .build();
+
+        assertArrayEquals(publicKey.getEncoded(), PubKey.fromProto(proto).getPublicKey().getEncoded());
     }
 }

@@ -31,6 +31,7 @@ import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -161,7 +162,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        EcPublicKeyValidation.validate(ownerPublicKeyBytes);
         if (signature.length > 0) {
             NetworkDataValidation.validateECSignature(signature);
         }
