@@ -823,6 +823,59 @@ class AuthenticatedDataStorageServiceTest {
         assertEquals(List.of(authenticatedData), removedData);
     }
 
+    // At the cutoff date the prune task selects many entries at once. A request of the owner can replace an entry after
+    // the task selected it. The task must not remove the new entry (finding F12.1 of the review
+    // 2026-09-29_16-18-18-fable-5.1).
+    @Test
+    void pruneTaskKeepsAnEntryWhichARequestReplacedAfterTheSelection() throws GeneralSecurityException {
+        AtomicReference<Runnable> pruneExpiredTask = new AtomicReference<>();
+        AtomicReference<AddAuthenticatedDataRequest> replacement = new AtomicReference<>();
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService() {
+                    @Override
+                    public void addTask(Runnable task) {
+                        pruneExpiredTask.set(task);
+                    }
+                },
+                "running",
+                STORE_KEY,
+                () -> time) {
+            @Override
+            protected boolean isToPrune(AuthenticatedDataRequest dataRequest) {
+                boolean isToPrune = super.isToPrune(dataRequest);
+                if (isToPrune && replacement.get() != null) {
+                    getPersistableStore().getMap().put(replacement.get().getStorageKey(), replacement.get());
+                }
+                return isToPrune;
+            }
+        };
+        List<AuthenticatedData> removedData = new ArrayList<>();
+        store.addListener(new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+            }
+
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                removedData.add(authenticatedData);
+            }
+        });
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest legacyAdd = withoutSignatureV2(
+                AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair));
+        assertTrue(store.add(legacyAdd).isSuccess());
+        AddAuthenticatedDataRequest addOfOwner = AddAuthenticatedDataRequest.from(store, authenticatedData,
+                ownerKeyPair);
+        replacement.set(addOfOwner);
+
+        time = AT_CUTOFF;
+        pruneExpiredTask.get().run();
+
+        assertEquals(Map.of(addOfOwner.getStorageKey(), addOfOwner), store.getPersistableStore().getMap());
+        assertTrue(removedData.isEmpty());
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+    }
+
     // A user must not publish the data of another user. The user could remove the copy, and the application would
     // remove the data of the owner (see docs/specifications/network/storage-ownership.md).
     @Test

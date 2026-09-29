@@ -396,23 +396,21 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         return isAdd || isRemoveWithSignatureV2;
     }
 
-    // Removes the entries which have expired, and those without signature V2 when the node requires it (see isToPrune)
+    // Removes the entries which have expired, and those without signature V2 when the node requires it (see isToPrune).
+    // A request can replace an entry after it was selected, so an entry is removed only if the map still holds it.
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
-                .filter(entry -> {
-                    AuthenticatedDataRequest dataRequest = entry.getValue();
-                    boolean isToPrune = isToPrune(dataRequest);
-                    if (isToPrune) {
-                        prunedAndExpiredDataRequests.add(dataRequest);
-                    }
-                    return isToPrune;
-                })
+                .filter(entry -> isToPrune(entry.getValue()))
+                .map(entry -> Map.entry(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
             log.info("We remove {} entries from our {} map which have expired or have no signature V2",
                     expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> {
-                persistableStore.getMap().remove(entry.getKey());
+                if (!persistableStore.getMap().remove(entry.getKey(), entry.getValue())) {
+                    return;
+                }
+                prunedAndExpiredDataRequests.add(entry.getValue());
                 if (entry.getValue() instanceof AddAuthenticatedDataRequest addRequest) {
                     AuthenticatedSequentialData sequentialData = addRequest.getAuthenticatedSequentialData();
                     AuthenticatedData data = sequentialData.getAuthenticatedData();
