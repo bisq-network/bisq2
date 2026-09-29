@@ -24,7 +24,7 @@ public class DataStorageResult {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
             dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid,
-            classNameInvalid, ownerInvalid;
+            classNameInvalid, ownerInvalid, signatureV2Missing;
     private StorageData removedData;
 
     public static DataStorageResult success() {
@@ -68,6 +68,13 @@ public class DataStorageResult {
     public DataStorageResult signatureInvalid() {
         signatureInvalid = true;
         isSevereFailure = true;
+        return this;
+    }
+
+    // The request has no signature V2, and the node requires it (see SignedRequest.SIGNATURE_V1_CUTOFF_DATE). Nodes of
+    // earlier versions send such requests, so this is not a severe failure.
+    public DataStorageResult signatureV2Missing() {
+        signatureV2Missing = true;
         return this;
     }
 
@@ -143,6 +150,7 @@ public class DataStorageResult {
                 ", metaDataInvalid=" + metaDataInvalid +
                 ", classNameInvalid=" + classNameInvalid +
                 ", ownerInvalid=" + ownerInvalid +
+                ", signatureV2Missing=" + signatureV2Missing +
                 ", removedData=" + removedData +
                 '}';
     }

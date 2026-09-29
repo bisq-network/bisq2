@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.AT_CUTOFF;
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
 import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +46,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * including the version and className of the nested MailboxData. Nodes of earlier versions know neither signatureV2
  * nor the version of the add request. Both are excluded from the hash, so the proof of work payload is the same for
  * nodes of all versions.
+ * <p>
+ * A node accepts requests without signature V2 only before SignedRequest.SIGNATURE_V1_CUTOFF_DATE. The tests of such
+ * requests pass the time of the node, so they do not depend on the date at which they run.
  */
 class MailboxSignatureV2Test {
     private static final String CLASS_NAME = AckMessage.class.getSimpleName();
@@ -85,15 +90,41 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void addMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1() throws GeneralSecurityException {
+    void addMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
         AddMailboxRequest request = createAddMailboxRequest();
 
         AddMailboxRequest asFromEarlierVersion = AddMailboxRequest.fromProto(
                 request.toValueProto(false).toBuilder().clearSignatureV2().clearVersion().build());
 
         assertFalse(asFromEarlierVersion.isSignatureV2Present());
-        assertFalse(asFromEarlierVersion.isSignatureInvalid());
+        assertFalse(asFromEarlierVersion.isRequiredSignatureV2Missing(BEFORE_CUTOFF));
+        assertFalse(asFromEarlierVersion.isSignatureInvalid(BEFORE_CUTOFF));
         assertArrayEquals(request.serializeForHash(), asFromEarlierVersion.serializeForHash());
+    }
+
+    // Signature V1 is valid, but it does not cover all fields of the request. From the cutoff date on, a node does not
+    // accept it alone.
+    @Test
+    void addMailboxRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOn() throws GeneralSecurityException {
+        AddMailboxRequest asFromEarlierVersion = AddMailboxRequest.fromProto(
+                createAddMailboxRequest().toValueProto(false).toBuilder().clearSignatureV2().clearVersion().build());
+
+        assertFalse(asFromEarlierVersion.isSignatureV1Invalid());
+        assertTrue(asFromEarlierVersion.isRequiredSignatureV2Missing(AT_CUTOFF));
+        assertTrue(asFromEarlierVersion.isSignatureInvalid(AT_CUTOFF));
+    }
+
+    @Test
+    void mailboxRequestsWithSignatureV2AreValidBeforeAndAfterTheCutoffDate() throws GeneralSecurityException {
+        AddMailboxRequest addRequest = createAddMailboxRequest();
+        RemoveMailboxRequest removeRequest = createRemoveMailboxRequest();
+
+        for (long now : new long[]{BEFORE_CUTOFF, AT_CUTOFF}) {
+            assertFalse(addRequest.isRequiredSignatureV2Missing(now));
+            assertFalse(addRequest.isSignatureInvalid(now));
+            assertFalse(removeRequest.isRequiredSignatureV2Missing(now));
+            assertFalse(removeRequest.isSignatureInvalid(now));
+        }
     }
 
     @Test
@@ -121,14 +152,31 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void removeMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1() throws GeneralSecurityException {
+    void removeMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
         RemoveMailboxRequest request = createRemoveMailboxRequest();
 
         RemoveMailboxRequest withoutSignatureV2 = RemoveMailboxRequest.fromProto(
                 request.toValueProto(false).toBuilder().clearSignatureV2().build());
 
-        assertFalse(withoutSignatureV2.isSignatureInvalid());
+        assertFalse(withoutSignatureV2.isSignatureInvalid(BEFORE_CUTOFF));
         assertArrayEquals(request.serializeForHash(), withoutSignatureV2.serializeForHash());
+    }
+
+    // Signature V1 of a remove request does not cover the creation date. The time of the node decides, so an earlier
+    // creation date, which a relay can set, does not make the request valid.
+    @Test
+    void removeMailboxRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOnForAnyCreationDate() throws GeneralSecurityException {
+        RemoveMailboxRequest request = createRemoveMailboxRequest();
+
+        RemoveMailboxRequest withEarlierCreationDate = RemoveMailboxRequest.fromProto(
+                request.toValueProto(false).toBuilder()
+                        .clearSignatureV2()
+                        .setCreated(request.getCreated() - 1000)
+                        .build());
+
+        assertFalse(withEarlierCreationDate.isSignatureV1Invalid());
+        assertTrue(withEarlierCreationDate.isRequiredSignatureV2Missing(AT_CUTOFF));
+        assertTrue(withEarlierCreationDate.isSignatureInvalid(AT_CUTOFF));
     }
 
     // Nodes of this version sign in low-S form. A relay can create the high-S form of a signature without the private
@@ -159,7 +207,7 @@ class MailboxSignatureV2Test {
                         .clearVersion()
                         .setSignature(EcdsaSignatureVariants.toOtherS(proto.getSignature(), senderKeyPair.getPublic()))
                         .build())
-                .isSignatureInvalid());
+                .isSignatureInvalid(BEFORE_CUTOFF));
     }
 
     @Test
@@ -175,7 +223,7 @@ class MailboxSignatureV2Test {
                         .clearSignatureV2()
                         .setSignature(EcdsaSignatureVariants.toOtherS(proto.getSignature(), receiverKeyPair.getPublic()))
                         .build())
-                .isSignatureInvalid());
+                .isSignatureInvalid(BEFORE_CUTOFF));
     }
 
     // The preimages of signature V2 are new messages. Their layout is written here independently with protobuf's

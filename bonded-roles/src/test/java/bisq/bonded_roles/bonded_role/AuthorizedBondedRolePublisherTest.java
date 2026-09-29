@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.common.encoding.Hex;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
@@ -73,7 +74,10 @@ class AuthorizedBondedRolePublisherTest {
         authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
 
-        dataService = new DataService(new PersistenceService(tempDir));
+        // Entries of earlier versions have no signature V2. A node accepts them only before the cutoff date of
+        // signature V1, so the node of these tests has a time before that date.
+        dataService = new DataService(new PersistenceService(tempDir),
+                () -> SignedRequest.SIGNATURE_V1_CUTOFF_DATE.getTime() - 1);
         store = dataService.getStorageService()
                 .getOrCreateAuthenticatedDataStore(AuthorizedBondedRole.class.getSimpleName())
                 .join();

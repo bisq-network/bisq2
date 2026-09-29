@@ -53,3 +53,6 @@ Formats which follow rule 5:
   - What removes it: a format change after which verifiers require the low-S form, for example when the network
     requires a minimum version whose nodes all sign in low-S form.
   - Who decides: the developers, for each signature format.
+  - Signature V1 of the storage requests: from its cutoff date on, nodes accept only requests with signature V2, which
+    covers the bytes of signature V1 (see
+    [`../network/storage-request-signatures.md`](../network/storage-request-signatures.md#cutoff-date-of-signature-v1)).

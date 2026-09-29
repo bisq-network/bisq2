@@ -16,7 +16,10 @@ add must not undo that refresh. The same ordering rule applies after removal and
 ## Authenticated removals during signature migration
 
 Signature V1 of an authenticated removal does not cover its sequence number. A relay can change that number without
-invalidating the signature. Signature V2 covers it. These rules apply to an already stored authenticated removal:
+invalidating the signature. Signature V2 covers it. A node accepts a V1 removal only before the cutoff date of
+signature V1, and from that date on the store removes the V1 removals which it holds (see
+[storage-request-signatures.md](storage-request-signatures.md#cutoff-date-of-signature-v1)). Until then, these rules
+apply to an already stored authenticated removal:
 
 - An incoming removal with a verified signature V2 replaces a V1 removal regardless of their sequence numbers.
   Comparing against the V1 number would let a relay prevent the upgrade by choosing `Integer.MAX_VALUE`.
@@ -30,8 +33,9 @@ invalidating the signature. Signature V2 covers it. These rules apply to an alre
 These rules govern replacement, not signature verification: an invalid signature V2 cannot upgrade a legacy entry.
 Mailbox removals use the separate terminal rule below.
 
-The protocol still accepts V1 requests for compatibility. These transition rules do not remove the signature-stripping
-limitation described in [storage-request-signatures.md](storage-request-signatures.md#known-limitations).
+Before the cutoff date of signature V1, the protocol accepts V1 requests for compatibility. These transition rules do
+not remove the signature-stripping limitation described in
+[storage-request-signatures.md](storage-request-signatures.md#known-limitations). The cutoff date removes it.
 
 ## Mailbox requests
 
@@ -39,7 +43,9 @@ Mailbox add requests have sequence number 1. A mailbox removal has the fixed seq
 regardless of signature version. This value is derived locally, not supplied by a peer.
 
 While the removal remains stored, no add for that storage key may replace it. This applies whether the removal
-arrives before or after the add, and whether the removal has signature V1 only or signature V2.
+arrives before or after the add, and whether the removal has signature V1 only or signature V2. A removal with
+signature V1 only, which a node accepted before the cutoff date of signature V1, remains stored until it expires (see
+[storage-request-signatures.md](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 No mailbox removal can have a higher sequence number.
 Different add requests with the same sequence number must not replace each other either.
 

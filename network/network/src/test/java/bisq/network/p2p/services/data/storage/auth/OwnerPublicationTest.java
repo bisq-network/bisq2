@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,6 +45,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Applications get only the data which its owner published (see docs/specifications/network/storage-ownership.md).
  * During the transition, the store also accepts authorized data which oracle nodes of earlier versions published with
  * the key pair of their network identity, and copies of anyone.
+ * <p>
+ * Entries of earlier versions have no signature V2. The node accepts them only before
+ * SignedRequest.SIGNATURE_V1_CUTOFF_DATE, so the node of these tests has a time before that date.
  */
 class OwnerPublicationTest {
     @TempDir
@@ -62,7 +66,7 @@ class OwnerPublicationTest {
     @BeforeEach
     void setUp() throws GeneralSecurityException {
         StorableTypesRegistry.register(TestAuthorizedDistributedData.class, TestAuthorizedDistributedData.META_DATA);
-        storageService = new StorageService(new PersistenceService(appDataDir));
+        storageService = new StorageService(new PersistenceService(appDataDir), CLOCK_BEFORE_CUTOFF);
         storageService.addListener(new StorageService.Listener() {
             @Override
             public void onAdded(StorageData storageData) {

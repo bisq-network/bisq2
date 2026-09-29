@@ -17,12 +17,26 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.util.DateUtils;
 import bisq.security.SignatureUtil;
 import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 public interface SignedRequest {
+    // Nodes of versions before 2.1.14 create only signature V1, which leaves out several fields of the request. Until
+    // this date, a node accepts requests without signature V2. The node compares the date with its own time, not with
+    // the creation date of the request: signature V1 of the remove requests does not cover the creation date, so a
+    // relay could set an earlier one (see docs/specifications/network/storage-request-signatures.md).
+    Date SIGNATURE_V1_CUTOFF_DATE = DateUtils.getUTCDate(2027, GregorianCalendar.JANUARY, 1);
+
+    // now: the time of the node which verifies the request
+    static boolean isSignatureV2Required(long now) {
+        return now >= SIGNATURE_V1_CUTOFF_DATE.getTime();
+    }
+
     byte[] getPreImageV1();
 
     byte[] getPreImageV2();
@@ -33,16 +47,26 @@ public interface SignedRequest {
 
     byte[] getSignatureV2();
 
+    // Uses the system time. The stores use their clock (see DataStorageService).
     default boolean isSignatureInvalid() {
+        return isSignatureInvalid(System.currentTimeMillis());
+    }
+
+    // now: the time of the node which verifies the request
+    default boolean isSignatureInvalid(long now) {
         if (isSignatureV2Present()) {
             return isSignatureV2Invalid();
-        } else {
-            return isSignatureV1Invalid();
         }
+        return isSignatureV2Required(now) || isSignatureV1Invalid();
     }
 
     default boolean isSignatureV2Present() {
         return getSignatureV2().length > 0;
+    }
+
+    // The request is of a node of an earlier version, or a relay removed signature V2
+    default boolean isRequiredSignatureV2Missing(long now) {
+        return isSignatureV2Required(now) && !isSignatureV2Present();
     }
 
     default boolean isSignatureV1Invalid() {

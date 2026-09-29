@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.EcPublicKeyVariants;
 import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
+import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
@@ -34,7 +35,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.time.Instant;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.AT_CUTOFF;
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -45,6 +49,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Signature V2 of the add and remove requests of authenticated data covers every field of the request except itself
  * and the deprecated metaData. Nodes of earlier versions know neither signatureV2 nor the version of the add request.
  * Both are excluded from the hash, so the proof of work payload is the same for nodes of all versions.
+ * <p>
+ * A node accepts requests without signature V2 only before SignedRequest.SIGNATURE_V1_CUTOFF_DATE. The tests of such
+ * requests pass the time of the node, so they do not depend on the date at which they run.
  */
 class AuthenticatedDataSignatureV2Test {
     private static final String STORE_KEY = TestDistributedData.class.getSimpleName();
@@ -92,15 +99,64 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void addRequestWithoutSignatureV2IsVerifiedWithSignatureV1() throws GeneralSecurityException {
+    void cutoffDateOfSignatureV1IsTheStartOf2027InUtc() {
+        assertEquals(Instant.parse("2027-01-01T00:00:00Z").toEpochMilli(),
+                SignedRequest.SIGNATURE_V1_CUTOFF_DATE.getTime());
+        assertFalse(SignedRequest.isSignatureV2Required(BEFORE_CUTOFF));
+        assertTrue(SignedRequest.isSignatureV2Required(AT_CUTOFF));
+    }
+
+    @Test
+    void addRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
 
         AddAuthenticatedDataRequest asFromEarlierVersion = fromProto(
                 request.toValueProto(false).toBuilder().clearSignatureV2().clearVersion().build(), request);
 
         assertFalse(asFromEarlierVersion.isSignatureV2Present());
-        assertFalse(asFromEarlierVersion.isSignatureInvalid());
+        assertFalse(asFromEarlierVersion.isRequiredSignatureV2Missing(BEFORE_CUTOFF));
+        assertFalse(asFromEarlierVersion.isSignatureInvalid(BEFORE_CUTOFF));
         assertArrayEquals(request.serializeForHash(), asFromEarlierVersion.serializeForHash());
+    }
+
+    // Signature V1 is valid, but it does not cover all fields of the request. From the cutoff date on, a node does not
+    // accept it alone.
+    @Test
+    void addRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOn() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+
+        AddAuthenticatedDataRequest asFromEarlierVersion = fromProto(
+                request.toValueProto(false).toBuilder().clearSignatureV2().clearVersion().build(), request);
+
+        assertFalse(asFromEarlierVersion.isSignatureV1Invalid());
+        assertTrue(asFromEarlierVersion.isRequiredSignatureV2Missing(AT_CUTOFF));
+        assertTrue(asFromEarlierVersion.isSignatureInvalid(AT_CUTOFF));
+    }
+
+    @Test
+    void requestsWithSignatureV2AreValidBeforeAndAfterTheCutoffDate() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store, authenticatedData,
+                ownerKeyPair);
+
+        for (long now : new long[]{BEFORE_CUTOFF, AT_CUTOFF}) {
+            assertFalse(addRequest.isRequiredSignatureV2Missing(now));
+            assertFalse(addRequest.isSignatureInvalid(now));
+            assertFalse(removeRequest.isRequiredSignatureV2Missing(now));
+            assertFalse(removeRequest.isSignatureInvalid(now));
+        }
+    }
+
+    // The cutoff date does not make a request with an invalid signature V2 fall back to signature V1
+    @Test
+    void requestWithInvalidSignatureV2IsInvalidBeforeTheCutoffDate() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest changed = RemoveAuthenticatedDataRequest.fromProto(
+                request.toValueProto(false).toBuilder().setSequenceNumber(request.getSequenceNumber() + 1).build());
+
+        assertFalse(changed.isSignatureV1Invalid());
+        assertTrue(changed.isSignatureInvalid(BEFORE_CUTOFF));
+        assertTrue(changed.isSignatureInvalid(AT_CUTOFF));
     }
 
     @Test
@@ -133,14 +189,31 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void removeRequestWithoutSignatureV2IsVerifiedWithSignatureV1() throws GeneralSecurityException {
+    void removeRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
 
         RemoveAuthenticatedDataRequest withoutSignatureV2 = RemoveAuthenticatedDataRequest.fromProto(
                 request.toValueProto(false).toBuilder().clearSignatureV2().build());
 
-        assertFalse(withoutSignatureV2.isSignatureInvalid());
+        assertFalse(withoutSignatureV2.isSignatureInvalid(BEFORE_CUTOFF));
         assertArrayEquals(request.serializeForHash(), withoutSignatureV2.serializeForHash());
+    }
+
+    // Signature V1 of a remove request does not cover the creation date. The time of the node decides, so an earlier
+    // creation date, which a relay can set, does not make the request valid.
+    @Test
+    void removeRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOnForAnyCreationDate() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+
+        RemoveAuthenticatedDataRequest withEarlierCreationDate = RemoveAuthenticatedDataRequest.fromProto(
+                request.toValueProto(false).toBuilder()
+                        .clearSignatureV2()
+                        .setCreated(request.getCreated() - 1000)
+                        .build());
+
+        assertFalse(withEarlierCreationDate.isSignatureV1Invalid());
+        assertTrue(withEarlierCreationDate.isRequiredSignatureV2Missing(AT_CUTOFF));
+        assertTrue(withEarlierCreationDate.isSignatureInvalid(AT_CUTOFF));
     }
 
     // Signature V1 of a remove request does not cover the public key. A relay could replace the key with another
@@ -173,7 +246,7 @@ class AuthenticatedDataSignatureV2Test {
                 .clearVersion()
                 .setSignature(EcdsaSignatureVariants.toOtherS(proto.getSignature(), ownerKeyPair.getPublic()))
                 .build(), request);
-        assertFalse(highSSignatureV1.isSignatureInvalid());
+        assertFalse(highSSignatureV1.isSignatureInvalid(BEFORE_CUTOFF));
     }
 
     @Test
@@ -190,7 +263,7 @@ class AuthenticatedDataSignatureV2Test {
                         .clearSignatureV2()
                         .setSignature(EcdsaSignatureVariants.toOtherS(proto.getSignature(), ownerKeyPair.getPublic()))
                         .build())
-                .isSignatureInvalid());
+                .isSignatureInvalid(BEFORE_CUTOFF));
     }
 
     @Test

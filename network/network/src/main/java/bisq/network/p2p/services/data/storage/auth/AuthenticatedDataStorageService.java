@@ -20,6 +20,8 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.formatter.DataSizeFormatter;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
@@ -29,6 +31,7 @@ import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -63,7 +66,16 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                                            PruneExpiredEntriesService pruneExpiredEntriesService,
                                            String storeName,
                                            String storeKey) {
-        super(persistenceService, storeName, storeKey);
+        this(persistenceService, pruneExpiredEntriesService, storeName, storeKey, new SystemClock());
+    }
+
+    @VisibleForTesting
+    public AuthenticatedDataStorageService(PersistenceService persistenceService,
+                                           PruneExpiredEntriesService pruneExpiredEntriesService,
+                                           String storeName,
+                                           String storeKey,
+                                           Clock clock) {
+        super(persistenceService, storeName, storeKey, clock);
         pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
 
@@ -87,6 +99,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         if (isClassNameInvalid(request.getDistributedData().getClass().getSimpleName())) {
             return DataStorageResult.failed().classNameInvalid();
+        }
+
+        long now = clock.now();
+        if (request.isRequiredSignatureV2Missing(now)) {
+            log.debug("Signature V2 is missing at add. storageKey={}", request.getStorageKey());
+            return DataStorageResult.failed().signatureV2Missing();
         }
 
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
@@ -121,7 +139,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             log.warn("PublicKey is invalid at add. request={}", request);
             return DataStorageResult.failed().publicKeyHashInvalid();
         }
-        if (request.isSignatureInvalid()) {
+        if (request.isSignatureInvalid(now)) {
             log.warn("Signature is invalid at add. request={}", request);
             return DataStorageResult.failed().signatureInvalid();
         }
@@ -180,11 +198,17 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             return DataStorageResult.failed().classNameInvalid();
         }
 
+        long now = clock.now();
+        if (request.isRequiredSignatureV2Missing(now)) {
+            log.debug("Signature V2 is missing at remove. storageKey={}", request.getStorageKey());
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+
         if (request.isExpired()) {
             return DataStorageResult.failed().expired();
         }
 
-        if (request.isSignatureInvalid()) {
+        if (request.isSignatureInvalid(now)) {
             log.warn("Signature is invalid at remove. request={}", request);
             return DataStorageResult.failed().signatureInvalid();
         }
@@ -263,6 +287,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             return DataStorageResult.failed().classNameInvalid();
         }
 
+        long now = clock.now();
+        if (refreshRequest.isRequiredSignatureV2Missing(now)) {
+            log.debug("Signature V2 is missing at refresh. storageKey={}", refreshRequest.getStorageKey());
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+
         if (refreshRequest.isExpired()) {
             return DataStorageResult.failed().expired();
         }
@@ -304,7 +334,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // The signature of the RefreshAuthenticatedDataRequest is created with the full data of an
             // AddAuthenticatedDataRequest at the owner's side, thus the signature will match the new object.
             updatedAddRequest = AddAuthenticatedDataRequest.from(addRequestFromMap, refreshRequest);
-            if (updatedAddRequest.isSignatureInvalid()) {
+            if (updatedAddRequest.isSignatureInvalid(now)) {
                 log.warn("Signature is invalid at refresh. request={}", refreshRequest);
                 return DataStorageResult.failed().signatureInvalid();
             }
@@ -358,19 +388,21 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         }
     }
 
+    // Removes the entries which have expired, and those without signature V2 when the node requires it (see isToPrune)
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
                 .filter(entry -> {
                     AuthenticatedDataRequest dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
+                    boolean isToPrune = isToPrune(dataRequest);
+                    if (isToPrune) {
                         prunedAndExpiredDataRequests.add(dataRequest);
                     }
-                    return isExpired;
+                    return isToPrune;
                 })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
+            log.info("We remove {} entries from our {} map which have expired or have no signature V2",
+                    expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> {
                 persistableStore.getMap().remove(entry.getKey());
                 if (entry.getValue() instanceof AddAuthenticatedDataRequest addRequest) {

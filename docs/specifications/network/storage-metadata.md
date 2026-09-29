@@ -59,8 +59,8 @@ signature nor the hash covered it. So they could choose the time to live, the pr
 
 Reason: all entries of a store then use the MetaData of the store type. A type which returned the MetaData of another
 type would otherwise put its data into the store of that other type. For rule 9: mailbox data and remove requests
-carry only a class name. Signature V1 does not cover it, and a relay can remove signature V2 (see
-[`storage-request-signatures.md`](storage-request-signatures.md#known-limitations)). Without rule 9, a sender or relay could name a
+carry only a class name. Signature V1 does not cover it, and before the cutoff date of signature V1 a relay can remove
+signature V2 (see [`storage-request-signatures.md`](storage-request-signatures.md#known-limitations)). Without rule 9, a sender or relay could name a
 `DistributedData` type in a mailbox request. The request would then get the MetaData of that type, for example a time
 to live of 100 days instead of at most 15 days, and an expired mailbox entry would become valid again.
 
@@ -120,7 +120,9 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   [`storage-request-signatures.md`](storage-request-signatures.md#known-limitations)). Until then, a relay can change
   `className` to the class name of another registered type of the same store type (rule 9). The data then goes into
   the store of that type and uses its MetaData. A remove request then does not find its add entry and is stored in the
-  other store without an add entry. The activation which makes signature V2 required removes this.
+  other store without an add entry. The cutoff date of signature V1 removes this: from 2027-01-01 on, nodes accept
+  only requests with signature V2 (see
+  [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 - Nodes of earlier versions still use the MetaData from the network until they update.
 
 ## Known defects

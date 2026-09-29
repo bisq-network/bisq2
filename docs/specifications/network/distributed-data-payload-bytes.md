@@ -84,9 +84,9 @@ In the canonical encoding, the kept `Any` is the message `string type_url = 1; b
 kept values. The type URL binds the type of the payload.
 
 Signature V2 of `AddAuthenticatedDataRequest` uses the `SIGNATURE` purpose (see
-[`storage-request-signatures.md`](storage-request-signatures.md)). Receivers still accept requests with only
-`signatureV1`. Signature V2 therefore protects the payload bytes only after an activation that makes it required
-(see [`storage-request-signatures.md`](storage-request-signatures.md#known-limitations)).
+[`storage-request-signatures.md`](storage-request-signatures.md)). Before the cutoff date of signature V1, receivers
+accept requests with only `signatureV1`. Signature V2 therefore protects the payload bytes from the cutoff date on
+(see [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 
 ## Adding a field to a `DistributedData` type
 

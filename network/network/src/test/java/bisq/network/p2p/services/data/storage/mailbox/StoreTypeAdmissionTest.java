@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.concurrent.CompletionException;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
 import static bisq.network.p2p.services.data.storage.StoreType.APPEND_ONLY_DATA_STORE;
 import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DATA_STORE;
 import static bisq.network.p2p.services.data.storage.StoreType.MAILBOX_DATA_STORE;
@@ -117,8 +118,9 @@ class StoreTypeAdmissionTest {
         AddMailboxRequest request = AddMailboxRequest.fromProto(builder.build());
         builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setClassName(DISTRIBUTED_DATA_TYPE);
         assertTrue(AddMailboxRequest.fromProto(builder.build()).isSignatureInvalid());
+        // Before the cutoff date of signature V1, a relay can remove signature V2
         AddMailboxRequest redirected = AddMailboxRequest.fromProto(builder.clearSignatureV2().clearVersion().build());
-        assertFalse(redirected.isSignatureInvalid());
+        assertFalse(redirected.isSignatureInvalid(BEFORE_CUTOFF));
 
         assertThrows(CompletionException.class, () -> storageService.onAddDataRequest(redirected).join());
         assertTrue(storageService.onAddDataRequest(request).join().isPresent());
@@ -130,8 +132,9 @@ class StoreTypeAdmissionTest {
         bisq.network.protobuf.RemoveMailboxRequest.Builder builder = RemoveMailboxRequest.from(mailboxData,
                 receiverKeyPair).toValueProto(false).toBuilder().setClassName(DISTRIBUTED_DATA_TYPE);
         assertTrue(RemoveMailboxRequest.fromProto(builder.build()).isSignatureInvalid());
+        // Before the cutoff date of signature V1, a relay can remove signature V2
         RemoveMailboxRequest redirected = RemoveMailboxRequest.fromProto(builder.clearSignatureV2().build());
-        assertFalse(redirected.isSignatureInvalid());
+        assertFalse(redirected.isSignatureInvalid(BEFORE_CUTOFF));
 
         assertThrows(CompletionException.class, () -> storageService.onRemoveDataRequest(redirected).join());
     }

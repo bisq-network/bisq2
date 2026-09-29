@@ -29,6 +29,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
 import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,12 +95,12 @@ class MailboxMetaDataTest {
         bisq.network.protobuf.RemoveMailboxRequest.Builder forgedBuilder = request.toValueProto(false).toBuilder()
                 .setMetaData(FORGED_META_DATA.toProto(false))
                 .setCreated(System.currentTimeMillis() - SIX_DAYS);
-        // Signature V2 covers created. Signature V1 covers neither metaData nor created, and a relay can remove
-        // signature V2.
+        // Signature V2 covers created. Signature V1 covers neither metaData nor created, and before the cutoff date of
+        // signature V1 a relay can remove signature V2.
         assertTrue(RemoveMailboxRequest.fromProto(forgedBuilder.build()).isSignatureInvalid());
         RemoveMailboxRequest forgedRequest = RemoveMailboxRequest.fromProto(forgedBuilder.clearSignatureV2().build());
 
-        assertFalse(forgedRequest.isSignatureInvalid());
+        assertFalse(forgedRequest.isSignatureInvalid(BEFORE_CUTOFF));
         assertSame(AckMessage.META_DATA, forgedRequest.getMetaData());
         assertEquals(MessageCostPolicy.getCostFactor(request), MessageCostPolicy.getCostFactor(forgedRequest));
         assertTrue(forgedRequest.isExpired());

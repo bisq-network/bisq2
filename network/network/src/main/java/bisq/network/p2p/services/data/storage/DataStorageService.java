@@ -19,6 +19,8 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -51,10 +53,18 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     protected final Path subDirPath;
     @Getter
     protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
+    // The time of the node. It decides whether the node requires signature V2 (see
+    // SignedRequest.SIGNATURE_V1_CUTOFF_DATE).
+    protected final Clock clock;
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+        this(persistenceService, storeName, storeKey, new SystemClock());
+    }
+
+    public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey, Clock clock) {
         super();
 
+        this.clock = clock;
         this.storeKey = storeKey;
         String storageFileName = storeKey + STORE_POST_FIX;
         DbSubDirectory dbSubDirectory = DbSubDirectory.NETWORK_DB;
@@ -113,11 +123,11 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         Map<ByteArray, T> pruned = map.entrySet().stream()
                 .filter(entry -> {
                     T dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
+                    boolean isToPrune = isToPrune(dataRequest);
+                    if (isToPrune) {
                         prunedAndExpiredDataRequests.add(dataRequest);
                     }
-                    return !isExpired;
+                    return !isToPrune;
                 })
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
@@ -125,6 +135,15 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         map.clear();
         map.putAll(pruned);
         return persisted;
+    }
+
+    // A store keeps an entry until it expires. From SignedRequest.SIGNATURE_V1_CUTOFF_DATE on, a store also removes the
+    // entries without signature V2 which it accepted before that date. It would not accept them anymore, and other
+    // nodes do not accept them from its inventory (see docs/specifications/network/storage-request-signatures.md).
+    protected boolean isToPrune(T dataRequest) {
+        return dataRequest.isExpired() ||
+                (dataRequest instanceof SignedRequest signedRequest &&
+                        signedRequest.isRequiredSignatureV2Missing(clock.now()));
     }
 
     // A store holds the data of one type, and its key is the simple class name of that type. The store takes the

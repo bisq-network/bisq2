@@ -35,6 +35,7 @@ import java.security.KeyPair;
 import java.util.List;
 import java.util.Optional;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -44,6 +45,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Oracle nodes of earlier versions published their authorized data with the key pair of their network identity. The
  * migration publishes it again with the authorized key pair and removes the entries of the earlier key pair (see
  * docs/specifications/network/storage-ownership.md).
+ * <p>
+ * Entries of earlier versions have no signature V2. The node accepts them only before
+ * SignedRequest.SIGNATURE_V1_CUTOFF_DATE, so the node of these tests has a time before that date.
  */
 class AuthorizedDataPublisherMigrationTest {
     @TempDir
@@ -62,7 +66,8 @@ class AuthorizedDataPublisherMigrationTest {
         store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
                 new PruneExpiredEntriesService(),
                 "migration",
-                TestAuthorizedDistributedData.class.getSimpleName());
+                TestAuthorizedDistributedData.class.getSimpleName(),
+                CLOCK_BEFORE_CUTOFF);
         authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         authorizedData = authorize("content", authorizedKeyPair);
