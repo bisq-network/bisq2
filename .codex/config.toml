@@ -1,0 +1,4 @@
+# Codex settings for this repository.
+# AGENTS.md is larger than the Codex default limit of 32 KiB for project instructions.
+# Without this setting Codex silently drops the end of AGENTS.md.
+project_doc_max_bytes = 65536
