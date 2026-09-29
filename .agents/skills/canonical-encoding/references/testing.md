@@ -37,12 +37,17 @@ A schema is correct only when tests prove its bytes. Code review cannot find a w
   noticed.
 - **Hash purposes.** `encodeCanonical(STORAGE_KEY)` of the stored data (also `AuthorizedData` with a
   signature), `encodeCanonical(PROOF_OF_WORK)`, and `encodeCanonical(TRADE_CONTRACT)` must equal
-  `serializeForHash()`. Requests and sequential data must reject `STORAGE_KEY`.
+  `serializeForHash()`. The exception is `AuthorizedData` with a signature: its `PROOF_OF_WORK` and
+  `TRADE_CONTRACT` bytes contain the signature and equal `toProto(true).toByteArray()` (see
+  `authorizedDataContainsSignatureUnlikeHashSerialization`). Requests and sequential data must reject
+  `STORAGE_KEY`.
   `encodeCanonical(SIGNATURE)` must equal it for classes without signature V2 (see
   `hashPurposesMatchSerializeForHash` in `StorageCanonicalEncoderTest`). For every message type,
-  `PROOF_OF_WORK` must equal `serializeForHash()` of the message, also with `AuthorizedData` and with
-  external data that has an excluded field (see
-  `proofOfWorkPurposeMatchesProofOfWorkPayloadOfEveryMessage`). For `excludeOnlyInVersions`, test
+  `PROOF_OF_WORK` and `TRADE_CONTRACT` must equal `serializeForHash()` of the message, also with
+  `AuthorizedData` and with external data that has an excluded field (see
+  `nestedHashPurposesMatchSerializeForHashOfEveryMessage`). A holder of data with a canonical encoding
+  must pass the purpose on; test this with a stub that records the purposes it receives (see
+  `addAppendOnlyDataRequestPassesEncodingPurposeToAppendOnlyData`). For `excludeOnlyInVersions`, test
   versions inside and outside the list. Assert documented differences (`AuthorizedData`, and the
   `SIGNATURE` bytes of holders of external data with an excluded field).
 - **Signature V2 preimages.** Test the layout with bytes written independently by protobuf's
