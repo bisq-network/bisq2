@@ -195,7 +195,9 @@ reject a request without signature V1.
   versions still accept the requests of nodes of this version.
 - Nodes of earlier versions do not know `signatureV2`. They remove it when they relay, persist or serve a request.
   From the cutoff date on, a node of this version therefore accepts a request only if it got the request from its
-  owner, or if all nodes which relayed it are nodes of this version.
+  owner, or if all nodes which relayed it are nodes of this version. For the same reason, it no longer requests
+  inventory from nodes of earlier versions from that date on (rule 8 of
+  [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#configuration)).
 - Signature V2 does not change the storage keys. The storage keys are specified in
   [`storage-keys.md`](storage-keys.md).
 
@@ -236,14 +238,6 @@ The following weaknesses can be removed by a change of other rules. The develope
   - What removes it: a rule in [`storage-request-ordering.md`](storage-request-ordering.md) by which a request with
     signature V2 replaces the stored copy of the same request without signature V2. With this rule, the stores hold
     the complete requests before the cutoff date.
-- **Inventory requests to nodes of earlier versions.** All requests which a node of an earlier version serves are
-  without signature V2. From the cutoff date on, a node of this version rejects all of them, but it still sends
-  inventory requests to such nodes (see [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md)). After a
-  response which reached the size limit, it does not ask that node again (rule 6 of
-  [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#repeated-requests)). A response below the size limit
-  can still count as a completed inventory request.
-  - What removes it: from the cutoff date on, a node sends inventory requests only to peers which support the filter
-    type `HASH_SET_V2`.
 - **Remove requests without signature V2 in inventory responses.** Until they expire, the mailbox stores serve their
   remove requests without signature V2 (rule 9) in inventory responses. Nodes of this version reject them each time.
   This ends 15 days after the cutoff date.

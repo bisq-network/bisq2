@@ -18,6 +18,8 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteUnit;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.services.data.DataService;
@@ -25,6 +27,7 @@ import bisq.network.p2p.services.data.inventory.filter.FilterService;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterService;
+import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorageService;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +45,22 @@ import static com.google.common.base.Preconditions.checkArgument;
 class InventoryFilterFactory {
     private final Map<InventoryFilterType, FilterService<? extends InventoryFilter>> mySupportedFilterServices = new HashMap<>();
     private final InventoryService.Config config;
+    // The time of the node. It decides whether the node requires signature V2 (see getPreferredFilterType).
+    private final Clock clock;
 
     InventoryFilterFactory(Set<Feature> myFeatures,
                            DataService dataService,
                            InventoryService.Config config) {
+        this(myFeatures, dataService, config, new SystemClock());
+    }
+
+    @VisibleForTesting
+    InventoryFilterFactory(Set<Feature> myFeatures,
+                           DataService dataService,
+                           InventoryService.Config config,
+                           Clock clock) {
         this.config = config;
+        this.clock = clock;
         int maxSize = (int) Math.round(ByteUnit.KB.toBytes(config.getMaxSizeInKb()));
         Inventory.setMaxSize(maxSize);
         StorageService storageService = dataService.getStorageService();
@@ -100,12 +114,17 @@ class InventoryFilterFactory {
         return filterService.createInventory(inventoryFilter);
     }
 
-    // Get first match with peers feature based on order of myPreferredFilterTypes
+    // Get first match with peers feature based on order of myPreferredFilterTypes. From the cutoff date of signature V1
+    // on, the node does not request with HASH_SET. Only peers of earlier versions need it, and they serve only requests
+    // without signature V2, which the node then rejects (see docs/specifications/network/inventory-hash-set-filter.md).
+    // A peer which supports no other type is then not used for inventory requests.
     Optional<InventoryFilterType> getPreferredFilterType(List<Feature> peersFeatures) {
         List<InventoryFilterType> peersInventoryFilterTypes = toFilterTypes(peersFeatures);
+        boolean isSignatureV2Required = SignedRequest.isSignatureV2Required(clock.now());
         return config.getMyPreferredFilterTypes().stream()
                 .filter(peersInventoryFilterTypes::contains)
                 .filter(mySupportedFilterServices::containsKey)
+                .filter(inventoryFilterType -> !isSignatureV2Required || inventoryFilterType != InventoryFilterType.HASH_SET)
                 .findFirst();
     }
 
