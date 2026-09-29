@@ -56,7 +56,7 @@ public interface SignedRequest {
 
     default boolean isSignatureV2Invalid() {
         try {
-            return !SignatureUtil.verify(getPreImageV2(), getSignatureV2(), getSignaturePublicKey());
+            return !SignatureUtil.verifyLowS(getPreImageV2(), getSignatureV2(), getSignaturePublicKey());
         } catch (Exception e) {
             LoggerFactory.getLogger(getClass()).warn("Verifying signature failed", e);
             return true;
