@@ -40,4 +40,9 @@ public enum EncodingPurpose {
      * of the message's authorization token binds to the message.
      */
     PROOF_OF_WORK,
+    /**
+     * The preimage of the hash of a trade contract: the bytes of the contract that are hashed to the contract hash,
+     * which the traders sign.
+     */
+    TRADE_CONTRACT,
 }

@@ -75,10 +75,11 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
                             CanonicalSchema.newBuilder())
                     .build();
 
-    // STORAGE_KEY and PROOF_OF_WORK: same as DEFAULT_SCHEMA, but with the DistributedData in its hash serialization,
-    // as serializeForHash() writes it
+    // STORAGE_KEY, PROOF_OF_WORK and TRADE_CONTRACT: same as DEFAULT_SCHEMA, but with the DistributedData in its hash
+    // serialization, as serializeForHash() writes it
     public static final CanonicalSchema<DefaultAuthenticatedData> STORAGE_KEY_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<DefaultAuthenticatedData> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<DefaultAuthenticatedData> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
     private static CanonicalSchema<DefaultAuthenticatedData> createSchemaForHash() {
         return DefaultAuthenticatedData.<DefaultAuthenticatedData>getSchemaBuilderForHash()
@@ -95,6 +96,7 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
             case SIGNATURE -> DEFAULT_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

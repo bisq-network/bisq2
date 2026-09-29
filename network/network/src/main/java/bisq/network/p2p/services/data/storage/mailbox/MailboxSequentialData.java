@@ -137,6 +137,7 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
             case STORAGE_KEY ->
                     throw new IllegalArgumentException("Storage key not supported for MailboxSequentialData");
             case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+            case TRADE_CONTRACT -> DEFAULT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

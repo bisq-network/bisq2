@@ -264,6 +264,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                             .bytes(9, request -> request.signatureV2));
 
     public static final CanonicalSchema<RemoveAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<RemoveAuthenticatedDataRequest> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
     // 1 to 3, version (field 7), className (field 8) and signatureV2 (field 9).
@@ -306,6 +307,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RemoveAuthenticatedDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

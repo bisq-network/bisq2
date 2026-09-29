@@ -92,8 +92,8 @@ public abstract class AuthenticatedData implements StorageData, Canonical {
                 .compose(1, authenticatedData -> authenticatedData.distributedDataAny, DistributedDataAny.SCHEMA);
     }
 
-    // Used by the STORAGE_KEY and PROOF_OF_WORK schemas, which reproduce serializeForHash(): nodes of all versions must
-    // compute the same storage key and proof of work payload.
+    // Used by the STORAGE_KEY, PROOF_OF_WORK and TRADE_CONTRACT schemas, which reproduce serializeForHash(): nodes of
+    // all versions must compute the same storage key, proof of work payload and contract hash.
     protected static <T extends AuthenticatedData> CanonicalSchema.Builder<T> getSchemaBuilderForHash() {
         return CanonicalSchema.<T>newBuilder()
                 // Canonical encoding is not yet supported for DistributedData, as its implementations are defined

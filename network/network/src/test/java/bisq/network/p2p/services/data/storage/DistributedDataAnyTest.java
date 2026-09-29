@@ -540,6 +540,7 @@ public class DistributedDataAnyTest {
                 case SIGNATURE -> DEFAULT_SCHEMA;
                 case STORAGE_KEY -> SCHEMA_FOR_HASH;
                 case PROOF_OF_WORK -> SCHEMA_FOR_HASH;
+                case TRADE_CONTRACT -> SCHEMA_FOR_HASH;
             };
             return canonicalEncoder.encode(this, schema, encodingPurpose);
         }
@@ -611,6 +612,7 @@ public class DistributedDataAnyTest {
                 case SIGNATURE -> DEFAULT_SCHEMA;
                 case STORAGE_KEY -> SCHEMA_FOR_HASH;
                 case PROOF_OF_WORK -> SCHEMA_FOR_HASH;
+                case TRADE_CONTRACT -> SCHEMA_FOR_HASH;
             };
             return canonicalEncoder.encode(this, schema, encodingPurpose);
         }

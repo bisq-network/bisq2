@@ -391,6 +391,7 @@ class InventoryHashSetFilterTest {
                 case SIGNATURE -> DEFAULT_SCHEMA;
                 case STORAGE_KEY -> DEFAULT_SCHEMA;
                 case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+                case TRADE_CONTRACT -> DEFAULT_SCHEMA;
             };
             return canonicalEncoder.encode(this, schema, encodingPurpose);
         }

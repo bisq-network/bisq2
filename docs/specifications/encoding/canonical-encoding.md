@@ -24,8 +24,8 @@ other modules) map to canonical messages is specified in
   implements it as well.
 - The classes with fields annotated with `@ExcludeForHash` (`MailboxData`, the add, remove, and
   refresh requests of authenticated data, and the add and remove requests of mailbox data) leave
-  these fields out of their `STORAGE_KEY` and `PROOF_OF_WORK` schemas. Because the purpose reaches
-  nested objects, the `STORAGE_KEY` encodings of all storage data classes equal their
+  these fields out of their `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` schemas. Because the
+  purpose reaches nested objects, the `STORAGE_KEY` encodings of all storage data classes equal their
   `serializeForHash()`, including `AuthorizedData`. Only the stored data has a `STORAGE_KEY` encoding:
   the `DataRequest` types and the sequential data classes have none, because their storage keys are not
   encodings of the request (see [`../network/storage-keys.md`](../network/storage-keys.md)). The
@@ -38,14 +38,19 @@ other modules) map to canonical messages is specified in
   higher-level modules with its exact bytes.
 - The production call sites of canonical encoding are signature V2 and the data hash of storage key V2
   (see [`../network/storage-keys.md`](../network/storage-keys.md)). Storage key V1, the preimages of
-  signature V1, proof of work payloads, and the inventory order still use `serializeForHash()`.
-  Switching such a call site is a protocol change; see [Changing an encoding](#changing-an-encoding).
+  signature V1, proof of work payloads, trade contract hashes, and the inventory order still use
+  `serializeForHash()`. Switching such a call site is a protocol change; see
+  [Changing an encoding](#changing-an-encoding).
 - `AppendOnlyData` extends `Canonical`: its implementations must support canonical encoding (see
   [Data of other modules](#data-of-other-modules)).
+- The classes of trade contracts (the contract module and the classes that a contract contains, for
+  example `Offer`) have no canonical encoding yet. The `TRADE_CONTRACT` purpose defines the encoding
+  that they must implement (see
+  [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)).
 - Other classes of higher-level modules (for example offers, user profiles, chat messages) have no
   canonical encoding yet. The network classes hold them in a `google.protobuf.Any` and keep the received
-  bytes of that `Any`. The `DEFAULT` and `SIGNATURE` purposes contain these bytes; the `STORAGE_KEY` and
-  `PROOF_OF_WORK` purposes contain the protobuf serialization for hashes; see
+  bytes of that `Any`. The `DEFAULT` and `SIGNATURE` purposes contain these bytes; the `STORAGE_KEY`,
+  `PROOF_OF_WORK`, and `TRADE_CONTRACT` purposes contain the protobuf serialization for hashes; see
   [Data of other modules](#data-of-other-modules).
 
 Out of scope: protobuf serialization of network messages and persisted data, and preimages built by
@@ -79,8 +84,8 @@ The bytes must not depend on the protobuf runtime, on the iteration order of an 
 on object identity, on caches, or on the thread, locale, or time. Data of higher-level modules is the
 exception (see [Data of other modules](#data-of-other-modules)): its kept bytes are part of the object
 state and are written unchanged, but they were produced by a protobuf serialization, and the
-`STORAGE_KEY` and `PROOF_OF_WORK` purposes use its protobuf serialization for hashes until those
-classes support canonical encoding.
+`STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` purposes use its protobuf serialization for
+hashes until those classes support canonical encoding.
 
 ### Complete encoding
 
@@ -94,7 +99,8 @@ The default encoding is not identical to `serializeForHash()`:
 
 - `serializeForHash()` omits fields annotated with `@ExcludeForHash` (for example `metaData` and
   `version` of the remove, refresh, and mailbox classes). The default encoding contains them. The
-  `STORAGE_KEY` and `PROOF_OF_WORK` encodings leave them out (see [Encoding purpose](#encoding-purpose)).
+  `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` encodings leave them out (see
+  [Encoding purpose](#encoding-purpose)).
 - `AuthorizedData.serializeForHash()` omits the signature, so that republishing keeps the storage key.
   The `STORAGE_KEY` encoding of `AuthorizedData` omits it as well. All other canonical encodings of
   `AuthorizedData` contain the signature: `AuthorizedData` is nested in their preimages, where
@@ -128,6 +134,17 @@ proof of work payload it is always nested in a request, where `toProto(true)` co
 Only the messages of the data storage and `ConfidentialMessage` have a canonical encoding. The proof of
 work call site can therefore switch to canonical encoding only after all other network message types
 have one, or for these messages alone.
+
+The `TRADE_CONTRACT` encoding of a contract must equal `serializeForHash()` of the contract. The
+contract service hashes these bytes to the contract hash, which each trader signs. The peer verifies
+that signature, or compares the peer's contract hash with the hash of its own contract, and each trade
+persists the contract signature data. Traders on different versions must therefore compute the same
+contract hash, and the contract hash of a persisted trade must not change. Every class that a contract
+contains therefore leaves its `@ExcludeForHash` fields out of its `TRADE_CONTRACT` schema, with the
+same version conditions, and a nested `AuthorizedData` keeps its signature, as `toProto(true)` does.
+No contract class has a canonical encoding yet, so the contract hash call site cannot switch yet. The
+existing implementations, which a contract does not contain, select an encoding for `TRADE_CONTRACT`
+that equals their `serializeForHash()` as well.
 
 The `SIGNATURE` encodings contain the exact bytes of data of higher-level modules and the
 `@ExcludeForHash` fields of the network classes. They are therefore not identical to the preimages of
@@ -289,11 +306,11 @@ encodes the data per purpose:
   writes. They contain the fields annotated with `@ExcludeForHash` and the fields that the node does not
   know. A signature over them therefore covers every field of the data, and a node that does not know a
   field computes the same bytes as the signer. The type URL keeps the type of the data in the preimage.
-- `STORAGE_KEY` and `PROOF_OF_WORK`: the protobuf serialization for hashes, in an `encodedMessage`
-  field, with a comment that canonical encoding is not yet supported: the `google.protobuf.Any` that
-  `toAny(true)` returns. It contains the type URL and the `serializeForHash()` bytes, exactly as the
-  protobuf hash serialization of the holder contains it. Nodes of all versions must compute the same
-  storage key and proof of work payload.
+- `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT`: the protobuf serialization for hashes, in an
+  `encodedMessage` field, with a comment that canonical encoding is not yet supported: the
+  `google.protobuf.Any` that `toAny(true)` returns. It contains the type URL and the
+  `serializeForHash()` bytes, exactly as the protobuf hash serialization of the holder contains it.
+  Nodes of all versions must compute the same storage key, proof of work payload, and contract hash.
 
 Both encodings are implemented once where the data is held: in the base class `AuthenticatedData` for
 `DistributedData` (for `DefaultAuthenticatedData` and `AuthorizedData`). `AddAppendOnlyDataRequest`
@@ -339,10 +356,12 @@ different purpose.
 | `SIGNATURE` | The bytes that are signed and verified: the preimage of signature V2 of the storage requests. Signature V1 does not use it (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
 | `STORAGE_KEY` | The bytes of the stored data (`AuthenticatedData`, `MailboxData`, `AppendOnlyData`) that are hashed to the data hash of storage key V2. The requests and the sequential data have no `STORAGE_KEY` encoding. |
 | `PROOF_OF_WORK` | The bytes of a network message to which the proof of work of the message's authorization token is bound, for example an `AddAuthenticatedDataRequest` with its `EnvelopePayloadMessage` envelope. The proof of work does not use it yet (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
+| `TRADE_CONTRACT` | The bytes of a trade contract that are hashed to the contract hash, which the traders sign. The contract hash does not use it yet (see [Byte parity when a call site changes](#byte-parity-when-a-call-site-changes)). |
 
-`SIGNATURE`, `STORAGE_KEY`, and `PROOF_OF_WORK` are the hash purposes: their preimages are hashed or
-signed. Nodes compute storage key V1, the preimages of signature V1, and the proof of work payloads with
-`serializeForHash()`. The data hash of storage key V2 uses the `STORAGE_KEY` purpose.
+`SIGNATURE`, `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` are the hash purposes: their
+preimages are hashed or signed. Nodes compute storage key V1, the preimages of signature V1, the proof
+of work payloads, and the contract hashes with `serializeForHash()`. The data hash of storage key V2
+uses the `STORAGE_KEY` purpose.
 
 Rules:
 
@@ -363,19 +382,21 @@ Rules:
 - An implementation selects its schema with a `switch` over all purposes, without a `default` branch.
   A new purpose then does not compile until every class has decided its encoding for it. A class
   without a specific encoding for a purpose uses its default schema.
-- Fields annotated with `@ExcludeForHash` are left out of the `STORAGE_KEY` and `PROOF_OF_WORK`
-  schemas, as `serializeForHash()` leaves them out. The `DEFAULT` schema contains them. A comment at
-  the schema names the left-out fields and their annotation. An annotation with `excludeOnlyInVersions` is
-  reproduced with the same version condition, based on the version that `getVersion()` of the object
-  returns. With these schemas, the `STORAGE_KEY` purpose reproduces the existing storage keys.
+- Fields annotated with `@ExcludeForHash` are left out of the `STORAGE_KEY`, `PROOF_OF_WORK`, and
+  `TRADE_CONTRACT` schemas, as `serializeForHash()` leaves them out. The `DEFAULT` schema contains them.
+  A comment at the schema names the left-out fields and their annotation. An annotation with
+  `excludeOnlyInVersions` is reproduced with the same version condition, based on the version that
+  `getVersion()` of the object returns. With these schemas, the `STORAGE_KEY` purpose reproduces the
+  existing storage keys.
 - The `SIGNATURE` purpose is the preimage of signature V2, which has no legacy bytes. Its schemas
   contain the fields annotated with `@ExcludeForHash`. A `SIGNATURE_V2_SCHEMA` may leave out a field
   only for a stated reason, named in a comment at the schema, and never the signature that the preimage
   is signed for.
 - Exception: data of higher-level modules. Its fields cannot be left out of the kept bytes without
   decoding and encoding the data again, which loses the fields that the node does not know. The
-  `SIGNATURE` purpose contains the kept bytes completely; the `STORAGE_KEY` and `PROOF_OF_WORK`
-  purposes use the hash serialization (see [Data of other modules](#data-of-other-modules)).
+  `SIGNATURE` purpose contains the kept bytes completely; the `STORAGE_KEY`, `PROOF_OF_WORK`, and
+  `TRADE_CONTRACT` purposes use the hash serialization (see
+  [Data of other modules](#data-of-other-modules)).
 - The encoding of an object for a purpose applies wherever the object appears in a preimage for that
   purpose, also as a nested object. It may therefore leave out only data that no preimage of that
   purpose must protect. In particular, it must not leave out the object's own signature if an enclosing
@@ -405,25 +426,31 @@ Rationale:
 
 Security note on `@ExcludeForHash`: a field that a hash purpose leaves out is not protected by a hash
 or signature of that purpose. The annotation keeps hashes compatible with nodes that do not know a
-field, and the `STORAGE_KEY` and `PROOF_OF_WORK` purposes reproduce it only for byte parity. In
-`MailboxData`, `RemoveAuthenticatedDataRequest`, and `RemoveMailboxRequest`, the `version` also decides
-whether `metaData` is left out, so in versions 1 to 3 signature V1 protects neither. Signature V2
-covers `version`. The proof of work payload does not bind the `@ExcludeForHash` fields either: a proof
-of work stays valid when they change. The receiver computes the expected cost from the message that it
-received ([`../network/message-cost.md`](../network/message-cost.md)), so a change does not lower the
-cost that the receiver expects. A preimage without legacy bytes must not repeat such exclusions without
-a reason.
+field, and the `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` purposes reproduce it only for
+byte parity. In `MailboxData`, `RemoveAuthenticatedDataRequest`, and `RemoveMailboxRequest`, the
+`version` also decides whether `metaData` is left out, so in versions 1 to 3 signature V1 protects
+neither. Signature V2 covers `version`. The proof of work payload does not bind the `@ExcludeForHash`
+fields either: a proof of work stays valid when they change. The receiver computes the expected cost
+from the message that it received ([`../network/message-cost.md`](../network/message-cost.md)), so a
+change does not lower the cost that the receiver expects. The contract hash does not bind the
+`@ExcludeForHash` fields of the contract's classes either, for example `version`,
+`tradeProtocolVersion`, and `appVersion` of `Offer` (see [Unresolved
+questions](#unresolved-questions)). A preimage without legacy bytes must not repeat such exclusions
+without a reason.
 
 Current state: `MailboxData`, `AddAuthenticatedDataRequest`, `RemoveAuthenticatedDataRequest`,
 `AddMailboxRequest`, and `RemoveMailboxRequest` use a `SIGNATURE_V2_SCHEMA` for `SIGNATURE`, and a
-`STORAGE_KEY_SCHEMA` and a `PROOF_OF_WORK_SCHEMA` without their `@ExcludeForHash` fields.
-`RefreshAuthenticatedDataRequest` has no preimage of its own; it uses `DEFAULT_SCHEMA` for `DEFAULT`
-and `SIGNATURE`, and a `PROOF_OF_WORK_SCHEMA`. The requests have no `STORAGE_KEY` encoding; a call with
-this purpose fails. `DefaultAuthenticatedData` and `AuthorizedData` use `DEFAULT_SCHEMA` for `DEFAULT`
-and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA` and a `PROOF_OF_WORK_SCHEMA` with the hash serialization of
-the data of the higher-level module. `AddAppendOnlyDataRequest` uses `DEFAULT_SCHEMA` for `DEFAULT` and
-`SIGNATURE`, and a `PROOF_OF_WORK_SCHEMA` with the canonical encoding of the `AppendOnlyData`. All other
-implementations use `DEFAULT_SCHEMA` for all purposes. Every implementation passes the purpose on.
+`PROOF_OF_WORK_SCHEMA` and a `TRADE_CONTRACT_SCHEMA` without their `@ExcludeForHash` fields;
+`MailboxData` also has a `STORAGE_KEY_SCHEMA` without them. `RefreshAuthenticatedDataRequest` has no
+preimage of its own; it uses `DEFAULT_SCHEMA` for `DEFAULT` and `SIGNATURE`, and a
+`PROOF_OF_WORK_SCHEMA` and a `TRADE_CONTRACT_SCHEMA`. The requests have no `STORAGE_KEY` encoding; a
+call with this purpose fails. `DefaultAuthenticatedData` and `AuthorizedData` use `DEFAULT_SCHEMA` for
+`DEFAULT` and `SIGNATURE`, and a `STORAGE_KEY_SCHEMA`, a `PROOF_OF_WORK_SCHEMA`, and a
+`TRADE_CONTRACT_SCHEMA` with the hash serialization of the data of the higher-level module.
+`AddAppendOnlyDataRequest` uses `DEFAULT_SCHEMA` for `DEFAULT` and `SIGNATURE`, and a
+`PROOF_OF_WORK_SCHEMA` and a `TRADE_CONTRACT_SCHEMA` with the canonical encoding of the
+`AppendOnlyData` for the same purpose. All other implementations use `DEFAULT_SCHEMA` for all purposes.
+Every implementation passes the purpose on.
 
 ## Schema metadata without effect on the bytes
 
@@ -554,18 +581,31 @@ the first schema that uses the feature, and an update of this specification.
 ## Unresolved questions
 
 - **Purpose-specific schemas for the existing call sites.** Before a storage key, signature, proof of
-  work payload, or inventory order uses canonical encoding, it needs a purpose whose encoding reproduces
-  the bytes of `serializeForHash()`, or an activation of new bytes. The `STORAGE_KEY` purpose
-  reproduces `serializeForHash()` for the stored data classes, and the `PROOF_OF_WORK` purpose
-  reproduces it for every message. Because the purpose is passed to nested objects, the schema of a
-  class for a purpose applies at every depth. The `STORAGE_KEY` schema of `AuthorizedData` leaves out
-  the signature, which is correct only while `STORAGE_KEY` is used for the data hash of storage keys
-  alone, where `AuthorizedData` is the root. The inventory order has no purpose yet.
+  work payload, contract hash, or inventory order uses canonical encoding, it needs a purpose whose
+  encoding reproduces the bytes of `serializeForHash()`, or an activation of new bytes. The
+  `STORAGE_KEY` purpose reproduces `serializeForHash()` for the stored data classes, and the
+  `PROOF_OF_WORK` purpose reproduces it for every message. Because the purpose is passed to nested
+  objects, the schema of a class for a purpose applies at every depth. The `STORAGE_KEY` schema of
+  `AuthorizedData` leaves out the signature, which is correct only while `STORAGE_KEY` is used for the
+  data hash of storage keys alone, where `AuthorizedData` is the root. Where `AuthorizedData` is nested
+  (the proof of work payload, the contract hash), `toProto(true)` contains the signature, and so do its
+  `PROOF_OF_WORK` and `TRADE_CONTRACT` schemas. The inventory order has no purpose yet.
 - **Canonical encoding of data of higher-level modules.** Signatures do not need it: the `SIGNATURE`
   purpose contains the kept bytes. `AppendOnlyData` supports it. For `DistributedData`, the
-  `STORAGE_KEY` and `PROOF_OF_WORK` purposes still use the protobuf serialization for hashes.
-  Replacing it changes storage keys and proof of work payloads, unless the canonical bytes reproduce
-  the protobuf hash serialization.
+  `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` purposes still use the protobuf serialization for
+  hashes. Replacing it changes storage keys, proof of work payloads, and contract hashes, unless the
+  canonical bytes reproduce the protobuf hash serialization.
+- **Contract classes.** The contract module and the classes that a contract contains (for example
+  `Offer`, `Party`, `NetworkId`, and the payment method specifications) have no canonical encoding.
+  Before the contract hash can use the `TRADE_CONTRACT` purpose, they need schemas whose
+  `TRADE_CONTRACT` encoding equals `serializeForHash()`, and parity tests with the contracts of all
+  trade protocols.
+- **Fields that the contract hash does not bind.** The contract hash leaves out the fields annotated
+  with `@ExcludeForHash` of the contract's classes, for example `version`, `tradeProtocolVersion`, and
+  `appVersion` of `Offer`. The traders' signatures do not protect them. A contract hash that covers
+  them has no legacy bytes and needs an activation; the `TRADE_CONTRACT` purpose reproduces the
+  existing contract hash and cannot cover them. Whether any trade decision depends on these fields,
+  and whether a new contract hash is needed, needs a decision by the developers.
 - **Explicit presence.** `optional` fields whose present value can be the default need framework
   support.
 - **Enforcement of `oneof` alternatives.** The framework cannot express that a group of fields is a

@@ -149,6 +149,7 @@ public final class MailboxData implements StorageData, Canonical {
 
     public static final CanonicalSchema<MailboxData> STORAGE_KEY_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<MailboxData> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<MailboxData> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 2) in versions
     // 1 to 3, version (field 3) and className (field 4).
@@ -175,6 +176,7 @@ public final class MailboxData implements StorageData, Canonical {
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
