@@ -18,6 +18,7 @@
 package bisq.bonded_roles.security_manager.alert;
 
 import bisq.bonded_roles.BondedRoleType;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
@@ -70,6 +71,14 @@ public class AlertService implements Service, AuthorizedBondedRolesService.Liste
                 authorizedAlertDataSet.add(authorizedAlertData);
                 maybeApplyBannedState(authorizedAlertData, true);
             }
+        } else if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole authorizedBondedRole) {
+            // A role can arrive after the alert which bans it, for example with an inventory response, or when an oracle
+            // node publishes it again. AuthorizedBondedRolesService adds the role before it notifies its listeners.
+            authorizedAlertDataSet.stream()
+                    .filter(authorizedAlertData -> authorizedAlertData.getAlertType() == AlertType.BAN &&
+                            authorizedAlertData.getBannedRole().filter(authorizedBondedRole::equals).isPresent())
+                    .findAny()
+                    .ifPresent(authorizedAlertData -> maybeApplyBannedState(authorizedAlertData, true));
         }
     }
 
