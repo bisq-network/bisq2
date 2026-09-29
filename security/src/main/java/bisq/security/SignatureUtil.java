@@ -46,17 +46,33 @@ public class SignatureUtil {
         return sign(message, privateKey, SHA256withECDSA);
     }
 
+    /**
+     * Supports only {@link #SHA256withECDSA} and {@link #SHA256withDSA}, given by exactly these names. Other names
+     * are rejected, including aliases which the provider would accept (other letter case, OIDs). An ECDSA signature
+     * must be converted to the low-S form, and this conversion depends on the signature encoding. For an arbitrary
+     * algorithm name this method cannot know the encoding, and an ECDSA signature could skip the conversion.
+     */
     public static byte[] sign(byte[] message, PrivateKey privateKey, String algorithm) throws GeneralSecurityException {
+        return switch (algorithm) {
+            case SHA256withECDSA -> {
+                if (!(privateKey instanceof ECKey ecKey)) {
+                    throw new InvalidKeyException(SHA256withECDSA + " requires an EC private key");
+                }
+                // For each ECDSA signature (r, s), the signature (r, n - s) is valid as well. Only the low-S form is
+                // created, so that verifiers can reject the other form (see verifyLowS). All verifiers accept it.
+                yield toLowS(signWithProvider(message, privateKey, algorithm), ecKey.getParams().getOrder());
+            }
+            case SHA256withDSA -> signWithProvider(message, privateKey, algorithm);
+            default -> throw new NoSuchAlgorithmException("Unsupported signature algorithm: " + algorithm +
+                    ". Supported are " + SHA256withECDSA + " and " + SHA256withDSA);
+        };
+    }
+
+    private static byte[] signWithProvider(byte[] message, PrivateKey privateKey, String algorithm) throws GeneralSecurityException {
         Signature signature = Signature.getInstance(algorithm, "BC");
         signature.initSign(privateKey);
         signature.update(message);
-        byte[] signatureBytes = signature.sign();
-        if (privateKey instanceof ECKey ecKey && isDerEncodedEcdsa(algorithm)) {
-            // For each ECDSA signature (r, s), the signature (r, n - s) is valid as well. Only the low-S form is
-            // created, so that verifiers can reject the other form (see verifyLowS). All verifiers accept it.
-            return toLowS(signatureBytes, ecKey.getParams().getOrder());
-        }
-        return signatureBytes;
+        return signature.sign();
     }
 
     public static boolean verify(byte[] message, byte[] signature, PublicKey publicKey) throws GeneralSecurityException {
@@ -93,11 +109,6 @@ public class SignatureUtil {
             return false;
         }
         return verify(message, signature, publicKey, SHA256withECDSA);
-    }
-
-    private static boolean isDerEncodedEcdsa(String algorithm) {
-        // Excludes the PLAIN-ECDSA and CVC-ECDSA variants, which do not use a DER sequence.
-        return algorithm.endsWith("withECDSA");
     }
 
     private static byte[] toLowS(byte[] derSignature, BigInteger curveOrder) throws SignatureException {

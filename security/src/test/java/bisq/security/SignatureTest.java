@@ -28,8 +28,10 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
 
@@ -142,6 +144,29 @@ public class SignatureTest {
         assertTrue(SignatureUtil.verify(message, signature, keyPair.getPublic(), SignatureUtil.SHA256withDSA));
         assertThrows(GeneralSecurityException.class,
                 () -> SignatureUtil.verifyLowS(message, signature, keyPair.getPublic()));
+    }
+
+    // Aliases of SHA256withECDSA, and other ECDSA variants, could otherwise create high-S signatures.
+    @Test
+    public void signRejectsUnsupportedAlgorithmNames() {
+        byte[] message = "hello".getBytes();
+        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+        for (String algorithm : new String[]{"SHA256WITHECDSA", "sha256withecdsa", "1.2.840.10045.4.3.2",
+                "OID.1.2.840.10045.4.3.2", "ECDSA", "NONEwithECDSA", "SHA256withECDDSA", "SHA256withPLAIN-ECDSA",
+                "SHA256withCVC-ECDSA", "SHA512withECDSA"}) {
+            assertThrows(NoSuchAlgorithmException.class,
+                    () -> SignatureUtil.sign(message, keyPair.getPrivate(), algorithm), algorithm);
+        }
+    }
+
+    @Test
+    public void signRejectsKeyWhichDoesNotMatchAlgorithm() throws GeneralSecurityException {
+        byte[] message = "hello".getBytes();
+        KeyPairGenerator generator = KeyPairGenerator.getInstance(KeyGeneration.DSA);
+        generator.initialize(2048);
+        KeyPair dsaKeyPair = generator.generateKeyPair();
+        assertThrows(InvalidKeyException.class,
+                () -> SignatureUtil.sign(message, dsaKeyPair.getPrivate(), SignatureUtil.SHA256withECDSA));
     }
 
     // Both methods report an invalid signature with false, or with a SignatureException for an invalid encoding.
