@@ -376,6 +376,7 @@ public class DataService implements StorageService.Listener {
         storageService.getStoresByStoreType(StoreType.AUTHENTICATED_DATA_STORE)
                 .map(AuthenticatedDataStorageService.class::cast)
                 .forEach(store -> {
+                    // A failure in one store must not stop the migration of the other stores
                     try {
                         List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.migrate(store,
                                 earlierPublisherKeyPair,
@@ -385,7 +386,7 @@ public class DataService implements StorageService.Listener {
                                     requests.size(), store.getStoreKey());
                         }
                         requests.forEach(request -> broadcasters.forEach(broadcaster -> broadcaster.broadcast(request)));
-                    } catch (GeneralSecurityException e) {
+                    } catch (RuntimeException e) {
                         log.error("Migrating the publisher of our data in store {} failed", store.getStoreKey(), e);
                     }
                 });
