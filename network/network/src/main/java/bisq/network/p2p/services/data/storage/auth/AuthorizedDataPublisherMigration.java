@@ -24,9 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Oracle and seed nodes of earlier versions published their authorized data with the key pair of their network
@@ -104,6 +106,41 @@ public final class AuthorizedDataPublisherMigration {
             acceptedRequests.add(removeRequest);
         }
         return acceptedRequests;
+    }
+
+    /**
+     * The requests which the runs of the migration applied to the store, also before a restart: the removals of the
+     * earlier key pair with signature V2, and the entries of the authorized key pair for the same data. Nodes of
+     * earlier versions create only signature V1, so their removals are not included. The entries come first, so that
+     * nodes of earlier versions receive the entry of the authorized key pair before the removal (see
+     * docs/specifications/network/storage-ownership.md).
+     */
+    public static List<AuthenticatedDataRequest> findMigrationRequests(AuthenticatedDataStorageService store,
+                                                                       PublicKey earlierPublisherKey,
+                                                                       PublicKey authorizedKey) {
+        byte[] earlierPublicKeyBytes = earlierPublisherKey.getEncoded();
+        byte[] authorizedPublicKeyBytes = authorizedKey.getEncoded();
+        Map<ByteArray, AuthenticatedDataRequest> map = store.getPersistableStore().getMap();
+        List<RemoveAuthenticatedDataRequest> removals = map.values().stream()
+                .filter(RemoveAuthenticatedDataRequest.class::isInstance)
+                .map(RemoveAuthenticatedDataRequest.class::cast)
+                .filter(RemoveAuthenticatedDataRequest::isSignatureV2Present)
+                .filter(removal -> Arrays.equals(removal.getSignaturePubKeyEncoded(), earlierPublicKeyBytes))
+                .filter(removal -> !removal.isExpired())
+                .toList();
+        List<AuthenticatedDataRequest> requests = new ArrayList<>();
+        removals.forEach(removal -> {
+            // The storage key V1 of a removal is the hash of the data
+            ByteArray storageKeyOfOwner = AddAuthenticatedDataRequest.getStorageKey(
+                    removal.getStorageKeyV1().getBytes(),
+                    authorizedPublicKeyBytes);
+            if (map.get(storageKeyOfOwner) instanceof AddAuthenticatedDataRequest entryOfOwner &&
+                    !entryOfOwner.isExpired()) {
+                requests.add(entryOfOwner);
+            }
+        });
+        requests.addAll(removals);
+        return requests;
     }
 
     // Data which the owner removed is not published again, also if the entry of the earlier key pair is still stored.
