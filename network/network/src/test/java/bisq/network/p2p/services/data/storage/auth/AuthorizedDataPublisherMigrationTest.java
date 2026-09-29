@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -62,6 +64,9 @@ class AuthorizedDataPublisherMigrationTest {
     private AuthorizedData authorizedData;
     // A full store accepts no entry for a new storage key
     private boolean isStoreFull;
+    // The store throws at the add request of this data
+    @Nullable
+    private AuthorizedData dataWhoseAddThrows;
 
     @BeforeEach
     void setUp() throws GeneralSecurityException {
@@ -74,6 +79,14 @@ class AuthorizedDataPublisherMigrationTest {
             @Override
             protected boolean isExceedingMapSize() {
                 return isStoreFull || super.isExceedingMapSize();
+            }
+
+            @Override
+            public DataStorageResult add(AddAuthenticatedDataRequest request) {
+                if (request.getAuthenticatedSequentialData().getAuthenticatedData().equals(dataWhoseAddThrows)) {
+                    throw new IllegalStateException("Simulated failure");
+                }
+                return super.add(request);
             }
         };
         authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -142,6 +155,31 @@ class AuthorizedDataPublisherMigrationTest {
         assertEquals(addRequest, store.getPersistableStore().getMap().get(addRequest.getStorageKey()));
         assertInstanceOf(RemoveAuthenticatedDataRequest.class,
                 store.getPersistableStore().getMap().get(entryOfEarlierVersion.getStorageKey()));
+    }
+
+    // An exception at one entry, for example at the creation of a signature, must not stop the migration of the other
+    // entries. The entry stays, and a later run migrates it.
+    @Test
+    void failureAtOneEntryDoesNotStopTheMigrationOfTheOthers() throws GeneralSecurityException {
+        AuthorizedData otherAuthorizedData = authorize("other content", authorizedKeyPair);
+        AddAuthenticatedDataRequest entryWhichFails = createRequestOfEarlierVersion(authorizedData, 1);
+        AddAuthenticatedDataRequest otherEntry = createRequestOfEarlierVersion(otherAuthorizedData, 1);
+        assertTrue(store.add(entryWhichFails).isSuccess());
+        assertTrue(store.add(otherEntry).isSuccess());
+        dataWhoseAddThrows = authorizedData;
+
+        List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.migrate(store, identityKeyPair,
+                authorizedKeyPair);
+
+        assertEquals(2, requests.size());
+        assertInstanceOf(RemoveAuthenticatedDataRequest.class,
+                store.getPersistableStore().getMap().get(otherEntry.getStorageKey()));
+        assertEquals(entryWhichFails, store.getPersistableStore().getMap().get(entryWhichFails.getStorageKey()));
+
+        dataWhoseAddThrows = null;
+        assertEquals(2, AuthorizedDataPublisherMigration.migrate(store, identityKeyPair, authorizedKeyPair).size());
+        assertInstanceOf(RemoveAuthenticatedDataRequest.class,
+                store.getPersistableStore().getMap().get(entryWhichFails.getStorageKey()));
     }
 
     // For example, the oracle node removed a bonded role with its authorized key pair before the migration ran

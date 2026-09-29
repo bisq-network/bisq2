@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.security.DigestUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -37,14 +38,16 @@ import java.util.List;
  * Only oracle and seed nodes use it. It can be removed when no entry of an earlier publisher is valid anymore:
  * AuthorizedData.LEGACY_OWNER_CUTOFF_DATE plus the time to live of the transition types.
  */
+@Slf4j
 public final class AuthorizedDataPublisherMigration {
     private AuthorizedDataPublisherMigration() {
     }
 
-    // Applies the requests to the store and returns those which it accepted, for broadcasting
+    // Applies the requests to the store and returns those which it accepted, for broadcasting. If the migration of an
+    // entry fails, the entry stays, and a later run migrates it.
     public static List<AuthenticatedDataRequest> migrate(AuthenticatedDataStorageService store,
                                                          KeyPair earlierPublisherKeyPair,
-                                                         KeyPair authorizedKeyPair) throws GeneralSecurityException {
+                                                         KeyPair authorizedKeyPair) {
         byte[] earlierPublicKeyBytes = earlierPublisherKeyPair.getPublic().getEncoded();
         byte[] authorizedPublicKeyBytes = authorizedKeyPair.getPublic().getEncoded();
         byte[] authorizedPubKeyHash = DigestUtil.hash(authorizedPublicKeyBytes);
@@ -62,29 +65,43 @@ public final class AuthorizedDataPublisherMigration {
 
         List<AuthenticatedDataRequest> acceptedRequests = new ArrayList<>();
         for (AddAuthenticatedDataRequest entry : entriesOfEarlierPublisher) {
-            AuthorizedData authorizedData = (AuthorizedData) entry.getAuthenticatedSequentialData().getAuthenticatedData();
-            if (!isRemovedByOwner(store, authorizedData, authorizedPublicKeyBytes)) {
-                // Nodes of earlier versions store the entries of both key pairs under one storage key (V1), and they
-                // accept a request only with a higher sequence number than the stored one. With a sequence number above
-                // the one of the remove request below, they replace the entry of the earlier key pair in any order.
-                // Then they also apply later remove requests of the authorized key pair.
-                AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store,
-                        authorizedData,
-                        authorizedKeyPair,
-                        entry.getSequenceNumber() + 2);
-                if (!store.add(addRequest).isSuccess()) {
-                    // For example, the store is full. The entry of the earlier key pair is the source of the data, so
-                    // it stays, and a later run migrates it.
-                    continue;
-                }
-                acceptedRequests.add(addRequest);
+            try {
+                acceptedRequests.addAll(migrate(store, entry, earlierPublisherKeyPair, authorizedKeyPair));
+            } catch (GeneralSecurityException | RuntimeException e) {
+                log.error("Migrating the publisher of entry {} failed", entry.getStorageKey(), e);
             }
-            RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store,
+        }
+        return acceptedRequests;
+    }
+
+    private static List<AuthenticatedDataRequest> migrate(AuthenticatedDataStorageService store,
+                                                          AddAuthenticatedDataRequest entry,
+                                                          KeyPair earlierPublisherKeyPair,
+                                                          KeyPair authorizedKeyPair) throws GeneralSecurityException {
+        byte[] authorizedPublicKeyBytes = authorizedKeyPair.getPublic().getEncoded();
+        AuthorizedData authorizedData = (AuthorizedData) entry.getAuthenticatedSequentialData().getAuthenticatedData();
+        List<AuthenticatedDataRequest> acceptedRequests = new ArrayList<>();
+        if (!isRemovedByOwner(store, authorizedData, authorizedPublicKeyBytes)) {
+            // Nodes of earlier versions store the entries of both key pairs under one storage key (V1), and they
+            // accept a request only with a higher sequence number than the stored one. With a sequence number above
+            // the one of the remove request below, they replace the entry of the earlier key pair in any order.
+            // Then they also apply later remove requests of the authorized key pair.
+            AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store,
                     authorizedData,
-                    earlierPublisherKeyPair);
-            if (store.remove(removeRequest).isSuccess()) {
-                acceptedRequests.add(removeRequest);
+                    authorizedKeyPair,
+                    entry.getSequenceNumber() + 2);
+            if (!store.add(addRequest).isSuccess()) {
+                // For example, the store is full. The entry of the earlier key pair is the source of the data, so
+                // it stays, and a later run migrates it.
+                return acceptedRequests;
             }
+            acceptedRequests.add(addRequest);
+        }
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store,
+                authorizedData,
+                earlierPublisherKeyPair);
+        if (store.remove(removeRequest).isSuccess()) {
+            acceptedRequests.add(removeRequest);
         }
         return acceptedRequests;
     }
