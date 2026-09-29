@@ -24,8 +24,6 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.encoding.Hex;
-import bisq.identity.Identity;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
@@ -66,7 +64,6 @@ import static bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRolesVerificatio
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -443,16 +440,7 @@ class Bisq1BridgeRequestServiceTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.removeAuthorizedData(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        when(networkService.removeAuthorizedData(any(), any(), any()))
-                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        IdentityService identityService = mock(IdentityService.class);
-        Identity identity = mock(Identity.class);
-        when(identity.getNetworkIdWithKeyPair()).thenReturn(
-                new bisq.network.identity.NetworkIdWithKeyPair(registration.getNetworkId(),
-                        KeyGeneration.generateDefaultEcKeyPair()));
-        when(identityService.getOrCreateDefaultIdentity()).thenReturn(identity);
         Bisq1BridgeRequestService service = createService(KeyGeneration.generateDefaultEcKeyPair(),
-                identityService,
                 networkService,
                 mock(AuthorizedBondedRolesService.class),
                 bondedRoleGrpcService,
@@ -493,17 +481,9 @@ class Bisq1BridgeRequestServiceTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.removeAuthorizedData(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        when(networkService.removeAuthorizedData(any(), any(), any()))
-                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        IdentityService identityService = mock(IdentityService.class);
-        Identity identity = mock(Identity.class);
-        KeyPair identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        when(identity.getNetworkIdWithKeyPair()).thenReturn(
-                new bisq.network.identity.NetworkIdWithKeyPair(registration.getNetworkId(), identityKeyPair));
-        when(identityService.getOrCreateDefaultIdentity()).thenReturn(identity);
         KeyPair authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         Bisq1BridgeRequestService service = createService(authorizedKeyPair,
-                identityService, networkService, mock(AuthorizedBondedRolesService.class), bondedRoleGrpcService,
+                networkService, mock(AuthorizedBondedRolesService.class), bondedRoleGrpcService,
                 mock(GrpcClient.class));
         service.getPersistableStore().getBondedRoleRegistrationRequests().add(registration);
         useDirectExecutor(service);
@@ -511,7 +491,7 @@ class Bisq1BridgeRequestServiceTest {
         service.onConfidentialMessage(cancellation, KeyGeneration.generateDefaultEcKeyPair().getPublic());
 
         verify(bondedRoleGrpcService).requestBondedRoleVerification(any(), any());
-        verifyRemovalWithAuthorizedAndIdentityKeyPair(networkService, authorizedKeyPair, identityKeyPair);
+        verifyRemovalWithAuthorizedKeyPair(networkService, authorizedKeyPair);
         assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).isEmpty();
     }
 
@@ -558,23 +538,15 @@ class Bisq1BridgeRequestServiceTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.removeAuthorizedData(any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        when(networkService.removeAuthorizedData(any(), any(), any()))
-                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
-        IdentityService identityService = mock(IdentityService.class);
-        Identity identity = mock(Identity.class);
-        KeyPair identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        when(identity.getNetworkIdWithKeyPair()).thenReturn(
-                new bisq.network.identity.NetworkIdWithKeyPair(invalid.getNetworkId(), identityKeyPair));
-        when(identityService.getOrCreateDefaultIdentity()).thenReturn(identity);
         KeyPair authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         Bisq1BridgeRequestService service = createService(authorizedKeyPair,
-                identityService, networkService, mock(AuthorizedBondedRolesService.class), bondedRoleGrpcService,
+                networkService, mock(AuthorizedBondedRolesService.class), bondedRoleGrpcService,
                 mock(GrpcClient.class));
         service.getPersistableStore().getBondedRoleRegistrationRequests().addAll(List.of(invalid, valid));
 
         service.revalidateBondedRolesNow();
 
-        verifyRemovalWithAuthorizedAndIdentityKeyPair(networkService, authorizedKeyPair, identityKeyPair);
+        verifyRemovalWithAuthorizedKeyPair(networkService, authorizedKeyPair);
         assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).containsExactly(valid);
     }
 
@@ -708,14 +680,13 @@ class Bisq1BridgeRequestServiceTest {
         return Math.floorDiv(date, bucketSize) * bucketSize;
     }
 
-    // The authorized key owns the data. Oracle nodes of earlier versions published it with the key pair of their network
-    // identity, so that copy is removed as well (see docs/specifications/network/storage-ownership.md).
-    private static void verifyRemovalWithAuthorizedAndIdentityKeyPair(NetworkService networkService,
-                                                                     KeyPair authorizedKeyPair,
-                                                                     KeyPair identityKeyPair) {
+    // The authorized key owns the data. The entries which oracle nodes of earlier versions published with the key pair
+    // of their network identity are removed by the migration at startup, not with each removal (see
+    // docs/specifications/network/storage-ownership.md).
+    private static void verifyRemovalWithAuthorizedKeyPair(NetworkService networkService, KeyPair authorizedKeyPair) {
         verify(networkService).removeAuthorizedData(any(),
                 argThat((KeyPair keyPair) -> keyPair.getPublic().equals(authorizedKeyPair.getPublic())));
-        verify(networkService).removeAuthorizedData(any(), eq(identityKeyPair), eq(authorizedKeyPair.getPublic()));
+        verify(networkService, never()).removeAuthorizedData(any(), any(), any());
     }
 
     private static void useDirectExecutor(Bisq1BridgeRequestService service) {
@@ -750,16 +721,7 @@ class Bisq1BridgeRequestServiceTest {
         when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
         GrpcClient grpcClient = mock(GrpcClient.class);
 
-        IdentityService identityService = mock(IdentityService.class);
-        Identity identity = mock(Identity.class);
-        when(identity.getNetworkIdWithKeyPair()).thenReturn(
-                new bisq.network.identity.NetworkIdWithKeyPair(
-                        mock(bisq.network.identity.NetworkId.class),
-                        KeyGeneration.generateDefaultEcKeyPair()));
-        when(identityService.getOrCreateDefaultIdentity()).thenReturn(identity);
-
         return new Bisq1BridgeRequestService(persistenceService,
-                identityService,
                 networkService,
                 mock(AuthorizedBondedRolesService.class),
                 authorizedKeyPair.getPrivate(),
@@ -778,7 +740,6 @@ class Bisq1BridgeRequestServiceTest {
             boolean bondedRoleRegistrationEnabled) {
         var authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         return createService(authorizedKeyPair,
-                mock(IdentityService.class),
                 mock(NetworkService.class),
                 mock(AuthorizedBondedRolesService.class),
                 bondedRoleGrpcService,
@@ -808,7 +769,6 @@ class Bisq1BridgeRequestServiceTest {
                                                            BondedRoleGrpcService bondedRoleGrpcService,
                                                            GrpcClient grpcClient) {
         return createService(authorizedKeyPair,
-                mock(IdentityService.class),
                 networkService,
                 authorizedBondedRolesService,
                 bondedRoleGrpcService,
@@ -817,22 +777,6 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     private static Bisq1BridgeRequestService createService(KeyPair authorizedKeyPair,
-                                                           IdentityService identityService,
-                                                           NetworkService networkService,
-                                                           AuthorizedBondedRolesService authorizedBondedRolesService,
-                                                           BondedRoleGrpcService bondedRoleGrpcService,
-                                                           GrpcClient grpcClient) {
-        return createService(authorizedKeyPair,
-                identityService,
-                networkService,
-                authorizedBondedRolesService,
-                bondedRoleGrpcService,
-                grpcClient,
-                true);
-    }
-
-    private static Bisq1BridgeRequestService createService(KeyPair authorizedKeyPair,
-                                                           IdentityService identityService,
                                                            NetworkService networkService,
                                                            AuthorizedBondedRolesService authorizedBondedRolesService,
                                                            BondedRoleGrpcService bondedRoleGrpcService,
@@ -846,7 +790,6 @@ class Bisq1BridgeRequestServiceTest {
         when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
 
         return new Bisq1BridgeRequestService(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedKeyPair.getPrivate(),

@@ -39,7 +39,6 @@ import bisq.oracle_node.market_price.MarketPricePropagationService;
 import bisq.oracle_node.timestamp.TimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
-import bisq.user.reputation.ReputationDataUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -116,7 +115,7 @@ public class OracleNodeService implements Service {
 
     private Bisq1BridgeService bisq1BridgeService;
     @Nullable
-    private Scheduler startupScheduler, scheduler;
+    private Scheduler startupScheduler, scheduler, migrationScheduler;
     @Nullable
     private Pin bondedRolesPin;
 
@@ -175,8 +174,6 @@ public class OracleNodeService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        ReputationDataUtil.cleanupMap(networkService);
-
         Identity identity = identityService.getOrCreateDefaultIdentity();
         NetworkId networkId = identity.getNetworkId();
         KeyPair keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
@@ -192,13 +189,22 @@ public class OracleNodeService implements Service {
         Bisq1BridgeService.Config bisq1BridgeConfig = Bisq1BridgeService.Config.from(config.getBisq1Bridge());
         bisq1BridgeService = new Bisq1BridgeService(bisq1BridgeConfig,
                 persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
                 authorizedPublicKey,
                 staticPublicKeysProvided,
                 myAuthorizedOracleNode);
+
+        // Oracle nodes of earlier versions published their authorized data with the key pair of their network identity.
+        // Applications use only data which its owner published, so we publish it again with our authorized key pair
+        // (see docs/specifications/network/storage-ownership.md). Repeated like the publishing at startup, because our
+        // data can also arrive with the inventory.
+        migrationScheduler = Scheduler.run(() -> networkService.migratePublisherOfAuthorizedData(keyPair,
+                        authorizedKeyPair))
+                .host(this)
+                .runnableName("migratePublisherOfAuthorizedData")
+                .repeated(10, 60, TimeUnit.SECONDS, 3);
 
         // We only self-publish if we are a root oracle
         if (staticPublicKeysProvided) {
@@ -237,12 +243,6 @@ public class OracleNodeService implements Service {
             public void onRemoved(Object element) {
                 if (element instanceof BondedRole bondedRole) {
                     networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(), authorizedKeyPair);
-                    // Oracle nodes of earlier versions published it with the key pair of their network identity. Until
-                    // no such data is valid anymore (AuthorizedData.LEGACY_OWNER_CUTOFF_DATE plus its TTL), we
-                    // remove that copy as well.
-                    networkService.removeAuthorizedData(bondedRole.getAuthorizedBondedRole(),
-                            keyPair,
-                            authorizedPublicKey);
                 }
             }
 
@@ -272,6 +272,10 @@ public class OracleNodeService implements Service {
         if (startupScheduler != null) {
             startupScheduler.stop();
             startupScheduler = null;
+        }
+        if (migrationScheduler != null) {
+            migrationScheduler.stop();
+            migrationScheduler = null;
         }
 
         if (bondedRolesPin != null) {

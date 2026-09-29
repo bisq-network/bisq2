@@ -21,10 +21,14 @@ import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.StorageService;
+import bisq.network.p2p.services.data.storage.StoreType;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.AuthorizedDataPublisherMigration;
 import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -38,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -344,6 +349,31 @@ public class DataService implements StorageService.Listener {
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();
                         throw new CompletionException(e);
+                    }
+                });
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Migration
+    /* --------------------------------------------------------------------- */
+
+    // Only for oracle and seed nodes (see AuthorizedDataPublisherMigration)
+    public void migratePublisherOfAuthorizedData(KeyPair earlierPublisherKeyPair, KeyPair authorizedKeyPair) {
+        storageService.getStoresByStoreType(StoreType.AUTHENTICATED_DATA_STORE)
+                .map(AuthenticatedDataStorageService.class::cast)
+                .forEach(store -> {
+                    try {
+                        List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.migrate(store,
+                                earlierPublisherKeyPair,
+                                authorizedKeyPair);
+                        if (!requests.isEmpty()) {
+                            log.info("We publish {} requests to migrate the publisher of our data in store {}",
+                                    requests.size(), store.getStoreKey());
+                        }
+                        requests.forEach(request -> broadcasters.forEach(broadcaster -> broadcaster.broadcast(request)));
+                    } catch (GeneralSecurityException e) {
+                        log.error("Migrating the publisher of our data in store {} failed", store.getStoreKey(), e);
                     }
                 });
     }

@@ -96,6 +96,19 @@ persisted request again and stores the request under it. It does not trust the p
 have the same key, the node keeps the one which the store would keep: the higher sequence number, else the later
 creation date. This happens only if the persisted keys were not the keys of their requests.
 
+Otherwise the node keeps every persisted request which has not expired, unless a rule of the store removes it when the
+store is loaded (for example rule 8 of [`storage-ownership.md`](storage-ownership.md)). This includes:
+
+- Remove requests. A remove request rejects add requests of its key whose sequence number is not higher. A node which
+  dropped remove requests at startup would accept a replayed add request of removed data again.
+- Add requests of the same data of different publishers. They have different keys. A selection of one of them, for
+  example the one with the highest sequence number, could drop the entry of the owner.
+
+Earlier versions removed at startup all remove requests of the stores of bonded roles, oracle nodes, market prices and
+reputation data, and kept only one add request of equal data in these stores. That cleanup removed duplicates of a
+defect of 2024, when the storage key contained the authorization signature. The key is computed again at load (see
+above), so such duplicates do not exist anymore.
+
 ## Compatibility
 
 - Storage keys are local to a node, with one exception: the inventory filter. Its type defines which storage key it

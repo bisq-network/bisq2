@@ -30,9 +30,8 @@ import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
@@ -41,7 +40,6 @@ import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Files;
@@ -50,13 +48,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -104,40 +100,7 @@ public class StorageService {
                 getExistingStoreKeys(dirPath, AUTHENTICATED_DATA_STORE)
                         .forEach(storeKey -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey);
-                            AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
-                                @Override
-                                public void onAdded(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onAdded(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onAdded at listener {} failed", listener, e);
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void onRemoved(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onRemoved(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void onRefreshed(AuthenticatedData authenticatedData) {
-                                    listeners.forEach(listener -> {
-                                        try {
-                                            listener.onRefreshed(authenticatedData);
-                                        } catch (Exception e) {
-                                            log.error("Calling onRefresh at listener {} failed", listener, e);
-                                        }
-                                    });
-                                }
-                            };
+                            AuthenticatedDataStorageService.Listener listener = createAuthenticatedDataStoreListener();
                             dataStore.addListener(listener);
                             authenticatedDataStoresListeners.put(storeKey, listener);
                             authenticatedDataStores.put(storeKey, dataStore);
@@ -252,8 +215,19 @@ public class StorageService {
         // todo use getClone once tested enough on main
         return store.getPersistableStore().getMutableClone().getMap().values().stream()
                 .filter(e -> e instanceof AddAuthenticatedDataRequest)
-                .map(e -> (AddAuthenticatedDataRequest) e)
-                .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData());
+                .map(e -> ((AddAuthenticatedDataRequest) e).getAuthenticatedSequentialData())
+                .filter(sequentialData -> isPublishedByOwner(sequentialData.getAuthenticatedData(),
+                        sequentialData.getPubKeyHash()))
+                .map(AuthenticatedSequentialData::getAuthenticatedData);
+    }
+
+    // Applications get only the data of entries which the owner of the data published (see
+    // docs/specifications/network/storage-ownership.md). During the transition of the publisher of authorized data, a
+    // store also holds entries of other publishers. Applications identify data without its publisher. So the removal
+    // or expiry of such an entry would remove the data of the owner from them. The stores still hold and relay these
+    // entries.
+    private static boolean isPublishedByOwner(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+        return authenticatedData.isOwner(publisherPubKeyHash);
     }
 
 
@@ -422,30 +396,7 @@ public class StorageService {
                     AUTHENTICATED_DATA_STORE.getStoreName(),
                     storeKey);
 
-            AuthenticatedDataStorageService.Listener listener = new AuthenticatedDataStorageService.Listener() {
-                @Override
-                public void onAdded(AuthenticatedData authenticatedData) {
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onAdded(authenticatedData);
-                        } catch (Exception e) {
-                            log.error("Calling onAdded at listener {} failed", listener, e);
-                        }
-                    });
-                }
-
-                @Override
-                public void onRemoved(AuthenticatedData authenticatedData) {
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onRemoved(authenticatedData);
-                        } catch (Exception e) {
-                            log.error("Calling onRemoved at listener {} failed", listener, e);
-                        }
-                    });
-                }
-            };
-
+            AuthenticatedDataStorageService.Listener listener = createAuthenticatedDataStoreListener();
             storageService.addListener(listener);
             authenticatedDataStoresListeners.put(storeKey, listener);
             authenticatedDataStores.put(storeKey, storageService);
@@ -529,69 +480,52 @@ public class StorageService {
         }
     }
 
-    public <T extends AuthorizedDistributedData> void cleanupMap(String storeKey,
-                                                                 Function<AuthorizedDistributedData, Optional<T>> typeFilter) {
-        try {
-            AuthenticatedDataStorageService authenticatedDataStorageService = getOrCreateAuthenticatedDataStore(storeKey).join();
-            Map<ByteArray, AuthenticatedDataRequest> map = authenticatedDataStorageService.getPersistableStore().getMap();
-            // We create a map with the distributedData as key. The duplicated entries will get filtered by data and sequence number, so the most recent and highest seq nr is used.
-            Map<T, Map.Entry<ByteArray, AuthenticatedDataRequest>> entryByDistributedData = map.entrySet().stream()
-                    .filter(entry -> entry.getValue() instanceof AddAuthenticatedDataRequest) // We have only polluted AddAuthenticatedDataRequest, so we can ignore the RemoveAuthenticatedDataRequest
-                    .filter(entry -> {
-                        AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) entry.getValue();
-                        return addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData() instanceof AuthorizedData;
-                    })
-                    .map(entry -> {
-                        AddAuthenticatedDataRequest addAuthenticatedDataRequest = (AddAuthenticatedDataRequest) entry.getValue();
-                        AuthorizedData authorizedData = (AuthorizedData) addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData();
-                        return typeFilter.apply(authorizedData.getAuthorizedDistributedData())
-                                .map(distributedData -> Maps.immutableEntry(distributedData, entry))
-                                .orElse(null);
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toMap(Map.Entry::getKey,
-                            Map.Entry::getValue,
-                            (oldValue, newValue) -> {
-                                if (newValue.getValue().getSequenceNumber() > oldValue.getValue().getSequenceNumber()) {
-                                    return newValue;
-                                }
-                                if (newValue.getValue().getSequenceNumber() == oldValue.getValue().getSequenceNumber()) {
-                                    if (newValue.getValue().getCreated() > oldValue.getValue().getCreated()) {
-                                        return newValue;
-                                    } else {
-                                        return oldValue;
-                                    }
-                                } else {
-                                    return oldValue;
-                                }
-                            }));
+    // Forwards the events of an authenticated data store to the listeners of this service, for data which its owner
+    // published
+    private AuthenticatedDataStorageService.Listener createAuthenticatedDataStoreListener() {
+        return new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                if (!isPublishedByOwner(authenticatedData, publisherPubKeyHash)) {
+                    return;
+                }
+                listeners.forEach(listener -> {
+                    try {
+                        listener.onAdded(authenticatedData);
+                    } catch (Exception e) {
+                        log.error("Calling onAdded at listener {} failed", listener, e);
+                    }
+                });
+            }
 
-            Map<ByteArray, AuthenticatedDataRequest> cleaned = entryByDistributedData.values().stream()
-                    .map(entry -> Maps.immutableEntry(entry.getKey(), entry.getValue()))
-                    .collect(Collectors.toMap(Map.Entry::getKey,
-                            Map.Entry::getValue,
-                            (oldValue, newValue) -> {
-                                // We should not have merge conflicts
-                                if (newValue.getSequenceNumber() > oldValue.getSequenceNumber()) {
-                                    return newValue;
-                                }
-                                if (newValue.getSequenceNumber() == oldValue.getSequenceNumber()) {
-                                    if (newValue.getCreated() > oldValue.getCreated()) {
-                                        return newValue;
-                                    } else {
-                                        return oldValue;
-                                    }
-                                } else {
-                                    return oldValue;
-                                }
-                            }));
-            log.info("cleanupMap for {}: size of cleaned map {}; size of original map={}", storeKey, cleaned.size(), map.size());
-            map.clear();
-            map.putAll(cleaned);
-            authenticatedDataStorageService.persist();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                if (!isPublishedByOwner(authenticatedData, publisherPubKeyHash)) {
+                    return;
+                }
+                listeners.forEach(listener -> {
+                    try {
+                        listener.onRemoved(authenticatedData);
+                    } catch (Exception e) {
+                        log.error("Calling onRemoved at listener {} failed", listener, e);
+                    }
+                });
+            }
+
+            @Override
+            public void onRefreshed(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                if (!isPublishedByOwner(authenticatedData, publisherPubKeyHash)) {
+                    return;
+                }
+                listeners.forEach(listener -> {
+                    try {
+                        listener.onRefreshed(authenticatedData);
+                    } catch (Exception e) {
+                        log.error("Calling onRefresh at listener {} failed", listener, e);
+                    }
+                });
+            }
+        };
     }
 
 

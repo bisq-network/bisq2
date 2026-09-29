@@ -22,13 +22,17 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Minimal AuthorizedDistributedData for storage tests, serialized like TestDistributedData. It names no owner, so its
  * authorized key owns it.
  */
 @EqualsAndHashCode
 public final class TestAuthorizedDistributedData implements AuthorizedDistributedData {
-    public static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS,
+    // Longer than the time to live of real types, so that entries created before AuthorizedData.LEGACY_OWNER_CUTOFF_DATE
+    // do not expire while the tests of the transition rule run
+    public static final MetaData META_DATA = new MetaData(TimeUnit.DAYS.toMillis(1000),
             TestAuthorizedDistributedData.class.getSimpleName());
 
     @Getter

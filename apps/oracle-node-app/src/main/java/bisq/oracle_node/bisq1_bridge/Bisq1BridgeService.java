@@ -26,7 +26,6 @@ import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -107,7 +106,6 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
     private final GrpcClient grpcClient;
     private final Bisq1BridgeService.Config config;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final PrivateKey authorizedPrivateKey;
@@ -129,7 +127,6 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
     public Bisq1BridgeService(Config config,
                               PersistenceService persistenceService,
-                              IdentityService identityService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
@@ -139,7 +136,6 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
         grpcClient = new GrpcClient(config.getGrpcServicePort());
         this.config = config;
-        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.myAuthorizedOracleNode = myAuthorizedOracleNode;
@@ -150,7 +146,6 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
         burningmanGrpcService = new BurningmanGrpcService(staticPublicKeysProvided, grpcClient);
 
         bisq1BridgeRequestService = new Bisq1BridgeRequestService(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,

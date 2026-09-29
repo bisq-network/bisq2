@@ -43,12 +43,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class AuthenticatedDataStorageService extends DataStorageService<AuthenticatedDataRequest> {
     // TODO rename with Handler as only used by StorageService (see https://github.com/bisq-network/bisq2/issues/3691)
+    // publisherPubKeyHash is the hash of the key which published the data: the pubKeyHash of its add request. It
+    // identifies the entry together with the data. The store accepts only the owner of the data as publisher, except
+    // by the transition rule for authorized data (see docs/specifications/network/storage-ownership.md).
     public interface Listener {
-        void onAdded(AuthenticatedData authenticatedData);
+        void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash);
 
-        void onRemoved(AuthenticatedData authenticatedData);
+        void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash);
 
-        default void onRefreshed(AuthenticatedData authenticatedData) {
+        default void onRefreshed(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
         }
     }
 
@@ -160,7 +163,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         listeners.forEach(listener -> {
             try {
-                listener.onAdded(authenticatedData);
+                listener.onAdded(authenticatedData, authenticatedSequentialData.getPubKeyHash());
             } catch (Exception e) {
                 log.error("Calling onAdded at listener {} failed", listener, e);
             }
@@ -188,6 +191,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         ByteArray storageKey = request.getStorageKey();
         AuthenticatedData authenticatedDataFromMap;
+        byte[] publisherPubKeyHash;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
             AuthenticatedDataRequest requestFromMap = map.get(storageKey);
@@ -224,6 +228,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // We have an entry, lets validate if we can remove it
             AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
             authenticatedDataFromMap = dataFromMap.getAuthenticatedData();
+            publisherPubKeyHash = dataFromMap.getPubKeyHash();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 log.warn("SequenceNr has not increased at remove. request={}", request);
                 return DataStorageResult.failed().sequenceNrInvalid();
@@ -241,7 +246,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         listeners.forEach(listener -> {
             try {
-                listener.onRemoved(authenticatedDataFromMap);
+                listener.onRemoved(authenticatedDataFromMap, publisherPubKeyHash);
             } catch (Exception e) {
                 log.error("Calling onRemoved at listener {} failed", listener, e);
             }
@@ -323,7 +328,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         AuthenticatedData authenticatedData = updatedAddRequest.getAuthenticatedSequentialData().getAuthenticatedData();
         listeners.forEach(listener -> {
             try {
-                listener.onRefreshed(authenticatedData);
+                listener.onRefreshed(authenticatedData, updatedAddRequest.getAuthenticatedSequentialData().getPubKeyHash());
             } catch (Exception e) {
                 log.error("Calling onRefreshed at listener {} failed", listener, e);
             }
@@ -368,11 +373,12 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> {
                 persistableStore.getMap().remove(entry.getKey());
-                if (entry.getValue() instanceof AddAuthenticatedDataRequest) {
-                    AuthenticatedData data = ((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().getAuthenticatedData();
+                if (entry.getValue() instanceof AddAuthenticatedDataRequest addRequest) {
+                    AuthenticatedSequentialData sequentialData = addRequest.getAuthenticatedSequentialData();
+                    AuthenticatedData data = sequentialData.getAuthenticatedData();
                     listeners.forEach(listener -> {
                         try {
-                            listener.onRemoved(data);
+                            listener.onRemoved(data, sequentialData.getPubKeyHash());
                         } catch (Exception e) {
                             log.error("Calling onRemoved at listener {} failed", listener, e);
                         }

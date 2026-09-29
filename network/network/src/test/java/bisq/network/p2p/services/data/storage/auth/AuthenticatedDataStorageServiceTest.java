@@ -42,9 +42,12 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -574,6 +577,83 @@ class AuthenticatedDataStorageServiceTest {
         peerStore.onPersistedApplied(peerStore.getPersistableStore());
 
         assertEquals(Map.of(ownerRequest.getStorageKey(), ownerRequest), map);
+    }
+
+    // The store holds one entry per data and publisher. The listeners get both, so that they can tell the entries of the
+    // same data apart.
+    @Test
+    void listenersGetTheKeyWhichPublishedTheData() throws GeneralSecurityException {
+        List<String> events = new ArrayList<>();
+        peerStore.addListener(new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                events.add("added by " + Hex.encode(publisherPubKeyHash));
+            }
+
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                events.add("removed by " + Hex.encode(publisherPubKeyHash));
+            }
+
+            @Override
+            public void onRefreshed(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                events.add("refreshed by " + Hex.encode(publisherPubKeyHash));
+            }
+        });
+
+        addToOwnerAndPeer();
+        assertTrue(peerStore.refresh(RefreshAuthenticatedDataRequest.from(peerStore, authenticatedData, ownerKeyPair))
+                .isSuccess());
+        assertTrue(peerStore.remove(RemoveAuthenticatedDataRequest.from(peerStore, authenticatedData, ownerKeyPair))
+                .isSuccess());
+
+        String owner = Hex.encode(DigestUtil.hash(ownerKeyPair.getPublic().getEncoded()));
+        assertEquals(List.of("added by " + owner, "refreshed by " + owner, "removed by " + owner), events);
+    }
+
+    // At expiry the listeners get the key which published the entry, also if it is not the owner of the data, as in
+    // entries of the transition rule
+    @Test
+    void listenersGetTheKeyWhichPublishedExpiredData() throws GeneralSecurityException {
+        AtomicReference<Runnable> pruneExpiredTask = new AtomicReference<>();
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService() {
+                    @Override
+                    public void addTask(Runnable task) {
+                        pruneExpiredTask.set(task);
+                    }
+                },
+                "expiry",
+                TestAuthorizedDistributedData.class.getSimpleName());
+        List<byte[]> publishers = new ArrayList<>();
+        store.addListener(new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+            }
+
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                publishers.add(publisherPubKeyHash);
+            }
+        });
+        KeyPair publisherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(
+                authorize(TestAuthorizedDistributedData.withLegacyOwners("content")),
+                1,
+                DigestUtil.hash(publisherKeyPair.getPublic().getEncoded()),
+                System.currentTimeMillis() - TestAuthorizedDistributedData.META_DATA.getTtl() - 1000);
+        AddAuthenticatedDataRequest expiredRequest = new AddAuthenticatedDataRequest(sequentialData,
+                SignatureUtil.sign(sequentialData.serializeForHash(), publisherKeyPair.getPrivate()),
+                publisherKeyPair.getPublic().getEncoded(),
+                publisherKeyPair.getPublic(),
+                new byte[]{},
+                0);
+        store.getPersistableStore().getMap().put(expiredRequest.getStorageKey(), expiredRequest);
+
+        pruneExpiredTask.get().run();
+
+        assertEquals(1, publishers.size());
+        assertArrayEquals(DigestUtil.hash(publisherKeyPair.getPublic().getEncoded()), publishers.get(0));
     }
 
     private AuthorizedData authorize(AuthorizedDistributedData data) {

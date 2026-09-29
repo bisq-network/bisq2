@@ -26,7 +26,6 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyGeneration;
-import bisq.user.reputation.ReputationDataUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,8 +88,6 @@ public class SeedNodeService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        ReputationDataUtil.cleanupMap(networkService);
-
         optionalConfig.ifPresent(config -> {
             String privateKey = config.getPrivateKey();
             PrivateKey authorizedPrivateKey = KeyGeneration.getPrivateKeyFromHex(privateKey);
@@ -109,9 +106,15 @@ public class SeedNodeService implements Service {
             // The authorized key owns the authorized data which this node publishes (see
             // docs/specifications/network/storage-ownership.md)
             KeyPair authorizedKeyPair = new KeyPair(authorizedPublicKey, authorizedPrivateKey);
+            // Seed nodes of earlier versions published their bonded role with the key pair of their default identity.
+            // Applications use only data which its owner published, so we publish it again with the authorized key pair.
+            KeyPair earlierKeyPair = identityService.getOrCreateDefaultIdentity().getNetworkIdWithKeyPair().getKeyPair();
 
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
-            startupScheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, authorizedKeyPair))
+            startupScheduler = Scheduler.run(() -> {
+                        networkService.migratePublisherOfAuthorizedData(earlierKeyPair, authorizedKeyPair);
+                        publishMyBondedRole(authorizedBondedRole, authorizedKeyPair);
+                    })
                     .host(this)
                     .runnableName("publishMyBondedRoleAtStartup")
                     .repeated(10, 60, TimeUnit.SECONDS, 3);

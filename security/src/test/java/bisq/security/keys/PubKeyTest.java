@@ -41,4 +41,15 @@ class PubKeyTest {
         assertFalse(PubKey.isId("z" + id.substring(1)));
         assertThrows(IllegalArgumentException.class, () -> PubKey.getHashFromId(id.toUpperCase(Locale.ROOT)));
     }
+
+    // A hash has 20 bytes, so an ID has 40 characters. Other lengths are valid hex encodings, but no IDs.
+    @Test
+    void idsOfOtherLengthsAreNoIds() {
+        String id = new PubKey(KeyGeneration.generateDefaultEcKeyPair().getPublic(), "keyId").getId();
+
+        assertFalse(PubKey.isId(""));
+        assertFalse(PubKey.isId(id.substring(2)));
+        assertFalse(PubKey.isId(id + "00"));
+        assertThrows(IllegalArgumentException.class, () -> PubKey.getHashFromId(id.substring(2)));
+    }
 }

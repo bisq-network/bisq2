@@ -56,12 +56,21 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                                                    AuthenticatedData authenticatedData,
                                                    KeyPair keyPair)
             throws GeneralSecurityException {
+        return from(store, authenticatedData, keyPair, 1);
+    }
+
+    // The sequence number is at least minSequenceNumber (see AuthorizedDataPublisherMigration)
+    static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
+                                            AuthenticatedData authenticatedData,
+                                            KeyPair keyPair,
+                                            int minSequenceNumber)
+            throws GeneralSecurityException {
         int version = VERSION;
         PublicKey publicKey = keyPair.getPublic();
         byte[] publicKeyEncoded = publicKey.getEncoded();
         ByteArray storageKey = getStorageKey(getAuthenticatedDataHash(authenticatedData), publicKeyEncoded);
         byte[] pubKeyHash = DigestUtil.hash(publicKeyEncoded);
-        int sequenceNumber = store.getNextSequenceNumber(storageKey);
+        int sequenceNumber = Math.max(store.getNextSequenceNumber(storageKey), minSequenceNumber);
         long created = System.currentTimeMillis();
         AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authenticatedData,
                 sequenceNumber,
