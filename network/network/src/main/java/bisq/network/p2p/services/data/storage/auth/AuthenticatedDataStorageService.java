@@ -287,8 +287,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             return DataStorageResult.failed().classNameInvalid();
         }
 
-        long now = clock.now();
-        if (refreshRequest.isRequiredSignatureV2Missing(now)) {
+        // A refresh request needs signature V2, also before the cutoff date of signature V1. Nodes of earlier versions
+        // sign only the hash of the data, which covers neither the sequence number nor the creation date (see
+        // docs/specifications/network/storage-request-signatures.md).
+        if (!refreshRequest.isSignatureV2Present()) {
             log.debug("Signature V2 is missing at refresh. storageKey={}", refreshRequest.getStorageKey());
             return DataStorageResult.failed().signatureV2Missing();
         }
@@ -315,11 +317,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             checkArgument(requestFromMap instanceof AddAuthenticatedDataRequest,
                     "requestFromMap expected be type of AddAuthenticatedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
-            // We have an entry, lets validate if we can remove it
             AuthenticatedSequentialData sequentialDataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
             if (refreshRequest.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
-                log.warn("SequenceNr is invalid at refresh. request={}", refreshRequest);
-                // Sequence number has not increased
+                // The sequence number has not increased. This is the normal case for the copies of a refresh request
+                // which arrive from other peers after the node applied it.
+                log.debug("SequenceNr is invalid at refresh. storageKey={}", storageKey);
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
@@ -334,7 +336,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // The signature of the RefreshAuthenticatedDataRequest is created with the full data of an
             // AddAuthenticatedDataRequest at the owner's side, thus the signature will match the new object.
             updatedAddRequest = AddAuthenticatedDataRequest.from(addRequestFromMap, refreshRequest);
-            if (updatedAddRequest.isSignatureInvalid(now)) {
+            if (updatedAddRequest.isSignatureV2Invalid()) {
                 log.warn("Signature is invalid at refresh. request={}", refreshRequest);
                 return DataStorageResult.failed().signatureInvalid();
             }
@@ -462,9 +464,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     private void handlePersistedPublishDateAware(DataStore<AuthenticatedDataRequest> persisted) {
         persisted.getMap().values().forEach(authenticatedDataRequest -> {
-            // We do not handle RefreshAuthenticatedDataRequest as we would receive a new
-            // AddAuthenticatedDataRequest from inventoryRequest anyway as RefreshAuthenticatedDataRequests are
-            // not included in inventoryRequests.
+            // The map holds no RefreshAuthenticatedDataRequest: a refresh replaces the stored
+            // AddAuthenticatedDataRequest.
             if (authenticatedDataRequest instanceof AddAuthenticatedDataRequest request) {
                 DistributedData distributedData = request.getDistributedData();
                 if (distributedData instanceof PublishDateAware publishDateAware) {

@@ -31,6 +31,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -161,21 +162,104 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isSignatureInvalid(), result.toString());
     }
 
-    @Test
-    void refreshWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
-        time = BEFORE_CUTOFF;
+    // A refresh request needs signature V2, also before the cutoff date of signature V1. Nodes of earlier versions do
+    // not relay refresh requests, so only a relay which removes signature V2 on purpose creates such a request.
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void refreshWithoutSignatureV2IsRejected(boolean beforeCutoffDate) throws GeneralSecurityException {
+        time = beforeCutoffDate ? BEFORE_CUTOFF : AT_CUTOFF;
         addToOwnerAndPeer();
         RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
-        // A node of an earlier version sends version 1 and no signature V2
-        RefreshAuthenticatedDataRequest asFromEarlierVersion = RefreshAuthenticatedDataRequest.fromProto(
+        RefreshAuthenticatedDataRequest withoutSignatureV2 = RefreshAuthenticatedDataRequest.fromProto(
                 refreshRequest.toValueProto(false).toBuilder()
-                        .setVersion(1)
                         .clearSignatureV2()
                         .build());
+        AuthenticatedDataRequest storedRequest = peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey());
 
-        DataStorageResult result = peerStore.refresh(asFromEarlierVersion);
+        DataStorageResult result = peerStore.refresh(withoutSignatureV2);
 
-        assertTrue(result.isSuccess(), result.toString());
+        assertFalse(result.isSuccess());
+        assertTrue(result.isSignatureV2Missing(), result.toString());
+        assertSame(storedRequest, peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey()));
+        assertTrue(peerStore.refresh(refreshRequest).isSuccess());
+    }
+
+    // Nodes of versions up to 2.1.13 sign only the hash of the data. This signature covers neither the sequence number
+    // nor the creation date, so a node cannot apply such a request. These nodes send a refresh request every few
+    // minutes while the user is active, so the result is not a severe failure.
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void refreshOfEarlierVersionIsRejected(boolean beforeCutoffDate) throws GeneralSecurityException {
+        time = beforeCutoffDate ? BEFORE_CUTOFF : AT_CUTOFF;
+        addToOwnerAndPeer();
+        AuthenticatedDataRequest storedRequest = peerStore.getPersistableStore().getMap().values().iterator().next();
+        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
+        //noinspection deprecation
+        RefreshAuthenticatedDataRequest ofEarlierVersion = RefreshAuthenticatedDataRequest.fromProto(
+                bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
+                        .setVersion(1)
+                        .setMetaData(TestDistributedData.META_DATA.toProto(false))
+                        .setHash(ByteString.copyFrom(hash))
+                        .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerKeyPair.getPublic().getEncoded()))
+                        .setSequenceNumber(2)
+                        .setSignature(ByteString.copyFrom(SignatureUtil.sign(hash, ownerKeyPair.getPrivate())))
+                        .setCreated(System.currentTimeMillis())
+                        .build());
+        assertEquals(storedRequest.getStorageKey(), ofEarlierVersion.getStorageKey());
+
+        DataStorageResult result = peerStore.refresh(ofEarlierVersion);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isSignatureV2Missing(), result.toString());
+        assertFalse(result.isSevereFailure(), result.toString());
+        assertSame(storedRequest, peerStore.getPersistableStore().getMap().get(storedRequest.getStorageKey()));
+    }
+
+    // A broadcast arrives from several peers. The node applies the first copy of a refresh request. For the later
+    // copies the sequence number has not increased.
+    @Test
+    void copyOfAppliedRefreshIsNotAppliedAgain() throws GeneralSecurityException {
+        addToOwnerAndPeer();
+        List<AuthenticatedData> refreshedData = new ArrayList<>();
+        peerStore.addListener(new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+            }
+
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+            }
+
+            @Override
+            public void onRefreshed(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                refreshedData.add(authenticatedData);
+            }
+        });
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.refresh(refreshRequest).isSuccess());
+        AuthenticatedDataRequest storedRequest = peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey());
+
+        DataStorageResult result = peerStore.refresh(RefreshAuthenticatedDataRequest.fromProto(refreshRequest.toValueProto(false)));
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertFalse(result.isSevereFailure(), result.toString());
+        assertSame(storedRequest, peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey()));
+        assertEquals(List.of(authenticatedData), refreshedData);
+    }
+
+    @Test
+    void refreshOfRemovedDataIsRejected() throws GeneralSecurityException {
+        addToOwnerAndPeer();
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.remove(removeRequest).isSuccess());
+
+        DataStorageResult result = peerStore.refresh(refreshRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isAlreadyRemoved(), result.toString());
+        assertSame(removeRequest, peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey()));
     }
 
     // Storage key V2 contains the public key of the owner. A refresh signed with another key therefore does not find
@@ -344,20 +428,12 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isClassNameInvalid(), result.toString());
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void staleAddCannotReplaceRefreshedEntry(boolean legacy) throws GeneralSecurityException {
-        if (legacy) {
-            time = BEFORE_CUTOFF;
-        }
+    @Test
+    void staleAddCannotReplaceRefreshedEntry() throws GeneralSecurityException {
         AddAuthenticatedDataRequest original = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(ownerStore.add(original).isSuccess());
         assertTrue(peerStore.add(original).isSuccess());
         RefreshAuthenticatedDataRequest refresh = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
-        if (legacy) {
-            refresh = RefreshAuthenticatedDataRequest.fromProto(refresh.toValueProto(false).toBuilder()
-                    .setVersion(1).clearSignatureV2().build());
-        }
         assertTrue(peerStore.refresh(refresh).isSuccess());
         AuthenticatedDataRequest refreshed = peerStore.getPersistableStore().getMap().get(original.getStorageKey());
 
@@ -539,26 +615,23 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(storeWithoutEntry.remove(changedByRelay).isSuccess());
     }
 
+    // A node of an earlier version removes signature V2 when it relays an add request. A node which got such a copy
+    // first can still apply the refresh request of the owner, because the data of the copy is the data which the owner
+    // signed. The refreshed entry then has signature V2.
     @Test
-    void refreshWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate() throws GeneralSecurityException {
-        addToOwnerAndPeer();
-        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
-        RefreshAuthenticatedDataRequest asFromEarlierVersion = RefreshAuthenticatedDataRequest.fromProto(
-                refreshRequest.toValueProto(false).toBuilder()
-                        .setVersion(1)
-                        .clearSignatureV2()
-                        .build());
-        AuthenticatedDataRequest storedRequest = peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey());
-
-        time = AT_CUTOFF;
-        DataStorageResult result = peerStore.refresh(asFromEarlierVersion);
-
-        assertFalse(result.isSuccess());
-        assertTrue(result.isSignatureV2Missing(), result.toString());
-        assertSame(storedRequest, peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey()));
-
+    void refreshOfCopyWithoutSignatureV2CreatesEntryWithSignatureV2() throws GeneralSecurityException {
         time = BEFORE_CUTOFF;
-        assertTrue(peerStore.refresh(asFromEarlierVersion).isSuccess());
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.add(addRequest).isSuccess());
+        assertTrue(peerStore.add(withoutSignatureV2(addRequest)).isSuccess());
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+
+        DataStorageResult result = peerStore.refresh(refreshRequest);
+
+        assertTrue(result.isSuccess(), result.toString());
+        AuthenticatedDataRequest storedRequest = peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey());
+        assertTrue(storedRequest.isSignatureV2Present());
+        assertFalse(storedRequest.isSignatureInvalid(AT_CUTOFF));
     }
 
     // Oracle nodes of earlier versions created their entries without signature V2. The transition rule for the owner of

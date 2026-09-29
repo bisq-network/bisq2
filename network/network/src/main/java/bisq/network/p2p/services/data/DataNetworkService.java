@@ -23,6 +23,7 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
+import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -53,14 +54,14 @@ public class DataNetworkService implements Node.Listener {
     // Node.Listener
     /* --------------------------------------------------------------------- */
 
-    // TODO Received RefreshAuthenticatedDataRequests are dropped here, although their owner broadcasts them. See
-    //  "Known defects" in docs/specifications/network/storage-metadata.md.
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
         if (envelopePayloadMessage instanceof AddDataRequest) {
             dataService.processAddDataRequest((AddDataRequest) envelopePayloadMessage, true);
         } else if (envelopePayloadMessage instanceof RemoveDataRequest) {
             dataService.processRemoveDataRequest((RemoveDataRequest) envelopePayloadMessage, true);
+        } else if (envelopePayloadMessage instanceof RefreshAuthenticatedDataRequest refreshRequest) {
+            dataService.processRefreshDataRequest(refreshRequest);
         }
     }
 

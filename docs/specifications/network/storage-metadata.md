@@ -125,15 +125,6 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 - Nodes of earlier versions still use the MetaData from the network until they update.
 
-## Known defects
-
-- Receivers do not process `RefreshAuthenticatedDataRequest`. The owner applies a refresh to its own store and
-  broadcasts it, for example for user profiles and MuSig offers. A receiving node checks the proof of work and then
-  drops the message, because it handles only add and remove requests. Its copy keeps the old `created` date and
-  expires after the time to live, unless it receives the refreshed add request again through an inventory request.
-  The fix is to process received refresh requests in the storage layer and to relay them. The developers decided to
-  fix this in a later change.
-
 ## Open points
 
 - Whether stores need per-type size limits, and which values. This needs the sizes of real stores.

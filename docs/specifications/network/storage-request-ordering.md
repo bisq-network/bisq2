@@ -13,6 +13,10 @@ An identical add is a duplicate and does not change the stored entry or notify l
 A refresh produces a stored add request with the refreshed sequence number and creation date. Replaying an older
 add must not undo that refresh. The same ordering rule applies after removal and republication of the data.
 
+A copy of a refresh request which a node has applied has the sequence number of the stored add request. The node
+does not apply it again, does not notify listeners, and does not relay it (see
+[storage-refresh-requests.md](storage-refresh-requests.md)).
+
 ## Authenticated removals during signature migration
 
 Signature V1 of an authenticated removal does not cover its sequence number. A relay can change that number without
