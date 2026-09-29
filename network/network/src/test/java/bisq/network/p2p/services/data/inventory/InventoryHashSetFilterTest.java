@@ -23,8 +23,10 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.Feature;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilter;
@@ -43,6 +45,8 @@ import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
@@ -61,6 +65,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
+import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -69,6 +75,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The inventory hash set filter types HASH_SET (storage key V1) and HASH_SET_V2 (storage key V2). See
  * docs/specifications/network/inventory-hash-set-filter.md.
+ * <p>
+ * Requests without signature V2 are accepted only before SignedRequest.SIGNATURE_V1_CUTOFF_DATE, so the nodes of these
+ * tests have a time before that date.
  */
 class InventoryHashSetFilterTest {
     private static final int MAX_SIZE = 2_000_000;
@@ -78,6 +87,8 @@ class InventoryHashSetFilterTest {
 
     private DataService dataService;
     private StorageService storageService;
+    // The node which responds to the requests of dataService, if a test needs one
+    private Optional<DataService> responder = Optional.empty();
     private AuthenticatedDataStorageService authenticatedDataStore;
     private final KeyPair ownerA = KeyGeneration.generateDefaultEcKeyPair();
     private final KeyPair ownerB = KeyGeneration.generateDefaultEcKeyPair();
@@ -86,11 +97,12 @@ class InventoryHashSetFilterTest {
     static void registerTypes() {
         StorableTypesRegistry.register(InventoryTestData.class, InventoryTestData.META_DATA);
         StorableTypesRegistry.register(InventoryTestAppendOnlyData.class, InventoryTestAppendOnlyData.META_DATA);
+        StorableTypesRegistry.register(AckMessage.class, AckMessage.META_DATA);
     }
 
     @BeforeEach
     void setUp() {
-        dataService = new DataService(new PersistenceService(appDataDir));
+        dataService = new DataService(new PersistenceService(appDataDir), CLOCK_BEFORE_CUTOFF);
         storageService = dataService.getStorageService();
         authenticatedDataStore = storageService.getOrCreateAuthenticatedDataStore(InventoryTestData.class.getSimpleName())
                 .join();
@@ -100,7 +112,13 @@ class InventoryHashSetFilterTest {
     // files in it. A write queued now completes after all earlier ones.
     @AfterEach
     void tearDown() {
-        storageService.getStoresByStoreType(StoreType.ALL).forEach(InventoryHashSetFilterTest::waitForPendingWrites);
+        responder.ifPresent(InventoryHashSetFilterTest::shutdown);
+        shutdown(dataService);
+    }
+
+    private static void shutdown(DataService dataService) {
+        dataService.getStorageService().getStoresByStoreType(StoreType.ALL)
+                .forEach(InventoryHashSetFilterTest::waitForPendingWrites);
         dataService.shutdown();
     }
 
@@ -263,6 +281,63 @@ class InventoryHashSetFilterTest {
         assertTrue(factory.getPreferredFilterType(List.of(Feature.INVENTORY_HASH_SET)).isEmpty());
     }
 
+    // A relay of an earlier version removes signature V2 from a removal and keeps its sequence number. The removal with
+    // signature V2 replaces such a copy (see storage-request-ordering.md), so the responder must send it, for both store
+    // types.
+    @Test
+    void responderSendsRemovalWithSignatureV2ToRequesterWithCopyWithoutIt() throws Exception {
+        StorageService responderStorageService = createResponder();
+        List<RemoveDataRequest> removals = createRemovalsOfBothStoreTypes();
+        for (RemoveDataRequest removal : removals) {
+            assertTrue(storageService.onRemoveDataRequest(withoutSignatureV2(removal)).join().isSuccess());
+            assertTrue(responderStorageService.onRemoveDataRequest(removal).join().isSuccess());
+        }
+
+        Inventory inventory = createInventoryV2(responderStorageService);
+
+        assertEquals(Set.copyOf(removals), Set.copyOf(inventory.getEntries()));
+        inventory.getEntries().forEach(removal ->
+                assertTrue(storageService.onRemoveDataRequest((RemoveDataRequest) removal).join().isSuccess()));
+        assertTrue(createInventoryV2(responderStorageService).getEntries().isEmpty());
+    }
+
+    // A copy without signature V2 never replaces a stored removal. So copies have equal entries, also if a relay changed
+    // the sequence number, which signature V1 does not cover.
+    @Test
+    void responderDoesNotSendCopyWithoutSignatureV2ToRequesterWithCopy() throws Exception {
+        StorageService responderStorageService = createResponder();
+        RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(authenticatedDataStore,
+                new DefaultAuthenticatedData(new InventoryTestData("removed", ownerA)),
+                ownerA);
+        RemoveAuthenticatedDataRequest copy = (RemoveAuthenticatedDataRequest) withoutSignatureV2(removal);
+        RemoveAuthenticatedDataRequest changedCopy = RemoveAuthenticatedDataRequest.fromProto(copy.toValueProto(false)
+                .toBuilder()
+                .setSequenceNumber(Integer.MAX_VALUE)
+                .build());
+        assertTrue(storageService.onRemoveDataRequest(copy).join().isSuccess());
+        assertTrue(responderStorageService.onRemoveDataRequest(changedCopy).join().isSuccess());
+
+        assertTrue(createInventoryV2(responderStorageService).getEntries().isEmpty());
+    }
+
+    // Nodes of earlier versions list removals with their sequence number, so HASH_SET keeps it
+    @Test
+    void onlyFilterV2ListsRemovalWithoutSignatureV2WithoutItsSequenceNumber() throws Exception {
+        RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(authenticatedDataStore,
+                new DefaultAuthenticatedData(new InventoryTestData("removed", ownerA)),
+                ownerA);
+        RemoveAuthenticatedDataRequest copy = RemoveAuthenticatedDataRequest.fromProto(
+                ((RemoveAuthenticatedDataRequest) withoutSignatureV2(removal)).toValueProto(false).toBuilder()
+                        .setSequenceNumber(5)
+                        .build());
+        assertTrue(storageService.onRemoveDataRequest(copy).join().isSuccess());
+
+        assertEquals(List.of(new HashSetFilterEntry(copy.getStorageKeyV1().getBytes(), 5)),
+                service(InventoryFilterType.HASH_SET).getFilter().getFilterEntries());
+        assertEquals(List.of(new HashSetFilterEntry(copy.getStorageKeyV2().getBytes(), 0)),
+                service(InventoryFilterType.HASH_SET_V2).getFilter().getFilterEntries());
+    }
+
     // An authenticated data entry of owner A, a remove request of owner B without entry, and append-only data
     private void addStoreContent() throws Exception {
         add(new InventoryTestData("a", ownerA), ownerA);
@@ -309,6 +384,44 @@ class InventoryHashSetFilterTest {
 
     private HashSetFilterService service(InventoryFilterType type) {
         return new HashSetFilterService(storageService, MAX_SIZE, type);
+    }
+
+    private StorageService createResponder() {
+        DataService responderDataService = new DataService(new PersistenceService(appDataDir.resolve("responder")),
+                CLOCK_BEFORE_CUTOFF);
+        responder = Optional.of(responderDataService);
+        return responderDataService.getStorageService();
+    }
+
+    // The inventory which the responder sends for the HASH_SET_V2 filter of dataService
+    private Inventory createInventoryV2(StorageService responderStorageService) {
+        return new HashSetFilterService(responderStorageService, MAX_SIZE, InventoryFilterType.HASH_SET_V2)
+                .createInventory(service(InventoryFilterType.HASH_SET_V2).getFilter());
+    }
+
+    // A removal of authenticated data by owner A, and a removal of mailbox data by its receiver, owner B
+    private List<RemoveDataRequest> createRemovalsOfBothStoreTypes() throws Exception {
+        RemoveAuthenticatedDataRequest authenticatedDataRemoval = RemoveAuthenticatedDataRequest.from(
+                authenticatedDataStore,
+                new DefaultAuthenticatedData(new InventoryTestData("removed", ownerA)),
+                ownerA);
+        MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(ownerA));
+        return List.of(authenticatedDataRemoval, RemoveMailboxRequest.from(mailboxData, ownerB));
+    }
+
+    // As a relay of an earlier version sends it
+    private static RemoveDataRequest withoutSignatureV2(RemoveDataRequest removal) {
+        if (removal instanceof RemoveAuthenticatedDataRequest request) {
+            return RemoveAuthenticatedDataRequest.fromProto(request.toValueProto(false).toBuilder()
+                    .setVersion(1)
+                    .clearSignatureV2()
+                    .build());
+        }
+        RemoveMailboxRequest request = (RemoveMailboxRequest) removal;
+        return RemoveMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
+                .setVersion(1)
+                .clearSignatureV2()
+                .build());
     }
 
     // The owner is not serialized, so data of different owners can have the same storage key V1

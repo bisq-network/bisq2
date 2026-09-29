@@ -40,6 +40,31 @@ Reason: a filter entry is only meaningful together with the key it contains. Nod
 under storage key V2, nodes of earlier versions under V1. If both used one filter type, no entry would match between
 the versions, and the responder would send all requests up to the size limit of the inventory.
 
+## Removals without signature V2
+
+5. In a `HASH_SET_V2` filter, the entry of a removal without signature V2 has sequence number 0, as the entry of
+   append-only data. This applies to the removals of authenticated data and of mailbox data. In a `HASH_SET` filter, the
+   entry keeps the sequence number of the removal, as nodes of earlier versions compute it.
+
+Reasons:
+
+- A relay of an earlier version removes signature V2 from a removal and keeps its sequence number. With the sequence
+  number, the copy and the removal with signature V2 would have the same entry. A responder with the removal with
+  signature V2 would then not send it to a requester with the copy. But the removal with signature V2 replaces the copy
+  (see [`storage-request-ordering.md`](storage-request-ordering.md)): it restores the sequence number or the creation
+  date which the owner signed, and which a relay can change in the copy. With 0, the entries differ, and the responder
+  sends it.
+- Signature V1 does not cover the sequence number of a removal, so the number identifies nothing. Two copies have equal
+  entries also if a relay changed the number of one of them. A copy never replaces a stored removal, so a responder
+  does not need to send it to a requester which holds a copy.
+- The signed sequence numbers of stored requests are positive, so no other entry with the same key has sequence
+  number 0.
+
+Cost: a requester which holds the removal with signature V2 receives the copy from a responder which holds only the
+copy, and rejects it. This ends when the responder gets the removal with signature V2 from any peer, and at the latest
+when the copy expires or the store removes it at the cutoff date of signature V1 (see
+[`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
+
 ## Configuration
 
 Nodes of this version support both filter types, prefer `HASH_SET_V2` and fall back to `HASH_SET`:
