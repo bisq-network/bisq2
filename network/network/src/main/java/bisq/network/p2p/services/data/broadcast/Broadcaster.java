@@ -47,6 +47,10 @@ public class Broadcaster {
         return doBroadcast(broadcastMessage, 1);
     }
 
+    public boolean hasConnections() {
+        return node.isInitialized() && node.getAllActiveConnections().findAny().isPresent();
+    }
+
     private CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage,
                                                            double distributionFactor) {
         // NetworkService completes its initialization when the node of the first transport is ready. The node of

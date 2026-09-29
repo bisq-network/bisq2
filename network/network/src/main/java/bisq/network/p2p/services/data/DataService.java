@@ -17,9 +17,11 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.common.data.ByteArray;
 import bisq.common.timer.Clock;
 import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
+import bisq.network.p2p.services.data.broadcast.ThrottledBroadcastQueue;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.StorageService;
@@ -49,6 +51,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Stream;
 
@@ -87,10 +90,17 @@ public class DataService implements StorageService.Listener {
         }
     }
 
+    // A connection closes if more than about 100 messages wait for sending (see ThrottledBroadcastQueue)
+    private static final long MIGRATION_BROADCAST_INTERVAL_MS = 500;
+
     @Getter
     private final StorageService storageService;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<Broadcaster> broadcasters = new CopyOnWriteArraySet<>();
+    private final ThrottledBroadcastQueue migrationRequestsQueue = new ThrottledBroadcastQueue(broadcasters,
+            MIGRATION_BROADCAST_INTERVAL_MS);
+    // The storage keys of the requests of the publisher migration which are queued in this session
+    private final Set<ByteArray> queuedMigrationRequests = ConcurrentHashMap.newKeySet();
 
     public DataService(PersistenceService persistenceService) {
         this(persistenceService, new SystemClock());
@@ -104,6 +114,7 @@ public class DataService implements StorageService.Listener {
     }
 
     public void shutdown() {
+        migrationRequestsQueue.shutdown();
         storageService.removeListener(this);
         listeners.clear();
         broadcasters.clear();
@@ -371,21 +382,27 @@ public class DataService implements StorageService.Listener {
     // Migration
     /* --------------------------------------------------------------------- */
 
-    // Only for oracle and seed nodes (see AuthorizedDataPublisherMigration)
+    // Only for oracle and seed nodes (see AuthorizedDataPublisherMigration). The node broadcasts the requests one at a
+    // time, because an oracle node can have thousands of them. At the first run after a start, it broadcasts the
+    // requests of the runs before the restart again, because it might not have sent all of them.
     public void migratePublisherOfAuthorizedData(KeyPair earlierPublisherKeyPair, KeyPair authorizedKeyPair) {
         storageService.getStoresByStoreType(StoreType.AUTHENTICATED_DATA_STORE)
                 .map(AuthenticatedDataStorageService.class::cast)
                 .forEach(store -> {
                     // A failure in one store must not stop the migration of the other stores
                     try {
-                        List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.migrate(store,
-                                earlierPublisherKeyPair,
-                                authorizedKeyPair);
+                        AuthorizedDataPublisherMigration.migrate(store, earlierPublisherKeyPair, authorizedKeyPair);
+                        List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.findMigrationRequests(store,
+                                        earlierPublisherKeyPair.getPublic(),
+                                        authorizedKeyPair.getPublic())
+                                .stream()
+                                .filter(request -> queuedMigrationRequests.add(request.getStorageKey()))
+                                .toList();
                         if (!requests.isEmpty()) {
-                            log.info("We publish {} requests to migrate the publisher of our data in store {}",
+                            log.info("We broadcast {} requests to migrate the publisher of our data in store {}",
                                     requests.size(), store.getStoreKey());
+                            migrationRequestsQueue.addAll(requests);
                         }
-                        requests.forEach(request -> broadcasters.forEach(broadcaster -> broadcaster.broadcast(request)));
                     } catch (RuntimeException e) {
                         log.error("Migrating the publisher of our data in store {} failed", store.getStoreKey(), e);
                     }

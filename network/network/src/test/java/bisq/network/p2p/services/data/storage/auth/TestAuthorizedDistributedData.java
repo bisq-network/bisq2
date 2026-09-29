@@ -50,7 +50,7 @@ public final class TestAuthorizedDistributedData implements AuthorizedDistribute
     }
 
     // Data of a type which oracle nodes of earlier versions published with the key of their network identity
-    static TestAuthorizedDistributedData withLegacyOwners(String content) {
+    public static TestAuthorizedDistributedData withLegacyOwners(String content) {
         return new TestAuthorizedDistributedData(content, true);
     }
 
