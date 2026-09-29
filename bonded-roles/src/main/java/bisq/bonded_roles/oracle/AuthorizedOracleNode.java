@@ -20,7 +20,6 @@ package bisq.bonded_roles.oracle;
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
-import bisq.common.network.TransportType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
@@ -28,7 +27,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -152,12 +150,6 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData, Ow
 
     @Override
     public boolean isDataInvalid() {
-        // Can be removed after I2P is activated
-        if (!AuthorizedData.IS_I2P_ACTIVATED && networkId.getAddressByTransportTypeMap().containsKey(TransportType.I2P)) {
-            log.warn("AuthorizedOracleNode considered invalid as it contains an I2PAddress address and we have not yet activated I2P.\n" +
-                    "networkId={}", networkId);
-            return true;
-        }
         return false;
     }
 

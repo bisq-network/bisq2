@@ -32,6 +32,8 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 @ToString
 @EqualsAndHashCode
@@ -49,6 +51,8 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Owners
 
     @Override
     public void verify() {
+        checkNotNull(confidentialData, "ConfidentialData must not be null");
+        checkNotNull(receiverKeyId, "ReceiverKeyId must not be null");
         NetworkDataValidation.validateId(receiverKeyId);
     }
 
@@ -115,7 +119,7 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Owners
 
     @Override
     public boolean isDataInvalid() {
-        return confidentialData == null || receiverKeyId == null;
+        return false;
     }
 
     // The sender owns the message. In the mailbox store, the sender signs the add request.

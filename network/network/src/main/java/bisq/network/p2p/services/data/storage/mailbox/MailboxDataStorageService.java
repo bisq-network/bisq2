@@ -107,7 +107,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
 
-        // The sender check needs valid data, for example a confidential message with confidential data
         if (mailboxData.isDataInvalid()) {
             return DataStorageResult.failed().dataInvalid();
         }
