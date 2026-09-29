@@ -107,11 +107,16 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         }
 
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
-        // Detect them before the signature verification, which is the most expensive check. The check is
-        // repeated inside the lock because the map can change in between.
+        // Detect them before the signature verification, which is the most expensive check. A copy without signature
+        // V2, which a node of an earlier version relayed, is not equal to the stored request, but its sequence number is
+        // not higher. The checks are repeated inside the lock because the map can change in between.
         ByteArray storageKey = request.getStorageKey();
-        if (request.equals(persistableStore.getMap().get(storageKey))) {
+        AuthenticatedDataRequest storedRequest = persistableStore.getMap().get(storageKey);
+        if (request.equals(storedRequest)) {
             return DataStorageResult.failed().requestAlreadyReceived();
+        }
+        if (isSequenceNumberSigned(storedRequest) && request.isSequenceNrInvalid(storedRequest.getSequenceNumber())) {
+            return DataStorageResult.failed().sequenceNrInvalid();
         }
 
         if (request.isExpired()) {
