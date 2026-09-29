@@ -159,8 +159,15 @@ which stays on this version keeps this rule after the cutoff date, so it must be
   the requester of the earlier version, which may not be able to store it, for example a remove request of another
   owner for data which the requester holds. The requester's filter then does not change, and it can receive the same
   request again with the next response. If such requests fill a response up to the size limit, repeated requests do
-  not make progress. This follows from the code paths; it is not reproduced in a test. A requester of this version
-  stops such requests ([rule 6](#repeated-requests)); a requester of an earlier version does not.
+  not make progress. A requester of this version stops such requests ([rule 6](#repeated-requests)); a requester of an
+  earlier version does not.
+  - This is the normal case after the migration of the publisher of authorized data (rule 14 of
+    [`storage-ownership.md`](storage-ownership.md)): a responder of this version holds the remove request of the
+    network identity with sequence number `n + 1` and the entry of the authorized key with `n + 2`, both with storage
+    key V1 `K1`. A requester of an earlier version which holds `(K1, n + 2)` gets the remove request with every response
+    and rejects it, until the remove request expires (20 to 100 days). The review 2026-09-29_16-18-18-fable-5.1 found
+    this by reading the code (finding F8, case A); the number of such requests depends on the number of migrated
+    entries.
   - Why it cannot be removed now: the filter of a node of an earlier version contains no owner, and its code cannot be
     changed. The responder cannot know which owner's request the requester holds.
   - What removes it: ending the support of `HASH_SET` when nodes of earlier versions are no longer supported.
