@@ -215,6 +215,53 @@ class AuthenticatedDataStorageServiceTest {
         assertSame(storedRequest, peerStore.getPersistableStore().getMap().get(storedRequest.getStorageKey()));
     }
 
+    // A broadcast arrives from several peers. The node applies the first copy of a refresh request. For the later
+    // copies the sequence number has not increased.
+    @Test
+    void copyOfAppliedRefreshIsNotAppliedAgain() throws GeneralSecurityException {
+        addToOwnerAndPeer();
+        List<AuthenticatedData> refreshedData = new ArrayList<>();
+        peerStore.addListener(new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+            }
+
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+            }
+
+            @Override
+            public void onRefreshed(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                refreshedData.add(authenticatedData);
+            }
+        });
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.refresh(refreshRequest).isSuccess());
+        AuthenticatedDataRequest storedRequest = peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey());
+
+        DataStorageResult result = peerStore.refresh(RefreshAuthenticatedDataRequest.fromProto(refreshRequest.toValueProto(false)));
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertFalse(result.isSevereFailure(), result.toString());
+        assertSame(storedRequest, peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey()));
+        assertEquals(List.of(authenticatedData), refreshedData);
+    }
+
+    @Test
+    void refreshOfRemovedDataIsRejected() throws GeneralSecurityException {
+        addToOwnerAndPeer();
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.remove(removeRequest).isSuccess());
+
+        DataStorageResult result = peerStore.refresh(refreshRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isAlreadyRemoved(), result.toString());
+        assertSame(removeRequest, peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey()));
+    }
+
     // Storage key V2 contains the public key of the owner. A refresh signed with another key therefore does not find
     // the entry of the owner.
     @Test

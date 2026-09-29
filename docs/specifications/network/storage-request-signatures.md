@@ -98,6 +98,9 @@ versions also do not relay refresh requests. So only a relay which removes signa
 request without signature V2 whose signature V1 verifies. Accepting such a request would let this relay replace a
 stored add request with signature V2 by one without it.
 
+The rules by which nodes apply and relay refresh requests are defined in
+[`storage-refresh-requests.md`](storage-refresh-requests.md).
+
 ## Verification
 
 1. If `signatureV2` is not empty, the receiver verifies only signature V2.

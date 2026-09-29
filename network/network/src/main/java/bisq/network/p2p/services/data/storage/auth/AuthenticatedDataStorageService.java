@@ -317,11 +317,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             checkArgument(requestFromMap instanceof AddAuthenticatedDataRequest,
                     "requestFromMap expected be type of AddAuthenticatedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
-            // We have an entry, lets validate if we can remove it
             AuthenticatedSequentialData sequentialDataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
             if (refreshRequest.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
-                log.warn("SequenceNr is invalid at refresh. request={}", refreshRequest);
-                // Sequence number has not increased
+                // The sequence number has not increased. This is the normal case for the copies of a refresh request
+                // which arrive from other peers after the node applied it.
+                log.debug("SequenceNr is invalid at refresh. storageKey={}", storageKey);
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
@@ -464,9 +464,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     private void handlePersistedPublishDateAware(DataStore<AuthenticatedDataRequest> persisted) {
         persisted.getMap().values().forEach(authenticatedDataRequest -> {
-            // We do not handle RefreshAuthenticatedDataRequest as we would receive a new
-            // AddAuthenticatedDataRequest from inventoryRequest anyway as RefreshAuthenticatedDataRequests are
-            // not included in inventoryRequests.
+            // The map holds no RefreshAuthenticatedDataRequest: a refresh replaces the stored
+            // AddAuthenticatedDataRequest.
             if (authenticatedDataRequest instanceof AddAuthenticatedDataRequest request) {
                 DistributedData distributedData = request.getDistributedData();
                 if (distributedData instanceof PublishDateAware publishDateAware) {

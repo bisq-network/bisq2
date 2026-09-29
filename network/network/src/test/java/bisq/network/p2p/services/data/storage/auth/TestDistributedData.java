@@ -39,7 +39,7 @@ public final class TestDistributedData implements OwnershipVerifiableData {
     @EqualsAndHashCode.Exclude
     private final byte[] ownerPubKeyHash;
 
-    TestDistributedData(String content, PublicKey owner) {
+    public TestDistributedData(String content, PublicKey owner) {
         this.content = content;
         this.ownerPubKeyHash = DigestUtil.hash(owner.getEncoded());
     }

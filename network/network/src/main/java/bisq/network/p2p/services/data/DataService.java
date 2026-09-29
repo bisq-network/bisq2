@@ -306,6 +306,10 @@ public class DataService implements StorageService.Listener {
                         } else {
                             if (dataStorageResult.isSevereFailure()) {
                                 log.warn("refreshAuthenticatedData failed with severe error. Result={}", dataStorageResult);
+                            } else {
+                                // For example, the store holds no add request of the data. Then no node can apply the
+                                // refresh request, and the data must be published with an add request.
+                                log.info("refreshAuthenticatedData was not applied. Result={}", dataStorageResult);
                             }
                             return new BroadcastResult();
                         }
@@ -429,5 +433,19 @@ public class DataService implements StorageService.Listener {
                         broadcasters.forEach(e -> e.reBroadcast(removeDataRequest));
                     }
                 }));
+    }
+
+    // A node relays a refresh request only if it applied it. A copy which arrives from another peer is not applied
+    // again, so the relaying ends. Refresh requests are not part of inventory responses: a node which missed one gets
+    // the refreshed add request with an inventory response (see
+    // docs/specifications/network/storage-refresh-requests.md).
+    public void processRefreshDataRequest(RefreshAuthenticatedDataRequest refreshRequest) {
+        try {
+            if (storageService.onRefreshDataRequest(refreshRequest)) {
+                broadcasters.forEach(e -> e.reBroadcast(refreshRequest));
+            }
+        } catch (Exception e) {
+            log.warn("Processing the RefreshAuthenticatedDataRequest failed", e);
+        }
     }
 }

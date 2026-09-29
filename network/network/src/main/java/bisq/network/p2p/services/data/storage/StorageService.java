@@ -33,6 +33,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
+import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
@@ -353,6 +354,26 @@ public class StorageService {
                         return Optional.empty();
                     }
                 });
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Refresh data
+    /* --------------------------------------------------------------------- */
+
+    // A refresh request applies only to an add request which a store holds. So it never creates a store: a store
+    // which does not exist holds no data, and the class name comes from the peer.
+    // Returns true if the store applied the request.
+    public boolean onRefreshDataRequest(RefreshAuthenticatedDataRequest request) {
+        AuthenticatedDataStorageService store = authenticatedDataStores.get(request.getClassName());
+        if (store == null) {
+            return false;
+        }
+        DataStorageResult dataStorageResult = store.refresh(request);
+        if (dataStorageResult.isSevereFailure()) {
+            log.info("RefreshAuthenticatedDataRequest was not applied. Result={}", dataStorageResult);
+        }
+        return dataStorageResult.isSuccess();
     }
 
     public Stream<Map<ByteArray, AuthenticatedDataRequest>> getAuthenticatedDataStoreMaps() {
