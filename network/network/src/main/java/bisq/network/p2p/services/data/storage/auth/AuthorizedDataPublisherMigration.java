@@ -31,7 +31,8 @@ import java.util.List;
  * Oracle and seed nodes of earlier versions published their authorized data with the key pair of their network
  * identity instead of their authorized key pair, which owns the data. For the entries of a store which the earlier key
  * pair published and the authorized key pair authorized, this publishes the data again with the authorized key pair
- * and removes the entries of the earlier key pair (see docs/specifications/network/storage-ownership.md).
+ * and removes the entries of the earlier key pair (see docs/specifications/network/storage-ownership.md). It removes an
+ * entry only if the store accepted the new entry, or if the owner removed the data.
  * <p>
  * Only oracle and seed nodes use it. It can be removed when no entry of an earlier publisher is valid anymore:
  * AuthorizedData.LEGACY_OWNER_CUTOFF_DATE plus the time to live of the transition types.
@@ -71,9 +72,12 @@ public final class AuthorizedDataPublisherMigration {
                         authorizedData,
                         authorizedKeyPair,
                         entry.getSequenceNumber() + 2);
-                if (store.add(addRequest).isSuccess()) {
-                    acceptedRequests.add(addRequest);
+                if (!store.add(addRequest).isSuccess()) {
+                    // For example, the store is full. The entry of the earlier key pair is the source of the data, so
+                    // it stays, and a later run migrates it.
+                    continue;
                 }
+                acceptedRequests.add(addRequest);
             }
             RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store,
                     authorizedData,
