@@ -28,7 +28,6 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -246,15 +245,6 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
 
     @Override
     public boolean isDataInvalid() {
-        // Can be removed after I2P is activated
-        if (!AuthorizedData.IS_I2P_ACTIVATED ) {
-            Boolean isBannedRoleInvalid = bannedRole.map(node -> node.isDataInvalid()).orElse(false);
-            if(isBannedRoleInvalid){
-                log.warn("AuthorizedAlertData considered invalid as bannedRole is invalid.\n" +
-                        "bannedRole={}", bannedRole);
-                return true;
-            }
-        }
         return message.orElse("").length() > MAX_MESSAGE_LENGTH;
     }
 }

@@ -52,10 +52,6 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
-    // Can be removed after I2P is activated
-    public static final Date I2P_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.DECEMBER, 1);
-    public static final boolean IS_I2P_ACTIVATED = new Date().after(I2P_ACTIVATION_DATE);
-
     // Oracle and seed nodes of earlier versions published data of some types with the key pair of their network
     // identity (see AuthorizedDistributedData.isLegacyOwnerAccepted). Their data created before this date is accepted
     // with another owner than the authorized key. The date must be after all oracle and seed nodes publish with their

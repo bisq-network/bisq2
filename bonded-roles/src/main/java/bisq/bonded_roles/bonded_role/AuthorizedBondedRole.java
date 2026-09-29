@@ -24,7 +24,6 @@ import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.network.AddressByTransportTypeMap;
-import bisq.common.network.TransportType;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.BitcoinTransactionValidation;
@@ -32,7 +31,6 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -276,21 +274,6 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
 
     @Override
     public boolean isDataInvalid() {
-        // Can be removed after I2P is activated
-        if (!AuthorizedData.IS_I2P_ACTIVATED ) {
-            if (networkId.getAddressByTransportTypeMap().containsKey(TransportType.I2P)) {
-                log.warn("AuthorizedBondedRole considered invalid as it contains an I2PAddress address and we have not yet activated I2P.\n" +
-                        "networkId={}", networkId);
-                return true;
-            }
-            Boolean hasAuthorizingOracleNodeI2pAddress = authorizingOracleNode.map(node -> node.getNetworkId().getAddressByTransportTypeMap().containsKey(TransportType.I2P))
-                    .orElse(false);
-            if(hasAuthorizingOracleNodeI2pAddress){
-                log.warn("AuthorizedBondedRole considered invalid as authorizingOracleNode contains an I2PAddress address and we have not yet activated I2P.\n" +
-                        "authorizingOracleNode={}", authorizingOracleNode);
-                return true;
-            }
-        }
         return false;
     }
 
