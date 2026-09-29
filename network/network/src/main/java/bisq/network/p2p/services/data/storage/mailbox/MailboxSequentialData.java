@@ -24,6 +24,7 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -74,7 +75,7 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
                 "sequenceNumber must be 1. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateHash(senderPublicKeyHash);
         NetworkDataValidation.validateHash(receiversPublicKeyHash);
-        NetworkDataValidation.validateECPubKey(receiversPubKeyBytes);
+        EcPublicKeyValidation.validate(receiversPubKeyBytes);
         NetworkDataValidation.validateDate(created);
     }
 

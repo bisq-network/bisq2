@@ -29,6 +29,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -129,7 +130,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECPubKey(senderPublicKeyBytes);
+        EcPublicKeyValidation.validate(senderPublicKeyBytes);
         if (signature.length > 0) {
             NetworkDataValidation.validateECSignature(signature);
         }

@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
+import bisq.network.p2p.services.data.storage.EcPublicKeyVariants;
 import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.keys.KeyGeneration;
@@ -35,6 +36,7 @@ import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTes
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -131,6 +133,18 @@ class MailboxSignatureV2Test {
 
     // Nodes of this version sign in low-S form. A relay can create the high-S form of a signature without the private
     // key. Signature V2 accepts only the low-S form, signature V1 accepts both (nodes of earlier versions create both).
+    // Signature V1 of a remove request does not cover the public key. A relay could replace the key with another
+    // encoding of the same key, and the request would get another storage key. Only the canonical encoding is valid.
+    @Test
+    void removeMailboxRequestWithOtherEncodingOfReceiverKeyIsRejected() throws GeneralSecurityException {
+        bisq.network.protobuf.RemoveMailboxRequest proto = createRemoveMailboxRequest().toValueProto(false).toBuilder()
+                .clearSignatureV2()
+                .setReceiverPublicKeyBytes(EcPublicKeyVariants.toCompressed(receiverKeyPair.getPublic()))
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> RemoveMailboxRequest.fromProto(proto));
+    }
+
     @Test
     void addMailboxRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException {
         bisq.network.protobuf.AddMailboxRequest proto = createAddMailboxRequest().toValueProto(false);

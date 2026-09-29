@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
+import bisq.network.p2p.services.data.storage.EcPublicKeyVariants;
 import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.persistence.PersistenceService;
@@ -37,6 +38,7 @@ import java.security.KeyPair;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -139,6 +141,19 @@ class AuthenticatedDataSignatureV2Test {
 
         assertFalse(withoutSignatureV2.isSignatureInvalid());
         assertArrayEquals(request.serializeForHash(), withoutSignatureV2.serializeForHash());
+    }
+
+    // Signature V1 of a remove request does not cover the public key. A relay could replace the key with another
+    // encoding of the same key, and the request would get another storage key. Only the canonical encoding is valid.
+    @Test
+    void removeRequestWithOtherEncodingOfOwnerKeyIsRejected() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        bisq.network.protobuf.RemoveAuthenticatedDataRequest proto = request.toValueProto(false).toBuilder()
+                .clearSignatureV2()
+                .setOwnerPublicKeyBytes(EcPublicKeyVariants.toCompressed(ownerKeyPair.getPublic()))
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> RemoveAuthenticatedDataRequest.fromProto(proto));
     }
 
     // Nodes of this version sign in low-S form. A relay can create the high-S form of a signature without the private

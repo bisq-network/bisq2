@@ -57,7 +57,7 @@ public final class PubKey implements NetworkProto {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECPubKey(publicKey);
+        EcPublicKeyValidation.validate(publicKey);
         NetworkDataValidation.validateId(keyId);
     }
 

@@ -29,6 +29,7 @@ import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
@@ -103,7 +104,7 @@ public final class AuthorizedData extends AuthenticatedData {
     @Override
     public void verify() {
         signature.ifPresent(NetworkDataValidation::validateECSignature);
-        NetworkDataValidation.validateECPubKey(authorizedPublicKeyBytes);
+        EcPublicKeyValidation.validate(authorizedPublicKeyBytes);
     }
 
     @Override

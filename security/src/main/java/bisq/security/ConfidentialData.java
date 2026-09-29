@@ -24,6 +24,7 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.keys.EcPublicKeyValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +64,7 @@ public final class ConfidentialData implements NetworkProto, Canonical {
     public void verify() {
         checkArgument(iv.length <= 20);
         checkArgument(cipherText.length <= MAX_SIZE_CIPHERTEXT, "cipherText size must not exceed 20 000 bytes");
-        NetworkDataValidation.validateECPubKey(senderPublicKey);
+        EcPublicKeyValidation.validate(senderPublicKey);
         NetworkDataValidation.validateECSignature(signature);
     }
 

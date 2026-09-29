@@ -19,6 +19,7 @@ package bisq.account.timestamp;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.keys.EcPublicKeyValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -56,7 +57,7 @@ public final class AuthorizeAccountTimestampV2Payload implements NetworkProto {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateHash(fingerprintHash); 
         NetworkDataValidation.validateHash(saltedFingerprintHash);
-        NetworkDataValidation.validateECPubKey(publicKey);
+        EcPublicKeyValidation.validate(publicKey);
     }
 
     @Override

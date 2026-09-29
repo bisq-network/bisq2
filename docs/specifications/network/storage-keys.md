@@ -117,10 +117,10 @@ above), so such duplicates do not exist anymore.
 - Remove and refresh requests of earlier versions carry the V1 data hash and the owner key. A node of this version
   computes the V2 key from them.
 
-## Unresolved questions
+## Encoding of the owner key
 
-- **Encoding of the owner key.** The same public key has several valid encodings (for example a compressed and an
-  uncompressed point). For add requests, the owner key must match the signed `pubKeyHash`, so a relay cannot change its
-  encoding. For remove requests without a stored entry, signature V1 does not cover the key. A relay can then store
-  the remove request under keys of other encodings of the same key. Requiring the encoding which all Bisq 2 nodes
-  create removes this.
+The same public key has several valid encodings (for example a compressed and an uncompressed point). Storage key V2
+contains the bytes of the owner key, so each encoding would give another key. For remove requests, signature V1 does
+not cover the owner key, so a relay could store one remove request under the keys of several encodings. Nodes
+therefore accept only the canonical encoding of every owner key (see
+[`../security/ec-public-key-encoding.md`](../security/ec-public-key-encoding.md)).

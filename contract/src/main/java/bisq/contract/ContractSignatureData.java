@@ -20,6 +20,7 @@ package bisq.contract;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -64,7 +65,7 @@ public final class ContractSignatureData implements NetworkProto {
     public void verify() {
         NetworkDataValidation.validateHash(contractHash);
         NetworkDataValidation.validateECSignature(signature);
-        NetworkDataValidation.validateECPubKey(publicKey);
+        EcPublicKeyValidation.validate(publicKey);
     }
 
     @Override

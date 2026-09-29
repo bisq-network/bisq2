@@ -27,6 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.StorageKeyV2;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -113,7 +114,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     @Override
     public void verify() {
         NetworkDataValidation.validateHash(hash);
-        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        EcPublicKeyValidation.validate(ownerPublicKeyBytes);
         NetworkDataValidation.validateDate(created);
         if (signature.length > 0) {
             NetworkDataValidation.validateECSignature(signature);
