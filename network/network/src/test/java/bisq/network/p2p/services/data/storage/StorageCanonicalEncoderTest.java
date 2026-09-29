@@ -281,9 +281,10 @@ public class StorageCanonicalEncoderTest {
     // (HashCashTokenService and HashCashV2TokenService). The PROOF_OF_WORK purpose must reproduce these bytes for every
     // message with a canonical encoding: all DataRequest types and ConfidentialMessage. AuthorizedData is always nested
     // in these messages, so its signature is part of the payload. Data of higher-level modules is contained in its hash
-    // serialization, also when it has a field excluded from the hash.
+    // serialization, also when it has a field excluded from the hash. TRADE_CONTRACT selects the same bytes for the
+    // classes which a contract does not contain.
     @Test
-    public void proofOfWorkPurposeMatchesProofOfWorkPayloadOfEveryMessage() {
+    public void nestedHashPurposesMatchSerializeForHashOfEveryMessage() {
         List<Proto> messages = new ArrayList<>();
         for (AuthenticatedData authenticatedData : List.of(getDefaultAuthenticatedData(),
                 getAuthorizedData(),
@@ -305,9 +306,34 @@ public class StorageCanonicalEncoderTest {
         }
 
         for (Proto message : messages) {
-            assertArrayEquals(message.serializeForHash(),
-                    ((Canonical) message).encodeCanonical(EncodingPurpose.PROOF_OF_WORK),
-                    message.getClass().getSimpleName());
+            for (EncodingPurpose encodingPurpose : NESTED_HASH_SERIALIZATION_PURPOSES) {
+                assertArrayEquals(message.serializeForHash(),
+                        ((Canonical) message).encodeCanonical(encodingPurpose),
+                        message.getClass().getSimpleName() + " " + encodingPurpose);
+            }
+        }
+    }
+
+    // ExternalData gives the same bytes for PROOF_OF_WORK and TRADE_CONTRACT, so the byte comparisons would not notice
+    // if the request passed the wrong hash purpose on. DEFAULT and SIGNATURE use the kept Any and do not encode the
+    // AppendOnlyData.
+    @Test
+    public void addAppendOnlyDataRequestPassesEncodingPurposeToAppendOnlyData() {
+        PurposeRecordingAppendOnlyData appendOnlyData = new PurposeRecordingAppendOnlyData();
+        AddAppendOnlyDataRequest request = new AddAppendOnlyDataRequest(appendOnlyData);
+        for (EncodingPurpose encodingPurpose : List.of(EncodingPurpose.DEFAULT, EncodingPurpose.SIGNATURE)) {
+            appendOnlyData.encodingPurposes.clear();
+
+            request.encodeCanonical(encodingPurpose);
+
+            assertEquals(List.of(), appendOnlyData.encodingPurposes, encodingPurpose.name());
+        }
+        for (EncodingPurpose encodingPurpose : NESTED_HASH_SERIALIZATION_PURPOSES) {
+            appendOnlyData.encodingPurposes.clear();
+
+            request.encodeCanonical(encodingPurpose);
+
+            assertEquals(List.of(encodingPurpose), appendOnlyData.encodingPurposes);
         }
     }
 
@@ -499,7 +525,7 @@ public class StorageCanonicalEncoderTest {
 
     // Data of a higher-level module, held in an Any. It serializes as network.MetaData so that no resolver is needed.
     // priority is excluded from the hash, as the name matches the protobuf field.
-    private static final class ExternalData implements AuthorizedDistributedData, AppendOnlyData {
+    private static class ExternalData implements AuthorizedDistributedData, AppendOnlyData {
         private final String content;
         @ExcludeForHash
         private final int priority;
@@ -557,6 +583,21 @@ public class StorageCanonicalEncoderTest {
                 case TRADE_CONTRACT -> SCHEMA_FOR_HASH;
             };
             return canonicalEncoder.encode(this, schema, encodingPurpose);
+        }
+    }
+
+    // AppendOnlyData which records the encoding purposes it receives
+    private static final class PurposeRecordingAppendOnlyData extends ExternalData {
+        private final List<EncodingPurpose> encodingPurposes = new ArrayList<>();
+
+        private PurposeRecordingAppendOnlyData() {
+            super("content", 0);
+        }
+
+        @Override
+        public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+            encodingPurposes.add(encodingPurpose);
+            return super.encodeCanonical(canonicalEncoder, encodingPurpose);
         }
     }
 
