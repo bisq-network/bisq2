@@ -20,11 +20,14 @@ package bisq.network.p2p.services.data.storage.mailbox;
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.formatter.DataSizeFormatter;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -51,7 +54,16 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                                      PruneExpiredEntriesService pruneExpiredEntriesService,
                                      String storeName,
                                      String storeKey) {
-        super(persistenceService, storeName, storeKey);
+        this(persistenceService, pruneExpiredEntriesService, storeName, storeKey, new SystemClock());
+    }
+
+    @VisibleForTesting
+    public MailboxDataStorageService(PersistenceService persistenceService,
+                                     PruneExpiredEntriesService pruneExpiredEntriesService,
+                                     String storeName,
+                                     String storeKey,
+                                     Clock clock) {
+        super(persistenceService, storeName, storeKey, clock);
         pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
 
@@ -73,6 +85,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         // The message is encrypted, so the class name comes from MailboxData
         if (isClassNameInvalid(request.getClassName())) {
             return DataStorageResult.failed().classNameInvalid();
+        }
+
+        long now = clock.now();
+        if (request.isRequiredSignatureV2Missing(now)) {
+            return DataStorageResult.failed().signatureV2Missing();
         }
 
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
@@ -100,7 +117,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         if (request.isSignaturePubKeyHashInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
             return DataStorageResult.failed().publicKeyHashInvalid();
         }
-        if (request.isSignatureInvalid()) {
+        if (request.isSignatureInvalid(now)) {
             return DataStorageResult.failed().signatureInvalid();
         }
 
@@ -146,10 +163,15 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             return DataStorageResult.failed().classNameInvalid();
         }
 
+        long now = clock.now();
+        if (request.isRequiredSignatureV2Missing(now)) {
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+
         if (request.isExpired()) {
             return DataStorageResult.failed().expired();
         }
-        if (request.isSignatureInvalid()) {
+        if (request.isSignatureInvalid(now)) {
             return DataStorageResult.failed().signatureInvalid();
         }
 

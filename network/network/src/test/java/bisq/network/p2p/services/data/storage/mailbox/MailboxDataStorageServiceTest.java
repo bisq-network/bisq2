@@ -35,6 +35,8 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.AT_CUTOFF;
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
 import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,6 +58,9 @@ class MailboxDataStorageServiceTest {
     private final KeyPair receiverKeyPair = KeyGeneration.generateDefaultEcKeyPair();
     private MailboxDataStorageService store;
     private MailboxData mailboxData;
+    // The time of the node. From SignedRequest.SIGNATURE_V1_CUTOFF_DATE on, it requires signature V2. The tests of
+    // requests without signature V2 set a time before that date, so they do not depend on the date at which they run.
+    private long time = AT_CUTOFF;
 
     @BeforeAll
     static void registerMetaData() {
@@ -67,7 +72,8 @@ class MailboxDataStorageServiceTest {
         store = new MailboxDataStorageService(new PersistenceService(tempDir),
                 new PruneExpiredEntriesService(),
                 "mailbox",
-                STORE_KEY);
+                STORE_KEY,
+                () -> time);
         mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
     }
 
@@ -79,6 +85,9 @@ class MailboxDataStorageServiceTest {
     @ParameterizedTest
     @CsvSource({"false, false", "false, true", "true, false", "true, true"})
     void removalPreventsLaterAdd(boolean legacy, boolean addFirst) throws GeneralSecurityException {
+        if (legacy) {
+            time = BEFORE_CUTOFF;
+        }
         AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
         RemoveMailboxRequest remove = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
         if (legacy) {
@@ -100,6 +109,7 @@ class MailboxDataStorageServiceTest {
 
     @Test
     void v2RemovalReplacesLegacyRemoval() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
         AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
         RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
         RemoveMailboxRequest legacy = toLegacy(verified);
@@ -114,6 +124,7 @@ class MailboxDataStorageServiceTest {
 
     @Test
     void legacyRemovalDoesNotReplaceV2Removal() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
         RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
         assertTrue(store.remove(verified).isSuccess());
 
@@ -138,6 +149,7 @@ class MailboxDataStorageServiceTest {
 
     @Test
     void invalidSignatureV2CannotReplaceLegacyRemoval() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
         RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
         RemoveMailboxRequest legacy = toLegacy(verified);
         assertTrue(store.remove(legacy).isSuccess());
@@ -153,6 +165,56 @@ class MailboxDataStorageServiceTest {
     private static RemoveMailboxRequest toLegacy(RemoveMailboxRequest request) {
         return RemoveMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
                 .setVersion(1).clearSignatureV2().build());
+    }
+
+    private static AddMailboxRequest toLegacy(AddMailboxRequest request) {
+        return AddMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
+                .clearVersion().clearSignatureV2().build());
+    }
+
+    // From the cutoff date of signature V1 on, a node accepts only requests with signature V2 (see
+    // docs/specifications/network/storage-request-signatures.md). The same request is accepted before that date.
+    @Test
+    void addWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate() throws GeneralSecurityException {
+        AddMailboxRequest legacy = toLegacy(AddMailboxRequest.from(mailboxData, senderKeyPair,
+                receiverKeyPair.getPublic()));
+        assertFalse(legacy.isSignatureV1Invalid());
+
+        time = AT_CUTOFF;
+        DataStorageResult result = store.add(legacy);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isSignatureV2Missing(), result.toString());
+        // Nodes of earlier versions send such requests
+        assertFalse(result.isSevereFailure(), result.toString());
+        assertTrue(store.getPersistableStore().getMap().isEmpty());
+
+        time = BEFORE_CUTOFF;
+        assertTrue(store.add(legacy).isSuccess());
+    }
+
+    // Signature V1 of a removal does not cover the creation date, so the node uses its own time
+    @Test
+    void removalWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate() throws GeneralSecurityException {
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        assertTrue(store.add(add).isSuccess());
+        RemoveMailboxRequest remove = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        RemoveMailboxRequest changedByRelay = RemoveMailboxRequest.fromProto(remove.toValueProto(false).toBuilder()
+                .setVersion(1)
+                .clearSignatureV2()
+                .setCreated(remove.getCreated() - 1000)
+                .build());
+        assertFalse(changedByRelay.isSignatureV1Invalid());
+
+        time = AT_CUTOFF;
+        DataStorageResult result = store.remove(changedByRelay);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isSignatureV2Missing(), result.toString());
+        assertSame(add, store.getPersistableStore().getMap().get(add.getStorageKey()));
+
+        time = BEFORE_CUTOFF;
+        assertTrue(store.remove(changedByRelay).isSuccess());
     }
 
     // The sender of the confidential message must sign the add request (see

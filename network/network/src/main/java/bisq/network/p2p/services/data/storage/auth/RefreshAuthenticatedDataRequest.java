@@ -298,7 +298,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
     @Override
-    public boolean isSignatureInvalid() {
+    public boolean isSignatureInvalid(long now) {
         throw new UnsupportedOperationException("RefreshAuthenticatedDataRequest cannot be verified alone. " +
                 "Verify the AddAuthenticatedDataRequest created with AddAuthenticatedDataRequest.from(requestFromMap, refreshRequest).");
     }

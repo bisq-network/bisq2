@@ -19,6 +19,8 @@ package bisq.network.p2p.services.data.storage;
 
 
 import bisq.common.data.ByteArray;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
@@ -40,6 +42,7 @@ import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Files;
@@ -82,11 +85,19 @@ public class StorageService {
     private final Map<String, AppendOnlyDataStorageService.Listener> appendOnlyDataStoresListeners = new HashMap<>();
 
     private final PersistenceService persistenceService;
+    // The time of the node, for the stores (see DataStorageService)
+    private final Clock clock;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final PruneExpiredEntriesService pruneExpiredEntriesService = new PruneExpiredEntriesService();
 
     public StorageService(PersistenceService persistenceService) {
+        this(persistenceService, new SystemClock());
+    }
+
+    @VisibleForTesting
+    public StorageService(PersistenceService persistenceService, Clock clock) {
         this.persistenceService = persistenceService;
+        this.clock = clock;
 
         pruneExpiredEntriesService.initialize();
 
@@ -99,7 +110,7 @@ public class StorageService {
             if (Files.exists(dirPath)) {
                 getExistingStoreKeys(dirPath, AUTHENTICATED_DATA_STORE)
                         .forEach(storeKey -> {
-                            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey);
+                            AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, pruneExpiredEntriesService, authStoreName, storeKey, clock);
                             AuthenticatedDataStorageService.Listener listener = createAuthenticatedDataStoreListener();
                             dataStore.addListener(listener);
                             authenticatedDataStoresListeners.put(storeKey, listener);
@@ -111,7 +122,7 @@ public class StorageService {
             if (Files.exists(dirPath)) {
                 getExistingStoreKeys(dirPath, MAILBOX_DATA_STORE)
                         .forEach(storeKey -> {
-                            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, pruneExpiredEntriesService, mailboxStoreName, storeKey);
+                            MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, pruneExpiredEntriesService, mailboxStoreName, storeKey, clock);
                             MailboxDataStorageService.Listener listener = new MailboxDataStorageService.Listener() {
                                 @Override
                                 public void onAdded(MailboxData mailboxData) {
@@ -394,7 +405,8 @@ public class StorageService {
             AuthenticatedDataStorageService storageService = new AuthenticatedDataStorageService(persistenceService,
                     pruneExpiredEntriesService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
-                    storeKey);
+                    storeKey,
+                    clock);
 
             AuthenticatedDataStorageService.Listener listener = createAuthenticatedDataStoreListener();
             storageService.addListener(listener);
@@ -415,7 +427,8 @@ public class StorageService {
             MailboxDataStorageService storageService = new MailboxDataStorageService(persistenceService,
                     pruneExpiredEntriesService,
                     MAILBOX_DATA_STORE.getStoreName(),
-                    storeKey);
+                    storeKey,
+                    clock);
 
             MailboxDataStorageService.Listener listener = new MailboxDataStorageService.Listener() {
                 @Override

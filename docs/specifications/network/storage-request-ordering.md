@@ -16,7 +16,9 @@ add must not undo that refresh. The same ordering rule applies after removal and
 ## Authenticated removals during signature migration
 
 Signature V1 of an authenticated removal does not cover its sequence number. A relay can change that number without
-invalidating the signature. Signature V2 covers it. These rules apply to an already stored authenticated removal:
+invalidating the signature. Signature V2 covers it. A node accepts a V1 removal only before the cutoff date of
+signature V1 (see [storage-request-signatures.md](storage-request-signatures.md#cutoff-date-of-signature-v1)). These
+rules apply to an already stored authenticated removal:
 
 - An incoming removal with a verified signature V2 replaces a V1 removal regardless of their sequence numbers.
   Comparing against the V1 number would let a relay prevent the upgrade by choosing `Integer.MAX_VALUE`.
@@ -30,8 +32,9 @@ invalidating the signature. Signature V2 covers it. These rules apply to an alre
 These rules govern replacement, not signature verification: an invalid signature V2 cannot upgrade a legacy entry.
 Mailbox removals use the separate terminal rule below.
 
-The protocol still accepts V1 requests for compatibility. These transition rules do not remove the signature-stripping
-limitation described in [storage-request-signatures.md](storage-request-signatures.md#known-limitations).
+Before the cutoff date of signature V1, the protocol accepts V1 requests for compatibility. These transition rules do
+not remove the signature-stripping limitation described in
+[storage-request-signatures.md](storage-request-signatures.md#known-limitations). The cutoff date removes it.
 
 ## Mailbox requests
 

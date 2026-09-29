@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
@@ -36,6 +38,7 @@ import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,7 +93,13 @@ public class DataService implements StorageService.Listener {
     private final Set<Broadcaster> broadcasters = new CopyOnWriteArraySet<>();
 
     public DataService(PersistenceService persistenceService) {
-        this.storageService = new StorageService(persistenceService);
+        this(persistenceService, new SystemClock());
+    }
+
+    // clock: the time of the node, for the stores (see DataStorageService)
+    @VisibleForTesting
+    public DataService(PersistenceService persistenceService, Clock clock) {
+        this.storageService = new StorageService(persistenceService, clock);
         storageService.addListener(this);
     }
 

@@ -19,6 +19,8 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
@@ -51,10 +53,18 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     protected final Path subDirPath;
     @Getter
     protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
+    // The time of the node. It decides whether the node requires signature V2 (see
+    // SignedRequest.SIGNATURE_V1_CUTOFF_DATE).
+    protected final Clock clock;
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+        this(persistenceService, storeName, storeKey, new SystemClock());
+    }
+
+    public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey, Clock clock) {
         super();
 
+        this.clock = clock;
         this.storeKey = storeKey;
         String storageFileName = storeKey + STORE_POST_FIX;
         DbSubDirectory dbSubDirectory = DbSubDirectory.NETWORK_DB;

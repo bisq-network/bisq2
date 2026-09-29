@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -118,8 +119,8 @@ public class DistributedDataAnyTest {
 
         AddAuthenticatedDataRequest received = (AddAuthenticatedDataRequest) DataRequest.fromProto(proto);
 
-        // The signature covers the hash serialization, which this node computes from its model
-        assertFalse(received.isSignatureInvalid());
+        // Signature V1 covers the hash serialization, which this node computes from its model
+        assertFalse(received.isSignatureInvalid(BEFORE_CUTOFF));
         assertEquals(getStorageKeyOfNodesWhichKnowOnlyTheModel(), received.getStorageKeyV1());
         // Storage key V2 contains the hash of the model as well: a field unknown to this node does not change it
         AddAuthenticatedDataRequest createdFromModel = AddAuthenticatedDataRequest.fromProto(
@@ -161,9 +162,9 @@ public class DistributedDataAnyTest {
         AuthenticatedSequentialData sequentialData = received.getAuthenticatedSequentialData();
         AuthenticatedSequentialData changedSequentialData = changedByRelay.getAuthenticatedSequentialData();
 
-        // The hash serialization does not contain field 3, so the signature of the request does not detect the change
+        // The hash serialization does not contain field 3, so signature V1 of the request does not detect the change
         assertArrayEquals(sequentialData.serializeForHash(), changedSequentialData.serializeForHash());
-        assertFalse(changedByRelay.isSignatureInvalid());
+        assertFalse(changedByRelay.isSignatureInvalid(BEFORE_CUTOFF));
 
         // The SIGNATURE encoding contains the payload as serialize() writes it, also after a relay hop
         byte[] signaturePreimage = sequentialData.encodeCanonical(EncodingPurpose.SIGNATURE);
@@ -326,7 +327,7 @@ public class DistributedDataAnyTest {
     public void oversizedSignedRequestIsRejectedAndSkippedOnRestore() throws Exception {
         bisq.network.protobuf.DataRequest original = getAddAuthenticatedDataRequestProto(getNewerAny("new field"));
         AddAuthenticatedDataRequest received = (AddAuthenticatedDataRequest) DataRequest.fromProto(original);
-        assertFalse(received.isSignatureInvalid());
+        assertFalse(received.isSignatureInvalid(BEFORE_CUTOFF));
         bisq.network.protobuf.AddAuthenticatedDataRequest addRequest = original.getAddAuthenticatedDataRequest();
         bisq.network.protobuf.AuthenticatedSequentialData sequentialData = addRequest.getAuthenticatedSequentialData();
         bisq.network.protobuf.DataRequest padded = original.toBuilder()

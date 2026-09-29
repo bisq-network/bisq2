@@ -55,9 +55,10 @@ identities, and a third party can choose between them.
   of a remove request with another encoding. The signature stays valid, and the request gets another storage key V2.
   A node which has no entry under that key stores the request as a new entry, so that it can reject a later add
   request with a lower sequence number. So a relay can create many entries from one remove request. Each entry counts
-  toward the size limit of the store. A relay can also strip signature V2, because receivers still accept signature V1 alone
+  toward the size limit of the store. Before the cutoff date of signature V1, a relay can also strip signature V2,
+  because receivers accept signature V1 alone
   (see [`../network/storage-request-signatures.md`](../network/storage-request-signatures.md)). Therefore signature
-  V2 does not prevent this.
+  V2 does not prevent this before that date.
 - For the other fields, a signature or a hash check already binds the bytes, so only the owner of the key can choose
   another encoding. Rule 3 still applies to them, so that each key has exactly one identity. Then storage key V2 has
   exactly one value for each data hash and owner, as [`../network/storage-keys.md`](../network/storage-keys.md)
