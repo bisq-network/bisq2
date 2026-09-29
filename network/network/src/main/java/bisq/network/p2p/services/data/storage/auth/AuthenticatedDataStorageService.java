@@ -388,19 +388,21 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         }
     }
 
+    // Removes the entries which have expired, and those without signature V2 when the node requires it (see isToPrune)
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
                 .filter(entry -> {
                     AuthenticatedDataRequest dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
+                    boolean isToPrune = isToPrune(dataRequest);
+                    if (isToPrune) {
                         prunedAndExpiredDataRequests.add(dataRequest);
                     }
-                    return isExpired;
+                    return isToPrune;
                 })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
+            log.info("We remove {} entries from our {} map which have expired or have no signature V2",
+                    expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> {
                 persistableStore.getMap().remove(entry.getKey());
                 if (entry.getValue() instanceof AddAuthenticatedDataRequest addRequest) {

@@ -162,8 +162,8 @@ After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then
 The entries of earlier versions have no signature V2. The cutoff date of signature V1 is the same date, but nodes
 compare it with their own time, not with the creation date of the entry (see
 [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)). From that date on, nodes
-reject the entries of earlier versions, also if rule 12 accepts their owner. So the migration of rule 14 must run
-before that date. Rule 12 then still accepts only entries with signature V2 and an
+reject the entries of earlier versions and remove the stored ones, also if rule 12 accepts their owner. So the
+migration of rule 14 must run before that date. Rule 12 then still accepts only entries with signature V2 and an
 earlier creation date, which are the copies described in [Known limitations](#known-limitations).
 
 ## Compatibility

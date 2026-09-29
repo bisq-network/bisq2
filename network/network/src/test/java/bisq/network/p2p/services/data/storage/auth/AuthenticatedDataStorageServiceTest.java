@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -589,6 +590,81 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(authorizedDataStore.add(entryOfEarlierVersion).isSuccess());
     }
 
+    // A store which accepted requests without signature V2 does not keep them after the cutoff date. It would not
+    // accept them anymore, and other nodes do not accept them from its inventory.
+    @Test
+    void entriesWithoutSignatureV2AreRemovedAtLoadFromTheCutoffDateOn() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest legacyAdd = withoutSignatureV2(
+                AddAuthenticatedDataRequest.from(peerStore, authenticatedData, ownerKeyPair));
+        RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(peerStore, createData("removed 1"),
+                ownerKeyPair);
+        RemoveAuthenticatedDataRequest legacyRemoval = RemoveAuthenticatedDataRequest.fromProto(
+                RemoveAuthenticatedDataRequest.from(peerStore, createData("removed 2"), ownerKeyPair)
+                        .toValueProto(false).toBuilder().setVersion(1).clearSignatureV2().build());
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(peerStore, createData("other content"),
+                ownerKeyPair);
+        assertTrue(peerStore.add(legacyAdd).isSuccess());
+        assertTrue(peerStore.remove(legacyRemoval).isSuccess());
+        assertTrue(peerStore.add(add).isSuccess());
+        assertTrue(peerStore.remove(removal).isSuccess());
+        Map<ByteArray, AuthenticatedDataRequest> map = peerStore.getPersistableStore().getMap();
+
+        peerStore.prunePersisted(peerStore.getPersistableStore());
+        assertEquals(4, map.size());
+
+        time = AT_CUTOFF;
+        peerStore.prunePersisted(peerStore.getPersistableStore());
+
+        assertEquals(Map.of(add.getStorageKey(), add, removal.getStorageKey(), removal), map);
+        assertEquals(Set.of(legacyAdd, legacyRemoval), peerStore.getPrunedAndExpiredDataRequests().getUnmodifiableSet());
+    }
+
+    // A node which runs at the cutoff date removes the entries with the task which removes expired entries. The
+    // applications get the removal of the data, as at expiry.
+    @Test
+    void runningNodeRemovesEntriesWithoutSignatureV2FromTheCutoffDateOn() throws GeneralSecurityException {
+        AtomicReference<Runnable> pruneExpiredTask = new AtomicReference<>();
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService() {
+                    @Override
+                    public void addTask(Runnable task) {
+                        pruneExpiredTask.set(task);
+                    }
+                },
+                "running",
+                STORE_KEY,
+                () -> time);
+        List<AuthenticatedData> removedData = new ArrayList<>();
+        store.addListener(new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+            }
+
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                removedData.add(authenticatedData);
+            }
+        });
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest legacyAdd = withoutSignatureV2(
+                AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair));
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(store, createData("other content"),
+                ownerKeyPair);
+        assertTrue(store.add(legacyAdd).isSuccess());
+        assertTrue(store.add(add).isSuccess());
+
+        pruneExpiredTask.get().run();
+        assertEquals(2, store.getPersistableStore().getMap().size());
+        assertTrue(removedData.isEmpty());
+
+        time = AT_CUTOFF;
+        pruneExpiredTask.get().run();
+
+        assertEquals(Map.of(add.getStorageKey(), add), store.getPersistableStore().getMap());
+        assertEquals(List.of(authenticatedData), removedData);
+    }
+
     // A user must not publish the data of another user. The user could remove the copy, and the application would
     // remove the data of the owner (see docs/specifications/network/storage-ownership.md).
     @Test
@@ -792,6 +868,10 @@ class AuthenticatedDataStorageServiceTest {
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private AuthenticatedData createData(String content) {
+        return new DefaultAuthenticatedData(new TestDistributedData(content, ownerKeyPair.getPublic()));
     }
 
     private AddAuthenticatedDataRequest withoutSignatureV2(AddAuthenticatedDataRequest request) {

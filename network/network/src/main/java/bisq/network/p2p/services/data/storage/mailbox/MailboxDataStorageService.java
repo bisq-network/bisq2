@@ -246,19 +246,34 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     // Private
     /* --------------------------------------------------------------------- */
 
+    // A remove request contains no data. It only rejects the add request of the removed message until it expires. A
+    // remove request without signature V2, which the store accepted before the cutoff date, therefore stays until it
+    // expires. Without it, the store would accept the add request again, and the receiver would get a message again
+    // which it has removed.
+    @Override
+    protected boolean isToPrune(MailboxRequest request) {
+        if (request instanceof RemoveMailboxRequest) {
+            return request.isExpired();
+        }
+        return super.isToPrune(request);
+    }
+
+    // Removes the entries which have expired, and the add requests without signature V2 when the node requires it (see
+    // isToPrune)
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
                 .filter(entry -> {
                     MailboxRequest dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
+                    boolean isToPrune = isToPrune(dataRequest);
+                    if (isToPrune) {
                         prunedAndExpiredDataRequests.add(dataRequest);
                     }
-                    return isExpired;
+                    return isToPrune;
                 })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
+            log.info("We remove {} entries from our {} map which have expired or have no signature V2",
+                    expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> persistableStore.getMap().remove(entry.getKey()));
         }
     }

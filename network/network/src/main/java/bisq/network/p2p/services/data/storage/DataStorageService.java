@@ -123,11 +123,11 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         Map<ByteArray, T> pruned = map.entrySet().stream()
                 .filter(entry -> {
                     T dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
+                    boolean isToPrune = isToPrune(dataRequest);
+                    if (isToPrune) {
                         prunedAndExpiredDataRequests.add(dataRequest);
                     }
-                    return !isExpired;
+                    return !isToPrune;
                 })
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
                 .limit(MAX_MAP_SIZE)
@@ -135,6 +135,15 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         map.clear();
         map.putAll(pruned);
         return persisted;
+    }
+
+    // A store keeps an entry until it expires. From SignedRequest.SIGNATURE_V1_CUTOFF_DATE on, a store also removes the
+    // entries without signature V2 which it accepted before that date. It would not accept them anymore, and other
+    // nodes do not accept them from its inventory (see docs/specifications/network/storage-request-signatures.md).
+    protected boolean isToPrune(T dataRequest) {
+        return dataRequest.isExpired() ||
+                (dataRequest instanceof SignedRequest signedRequest &&
+                        signedRequest.isRequiredSignatureV2Missing(clock.now()));
     }
 
     // A store holds the data of one type, and its key is the simple class name of that type. The store takes the

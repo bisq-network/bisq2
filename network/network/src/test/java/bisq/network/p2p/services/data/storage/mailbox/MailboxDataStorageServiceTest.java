@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -34,6 +35,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.AT_CUTOFF;
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
@@ -61,6 +64,7 @@ class MailboxDataStorageServiceTest {
     // The time of the node. From SignedRequest.SIGNATURE_V1_CUTOFF_DATE on, it requires signature V2. The tests of
     // requests without signature V2 set a time before that date, so they do not depend on the date at which they run.
     private long time = AT_CUTOFF;
+    private final AtomicReference<Runnable> pruneExpiredTask = new AtomicReference<>();
 
     @BeforeAll
     static void registerMetaData() {
@@ -70,7 +74,12 @@ class MailboxDataStorageServiceTest {
     @BeforeEach
     void setUp() {
         store = new MailboxDataStorageService(new PersistenceService(tempDir),
-                new PruneExpiredEntriesService(),
+                new PruneExpiredEntriesService() {
+                    @Override
+                    public void addTask(Runnable task) {
+                        pruneExpiredTask.set(task);
+                    }
+                },
                 "mailbox",
                 STORE_KEY,
                 () -> time);
@@ -215,6 +224,65 @@ class MailboxDataStorageServiceTest {
 
         time = BEFORE_CUTOFF;
         assertTrue(store.remove(changedByRelay).isSuccess());
+    }
+
+    // A store which accepted add requests without signature V2 does not keep them after the cutoff date: neither when
+    // the node loads the store, nor while the node runs. It keeps the remove requests until they expire.
+    @Test
+    void addRequestsWithoutSignatureV2AreRemovedFromTheCutoffDateOn() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        // The storage key contains the key of the receiver, so each receiver has an entry of its own
+        AddMailboxRequest legacyAdd = toLegacy(AddMailboxRequest.from(mailboxData, senderKeyPair,
+                receiverKeyPair.getPublic()));
+        RemoveMailboxRequest legacyRemoval = toLegacy(RemoveMailboxRequest.from(mailboxData,
+                KeyGeneration.generateDefaultEcKeyPair()));
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair,
+                KeyGeneration.generateDefaultEcKeyPair().getPublic());
+        RemoveMailboxRequest removal = RemoveMailboxRequest.from(mailboxData, KeyGeneration.generateDefaultEcKeyPair());
+        Map<ByteArray, MailboxRequest> entries = Map.of(legacyAdd.getStorageKey(), legacyAdd,
+                legacyRemoval.getStorageKey(), legacyRemoval,
+                add.getStorageKey(), add,
+                removal.getStorageKey(), removal);
+        assertTrue(store.add(legacyAdd).isSuccess());
+        assertTrue(store.remove(legacyRemoval).isSuccess());
+        assertTrue(store.add(add).isSuccess());
+        assertTrue(store.remove(removal).isSuccess());
+        Map<ByteArray, MailboxRequest> map = store.getPersistableStore().getMap();
+
+        store.prunePersisted(store.getPersistableStore());
+        pruneExpiredTask.get().run();
+        assertEquals(entries, map);
+
+        Map<ByteArray, MailboxRequest> entriesFromTheCutoffDateOn = Map.of(legacyRemoval.getStorageKey(), legacyRemoval,
+                add.getStorageKey(), add,
+                removal.getStorageKey(), removal);
+
+        time = AT_CUTOFF;
+        pruneExpiredTask.get().run();
+        assertEquals(entriesFromTheCutoffDateOn, map);
+
+        map.putAll(entries);
+        store.prunePersisted(store.getPersistableStore());
+        assertEquals(entriesFromTheCutoffDateOn, map);
+    }
+
+    // The receiver removed the message with a node of an earlier version. The remove request still rejects the add
+    // request from the cutoff date on. Otherwise the receiver would get the message again.
+    @Test
+    void removalWithoutSignatureV2StillPreventsLaterAddFromTheCutoffDateOn() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        RemoveMailboxRequest legacyRemoval = toLegacy(RemoveMailboxRequest.from(mailboxData, receiverKeyPair));
+        assertTrue(store.add(add).isSuccess());
+        assertTrue(store.remove(legacyRemoval).isSuccess());
+
+        time = AT_CUTOFF;
+        store.prunePersisted(store.getPersistableStore());
+        pruneExpiredTask.get().run();
+        DataStorageResult result = store.add(add);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(legacyRemoval, store.getPersistableStore().getMap().get(add.getStorageKey()));
     }
 
     // The sender of the confidential message must sign the add request (see

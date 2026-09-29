@@ -117,6 +117,10 @@ requests without signature V2, so that nodes of earlier versions can take part i
 6. The node compares the cutoff date with its own time. The creation date of the request is not used.
 7. A node of this version creates both signatures also after the cutoff date.
 8. A node parses a request without signature V2 as before. Only the stores reject it.
+9. From the cutoff date on, a store removes the add requests without signature V2 which it holds. The store of
+   authenticated data also removes the remove requests without signature V2. The mailbox store keeps them until they
+   expire. A node does this when it loads a store, and with the task which removes expired entries. Applications get
+   the removal of the data in the same way as at expiry.
 
 Reasons:
 
@@ -129,6 +133,12 @@ Reasons:
   remove requests. Then data which its owner removed would stay in the stores.
 - Rule 7: nodes of earlier versions verify only signature V1, and the preimage of signature V2 contains signature V1.
 - Rule 8: a node which cannot parse one entry drops the whole inventory response.
+- Rule 9: a store would otherwise hold requests which it does not accept, and which other nodes do not accept from its
+  inventory responses. A request which a relay changed before the cutoff date would also stay until it expires. A
+  remove request contains no data. In the mailbox store it rejects the add request of the removed message until it
+  expires. Without it, a receiver which removed a message with a node of an earlier version would get the message
+  again. In the store of authenticated data, a remove request without signature V2 rejects no add request (see
+  [`storage-request-ordering.md`](storage-request-ordering.md)), so the store does not keep it.
 
 ### Conditions for the cutoff date
 
@@ -148,9 +158,9 @@ release. Nodes which stay on this version keep the date. So the following must h
 The following can be removed when no supported version accepts requests without signature V2:
 
 - the verification of signature V1 (verification rule 2) and the exception for the high-S form of signature V1;
-- the rules for V1 removals in [`storage-request-ordering.md`](storage-request-ordering.md), when every request
-  without signature V2 has expired. This is 100 days after the cutoff date, which is the longest time to live of a
-  type.
+- the rules for V1 removals in [`storage-request-ordering.md`](storage-request-ordering.md);
+- rule 9, when every request without signature V2 has expired. This is 100 days after the cutoff date, which is the
+  longest time to live of a type.
 
 The creation of signature V1 (rule 7) can be removed when nodes of earlier versions are no longer supported. They
 reject a request without signature V1.
@@ -202,13 +212,23 @@ reject a request without signature V1.
 
 The following weaknesses can be removed by a change of other rules. The developers have not decided these changes yet.
 
-- **Stored requests without signature V2.** A store keeps the requests without signature V2 which it accepted before
-  the cutoff date until they expire. It serves them in inventory responses, and nodes of this version reject them each
-  time.
-  - What removes it: a rule by which the stores remove these requests at the cutoff date.
+- **Copies without signature V2 of requests of this version.** A node of an earlier version removes signature V2 when
+  it relays a request. Before the cutoff date, a node of this version which gets such a copy first stores it. It
+  rejects the complete request which arrives later, because both have the same sequence number. At the cutoff date,
+  the store removes the copy (rule 9), and the applications get the removal of data whose owner runs this version. The
+  node gets the complete request again with an inventory response of a node which holds it, or when the owner
+  publishes the data again.
+  - What removes it: a rule in [`storage-request-ordering.md`](storage-request-ordering.md) by which a request with
+    signature V2 replaces the stored copy of the same request without signature V2. With this rule, the stores hold
+    the complete requests before the cutoff date.
 - **Inventory requests to nodes of earlier versions.** All requests which a node of an earlier version serves are
   without signature V2. From the cutoff date on, a node of this version rejects all of them, but it still sends
   inventory requests to such nodes (see [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md)). It can count
   such a response as a completed inventory request.
   - What removes it: from the cutoff date on, a node sends inventory requests only to peers which support the filter
     type `HASH_SET_V2`.
+- **Remove requests without signature V2 in inventory responses.** Until they expire, the mailbox stores serve their
+  remove requests without signature V2 (rule 9) in inventory responses. Nodes of this version reject them each time.
+  This ends 15 days after the cutoff date.
+  - What removes it: from the cutoff date on, a node does not add requests without signature V2 to an inventory
+    response for a filter of type `HASH_SET_V2`.
