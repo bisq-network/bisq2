@@ -245,6 +245,6 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
 
     @Override
     public boolean isDataInvalid() {
-        return message.orElse("").length() > MAX_MESSAGE_LENGTH;
+        return false;
     }
 }
