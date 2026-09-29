@@ -63,7 +63,6 @@ When uncertain: **do nothing and ask**.
   - K&R brace style, always use braces
   - Avoid nullable values; use `Optional` and `@Nullable` where needed
 - See `docs/dev/contributing.md` for PR workflow and commit style
-- For i18n strings, only update the base file in `i18n/src/main/resources/<name>.properties` and do not edit `..._<lang>.properties` files directly.
 
 ## Useful Docs
 - `docs/dev/build.md`

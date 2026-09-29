@@ -77,6 +77,11 @@ if [[ "${1:-}" == "--check" ]]; then
 fi
 
 generate "$ROOT"
+# Must not exceed project_doc_max_bytes in .codex/config.toml, or Codex drops the end of AGENTS.md.
+if (( $(wc -c < AGENTS.md) > 65536 )); then
+    echo "AGENTS.md exceeds 65536 bytes. Shorten the instructions or raise project_doc_max_bytes in .codex/config.toml" >&2
+    exit 1
+fi
 for f in "${GENERATED[@]}"; do
     echo "$f: $(wc -l < "$f") lines, $(wc -c < "$f") bytes"
 done

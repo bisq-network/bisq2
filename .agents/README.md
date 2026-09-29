@@ -21,6 +21,7 @@ This directory is the source of the instructions for AI coding agents.
 ## How the agents load the files
 
 * Codex and most other agents read `AGENTS.md`. It has no import syntax, so it is a concatenation of all sources.
+* Codex reads at most 32 KiB of project instructions by default and silently drops the rest. `AGENTS.md` is larger, so `.codex/config.toml` raises the limit to 64 KiB. Codex applies this project setting only when the user has marked the project as trusted. Without it, Codex sees only the beginning of `AGENTS.md`. For this reason the project overview and the skill list come first. `build-instructions.sh` fails if `AGENTS.md` exceeds 64 KiB.
 * Claude Code reads `CLAUDE.md`. It contains `@` imports of the source files, which Claude Code expands at startup. Claude Code warns about instruction files longer than 200 lines; small imported files avoid that warning.
 * JetBrains AI Assistant reads `.aiassistant/rules/bisq.md`, which has the same content as `AGENTS.md`.
 * Codex reads skills from `.agents/skills/`. Claude Code reads them from `.claude/skills`, which is a symbolic link to `.agents/skills`.

@@ -13,3 +13,8 @@ Other agents read a skill's `SKILL.md` only when the task touches the area liste
 - `canonical-encoding`: canonical encoding (`bisq.common.encoding.canonical`) of hash and signature
   preimages: classes that implement `Canonical` or define a `CanonicalSchema`, their `@ExcludeForHash`
   fields, and `serializeForHash()` in hash, signature, or proof of work paths
+- `root-cause-analysis`: non-trivial bugs, unexpected behavior, domain inconsistencies, security-sensitive
+  changes, and problems with several edge cases. Load it before proposing a fix or presenting alternatives
+- `write-specification`: creating or updating a specification in `docs/specifications/` (see **Specifications**)
+- `review-feedback`: the user provides feedback prefixed with `reviewer claims:`
+- `release-notes`: release notes are requested
