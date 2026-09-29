@@ -49,6 +49,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -282,15 +283,25 @@ public class WalletService implements Service {
     }
 
     public CompletableFuture<List<Transaction>> listTransactions() {
-        return tracked(client.listTransactions()
-                .thenApply(response -> {
-                    try {
-                        return ProtobufUtils.fromProtoStream(response.getTransactionsList(), Transaction::fromProto)
-                                .toList();
-                    } catch (UnresolvableProtobufException e) {
-                        throw new CompletionException(e);
-                    }
-                }));
+        return tracked(fetchTransactions());
+    }
+
+    // The daemon's transaction outputs carry no ownership information. The wallet's addresses are requested after
+    // the transaction list, so they include every address a listed transaction pays to.
+    private CompletableFuture<List<Transaction>> fetchTransactions() {
+        return client.listTransactions()
+                .thenCompose(response -> client.requestWalletAddresses()
+                        .thenApply(addressesResponse -> {
+                            Set<String> ownAddresses = addressesResponse.getAddressesList().stream()
+                                    .map(PubAddressInfo::getAddress)
+                                    .collect(Collectors.toSet());
+                            try {
+                                return ProtobufUtils.fromProtoStream(response.getTransactionsList(),
+                                        tx -> Transaction.fromProto(tx, ownAddresses)).toList();
+                            } catch (UnresolvableProtobufException e) {
+                                throw new CompletionException(e);
+                            }
+                        }));
     }
 
     public CompletableFuture<List<Utxo>> listUtxos() {
@@ -400,15 +411,9 @@ public class WalletService implements Service {
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
         int sequence = transactionsSequence.incrementAndGet();
-        return tracked(client.listTransactions()
-                .thenApply(response -> {
-                    try {
-                        applyTransactions(sequence, ProtobufUtils.fromProtoStream(response.getTransactionsList(),
-                                        Transaction::fromProto)
-                                .toList());
-                    } catch (UnresolvableProtobufException e) {
-                        throw new CompletionException(e);
-                    }
+        return tracked(fetchTransactions()
+                .thenApply(latest -> {
+                    applyTransactions(sequence, latest);
                     return transactions;
                 }));
     }

@@ -76,6 +76,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -299,6 +300,50 @@ class WalletServiceGrpcTest {
         assertTrue(addresses.contains("bcrt1qone"));
         assertTrue(addresses.contains("bcrt1qtwo"));
         assertEquals(2, addresses.size());
+    }
+
+    // The daemon serves one transaction: an output to a foreign address, one without address, one to the wallet address bcrt1qone
+    @Test
+    void listedTransactionsMarkTheOutputsPaidToWalletAddresses() throws ExecutionException, InterruptedException {
+        List<bisq.wallet.vo.Transaction> transactions = walletService.listTransactions().get();
+
+        assertEquals(List.of(false, false, true), ownership(transactions.get(0)));
+    }
+
+    @Test
+    void publishedTransactionsMarkTheOutputsPaidToWalletAddresses() throws ExecutionException, InterruptedException {
+        walletService.requestTransactions().get();
+
+        assertEquals(List.of(false, false, true), ownership(walletService.getTransactions().iterator().next()));
+    }
+
+    @Test
+    void theAddressesAreRequestedAfterTheTransactionList() throws ExecutionException, InterruptedException {
+        walletService.requestTransactions().get();
+
+        assertEquals(2, requests.size());
+        assertInstanceOf(ListTransactionsRequest.class, requests.get(0));
+        assertInstanceOf(GetWalletAddressesRequest.class, requests.get(1));
+    }
+
+    @Test
+    void aFailedTransactionListSkipsTheAddressRequest() {
+        daemon.failure = Status.INTERNAL;
+
+        assertThrows(ExecutionException.class, () -> walletService.requestTransactions().get());
+
+        assertTrue(requests.stream().noneMatch(GetWalletAddressesRequest.class::isInstance));
+    }
+
+    @Test
+    void aFailedAddressRequestKeepsThePublishedTransactions() throws ExecutionException, InterruptedException {
+        walletService.requestTransactions().get();
+        daemon.transactionId = "tx2";
+        daemon.addressesFailure = Status.INTERNAL;
+
+        assertThrows(ExecutionException.class, () -> walletService.requestTransactions().get());
+
+        assertEquals(List.of("tx1"), walletService.getTransactions().stream().map(bisq.wallet.vo.Transaction::getTxId).toList());
     }
 
     @Test
@@ -875,6 +920,10 @@ class WalletServiceGrpcTest {
         assertEquals(WalletService.State.OPEN, walletService.getState().get());
     }
 
+    private static List<Boolean> ownership(bisq.wallet.vo.Transaction transaction) {
+        return transaction.getOutputs().stream().map(bisq.wallet.vo.TransactionOutput::isMine).toList();
+    }
+
     private void openWallet() throws ExecutionException, InterruptedException {
         walletService.initialize().get();
         walletService.openOrCreateWallet("Wallet-Pa55!").get();
@@ -962,6 +1011,8 @@ class WalletServiceGrpcTest {
         private volatile long balance = 2000;
         private volatile long untrustedPending = 7;
         private volatile Status failure;
+        private volatile Status addressesFailure;
+        private volatile String transactionId = "tx1";
         private volatile boolean holdBalanceReply;
         private volatile StreamObserver<GetBalanceResponse> heldBalanceReply;
 
@@ -1039,6 +1090,11 @@ class WalletServiceGrpcTest {
 
         @Override
         public void getWalletAddresses(GetWalletAddressesRequest request, StreamObserver<GetWalletAddressesResponse> responseObserver) {
+            requests.add(request);
+            if (addressesFailure != null) {
+                responseObserver.onError(addressesFailure.asRuntimeException());
+                return;
+            }
             if (!canServe(responseObserver)) {
                 return;
             }
@@ -1056,10 +1112,12 @@ class WalletServiceGrpcTest {
             }
             reply(responseObserver, ListTransactionsResponse.newBuilder()
                     .addTransactions(bisq.wallet.protobuf.Transaction.newBuilder()
-                            .setTxId("tx1")
+                            .setTxId(transactionId)
                             .addOutputs(TransactionOutput.newBuilder().setValue(1L)
                                     .setAddress(PubAddressInfo.newBuilder().setAddress("bcrt1qpaid")))
-                            .addOutputs(TransactionOutput.newBuilder().setValue(2L)))
+                            .addOutputs(TransactionOutput.newBuilder().setValue(2L))
+                            .addOutputs(TransactionOutput.newBuilder().setValue(3L)
+                                    .setAddress(PubAddressInfo.newBuilder().setAddress("bcrt1qone"))))
                     .build());
         }
 
