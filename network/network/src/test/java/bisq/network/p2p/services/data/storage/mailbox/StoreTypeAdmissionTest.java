@@ -45,7 +45,7 @@ import static bisq.network.p2p.services.data.storage.StoreType.ALL;
 import static bisq.network.p2p.services.data.storage.StoreType.APPEND_ONLY_DATA_STORE;
 import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DATA_STORE;
 import static bisq.network.p2p.services.data.storage.StoreType.MAILBOX_DATA_STORE;
-import static bisq.network.p2p.services.data.storage.mailbox.MailboxClassNameTest.createConfidentialMessage;
+import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;

@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.services.data;
 
-import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
@@ -36,7 +35,6 @@ import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
-import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +49,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
+import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -185,17 +184,5 @@ class DataServiceRelayTest {
 
     private static <T extends DataRequest> void waitForPendingWrites(DataStorageService<T> store) {
         store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
-    }
-
-    // The storage layer does not decrypt the message, so the content does not need to be valid cipher text
-    private static ConfidentialMessage createConfidentialMessage(KeyPair senderKeyPair) {
-        return ConfidentialMessage.fromProto(bisq.network.protobuf.ConfidentialMessage.newBuilder()
-                .setConfidentialData(bisq.security.protobuf.ConfidentialData.newBuilder()
-                        .setSenderPublicKey(ByteString.copyFrom(senderKeyPair.getPublic().getEncoded()))
-                        .setIv(ByteString.copyFrom(new byte[16]))
-                        .setCipherText(ByteString.copyFrom(new byte[32]))
-                        .setSignature(ByteString.copyFrom(new byte[70])))
-                .setReceiverKeyId("receiverKeyId")
-                .build());
     }
 }
