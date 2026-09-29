@@ -110,6 +110,7 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
             case STORAGE_KEY ->
                     throw new IllegalArgumentException("Storage key not supported for AuthenticatedSequentialData");
             case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+            case TRADE_CONTRACT -> DEFAULT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

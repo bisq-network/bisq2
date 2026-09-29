@@ -111,19 +111,26 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
                     CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
                             .compose(1, request -> request.appendOnlyDataAny, DistributedDataAny.SCHEMA));
 
-    // PROOF_OF_WORK reproduces serializeForHash(): nodes of all versions must compute the same proof of work payload.
-    // It differs from DEFAULT_SCHEMA only in the value of the Any: the PROOF_OF_WORK encoding of the decoded
-    // AppendOnlyData instead of the kept bytes. It equals the Any of toAny(true), which getValueBuilder(true) writes.
+    // PROOF_OF_WORK and TRADE_CONTRACT reproduce serializeForHash(): nodes of all versions must compute the same proof
+    // of work payload and contract hash. They differ from DEFAULT_SCHEMA only in the value of the Any: the encoding of
+    // the decoded AppendOnlyData for the same purpose instead of the kept bytes. It equals the Any of toAny(true), which
+    // getValueBuilder(true) writes.
     public static final CanonicalSchema<AddAppendOnlyDataRequest> PROOF_OF_WORK_SCHEMA =
-            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
-                    CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
-                            .compose(1, AddAppendOnlyDataRequest::getAppendOnlyDataAnyForProofOfWork, DistributedDataAny.SCHEMA));
+            createSchemaForHash(EncodingPurpose.PROOF_OF_WORK);
+    public static final CanonicalSchema<AddAppendOnlyDataRequest> TRADE_CONTRACT_SCHEMA =
+            createSchemaForHash(EncodingPurpose.TRADE_CONTRACT);
+
+    private static CanonicalSchema<AddAppendOnlyDataRequest> createSchemaForHash(EncodingPurpose encodingPurpose) {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(6,
+                CanonicalSchema.<AddAppendOnlyDataRequest>newBuilder()
+                        .compose(1, request -> request.getAppendOnlyDataAnyForHash(encodingPurpose), DistributedDataAny.SCHEMA));
+    }
 
     // The kept type URL is the one that Any.pack creates (DistributedDataAny.retain checks it)
-    private Any getAppendOnlyDataAnyForProofOfWork() {
+    private Any getAppendOnlyDataAnyForHash(EncodingPurpose encodingPurpose) {
         return Any.newBuilder()
                 .setTypeUrl(appendOnlyDataAny.getTypeUrl())
-                .setValue(ByteString.copyFrom(appendOnlyData.encodeCanonical(EncodingPurpose.PROOF_OF_WORK)))
+                .setValue(ByteString.copyFrom(appendOnlyData.encodeCanonical(encodingPurpose)))
                 .build();
     }
 
@@ -136,6 +143,7 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
             case STORAGE_KEY ->
                     throw new IllegalArgumentException("Storage key not supported for AddAppendOnlyDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

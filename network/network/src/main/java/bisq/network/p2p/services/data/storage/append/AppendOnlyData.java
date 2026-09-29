@@ -29,8 +29,8 @@ import bisq.network.p2p.services.data.storage.StorageData;
  * google.protobuf.Any in which AddAppendOnlyDataRequest carries it:
  * <ul>
  *     <li>DEFAULT and SIGNATURE: all non-transient fields; the bytes equal serialize().</li>
- *     <li>STORAGE_KEY and PROOF_OF_WORK: without the fields annotated with @ExcludeForHash; the bytes equal
- *     serializeForHash(). Nodes of earlier versions compute the proof of work payload with serializeForHash().</li>
+ *     <li>STORAGE_KEY, PROOF_OF_WORK and TRADE_CONTRACT: without the fields annotated with @ExcludeForHash; the bytes
+ *     equal serializeForHash(). Nodes of earlier versions compute the proof of work payload with serializeForHash().</li>
  * </ul>
  */
 public interface AppendOnlyData extends DistributedData, StorageData, Canonical {

@@ -238,6 +238,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                             .sint32(5, request -> request.version));
 
     public static final CanonicalSchema<AddAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<AddAuthenticatedDataRequest> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: signatureV2 (field 4) and
     // version (field 5).
@@ -268,6 +269,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for AddAuthenticatedDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

@@ -249,6 +249,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                             .bytes(8, request -> request.signatureV2));
 
     public static final CanonicalSchema<RemoveMailboxRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<RemoveMailboxRequest> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
     // 1 to 3, version (field 6), className (field 7) and signatureV2 (field 8).
@@ -289,6 +290,7 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
             case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RemoveMailboxRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }

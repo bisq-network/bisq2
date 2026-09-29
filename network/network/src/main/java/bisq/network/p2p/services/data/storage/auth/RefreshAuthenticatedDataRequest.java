@@ -217,6 +217,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                             .bytes(9, request -> request.signatureV2));
 
     public static final CanonicalSchema<RefreshAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<RefreshAuthenticatedDataRequest> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
     // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1), version
     // (field 6), className (field 8) and signatureV2 (field 9).
@@ -240,6 +241,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
             case SIGNATURE -> DEFAULT_SCHEMA;
             case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RefreshAuthenticatedDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
