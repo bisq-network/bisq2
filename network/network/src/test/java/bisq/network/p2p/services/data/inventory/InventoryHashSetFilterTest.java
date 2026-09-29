@@ -30,11 +30,13 @@ import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilter;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterEntry;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterService;
+import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.Sequential;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.StorageService;
+import bisq.network.p2p.services.data.storage.StoreType;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
@@ -94,9 +96,16 @@ class InventoryHashSetFilterTest {
                 .join();
     }
 
+    // The stores write asynchronously. JUnit deletes appDataDir after the test, and fails if a write still creates
+    // files in it. A write queued now completes after all earlier ones.
     @AfterEach
     void tearDown() {
+        storageService.getStoresByStoreType(StoreType.ALL).forEach(InventoryHashSetFilterTest::waitForPendingWrites);
         dataService.shutdown();
+    }
+
+    private static <T extends DataRequest> void waitForPendingWrites(DataStorageService<T> store) {
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
     }
 
     @Test
