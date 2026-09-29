@@ -346,7 +346,7 @@ class InventoryHashSetFilterTest {
                 ownerB);
         assertTrue(storageService.onRemoveDataRequest(removeRequest).join().isNoEntry());
         assertTrue(storageService.onAddDataRequest(new AddAppendOnlyDataRequest(new InventoryTestAppendOnlyData("x")))
-                .join().isPresent());
+                .join().isSuccess());
         assertEquals(3, storageService.getAllDataRequestMapEntries().count());
     }
 
@@ -354,7 +354,7 @@ class InventoryHashSetFilterTest {
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(authenticatedDataStore,
                 new DefaultAuthenticatedData(data),
                 keyPair);
-        assertTrue(storageService.onAddDataRequest(request).join().isPresent());
+        assertTrue(storageService.onAddDataRequest(request).join().isSuccess());
         return request;
     }
 

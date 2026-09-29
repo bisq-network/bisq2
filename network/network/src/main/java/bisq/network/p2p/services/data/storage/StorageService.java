@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -246,7 +245,7 @@ public class StorageService {
     // Add data
     /* --------------------------------------------------------------------- */
 
-    public CompletableFuture<Optional<StorageData>> onAddDataRequest(AddDataRequest addDataRequest) {
+    public CompletableFuture<DataStorageResult> onAddDataRequest(AddDataRequest addDataRequest) {
         if (addDataRequest instanceof AddMailboxRequest) {
             return onAddMailboxRequest((AddMailboxRequest) addDataRequest);
         } else if (addDataRequest instanceof AddAuthenticatedDataRequest) {
@@ -260,51 +259,39 @@ public class StorageService {
         }
     }
 
-    private CompletableFuture<Optional<StorageData>> onAddMailboxRequest(AddMailboxRequest request) {
+    private CompletableFuture<DataStorageResult> onAddMailboxRequest(AddMailboxRequest request) {
         MailboxData mailboxData = request.getMailboxSequentialData().getMailboxData();
         return getOrCreateMailboxDataStore(mailboxData.getClassName())
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.add(request);
-                    if (dataStorageResult.isSuccess()) {
-                        return Optional.of(mailboxData);
-                    } else {
-                        if (dataStorageResult.isSevereFailure()) {
-                            log.info("AddMailboxRequest was not added to store. Result={}", dataStorageResult);
-                        }
-                        return Optional.empty();
+                    if (dataStorageResult.isSevereFailure()) {
+                        log.info("AddMailboxRequest was not added to store. Result={}", dataStorageResult);
                     }
+                    return dataStorageResult;
                 });
     }
 
-    private CompletableFuture<Optional<StorageData>> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
+    private CompletableFuture<DataStorageResult> onAddAuthenticatedDataRequest(AddAuthenticatedDataRequest request) {
         AuthenticatedData authenticatedData = request.getAuthenticatedSequentialData().getAuthenticatedData();
         return getOrCreateAuthenticatedDataStore(authenticatedData.getClassName())
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.add(request);
-                    if (dataStorageResult.isSuccess()) {
-                        return Optional.of(authenticatedData);
-                    } else {
-                        if (dataStorageResult.isSevereFailure()) {
-                            log.info("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
-                        }
-                        return Optional.empty();
+                    if (dataStorageResult.isSevereFailure()) {
+                        log.info("AddAuthenticatedDataRequest was not added to store. Result={}", dataStorageResult);
                     }
+                    return dataStorageResult;
                 });
     }
 
-    private CompletableFuture<Optional<StorageData>> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
+    private CompletableFuture<DataStorageResult> onAddAppendOnlyDataRequest(AddAppendOnlyDataRequest request) {
         AppendOnlyData appendOnlyData = request.getAppendOnlyData();
         return getOrCreateAppendOnlyDataStore(appendOnlyData.getMetaData().getClassName())
                 .thenApply(store -> {
                     DataStorageResult dataStorageResult = store.add(request);
-                    if (dataStorageResult.isSuccess()) {
-                        return Optional.of(appendOnlyData);
-                    } else {
-                        if (dataStorageResult.isSevereFailure()) {
-                            log.info("AddAppendOnlyDataRequest was not added to store. Result={}", dataStorageResult);
-                        }
-                        return Optional.empty();
+                    if (dataStorageResult.isSevereFailure()) {
+                        log.info("AddAppendOnlyDataRequest was not added to store. Result={}", dataStorageResult);
                     }
+                    return dataStorageResult;
                 });
     }
 

@@ -132,7 +132,7 @@ class StoreTypeAdmissionTest {
         assertFalse(redirected.isSignatureInvalid(BEFORE_CUTOFF));
 
         assertThrows(CompletionException.class, () -> storageService.onAddDataRequest(redirected).join());
-        assertTrue(storageService.onAddDataRequest(request).join().isPresent());
+        assertTrue(storageService.onAddDataRequest(request).join().isSuccess());
     }
 
     @Test
