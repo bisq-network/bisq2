@@ -1,6 +1,7 @@
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.verification.DependencyVerificationMode
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.kotlin.dsl.register
 import org.w3c.dom.Element
@@ -26,6 +27,7 @@ data class ResolvedBuildDependencies(
     val directComponents: Set<String>,
     val configurationCount: Int,
     val artifactsByComponent: Map<String, Set<String>> = emptyMap(),
+    val artifactFiles: Set<File> = emptySet(),
 )
 data class SignerMetadata(
     val keyId: String,
@@ -90,17 +92,14 @@ val dependencyVerificationKeyring = File(bisqRepositoryRoot, "gradle/verificatio
 val dependencyVerificationBinaryKeyring = File(bisqRepositoryRoot, "gradle/verification-keyring.gpg")
 val dependencyChecksumFallbackAllowlist = File(bisqRepositoryRoot, "gradle/dependency-checksum-fallback-allowlist.tsv")
 val dependencySignatureReport = File(bisqRepositoryRoot, "docs/dependency-signature-report.md")
-val dependencyVerificationInventoryDir = File(bisqRepositoryRoot, "build/dependency-verification")
 val unsignedArtifactReason = "Artifact is not signed"
 val gradleWrapperCommand =
     if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) "gradlew.bat" else "./gradlew"
-val includedBuildCurrentResolverTaskPaths = listOf(
-    ":build-logic:resolveAndVerifyDependenciesForCurrentBuild",
-    ":apps:resolveAndVerifyDependenciesForCurrentBuild",
-    ":apps:desktop:resolveAndVerifyDependenciesForCurrentBuild",
-    ":network:resolveAndVerifyDependenciesForCurrentBuild",
-    ":network:tor:resolveAndVerifyDependenciesForCurrentBuild",
+val dependencyVerificationBuildDirs = listOf(
+    "", "build-logic", "apps", "apps/desktop", "network", "network/tor",
 )
+val dependencyVerificationInventoryFiles = dependencyVerificationBuildDirs
+    .map { dependencyVerificationInventoryFile(File(bisqRepositoryRoot, it)) }
 
 fun htmlEscape(value: Any?): String =
     value?.toString()
@@ -311,41 +310,46 @@ fun resolvableConfigurations(): List<ResolvableConfiguration> =
         }
         .sortedBy { "${it.projectPath}:${it.configuration.name}" }
 
-fun resolveConfigurations(collectComponents: Boolean): ResolvedBuildDependencies {
+fun resolveConfigurations(): ResolvedBuildDependencies {
+    // Gradle skips or downgrades artifact verification in these modes, so the audit would pass on unverified artifacts.
+    val verificationMode = gradle.startParameter.dependencyVerificationMode
+    if (verificationMode != DependencyVerificationMode.STRICT) {
+        throw GradleException(
+            "Dependency audit requires --dependency-verification=strict, but the mode is ${verificationMode.name.lowercase(Locale.ROOT)}."
+        )
+    }
     val resolvedComponents = TreeSet<String>()
     val directComponents = TreeSet<String>()
     val artifactsByComponent = TreeMap<String, MutableSet<String>>()
+    val artifactFiles = mutableSetOf<File>()
     val failures = mutableListOf<String>()
     val configurations = resolvableConfigurations()
 
     configurations.forEach { entry ->
         val configuration = entry.configuration
         try {
-            if (collectComponents) {
-                val result = configuration.incoming.resolutionResult
-                result.root.dependencies.forEach { dependency ->
-                    val selected = (dependency as? ResolvedDependencyResult)?.selected?.id
-                    if (selected is ModuleComponentIdentifier) {
-                        directComponents += "${selected.group}:${selected.module}:${selected.version}"
-                    }
-                }
-                result.allComponents.forEach { component ->
-                    val id = component.id
-                    if (id is ModuleComponentIdentifier) {
-                        resolvedComponents += "${id.group}:${id.module}:${id.version}"
-                    }
-                }
-                configuration.incoming.artifacts.artifacts.forEach { artifact ->
-                    val id = artifact.id.componentIdentifier
-                    if (id is ModuleComponentIdentifier) {
-                        artifactsByComponent
-                            .getOrPut("${id.group}:${id.module}:${id.version}") { TreeSet() }
-                            .add(artifact.file.name)
-                    }
+            val result = configuration.incoming.resolutionResult
+            result.root.dependencies.forEach { dependency ->
+                val selected = (dependency as? ResolvedDependencyResult)?.selected?.id
+                if (selected is ModuleComponentIdentifier) {
+                    directComponents += "${selected.group}:${selected.module}:${selected.version}"
                 }
             }
-
-            configuration.resolve()
+            result.allComponents.forEach { component ->
+                val id = component.id
+                if (id is ModuleComponentIdentifier) {
+                    resolvedComponents += "${id.group}:${id.module}:${id.version}"
+                }
+            }
+            configuration.incoming.artifacts.artifacts.forEach { artifact ->
+                val id = artifact.id.componentIdentifier
+                if (id is ModuleComponentIdentifier) {
+                    artifactFiles += artifact.file
+                    artifactsByComponent
+                        .getOrPut("${id.group}:${id.module}:${id.version}") { TreeSet() }
+                        .add(artifact.file.name)
+                }
+            }
         } catch (exception: Exception) {
             failures += "${entry.projectPath}:${configuration.name} - ${exception.message}"
         }
@@ -360,22 +364,15 @@ fun resolveConfigurations(collectComponents: Boolean): ResolvedBuildDependencies
         directComponents = directComponents,
         configurationCount = configurations.size,
         artifactsByComponent = artifactsByComponent.mapValues { it.value.toSet() },
+        artifactFiles = artifactFiles,
     )
 }
 
-fun dependencyVerificationInventoryFile(): File {
-    val relativeBuildDir = bisqRepositoryRoot.toPath().relativize(rootDir.canonicalFile.toPath()).toString()
-    val buildId = if (relativeBuildDir.isEmpty()) {
-        "root"
-    } else {
-        relativeBuildDir.replace(File.separatorChar, '_')
-    }
-    return File(dependencyVerificationInventoryDir, "$buildId.tsv")
-}
+// Included builds can finish their inventories before cleanAll deletes build outputs.
+fun dependencyVerificationInventoryFile(buildDir: File = rootDir): File =
+    File(buildDir, ".gradle/dependency-verification/inventory.tsv")
 
-fun writeResolvedDependencyInventory(resolved: ResolvedBuildDependencies) {
-    val inventoryFile = dependencyVerificationInventoryFile()
-    inventoryFile.parentFile.mkdirs()
+fun resolvedDependencyInventoryLines(resolved: ResolvedBuildDependencies): List<String> {
     val lines = mutableListOf("configurations\t${resolved.configurationCount}")
     resolved.resolvedComponents.forEach { id ->
         val scope = if (resolved.directComponents.contains(id)) "direct" else "transitive"
@@ -386,7 +383,16 @@ fun writeResolvedDependencyInventory(resolved: ResolvedBuildDependencies) {
             lines += "artifact\t$id\t$artifactName"
         }
     }
-    inventoryFile.writeText(lines.joinToString(System.lineSeparator()) + System.lineSeparator(), StandardCharsets.UTF_8)
+    return lines
+}
+
+fun writeResolvedDependencyInventory(resolved: ResolvedBuildDependencies) {
+    val inventoryFile = dependencyVerificationInventoryFile()
+    inventoryFile.parentFile.mkdirs()
+    inventoryFile.writeText(
+        resolvedDependencyInventoryLines(resolved).joinToString(System.lineSeparator()) + System.lineSeparator(),
+        StandardCharsets.UTF_8,
+    )
 }
 
 fun readResolvedDependencyInventory(): ResolvedBuildDependencies {
@@ -394,34 +400,31 @@ fun readResolvedDependencyInventory(): ResolvedBuildDependencies {
     val directComponents = TreeSet<String>()
     val artifactsByComponent = TreeMap<String, MutableSet<String>>()
     var configurationCount = 0
-    if (!dependencyVerificationInventoryDir.isDirectory) {
-        return ResolvedBuildDependencies(emptySet(), emptySet(), 0)
-    }
-
-    dependencyVerificationInventoryDir.listFiles { file -> file.isFile && file.extension == "tsv" }
-        ?.sortedBy { it.name }
-        ?.forEach { file ->
-            file.forEachLine(StandardCharsets.UTF_8) { line ->
-                val columns = line.split('\t')
-                when (columns[0]) {
-                    "configurations" -> if (columns.size == 2) {
-                        configurationCount += columns[1].toInt()
-                    }
-                    "direct" -> {
-                        if (columns.size == 2) {
-                            resolvedComponents += columns[1]
-                            directComponents += columns[1]
-                        }
-                    }
-                    "transitive" -> if (columns.size == 2) {
+    dependencyVerificationInventoryFiles.forEach { file ->
+        if (!file.isFile) {
+            throw GradleException("Missing dependency verification inventory: $file")
+        }
+        file.forEachLine(StandardCharsets.UTF_8) { line ->
+            val columns = line.split('\t')
+            when (columns[0]) {
+                "configurations" -> if (columns.size == 2) {
+                    configurationCount += columns[1].toInt()
+                }
+                "direct" -> {
+                    if (columns.size == 2) {
                         resolvedComponents += columns[1]
+                        directComponents += columns[1]
                     }
-                    "artifact" -> if (columns.size == 3) {
-                        artifactsByComponent.getOrPut(columns[1]) { TreeSet() }.add(columns[2])
-                    }
+                }
+                "transitive" -> if (columns.size == 2) {
+                    resolvedComponents += columns[1]
+                }
+                "artifact" -> if (columns.size == 3) {
+                    artifactsByComponent.getOrPut(columns[1]) { TreeSet() }.add(columns[2])
                 }
             }
         }
+    }
 
     return ResolvedBuildDependencies(
         resolvedComponents = resolvedComponents,
@@ -607,60 +610,35 @@ val resolveCurrentBuildTask = tasks.register("resolveAndVerifyDependenciesForCur
     group = "verification"
     description = "Resolves every resolvable configuration in this Gradle build."
 
+    // Resolve before checking task history so changed graphs and verification failures cannot be hidden by it.
+    val resolved by lazy { resolveConfigurations() }
+    inputs.property("resolvedDependencyInventory", providers.provider { resolvedDependencyInventoryLines(resolved) })
+    inputs.files(providers.provider { resolved.artifactFiles }).withPropertyName("resolvedArtifacts")
+    inputs.files(dependencyVerificationMetadata, dependencyVerificationKeyring)
+        .withPropertyName("verificationConfiguration")
     outputs.file(dependencyVerificationInventoryFile())
-    outputs.upToDateWhen { false }
+    outputs.upToDateWhen {
+        !gradle.startParameter.isRefreshDependencies && gradle.startParameter.writeDependencyVerifications.isEmpty()
+    }
 
     doLast {
-        val resolved = resolveConfigurations(true)
         writeResolvedDependencyInventory(resolved)
         logger.lifecycle("Resolved and verified ${resolved.configurationCount} configurations in ${rootProject.name}.")
     }
 }
 
+tasks.register("resolveAndVerifyDependencies") {
+    group = "verification"
+    description = "Resolves every resolvable configuration in this build and its nested included builds."
+    dependsOn(resolveCurrentBuildTask)
+
+    // Included builds also include the repository root; follow descendants only to avoid task dependency cycles.
+    dependsOn(gradle.includedBuilds
+        .filter { it.projectDir.canonicalFile.toPath().startsWith(rootDir.canonicalFile.toPath()) }
+        .map { it.task(":resolveAndVerifyDependencies") })
+}
+
 if (isBisqRepositoryRootBuild) {
-    tasks.register("resolveAndVerifyDependencies") {
-        group = "verification"
-        description = "Resolves every resolvable configuration in the Bisq 2 composite build."
-
-        doLast {
-            dependencyVerificationInventoryDir.deleteRecursively()
-
-            val currentBuildResolved = resolveConfigurations(true)
-            writeResolvedDependencyInventory(currentBuildResolved)
-            logger.lifecycle("Resolved and verified ${currentBuildResolved.configurationCount} configurations in ${rootProject.name}.")
-
-            val writeVerificationArguments = gradle.startParameter.writeDependencyVerifications
-                .takeIf { it.isNotEmpty() }
-                ?.let { listOf("--write-verification-metadata", it.joinToString(",")) }
-                ?: emptyList()
-            val passthroughArguments = buildList {
-                add("--no-daemon")
-                add("--no-parallel")
-                if (gradle.startParameter.isOffline) {
-                    add("--offline")
-                }
-                if (gradle.startParameter.isRefreshDependencies) {
-                    add("--refresh-dependencies")
-                }
-                addAll(writeVerificationArguments)
-            }
-
-            includedBuildCurrentResolverTaskPaths.forEach { taskPath ->
-                val result = project.exec {
-                    workingDir = bisqRepositoryRoot
-                    commandLine(listOf(gradleWrapperCommand) + passthroughArguments + taskPath)
-                    isIgnoreExitValue = true
-                }
-                if (result.exitValue != 0) {
-                    throw GradleException("Failed to run $gradleWrapperCommand ${passthroughArguments.joinToString(" ")} $taskPath")
-                }
-            }
-
-            val resolved = readResolvedDependencyInventory()
-            logger.lifecycle("Resolved and verified ${resolved.configurationCount} configurations across the Bisq 2 composite build.")
-        }
-    }
-
     tasks.register("refreshDependencyVerificationKeyring") {
         group = "verification"
         description = "Refreshes dependency verification PGP public keys from key servers and exports the armored keyring."
@@ -710,6 +688,7 @@ if (isBisqRepositoryRootBuild) {
         description = "Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed."
 
         dependsOn("resolveAndVerifyDependencies")
+        inputs.files(dependencyVerificationInventoryFiles).withPropertyName("dependencyInventories")
         inputs.file(dependencyVerificationMetadata)
         inputs.file(dependencyChecksumFallbackAllowlist)
 
@@ -779,6 +758,7 @@ if (isBisqRepositoryRootBuild) {
         description = "Writes a report of signed and checksum-only dependencies from Gradle verification metadata."
 
         dependsOn("resolveAndVerifyDependencies")
+        inputs.files(dependencyVerificationInventoryFiles).withPropertyName("dependencyInventories")
         inputs.file(dependencyVerificationMetadata)
         inputs.file(dependencyVerificationKeyring).optional()
         inputs.file(dependencyChecksumFallbackAllowlist)
@@ -1017,11 +997,5 @@ if (isBisqRepositoryRootBuild) {
             dependencySignatureReport.writeText(markdown.toString(), StandardCharsets.UTF_8)
             logger.lifecycle("Wrote $dependencySignatureReport.")
         }
-    }
-} else {
-    tasks.register("resolveAndVerifyDependencies") {
-        group = "verification"
-        description = "Resolves every resolvable configuration in this Gradle build."
-        dependsOn(resolveCurrentBuildTask)
     }
 }
