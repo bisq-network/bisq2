@@ -23,9 +23,9 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
-import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.SignatureValidation;
 import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -39,8 +39,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
@@ -131,14 +129,7 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public void verify() {
         EcPublicKeyValidation.validate(senderPublicKeyBytes);
-        if (signature.length > 0) {
-            NetworkDataValidation.validateECSignature(signature);
-        }
-        if (signatureV2.length > 0) {
-            NetworkDataValidation.validateECSignature(signatureV2);
-        }
-        checkArgument(signature.length > 0 || signatureV2.length > 0,
-                "No signature found");
+        SignatureValidation.validateSignatures(signature, signatureV2);
     }
 
 
