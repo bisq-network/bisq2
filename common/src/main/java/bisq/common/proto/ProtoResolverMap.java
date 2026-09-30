@@ -18,12 +18,10 @@
 package bisq.common.proto;
 
 import com.google.protobuf.Any;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 public abstract class ProtoResolverMap<T extends Proto> {
     public ProtoResolverMap() {
     }
@@ -39,16 +37,13 @@ public abstract class ProtoResolverMap<T extends Proto> {
         ProtoResolver<T> resolver = map.get(protoTypeName);
 
         if (resolver == null) {
-            log.error("resolver is null. protoTypeName={}", protoTypeName);
             throw new UnresolvableProtobufMessageException(anyProto);
         }
 
         try {
             return resolver.fromAny(anyProto);
         } catch (Exception e) {
-            // Never log the Any itself, it can hold private keys or payment account data.
-            log.error("Could not resolve proto. protoTypeName={}, {} bytes",
-                    protoTypeName, anyProto.getValue().size(), e);
+            // The caller owns recovery and reporting, including limits for collections of invalid entries.
             throw new UnresolvableProtobufMessageException(anyProto, e);
         }
     }

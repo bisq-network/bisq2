@@ -194,6 +194,8 @@ A caller handles the exception or declares it:
 
 - A caller which converts a collection decides what fails: one entry or the whole collection. For example
   `DataStore` skips a persisted entry which it cannot convert and keeps the other entries.
+- `ProtoResolverMap` propagates conversion failures without logging them. The caller owns recovery and reporting,
+  including any limit on diagnostics for a collection. Logging inside the resolver would bypass that limit.
 - A caller which cannot throw a checked exception, for example a gRPC `StreamObserver` or a `CompletableFuture`
   stage, rethrows it as an unchecked exception. A caller which converts its own data, for example to copy an object,
   does the same, as a failure is a bug.
