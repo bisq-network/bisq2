@@ -8,8 +8,8 @@ data and mailbox data. Append-only data has no owner.
 - **Owner**: the key which may publish the data. In the authenticated data store, only the owner can also refresh and
   remove it. The data names its owner, or, for authorized data, the authorized key is the owner.
 - **Publisher**: the key which signs an add request. The add request contains the hash of this key
-  (`pubKeyHash` of `AuthenticatedSequentialData`, `senderPublicKeyHash` of `MailboxSequentialData`). The storage checks
-  that the signing key matches this hash.
+  (`pubKeyHash` of `AuthenticatedSequentialData`, `senderPublicKeyHash` of `MailboxSequentialData`). This hash must be
+  the owner hash of the signing key (see [The publisher hash](#the-publisher-hash)).
 - **Owner hash**: the hash of the encoded public key of the owner, `RIPEMD160(SHA256(publicKey.getEncoded()))`, as
   `PubKey.getHash()` computes it.
 
@@ -68,6 +68,17 @@ compare both before it accepts the data.
    Reason: the authorization signature covers the data, but not the publisher. Anyone can copy authorized data with a
    valid authorization signature into their own add request. Only the authority can decide who publishes and removes
    its data.
+
+### The publisher hash
+
+The publisher hash of an add request must equal the hash of the public key bytes which sign the request
+(`ownerPublicKeyBytes` of `AddAuthenticatedDataRequest`, `senderPublicKeyBytes` of `AddMailboxRequest`). An add request
+with another hash is invalid when it is constructed or decoded, including persisted entries.
+
+Reason: storage key V2 and the signature use the public key bytes, but the owner checks (rules 5 and 6) use the
+publisher hash. If both could differ, the owner check would not check the key which signs the request. Nodes of all
+released versions (since 2.0.0) reject such add requests at admission, so no honest node stores or relays one. A parse
+failure therefore affects only a peer which sends a request that no released node creates.
 
 ### Admission
 
@@ -236,6 +247,8 @@ earlier creation date, which are the copies described in [Known limitations](#kn
   rejects a replay of the removed entry.
 - Persisted entries of another publisher are removed when a store is loaded. A refresh of such an entry is rejected.
 - A mailbox add request of another sender is rejected.
+- Add requests (authenticated and mailbox) whose publisher hash does not match the signing public key bytes are
+  rejected when they are constructed or decoded, whichever of the two fields is changed.
 - Mailbox sequential data with a receiver hash that does not match the receiver public key bytes is rejected.
 - With the real MuSig offerbook: a copy of an offer which another user signs is rejected, the removal of that user does
   not remove the offer, and the maker can remove it.
