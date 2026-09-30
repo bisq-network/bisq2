@@ -19,18 +19,21 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.validation.NetworkDataValidation;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 public class SignatureValidation {
 
     public static void validateSignatures(byte[] signatureV1, byte[] signatureV2) {
-        if (signatureV1.length > 0) {
-            NetworkDataValidation.validateECSignature(signatureV1);
-        }
-        if (signatureV2.length > 0) {
+        if (SignedRequest.isSignatureV2Required(System.currentTimeMillis())) {
+            // After cutoff date we might omit the v1 signature.
+            if (signatureV1.length > 0) {
+                NetworkDataValidation.validateECSignature(signatureV1);
+            }
             NetworkDataValidation.validateECSignature(signatureV2);
+        } else {
+            NetworkDataValidation.validateECSignature(signatureV1);
+            if (signatureV2.length > 0) {
+                NetworkDataValidation.validateECSignature(signatureV2);
+            }
         }
-        checkArgument(signatureV1.length > 0 || signatureV2.length > 0,
-                "No signature found");
+
     }
 }
