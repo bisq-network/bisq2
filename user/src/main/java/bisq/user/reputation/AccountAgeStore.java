@@ -18,6 +18,7 @@
 package bisq.user.reputation;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -56,7 +57,8 @@ final class AccountAgeStore implements PersistableStore<AccountAgeStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountAgeStore fromProto(bisq.user.protobuf.AccountAgeStore proto) {
+    public static AccountAgeStore fromProto(bisq.user.protobuf.AccountAgeStore proto)
+            throws UnresolvableProtobufException {
         return new AccountAgeStore(new HashSet<>(proto.getJsonRequestsList()), proto.getLastRequested());
     }
 

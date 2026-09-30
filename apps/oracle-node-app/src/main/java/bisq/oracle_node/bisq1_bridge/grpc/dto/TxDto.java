@@ -18,7 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.dto;
 
 import bisq.common.proto.NetworkProto;
-import bisq.common.util.OptionalUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -63,10 +63,14 @@ public final class TxDto implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static TxDto fromProto(bisq.bridge.protobuf.TxDto proto) {
+    public static TxDto fromProto(bisq.bridge.protobuf.TxDto proto) throws UnresolvableProtobufException {
         return new TxDto(proto.getTxId(),
-                OptionalUtils.optionalIf(proto.hasProofOfBurnDto(), () -> ProofOfBurnDto.fromProto(proto.getProofOfBurnDto())),
-                OptionalUtils.optionalIf(proto.hasBondedReputationDto(), () -> BondedReputationDto.fromProto(proto.getBondedReputationDto()))
+                proto.hasProofOfBurnDto()
+                        ? Optional.of(ProofOfBurnDto.fromProto(proto.getProofOfBurnDto()))
+                        : Optional.empty(),
+                proto.hasBondedReputationDto()
+                        ? Optional.of(BondedReputationDto.fromProto(proto.getBondedReputationDto()))
+                        : Optional.empty()
         );
     }
 }

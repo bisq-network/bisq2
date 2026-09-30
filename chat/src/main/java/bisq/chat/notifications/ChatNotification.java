@@ -23,6 +23,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.notifications.Notification;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -163,7 +164,8 @@ public class ChatNotification implements Notification, PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ChatNotification fromProto(bisq.chat.protobuf.ChatNotification proto) {
+    public static ChatNotification fromProto(bisq.chat.protobuf.ChatNotification proto)
+            throws UnresolvableProtobufException {
         return new ChatNotification(
                 proto.getId(),
                 proto.getTitle(),

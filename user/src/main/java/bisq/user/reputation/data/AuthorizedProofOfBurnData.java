@@ -22,6 +22,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -126,7 +127,8 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto) {
+    public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto)
+            throws UnresolvableProtobufException {
         return new AuthorizedProofOfBurnData(
                 proto.getVersion(),
                 proto.getBlockTime(),

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.keep_alive;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Request;
 import lombok.EqualsAndHashCode;
@@ -54,7 +55,7 @@ public final class Ping implements EnvelopePayloadMessage, Request {
         return bisq.network.protobuf.Ping.newBuilder().setNonce(nonce);
     }
 
-    public static Ping fromProto(bisq.network.protobuf.Ping proto) {
+    public static Ping fromProto(bisq.network.protobuf.Ping proto) throws UnresolvableProtobufException {
         return new Ping(proto.getNonce());
     }
 

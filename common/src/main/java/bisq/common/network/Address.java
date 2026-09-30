@@ -18,6 +18,7 @@
 package bisq.common.network;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkPortValidation;
 import com.google.common.annotations.VisibleForTesting;
@@ -116,7 +117,7 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
 
     abstract public TransportType getTransportType();
 
-    public static Address fromProto(bisq.common.protobuf.Address proto) {
+    public static Address fromProto(bisq.common.protobuf.Address proto) throws UnresolvableProtobufException {
         return Address.from(proto.getHost(), proto.getPort());
     }
 

@@ -18,6 +18,7 @@
 package bisq.support.arbitration.mu_sig;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.Role;
 import lombok.EqualsAndHashCode;
@@ -78,7 +79,8 @@ public final class MuSigArbitrationIssue implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigArbitrationIssue fromProto(bisq.support.protobuf.MuSigArbitrationIssue proto) {
+    public static MuSigArbitrationIssue fromProto(bisq.support.protobuf.MuSigArbitrationIssue proto)
+            throws UnresolvableProtobufException {
         return new MuSigArbitrationIssue(
                 proto.getDate(),
                 Role.fromProto(proto.getCausingRole()),

@@ -18,6 +18,7 @@
 package bisq.user.contact_list;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -85,7 +86,8 @@ public final class ContactListEntry implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ContactListEntry fromProto(bisq.user.protobuf.ContactListEntry proto) {
+    public static ContactListEntry fromProto(bisq.user.protobuf.ContactListEntry proto)
+            throws UnresolvableProtobufException {
         return new ContactListEntry(UserProfile.fromProto(proto.getUserProfile()),
                 UserProfile.fromProto(proto.getMyUserProfile()),
                 proto.getDate(),

@@ -19,6 +19,7 @@ package bisq.trade.mu_sig;
 
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -67,7 +68,8 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigTradeStore fromProto(bisq.trade.protobuf.MuSigTradeStore proto) {
+    public static MuSigTradeStore fromProto(bisq.trade.protobuf.MuSigTradeStore proto)
+            throws UnresolvableProtobufException {
         var tradeById = proto.getTradeByIdMap().entrySet().stream()
                 .map(entry -> {
                     try {

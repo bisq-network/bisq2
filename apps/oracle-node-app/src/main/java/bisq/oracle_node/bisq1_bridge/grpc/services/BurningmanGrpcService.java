@@ -20,6 +20,7 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 import bisq.bridge.protobuf.BurningmanBlockSubscription;
 import bisq.burningman.AuthorizedBurningmanListByBlock;
 import bisq.burningman.BurningmanData;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BurningmanBlockDto;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BurningmanBlocksRequest;
@@ -49,7 +50,7 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
     }
 
     @Override
-    protected List<BurningmanBlockDto> doRequest(int startBlockHeight) {
+    protected List<BurningmanBlockDto> doRequest(int startBlockHeight) throws UnresolvableProtobufException {
         var protoRequest = new BurningmanBlocksRequest(startBlockHeight).completeProto();
         var protoResponse = GrpcClient.withBulkRequestDeadline(grpcClient.getBurningmanBlockingStub())
                 .requestBurningmanBlocks(protoRequest);
@@ -70,7 +71,11 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
         grpcClient.getBurningmanStub().subscribe(subscription, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bridge.protobuf.BurningmanBlockDto proto) {
-                handleResponse(BurningmanBlockDto.fromProto(proto));
+                try {
+                    handleResponse(BurningmanBlockDto.fromProto(proto));
+                } catch (UnresolvableProtobufException e) {
+                    throw new RuntimeException(e);
+                }
 
                 // reset
                 subscribeRetryInterval.set(1);

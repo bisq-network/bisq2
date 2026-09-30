@@ -20,6 +20,7 @@ package bisq.chat.reactions;
 import bisq.chat.ChatChannelDomain;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -79,7 +80,8 @@ public abstract class ChatMessageReaction implements NetworkProto {
                 .setDate(date);
     }
 
-    public static ChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction proto) {
+    public static ChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case COMMONPUBLICCHATMESSAGEREACTION -> CommonPublicChatMessageReaction.fromProto(proto);
             case BISQEASYOFFERBOOKMESSAGEREACTION -> BisqEasyOfferbookMessageReaction.fromProto(proto);

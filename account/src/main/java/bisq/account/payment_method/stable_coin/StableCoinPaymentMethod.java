@@ -21,6 +21,7 @@ import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.StableCoin;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -61,7 +62,8 @@ public class StableCoinPaymentMethod extends PaymentMethod<StableCoinPaymentRail
         return unsafeToProto(serializeForHash);
     }
 
-    public static StableCoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
+    public static StableCoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
+            throws UnresolvableProtobufException {
         return Optional.ofNullable(
                         StableCoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
                 .orElseThrow(() -> new IllegalArgumentException(

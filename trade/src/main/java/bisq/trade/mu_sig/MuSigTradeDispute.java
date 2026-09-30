@@ -20,6 +20,7 @@ package bisq.trade.mu_sig;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationResult;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
@@ -69,7 +70,8 @@ public final class MuSigTradeDispute implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigTradeDispute fromProto(bisq.trade.protobuf.MuSigTradeDispute proto) {
+    public static MuSigTradeDispute fromProto(bisq.trade.protobuf.MuSigTradeDispute proto)
+            throws UnresolvableProtobufException {
         return new MuSigTradeDispute(
                 MuSigDisputeState.fromProto(proto.getDisputeState()),
                 proto.hasMuSigMediationResult()

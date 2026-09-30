@@ -22,6 +22,7 @@ import bisq.bi2p.protobuf.RouterInfoRequest;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.i2p.grpc.messages.NetworkStateUpdate;
 import bisq.network.i2p.grpc.messages.PeerAvailabilityResponse;
 import bisq.network.i2p.grpc.messages.ProcessStateUpdate;
@@ -80,7 +81,7 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
         } catch (io.grpc.StatusRuntimeException e) {
             log.warn("requestRouterState failed: {}", e.getStatus(), e);
             processState.set(ProcessState.FAILED);
-        } catch (RuntimeException e) {
+        } catch (UnresolvableProtobufException | RuntimeException e) {
             log.error("requestRouterState unexpected error", e);
             processState.set(ProcessState.FAILED);
         }
@@ -98,6 +99,8 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
         } catch (io.grpc.StatusRuntimeException e) {
             log.warn("requestPeerAvailability failed for {}: {}", peersDestination, e.getStatus(), e);
             throw e;
+        } catch (UnresolvableProtobufException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -148,9 +151,13 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
         client.getStub().subscribeProcessState(subscribeRequest, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bi2p.protobuf.ProcessStateUpdate proto) {
-                ProcessStateUpdate update = ProcessStateUpdate.fromProto(proto);
-                log.info("ProcessState {} ", update.getValue());
-                processState.set(update.getValue());
+                try {
+                    ProcessStateUpdate update = ProcessStateUpdate.fromProto(proto);
+                    log.info("ProcessState {} ", update.getValue());
+                    processState.set(update.getValue());
+                } catch (UnresolvableProtobufException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             @Override
@@ -168,9 +175,13 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
         client.getStub().subscribeNetworkState(subscribeRequest, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bi2p.protobuf.NetworkStateUpdate proto) {
-                NetworkStateUpdate update = NetworkStateUpdate.fromProto(proto);
-                log.info("NetworkState {} ", update.getValue());
-                networkState.set(update.getValue());
+                try {
+                    NetworkStateUpdate update = NetworkStateUpdate.fromProto(proto);
+                    log.info("NetworkState {} ", update.getValue());
+                    networkState.set(update.getValue());
+                } catch (UnresolvableProtobufException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             @Override
@@ -188,9 +199,13 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
         client.getStub().subscribeRouterState(subscribeRequest, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bi2p.protobuf.RouterStateUpdate proto) {
-                RouterStateUpdate update = RouterStateUpdate.fromProto(proto);
-                log.info("RouterState {} ", update.getValue());
-                routerState.set(update.getValue());
+                try {
+                    RouterStateUpdate update = RouterStateUpdate.fromProto(proto);
+                    log.info("RouterState {} ", update.getValue());
+                    routerState.set(update.getValue());
+                } catch (UnresolvableProtobufException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             @Override
@@ -208,9 +223,13 @@ public class Bi2pGrpcClientService implements RouterObserver, Service {
         client.getStub().subscribeTunnelInfo(subscribeRequest, new StreamObserver<>() {
             @Override
             public void onNext(bisq.bi2p.protobuf.TunnelInfoUpdate proto) {
-                TunnelInfoUpdate update = TunnelInfoUpdate.fromProto(proto);
-                log.info("TunnelInfo {} ", update.getValue());
-                tunnelInfo.set(update.getValue());
+                try {
+                    TunnelInfoUpdate update = TunnelInfoUpdate.fromProto(proto);
+                    log.info("TunnelInfo {} ", update.getValue());
+                    tunnelInfo.set(update.getValue());
+                } catch (UnresolvableProtobufException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             @Override

@@ -19,6 +19,8 @@ package bisq.support.moderator;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -66,15 +68,16 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto) {
-        Set<ReportToModeratorMessage> messages = proto.getReportToModeratorMessagesList().stream()
-                .map(ReportToModeratorMessage::fromProto)
+    public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto)
+            throws UnresolvableProtobufException {
+        Set<ReportToModeratorMessage> messages = ProtobufUtils.fromProtoStream(proto.getReportToModeratorMessagesList(),
+                        ReportToModeratorMessage::fromProto)
                 .collect(Collectors.toSet());
 
         Map<String, BannedUserModeratorData> bannedDataMap = new TreeMap<>();
         if (proto.getBannedUserModeratorDataCount() > 0) {
-            bannedDataMap = proto.getBannedUserModeratorDataList().stream()
-                    .map(BannedUserModeratorData::fromProto)
+            bannedDataMap = ProtobufUtils.fromProtoStream(proto.getBannedUserModeratorDataList(),
+                            BannedUserModeratorData::fromProto)
                     .collect(Collectors.toMap(
                             BannedUserModeratorData::getAccusedUserProfileId,
                             data -> data,

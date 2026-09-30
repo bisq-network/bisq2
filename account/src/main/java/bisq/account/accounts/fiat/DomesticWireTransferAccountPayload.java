@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.util.BankAccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -105,7 +106,8 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
                 .setHolderAddress(holderAddress);
     }
 
-    public static DomesticWireTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static DomesticWireTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         var domesticWireAccountPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();

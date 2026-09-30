@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network.handler.taker;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
@@ -35,6 +36,7 @@ import bisq.trade.mu_sig.messages.network.handler.PartialSignaturesRequestUtil;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import com.google.protobuf.ByteString;
@@ -72,33 +74,37 @@ public abstract class BaseSetupTradeMessage_B_Handler extends MuSigTradeMessageH
 
     @Override
     protected void process(SetupTradeMessage_B message) {
-        peersNonceShares = message.getNonceShares();
-        peersPubKeyShares = message.getPubKeyShares();
-        MuSigContract peersContract = message.getContract(); //todo needed?
-        peersContractSignatureData = message.getContractSignatureData();
+        try {
+            peersNonceShares = message.getNonceShares();
+            peersPubKeyShares = message.getPubKeyShares();
+            MuSigContract peersContract = message.getContract(); //todo needed?
+            peersContractSignatureData = message.getContractSignatureData();
 
-        NonceSharesRequest nonceSharesRequest = NonceSharesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
-                .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
-                .setPeersMultisigScriptKey(ByteString.copyFrom(peersPubKeyShares.getMultisigScriptKey()))
-                .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
-                .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
-                .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
-                .setBuyersSecurityDeposit(NonceSharesRequestUtil.getBuyerSecurityDeposit())
-                .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
-                .setTradeFeeReceiver(NonceSharesRequestUtil.getTradeFeeReceiver())
-                .build();
-        myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
-        long redirectionAmountMsat = myNonceSharesMessage.getRedirectionAmountMsat();
+            NonceSharesRequest nonceSharesRequest = NonceSharesRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
+                    .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
+                    .setPeersMultisigScriptKey(ByteString.copyFrom(peersPubKeyShares.getMultisigScriptKey()))
+                    .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
+                    .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
+                    .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
+                    .setBuyersSecurityDeposit(NonceSharesRequestUtil.getBuyerSecurityDeposit())
+                    .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
+                    .setTradeFeeReceiver(NonceSharesRequestUtil.getTradeFeeReceiver())
+                    .build();
+            myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
+            long redirectionAmountMsat = myNonceSharesMessage.getRedirectionAmountMsat();
 
-        NonceSharesMessage peersNonceSharesMessage = NonceSharesMessage.from(peersNonceShares);
-        PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
-                .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers(redirectionAmountMsat))
-                .build();
-        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
+            NonceSharesMessage peersNonceSharesMessage = NonceSharesMessage.from(peersNonceShares);
+            PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
+                    .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers(redirectionAmountMsat))
+                    .build();
+            myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

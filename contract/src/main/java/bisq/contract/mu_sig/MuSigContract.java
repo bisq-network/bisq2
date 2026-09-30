@@ -21,6 +21,7 @@ import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.market.Market;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
@@ -168,7 +169,7 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigContract fromProto(bisq.contract.protobuf.Contract proto) {
+    public static MuSigContract fromProto(bisq.contract.protobuf.Contract proto) throws UnresolvableProtobufException {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
         bisq.contract.protobuf.MuSigContract muSigContractProto = twoPartyContractProto.getMuSigContract();
         MuSigOffer muSigOffer = MuSigOffer.fromProto(proto.getOffer());

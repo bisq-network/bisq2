@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
@@ -130,7 +131,7 @@ class DataServiceRelayTest {
     // A relay removed signature V2 and changed the sequence number, which signature V1 does not cover. The removal with
     // signature V2 replaces the stored one and must reach the nodes behind this node.
     @Test
-    void removalWhichReplacesStoredRemovalIsRelayed() throws GeneralSecurityException {
+    void removalWhichReplacesStoredRemovalIsRelayed() throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(authenticatedDataStore,
                 authenticatedData, ownerKeyPair);
         RemoveAuthenticatedDataRequest legacy = RemoveAuthenticatedDataRequest.fromProto(
@@ -152,7 +153,8 @@ class DataServiceRelayTest {
 
     // A relay removed signature V2 and moved the creation date back, which signature V1 does not cover
     @Test
-    void mailboxRemovalWhichReplacesStoredRemovalIsRelayed() throws GeneralSecurityException {
+    void mailboxRemovalWhichReplacesStoredRemovalIsRelayed()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(ownerKeyPair));
         KeyPair receiverKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);

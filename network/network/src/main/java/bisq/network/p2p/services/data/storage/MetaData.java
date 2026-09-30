@@ -22,6 +22,7 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -118,7 +119,7 @@ public final class MetaData implements NetworkProto, Canonical {
                 .setMaxMapSize(maxMapSize);
     }
 
-    public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
+    public static MetaData fromProto(bisq.network.protobuf.MetaData proto) throws UnresolvableProtobufException {
         return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
     }
 

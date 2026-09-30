@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -89,7 +90,8 @@ public final class MuSigCustomPayoutPsbtMessage extends MuSigTradeMessage {
                 .setPsbt(ByteString.copyFrom(psbt));
     }
 
-    public static MuSigCustomPayoutPsbtMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static MuSigCustomPayoutPsbtMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.MuSigCustomPayoutPsbtMessage message =
                 proto.getMuSigTradeMessage().getMuSigCustomPayoutPsbtMessage();
         return new MuSigCustomPayoutPsbtMessage(

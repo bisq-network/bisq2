@@ -18,6 +18,7 @@
 package bisq.account.timestamp;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.EcPublicKeyValidation;
 import com.google.protobuf.ByteString;
@@ -70,7 +71,8 @@ public final class AuthorizeAccountTimestampV2Payload implements NetworkProto {
                 .setPublicKey(ByteString.copyFrom(publicKey));
     }
 
-    public static AuthorizeAccountTimestampV2Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV2Payload proto) {
+    public static AuthorizeAccountTimestampV2Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV2Payload proto)
+            throws UnresolvableProtobufException {
         return new AuthorizeAccountTimestampV2Payload(
                 proto.getDate(),
                 proto.getHash().toByteArray(),

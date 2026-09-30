@@ -21,6 +21,8 @@ import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -122,10 +124,12 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto) {
-        Map<String, ClientProfile> clientProfileByIdMap = proto.getClientProfileByIdMapMap().entrySet().stream()
+    public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto)
+            throws UnresolvableProtobufException {
+        Map<String, ClientProfile> clientProfileByIdMap = ProtobufUtils.fromProtoEntryStream(
+                        proto.getClientProfileByIdMapMap(), ClientProfile::fromProto)
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> ClientProfile.fromProto(e.getValue())));
+                        Map.Entry::getValue));
         Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
         boolean anyPromoted = false;
         for (Map.Entry<String, bisq.api.protobuf.PermissionSet> e : proto.getPermissionsByClientIdMap().entrySet()) {

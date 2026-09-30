@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -62,7 +63,8 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
         return bisq.account.protobuf.UpiAccountPayload.newBuilder().setVirtualPaymentAddress(virtualPaymentAddress);
     }
 
-    public static UpiAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static UpiAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         return new UpiAccountPayload(
                 proto.getId(),

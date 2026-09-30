@@ -21,6 +21,7 @@ import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.security.keys.PubKey;
 import com.google.common.base.Joiner;
@@ -56,7 +57,8 @@ public final class NetworkId implements NetworkProto {
                 .setPubKey(pubKey.toProto(serializeForHash));
     }
 
-    public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto) {
+    public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto)
+            throws UnresolvableProtobufException {
         return new NetworkId(AddressByTransportTypeMap.fromProto(proto.getAddressByNetworkTypeMap()),
                 PubKey.fromProto(proto.getPubKey()));
     }

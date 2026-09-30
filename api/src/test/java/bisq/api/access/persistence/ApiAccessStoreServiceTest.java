@@ -19,6 +19,7 @@ package bisq.api.access.persistence;
 
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import org.junit.jupiter.api.Test;
@@ -67,7 +68,7 @@ class ApiAccessStoreServiceTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void readPersistedPromotesAndWritesGrantAllBackSoItSurvivesRestart() {
+    void readPersistedPromotesAndWritesGrantAllBackSoItSurvivesRestart() throws UnresolvableProtobufException {
         Persistence persistence = mock(Persistence.class);
         // read() deserializes (and promotes) the legacy store, exactly as production does.
         when(persistence.read()).thenReturn(Optional.of(
@@ -92,7 +93,7 @@ class ApiAccessStoreServiceTest {
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void readPersistedDoesNotWriteBackWhenNothingWasPromoted() {
+    void readPersistedDoesNotWriteBackWhenNothingWasPromoted() throws UnresolvableProtobufException {
         Persistence persistence = mock(Persistence.class);
         // Already grantAll on disk — nothing promoted, nothing to write back.
         ApiAccessStore alreadyGrantAll = ApiAccessStore.fromProto(bisq.api.protobuf.ApiAccessStore.newBuilder()

@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
 import bisq.common.encoding.Hex;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.user.reputation.WitnessReputationProtocol;
 
 import com.google.protobuf.CodedOutputStream;
@@ -36,7 +37,7 @@ class WitnessOwnershipResponseMessagesTest {
             "f8595c82649513a9df373f4d14077922585b6ed555fdabc0c6c4e6967aa4f563");
 
     @Test
-    void accountAgeResponseRoundTripsBucketAndNullifier() {
+    void accountAgeResponseRoundTripsBucketAndNullifier() throws UnresolvableProtobufException {
         AccountAgeWitnessOwnershipResponse response =
                 new AccountAgeWitnessOwnershipResponse(GOLDEN_DATE_BUCKET, GOLDEN_NULLIFIER);
 
@@ -49,7 +50,7 @@ class WitnessOwnershipResponseMessagesTest {
     }
 
     @Test
-    void signedWitnessResponseRoundTripsBucketAndNullifier() {
+    void signedWitnessResponseRoundTripsBucketAndNullifier() throws UnresolvableProtobufException {
         SignedWitnessOwnershipResponse response =
                 new SignedWitnessOwnershipResponse(GOLDEN_DATE_BUCKET, GOLDEN_NULLIFIER);
 

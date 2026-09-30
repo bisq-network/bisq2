@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
+import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -30,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 
 class BondedRolesVerificationMessagesTest {
     @Test
-    void missingProtocolVersionIsReadAsLegacyVersionOne() {
+    void missingProtocolVersionIsReadAsLegacyVersionOne() throws UnresolvableProtobufException {
         bisq.bridge.protobuf.BondedRoleVerificationRequest proto =
                 bisq.bridge.protobuf.BondedRoleVerificationRequest.newBuilder()
                         .setBondUserName("legacy")
@@ -46,7 +47,7 @@ class BondedRolesVerificationMessagesTest {
     }
 
     @Test
-    void explicitVersionZeroRemainsUnsupported() {
+    void explicitVersionZeroRemainsUnsupported() throws UnresolvableProtobufException {
         bisq.bridge.protobuf.BondedRoleVerificationRequest proto = request("unsupported")
                 .completeProto()
                 .toBuilder()
@@ -61,7 +62,7 @@ class BondedRolesVerificationMessagesTest {
     }
 
     @Test
-    void batchMessagesRoundTripInRequestOrder() {
+    void batchMessagesRoundTripInRequestOrder() throws UnresolvableProtobufException {
         BondedRoleVerificationRequest first = request("first");
         BondedRoleVerificationRequest second = request("second");
         BondedRolesVerificationRequest request = new BondedRolesVerificationRequest(List.of(first, second));
@@ -76,7 +77,8 @@ class BondedRolesVerificationMessagesTest {
     }
 
     @Test
-    void verificationMessageAllowsAnUnsupportedFutureProtocolAtTheStructuralBoundary() {
+    void verificationMessageAllowsAnUnsupportedFutureProtocolAtTheStructuralBoundary()
+            throws UnresolvableProtobufException {
         BondedRoleVerificationRequest request = new BondedRoleVerificationRequest("future",
                 "MEDIATOR",
                 "0123456789abcdef0123456789abcdef01234567",

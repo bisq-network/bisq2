@@ -18,6 +18,7 @@
 package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -126,7 +127,8 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
         return resolveValueProto(serializeForHash);
     }
 
-    public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {
+    public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto)
+            throws UnresolvableProtobufException {
         return new AuthorizeAccountAgeRequest(proto.hasProtocolVersion()
                 ? proto.getProtocolVersion()
                 : LEGACY_VERSION,

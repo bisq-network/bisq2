@@ -21,6 +21,7 @@ import bisq.account.accounts.AccountPayload;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.trade.TradeParty;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
@@ -134,7 +135,7 @@ public final class MuSigTradeParty extends TradeParty {
         return getTradePartyBuilder(serializeForHash).setMuSigTradeParty(builder);
     }
 
-    public static MuSigTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
+    public static MuSigTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) throws UnresolvableProtobufException {
         bisq.trade.protobuf.MuSigTradeParty muSigTradePartyProto = proto.getMuSigTradeParty();
         return new MuSigTradeParty(
                 NetworkId.fromProto(proto.getNetworkId()),

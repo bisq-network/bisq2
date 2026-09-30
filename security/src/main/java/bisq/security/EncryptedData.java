@@ -19,6 +19,7 @@ package bisq.security;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -52,7 +53,8 @@ public final class EncryptedData implements PersistableProto {
                 .setCipherText(ByteString.copyFrom(cipherText));
     }
 
-    public static EncryptedData fromProto(bisq.security.protobuf.EncryptedData proto) {
+    public static EncryptedData fromProto(bisq.security.protobuf.EncryptedData proto)
+            throws UnresolvableProtobufException {
         return new EncryptedData(proto.getIv().toByteArray(), proto.getCipherText().toByteArray());
     }
 

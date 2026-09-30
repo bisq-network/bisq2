@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -62,7 +63,8 @@ public final class BisqEasyRejectTradeMessage extends BisqEasyTradeMessage {
         return bisq.trade.protobuf.BisqEasyRejectTradeMessage.newBuilder();
     }
 
-    public static BisqEasyRejectTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static BisqEasyRejectTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         return new BisqEasyRejectTradeMessage(
                 proto.getId(),
                 proto.getTradeId(),

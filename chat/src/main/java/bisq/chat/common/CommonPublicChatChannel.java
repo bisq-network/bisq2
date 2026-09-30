@@ -20,6 +20,7 @@ package bisq.chat.common;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -77,7 +78,8 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     }
 
     public static CommonPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                    bisq.chat.protobuf.CommonPublicChatChannel proto) {
+                                                    bisq.chat.protobuf.CommonPublicChatChannel proto)
+            throws UnresolvableProtobufException {
         return new CommonPublicChatChannel(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),

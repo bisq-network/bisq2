@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -115,7 +116,8 @@ public final class NonceSharesMessage implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static NonceSharesMessage fromProto(bisq.trade.protobuf.NonceSharesMessage proto) {
+    public static NonceSharesMessage fromProto(bisq.trade.protobuf.NonceSharesMessage proto)
+            throws UnresolvableProtobufException {
         return new NonceSharesMessage(proto.getWarningTxFeeBumpAddress(),
                 proto.getRedirectTxFeeBumpAddress(),
                 proto.getClaimTxPayoutAddress(),

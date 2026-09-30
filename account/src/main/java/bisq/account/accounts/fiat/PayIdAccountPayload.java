@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -67,7 +68,8 @@ public final class PayIdAccountPayload extends CountryBasedAccountPayload implem
                 .setPayId(payId);
     }
 
-    public static PayIdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static PayIdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var payload = proto.getCountryBasedAccountPayload().getPayIdAccountPayload();
         return new PayIdAccountPayload(
                 proto.getId(),

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -52,7 +53,7 @@ class MailboxClassNameTest {
     }
 
     @Test
-    void mailboxDataSendsClassNameAndMetaData() {
+    void mailboxDataSendsClassNameAndMetaData() throws UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
 
         bisq.network.protobuf.MailboxData proto = mailboxData.toProto(false);
@@ -65,7 +66,7 @@ class MailboxClassNameTest {
     }
 
     @Test
-    void mailboxDataWithoutClassNameUsesClassNameOfMetaData() {
+    void mailboxDataWithoutClassNameUsesClassNameOfMetaData() throws UnresolvableProtobufException {
         bisq.network.protobuf.MailboxData proto = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair))
                 .toProto(false).toBuilder()
                 .clearClassName()
@@ -75,7 +76,7 @@ class MailboxClassNameTest {
     }
 
     @Test
-    void mailboxDataUsesClassNameFieldIfPresent() {
+    void mailboxDataUsesClassNameFieldIfPresent() throws UnresolvableProtobufException {
         bisq.network.protobuf.MailboxData proto = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair))
                 .toProto(false).toBuilder()
                 .setClassName("OtherMailboxMessage")
@@ -86,7 +87,7 @@ class MailboxClassNameTest {
 
     @Test
     void addMailboxRequestWithoutClassNameHasSameSignatureStorageKeyAndProofOfWorkPayload()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
         AddMailboxRequest request = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
         bisq.network.protobuf.AddMailboxRequest.Builder builder = request.toValueProto(false).toBuilder();
@@ -102,7 +103,8 @@ class MailboxClassNameTest {
     }
 
     @Test
-    void removeMailboxRequestSendsClassNameAndMetaData() throws GeneralSecurityException {
+    void removeMailboxRequestSendsClassNameAndMetaData()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
         RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
 
@@ -116,7 +118,8 @@ class MailboxClassNameTest {
     }
 
     @Test
-    void removeMailboxRequestWithoutClassNameHasSameProofOfWorkPayload() throws GeneralSecurityException {
+    void removeMailboxRequestWithoutClassNameHasSameProofOfWorkPayload()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
         RemoveMailboxRequest request = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
 

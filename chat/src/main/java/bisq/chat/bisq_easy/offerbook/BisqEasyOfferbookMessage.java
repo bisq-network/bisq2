@@ -22,6 +22,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -102,7 +103,8 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
         return builder;
     }
 
-    public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
         Optional<Citation> citation = baseProto.hasCitation() ?
                 Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();

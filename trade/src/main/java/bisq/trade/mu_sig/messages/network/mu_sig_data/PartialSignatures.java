@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import com.google.protobuf.ByteString;
@@ -104,7 +105,8 @@ public final class PartialSignatures implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static PartialSignatures fromProto(bisq.trade.protobuf.PartialSignatures proto) {
+    public static PartialSignatures fromProto(bisq.trade.protobuf.PartialSignatures proto)
+            throws UnresolvableProtobufException {
         return new PartialSignatures(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
                 proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
                 proto.getPeersRedirectTxInputPartialSignature().toByteArray(),

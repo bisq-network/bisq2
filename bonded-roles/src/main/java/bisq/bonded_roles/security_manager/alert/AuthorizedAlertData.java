@@ -23,6 +23,7 @@ import bisq.bonded_roles.release.AppType;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -186,7 +187,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto) {
+    public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto)
+            throws UnresolvableProtobufException {
         AlertType alertType = AlertType.fromProto(proto.getAlertType());
         return new AuthorizedAlertData(
                 proto.getVersion(),

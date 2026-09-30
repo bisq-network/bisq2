@@ -17,6 +17,7 @@
 
 package bisq.offer.price.spec;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,7 +54,8 @@ public final class MarketPriceSpec implements PriceSpec {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto) {
+    public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto)
+            throws UnresolvableProtobufException {
         return new MarketPriceSpec();
     }
 }

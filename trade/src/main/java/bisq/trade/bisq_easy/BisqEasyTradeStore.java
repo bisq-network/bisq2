@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
@@ -84,7 +85,8 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyTradeStore fromProto(bisq.trade.protobuf.BisqEasyTradeStore proto) {
+    public static BisqEasyTradeStore fromProto(bisq.trade.protobuf.BisqEasyTradeStore proto)
+            throws UnresolvableProtobufException {
         var trades = proto.getTradesList().stream()
                 .map(tradeProto -> {
                     try {

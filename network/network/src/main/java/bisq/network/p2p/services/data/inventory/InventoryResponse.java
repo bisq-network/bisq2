@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import lombok.EqualsAndHashCode;
@@ -76,7 +77,8 @@ public final class InventoryResponse implements BroadcastMessage, Response {
                 .setRequestNonce(requestNonce);
     }
 
-    public static InventoryResponse fromProto(bisq.network.protobuf.InventoryResponse proto) {
+    public static InventoryResponse fromProto(bisq.network.protobuf.InventoryResponse proto)
+            throws UnresolvableProtobufException {
         return new InventoryResponse(proto.getVersion(), Inventory.fromProto(proto.getInventory()), proto.getRequestNonce());
     }
 

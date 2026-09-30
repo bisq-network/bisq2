@@ -21,6 +21,8 @@ import bisq.account.accounts.AccountPayload;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.arbitration.ArbitrationCaseState;
 import com.google.protobuf.ByteString;
@@ -104,7 +106,8 @@ public class MuSigArbitrationCase implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigArbitrationCase fromProto(bisq.support.protobuf.MuSigArbitrationCase proto) {
+    public static MuSigArbitrationCase fromProto(bisq.support.protobuf.MuSigArbitrationCase proto)
+            throws UnresolvableProtobufException {
         return new MuSigArbitrationCase(MuSigArbitrationRequest.fromProto(proto.getMuSigArbitrationRequest()),
                 proto.getRequestDate(),
                 ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
@@ -121,8 +124,7 @@ public class MuSigArbitrationCase implements PersistableProto {
                         Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
                         Optional.empty(),
                 proto.getArbitratorHasLeftChat(),
-                proto.getIssuesList().stream()
-                        .map(MuSigArbitrationIssue::fromProto)
+                ProtobufUtils.fromProtoStream(proto.getIssuesList(), MuSigArbitrationIssue::fromProto)
                         .toList());
     }
 

@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter.mini_sketch;
 
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.EqualsAndHashCode;
@@ -62,7 +63,8 @@ public final class MiniSketchFilter extends InventoryFilter {
                 bisq.network.protobuf.MiniSketchFilter.newBuilder());
     }
 
-    public static MiniSketchFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {
+    public static MiniSketchFilter fromProto(bisq.network.protobuf.InventoryFilter proto)
+            throws UnresolvableProtobufException {
         return new MiniSketchFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()));
     }
 

@@ -22,6 +22,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.platform.Version;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -150,7 +151,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto) {
+    public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto)
+            throws UnresolvableProtobufException {
         return new ReleaseNotification(
                 proto.getVersion(),
                 proto.getId(),

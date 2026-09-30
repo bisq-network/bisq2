@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -54,7 +55,8 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
 
     abstract protected bisq.trade.protobuf.BisqEasyTradeMessage.Builder getBisqEasyTradeMessageBuilder(boolean serializeForHash);
 
-    public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getBisqEasyTradeMessage().getMessageCase()) {
             case BISQEASYTAKEOFFERREQUEST -> BisqEasyTakeOfferRequest.fromProto(proto);
             case BISQEASYTAKEOFFERRESPONSE -> BisqEasyTakeOfferResponse.fromProto(proto);

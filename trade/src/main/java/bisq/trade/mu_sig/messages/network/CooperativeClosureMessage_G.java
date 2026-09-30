@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -67,7 +68,8 @@ public final class CooperativeClosureMessage_G extends MuSigTradeMessage {
                 .setPeerOutputPrvKeyShare(peerOutputPrvKeyShare.toProto(serializeForHash));
     }
 
-    public static CooperativeClosureMessage_G fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static CooperativeClosureMessage_G fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.CooperativeClosureMessage_G muSigMessageProto = proto.getMuSigTradeMessage().getCooperativeClosureMessageG();
         return new CooperativeClosureMessage_G(
                 proto.getId(),

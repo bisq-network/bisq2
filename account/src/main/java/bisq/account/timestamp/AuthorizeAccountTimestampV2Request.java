@@ -18,6 +18,7 @@
 package bisq.account.timestamp;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -69,7 +70,8 @@ public final class AuthorizeAccountTimestampV2Request implements MailboxMessage,
         return resolveValueProto(serializeForHash);
     }
 
-    public static AuthorizeAccountTimestampV2Request fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV2Request proto) {
+    public static AuthorizeAccountTimestampV2Request fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV2Request proto)
+            throws UnresolvableProtobufException {
         return new AuthorizeAccountTimestampV2Request(
                 AuthorizeAccountTimestampV2Payload.fromProto(proto.getPayload()),
                 proto.getSignature().toByteArray()

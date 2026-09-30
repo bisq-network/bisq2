@@ -19,6 +19,7 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.protocol_type.ProtocolType;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 
 public enum BankAccountType implements ProtocolType {
@@ -30,7 +31,8 @@ public enum BankAccountType implements ProtocolType {
         return bisq.account.protobuf.BankAccountType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static BankAccountType fromProto(bisq.account.protobuf.BankAccountType proto) {
+    public static BankAccountType fromProto(bisq.account.protobuf.BankAccountType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(BankAccountType.class, proto.name(), CHECKING);
     }
 

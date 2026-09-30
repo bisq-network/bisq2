@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
@@ -67,7 +68,8 @@ public final class PaymentReceivedMessage_F extends MuSigTradeMessage {
                 .setSwapTxSignature(swapTxSignature.toProto(serializeForHash));
     }
 
-    public static PaymentReceivedMessage_F fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static PaymentReceivedMessage_F fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.PaymentReceivedMessage_F muSigMessageProto = proto.getMuSigTradeMessage().getPaymentReceivedMessageF();
         return new PaymentReceivedMessage_F(
                 proto.getId(),

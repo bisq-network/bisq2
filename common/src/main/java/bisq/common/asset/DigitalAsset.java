@@ -18,6 +18,7 @@
 package bisq.common.asset;
 
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -37,7 +38,7 @@ public abstract class DigitalAsset extends Asset {
         return bisq.common.protobuf.DigitalAsset.newBuilder();
     }
 
-    public static Asset fromProto(bisq.common.protobuf.Asset proto) {
+    public static Asset fromProto(bisq.common.protobuf.Asset proto) throws UnresolvableProtobufException {
         return switch (proto.getDigitalAsset().getMessageCase()) {
             case CRYPTOASSET -> CryptoAsset.fromProto(proto);
             case STABLECOIN -> StableCoin.fromProto(proto);

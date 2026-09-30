@@ -23,6 +23,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.SignatureValidation;
@@ -157,7 +158,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                 .setVersion(version);
     }
 
-    public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto) {
+    public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto)
+            throws UnresolvableProtobufException {
         byte[] senderPublicKeyBytes = proto.getSenderPublicKeyBytes().toByteArray();
         try {
             PublicKey senderPublicKey = KeyGeneration.generatePublic(senderPublicKeyBytes);

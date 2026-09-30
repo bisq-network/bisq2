@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.confidential;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.ConfidentialData;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -34,7 +35,7 @@ class ConfidentialMessageTest {
     private static final String RECEIVER_KEY_ID = "receiverKeyId";
 
     @Test
-    void validMessageIsCreated() {
+    void validMessageIsCreated() throws UnresolvableProtobufException {
         ConfidentialMessage message = ConfidentialMessage.fromProto(createProto());
 
         assertFalse(message.isDataInvalid());
@@ -48,7 +49,7 @@ class ConfidentialMessageTest {
     }
 
     @Test
-    void messageWithoutReceiverKeyIdCannotBeCreated() {
+    void messageWithoutReceiverKeyIdCannotBeCreated() throws UnresolvableProtobufException {
         ConfidentialData confidentialData = ConfidentialMessage.fromProto(createProto()).getConfidentialData();
 
         assertThrows(NullPointerException.class, () -> new ConfidentialMessage(confidentialData, null));

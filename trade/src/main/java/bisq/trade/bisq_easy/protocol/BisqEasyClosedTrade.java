@@ -18,7 +18,7 @@
 package bisq.trade.bisq_easy.protocol;
 
 import bisq.common.proto.PersistableProto;
-import bisq.common.proto.UnresolvableProtobufEnumException;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,8 @@ public record BisqEasyClosedTrade(BisqEasyTrade trade, UserProfile myUserProfile
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyClosedTrade fromProto(bisq.trade.protobuf.BisqEasyClosedTrade proto) throws UnresolvableProtobufEnumException {
+    public static BisqEasyClosedTrade fromProto(bisq.trade.protobuf.BisqEasyClosedTrade proto)
+            throws UnresolvableProtobufException {
         return new BisqEasyClosedTrade(
                 BisqEasyTrade.fromProto(proto.getTrade()),
                 UserProfile.fromProto(proto.getMyUserProfile()),

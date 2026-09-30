@@ -23,6 +23,7 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import com.google.protobuf.ByteString;
@@ -81,7 +82,8 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
                 .setCreated(created);
     }
 
-    public static AuthenticatedSequentialData fromProto(bisq.network.protobuf.AuthenticatedSequentialData proto) {
+    public static AuthenticatedSequentialData fromProto(bisq.network.protobuf.AuthenticatedSequentialData proto)
+            throws UnresolvableProtobufException {
         return new AuthenticatedSequentialData(AuthenticatedData.fromProto(proto.getAuthenticatedData()),
                 proto.getSequenceNumber(),
                 proto.getPubKeyHash().toByteArray(),

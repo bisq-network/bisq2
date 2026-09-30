@@ -18,6 +18,7 @@
 package bisq.contract.bisq_easy;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
@@ -129,7 +130,8 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto) {
+    public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto)
+            throws UnresolvableProtobufException {
         bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
         bisq.contract.protobuf.BisqEasyContract bisqEasyContract = twoPartyContractProto.getBisqEasyContract();
         return new BisqEasyContract(proto.getTakeOfferDate(),

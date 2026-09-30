@@ -18,6 +18,7 @@
 package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.util.AccountUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -84,7 +85,8 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
         return bisq.account.protobuf.OtherCryptoAssetAccountPayload.newBuilder();
     }
 
-    public static OtherCryptoAssetAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static OtherCryptoAssetAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
         return new OtherCryptoAssetAccountPayload(
                 proto.getId(),

@@ -18,6 +18,7 @@
 package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +64,7 @@ public final class I2PKeyPair implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static I2PKeyPair fromProto(bisq.security.protobuf.I2PKeyPair proto) {
+    public static I2PKeyPair fromProto(bisq.security.protobuf.I2PKeyPair proto) throws UnresolvableProtobufException {
         return new I2PKeyPair(proto.getIdentityBytes().toByteArray(),
                 proto.getDestinationBytes().toByteArray());
     }

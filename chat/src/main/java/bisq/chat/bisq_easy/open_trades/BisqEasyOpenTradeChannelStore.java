@@ -19,6 +19,8 @@ package bisq.chat.bisq_easy.open_trades;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -51,9 +53,10 @@ public final class BisqEasyOpenTradeChannelStore implements PersistableStore<Bis
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyOpenTradeChannelStore fromProto(bisq.chat.protobuf.BisqEasyOpenTradeChannelStore proto) {
-        Set<BisqEasyOpenTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
-                .map(e -> (BisqEasyOpenTradeChannel) BisqEasyOpenTradeChannel.fromProto(e))
+    public static BisqEasyOpenTradeChannelStore fromProto(bisq.chat.protobuf.BisqEasyOpenTradeChannelStore proto)
+            throws UnresolvableProtobufException {
+        Set<BisqEasyOpenTradeChannel> privateTradeChannels = ProtobufUtils.fromProtoStream(proto.getChannelsList(),
+                        e -> (BisqEasyOpenTradeChannel) BisqEasyOpenTradeChannel.fromProto(e))
                 .collect(Collectors.toSet());
         return new BisqEasyOpenTradeChannelStore(privateTradeChannels);
     }

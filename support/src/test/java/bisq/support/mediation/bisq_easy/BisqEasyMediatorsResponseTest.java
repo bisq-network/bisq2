@@ -19,6 +19,7 @@ package bisq.support.mediation.bisq_easy;
 
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
@@ -41,7 +42,7 @@ class BisqEasyMediatorsResponseTest {
     private static final String TRADE_ID = "tradeId";
 
     @Test
-    void responseContainsTheSenderPublicKey() {
+    void responseContainsTheSenderPublicKey() throws UnresolvableProtobufException {
         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
         BisqEasyMediatorsResponse response = new BisqEasyMediatorsResponse(TRADE_ID, createNetworkId(keyPair.getPublic()));
 
@@ -55,7 +56,7 @@ class BisqEasyMediatorsResponseTest {
     // Versions before the sender network ID was added sent version 0 without it. The sender public key is required for
     // these responses as well, so the receiver does not accept them.
     @Test
-    void responseOfVersion0RequiresTheSenderPublicKeyWhichItDoesNotContain() {
+    void responseOfVersion0RequiresTheSenderPublicKeyWhichItDoesNotContain() throws UnresolvableProtobufException {
         BisqEasyMediatorsResponse received = BisqEasyMediatorsResponse.fromProto(
                 bisq.support.protobuf.MediatorsResponse.newBuilder()
                         .setVersion(0)

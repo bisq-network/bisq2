@@ -1,6 +1,7 @@
 package bisq.network.p2p.message;
 
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.CloseReason;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +38,8 @@ public final class CloseConnectionMessage implements EnvelopePayloadMessage {
         return bisq.network.protobuf.CloseConnectionMessage.newBuilder().setCloseReason(closeReason.name());
     }
 
-    public static CloseConnectionMessage fromProto(bisq.network.protobuf.CloseConnectionMessage proto) {
+    public static CloseConnectionMessage fromProto(bisq.network.protobuf.CloseConnectionMessage proto)
+            throws UnresolvableProtobufException {
         return new CloseConnectionMessage(ProtobufUtils.enumFromProto(CloseReason.class, proto.getCloseReason(), CloseReason.UNDEFINED));
     }
 }

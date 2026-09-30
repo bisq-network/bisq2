@@ -20,6 +20,8 @@ package bisq.chat.two_party;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateChatChannel;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -82,14 +84,14 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     }
 
     public static TwoPartyPrivateChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                       bisq.chat.protobuf.TwoPartyPrivateChatChannel proto) {
+                                                       bisq.chat.protobuf.TwoPartyPrivateChatChannel proto)
+            throws UnresolvableProtobufException {
         return new TwoPartyPrivateChatChannel(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
-                proto.getChatMessagesList().stream()
-                        .map(TwoPartyPrivateChatMessage::fromProto)
+                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), TwoPartyPrivateChatMessage::fromProto)
                         .collect(Collectors.toSet()),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType())
         );

@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -47,7 +48,8 @@ public final class CustomPayoutPsbtRequest implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static CustomPayoutPsbtRequest fromProto(bisq.trade.protobuf.CustomPayoutPsbtRequest proto) {
+    public static CustomPayoutPsbtRequest fromProto(bisq.trade.protobuf.CustomPayoutPsbtRequest proto)
+            throws UnresolvableProtobufException {
         return new CustomPayoutPsbtRequest(proto.getTradeId(),
                 proto.getSellersPayoutAmountExcludingFee(),
                 proto.getFeeRate());

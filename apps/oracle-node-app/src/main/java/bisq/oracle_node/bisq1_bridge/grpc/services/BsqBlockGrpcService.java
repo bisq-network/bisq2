@@ -19,6 +19,7 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.bridge.protobuf.BsqBlockSubscription;
 import bisq.bridge.protobuf.BsqBlockSubscriptionEvent;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
@@ -89,7 +90,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     }
 
     @Override
-    protected List<BsqBlockDto> doRequest(int startBlockHeight) {
+    protected List<BsqBlockDto> doRequest(int startBlockHeight) throws UnresolvableProtobufException {
         var protoRequest = new BsqBlocksRequest(startBlockHeight).completeProto();
         var protoResponse = GrpcClient.withBulkRequestDeadline(grpcClient.getBsqBlockBlockingStub())
                 .requestBsqBlocks(protoRequest);
@@ -161,7 +162,11 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         grpcClient.getBsqBlockStub().subscribeWithSnapshot(subscription, new StreamObserver<>() {
             @Override
             public void onNext(BsqBlockSubscriptionEvent event) {
-                handleSubscriptionEvent(event);
+                try {
+                    handleSubscriptionEvent(event);
+                } catch (UnresolvableProtobufException e) {
+                    throw new RuntimeException(e);
+                }
 
                 // reset
                 subscribeRetryInterval.set(1);
@@ -184,7 +189,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         return "the continuity-aware BSQ block subscription (BsqBlockGrpcService.SubscribeWithSnapshot)";
     }
 
-    void handleSubscriptionEvent(BsqBlockSubscriptionEvent event) {
+    void handleSubscriptionEvent(BsqBlockSubscriptionEvent event) throws UnresolvableProtobufException {
         switch (event.getPayloadCase()) {
             case SUBSCRIPTIONREADYHEIGHT -> {
                 log.info("BSQ block subscription established at height {}", event.getSubscriptionReadyHeight());

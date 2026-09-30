@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.peer_group.network_load;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -59,7 +60,8 @@ public final class NetworkLoadExchangeRequest implements EnvelopePayloadMessage,
                 .setNetworkLoad(networkLoad.toProto(serializeForHash));
     }
 
-    public static NetworkLoadExchangeRequest fromProto(bisq.network.protobuf.NetworkLoadExchangeRequest proto) {
+    public static NetworkLoadExchangeRequest fromProto(bisq.network.protobuf.NetworkLoadExchangeRequest proto)
+            throws UnresolvableProtobufException {
         return new NetworkLoadExchangeRequest(proto.getNonce(), NetworkLoad.fromProto(proto.getNetworkLoad()));
     }
 

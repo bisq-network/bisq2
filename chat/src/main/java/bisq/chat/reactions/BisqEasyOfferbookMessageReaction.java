@@ -18,6 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.security.keys.PubKey;
@@ -81,7 +82,8 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
                 .setBisqEasyOfferbookMessageReaction(toBisqEasyOfferbookMessageReactionProto(serializeForHash));
     }
 
-    public static BisqEasyOfferbookMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
+    public static BisqEasyOfferbookMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
         return new BisqEasyOfferbookMessageReaction(
                 baseProto.getId(),
                 baseProto.getUserProfileId(),

@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
@@ -77,7 +78,8 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
                 .setMobileNr(mobileNr);
     }
 
-    public static HalCashAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static HalCashAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         bisq.account.protobuf.HalCashAccountPayload payload =
                 proto.getCountryBasedAccountPayload().getHalCashAccountPayload();
         return new HalCashAccountPayload(proto.getId(),

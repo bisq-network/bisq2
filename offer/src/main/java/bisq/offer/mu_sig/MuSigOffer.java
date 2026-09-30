@@ -23,6 +23,8 @@ import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
 import bisq.common.market.Market;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
@@ -150,21 +152,23 @@ public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodS
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigOffer fromProto(bisq.offer.protobuf.Offer proto) {
-        List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
-                .map(TradeProtocolType::fromProto)
+    public static MuSigOffer fromProto(bisq.offer.protobuf.Offer proto) throws UnresolvableProtobufException {
+        List<TradeProtocolType> protocolTypes = ProtobufUtils.fromProtoStream(proto.getProtocolTypesList(),
+                        TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
         Market market = Market.fromProto(proto.getMarket());
         Class<? extends PaymentMethodSpec<?>> clazzForBaseSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market);
-        List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForBaseSide))
+        List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                        proto.getBaseSidePaymentSpecsList(), 
+                        pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForBaseSide))
                 .collect(Collectors.toList());
         Class<? extends PaymentMethodSpec<?>> clazzForQuoteSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market);
-        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForQuoteSide))
+        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                        proto.getQuoteSidePaymentSpecsList(), 
+                        pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForQuoteSide))
                 .collect(Collectors.toList());
-        List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
-                .map(OfferOption::fromProto)
+        List<OfferOption> offerOptions = ProtobufUtils.fromProtoStream(proto.getOfferOptionsList(),
+                        OfferOption::fromProto)
                 .collect(Collectors.toList());
         return new MuSigOffer(proto.getId(),
                 proto.getDate(),

@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -121,7 +122,8 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData, Ow
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto) {
+    public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto)
+            throws UnresolvableProtobufException {
         return new AuthorizedOracleNode(
                 proto.getVersion(),
                 NetworkId.fromProto(proto.getNetworkId()),

@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -54,7 +55,8 @@ public final class ContractualTxIds implements Proto {
                 .setSellersRedirectTxId(sellersRedirectTxId);
     }
 
-    public static ContractualTxIds fromProto(bisq.trade.protobuf.ContractualTxIds proto) {
+    public static ContractualTxIds fromProto(bisq.trade.protobuf.ContractualTxIds proto)
+            throws UnresolvableProtobufException {
         return new ContractualTxIds(proto.getDepositTxId(),
                 proto.getBuyersWarningTxId(),
                 proto.getSellersWarningTxId(),

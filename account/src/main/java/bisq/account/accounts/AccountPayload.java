@@ -32,6 +32,7 @@ import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
 import bisq.account.accounts.fiat.WiseAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
@@ -83,7 +84,8 @@ public abstract class AccountPayload<M extends PaymentMethod<?>> implements Netw
                 .setSalt(ByteString.copyFrom(salt));
     }
 
-    public static AccountPayload<?> fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static AccountPayload<?> fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case COUNTRYBASEDACCOUNTPAYLOAD -> CountryBasedAccountPayload.fromProto(proto);
             case REVOLUTACCOUNTPAYLOAD -> RevolutAccountPayload.fromProto(proto);

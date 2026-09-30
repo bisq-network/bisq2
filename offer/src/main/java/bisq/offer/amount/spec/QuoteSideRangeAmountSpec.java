@@ -17,6 +17,7 @@
 
 package bisq.offer.amount.spec;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -48,7 +49,8 @@ public final class QuoteSideRangeAmountSpec extends RangeAmountSpec implements Q
         return unsafeToProto(serializeForHash);
     }
 
-    public static QuoteSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {
+    public static QuoteSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto)
+            throws UnresolvableProtobufException {
         return new QuoteSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
     }
 }

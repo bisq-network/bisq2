@@ -33,6 +33,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.Version;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
 import bisq.common.timer.Scheduler;
@@ -82,6 +83,7 @@ import bisq.trade.mu_sig.messages.network.handler.maker.MuSigTakeOfferRequestVal
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
@@ -673,11 +675,15 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 getMusigAsyncStub().subscribeTxConfirmationStatus(request, new StreamObserver<>() {
                     @Override
                     public void onNext(bisq.trade.protobuf.TxConfirmationStatus proto) {
-                        TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
-                        if (status.getNumConfirmations() > 0) {
-                            if (trade.isDepositTxCreatedButNotConfirmed()) {
-                                handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
+                        try {
+                            TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
+                            if (status.getNumConfirmations() > 0) {
+                                if (trade.isDepositTxCreatedButNotConfirmed()) {
+                                    handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
+                                }
                             }
+                        } catch (UnresolvableProtobufException e) {
+                            throw new MuSigProtocolException(e);
                         }
                     }
 

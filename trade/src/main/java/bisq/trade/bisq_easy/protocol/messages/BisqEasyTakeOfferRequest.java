@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.identity.NetworkId;
@@ -73,7 +74,8 @@ public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
                 .setContractSignatureData(contractSignatureData.toProto(serializeForHash));
     }
 
-    public static BisqEasyTakeOfferRequest fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static BisqEasyTakeOfferRequest fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = proto.getBisqEasyTradeMessage().getBisqEasyTakeOfferRequest();
         return new BisqEasyTakeOfferRequest(
                 proto.getId(),

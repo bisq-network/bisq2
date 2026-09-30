@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.EmailValidation;
@@ -94,7 +95,8 @@ public final class InteracETransferAccountPayload extends CountryBasedAccountPay
                 .setAnswer(answer);
     }
 
-    public static InteracETransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static InteracETransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var interactETransferAccountPayload = proto.getCountryBasedAccountPayload().getInteracETransferAccountPayload();
         return new InteracETransferAccountPayload(
                 proto.getId(),

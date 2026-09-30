@@ -19,6 +19,7 @@ package bisq.support.mediation.mu_sig;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.MediationResultReason;
@@ -119,7 +120,8 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigMediationResult fromProto(bisq.support.protobuf.MuSigMediationResult proto) {
+    public static MuSigMediationResult fromProto(bisq.support.protobuf.MuSigMediationResult proto)
+            throws UnresolvableProtobufException {
         return new MuSigMediationResult(
                 proto.getDate(),
                 proto.getContractHash().toByteArray(),

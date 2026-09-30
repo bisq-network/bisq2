@@ -18,6 +18,8 @@
 package bisq.security.keys;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.persistence.PersistableStore;
@@ -74,11 +76,12 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
                                 entry -> entry.getValue().toProto(serializeForHash))));
     }
 
-    public static KeyBundleStore fromProto(bisq.security.protobuf.KeyBundleStore proto) {
+    public static KeyBundleStore fromProto(bisq.security.protobuf.KeyBundleStore proto)
+            throws UnresolvableProtobufException {
         return new KeyBundleStore(proto.getSecretUid(),
-                proto.getKeyBundleByIdMap().entrySet().stream()
+                ProtobufUtils.fromProtoEntryStream(proto.getKeyBundleByIdMap(), KeyBundle::fromProto)
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> KeyBundle.fromProto(e.getValue()))));
+                                Map.Entry::getValue)));
     }
 
     @Override

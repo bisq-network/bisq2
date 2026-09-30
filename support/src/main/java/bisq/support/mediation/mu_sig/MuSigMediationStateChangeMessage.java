@@ -18,6 +18,7 @@
 package bisq.support.mediation.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -87,7 +88,8 @@ public final class MuSigMediationStateChangeMessage implements MailboxMessage, E
         return builder;
     }
 
-    public static MuSigMediationStateChangeMessage fromProto(bisq.support.protobuf.MuSigMediationStateChangeMessage proto) {
+    public static MuSigMediationStateChangeMessage fromProto(bisq.support.protobuf.MuSigMediationStateChangeMessage proto)
+            throws UnresolvableProtobufException {
         return new MuSigMediationStateChangeMessage(
                 proto.getId(),
                 proto.getTradeId(),

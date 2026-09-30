@@ -23,6 +23,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -90,7 +91,8 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
                 .setExtraInfo(extraInfo);
     }
 
-    public static CashByMailAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static CashByMailAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var cashByMailPayload = proto.getCashByMailAccountPayload();
         return new CashByMailAccountPayload(
                 proto.getId(),

@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -74,7 +75,8 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
         return builder;
     }
 
-    public static BisqEasyConfirmBtcSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static BisqEasyConfirmBtcSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = proto.getBisqEasyTradeMessage().getBisqEasyConfirmBtcSentMessage();
         return new BisqEasyConfirmBtcSentMessage(
                 proto.getId(),

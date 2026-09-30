@@ -19,6 +19,7 @@ package bisq.notifications.mobile.registration;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MobileDevicePlatform implements ProtoEnum {
     UNSPECIFIED,
@@ -30,7 +31,8 @@ public enum MobileDevicePlatform implements ProtoEnum {
         return bisq.notifications.protobuf.MobileDevicePlatform.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MobileDevicePlatform fromProto(bisq.notifications.protobuf.MobileDevicePlatform proto) {
+    public static MobileDevicePlatform fromProto(bisq.notifications.protobuf.MobileDevicePlatform proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MobileDevicePlatform.class, proto.name(), UNSPECIFIED);
     }
 }

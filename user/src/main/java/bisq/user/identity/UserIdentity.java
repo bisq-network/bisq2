@@ -18,6 +18,7 @@
 package bisq.user.identity;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.user.profile.UserProfile;
@@ -56,7 +57,7 @@ public final class UserIdentity implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static UserIdentity fromProto(bisq.user.protobuf.UserIdentity proto) {
+    public static UserIdentity fromProto(bisq.user.protobuf.UserIdentity proto) throws UnresolvableProtobufException {
         return new UserIdentity(Identity.fromProto(proto.getIdentity()),
                 UserProfile.fromProto(proto.getUserProfile()));
     }

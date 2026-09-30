@@ -18,6 +18,7 @@
 package bisq.bonded_roles.release;
 
 import bisq.common.platform.InvalidVersionException;
+import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,7 +33,7 @@ class ReleaseNotificationTest {
     private static final String VERSION = "2.1.14";
 
     @Test
-    void validReleaseNotificationIsCreated() {
+    void validReleaseNotificationIsCreated() throws UnresolvableProtobufException {
         ReleaseNotification releaseNotification = create(RELEASE_NOTES, VERSION);
 
         assertFalse(releaseNotification.isDataInvalid());

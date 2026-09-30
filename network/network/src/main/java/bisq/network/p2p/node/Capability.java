@@ -23,6 +23,7 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
@@ -120,7 +121,7 @@ public final class Capability implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static Capability fromProto(bisq.network.protobuf.Capability proto) {
+    public static Capability fromProto(bisq.network.protobuf.Capability proto) throws UnresolvableProtobufException {
         List<TransportType> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
                 .map(transportTypeProto -> {
                     try {

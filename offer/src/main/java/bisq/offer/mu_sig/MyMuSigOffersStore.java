@@ -20,6 +20,8 @@ package bisq.offer.mu_sig;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.offer.Offer;
 import bisq.persistence.PersistableStore;
@@ -78,8 +80,10 @@ final class MyMuSigOffersStore implements PersistableStore<MyMuSigOffersStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MyMuSigOffersStore fromProto(bisq.offer.protobuf.MyMuSigOffersStore proto) {
-        return new MyMuSigOffersStore(proto.getOffersList().stream().map(MuSigOffer::fromProto).collect(Collectors.toSet()),
+    public static MyMuSigOffersStore fromProto(bisq.offer.protobuf.MyMuSigOffersStore proto)
+            throws UnresolvableProtobufException {
+        return new MyMuSigOffersStore(ProtobufUtils.fromProtoStream(proto.getOffersList(),
+                        MuSigOffer::fromProto).collect(Collectors.toSet()),
                 new HashSet<>(proto.getDeactivatedOfferIdsList()));
     }
 

@@ -18,6 +18,7 @@
 package bisq.account.payment_method.cbdc;
 
 import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -54,7 +55,8 @@ public final class CbdcPaymentMethodSpec extends PaymentMethodSpec<CbdcPaymentMe
         return unsafeToProto(serializeForHash);
     }
 
-    public static CbdcPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
+    public static CbdcPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto)
+            throws UnresolvableProtobufException {
         return new CbdcPaymentMethodSpec(CbdcPaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }

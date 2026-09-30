@@ -19,6 +19,7 @@ package bisq.trade.exceptions;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.Getter;
 
 public enum TradeProtocolFailure implements ProtoEnum {
@@ -40,7 +41,8 @@ public enum TradeProtocolFailure implements ProtoEnum {
         return bisq.trade.protobuf.TradeProtocolFailure.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static TradeProtocolFailure fromProto(bisq.trade.protobuf.TradeProtocolFailure proto) {
+    public static TradeProtocolFailure fromProto(bisq.trade.protobuf.TradeProtocolFailure proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(TradeProtocolFailure.class, proto.name(), UNKNOWN);
     }
 }

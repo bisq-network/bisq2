@@ -18,6 +18,7 @@
 package bisq.persistence;
 
 import bisq.common.file.FileMutatorUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.persistence.backup.BackupFileInfo;
 import bisq.persistence.backup.RestoreService;
 import com.google.protobuf.Any;
@@ -114,7 +115,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         return Optional.empty();
     }
 
-    private PersistableStore<?> readStoreFromFile(Path path) throws IOException {
+    private PersistableStore<?> readStoreFromFile(Path path) throws IOException, UnresolvableProtobufException {
         try (InputStream fileInputStream = Files.newInputStream(path)) {
             Any any = Any.parseDelimitedFrom(fileInputStream);
             checkNotNull(any, "Any.parseDelimitedFrom for " + path + " resulted in a null value.");

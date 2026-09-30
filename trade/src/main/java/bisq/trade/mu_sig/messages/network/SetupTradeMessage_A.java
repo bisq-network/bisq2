@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
@@ -77,7 +78,8 @@ public final class SetupTradeMessage_A extends MuSigTradeMessage {
                 .setPubKeyShares(pubKeyShares.toProto(serializeForHash));
     }
 
-    public static SetupTradeMessage_A fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static SetupTradeMessage_A fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.SetupTradeMessage_A muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageA();
         return new SetupTradeMessage_A(
                 proto.getId(),

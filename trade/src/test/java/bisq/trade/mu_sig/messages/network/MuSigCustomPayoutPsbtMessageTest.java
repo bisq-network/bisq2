@@ -20,6 +20,7 @@ package bisq.trade.mu_sig.messages.network;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
@@ -35,7 +36,7 @@ class MuSigCustomPayoutPsbtMessageTest {
     private static final String TX_ID = "ab".repeat(32);
 
     @Test
-    void roundTripsThroughTradeMessageResolver() {
+    void roundTripsThroughTradeMessageResolver() throws UnresolvableProtobufException {
         MuSigCustomPayoutPsbtMessage message = createMessage(new byte[]{1, 2, 3});
 
         bisq.trade.protobuf.TradeMessage proto = message.resolveValueProto(false);

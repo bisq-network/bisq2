@@ -20,6 +20,7 @@ package bisq.account.accounts.fiat;
 import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.BankAccountUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -132,7 +133,8 @@ public abstract class BankAccountPayload extends CountryBasedAccountPayload impl
         return builder;
     }
 
-    public static BankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static BankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getCountryBasedAccountPayload().getBankAccountPayload().getMessageCase()) {
             case ACHTRANSFERACCOUNTPAYLOAD -> AchTransferAccountPayload.fromProto(proto);
             case NATIONALBANKACCOUNTPAYLOAD -> NationalBankAccountPayload.fromProto(proto);

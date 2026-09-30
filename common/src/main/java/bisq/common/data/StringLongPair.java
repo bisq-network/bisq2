@@ -18,6 +18,7 @@
 package bisq.common.data;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -46,7 +47,8 @@ public final class StringLongPair implements PersistableProto {
                 .setValue(value);
     }
 
-    public static StringLongPair fromProto(bisq.common.protobuf.StringLongPair proto) {
+    public static StringLongPair fromProto(bisq.common.protobuf.StringLongPair proto)
+            throws UnresolvableProtobufException {
         return new StringLongPair(proto.getKey(), proto.getValue());
     }
 }

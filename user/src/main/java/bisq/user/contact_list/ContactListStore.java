@@ -20,6 +20,8 @@ package bisq.user.contact_list;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -55,9 +57,10 @@ public final class ContactListStore implements PersistableStore<ContactListStore
         return unsafeToProto(serializeForHash);
     }
 
-    public static ContactListStore fromProto(bisq.user.protobuf.ContactListStore proto) {
-        return new ContactListStore(new HashSet<>(proto.getContactListEntriesList().stream()
-                .map(ContactListEntry::fromProto).
+    public static ContactListStore fromProto(bisq.user.protobuf.ContactListStore proto)
+            throws UnresolvableProtobufException {
+        return new ContactListStore(new HashSet<>(ProtobufUtils.fromProtoStream(proto.getContactListEntriesList(),
+                        ContactListEntry::fromProto).
                 collect(Collectors.toSet())));
     }
 

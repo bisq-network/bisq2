@@ -21,6 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,7 +54,8 @@ public abstract class CryptoAssetAccount<P extends CryptoAssetAccountPayload> ex
         return bisq.account.protobuf.CryptoAssetAccount.newBuilder();
     }
 
-    public static CryptoAssetAccount<?> fromProto(bisq.account.protobuf.Account proto) {
+    public static CryptoAssetAccount<?> fromProto(bisq.account.protobuf.Account proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getCryptoAssetAccount().getMessageCase()) {
             case MONEROACCOUNT -> MoneroAccount.fromProto(proto);
             case OTHERCRYPTOASSETACCOUNT -> OtherCryptoAssetAccount.fromProto(proto);

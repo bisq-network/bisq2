@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -91,7 +92,8 @@ public final class AuthorizedAccountTimestamp implements AuthorizedDistributedDa
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedAccountTimestamp fromProto(bisq.account.protobuf.AuthorizedAccountTimestamp proto) {
+    public static AuthorizedAccountTimestamp fromProto(bisq.account.protobuf.AuthorizedAccountTimestamp proto)
+            throws UnresolvableProtobufException {
         return new AuthorizedAccountTimestamp(
                 proto.getVersion(),
                 AccountTimestamp.fromProto(proto.getAccountTimestamp()),

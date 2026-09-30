@@ -18,6 +18,7 @@
 package bisq.contract;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -67,7 +68,7 @@ public final class Party implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static Party fromProto(bisq.contract.protobuf.Party proto) {
+    public static Party fromProto(bisq.contract.protobuf.Party proto) throws UnresolvableProtobufException {
         return new Party(Role.fromProto(proto.getRole()),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.hasSaltedAccountPayloadHash()

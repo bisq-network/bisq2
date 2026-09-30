@@ -20,6 +20,7 @@ package bisq.account.accounts.fiat;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +98,8 @@ public final class SameBankAccountPayload extends BankAccountPayload {
         return bisq.account.protobuf.SameBankAccountPayload.newBuilder();
     }
 
-    public static SameBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static SameBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new SameBankAccountPayload(proto.getId(),

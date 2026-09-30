@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.dto;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -53,7 +54,8 @@ public final class ProofOfBurnDto implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ProofOfBurnDto fromProto(bisq.bridge.protobuf.ProofOfBurnDto proto) {
+    public static ProofOfBurnDto fromProto(bisq.bridge.protobuf.ProofOfBurnDto proto)
+            throws UnresolvableProtobufException {
         return new ProofOfBurnDto(proto.getAmount(),
                 proto.getProofOfBurnHash().toByteArray()
         );

@@ -18,6 +18,8 @@
 package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -61,10 +63,10 @@ public final class BondedRolesVerificationResponse implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BondedRolesVerificationResponse fromProto(bisq.bridge.protobuf.BondedRolesVerificationResponse proto) {
+    public static BondedRolesVerificationResponse fromProto(bisq.bridge.protobuf.BondedRolesVerificationResponse proto)
+            throws UnresolvableProtobufException {
         return new BondedRolesVerificationResponse(proto.getDaoStateBlockHeight(),
-                proto.getVerificationsList().stream()
-                        .map(BondedRoleVerificationResponse::fromProto)
+                ProtobufUtils.fromProtoStream(proto.getVerificationsList(), BondedRoleVerificationResponse::fromProto)
                         .toList());
     }
 }

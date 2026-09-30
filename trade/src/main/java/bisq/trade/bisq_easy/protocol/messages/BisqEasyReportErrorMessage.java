@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -82,7 +83,8 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
                 .setTradeProtocolFailure(tradeProtocolFailure.toProtoEnum());
     }
 
-    public static BisqEasyReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static BisqEasyReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         var bisqEasyReportErrorMessage = proto.getBisqEasyTradeMessage().getBisqEasyReportErrorMessage();
         return new BisqEasyReportErrorMessage(
                 proto.getId(),

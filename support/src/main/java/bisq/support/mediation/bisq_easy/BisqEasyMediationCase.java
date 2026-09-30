@@ -20,6 +20,7 @@ package bisq.support.mediation.bisq_easy;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -70,7 +71,8 @@ public class BisqEasyMediationCase implements PersistableProto {
     }
 
 
-    public static BisqEasyMediationCase fromProto(bisq.support.protobuf.MediationCase proto) {
+    public static BisqEasyMediationCase fromProto(bisq.support.protobuf.MediationCase proto)
+            throws UnresolvableProtobufException {
         return new BisqEasyMediationCase(BisqEasyMediationRequest.fromProto(proto.getMediationRequest()),
                 proto.getRequestDate(),
                 proto.getIsClosed(),

@@ -21,6 +21,8 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -98,12 +100,13 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedBurningmanListByBlock fromProto(bisq.burningman.protobuf.AuthorizedBurningmanListByBlock proto) {
+    public static AuthorizedBurningmanListByBlock fromProto(bisq.burningman.protobuf.AuthorizedBurningmanListByBlock proto)
+            throws UnresolvableProtobufException {
         return new AuthorizedBurningmanListByBlock(
                 proto.getVersion(),
                 proto.getStaticPublicKeysProvided(),
                 proto.getBlockHeight(),
-                proto.getBurningmanDataList().stream().map(BurningmanData::fromProto).toList());
+                ProtobufUtils.fromProtoStream(proto.getBurningmanDataList(), BurningmanData::fromProto).toList());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

@@ -21,6 +21,7 @@ import bisq.common.market.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
@@ -112,7 +113,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         return builder;
     }
 
-    public static MuSigTrade fromProto(bisq.trade.protobuf.Trade proto) {
+    public static MuSigTrade fromProto(bisq.trade.protobuf.Trade proto) throws UnresolvableProtobufException {
         bisq.trade.protobuf.MuSigTrade muSigTradeProto = proto.getMuSigTrade();
         MuSigTradeState state = ProtobufUtils.enumFromProto(MuSigTradeState.class, proto.getState(), MuSigTradeState.UNSPECIFIED);
         MuSigTrade trade = new MuSigTrade(MuSigContract.fromProto(proto.getContract()),

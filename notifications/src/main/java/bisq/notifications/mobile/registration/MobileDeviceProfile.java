@@ -18,6 +18,7 @@
 package bisq.notifications.mobile.registration;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -71,7 +72,8 @@ public final class MobileDeviceProfile implements PersistableProto {
         return builder;
     }
 
-    public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.MobileDeviceProfile proto) {
+    public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.MobileDeviceProfile proto)
+            throws UnresolvableProtobufException {
         Optional<String> symmetricKey = proto.hasSymmetricKeyBase64()
                 ? Optional.of(proto.getSymmetricKeyBase64())
                 : Optional.empty();

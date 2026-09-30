@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.common.validation.PhoneNumberValidation;
@@ -79,7 +80,8 @@ public final class SwishAccountPayload extends CountryBasedAccountPayload implem
                 .setMobileNr(mobileNr);
     }
 
-    public static SwishAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static SwishAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.SwishAccountPayload payload = countryBasedAccountPayload.getSwishAccountPayload();
         return new SwishAccountPayload(proto.getId(),

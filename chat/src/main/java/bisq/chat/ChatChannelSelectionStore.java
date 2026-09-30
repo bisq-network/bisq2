@@ -18,6 +18,7 @@
 package bisq.chat;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -54,7 +55,8 @@ public final class ChatChannelSelectionStore implements PersistableStore<ChatCha
         return unsafeToProto(serializeForHash);
     }
 
-    public static ChatChannelSelectionStore fromProto(bisq.chat.protobuf.ChatChannelSelectionStore proto) {
+    public static ChatChannelSelectionStore fromProto(bisq.chat.protobuf.ChatChannelSelectionStore proto)
+            throws UnresolvableProtobufException {
         return new ChatChannelSelectionStore(proto.hasSelectedChannelId() ? proto.getSelectedChannelId() : null);
     }
 

@@ -19,6 +19,8 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteArray;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.DataRequest;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -89,10 +91,9 @@ public final class Inventory implements NetworkProto {
                 .setMaxSizeReached(maxSizeReached);
     }
 
-    public static Inventory fromProto(bisq.network.protobuf.Inventory proto) {
+    public static Inventory fromProto(bisq.network.protobuf.Inventory proto) throws UnresolvableProtobufException {
         List<bisq.network.protobuf.DataRequest> entriesList = proto.getEntriesList();
-        List<DataRequest> entries = entriesList.stream()
-                .map(DataRequest::fromProto)
+        List<DataRequest> entries = ProtobufUtils.fromProtoStream(entriesList, DataRequest::fromProto)
                 .collect(Collectors.toList());
         return new Inventory(entries, proto.getMaxSizeReached(), Optional.of(proto.getSerializedSize()));
     }
