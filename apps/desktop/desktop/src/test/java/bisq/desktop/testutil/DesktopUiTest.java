@@ -32,8 +32,8 @@ import java.lang.annotation.Target;
  * <p>
  * A robot on a real desktop moves the real pointer and types into whichever window has focus, and on macOS
  * it needs the Accessibility permission for the application which runs the tests. The {@code test} task
- * therefore excludes the {@code ui} tag. Only the {@code uiTest} task runs these classes
- * (see {@code apps/desktop/desktop/build.gradle.kts}).
+ * therefore excludes the {@code ui} tag. The {@code uiTest} task runs these classes, headless with Monocle
+ * by default (see {@code apps/desktop/desktop/build.gradle.kts}).
  * <p>
  * Tests which only need the JavaFX application thread use {@link JavaFxToolkitExtension} instead.
  */

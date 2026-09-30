@@ -60,6 +60,7 @@ dependencies {
 
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.hamcrest)
+    testRuntimeOnly(libs.testfx.monocle)
 }
 
 // Test classes annotated with @DesktopUiTest drive mouse and keyboard input with a TestFX robot. On a real
@@ -73,14 +74,29 @@ tasks.named<Test>("test") {
     }
 }
 
+// Headless (Monocle) by default, so the robot only acts on a virtual screen.
+// Use -PuiTest.native=true to run on the real desktop, for example to watch a test.
+val uiTestNative = providers.gradleProperty("uiTest.native").map { it.toBoolean() }.orElse(false)
+
 tasks.register<Test>("uiTest") {
     group = "verification"
-    description = "Runs the JavaFX UI tests which drive input with a TestFX robot."
+    description = "Runs the JavaFX UI tests which drive input with a TestFX robot. Headless unless -PuiTest.native=true."
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     shouldRunAfter("test")
     useJUnitPlatform {
         includeTags(desktopUiTestTag)
     }
+
     systemProperty("testfx.robot", "glass")
+    if (uiTestNative.get()) {
+        systemProperty("testfx.headless", "false")
+    } else {
+        systemProperty("testfx.headless", "true")
+        systemProperty("glass.platform", "Monocle")
+        systemProperty("monocle.platform", "Headless")
+        systemProperty("prism.order", "sw")
+        systemProperty("prism.text", "t2k")
+        systemProperty("java.awt.headless", "true")
+    }
 }
