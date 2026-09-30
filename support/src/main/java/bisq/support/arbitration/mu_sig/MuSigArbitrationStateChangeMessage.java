@@ -114,11 +114,6 @@ public final class MuSigArbitrationStateChangeMessage implements MailboxMessage,
     }
 
     @Override
-    public MetaData getMetaData() {
-        return META_DATA;
-    }
-
-    @Override
     public PublicKey getSenderPublicKey() {
         return senderNetworkId.getPubKey().getPublicKey();
     }
@@ -145,5 +140,10 @@ public final class MuSigArbitrationStateChangeMessage implements MailboxMessage,
         int result = Objects.hash(id, tradeId, senderNetworkId, arbitrationCaseState, muSigArbitrationResult);
         result = 31 * result + arbitrationResultSignature.map(Arrays::hashCode).orElse(0);
         return result;
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }
