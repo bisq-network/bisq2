@@ -97,7 +97,8 @@ class MuSigOfferMessageOwnerTest {
                 new BaseSideFixedAmountSpec(1_000_000),
                 new MarketPriceSpec(),
                 List.of(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
-                List.of(new CollateralOption(0.25, 0.25)),
+                List.of(new CollateralOption(MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT,
+                        MuSigOffer.DEFAULT_SELLER_SECURITY_DEPOSIT)),
                 "1");
     }
 
