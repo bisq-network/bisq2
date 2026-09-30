@@ -26,7 +26,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.main.content.chat.message_container.components.ChatMentionParser;
-import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -38,8 +38,6 @@ import org.junit.jupiter.api.parallel.ResourceLock;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.testfx.api.FxRobot;
-import org.testfx.framework.junit5.ApplicationExtension;
 
 import java.util.Optional;
 
@@ -47,9 +45,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith(JavaFxToolkitExtension.class)
 @ResourceLock(value = "Transitions.settingsService", mode = ResourceAccessMode.READ_WRITE)
-class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
+class ChatMessageContainerControllerTest {
     @Mock(answer = Answers.RETURNS_DEEP_STUBS)
     private ServiceProvider serviceProvider;
     @Mock
@@ -66,7 +64,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void supportPublicChannelSendPublishesUnmodifiedText(FxRobot robot) {
+    void supportPublicChannelSendPublishesUnmodifiedText() {
         closeable = MockitoAnnotations.openMocks(this);
         Transitions.setSettingsService(settingsService);
         when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
@@ -82,7 +80,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
         CommonPublicChatChannel channel = new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, SubDomain.SUPPORT_SUPPORT);
         TestableController controller = new TestableController(serviceProvider, ChatChannelDomain.SUPPORT);
 
-        robot.interact(() -> {
+        JavaFxToolkitExtension.runOnFxThread(() -> {
             controller.selectedChannelChanged(channel);
             controller.onSendMessage("How do I back up my wallet?");
         });
@@ -94,7 +92,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void mentionCompletionReplacesTheTokenAtTheCaretAndPreservesTheSuffix(FxRobot robot) {
+    void mentionCompletionReplacesTheTokenAtTheCaretAndPreservesTheSuffix() {
         closeable = MockitoAnnotations.openMocks(this);
         Transitions.setSettingsService(settingsService);
         when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
@@ -104,7 +102,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
         UserProfile mentioned = mock(UserProfile.class);
         when(mentioned.getUserName()).thenReturn("john");
 
-        robot.interact(() -> {
+        JavaFxToolkitExtension.runOnFxThread(() -> {
             controller.getModel().getTextInput().set("Hi @jo there");
             controller.onUserProfileSelected(mentioned,
                     new ChatMentionParser.MentionMatch("jo", 3, 6));
@@ -116,7 +114,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void mentionCompletionDoesNotDeleteTheWordAfterTheCaret(FxRobot robot) {
+    void mentionCompletionDoesNotDeleteTheWordAfterTheCaret() {
         closeable = MockitoAnnotations.openMocks(this);
         Transitions.setSettingsService(settingsService);
         when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
@@ -126,7 +124,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
         UserProfile mentioned = mock(UserProfile.class);
         when(mentioned.getUserName()).thenReturn("alice");
 
-        robot.interact(() -> {
+        JavaFxToolkitExtension.runOnFxThread(() -> {
             // "@al" typed directly in front of the pre-existing word "world".
             controller.getModel().getTextInput().set("@alworld");
             controller.onUserProfileSelected(mentioned,
@@ -138,7 +136,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void mentionCompletionBeforePunctuationDoesNotInsertASpace(FxRobot robot) {
+    void mentionCompletionBeforePunctuationDoesNotInsertASpace() {
         closeable = MockitoAnnotations.openMocks(this);
         Transitions.setSettingsService(settingsService);
         when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
@@ -148,7 +146,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
         UserProfile mentioned = mock(UserProfile.class);
         when(mentioned.getUserName()).thenReturn("alice");
 
-        robot.interact(() -> {
+        JavaFxToolkitExtension.runOnFxThread(() -> {
             controller.getModel().getTextInput().set("Hi @al, there");
             controller.onUserProfileSelected(mentioned,
                     new ChatMentionParser.MentionMatch("al", 3, 6));
@@ -159,7 +157,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void mentionCompletionWithAStaleMatchIsDropped(FxRobot robot) {
+    void mentionCompletionWithAStaleMatchIsDropped() {
         closeable = MockitoAnnotations.openMocks(this);
         Transitions.setSettingsService(settingsService);
         when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
@@ -168,7 +166,7 @@ class ChatMessageContainerControllerTest extends TestFxHeadlessSupport {
         TestableController controller = new TestableController(serviceProvider, ChatChannelDomain.SUPPORT);
         UserProfile mentioned = mock(UserProfile.class);
 
-        robot.interact(() -> {
+        JavaFxToolkitExtension.runOnFxThread(() -> {
             controller.getModel().getTextInput().set("x");
             controller.onUserProfileSelected(mentioned,
                     new ChatMentionParser.MentionMatch("jo", 0, 5));

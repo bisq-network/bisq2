@@ -24,7 +24,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.market.Market;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
@@ -38,7 +38,6 @@ import bisq.user.reputation.ReputationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.List;
@@ -51,8 +50,8 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(ApplicationExtension.class)
-class ProfileCardOffersControllerTest extends TestFxHeadlessSupport {
+@ExtendWith(JavaFxToolkitExtension.class)
+class ProfileCardOffersControllerTest {
     private static final Market MARKET = new Market("BTC", "USD", "Bitcoin", "US Dollar");
 
     private final ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();

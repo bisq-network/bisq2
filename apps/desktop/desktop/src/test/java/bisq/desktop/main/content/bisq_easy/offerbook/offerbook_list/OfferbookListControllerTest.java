@@ -32,7 +32,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -48,8 +48,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testfx.api.FxRobot;
-import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.ArrayList;
@@ -64,8 +62,8 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(ApplicationExtension.class)
-class OfferbookListControllerTest extends TestFxHeadlessSupport {
+@ExtendWith(JavaFxToolkitExtension.class)
+class OfferbookListControllerTest {
     private static final Market MARKET = MarketRepository.getUSDBitcoinMarket();
     // A base-side amount which converts to the quote side at one BTC price but overflows a
     // long at a higher one: 5e18 sat * 1 USD fits, 5e18 sat * 50,000 USD does not.
@@ -156,7 +154,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void offerReceivedBeforeItsMarketPriceIsListedOnceThePriceArrives(FxRobot robot) {
+    void offerReceivedBeforeItsMarketPriceIsListedOnceThePriceArrives() {
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(displayedMessageIds()).isEmpty();
@@ -170,7 +168,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void listedOfferWhoseAmountsOverflowAtANewMarketPriceIsRemoved(FxRobot robot) {
+    void listedOfferWhoseAmountsOverflowAtANewMarketPriceIsRemoved() {
         putMarketPrice(FITTING_PRICE);
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
@@ -190,7 +188,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void listedOfferIsRemovedWhenItsMarketPriceDisappears(FxRobot robot) {
+    void listedOfferIsRemovedWhenItsMarketPriceDisappears() {
         putMarketPrice(FITTING_PRICE);
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
@@ -204,7 +202,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void priceChangeAfterDeactivationDoesNotRepopulateTheList(FxRobot robot) {
+    void priceChangeAfterDeactivationDoesNotRepopulateTheList() {
         channel.addChatMessage(message);
         WaitForAsyncUtils.asyncFx(() -> controller.onDeactivate());
         WaitForAsyncUtils.waitForFxEvents();
@@ -219,7 +217,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void offerWhoseListItemCannotBeCreatedDoesNotBlockTheOthers(FxRobot robot) {
+    void offerWhoseListItemCannotBeCreatedDoesNotBlockTheOthers() {
         // Two mocks in the order the channel's set iterates them: the first one's list item
         // construction fails (its author's reputation lookup throws), the second is fine.
         List<BisqEasyOfferbookMessage> messages = new ArrayList<>(ConcurrentHashMap.<BisqEasyOfferbookMessage>newKeySet());
@@ -257,7 +255,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void ignoringAndUnignoringTheMakerRemovesAndRestoresTheListedOffer(FxRobot robot) {
+    void ignoringAndUnignoringTheMakerRemovesAndRestoresTheListedOffer() {
         putMarketPrice(FITTING_PRICE);
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();

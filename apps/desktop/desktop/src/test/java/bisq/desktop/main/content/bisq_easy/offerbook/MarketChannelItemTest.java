@@ -23,13 +23,12 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.market.MarketRepository;
 import bisq.common.observable.Observable;
-import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.FavouriteMarketsService;
 import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.stream.Stream;
@@ -39,8 +38,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(ApplicationExtension.class)
-class MarketChannelItemTest extends TestFxHeadlessSupport {
+@ExtendWith(JavaFxToolkitExtension.class)
+class MarketChannelItemTest {
     @Test
     void numOffersFollowsOfferValidityChangesWithoutChatMessageEvents() {
         BisqEasyOfferbookChannel channel = new BisqEasyOfferbookChannel(MarketRepository.getUSDBitcoinMarket());
