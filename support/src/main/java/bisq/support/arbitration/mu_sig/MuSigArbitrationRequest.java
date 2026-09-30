@@ -169,11 +169,6 @@ public final class MuSigArbitrationRequest implements
     }
 
     @Override
-    public MetaData getMetaData() {
-        return META_DATA;
-    }
-
-    @Override
     public PublicKey getSenderPublicKey() {
         return requester.getPublicKey();
     }
@@ -183,4 +178,8 @@ public final class MuSigArbitrationRequest implements
         return arbitratorNetworkId.getPubKey().getPublicKey();
     }
 
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
 }
