@@ -23,10 +23,10 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
-import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.SignatureValidation;
 import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
@@ -41,8 +41,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Request for adding authenticated data to the data storage.
@@ -163,14 +161,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Override
     public void verify() {
         EcPublicKeyValidation.validate(ownerPublicKeyBytes);
-        if (signature.length > 0) {
-            NetworkDataValidation.validateECSignature(signature);
-        }
-        if (signatureV2.length > 0) {
-            NetworkDataValidation.validateECSignature(signatureV2);
-        }
-        checkArgument(signature.length > 0 || signatureV2.length > 0,
-                "No signature found");
+        SignatureValidation.validateSignatures(signature, signatureV2);
     }
 
 
@@ -268,7 +259,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         CanonicalSchema<AddAuthenticatedDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
-            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for AddAuthenticatedDataRequest");
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for AddAuthenticatedDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
             case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };

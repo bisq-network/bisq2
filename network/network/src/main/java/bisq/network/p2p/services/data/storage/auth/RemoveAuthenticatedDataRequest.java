@@ -26,6 +26,7 @@ import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.SignatureValidation;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.protobuf.DataRequest;
@@ -160,14 +161,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         checkArgument(sequenceNumber > 0,
                 "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateDate(created);
-        if (signature.length > 0) {
-            NetworkDataValidation.validateECSignature(signature);
-        }
-        if (signatureV2.length > 0) {
-            NetworkDataValidation.validateECSignature(signatureV2);
-        }
-        checkArgument(signature.length > 0 || signatureV2.length > 0,
-                "No signature found");
+        SignatureValidation.validateSignatures(signature, signatureV2);
     }
 
 
