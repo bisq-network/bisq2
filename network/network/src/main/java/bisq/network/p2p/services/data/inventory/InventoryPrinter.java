@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.inventory;
 import bisq.common.data.ByteUnit;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.node.Connection;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -38,8 +39,25 @@ public class InventoryPrinter {
             return;
         }
         long requestTs = requestTsValue;
-        Map<String, Map<String, AtomicInteger>> dataRequestMap = new HashMap<>();
         Inventory inventory = response.getInventory();
+        String report = createReport(inventory);
+        int numEntries = inventory.getEntries().size();
+        String maxSizeReached = inventory.isMaxSizeReached()
+                ? "Still missing data. Response got truncated because max size was reached"
+                : numEntries == 0 ? "No data received from peer." : "All data received from peer. Num entries: " + numEntries;
+        String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
+        String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
+        log.info("\n##########################################################################################\n" +
+                        "Received {} of inventory data from: {} after {}; \n{}" +
+                        "\n##########################################################################################\n{}" +
+                        "\n##########################################################################################",
+                size, connection.getPeerAddress(), passed, maxSizeReached, report);
+    }
+
+    // The number of requests per request type and class name of the data
+    @VisibleForTesting
+    static String createReport(Inventory inventory) {
+        Map<String, Map<String, AtomicInteger>> dataRequestMap = new HashMap<>();
         inventory.getEntries()
                 .forEach(dataRequest -> {
                     String dataRequestName = dataRequest.getClass().getSimpleName();
@@ -60,20 +78,6 @@ public class InventoryPrinter {
                         .map(entry -> String.format("%4d item(s) of %s", entry.getValue().get(), entry.getKey()))
                         .collect(Collectors.joining("\n")))
                 .collect(Collectors.joining("\n"));
-
-        if (report.isEmpty()) {
-            report = "No items received";
-        }
-        int numEntries = inventory.getEntries().size();
-        String maxSizeReached = inventory.isMaxSizeReached()
-                ? "Still missing data. Response got truncated because max size was reached"
-                : numEntries == 0 ? "No data received from peer." : "All data received from peer. Num entries: " + numEntries;
-        String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
-        String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
-        log.info("\n##########################################################################################\n" +
-                        "Received {} of inventory data from: {} after {}; \n{}" +
-                        "\n##########################################################################################\n{}" +
-                        "\n##########################################################################################",
-                size, connection.getPeerAddress(), passed, maxSizeReached, report);
+        return report.isEmpty() ? "No items received" : report;
     }
 }
