@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.List;
 
@@ -270,6 +271,21 @@ class AuthenticatedDataSignatureV2Test {
                 .build();
 
         assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> RemoveAuthenticatedDataRequest.fromProto(proto)).getCause());
+    }
+
+    // fromProto parses the key before verify() checks the request. A key with explicit curve parameters is a valid
+    // encoding of the same key, but it exceeds the size limit of a key. The work of the key parser grows with the size
+    // of such a key, so the request is rejected by the size of the key, before the parser runs.
+    @Test
+    void removeRequestWithOversizedOwnerKeyIsRejectedBeforeTheKeyParserRuns() throws GeneralSecurityException {
+        RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        bisq.network.protobuf.RemoveAuthenticatedDataRequest proto = request.toValueProto(false).toBuilder()
+                .setOwnerPublicKeyBytes(EcPublicKeyVariants.toExplicitParameters(ownerKeyPair.getPublic()))
+                .build();
+
+        assertInstanceOf(InvalidKeySpecException.class,
                 assertThrows(UnresolvableProtobufException.class,
                         () -> RemoveAuthenticatedDataRequest.fromProto(proto)).getCause());
     }
