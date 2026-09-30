@@ -60,7 +60,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * A response which reached the size limit makes the requester ask the same peer again, because the peer has more data.
- * The next response differs only if the requester stored something of the last one (see
+ * The next response differs only if the filter of the requester lists something of the last one (see
  * docs/specifications/network/inventory-hash-set-filter.md).
  */
 class InventoryRequestPolicyTest {
@@ -72,6 +72,7 @@ class InventoryRequestPolicyTest {
     private InventoryRequestPolicy policy;
     // A response of one entry which reached the size limit
     private Inventory fullResponse;
+    private AddAuthenticatedDataRequest entryOfFullResponse;
 
     @BeforeAll
     static void registerTypes() {
@@ -109,10 +110,10 @@ class InventoryRequestPolicyTest {
         AuthenticatedDataStorageService store = dataService.getStorageService()
                 .getOrCreateAuthenticatedDataStore(TestDistributedData.class.getSimpleName())
                 .join();
-        AddAuthenticatedDataRequest entry = AddAuthenticatedDataRequest.from(store,
+        entryOfFullResponse = AddAuthenticatedDataRequest.from(store,
                 new DefaultAuthenticatedData(new TestDistributedData("content", keyPair.getPublic())),
                 keyPair);
-        fullResponse = new Inventory(List.of(entry), true);
+        fullResponse = new Inventory(List.of(entryOfFullResponse), true);
     }
 
     @AfterEach
@@ -122,9 +123,9 @@ class InventoryRequestPolicyTest {
         dataService.shutdown();
     }
 
-    // Our filter lists only what we stored, so the next response of the peer would be the same
+    // We hold none of the entries, so our next filter is the same, and so is the next response of the peer
     @Test
-    void peerIsNotAskedAgainIfWeStoredNothingOfItsFullResponse() {
+    void peerIsNotAskedAgainIfOurFilterListsNothingOfItsFullResponse() {
         assertEquals(List.of(connection), policy.getCandidatesForPeriodicRequests());
 
         policy.onInventoryProcessed(connection, fullResponse, 0);
@@ -136,6 +137,19 @@ class InventoryRequestPolicyTest {
     @Test
     void peerIsAskedAgainIfWeStoredPartOfItsFullResponse() {
         policy.onInventoryProcessed(connection, fullResponse, 1);
+
+        assertEquals(RETRY_REQUEST_WITH_SAME_CONNECTION, policy.onRequestCompleted(connection, fullResponse, null));
+        assertEquals(List.of(connection), policy.getCandidatesForPeriodicRequests());
+    }
+
+    // Several initial requests use the same filter, so peers with the same data send the same response. We store the
+    // entries of the first response and nothing of the later ones. Our next filter lists these entries, so the next
+    // response of each of these peers differs.
+    @Test
+    void peerIsAskedAgainIfAnotherResponseDeliveredTheEntriesOfItsFullResponse() {
+        assertTrue(dataService.processAddDataRequest(entryOfFullResponse, false).join().isSuccess());
+
+        policy.onInventoryProcessed(connection, fullResponse, 0);
 
         assertEquals(RETRY_REQUEST_WITH_SAME_CONNECTION, policy.onRequestCompleted(connection, fullResponse, null));
         assertEquals(List.of(connection), policy.getCandidatesForPeriodicRequests());

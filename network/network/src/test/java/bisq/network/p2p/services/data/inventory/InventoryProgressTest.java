@@ -37,6 +37,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -47,11 +49,12 @@ import java.util.List;
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The filter of an inventory request lists only the requests which the requester stored. If the requester stores none
- * of the requests of a response which reached the size limit, its next filter is the same, and so is the next response
+ * The filter of an inventory request lists the requests which the requester holds. If it lists none of the requests of
+ * a response which reached the size limit, the next filter is the same for the responder, and so is the next response
  * (see docs/specifications/network/inventory-hash-set-filter.md).
  */
 class InventoryProgressTest {
@@ -119,15 +122,41 @@ class InventoryProgressTest {
         assertTrue(inventory.isMaxSizeReached());
         assertFalse(inventory.getEntries().isEmpty());
         assertEquals(0, InventoryService.storeEntries(requester, inventory).join());
+        assertFalse(createFilterServiceOfRequester(InventoryFilterType.HASH_SET_V2)
+                .isAnyRequestInFilter(inventory.getEntries()));
         assertEquals(inventory.getEntries(), createInventoryOfResponder(maxSize).getEntries());
+    }
+
+    // Several initial requests use the same filter, so two peers with the same data send the same response. The
+    // requester stores the requests of the first response and none of the second one. Its filter lists them now, so the
+    // next response of each peer differs.
+    @ParameterizedTest
+    @EnumSource(value = InventoryFilterType.class, names = {"HASH_SET", "HASH_SET_V2"})
+    void filterListsTheEntriesOfAResponseWhichAnotherPeerDeliveredFirst(InventoryFilterType inventoryFilterType) {
+        // Space for one add request
+        int maxSize = storeOfResponder.getPersistableStore().getMap().values().iterator().next().getSerializedSize();
+        Inventory inventory = createInventoryOfResponder(maxSize);
+        HashSetFilterService filterServiceOfRequester = createFilterServiceOfRequester(inventoryFilterType);
+        assertTrue(inventory.isMaxSizeReached());
+        assertEquals(1, inventory.getEntries().size());
+        assertFalse(filterServiceOfRequester.isAnyRequestInFilter(inventory.getEntries()));
+
+        assertEquals(1, InventoryService.storeEntries(requester, inventory).join());
+        // The same response of the other peer
+        assertEquals(0, InventoryService.storeEntries(requester, inventory).join());
+
+        assertTrue(filterServiceOfRequester.isAnyRequestInFilter(inventory.getEntries()));
+        assertNotEquals(inventory.getEntries(), createInventoryOfResponder(maxSize).getEntries());
     }
 
     // The inventory which the responder sends for the HASH_SET_V2 filter of the requester
     private Inventory createInventoryOfResponder(int maxSize) {
-        HashSetFilterService serviceOfRequester = new HashSetFilterService(requester.getStorageService(),
-                maxSize, InventoryFilterType.HASH_SET_V2);
         return new HashSetFilterService(responder.getStorageService(), maxSize, InventoryFilterType.HASH_SET_V2)
-                .createInventory(serviceOfRequester.getFilter());
+                .createInventory(createFilterServiceOfRequester(InventoryFilterType.HASH_SET_V2).getFilter());
+    }
+
+    private HashSetFilterService createFilterServiceOfRequester(InventoryFilterType inventoryFilterType) {
+        return new HashSetFilterService(requester.getStorageService(), Integer.MAX_VALUE, inventoryFilterType);
     }
 
     private static void shutdown(DataService dataService) {

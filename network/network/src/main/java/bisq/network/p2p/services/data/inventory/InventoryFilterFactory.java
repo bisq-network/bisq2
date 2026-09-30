@@ -100,6 +100,15 @@ class InventoryFilterFactory {
         return filterService.getFilter();
     }
 
+    // Whether the filter which we would send to the peer now lists at least one request of the inventory. The peer
+    // does not send such a request again, so its next response differs from this inventory.
+    boolean isAnyEntryInFilterForRequest(Connection connection, Inventory inventory) {
+        return getPreferredFilterType(connection.getPeersCapability().getFeatures())
+                .map(mySupportedFilterServices::get)
+                .map(filterService -> filterService.isAnyRequestInFilter(inventory.getEntries()))
+                .orElse(false);
+    }
+
     // The type of the received filter selects the service, not the features of the peer: a peer which supports several
     // types chooses one per request.
     Inventory createInventoryForResponse(InventoryRequest request) {
