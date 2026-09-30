@@ -91,6 +91,30 @@ Static root roles are bootstrap authority, not bridge registrations, and must ne
 the DAO-revalidation store. This distinction is made from the configured root identity rather than
 the `staticPublicKeysProvided` transport field, which is intentionally excluded from the data hash.
 
+## Several oracle nodes
+
+Users send registration requests to all oracle nodes, and each oracle node publishes the roles which it validated with
+its own authorized key. So a role can have several publications in the network storage, one per oracle node. The
+equality of a role leaves out the oracle node which authorized it, so a node shows one role for all of them.
+
+- A node keeps a role while the network storage holds at least one publication of an equal role which an oracle node
+  authorized. The removal or the expiry of one publication does not remove the role.
+- Each oracle node removes only its own publication, after its own DAO revalidation or cancellation (see below).
+- A publication counts only if an oracle node authorized it: its authorized key is a hard-coded oracle key, or the key
+  of a known oracle node role.
+
+Reasons:
+
+- The stores remove publications independently of each other: at expiry, and from the cutoff date of signature V1 on
+  also the copies without signature V2 which nodes of earlier versions relayed (see
+  [`../network/storage-request-signatures.md`](../network/storage-request-signatures.md#cutoff-date-of-signature-v1)).
+- An oracle node removes its own publication of a role which disappears from its view of the bonded roles. If the
+  removal of one publication removed the role, the removal of a copy of the publication of oracle node A on oracle
+  node B would make B remove its own publication for all nodes, and A would follow. All nodes would then hold only
+  removals of the role, and its holder would have to register again.
+- A role which one oracle node removes stays while another oracle node publishes it. Both oracle nodes check the same
+  DAO state and receive the same cancellation requests, so the other oracle node removes its publication as well.
+
 ## DAO revalidation
 
 At startup, after every live DAO block which advances the contiguous bridge view and after every
