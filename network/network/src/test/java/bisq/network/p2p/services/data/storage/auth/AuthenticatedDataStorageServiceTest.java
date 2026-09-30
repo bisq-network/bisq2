@@ -296,6 +296,38 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isRequestAlreadyReceived(), result.toString());
     }
 
+    // A node parses each copy of a request which it receives, so the copies are different objects with equal values.
+    // The store must detect the copy before it verifies the signatures, also for authorized data, whose authorization
+    // signature is an Optional of a byte array.
+    @Test
+    void duplicateAddRequestOfAuthorizedDataIsReportedAsAlreadyReceived() throws GeneralSecurityException {
+        AuthorizedData authorizedData = authorize(new TestAuthorizedDistributedData("content"));
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(authorizedDataStore, authorizedData,
+                authorizedKeyPair);
+        assertTrue(authorizedDataStore.add(addRequest).isSuccess());
+        AuthenticatedSequentialData sequentialData = addRequest.getAuthenticatedSequentialData();
+        AuthorizedData copyOfAuthorizedData = new AuthorizedData(authorizedData.getAuthorizedDistributedData(),
+                authorizedData.getSignature().map(byte[]::clone),
+                authorizedKeyPair.getPublic());
+        AddAuthenticatedDataRequest copy = new AddAuthenticatedDataRequest(
+                new AuthenticatedSequentialData(copyOfAuthorizedData,
+                        sequentialData.getSequenceNumber(),
+                        sequentialData.getPubKeyHash().clone(),
+                        sequentialData.getCreated()),
+                addRequest.getSignatureV1().clone(),
+                addRequest.getSignaturePubKeyEncoded().clone(),
+                addRequest.getSignaturePublicKey(),
+                addRequest.getSignatureV2().clone(),
+                addRequest.getVersion());
+
+        assertEquals(addRequest, copy);
+        assertEquals(addRequest.hashCode(), copy.hashCode());
+        DataStorageResult result = authorizedDataStore.add(copy);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isRequestAlreadyReceived(), result.toString());
+    }
+
     @Test
     void removeRequestWithInvalidSignatureIsNotStoredWithoutEntry()
             throws GeneralSecurityException, UnresolvableProtobufException {

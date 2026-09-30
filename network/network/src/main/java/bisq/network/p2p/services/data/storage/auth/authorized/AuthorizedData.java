@@ -23,6 +23,7 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.DateUtils;
+import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
@@ -259,12 +260,14 @@ public final class AuthorizedData extends AuthenticatedData {
                 "\r\n} ";
     }
 
+    // Optional.equals and Optional.hashCode would compare the signature arrays by reference. A node parses each copy of
+    // a request which it receives, so equal copies hold different arrays.
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof AuthorizedData that)) return false;
         if (!super.equals(o)) return false;
 
-        return Objects.equals(signature, that.signature) &&
+        return OptionalUtils.optionalByteArrayEquals(signature, that.signature) &&
                 Arrays.equals(authorizedPublicKeyBytes, that.authorizedPublicKeyBytes) &&
                 Objects.equals(authorizedPublicKey, that.authorizedPublicKey);
     }
@@ -272,7 +275,7 @@ public final class AuthorizedData extends AuthenticatedData {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + Objects.hashCode(signature);
+        result = 31 * result + signature.map(Arrays::hashCode).orElse(0);
         result = 31 * result + Arrays.hashCode(authorizedPublicKeyBytes);
         result = 31 * result + Objects.hashCode(authorizedPublicKey);
         return result;
