@@ -72,20 +72,28 @@ requests which the requester does not have. During the initial requests, the req
 Its next filter also lists the requests which it stored from the response, so the next response contains other
 requests.
 
-6. If the stores of the requester accepted none of the requests of a response which reached the size limit, the
-   requester does not request inventory from that peer anymore. During the initial requests it asks another peer, and
-   periodic requests do not select that peer.
+6. After the requester processed a response which reached the size limit, it checks its filter. If the filter which it
+   would send to that peer now lists none of the requests of the response, the requester does not request inventory
+   from that peer anymore. During the initial requests it asks another peer, and periodic requests do not select that
+   peer.
 
-Reason: the filter lists only the requests which the requester stored. If the requester rejects all requests of a full
-response, its next filter is the same, and the peer sends the same response again. Without rule 6, the requester would
-repeat the request without end, and the requests after that response would never arrive from that peer. This happens
-in ordinary cases, for example:
+Reason: the filter lists only the requests which the requester holds. If it lists none of the requests of a full
+response, the peer sends the same response again. Without rule 6, the requester would repeat the request without end,
+and the requests after that response would never arrive from that peer. This happens in ordinary cases, for example:
 
 - The requester holds a removal, and the responder missed it and still holds the earlier add request. The requester
   rejects the add request.
 - The responder is a node of an earlier version, and the requester is a node of this version which sent the request
   shortly before the cutoff date of signature V1 and gets the response after it. It rejects every request without
   signature V2. From the cutoff date on, rule 8 prevents such requests.
+
+Reason for the check of the filter: the requester can hold a request of a response although its stores accepted
+nothing from that response. Several initial requests run at the same time with the same filter, so peers with the same
+data send the same response. The requester stores the requests of the first response. The stores report the requests
+of the later responses as already received. A broadcast can also deliver a request before the response arrives. In
+these cases the next filter lists the requests, and the next response of the peer differs. A rule which counts only
+the requests which the stores accepted from a response would stop the requests to honest peers, often to the seed
+nodes.
 
 Limitation: the requester does not get the requests after that response from that peer. It gets them from other peers,
 or by broadcast. A requester of an earlier version does not follow rule 6.

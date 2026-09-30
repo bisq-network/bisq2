@@ -31,9 +31,11 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -64,6 +66,25 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
                     HashSetFilter.MAX_ENTRIES);
         }
         return new HashSetFilter(inventoryFilterType, filterEntries);
+    }
+
+    @Override
+    public boolean isAnyRequestInFilter(Collection<? extends DataRequest> dataRequests) {
+        Set<HashSetFilterEntry> filterEntries = storageService.getAllDataRequestMapEntries()
+                .map(this::toFilterEntry)
+                .collect(Collectors.toSet());
+        return dataRequests.stream().anyMatch(dataRequest -> isInFilter(filterEntries, dataRequest));
+    }
+
+    // The request comes from a peer and is not the map entry of a store, so the storage key is computed from it
+    private boolean isInFilter(Set<HashSetFilterEntry> filterEntries, DataRequest dataRequest) {
+        try {
+            return filterEntries.contains(toFilterEntry(Map.entry(dataRequest.getStorageKey(), dataRequest)));
+        } catch (Exception e) {
+            // No store holds a request whose storage key cannot be computed
+            log.debug("Could not compute the filter entry of {}", dataRequest.getClass().getSimpleName(), e);
+            return false;
+        }
     }
 
     @Override
