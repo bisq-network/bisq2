@@ -22,7 +22,9 @@ import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.EcPublicKeyVariants;
 import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -71,6 +73,22 @@ class MailboxSignatureV2Test {
         assertFalse(received.isSignatureV2Invalid());
         assertFalse(received.isSignatureV1Invalid());
         assertFalse(received.isSignatureInvalid());
+    }
+
+    @Test
+    void mailboxReceiverHashMustIdentifyTheReceiverUsedByTheStorageKey() throws GeneralSecurityException {
+        bisq.network.protobuf.MailboxSequentialData proto = createAddMailboxRequest()
+                .getMailboxSequentialData().toProto(false);
+        byte[] otherPublicKeyBytes = KeyGeneration.generateDefaultEcKeyPair().getPublic().getEncoded();
+
+        // Otherwise the receiver's removal finds the entry but fails the hash check, while a removal
+        // signed by the key of the supplied hash looks up another storage key. Neither can remove it.
+        assertThrows(IllegalArgumentException.class, () -> MailboxSequentialData.fromProto(proto.toBuilder()
+                .setReceiversPubKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)))
+                .build()));
+        assertThrows(IllegalArgumentException.class, () -> MailboxSequentialData.fromProto(proto.toBuilder()
+                .setReceiversPubKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
+                .build()));
     }
 
     @Test
