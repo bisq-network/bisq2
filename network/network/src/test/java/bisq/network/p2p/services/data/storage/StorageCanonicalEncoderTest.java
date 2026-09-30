@@ -38,6 +38,7 @@ import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxSequentialData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
+import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
@@ -69,7 +70,6 @@ public class StorageCanonicalEncoderTest {
     private static final KeyPair KEY_PAIR = KeyGeneration.generateDefaultEcKeyPair();
     private static final byte[] PUBLIC_KEY_BYTES = KEY_PAIR.getPublic().getEncoded();
     private static final byte[] HASH = filledBytes(20, 0x11);
-    private static final byte[] OTHER_HASH = filledBytes(20, 0x55);
     private static final byte[] SIGNATURE = filledBytes(70, 0x22);
     private static final byte[] SIGNATURE_V2 = filledBytes(70, 0x66);
     private static final long CREATED = System.currentTimeMillis() - 60_000;
@@ -480,7 +480,7 @@ public class StorageCanonicalEncoderTest {
     private static MailboxSequentialData getMailboxSequentialData(MailboxData mailboxData) {
         return new MailboxSequentialData(mailboxData,
                 HASH,
-                OTHER_HASH,
+                DigestUtil.hash(PUBLIC_KEY_BYTES),
                 KEY_PAIR.getPublic(),
                 PUBLIC_KEY_BYTES,
                 CREATED,

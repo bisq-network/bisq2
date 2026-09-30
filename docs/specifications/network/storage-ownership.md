@@ -77,7 +77,11 @@ compare both before it accepts the data.
    example from a valid profile ID.
 6. The mailbox store accepts an add request only if the sender is the owner of the confidential message. Otherwise the
    result is `ownerInvalid`. The receiver removes mailbox data; storage key V2 of mailbox data contains the key of the
-   receiver (see [`storage-keys.md`](storage-keys.md)).
+   receiver (see [`storage-keys.md`](storage-keys.md)). The receiver hash in the sequential data must equal the hash of
+   its receiver public key bytes. Reject inconsistent sequential data when it is constructed or decoded, including
+   persisted entries. Otherwise the key which finds the entry cannot pass its removal authorization check, and the
+   key which passes that check looks up another entry. No key could remove the message. Released nodes always derive
+   the receiver hash from the receiver public key, so valid existing entries already satisfy this rule.
 7. Remove requests need no own owner check. Their storage key contains the key which signs them, so they find only the
    entry which the same key added (see [`storage-keys.md`](storage-keys.md)). The same holds for refresh requests, but
    a refresh replaces the creation date of the entry, on which the transition rule depends. So the store checks the
@@ -216,6 +220,7 @@ earlier creation date, which are the copies described in [Known limitations](#kn
   rejects a replay of the removed entry.
 - Persisted entries of another publisher are removed when a store is loaded. A refresh of such an entry is rejected.
 - A mailbox add request of another sender is rejected.
+- Mailbox sequential data with a receiver hash that does not match the receiver public key bytes is rejected.
 - With the real MuSig offerbook: a copy of an offer which another user signs is rejected, the removal of that user does
   not remove the offer, and the maker can remove it.
 - `PubKey.isId` and `PubKey.getHashFromId` accept only IDs which `PubKey.getId()` creates, also not hex encodings of
