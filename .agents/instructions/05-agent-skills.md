@@ -10,11 +10,6 @@ symbolic link to `.agents/skills`, so that Claude Code finds the same skills. On
 
 Do not read skills by default. Agents that load skills automatically select them by their description.
 Other agents read a skill's `SKILL.md` only when the task touches the area listed here:
-- `bisq-contributor-workflow`: implementation tasks and contribution flow
-- `bisq2-javafx-ui`: JavaFX desktop UI changes
-- `bisq-pr-reviewer`: Bisq pull request review
-- `git-commit-writer`: commit message drafting
-- `ui-design-principles`: UI quality review
 - `canonical-encoding`: canonical encoding (`bisq.common.encoding.canonical`) of hash and signature
   preimages: classes that implement `Canonical` or define a `CanonicalSchema`, their `@ExcludeForHash`
   fields, and `serializeForHash()` in hash, signature, or proof of work paths
@@ -23,3 +18,8 @@ Other agents read a skill's `SKILL.md` only when the task touches the area liste
 - `write-specification`: creating or updating a specification in `docs/specifications/` (see **Specifications**)
 - `review-feedback`: the user provides feedback prefixed with `reviewer claims:`
 - `release-notes`: release notes are requested
+- `bisq-contributor-workflow`: implementation tasks and contribution flow
+- `bisq2-javafx-ui`: JavaFX desktop UI changes
+- `bisq-pr-reviewer`: Bisq pull request review
+- `git-commit-writer`: commit message drafting
+- `ui-design-principles`: UI quality review
