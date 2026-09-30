@@ -70,6 +70,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class StorageCanonicalEncoderTest {
     private static final KeyPair KEY_PAIR = KeyGeneration.generateDefaultEcKeyPair();
     private static final byte[] PUBLIC_KEY_BYTES = KEY_PAIR.getPublic().getEncoded();
+    private static final byte[] PUBLIC_KEY_HASH = DigestUtil.hash(PUBLIC_KEY_BYTES);
     private static final byte[] HASH = filledBytes(20, 0x11);
     private static final byte[] SIGNATURE = filledBytes(70, 0x22);
     private static final byte[] SIGNATURE_V2 = filledBytes(70, 0x66);
@@ -154,7 +155,7 @@ public class StorageCanonicalEncoderTest {
         for (AuthenticatedData authenticatedData : List.of(getDefaultAuthenticatedData(), getAuthorizedData())) {
             AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authenticatedData,
                     3,
-                    HASH,
+                    PUBLIC_KEY_HASH,
                     CREATED);
             assertArrayEquals(sequentialData.serialize(), sequentialData.encodeCanonical());
 
@@ -250,7 +251,7 @@ public class StorageCanonicalEncoderTest {
                     authenticatedData.getClass().getSimpleName());
             AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authenticatedData,
                     3,
-                    HASH,
+                    PUBLIC_KEY_HASH,
                     CREATED);
             assertArrayEquals(sequentialData.serializeForHash(), sequentialData.encodeCanonical(EncodingPurpose.SIGNATURE));
             assertNestedHashPurposesMatchSerializeForHashWithoutStorageKey(sequentialData, "");
@@ -294,7 +295,7 @@ public class StorageCanonicalEncoderTest {
                 new AuthorizedData(new ExternalData("content", 7), Optional.of(SIGNATURE), KEY_PAIR.getPublic()))) {
             messages.add(getAddAuthenticatedDataRequest(new AuthenticatedSequentialData(authenticatedData,
                     3,
-                    HASH,
+                    PUBLIC_KEY_HASH,
                     CREATED)));
         }
         messages.add(new AddAppendOnlyDataRequest(new ExternalData("content", 0)));
@@ -348,7 +349,7 @@ public class StorageCanonicalEncoderTest {
                 EncodingPurpose.TRADE_CONTRACT)) {
             PurposeRecordingAuthenticatedData authenticatedData = new PurposeRecordingAuthenticatedData();
             AddAuthenticatedDataRequest request = getAddAuthenticatedDataRequest(
-                    new AuthenticatedSequentialData(authenticatedData, 1, HASH, CREATED));
+                    new AuthenticatedSequentialData(authenticatedData, 1, PUBLIC_KEY_HASH, CREATED));
 
             request.encodeCanonical(encodingPurpose);
 
@@ -485,8 +486,8 @@ public class StorageCanonicalEncoderTest {
 
     private static MailboxSequentialData getMailboxSequentialData(MailboxData mailboxData) {
         return new MailboxSequentialData(mailboxData,
-                HASH,
-                DigestUtil.hash(PUBLIC_KEY_BYTES),
+                PUBLIC_KEY_HASH,
+                PUBLIC_KEY_HASH,
                 KEY_PAIR.getPublic(),
                 PUBLIC_KEY_BYTES,
                 CREATED,
