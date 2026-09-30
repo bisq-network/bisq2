@@ -81,8 +81,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     @Override
     public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
-//        maybeLogMapState("onPersistedApplied", persisted);
-        pruneInvalidAuthorizedData();
+        maybeLogMapState("onPersistedApplied", persisted);
         pruneDataOfOtherOwners();
         handlePersistedPublishDateAware(persisted);
     }
@@ -426,29 +425,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     });
                 }
             });
-        }
-    }
-
-    private void pruneInvalidAuthorizedData() {
-        Map<ByteArray, AuthenticatedDataRequest> invalidAuthorizedData = persistableStore.getMap().entrySet().stream()
-                .filter(entry -> {
-                    AuthenticatedDataRequest request = entry.getValue();
-                    if (request instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-                        AuthenticatedData authenticatedData = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getAuthenticatedData();
-                        if (authenticatedData instanceof AuthorizedData authorizedData) {
-                            return authorizedData.isNotAuthorized();
-                        }
-                    }
-                    return false;
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        if (!invalidAuthorizedData.isEmpty()) {
-            invalidAuthorizedData.forEach((key, value) -> {
-                log.warn("We prune the AddAuthenticatedDataRequest with an invalid AuthorizedData. {}",
-                        StringUtils.truncate(value.toString(), 3000));
-                persistableStore.getMap().remove(key);
-            });
-            persist();
         }
     }
 

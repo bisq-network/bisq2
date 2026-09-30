@@ -112,11 +112,6 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
     }
 
     @Override
-    public MetaData getMetaData() {
-        return META_DATA;
-    }
-
-    @Override
     public PublicKey getSenderPublicKey() {
         return senderNetworkId.getPubKey().getPublicKey();
     }
@@ -125,4 +120,8 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
         return contractHash.clone();
     }
 
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
 }
