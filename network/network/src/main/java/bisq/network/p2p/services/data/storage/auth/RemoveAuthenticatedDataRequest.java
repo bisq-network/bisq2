@@ -302,7 +302,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
         CanonicalSchema<RemoveAuthenticatedDataRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
-            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RemoveAuthenticatedDataRequest");
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for RemoveAuthenticatedDataRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
             case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
