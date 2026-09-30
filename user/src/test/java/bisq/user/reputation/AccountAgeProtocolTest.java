@@ -22,7 +22,10 @@ import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
 import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import bisq.user.reputation.data.AuthorizedSignedWitnessData;
+import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
@@ -79,6 +82,42 @@ class AccountAgeProtocolTest {
 
         assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void currentAccountAgeRequestMustNotCarryARequesterSuppliedDate() {
+        bisq.user.protobuf.AuthorizeAccountAgeRequest proto =
+                bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
+                        .setProfileId(PROFILE_ID)
+                        .setHashAsHex("34".repeat(20))
+                        .setDate(1_700_000_000_000L)
+                        .setAccountInputDataWithSalt(ByteString.copyFrom(new byte[]{1, 2, 3}))
+                        .setPubKeyBase64("key")
+                        .setSignatureBase64("signature")
+                        .setProtocolVersion(AuthorizeAccountAgeRequest.CURRENT_VERSION)
+                        .build();
+
+        assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void anUnknownAccountAgeRequestVersionIsOnlyBoundedStructurally() {
+        // An unknown version cannot be assumed to use the current field layout, so neither the preimage nor the
+        // date rules of version 2 are applied to it. The oracle rejects it by version before it is used.
+        bisq.user.protobuf.AuthorizeAccountAgeRequest proto =
+                bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
+                        .setProfileId(PROFILE_ID)
+                        .setHashAsHex("34".repeat(20))
+                        .setPubKeyBase64("key")
+                        .setSignatureBase64("signature")
+                        .setProtocolVersion(AuthorizeAccountAgeRequest.CURRENT_VERSION + 1)
+                        .build();
+
+        AuthorizeAccountAgeRequest request = AuthorizeAccountAgeRequest.fromProto(proto);
+
+        assertThat(request.getProtocolVersion()).isEqualTo(AuthorizeAccountAgeRequest.CURRENT_VERSION + 1);
+        assertThat(request.getAccountInputDataWithSalt()).isEmpty();
     }
 
     @Test
@@ -203,6 +242,25 @@ class AccountAgeProtocolTest {
                 bisq.user.protobuf.AuthorizeSignedWitnessRequest.newBuilder()
                         .setProfileId(PROFILE_ID)
                         .setHashAsHex("34".repeat(20))
+                        .setPubKeyBase64("key")
+                        .setSignatureBase64("signature")
+                        .setProtocolVersion(AuthorizeSignedWitnessRequest.CURRENT_VERSION)
+                        .build();
+
+        assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1700000000000, 0", "0, 1700000000001", "1700000000000, 1700000000001"})
+    void currentSignedWitnessRequestMustNotCarryRequesterSuppliedDates(long accountDate, long signDate) {
+        bisq.user.protobuf.AuthorizeSignedWitnessRequest proto =
+                bisq.user.protobuf.AuthorizeSignedWitnessRequest.newBuilder()
+                        .setProfileId(PROFILE_ID)
+                        .setHashAsHex("34".repeat(20))
+                        .setAccountAgeWitnessDate(accountDate)
+                        .setWitnessSignDate(signDate)
+                        .setAccountInputDataWithSalt(ByteString.copyFrom(new byte[]{1, 2, 3}))
                         .setPubKeyBase64("key")
                         .setSignatureBase64("signature")
                         .setProtocolVersion(AuthorizeSignedWitnessRequest.CURRENT_VERSION)

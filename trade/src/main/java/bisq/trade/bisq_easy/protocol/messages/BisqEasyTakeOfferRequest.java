@@ -20,6 +20,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
+    public static final MetaData META_DATA = createMetaData(BisqEasyTakeOfferRequest.class);
+
     private final BisqEasyContract bisqEasyContract;
     private final ContractSignatureData contractSignatureData;
 
@@ -83,7 +86,7 @@ public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

@@ -18,12 +18,20 @@
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.DistributedDataAny;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,9 +52,11 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
-    // Can be removed after I2P is activated
-    public static final Date I2P_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.DECEMBER, 1);
-    public static final boolean IS_I2P_ACTIVATED = new Date().after(I2P_ACTIVATION_DATE);
+    // Oracle and seed nodes of earlier versions published data of some types with the key pair of their network
+    // identity (see AuthorizedDistributedData.isLegacyOwnerAccepted). Their data created before this date is accepted
+    // with another owner than the authorized key. The date must be after all oracle and seed nodes publish with their
+    // authorized key pair (see docs/specifications/network/storage-ownership.md).
+    public static final Date LEGACY_OWNER_CUTOFF_DATE = DateUtils.getUTCDate(2027, GregorianCalendar.JANUARY, 1);
 
 
     private final Optional<byte[]> signature;
@@ -56,20 +66,30 @@ public final class AuthorizedData extends AuthenticatedData {
     // At remove, we do not need to authorizedPublicKey as the normal keypair is used to verify right to remove.
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                           PublicKey authorizedPublicKey) {
-        this(authorizedDistributedData, Optional.empty(), authorizedPublicKey, authorizedPublicKey.getEncoded());
+        this(authorizedDistributedData,
+                authorizedDistributedData.toAny(false),
+                Optional.empty(),
+                authorizedPublicKey,
+                authorizedPublicKey.getEncoded());
     }
 
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                           Optional<byte[]> signature,
                           PublicKey authorizedPublicKey) {
-        this(authorizedDistributedData, signature, authorizedPublicKey, authorizedPublicKey.getEncoded());
+        this(authorizedDistributedData,
+                authorizedDistributedData.toAny(false),
+                signature,
+                authorizedPublicKey,
+                authorizedPublicKey.getEncoded());
     }
 
+    // distributedDataAny: see AuthenticatedData
     private AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                           Any distributedDataAny,
                            Optional<byte[]> signature,
                            PublicKey authorizedPublicKey,
                            byte[] authorizedPublicKeyBytes) {
-        super(authorizedDistributedData);
+        super(authorizedDistributedData, distributedDataAny);
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
         this.authorizedPublicKeyBytes = authorizedPublicKeyBytes;
@@ -80,7 +100,7 @@ public final class AuthorizedData extends AuthenticatedData {
     @Override
     public void verify() {
         signature.ifPresent(NetworkDataValidation::validateECSignature);
-        NetworkDataValidation.validateECPubKey(authorizedPublicKeyBytes);
+        EcPublicKeyValidation.validate(authorizedPublicKeyBytes);
     }
 
     @Override
@@ -118,12 +138,14 @@ public final class AuthorizedData extends AuthenticatedData {
         byte[] authorizedPublicKeyBytes = authorizedDataProto.getAuthorizedPublicKeyBytes().toByteArray();
         try {
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(authorizedPublicKeyBytes);
+            Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
             DistributedData distributedData = DistributedData.fromAny(proto.getDistributedData());
             if (distributedData instanceof AuthorizedDistributedData) {
                 Optional<byte[]> signature = authorizedDataProto.hasSignature() ?
                         Optional.of(authorizedDataProto.getSignature().toByteArray()) :
                         Optional.empty();
                 return new AuthorizedData((AuthorizedDistributedData) distributedData,
+                        distributedDataAny,
                         signature,
                         authorizedPublicKey,
                         authorizedPublicKeyBytes
@@ -135,6 +157,58 @@ public final class AuthorizedData extends AuthenticatedData {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // Unlike serializeForHash(), which omits the signature so that republishing keeps the storage key, the default
+    // encoding contains all non-transient fields, including the signature. The SIGNATURE purpose uses the default
+    // schema: it contains the DistributedData with its exact bytes. The STORAGE_KEY, PROOF_OF_WORK and TRADE_CONTRACT
+    // schemas contain the DistributedData in its hash serialization. serializeForHash() omits the signature only where
+    // AuthorizedData is the root of the preimage (see docs/specifications/encoding):
+    // - STORAGE_KEY is the preimage of the data hash of the storage key, where AuthorizedData is always the root. It
+    //   omits the signature, as serializeForHash() does.
+    // - PROOF_OF_WORK and TRADE_CONTRACT: AuthorizedData is always nested, in a request or in a contract, whose hash
+    //   serialization contains the signature.
+    public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
+            AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
+                    .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
+                    .build();
+
+    public static final CanonicalSchema<AuthorizedData> STORAGE_KEY_SCHEMA =
+            AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
+                    .extend(11, authorizedData -> authorizedData, CanonicalSchema.<AuthorizedData>newBuilder()
+                            .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes))
+                    .build();
+
+    public static final CanonicalSchema<AuthorizedData> PROOF_OF_WORK_SCHEMA = createNestedSchemaForHash();
+    public static final CanonicalSchema<AuthorizedData> TRADE_CONTRACT_SCHEMA = createNestedSchemaForHash();
+
+    private static CanonicalSchema<AuthorizedData> createNestedSchemaForHash() {
+        return AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
+                .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
+                .build();
+    }
+
+    private static CanonicalSchema.Builder<AuthorizedData> getAuthorizedDataSchemaBuilder() {
+        return CanonicalSchema.<AuthorizedData>newBuilder()
+                .bytes(1, authorizedData -> authorizedData.signature.orElse(null))
+                .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes);
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<AuthorizedData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     public AuthorizedDistributedData getAuthorizedDistributedData() {
@@ -160,8 +234,24 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
-        return distributedData.isDataInvalid(ownerPubKeyHash);
+    public boolean isDataInvalid() {
+        return distributedData.isDataInvalid();
+    }
+
+    // The owner which the distributed data names, else the authorized key. The authorization signature does not cover
+    // the owner of the add request, so the authorized key must own the data: otherwise anyone could publish and remove
+    // a copy of it.
+    @Override
+    public boolean isOwner(byte[] pubKeyHash) {
+        byte[] ownerPubKeyHash = distributedData instanceof OwnershipVerifiableData ownershipVerifiableData
+                ? ownershipVerifiableData.getOwnerPubKeyHash()
+                : DigestUtil.hash(authorizedPublicKeyBytes);
+        return Arrays.equals(ownerPubKeyHash, pubKeyHash);
+    }
+
+    @Override
+    public boolean isOtherOwnerAccepted(long created) {
+        return getAuthorizedDistributedData().isLegacyOwnerAccepted() && created < LEGACY_OWNER_CUTOFF_DATE.getTime();
     }
 
     @Override

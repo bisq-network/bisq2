@@ -42,7 +42,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class MuSigDisputeCasePaymentDetailsResponse implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigDisputeCasePaymentDetailsResponse.class.getSimpleName());
     private final String tradeId;
     private final NetworkId senderNetworkId;
     private final AccountPayload<?> takerAccountPayload;
@@ -95,8 +95,8 @@ public final class MuSigDisputeCasePaymentDetailsResponse implements MailboxMess
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.4);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

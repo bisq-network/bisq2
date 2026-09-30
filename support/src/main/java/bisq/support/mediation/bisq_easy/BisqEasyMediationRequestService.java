@@ -237,17 +237,8 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         UserProfile mediator = expectedMediator.orElseThrow();
         Optional<NetworkId> senderNetworkId = bisqEasyMediatorsResponse.getSenderNetworkId();
         if (senderNetworkId.isEmpty()) {
-            if (bisqEasyMediatorsResponse.isSenderPublicKeyRequired()) {
-                log.warn("Ignoring BisqEasyMediatorsResponse for trade {} because senderNetworkId is missing.", tradeId);
-                return false;
-            }
-
-            if (bannedUserService.isUserProfileBanned(mediator)) {
-                log.warn("Ignoring BisqEasyMediatorsResponse for trade {} from banned mediator {}.", tradeId, mediator.getId());
-                return false;
-            }
-
-            return true;
+            log.warn("Ignoring BisqEasyMediatorsResponse for trade {} because senderNetworkId is missing.", tradeId);
+            return false;
         }
 
         NetworkId sender = senderNetworkId.orElseThrow();

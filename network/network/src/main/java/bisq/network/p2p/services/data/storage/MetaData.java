@@ -17,8 +17,11 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
-import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,13 +32,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * Meta data for storage properties per DistributedData
+ * Storage properties of a storable type. Each type declares one MetaData, and the storage layer takes it only from the
+ * StorableTypesRegistry by class name. See docs/specifications/network/storage-metadata.md.
  */
 @Slf4j
 @EqualsAndHashCode
 @ToString
 @Getter
-public final class MetaData implements NetworkProto {
+public final class MetaData implements NetworkProto, Canonical {
     public static final long TTL_2_DAYS = TimeUnit.DAYS.toMillis(2);
     public static final long TTL_5_DAYS = TimeUnit.DAYS.toMillis(5);
     public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
@@ -61,10 +65,11 @@ public final class MetaData implements NetworkProto {
     private final long ttl;
     // Used for inventory request priority of delivery if inventory size exceeds limit
     private final int priority;
+    // Not used by this version. Nodes of earlier versions use it as an input of the cost factor of messages (see
+    // MessageCostPolicy). Not used as limit of the store (see DataStorageService.MAX_MAP_SIZE).
+    private final int maxMapSize;
     // Used for name of storage file, for lookup of the store for a given distributedData object and for logging
     private final String className;
-    // Max file size of the storage file
-    private final int maxMapSize;
 
     public MetaData(String className) {
         this(TTL_10_DAYS, className);
@@ -117,10 +122,27 @@ public final class MetaData implements NetworkProto {
         return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
     }
 
-    public double getCostFactor() {
-        double ttlImpact = MathUtils.bounded(0, 1, ttl / (double) TTL_100_DAYS);
-        double mapSizeImpact = MathUtils.bounded(0, 1, maxMapSize / (double) MAX_MAP_SIZE_10_000);
-        double impact = ttlImpact + mapSizeImpact;
-        return MathUtils.bounded(0, 1, impact);
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<MetaData> DEFAULT_SCHEMA = CanonicalSchema.<MetaData>newBuilder()
+            .sint64(1, MetaData::getTtl)
+            .sint32(2, MetaData::getPriority)
+            .sint32(3, MetaData::getMaxMapSize)
+            .string(4, MetaData::getClassName)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<MetaData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+            case TRADE_CONTRACT -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 }

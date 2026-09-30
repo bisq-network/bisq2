@@ -39,7 +39,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 public final class AuthorizeAccountTimestampV2Request implements MailboxMessage, ExternalNetworkMessage {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, AuthorizeAccountTimestampV2Request.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final AuthorizeAccountTimestampV2Payload payload;
     private final byte[] signature;
@@ -88,8 +88,8 @@ public final class AuthorizeAccountTimestampV2Request implements MailboxMessage,
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

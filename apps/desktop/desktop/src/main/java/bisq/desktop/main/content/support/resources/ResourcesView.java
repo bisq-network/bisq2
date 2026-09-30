@@ -105,11 +105,13 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
                 ApplicationVersion.getVersion().getVersionAsString() : Res.get("na");
         String commitHash = ApplicationVersion.getBuildCommitShortHash() != null ?
                 ApplicationVersion.getBuildCommitShortHash() : Res.get("na");
+        String torBinaryVersion = ApplicationVersion.getTorBinaryVersionString() != null ?
+                ApplicationVersion.getTorBinaryVersionString() : Res.get("na");
         String torVersion = ApplicationVersion.getTorVersionString() != null ?
                 ApplicationVersion.getTorVersionString() : Res.get("na");
 
         Label details = new Label(Res.get("support.resources.localVersion.details",
-                versionString, commitHash, torVersion));
+                versionString, commitHash, torBinaryVersion, torVersion));
         details.getStyleClass().add("user-content-note");
         VBox localVersionBox = new VBox(5, details);
 

@@ -19,6 +19,7 @@ package bisq.trade.mu_sig.messages.network;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,6 +29,8 @@ import java.util.Arrays;
 @ToString(callSuper = true)
 @Getter
 public final class MuSigMediationResultRejectionMessage extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(MuSigMediationResultRejectionMessage.class);
+
     private final byte[] mediationResultHash;
 
     public MuSigMediationResultRejectionMessage(String id,
@@ -76,8 +79,8 @@ public final class MuSigMediationResultRejectionMessage extends MuSigTradeMessag
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.2);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     public byte[] getMediationResultHash() {

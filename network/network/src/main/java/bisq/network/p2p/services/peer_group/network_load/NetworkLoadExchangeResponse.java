@@ -64,11 +64,6 @@ public final class NetworkLoadExchangeResponse implements EnvelopePayloadMessage
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.05;
-    }
-
-    @Override
     public String getRequestId() {
         return String.valueOf(requestNonce);
     }

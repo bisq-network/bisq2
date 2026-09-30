@@ -19,13 +19,9 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.DataRequest;
-import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
-import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -35,13 +31,17 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
     public static final String STORE_POST_FIX = "Store";
+    // Maximum number of entries of a store. This was the effective limit of all stores so far. MetaData.maxMapSize
+    // is not used as limit, because its values are at most 10 000 and enforcing them could remove entries from
+    // existing stores. Nodes of earlier versions use MetaData.maxMapSize as an input of the cost factor of messages.
+    public static final int MAX_MAP_SIZE = 100_000;
 
     @Getter
     protected final Persistence<DataStore<T>> persistence;
@@ -53,11 +53,18 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     protected final Path subDirPath;
     @Getter
     protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
-    protected Optional<Integer> maxMapSize = Optional.empty();
+    // The time of the node. It decides whether the node requires signature V2 (see
+    // SignedRequest.SIGNATURE_V1_CUTOFF_DATE).
+    protected final Clock clock;
 
     public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey) {
+        this(persistenceService, storeName, storeKey, new SystemClock());
+    }
+
+    public DataStorageService(PersistenceService persistenceService, String storeName, String storeKey, Clock clock) {
         super();
 
+        this.clock = clock;
         this.storeKey = storeKey;
         String storageFileName = storeKey + STORE_POST_FIX;
         DbSubDirectory dbSubDirectory = DbSubDirectory.NETWORK_DB;
@@ -71,7 +78,39 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
     public void shutdown() {
         prunedAndExpiredDataRequests.clear();
-        maxMapSize = Optional.empty();
+    }
+
+    // Earlier versions persisted the entries under storage key V1. The storage services look entries up with the
+    // storage key of the received request, so every entry must be stored under that key. We recompute it from the
+    // persisted request instead of trusting the persisted key.
+    @Override
+    public DataStore<T> preProcessPersisted(DataStore<T> persisted) {
+        Map<ByteArray, T> map = persisted.getMap();
+        if (map.isEmpty()) {
+            return persisted;
+        }
+
+        Map<ByteArray, T> rekeyed = new HashMap<>();
+        map.values().forEach(dataRequest -> {
+            try {
+                rekeyed.merge(dataRequest.getStorageKey(), dataRequest, DataStorageService::selectNewer);
+            } catch (Exception e) {
+                log.warn("Could not compute storage key of persisted entry {}. We drop it.", dataRequest, e);
+            }
+        });
+        map.clear();
+        map.putAll(rekeyed);
+        return persisted;
+    }
+
+    // Two persisted requests only get the same key if the persisted keys were not the keys of their requests. Then we
+    // keep the request which the store would keep: the higher sequence number, else the later creation date.
+    private static <T extends DataRequest> T selectNewer(T existing, T candidate) {
+        if (existing instanceof Sequential existingSequential && candidate instanceof Sequential candidateSequential &&
+                existingSequential.getSequenceNumber() != candidateSequential.getSequenceNumber()) {
+            return candidateSequential.getSequenceNumber() > existingSequential.getSequenceNumber() ? candidate : existing;
+        }
+        return candidate.getCreated() > existing.getCreated() ? candidate : existing;
     }
 
     @Override
@@ -81,81 +120,50 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             return persisted;
         }
 
-        int maxSize = getMaxMapSize();
         Map<ByteArray, T> pruned = map.entrySet().stream()
                 .filter(entry -> {
                     T dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
+                    boolean isToPrune = isToPrune(dataRequest);
+                    if (isToPrune) {
                         prunedAndExpiredDataRequests.add(dataRequest);
                     }
-                    return !isExpired;
+                    return !isToPrune;
                 })
                 .sorted((o1, o2) -> Long.compare(o2.getValue().getCreated(), o1.getValue().getCreated()))
-                .limit(maxSize)
+                .limit(MAX_MAP_SIZE)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(pruned);
         return persisted;
     }
 
-    protected int getMaxMapSize() {
-        if (maxMapSize.isEmpty()) {
-            int size = persistableStore.getMap().values().stream()
-                    .map(DataRequest::getMaxMapSize)
-                    .findFirst()
-                    .orElse(100_000);
-            // Until the too low values in some MetaData are fixed we use 10000 as min size
-            maxMapSize = Optional.of(Math.max(MetaData.MAX_MAP_SIZE_10_000, size));
+    // A store keeps an entry until it expires. From SignedRequest.SIGNATURE_V1_CUTOFF_DATE on, a store also removes the
+    // entries without signature V2 which it accepted before that date. It would not accept them anymore, and other
+    // nodes do not accept them from its inventory (see docs/specifications/network/storage-request-signatures.md).
+    protected boolean isToPrune(T dataRequest) {
+        return dataRequest.isExpired() ||
+                (dataRequest instanceof SignedRequest signedRequest &&
+                        signedRequest.isRequiredSignatureV2Missing(clock.now()));
+    }
+
+    // A store holds the data of one type, and its key is the simple class name of that type. The store takes the
+    // MetaData of its entries from the StorableTypesRegistry by that class name.
+    protected boolean isClassNameInvalid(String className) {
+        if (storeKey.equals(className)) {
+            return false;
         }
-        return maxMapSize.get();
+        log.warn("Class name {} does not match the store {}", className, storeKey);
+        return true;
     }
 
     protected boolean isExceedingMapSize() {
         int size = persistableStore.getMap().size();
-        boolean isExceeding = size > getMaxMapSize();
+        boolean isExceeding = size > MAX_MAP_SIZE;
         if (isExceeding) {
-            String className = persistableStore.getMap().values().stream()
-                    .findFirst()
-                    .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
-                            return addRequest.getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
-                            return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
-                            return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest addRequest) {
-                            return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        }
-                        return "N/A";
-                    }).orElse("N/A");
-            log.warn("Max. map size reached for {}. map.size()={}, getMaxMapSize={}",
-                    className, size, getMaxMapSize());
+            log.warn("Max. map size reached for {}. map.size()={}, MAX_MAP_SIZE={}", storeKey, size, MAX_MAP_SIZE);
         }
         if (size > 20_000) {
-            String className = persistableStore.getMap().values().stream()
-                    .findFirst()
-                    .map(dataRequest -> {
-                        if (dataRequest instanceof AddAuthenticatedDataRequest addRequest) {
-                            return addRequest.getDistributedData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        } else if (dataRequest instanceof RefreshAuthenticatedDataRequest request) {
-                            return request.getClassName();
-                        } else if (dataRequest instanceof AddAppendOnlyDataRequest addRequest) {
-                            return addRequest.getAppendOnlyData().getClass().getSimpleName();
-                        } else if (dataRequest instanceof AddMailboxRequest addRequest) {
-                            return addRequest.getMailboxSequentialData().getMailboxData().getClassName();
-                        } else if (dataRequest instanceof RemoveMailboxRequest removeRequest) {
-                            return removeRequest.getClassName();
-                        }
-                        return "N/A";
-                    }).orElse("N/A");
-            log.info("Map size for {} reached > 20 000 entries. map.size()={}", className, size);
+            log.info("Map size for {} reached > 20 000 entries. map.size()={}", storeKey, size);
         }
         return isExceeding;
     }

@@ -25,9 +25,7 @@ import bisq.common.timer.Scheduler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
-import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.KeyGeneration;
-import bisq.user.reputation.ReputationDataUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,25 +74,20 @@ public class SeedNodeService implements Service {
 
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final KeyBundleService keyBundleService;
     private final Optional<Config> optionalConfig;
     @Nullable
     private Scheduler startupScheduler, scheduler;
 
     public SeedNodeService(Optional<Config> optionalConfig,
                            NetworkService networkService,
-                           IdentityService identityService,
-                           KeyBundleService keyBundleService) {
+                           IdentityService identityService) {
         this.optionalConfig = optionalConfig;
         this.networkService = networkService;
         this.identityService = identityService;
-        this.keyBundleService = keyBundleService;
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        ReputationDataUtil.cleanupMap(networkService);
-
         optionalConfig.ifPresent(config -> {
             String privateKey = config.getPrivateKey();
             PrivateKey authorizedPrivateKey = KeyGeneration.getPrivateKeyFromHex(privateKey);
@@ -110,17 +103,24 @@ public class SeedNodeService implements Service {
                     networkId,
                     Optional.empty(),
                     config.isStaticPublicKeysProvided());
-            String defaultKeyId = keyBundleService.getDefaultKeyId();
-            KeyPair keyPair = keyBundleService.getOrCreateKeyBundle(defaultKeyId).getKeyPair();
+            // The authorized key owns the authorized data which this node publishes (see
+            // docs/specifications/network/storage-ownership.md)
+            KeyPair authorizedKeyPair = new KeyPair(authorizedPublicKey, authorizedPrivateKey);
+            // Seed nodes of earlier versions published their bonded role with the key pair of their default identity.
+            // Applications use only data which its owner published, so we publish it again with the authorized key pair.
+            KeyPair earlierKeyPair = identityService.getOrCreateDefaultIdentity().getNetworkIdWithKeyPair().getKeyPair();
 
             // Repeat 3 times at startup to republish to ensure the data gets well distributed
-            startupScheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))
+            startupScheduler = Scheduler.run(() -> {
+                        networkService.migratePublisherOfAuthorizedData(earlierKeyPair, authorizedKeyPair);
+                        publishMyBondedRole(authorizedBondedRole, authorizedKeyPair);
+                    })
                     .host(this)
                     .runnableName("publishMyBondedRoleAtStartup")
                     .repeated(10, 60, TimeUnit.SECONDS, 3);
 
             // We have 100 days TTL for the data, we republish after 50 days to ensure the data does not expire
-            scheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, keyPair, authorizedPrivateKey, authorizedPublicKey))
+            scheduler = Scheduler.run(() -> publishMyBondedRole(authorizedBondedRole, authorizedKeyPair))
                     .host(this)
                     .runnableName("publishMyBondedRoleAfter50Days")
                     .periodically(50, TimeUnit.DAYS);
@@ -142,13 +142,7 @@ public class SeedNodeService implements Service {
         return CompletableFuture.completedFuture(true);
     }
 
-    private void publishMyBondedRole(AuthorizedBondedRole authorizedBondedRole,
-                                     KeyPair keyPair,
-                                     PrivateKey authorizedPrivateKey,
-                                     PublicKey authorizedPublicKey) {
-        networkService.publishAuthorizedData(authorizedBondedRole,
-                keyPair,
-                authorizedPrivateKey,
-                authorizedPublicKey);
+    private void publishMyBondedRole(AuthorizedBondedRole authorizedBondedRole, KeyPair authorizedKeyPair) {
+        networkService.publishAuthorizedData(authorizedBondedRole, authorizedKeyPair);
     }
 }

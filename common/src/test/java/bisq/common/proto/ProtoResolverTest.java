@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ProtoResolverTest {
     @Test
     void protoTypeIsTheSecondPackageTokenAndTheSimpleName() {
-        assertEquals("common.NetworkStorageWhiteList", ProtoResolver.getProtoType(NetworkStorageWhiteList.class));
+        assertEquals("common.NetworkProtoResolverMap", ProtoResolver.getProtoType(NetworkProtoResolverMap.class));
     }
 
     @Test

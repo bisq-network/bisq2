@@ -30,4 +30,12 @@ public interface AuthorizedDistributedData extends DistributedData {
     default boolean staticPublicKeysProvided() {
         return false;
     }
+
+    // Oracle and seed nodes of earlier versions published data of some types with the key pair of their network
+    // identity instead of their authorized key pair. For these types, data created before
+    // AuthorizedData.LEGACY_OWNER_CUTOFF_DATE can have another owner than its authorized key. Can be removed when no
+    // such data is valid anymore (see docs/specifications/network/storage-ownership.md).
+    default boolean isLegacyOwnerAccepted() {
+        return false;
+    }
 }

@@ -23,7 +23,6 @@ import bisq.common.util.DateUtils;
 import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -65,10 +64,6 @@ public class NetworkDataValidation {
     public static void validateECPubKey(byte[] pubKey) {
         checkArgument(pubKey.length > 50 && pubKey.length < 100,
                 "Public key not of the expected size. pubKey=" + Arrays.toString(pubKey));
-    }
-
-    public static void validateECPubKey(PublicKey publicKey) {
-        validateECPubKey(publicKey.getEncoded());
     }
 
 
@@ -198,5 +193,13 @@ public class NetworkDataValidation {
     public static void validateBondUserName(String bondUserName) {
         checkArgument(bondUserName.length() < 100,
                 "Bond username too long. bondUserName=" + bondUserName);
+    }
+
+    // A Bisq 1 bond is looked up by its username, so an empty name can never identify a bond. Used for messages
+    // sent to the Bisq 1 bridge. Parsing of received or persisted records keeps using validateBondUserName, so
+    // that a stricter rule cannot make an existing record unreadable.
+    public static void validateRequiredBondUserName(String bondUserName) {
+        checkArgument(!StringUtils.isEmpty(bondUserName), "Bond username must not be null or empty");
+        validateBondUserName(bondUserName);
     }
 }

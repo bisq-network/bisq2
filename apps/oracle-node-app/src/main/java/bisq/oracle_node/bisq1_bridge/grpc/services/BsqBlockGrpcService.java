@@ -179,6 +179,11 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         });
     }
 
+    @Override
+    protected String getSubscriptionDescription() {
+        return "the continuity-aware BSQ block subscription (BsqBlockGrpcService.SubscribeWithSnapshot)";
+    }
+
     void handleSubscriptionEvent(BsqBlockSubscriptionEvent event) {
         switch (event.getPayloadCase()) {
             case SUBSCRIPTIONREADYHEIGHT -> {

@@ -23,5 +23,5 @@ import bisq.common.proto.NetworkProto;
 public interface StorageData extends NetworkProto {
     MetaData getMetaData();
 
-    boolean isDataInvalid(byte[] ownerPubKeyHash);
+    boolean isDataInvalid();
 }

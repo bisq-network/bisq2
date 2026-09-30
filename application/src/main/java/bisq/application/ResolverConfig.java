@@ -42,10 +42,10 @@ import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.chat.reactions.MuSigOpenTradeMessageReaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
-import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.offer.mu_sig.MuSigOfferMessage;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationRequest;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
@@ -146,50 +146,89 @@ public class ResolverConfig {
         NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampV2Request", AuthorizeAccountTimestampV2Request.class, AuthorizeAccountTimestampV2Request.getNetworkMessageResolver());
 
 
-        // If the classes added via `addResolver` are not final classes, we need to add manually the subclasses.
-        // Otherwise, the className gets added from the `addResolver` method call.
+        // The network storage accepts only the types registered here. It takes their MetaData only from the
+        // StorableTypesRegistry, never from the network.
+
+        // DistributedData
+        StorableTypesRegistry.register(UserProfile.class, UserProfile.META_DATA);
+        StorableTypesRegistry.register(AuthorizedOracleNode.class, AuthorizedOracleNode.META_DATA);
+        StorableTypesRegistry.register(AuthorizedBondedRole.class, AuthorizedBondedRole.META_DATA);
+        StorableTypesRegistry.register(AuthorizedAlertData.class, AuthorizedAlertData.META_DATA);
+        StorableTypesRegistry.register(AuthorizedDifficultyAdjustmentData.class, AuthorizedDifficultyAdjustmentData.META_DATA);
+        //noinspection deprecation
+        StorableTypesRegistry.register(AuthorizedMinRequiredReputationScoreData.class, AuthorizedMinRequiredReputationScoreData.META_DATA);
+        StorableTypesRegistry.register(ReleaseNotification.class, ReleaseNotification.META_DATA);
+        StorableTypesRegistry.register(AuthorizedMarketPriceData.class, AuthorizedMarketPriceData.META_DATA);
+        StorableTypesRegistry.register(AuthorizedProofOfBurnData.class, AuthorizedProofOfBurnData.META_DATA);
+        StorableTypesRegistry.register(AuthorizedBondedReputationData.class, AuthorizedBondedReputationData.META_DATA);
+        StorableTypesRegistry.register(AuthorizedAccountAgeData.class, AuthorizedAccountAgeData.META_DATA);
+        StorableTypesRegistry.register(AuthorizedSignedWitnessData.class, AuthorizedSignedWitnessData.META_DATA);
+        StorableTypesRegistry.register(AuthorizedTimestampData.class, AuthorizedTimestampData.META_DATA);
+        StorableTypesRegistry.register(BannedUserProfileData.class, BannedUserProfileData.META_DATA);
+        StorableTypesRegistry.register(MuSigOfferMessage.class, MuSigOfferMessage.META_DATA);
+        StorableTypesRegistry.register(AuthorizedBurningmanListByBlock.class, AuthorizedBurningmanListByBlock.META_DATA);
+        StorableTypesRegistry.register(AccountTimestamp.class, AccountTimestamp.META_DATA);
+        StorableTypesRegistry.register(AuthorizedAccountTimestamp.class, AuthorizedAccountTimestamp.META_DATA);
+
+        // MailboxMessages
+        StorableTypesRegistry.register(AuthorizeAccountAgeRequest.class, AuthorizeAccountAgeRequest.META_DATA);
+        StorableTypesRegistry.register(AuthorizeSignedWitnessRequest.class, AuthorizeSignedWitnessRequest.META_DATA);
+        StorableTypesRegistry.register(AuthorizeTimestampRequest.class, AuthorizeTimestampRequest.META_DATA);
+        StorableTypesRegistry.register(BondedRoleRegistrationRequest.class, BondedRoleRegistrationRequest.META_DATA);
+        StorableTypesRegistry.register(BisqEasyMediationRequest.class, BisqEasyMediationRequest.META_DATA);
+        StorableTypesRegistry.register(BisqEasyMediatorsResponse.class, BisqEasyMediatorsResponse.META_DATA);
+        StorableTypesRegistry.register(MuSigDisputeCaseDataMessage.class, MuSigDisputeCaseDataMessage.META_DATA);
+        StorableTypesRegistry.register(MuSigMediationRequest.class, MuSigMediationRequest.META_DATA);
+        StorableTypesRegistry.register(MuSigMediationStateChangeMessage.class, MuSigMediationStateChangeMessage.META_DATA);
+        StorableTypesRegistry.register(MuSigDisputeCasePaymentDetailsRequest.class, MuSigDisputeCasePaymentDetailsRequest.META_DATA);
+        StorableTypesRegistry.register(MuSigDisputeCasePaymentDetailsResponse.class, MuSigDisputeCasePaymentDetailsResponse.META_DATA);
+        StorableTypesRegistry.register(MuSigArbitrationRequest.class, MuSigArbitrationRequest.META_DATA);
+        StorableTypesRegistry.register(MuSigArbitrationStateChangeMessage.class, MuSigArbitrationStateChangeMessage.META_DATA);
+        StorableTypesRegistry.register(ReportToModeratorMessage.class, ReportToModeratorMessage.META_DATA);
+        StorableTypesRegistry.register(AuthorizeAccountTimestampV1Request.class, AuthorizeAccountTimestampV1Request.META_DATA);
+        StorableTypesRegistry.register(AuthorizeAccountTimestampV2Request.class, AuthorizeAccountTimestampV2Request.META_DATA);
 
         // ChatMessage subclasses
-        NetworkStorageWhiteList.add(CommonPublicChatMessage.class);
-        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyOfferbookMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessage.class);
-        NetworkStorageWhiteList.add(MuSigOpenTradeMessage.class);
+        StorableTypesRegistry.register(CommonPublicChatMessage.class, CommonPublicChatMessage.META_DATA);
+        StorableTypesRegistry.register(TwoPartyPrivateChatMessage.class, TwoPartyPrivateChatMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyOfferbookMessage.class, BisqEasyOfferbookMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyOpenTradeMessage.class, BisqEasyOpenTradeMessage.META_DATA);
+        StorableTypesRegistry.register(MuSigOpenTradeMessage.class, MuSigOpenTradeMessage.META_DATA);
 
         // BisqEasyTradeMessage subclasses
-        NetworkStorageWhiteList.add(BisqEasyReportErrorMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyTakeOfferRequest.class);
-        NetworkStorageWhiteList.add(BisqEasyTakeOfferResponse.class);
-        NetworkStorageWhiteList.add(BisqEasyCancelTradeMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyRejectTradeMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyAccountDataMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyBtcAddressMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmFiatSentMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmFiatReceiptMessage.class);
-        NetworkStorageWhiteList.add(BisqEasyConfirmBtcSentMessage.class);
+        StorableTypesRegistry.register(BisqEasyReportErrorMessage.class, BisqEasyReportErrorMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyTakeOfferRequest.class, BisqEasyTakeOfferRequest.META_DATA);
+        StorableTypesRegistry.register(BisqEasyTakeOfferResponse.class, BisqEasyTakeOfferResponse.META_DATA);
+        StorableTypesRegistry.register(BisqEasyCancelTradeMessage.class, BisqEasyCancelTradeMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyRejectTradeMessage.class, BisqEasyRejectTradeMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyAccountDataMessage.class, BisqEasyAccountDataMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyBtcAddressMessage.class, BisqEasyBtcAddressMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyConfirmFiatSentMessage.class, BisqEasyConfirmFiatSentMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyConfirmFiatReceiptMessage.class, BisqEasyConfirmFiatReceiptMessage.META_DATA);
+        StorableTypesRegistry.register(BisqEasyConfirmBtcSentMessage.class, BisqEasyConfirmBtcSentMessage.META_DATA);
 
         // MuSigTradeMessage subclasses
-        NetworkStorageWhiteList.add(MuSigReportErrorMessage.class);
-        NetworkStorageWhiteList.add(SetupTradeMessage_A.class);
-        NetworkStorageWhiteList.add(SetupTradeMessage_B.class);
-        NetworkStorageWhiteList.add(SetupTradeMessage_C.class);
-        NetworkStorageWhiteList.add(SetupTradeMessage_D.class);
-        NetworkStorageWhiteList.add(SendAccountPayloadMessage.class);
-        NetworkStorageWhiteList.add(SendAccountPayloadAndDepositTxMessage.class);
-        NetworkStorageWhiteList.add(PaymentInitiatedMessage_E.class);
-        NetworkStorageWhiteList.add(PaymentReceivedMessage_F.class);
-        NetworkStorageWhiteList.add(CooperativeClosureMessage_G.class);
-        NetworkStorageWhiteList.add(MuSigCustomPayoutPsbtMessage.class);
-        NetworkStorageWhiteList.add(MuSigMediationResultRejectionMessage.class);
+        StorableTypesRegistry.register(MuSigReportErrorMessage.class, MuSigReportErrorMessage.META_DATA);
+        StorableTypesRegistry.register(SetupTradeMessage_A.class, SetupTradeMessage_A.META_DATA);
+        StorableTypesRegistry.register(SetupTradeMessage_B.class, SetupTradeMessage_B.META_DATA);
+        StorableTypesRegistry.register(SetupTradeMessage_C.class, SetupTradeMessage_C.META_DATA);
+        StorableTypesRegistry.register(SetupTradeMessage_D.class, SetupTradeMessage_D.META_DATA);
+        StorableTypesRegistry.register(SendAccountPayloadMessage.class, SendAccountPayloadMessage.META_DATA);
+        StorableTypesRegistry.register(SendAccountPayloadAndDepositTxMessage.class, SendAccountPayloadAndDepositTxMessage.META_DATA);
+        StorableTypesRegistry.register(PaymentInitiatedMessage_E.class, PaymentInitiatedMessage_E.META_DATA);
+        StorableTypesRegistry.register(PaymentReceivedMessage_F.class, PaymentReceivedMessage_F.META_DATA);
+        StorableTypesRegistry.register(CooperativeClosureMessage_G.class, CooperativeClosureMessage_G.META_DATA);
+        StorableTypesRegistry.register(MuSigCustomPayoutPsbtMessage.class, MuSigCustomPayoutPsbtMessage.META_DATA);
+        StorableTypesRegistry.register(MuSigMediationResultRejectionMessage.class, MuSigMediationResultRejectionMessage.META_DATA);
 
         // ChatMessageReaction subclasses
-        NetworkStorageWhiteList.add(CommonPublicChatMessageReaction.class);
-        NetworkStorageWhiteList.add(TwoPartyPrivateChatMessageReaction.class);
-        NetworkStorageWhiteList.add(BisqEasyOfferbookMessageReaction.class);
-        NetworkStorageWhiteList.add(BisqEasyOpenTradeMessageReaction.class);
-        NetworkStorageWhiteList.add(MuSigOpenTradeMessageReaction.class);
+        StorableTypesRegistry.register(CommonPublicChatMessageReaction.class, CommonPublicChatMessageReaction.META_DATA);
+        StorableTypesRegistry.register(TwoPartyPrivateChatMessageReaction.class, TwoPartyPrivateChatMessageReaction.META_DATA);
+        StorableTypesRegistry.register(BisqEasyOfferbookMessageReaction.class, BisqEasyOfferbookMessageReaction.META_DATA);
+        StorableTypesRegistry.register(BisqEasyOpenTradeMessageReaction.class, BisqEasyOpenTradeMessageReaction.META_DATA);
+        StorableTypesRegistry.register(MuSigOpenTradeMessageReaction.class, MuSigOpenTradeMessageReaction.META_DATA);
 
         // From network module. As it is used as mailbox message we add it here as well.
-        NetworkStorageWhiteList.add(AckMessage.class);
+        StorableTypesRegistry.register(AckMessage.class, AckMessage.META_DATA);
     }
 }

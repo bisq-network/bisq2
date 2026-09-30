@@ -47,8 +47,7 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     public static final int VERSION = 2;
     public static final long TTL = TTL_30_DAYS;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL, HIGH_PRIORITY, AuthorizedSignedWitnessData.class.getSimpleName());
     @ExcludeForHash(excludeOnlyInVersions = {0, 1})
     private final int version;
     private final String profileId;
@@ -136,13 +135,19 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
+    }
+
+    // Oracle nodes of earlier versions published it with the key of their network ID
+    @Override
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override

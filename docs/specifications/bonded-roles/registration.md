@@ -65,7 +65,13 @@ oracle signature check.
 
 Before publishing a successful registration, each oracle persists the complete non-cancellation
 request in its private bridge-request store. The persisted request is the source for subsequent
-revalidation and removal. A cancellation request is not stored as a registration and is ignored if
+revalidation and removal.
+
+The oracle publishes and removes the authorization with its authorized key pair, because the
+authorized key owns authorized data in the network storage (see
+[`../network/storage-ownership.md`](../network/storage-ownership.md)). Oracles of earlier versions
+published it with the key pair of their network identity. At startup, the oracle publishes such
+copies again with its authorized key pair and removes them. A cancellation request is not stored as a registration and is ignored if
 encountered while loading persisted registration state.
 
 Multiple registrations for the same public role may coexist when they have distinct signed

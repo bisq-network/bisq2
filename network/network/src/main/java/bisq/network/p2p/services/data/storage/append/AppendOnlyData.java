@@ -17,11 +17,21 @@
 
 package bisq.network.p2p.services.data.storage.append;
 
+import bisq.common.encoding.canonical.Canonical;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.StorageData;
 
 /**
  * Interface for AppendOnlyData implementations like AccountAgeWitnessData
+ * <p>
+ * Implementations must support canonical encoding. The storage key V2 and the proof of work payload of
+ * AddAppendOnlyDataRequest use it. The canonical encoding of an implementation is its bare message, without the
+ * google.protobuf.Any in which AddAppendOnlyDataRequest carries it:
+ * <ul>
+ *     <li>DEFAULT and SIGNATURE: all non-transient fields; the bytes equal serialize().</li>
+ *     <li>STORAGE_KEY, PROOF_OF_WORK and TRADE_CONTRACT: without the fields annotated with @ExcludeForHash; the bytes
+ *     equal serializeForHash(). Nodes of earlier versions compute the proof of work payload with serializeForHash().</li>
+ * </ul>
  */
-public interface AppendOnlyData extends DistributedData, StorageData {
+public interface AppendOnlyData extends DistributedData, StorageData, Canonical {
 }

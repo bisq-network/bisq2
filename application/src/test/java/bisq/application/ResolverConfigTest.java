@@ -17,8 +17,8 @@
 
 package bisq.application;
 
-import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.proto.ProtoResolver;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.LiteralTree;
@@ -50,16 +50,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Covers the invariants of the resolver registrations which nothing else checks. Each one fails silently in
  * production: the payload is simply refused or cannot be decoded, on every node running the build.
  * <p>
- * The whitelist is the set of store keys the P2P storage accepts, so a missing entry makes StorageService reject that
- * payload type. Adding a payload type is expected to fail that test, add the new name to the list.
+ * StorableTypesRegistry is the set of store keys the P2P storage accepts, so a missing entry makes StorageService
+ * reject that payload type. Adding a payload type is expected to fail that test, add the new name to the list.
  * <p>
- * A registration names one type three times: as the proto type name on the wire, as the class the whitelist is keyed
- * by, and as the owner of the decoder. The wire name is a contract and cannot be derived from the class, since
+ * A registration names one type three times: as the proto type name on the wire, as the class literal, and as the
+ * owner of the decoder. The wire name is a contract and cannot be derived from the class, since
  * renaming a class must not change it, so the three are checked against each other instead, with the deliberately
  * frozen names listed explicitly.
  * <p>
  * Each registry is pinned separately, because a type dropped from one of the two still leaves that registry unable to
- * decode it while the shared whitelist looks untouched.
+ * decode it while StorableTypesRegistry looks untouched.
  */
 class ResolverConfigTest {
     private static final Set<String> EXPECTED_CLASS_NAMES = new TreeSet<>(List.of(
@@ -101,8 +101,6 @@ class ResolverConfigTest {
             "BisqEasyTakeOfferRequest",
             "BisqEasyTakeOfferResponse",
             "BondedRoleRegistrationRequest",
-            "ChatMessage",
-            "ChatMessageReaction",
             "CommonPublicChatMessage",
             "CommonPublicChatMessageReaction",
             "CooperativeClosureMessage_G",
@@ -129,7 +127,6 @@ class ResolverConfigTest {
             "SetupTradeMessage_B",
             "SetupTradeMessage_C",
             "SetupTradeMessage_D",
-            "TradeMessage",
             "TwoPartyPrivateChatMessage",
             "TwoPartyPrivateChatMessageReaction",
             "UserProfile"));
@@ -144,7 +141,7 @@ class ResolverConfigTest {
 
     /**
      * The proto type names each registry must hold. Pinned per registry rather than as one set, because a type
-     * registered in only one of the two still leaves the other unable to decode it while the shared whitelist looks
+     * registered in only one of the two still leaves the other unable to decode it while StorableTypesRegistry looks
      * untouched.
      */
     private static final Set<String> DISTRIBUTED_DATA_TYPES = new TreeSet<>(List.of(
@@ -191,10 +188,10 @@ class ResolverConfigTest {
             "user.AuthorizeTimestampRequest"));
 
     @Test
-    void whiteListMatchesResolverRegistrations() {
+    void storableTypesRegistryHoldsTheExpectedTypes() {
         ResolverConfig.config();
 
-        assertEquals(EXPECTED_CLASS_NAMES, new TreeSet<>(NetworkStorageWhiteList.getClassNames()));
+        assertEquals(EXPECTED_CLASS_NAMES, new TreeSet<>(StorableTypesRegistry.getClassNames()));
     }
 
     @Test

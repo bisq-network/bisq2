@@ -46,8 +46,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private static final int VERSION = 1;
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, ReleaseNotification.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -186,8 +185,8 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
@@ -196,7 +195,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return !Version.isValid(versionString) || releaseNotes.length() > MAX_MESSAGE_LENGTH;
+    public boolean isDataInvalid() {
+        return false;
     }
 }

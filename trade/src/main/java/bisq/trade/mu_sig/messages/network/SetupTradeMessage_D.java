@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -31,6 +32,8 @@ import java.util.Objects;
 @ToString(callSuper = true)
 @Getter
 public final class SetupTradeMessage_D extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(SetupTradeMessage_D.class);
+
     private final PartialSignatures partialSignatures;
     private final byte[] depositPsbt;
 
@@ -83,8 +86,8 @@ public final class SetupTradeMessage_D extends MuSigTradeMessage {
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

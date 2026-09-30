@@ -20,23 +20,21 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.formatter.DataSizeFormatter;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -48,12 +46,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class AuthenticatedDataStorageService extends DataStorageService<AuthenticatedDataRequest> {
     // TODO rename with Handler as only used by StorageService (see https://github.com/bisq-network/bisq2/issues/3691)
+    // publisherPubKeyHash is the hash of the key which published the data: the pubKeyHash of its add request. It
+    // identifies the entry together with the data. The store accepts only the owner of the data as publisher, except
+    // by the transition rule for authorized data (see docs/specifications/network/storage-ownership.md).
     public interface Listener {
-        void onAdded(AuthenticatedData authenticatedData);
+        void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash);
 
-        void onRemoved(AuthenticatedData authenticatedData);
+        void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash);
 
-        default void onRefreshed(AuthenticatedData authenticatedData) {
+        default void onRefreshed(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
         }
     }
 
@@ -65,14 +66,24 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                                            PruneExpiredEntriesService pruneExpiredEntriesService,
                                            String storeName,
                                            String storeKey) {
-        super(persistenceService, storeName, storeKey);
+        this(persistenceService, pruneExpiredEntriesService, storeName, storeKey, new SystemClock());
+    }
+
+    @VisibleForTesting
+    public AuthenticatedDataStorageService(PersistenceService persistenceService,
+                                           PruneExpiredEntriesService pruneExpiredEntriesService,
+                                           String storeName,
+                                           String storeKey,
+                                           Clock clock) {
+        super(persistenceService, storeName, storeKey, clock);
         pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
 
     @Override
     public void onPersistedApplied(DataStore<AuthenticatedDataRequest> persisted) {
 //        maybeLogMapState("onPersistedApplied", persisted);
-//        pruneInvalidAuthorizedData();
+        pruneInvalidAuthorizedData();
+        pruneDataOfOtherOwners();
         handlePersistedPublishDateAware(persisted);
     }
 
@@ -85,63 +96,76 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     public DataStorageResult add(AddAuthenticatedDataRequest request) {
         maybeLogMapState("add", persistableStore);
+
+        if (isClassNameInvalid(request.getDistributedData().getClass().getSimpleName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
+        long now = clock.now();
+        if (request.isRequiredSignatureV2Missing(now)) {
+            log.debug("Signature V2 is missing at add. storageKey={}", request.getStorageKey());
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+
+        // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
+        // Detect them before the signature verification, which is the most expensive check. The check is
+        // repeated inside the lock because the map can change in between.
+        ByteArray storageKey = request.getStorageKey();
+        if (request.equals(persistableStore.getMap().get(storageKey))) {
+            return DataStorageResult.failed().requestAlreadyReceived();
+        }
+
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
-        DistributedData distributedData = authenticatedData.distributedData;
-        byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
-        ByteArray byteArray = new ByteArray(hash);
+        // The owner check needs valid data, for example a valid profile ID as the author of a chat message
+        if (authenticatedData.isDataInvalid()) {
+            log.warn("AuthenticatedData is invalid at add. request={}", request);
+            return DataStorageResult.failed().dataInvalid();
+        }
+        if (authenticatedSequentialData.isOwnerInvalid()) {
+            log.warn("The publisher is not the owner of the data at add. request={}",
+                    StringUtils.truncate(request.toString(), 1500));
+            return DataStorageResult.failed().ownerInvalid();
+        }
+        if (authenticatedData instanceof AuthorizedData authorizedData && authorizedData.isNotAuthorized()) {
+            log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
+            return DataStorageResult.failed().isNotAuthorized();
+        }
+        if (request.isSignaturePubKeyHashInvalid(authenticatedSequentialData.getPubKeyHash())) {
+            log.warn("PublicKey is invalid at add. request={}", request);
+            return DataStorageResult.failed().publicKeyHashInvalid();
+        }
+        if (request.isSignatureInvalid(now)) {
+            log.warn("Signature is invalid at add. request={}", request);
+            return DataStorageResult.failed().signatureInvalid();
+        }
+
         AuthenticatedDataRequest requestFromMap;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (isExceedingMapSize()) {
-                return new DataStorageResult(false).maxMapSizeReached();
+            requestFromMap = map.get(storageKey);
+
+            if (requestFromMap == null && isExceedingMapSize()) {
+                return DataStorageResult.failed().maxMapSizeReached();
             }
 
-            requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
-                return new DataStorageResult(false).requestAlreadyReceived();
+                return DataStorageResult.failed().requestAlreadyReceived();
             }
 
-            if (requestFromMap != null && authenticatedSequentialData.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
-                return new DataStorageResult(false).sequenceNrInvalid();
+            if (isSequenceNumberSigned(requestFromMap) && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (authenticatedSequentialData.isExpired()) {
-                log.debug("AddAuthenticatedDataRequest with {} is expired on {}",
-                        distributedData.getClass().getSimpleName(),
-                        new Date(authenticatedSequentialData.getCreated() + distributedData.getMetaData().getTtl())
-                );
-                log.debug("Data is expired at add. request={}", request);
-                return new DataStorageResult(false).expired();
+            if (authenticatedData.getDistributedData() instanceof PublishDateAware publishDateAware) {
+                publishDateAware.setPublishDate(request.getCreated());
             }
 
-            if (authenticatedData.isDataInvalid(authenticatedSequentialData.getPubKeyHash())) {
-                log.warn("AuthenticatedData is invalid at add. request={}", request);
-                return new DataStorageResult(false).dataInvalid();
-            }
-
-            if (authenticatedData instanceof AuthorizedData authorizedData) {
-                if (authorizedData.isNotAuthorized()) {
-                    log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
-                    return new DataStorageResult(false).isNotAuthorized();
-                }
-            }
-
-            if (request.isPublicKeyInvalid()) {
-                log.warn("PublicKey is invalid at add. request={}", request);
-                return new DataStorageResult(false).publicKeyHashInvalid();
-            }
-
-            if (request.isSignatureInvalid()) {
-                log.warn("Signature is invalid at add. request={}", request);
-                return new DataStorageResult(false).signatureInvalid();
-            }
-
-            if (distributedData instanceof PublishDateAware publishDateAware) {
-                publishDateAware.setPublishDate(authenticatedSequentialData.getCreated());
-            }
-
-            map.put(byteArray, request);
+            map.put(storageKey, request);
 
             // In case we only updated the seq number we still want to broadcast and update the listeners.
             // It is a valid use case that we have both an add and remove data request, and we get repeated sequences
@@ -153,40 +177,68 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         listeners.forEach(listener -> {
             try {
-                listener.onAdded(authenticatedData);
+                listener.onAdded(authenticatedData, authenticatedSequentialData.getPubKeyHash());
             } catch (Exception e) {
                 log.error("Calling onAdded at listener {} failed", listener, e);
             }
         });
+
         maybeLogMapState("add success", persistableStore);
-        return new DataStorageResult(true);
+        return DataStorageResult.success();
     }
 
     public DataStorageResult remove(RemoveAuthenticatedDataRequest request) {
         maybeLogMapState("remove ", persistableStore);
-        ByteArray byteArray = new ByteArray(request.getHash());
+
+        if (isClassNameInvalid(request.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
+        long now = clock.now();
+        if (request.isRequiredSignatureV2Missing(now)) {
+            log.debug("Signature V2 is missing at remove. storageKey={}", request.getStorageKey());
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+
+        if (request.isSignatureInvalid(now)) {
+            log.warn("Signature is invalid at remove. request={}", request);
+            return DataStorageResult.failed().signatureInvalid();
+        }
+
+        ByteArray storageKey = request.getStorageKey();
         AuthenticatedData authenticatedDataFromMap;
+        byte[] publisherPubKeyHash;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            AuthenticatedDataRequest requestFromMap = map.get(byteArray);
+            AuthenticatedDataRequest requestFromMap = map.get(storageKey);
             if (requestFromMap == null) {
-                log.debug("No entry at remove. hash={}", byteArray);
+                log.debug("No entry at remove. hash={}", storageKey);
+
+                if (isExceedingMapSize()) {
+                    return DataStorageResult.failed().maxMapSizeReached();
+                }
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
-                map.put(byteArray, request);
+                map.put(storageKey, request);
                 persist();
-                return new DataStorageResult(true).noEntry();
+                return DataStorageResult.success().noEntry();
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                // log.debug("Already removed. request={}, map={}", request, map);
-                // We have had the entry already removed.
-                if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+                // A verified V2 removal supersedes an untrusted V1 sequence. Once upgraded, keep only
+                // higher signed sequences so a V1 request cannot discard the trusted ordering information.
+                if (request.isSignatureV2Present() &&
+                        (!requestFromMap.isSignatureV2Present() || !request.isSequenceNrInvalid(requestFromMap.getSequenceNumber()))) {
                     // We update the map with the new request with the fresh sequence number.
-                    map.put(byteArray, request);
+                    map.put(storageKey, request);
                     persist();
+                    return DataStorageResult.success().alreadyRemoved();
                 }
-                return new DataStorageResult(true).alreadyRemoved();
+                return DataStorageResult.failed().alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddProtectedDataRequest
@@ -197,112 +249,122 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // We have an entry, lets validate if we can remove it
             AuthenticatedSequentialData dataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
             authenticatedDataFromMap = dataFromMap.getAuthenticatedData();
+            publisherPubKeyHash = dataFromMap.getPubKeyHash();
             if (request.isSequenceNrInvalid(dataFromMap.getSequenceNumber())) {
                 log.warn("SequenceNr has not increased at remove. request={}", request);
-                return new DataStorageResult(false).sequenceNrInvalid();
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyHashInvalid(dataFromMap)) {
+            if (request.isSignaturePubKeyHashInvalid(dataFromMap.getPubKeyHash())) {
                 log.warn("PublicKey hash is invalid at remove. request={}", request);
-                return new DataStorageResult(false).publicKeyHashInvalid();
+                return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
-            if (request.isSignatureInvalid()) {
-                log.warn("Signature is invalid at remove. request={}", request);
-                return new DataStorageResult(false).signatureInvalid();
-            }
-
-            // As metaData from distributedData is taken from the users current code base but the one from RemoveAuthenticatedDataRequest
-            // is from the senders version (taken from senders distributedData) it could be different if both users had
-            // different versions and metaData has changed between those versions.
-            // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
-            MetaData metaDataFromDistributedData = addRequestFromMap.getAuthenticatedSequentialData().getAuthenticatedData().getMetaData();
-            if (!request.getFallbackMetaData().equals(metaDataFromDistributedData)) {
-                request.setMetaDataFromDistributedData(Optional.of(metaDataFromDistributedData));
-                log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
-                                "metadata with the one we have from the associated distributed data." +
-                                "{} vs. {}",
-                        request.getFallbackMetaData(),
-                        metaDataFromDistributedData);
-            }
-
-            map.put(byteArray, request);
+            map.put(storageKey, request);
         }
 
         persist();
 
         listeners.forEach(listener -> {
             try {
-                listener.onRemoved(authenticatedDataFromMap);
+                listener.onRemoved(authenticatedDataFromMap, publisherPubKeyHash);
             } catch (Exception e) {
                 log.error("Calling onRemoved at listener {} failed", listener, e);
             }
         });
+
         maybeLogMapState("remove success", persistableStore);
-        return new DataStorageResult(true).removedData(authenticatedDataFromMap);
+        return DataStorageResult.success();
     }
 
-    public DataStorageResult refresh(RefreshAuthenticatedDataRequest request) {
+    public DataStorageResult refresh(RefreshAuthenticatedDataRequest refreshRequest) {
         maybeLogMapState("refresh ", persistableStore);
-        ByteArray byteArray = new ByteArray(request.getHash());
-        AddAuthenticatedDataRequest updatedRequest;
+
+        if (isClassNameInvalid(refreshRequest.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
+        // A refresh request needs signature V2, also before the cutoff date of signature V1. Nodes of earlier versions
+        // sign only the hash of the data, which covers neither the sequence number nor the creation date (see
+        // docs/specifications/network/storage-request-signatures.md).
+        if (!refreshRequest.isSignatureV2Present()) {
+            log.debug("Signature V2 is missing at refresh. storageKey={}", refreshRequest.getStorageKey());
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+
+        if (refreshRequest.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+
+        ByteArray storageKey = refreshRequest.getStorageKey();
+        AddAuthenticatedDataRequest updatedAddRequest;
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            AuthenticatedDataRequest requestFromMap = map.get(byteArray);
+            AuthenticatedDataRequest requestFromMap = map.get(storageKey);
 
             if (requestFromMap == null) {
-                return new DataStorageResult(false).noEntry();
+                return DataStorageResult.failed().noEntry();
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                return new DataStorageResult(false).alreadyRemoved();
+                return DataStorageResult.failed().alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddProtectedDataRequest
             checkArgument(requestFromMap instanceof AddAuthenticatedDataRequest,
                     "requestFromMap expected be type of AddAuthenticatedDataRequest");
             AddAuthenticatedDataRequest addRequestFromMap = (AddAuthenticatedDataRequest) requestFromMap;
-            // We have an entry, lets validate if we can remove it
-            AuthenticatedSequentialData sequentialData = addRequestFromMap.getAuthenticatedSequentialData();
-            if (request.isSequenceNrInvalid(sequentialData.getSequenceNumber())) {
-                log.warn("SequenceNr is invalid at refresh. request={}", request);
-                // Sequence number has not increased
-                return new DataStorageResult(false).sequenceNrInvalid();
+            AuthenticatedSequentialData sequentialDataFromMap = addRequestFromMap.getAuthenticatedSequentialData();
+            if (refreshRequest.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
+                // The sequence number has not increased. This is the normal case for the copies of a refresh request
+                // which arrive from other peers after the node applied it.
+                log.debug("SequenceNr is invalid at refresh. storageKey={}", storageKey);
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyInvalid(sequentialData)) {
-                log.warn("PublicKey is invalid at refresh. request={}", request);
+            if (refreshRequest.isSignaturePubKeyHashInvalid(sequentialDataFromMap.getPubKeyHash())) {
+                log.warn("PublicKey is invalid at refresh. request={}", refreshRequest);
                 // Hash of pubKey of data does not match provided one
-                return new DataStorageResult(false).publicKeyHashInvalid();
+                return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
-            if (request.isSignatureInvalid()) {
-                log.warn("Signature is invalid at refresh. request={}", request);
-                return new DataStorageResult(false).signatureInvalid();
+            // We use the creation date, sequence number and signatures from our RefreshAuthenticatedDataRequest
+            // and the rest from our existing AddAuthenticatedDataRequest to create an updated AddAuthenticatedDataRequest.
+            // The signature of the RefreshAuthenticatedDataRequest is created with the full data of an
+            // AddAuthenticatedDataRequest at the owner's side, thus the signature will match the new object.
+            updatedAddRequest = AddAuthenticatedDataRequest.from(addRequestFromMap, refreshRequest);
+            if (updatedAddRequest.isSignatureV2Invalid()) {
+                log.warn("Signature is invalid at refresh. request={}", refreshRequest);
+                return DataStorageResult.failed().signatureInvalid();
             }
 
-            long refreshDate = request.getCreated();
-            if (sequentialData.getDistributedData() instanceof PublishDateAware publishDateAware) {
-                publishDateAware.setPublishDate(refreshDate);
+            // The refresh changes the creation date, on which the transition rule for the owner of authorized data
+            // depends (see docs/specifications/network/storage-ownership.md)
+            if (updatedAddRequest.getAuthenticatedSequentialData().isOwnerInvalid()) {
+                log.warn("The publisher is not the owner of the data at refresh. request={}", refreshRequest);
+                return DataStorageResult.failed().ownerInvalid();
             }
-            AuthenticatedSequentialData updatedData = AuthenticatedSequentialData.from(sequentialData, request.getSequenceNumber(), refreshDate);
-            updatedRequest = new AddAuthenticatedDataRequest(updatedData,
-                    addRequestFromMap.getSignature(),
-                    addRequestFromMap.getOwnerPublicKey());
 
-            map.put(byteArray, updatedRequest);
+            if (sequentialDataFromMap.getDistributedData() instanceof PublishDateAware publishDateAware) {
+                publishDateAware.setPublishDate(updatedAddRequest.getCreated());
+            }
+
+            map.put(storageKey, updatedAddRequest);
         }
 
         persist();
+
+        AuthenticatedData authenticatedData = updatedAddRequest.getAuthenticatedSequentialData().getAuthenticatedData();
         listeners.forEach(listener -> {
             try {
-                listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().getAuthenticatedData());
+                listener.onRefreshed(authenticatedData, updatedAddRequest.getAuthenticatedSequentialData().getPubKeyHash());
             } catch (Exception e) {
                 log.error("Calling onRefreshed at listener {} failed", listener, e);
             }
         });
+
         maybeLogMapState("refresh success", persistableStore);
-        return new DataStorageResult(true);
+        return DataStorageResult.success();
     }
 
     public void addListener(Listener listener) {
@@ -313,39 +375,51 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         listeners.remove(listener);
     }
 
-    @VisibleForTesting
-    public int getSequenceNumber(byte[] hash) {
-        ByteArray byteArray = new ByteArray(hash);
-        int sequenceNumber = 0;
+    // The sequence number for the next request of the owner. A relay can change the sequence number of a removal without
+    // signature V2, so it is not used. Such a removal does not reject a request of any sequence number (see
+    // docs/specifications/network/storage-request-ordering.md).
+    public int getNextSequenceNumber(ByteArray storageKey) {
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (map.containsKey(byteArray)) {
-                sequenceNumber = map.get(byteArray).getSequenceNumber();
+            AuthenticatedDataRequest requestFromMap = map.get(storageKey);
+            if (!isSequenceNumberSigned(requestFromMap)) {
+                return 1;
             }
+            return Math.incrementExact(requestFromMap.getSequenceNumber());
         }
-        return sequenceNumber;
     }
 
+    // Both signature versions of an add request cover its sequence number. Only signature V2 of a removal covers it.
+    private static boolean isSequenceNumberSigned(AuthenticatedDataRequest requestFromMap) {
+        boolean isAdd = requestFromMap instanceof AddAuthenticatedDataRequest;
+        boolean isRemoveWithSignatureV2 = requestFromMap instanceof RemoveAuthenticatedDataRequest &&
+                requestFromMap.isSignatureV2Present();
+        return isAdd || isRemoveWithSignatureV2;
+    }
+
+    // Removes the entries which have expired, and those without signature V2 when the node requires it (see isToPrune)
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
                 .filter(entry -> {
                     AuthenticatedDataRequest dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
+                    boolean isToPrune = isToPrune(dataRequest);
+                    if (isToPrune) {
                         prunedAndExpiredDataRequests.add(dataRequest);
                     }
-                    return isExpired;
+                    return isToPrune;
                 })
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
+            log.info("We remove {} entries from our {} map which have expired or have no signature V2",
+                    expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> {
                 persistableStore.getMap().remove(entry.getKey());
-                if (entry.getValue() instanceof AddAuthenticatedDataRequest) {
-                    AuthenticatedData data = ((AddAuthenticatedDataRequest) entry.getValue()).getAuthenticatedSequentialData().getAuthenticatedData();
+                if (entry.getValue() instanceof AddAuthenticatedDataRequest addRequest) {
+                    AuthenticatedSequentialData sequentialData = addRequest.getAuthenticatedSequentialData();
+                    AuthenticatedData data = sequentialData.getAuthenticatedData();
                     listeners.forEach(listener -> {
                         try {
-                            listener.onRemoved(data);
+                            listener.onRemoved(data, sequentialData.getPubKeyHash());
                         } catch (Exception e) {
                             log.error("Calling onRemoved at listener {} failed", listener, e);
                         }
@@ -378,11 +452,27 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         }
     }
 
+    // Earlier versions did not check at add whether the publisher is the owner of the data. Remove and refresh
+    // requests of the publisher would affect the application objects of the owner (see
+    // docs/specifications/network/storage-ownership.md).
+    private void pruneDataOfOtherOwners() {
+        Set<ByteArray> storageKeys = persistableStore.getMap().entrySet().stream()
+                .filter(entry -> entry.getValue() instanceof AddAuthenticatedDataRequest addRequest &&
+                        addRequest.getAuthenticatedSequentialData().isOwnerInvalid())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+        if (!storageKeys.isEmpty()) {
+            log.warn("We prune {} AddAuthenticatedDataRequests which were not published by the owner of their data",
+                    storageKeys.size());
+            storageKeys.forEach(storageKey -> persistableStore.getMap().remove(storageKey));
+            persist();
+        }
+    }
+
     private void handlePersistedPublishDateAware(DataStore<AuthenticatedDataRequest> persisted) {
         persisted.getMap().values().forEach(authenticatedDataRequest -> {
-            // We do not handle RefreshAuthenticatedDataRequest as we would receive a new
-            // AddAuthenticatedDataRequest from inventoryRequest anyway as RefreshAuthenticatedDataRequests are
-            // not included in inventoryRequests.
+            // The map holds no RefreshAuthenticatedDataRequest: a refresh replaces the stored
+            // AddAuthenticatedDataRequest.
             if (authenticatedDataRequest instanceof AddAuthenticatedDataRequest request) {
                 DistributedData distributedData = request.getDistributedData();
                 if (distributedData instanceof PublishDateAware publishDateAware) {
@@ -415,7 +505,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                     removed.size(),
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
-                    getMaxMapSize());
+                    MAX_MAP_SIZE);
             boolean showDetails = false;
             if (showDetails) {
                 long now = System.currentTimeMillis();

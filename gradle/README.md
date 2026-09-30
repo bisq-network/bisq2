@@ -1,5 +1,29 @@
 # Gradle Notes
 
+## Gradle Wrapper Verification
+
+`verifyGradleWrapperSecurity` (part of the root `check`) and the CI workflow compare `gradlew`, `gradlew.bat`,
+`gradle/wrapper/gradle-wrapper.jar` and `gradle/wrapper/gradle-wrapper.properties` with the approved checksums in
+`gradle/wrapper/gradle-wrapper.sha256`. The task also requires `distributionUrl` to point to `services.gradle.org` for
+`releaseBuild.gradleVersion` with a pinned `distributionSha256Sum`.
+
+The checksums cover the committed bytes. `.gitattributes` disables line-ending conversion for `gradlew.bat` (`-text`),
+which is committed with CRLF line endings as Gradle generates it; the other files are committed with LF. Do not
+renormalize these files.
+
+After a reviewed wrapper change, for example `./gradlew wrapper --gradle-version <version>`, recompute and review the
+checksums and update `gradle/wrapper/gradle-wrapper.sha256`, `distributionSha256Sum` and `releaseBuild.gradleVersion`
+in the same change:
+
+```bash
+sha256sum gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties
+```
+
+A checksum mismatch means the working copy differs from the approved bytes. Review the difference; do not update the
+checksum file to match an unreviewed file.
+
+See [the specification](../docs/specifications/development/gradle-wrapper-verification.md).
+
 ## Dependency Verification
 
 Bisq 2 uses Gradle dependency verification with:

@@ -20,6 +20,7 @@ package bisq.trade.mu_sig.messages.network;
 import bisq.account.accounts.AccountPayload;
 import bisq.common.data.ByteArray;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class SendAccountPayloadAndDepositTxMessage extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(SendAccountPayloadAndDepositTxMessage.class);
+
     private final ByteArray depositTx;
     private final AccountPayload<?> accountPayload;
 
@@ -85,7 +88,7 @@ public final class SendAccountPayloadAndDepositTxMessage extends MuSigTradeMessa
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

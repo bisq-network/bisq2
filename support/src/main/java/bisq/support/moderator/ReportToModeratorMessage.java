@@ -41,8 +41,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public final class ReportToModeratorMessage implements MailboxMessage, ExternalNetworkMessage {
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, ReportToModeratorMessage.class.getSimpleName());
     private final long date;
     private final String reporterUserProfileId;
     private final UserProfile accusedUserProfile;
@@ -105,7 +104,7 @@ public final class ReportToModeratorMessage implements MailboxMessage, ExternalN
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

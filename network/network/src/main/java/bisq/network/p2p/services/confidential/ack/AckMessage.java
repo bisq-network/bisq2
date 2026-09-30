@@ -18,8 +18,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode
 @ToString
 public final class AckMessage implements MailboxMessage, Response {
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_5_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_5_DAYS, LOW_PRIORITY, AckMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String id;
 
@@ -57,8 +56,8 @@ public final class AckMessage implements MailboxMessage, Response {
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.05, 0.1);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

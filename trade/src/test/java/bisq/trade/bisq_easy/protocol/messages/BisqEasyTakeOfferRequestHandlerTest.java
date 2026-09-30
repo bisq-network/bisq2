@@ -90,14 +90,10 @@ class BisqEasyTakeOfferRequestHandlerTest {
         when(message.getBisqEasyContract()).thenReturn(takersContract);
         when(message.getSender()).thenReturn(takerNetworkId);
 
-        // The offer is matched through an existing trade with the same offer id.
+        // The offer is matched through a trade whose contract we have signed.
         when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
                 .thenReturn(new ObservableSet<>());
-        BisqEasyTrade existingTrade = mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS);
-        when(existingTrade.getOffer().getId()).thenReturn("offer-id");
-        ObservableSet<BisqEasyTrade> trades = new ObservableSet<>();
-        trades.add(existingTrade);
-        when(serviceProvider.getBisqEasyTradeService().getTrades()).thenReturn(trades);
+        when(serviceProvider.getBisqEasyTradeService().hasSignedTradeWithOffer(takersOffer)).thenReturn(true);
         when(serviceProvider.getContractService().arePublicKeysMatching(any(java.security.PublicKey.class), any(java.security.PublicKey.class))).thenReturn(true);
 
         BisqEasyTakeOfferRequestHandler handler =

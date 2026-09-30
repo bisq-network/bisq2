@@ -22,7 +22,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,11 +29,13 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 
 @Slf4j
 @ToString(callSuper = true)
-@Getter
 @EqualsAndHashCode(callSuper = true)
 public abstract class BisqEasyTradeMessage extends TradeMessage {
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    // All Bisq Easy trade messages use the same storage policy. Each subclass needs its own MetaData instance,
+    // because the class name selects the store.
+    protected static MetaData createMetaData(Class<? extends BisqEasyTradeMessage> tradeMessageClass) {
+        return new MetaData(TTL_10_DAYS, HIGH_PRIORITY, tradeMessageClass.getSimpleName());
+    }
 
     protected BisqEasyTradeMessage(String id, String tradeId, String protocolVersion, NetworkId sender, NetworkId receiver) {
         super(id, tradeId, protocolVersion, sender, receiver);
