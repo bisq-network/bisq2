@@ -19,11 +19,11 @@ package bisq.offer.options;
 
 import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.encoding.Hex;
 import bisq.common.util.ByteArrayUtils;
 import bisq.security.DigestUtil;
-import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@Slf4j
 public class OfferOptionUtil {
     public static List<OfferOption> fromTradeTermsAndReputationScore(String makersTradeTerms,
                                                                      long requiredTotalReputationScore) {
@@ -115,13 +114,25 @@ public class OfferOptionUtil {
                 .collect(Collectors.toSet());
     }
 
+    // The option carries what a taker needs to check compatibility (country and bank data)
+    // and what the maker needs to find the account again (the salted id and payload hash);
+    // the account id and payload themselves never leave the maker.
+    public static AccountOption createAccountOption(Account<?, ?> account, String offerId) {
+        AccountPayload<?> accountPayload = account.getAccountPayload();
+        return new AccountOption(account.getPaymentMethod(),
+                createdSaltedAccountId(account.getId(), offerId),
+                AccountUtils.getCountryCode(accountPayload),
+                AccountUtils.getAcceptedCountryCodes(accountPayload),
+                AccountUtils.getBankId(accountPayload),
+                AccountUtils.getAcceptedBanks(accountPayload),
+                createSaltedAccountPayloadHash(accountPayload, offerId));
+    }
+
     // Account ID stays private to user. We use offerId for hashing so that it's always a new string in each offer.
     // The account ID is added to the offer so that maker knows which account was assigned once a taker takes the offer.
     public static String createdSaltedAccountId(String accountId, String offerId) {
         String input = accountId + offerId;
-        log.info("createdSaltedAccountId accountId={}; offerId={}", accountId, offerId);
         byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
-        log.info("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
         return Hex.encode(hash);
     }
 
@@ -137,8 +148,6 @@ public class OfferOptionUtil {
         Set<Account<? extends PaymentMethod<?>, ?>> accountSet = accounts.stream()
                 .filter(account -> {
                     String salted = createdSaltedAccountId(account.getId(), offerId);
-                    log.error("findAccountFromSaltedAccountId accountId={}; offerId={}", account.getId(), offerId);
-                    log.error("findAccountFromSaltedAccountId \n{}\n{}", salted, saltedAccountId);
 
                     return saltedAccountId.equals(salted);
                 })
