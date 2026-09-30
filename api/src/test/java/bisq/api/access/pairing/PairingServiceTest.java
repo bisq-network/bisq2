@@ -26,6 +26,7 @@ import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.common.file.FileReaderUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import java.io.IOException;
@@ -33,6 +34,7 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Base64;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -134,7 +136,8 @@ class PairingServiceTest {
         PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
         String clientName = "a".repeat(PairingService.MAX_CLIENT_NAME_LENGTH + 50);
 
-        ClientProfile clientProfile = service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName);
+        ClientProfile clientProfile =
+                service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName).clientProfile();
 
         assertEquals(PairingService.MAX_CLIENT_NAME_LENGTH, clientProfile.getClientName().length());
     }
@@ -146,7 +149,8 @@ class PairingServiceTest {
         PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
         String clientName = "a".repeat(PairingService.MAX_CLIENT_NAME_LENGTH - 1) + "\uD83D\uDE00".repeat(5);
 
-        ClientProfile clientProfile = service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName);
+        ClientProfile clientProfile =
+                service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName).clientProfile();
 
         String cappedClientName = clientProfile.getClientName();
         assertEquals(PairingService.MAX_CLIENT_NAME_LENGTH - 1, cappedClientName.length());
@@ -163,7 +167,7 @@ class PairingServiceTest {
 
         assertDoesNotThrow(() -> {
             ClientProfile clientProfile =
-                    service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName);
+                    service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName).clientProfile();
             assertEquals("Pixel", clientProfile.getClientName());
         });
     }
@@ -192,10 +196,30 @@ class PairingServiceTest {
         PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
 
         ClientProfile clientProfile =
-                service.requestPairing(PairingService.VERSION, pairingCode.getId(), "Pixel 8");
+                service.requestPairing(PairingService.VERSION, pairingCode.getId(), "Pixel 8").clientProfile();
 
         verify(apiAccessStoreService).putClientProfileAndPermissions(clientProfile.getClientId(),
                 clientProfile,
                 grantAll);
+    }
+
+    @Test
+    void pairingStoresOnlyAHashOfTheSecretItHandsOut(@TempDir Path tempDir) throws InvalidPairingRequestException {
+        // The secret exists once, in the pairing result; what is stored authenticates it but
+        // cannot be turned back into it or presented as it.
+        ApiAccessStoreService apiAccessStoreService = mock(ApiAccessStoreService.class);
+        PairingService service = pairingService(tempDir, 60, apiAccessStoreService, mock(PermissionService.class));
+        PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
+
+        NewPairing newPairing = service.requestPairing(PairingService.VERSION, pairingCode.getId(), "Pixel 8");
+
+        ArgumentCaptor<ClientProfile> storedCaptor = ArgumentCaptor.forClass(ClientProfile.class);
+        verify(apiAccessStoreService).putClientProfileAndPermissions(any(), storedCaptor.capture(), any());
+        ClientProfile stored = storedCaptor.getValue();
+        assertTrue(stored.matchesSecret(newPairing.clientSecret()));
+        assertFalse(stored.matchesSecret(Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(stored.getClientSecretHash())));
+        String persistedSecretField = stored.toProto(false).getClientSecret();
+        assertTrue(persistedSecretField.isEmpty(), "plaintext field must stay empty on write");
     }
 }

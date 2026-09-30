@@ -51,8 +51,12 @@ message PermissionSet {
 
 message ClientProfile {
   string clientId = 1;
+  // Legacy, read only. Stores written before secrets were hashed carry the plaintext here; it is
+  // hashed into clientSecretHash on load and never written again.
   string clientSecret = 2;
   string clientName = 3;
+  // SHA-256 over the UTF-8 bytes of the secret as the client presents it.
+  bytes clientSecretHash = 4;
 }
 
 

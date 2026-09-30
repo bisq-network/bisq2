@@ -103,6 +103,8 @@ public class ClientRevocationService {
      * Run at startup because the state a failed cleanup leaves behind is not all transient. Live
      * connections do not survive a restart, but push registrations do, so without this a client
      * whose cleanup failed and was never retried would keep receiving notifications indefinitely.
+     * Runs on every boot, also with the API transports disabled: the store is read and rewritten
+     * regardless, and what it dropped exists only in memory until the handlers have run.
      */
     public void completeInterruptedRevocations() {
         pairingService.getClientProfiles().stream()
@@ -112,5 +114,12 @@ public class ClientRevocationService {
                     log.warn("Completing the interrupted revocation of client {}", clientId);
                     revokeClient(clientId);
                 });
+        // Dropped by the store for an unusable credential, so profile and grant are already gone
+        // and only the handlers have work left: a push registration still owned by such a client
+        // would keep receiving notifications and refuse the same device after it pairs again.
+        pairingService.getClientIdsDroppedDuringLoad().forEach(clientId -> {
+            log.warn("Cleaning up after client {} whose stored credential was unusable", clientId);
+            revokeClient(clientId);
+        });
     }
 }
