@@ -376,17 +376,19 @@ tasks.register("buildAll") {
     group = "build"
     description = "Build the entire project leaving it ready to work with."
 
+    // Builds all builds of the composite build in one Gradle run. A run configures the whole composite build, so a
+    // run per build repeats this work, and one run can execute the tasks of different builds in parallel. The run is
+    // a new process, so that after cleanAll it starts with a new configuration.
     doLast {
-        (listOf(
+        val buildTasks = listOf(
             ":build-logic:build",
             "build",
         ) + compositeBuilds
             .filter { it.taskPath != ":build-logic" }
-            .map { "${it.taskPath}:build" }).forEach {
-            exec {
-                println("Executing Build: $it")
-                commandLine(getGradleCommand(), it)
-            }
+            .map { "${it.taskPath}:build" }
+        exec {
+            println("Executing Build: ${buildTasks.joinToString(" ")}")
+            commandLine(listOf(getGradleCommand()) + buildTasks)
         }
     }
 }
