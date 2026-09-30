@@ -100,6 +100,15 @@ One such entry must not remove the other entries of the response.
 
 Limitation: a requester of an earlier version drops the whole response when it cannot parse one entry.
 
+### Diagnostics for skipped entries
+
+The requester reports at most three failed entry conversions per response. Nested resolvers must not emit separate
+failure diagnostics that bypass this limit. These diagnostics contain only the request type and its serialized size.
+They do not include received field values, raw exception messages or exception causes, which can contain those values.
+
+Reason: one response can contain many entries from an unknown type. Logging every failure amplifies the processing
+and disk cost of that response. Users also share log files, so received values must not be copied into the diagnostics.
+
 ## Configuration
 
 Nodes of this version support both filter types, prefer `HASH_SET_V2` and fall back to `HASH_SET`:
