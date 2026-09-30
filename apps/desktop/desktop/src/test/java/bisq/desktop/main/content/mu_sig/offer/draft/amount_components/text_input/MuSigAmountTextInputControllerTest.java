@@ -19,16 +19,14 @@ package bisq.desktop.main.content.mu_sig.offer.draft.amount_components.text_inpu
 
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
-import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.desktop.testutil.DesktopUiTest;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
-import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -38,8 +36,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(ApplicationExtension.class)
-class MuSigAmountTextInputControllerTest extends TestFxHeadlessSupport {
+@DesktopUiTest
+class MuSigAmountTextInputControllerTest {
     private final List<Optional<Monetary>> userEdits = new ArrayList<>();
     private MuSigAmountTextInputController controller;
     private TextField textField;
