@@ -23,6 +23,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -181,7 +182,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 .setSignatureV2(ByteString.copyFrom(signatureV2));
     }
 
-    public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto) {
+    public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto)
+            throws UnresolvableProtobufException {
         byte[] receiverPublicKeyBytes = proto.getReceiverPublicKeyBytes().toByteArray();
         try {
             PublicKey receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);

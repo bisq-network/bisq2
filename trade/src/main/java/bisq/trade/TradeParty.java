@@ -19,6 +19,7 @@ package bisq.trade;
 
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.identity.NetworkId;
@@ -56,7 +57,8 @@ public abstract class TradeParty implements PersistableProto {
         return builder;
     }
 
-    public static BisqEasyTradeParty protoToBisqEasyTradeParty(bisq.trade.protobuf.TradeParty proto) {
+    public static BisqEasyTradeParty protoToBisqEasyTradeParty(bisq.trade.protobuf.TradeParty proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case BISQEASYTRADEPARTY -> BisqEasyTradeParty.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
@@ -64,7 +66,8 @@ public abstract class TradeParty implements PersistableProto {
         };
     }
 
-    public static MuSigTradeParty protoToMuSigTradeParty(bisq.trade.protobuf.TradeParty proto) {
+    public static MuSigTradeParty protoToMuSigTradeParty(bisq.trade.protobuf.TradeParty proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case MUSIGTRADEPARTY -> MuSigTradeParty.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);

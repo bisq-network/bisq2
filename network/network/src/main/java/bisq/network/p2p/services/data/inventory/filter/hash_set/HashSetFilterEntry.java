@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -55,7 +56,8 @@ public final class HashSetFilterEntry implements NetworkProto, Comparable<HashSe
                 .setSequenceNumber(sequenceNumber);
     }
 
-    public static HashSetFilterEntry fromProto(bisq.network.protobuf.HashSetFilterEntry proto) {
+    public static HashSetFilterEntry fromProto(bisq.network.protobuf.HashSetFilterEntry proto)
+            throws UnresolvableProtobufException {
         return new HashSetFilterEntry(proto.getHash().toByteArray(), proto.getSequenceNumber());
     }
 

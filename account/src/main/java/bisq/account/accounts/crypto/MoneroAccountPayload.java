@@ -20,6 +20,7 @@ package bisq.account.accounts.crypto;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -127,7 +128,8 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
         return builder;
     }
 
-    public static MoneroAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static MoneroAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
         var monero = cryptoAssetAccountPayload.getMoneroAccountPayload();
         return new MoneroAccountPayload(

@@ -21,6 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -58,7 +59,7 @@ public final class RevolutAccount extends Account<FiatPaymentMethod, RevolutAcco
         return bisq.account.protobuf.RevolutAccount.newBuilder();
     }
 
-    public static RevolutAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static RevolutAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
         KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new RevolutAccount(proto.getId(),

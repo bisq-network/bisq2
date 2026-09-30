@@ -18,6 +18,7 @@
 package bisq.contract;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.contract.mu_sig.MuSigContract;
@@ -47,7 +48,8 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
         return resolveBuilder(getTwoPartyContractBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {
+    public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getTwoPartyContract().getMessageCase()) {
             case BISQEASYCONTRACT -> BisqEasyContract.fromProto(proto);
             case MUSIGCONTRACT -> MuSigContract.fromProto(proto);

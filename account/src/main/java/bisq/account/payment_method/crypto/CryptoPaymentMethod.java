@@ -22,6 +22,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.CryptoAsset;
 import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -92,7 +93,8 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
         return unsafeToProto(serializeForHash);
     }
 
-    public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
+    public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
+            throws UnresolvableProtobufException {
         String code = proto.getCryptoPaymentMethod().getCode();
         CryptoPaymentRail cryptoPaymentRail = CryptoPaymentMethodUtil.getCryptoPaymentRail(code);
         //String paymentRailName = proto.getPaymentRailName();

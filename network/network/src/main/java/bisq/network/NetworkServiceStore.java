@@ -18,6 +18,8 @@
 package bisq.network;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
@@ -65,14 +67,15 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
                                 e -> e.getValue().toProto(serializeForHash))));
     }
 
-    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto) {
-        Set<AddressByTransportTypeMap> seeds = proto.getSeedNodesList().stream()
-                .map(AddressByTransportTypeMap::fromProto)
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto)
+            throws UnresolvableProtobufException {
+        Set<AddressByTransportTypeMap> seeds = ProtobufUtils.fromProtoStream(proto.getSeedNodesList(),
+                        AddressByTransportTypeMap::fromProto)
                 .collect(Collectors.toSet());
         @SuppressWarnings("deprecation")
-        var networkIdByTag = proto.getNetworkIdByTagMap().entrySet().stream()
+        var networkIdByTag = ProtobufUtils.fromProtoEntryStream(proto.getNetworkIdByTagMap(), NetworkId::fromProto)
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> NetworkId.fromProto(e.getValue())));
+                        Map.Entry::getValue));
         return new NetworkServiceStore(seeds,
                 networkIdByTag);
     }

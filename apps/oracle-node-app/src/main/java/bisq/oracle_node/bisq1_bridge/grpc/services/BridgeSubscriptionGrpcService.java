@@ -19,6 +19,7 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.timer.Delay;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import io.grpc.Status;
@@ -146,7 +147,7 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         return getStartBlockHeight();
     }
 
-    protected abstract List<T> doRequest(int startBlockHeight);
+    protected abstract List<T> doRequest(int startBlockHeight) throws UnresolvableProtobufException;
 
     protected abstract void handleResponse(T data);
 

@@ -34,7 +34,7 @@ public abstract class ProtoResolverMap<T extends Proto> {
         map.put(protoTypeName, resolver);
     }
 
-    public T fromAny(Any anyProto) {
+    public T fromAny(Any anyProto) throws UnresolvableProtobufException {
         String protoTypeName = ProtobufUtils.getProtoType(anyProto);
         ProtoResolver<T> resolver = map.get(protoTypeName);
 

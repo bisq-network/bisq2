@@ -20,6 +20,7 @@ package bisq.account.accounts.fiat;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.protobuf.Account;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 import java.security.KeyPair;
@@ -49,7 +50,7 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
                 .setBankAccount(toBankAccountProto(serializeForHash));
     }
 
-    public static BankAccount<?> fromProto(Account proto) {
+    public static BankAccount<?> fromProto(Account proto) throws UnresolvableProtobufException {
         return switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
             case ACHTRANSFERACCOUNT -> AchTransferAccount.fromProto(proto);
             case NATIONALBANKACCOUNT -> NationalBankAccount.fromProto(proto);

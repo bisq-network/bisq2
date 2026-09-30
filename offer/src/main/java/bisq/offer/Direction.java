@@ -20,6 +20,7 @@ package bisq.offer;
 import bisq.common.market.Market;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 
 import java.util.Locale;
@@ -33,7 +34,7 @@ public enum Direction implements ProtoEnum {
         return bisq.offer.protobuf.Direction.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static Direction fromProto(bisq.offer.protobuf.Direction proto) {
+    public static Direction fromProto(bisq.offer.protobuf.Direction proto) throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(Direction.class, proto.name(), BUY);
     }
 

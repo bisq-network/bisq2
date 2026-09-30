@@ -19,6 +19,8 @@ package bisq.support.mediation.bisq_easy;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -53,9 +55,10 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MediatorStore fromProto(bisq.support.protobuf.MediatorStore proto) {
-        return new MediatorStore(proto.getMediationCasesList()
-                .stream().map(BisqEasyMediationCase::fromProto)
+    public static MediatorStore fromProto(bisq.support.protobuf.MediatorStore proto)
+            throws UnresolvableProtobufException {
+        return new MediatorStore(ProtobufUtils.fromProtoStream(proto.getMediationCasesList(),
+                        BisqEasyMediationCase::fromProto)
                 .collect(Collectors.toSet()));
     }
 

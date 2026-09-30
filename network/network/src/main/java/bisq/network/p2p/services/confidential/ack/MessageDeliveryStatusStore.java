@@ -20,6 +20,8 @@ package bisq.network.p2p.services.confidential.ack;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -61,10 +63,12 @@ public final class MessageDeliveryStatusStore implements PersistableStore<Messag
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
-    public static PersistableStore<?> fromProto(bisq.network.protobuf.MessageDeliveryStatusStore proto) {
-        return new MessageDeliveryStatusStore(proto.getMessageDeliveryStatusByMessageIdMap().entrySet().stream()
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.MessageDeliveryStatusStore proto)
+            throws UnresolvableProtobufException {
+        return new MessageDeliveryStatusStore(ProtobufUtils.fromProtoEntryStream(
+                        proto.getMessageDeliveryStatusByMessageIdMap(), MessageDeliveryStatus::fromProto)
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> new Observable<>(MessageDeliveryStatus.fromProto(e.getValue())))),
+                        e -> new Observable<>(e.getValue()))),
                 proto.getCreationDateByMessageIdMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }

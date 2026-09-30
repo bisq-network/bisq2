@@ -19,6 +19,7 @@ package bisq.support.arbitration;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum ArbitrationResultReason implements ProtoEnum {
     OTHER,
@@ -36,7 +37,8 @@ public enum ArbitrationResultReason implements ProtoEnum {
         return bisq.support.protobuf.ArbitrationResultReason.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static ArbitrationResultReason fromProto(bisq.support.protobuf.ArbitrationResultReason proto) {
+    public static ArbitrationResultReason fromProto(bisq.support.protobuf.ArbitrationResultReason proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(ArbitrationResultReason.class, proto.name(), OTHER);
     }
 }

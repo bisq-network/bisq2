@@ -23,6 +23,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.locale.Region;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.Inventory;
@@ -82,7 +83,8 @@ public class DistributedDataAnyTest {
     }
 
     @Test
-    public void defaultAuthenticatedDataKeepsFieldUnknownToThisNode() throws InvalidProtocolBufferException {
+    public void defaultAuthenticatedDataKeepsFieldUnknownToThisNode()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         bisq.network.protobuf.AuthenticatedData proto = getDefaultAuthenticatedDataProto(getNewerAny("new field"));
 
         AuthenticatedData received = AuthenticatedData.fromProto(proto);
@@ -97,7 +99,8 @@ public class DistributedDataAnyTest {
     }
 
     @Test
-    public void authorizedDataKeepsFieldUnknownToThisNode() throws InvalidProtocolBufferException {
+    public void authorizedDataKeepsFieldUnknownToThisNode()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         bisq.network.protobuf.AuthenticatedData proto = getAuthorizedDataProto(getNewerAny("new field"));
 
         AuthenticatedData received = AuthenticatedData.fromProto(proto);
@@ -190,7 +193,8 @@ public class DistributedDataAnyTest {
     }
 
     @Test
-    public void addAppendOnlyDataRequestKeepsFieldUnknownToThisNode() throws InvalidProtocolBufferException {
+    public void addAppendOnlyDataRequestKeepsFieldUnknownToThisNode()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         bisq.network.protobuf.DataRequest proto = bisq.network.protobuf.DataRequest.newBuilder()
                 .setAddAppendOnlyDataRequest(bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder()
                         .setAppendOnlyData(getNewerAny("new field")))
@@ -211,7 +215,7 @@ public class DistributedDataAnyTest {
     }
 
     @Test
-    public void dataCreatedByThisNodeContainsTheCompletePayload() {
+    public void dataCreatedByThisNodeContainsTheCompletePayload() throws UnresolvableProtobufException {
         PayloadData payloadData = new PayloadData(KEY, VALUE);
         Any completeAny = Any.pack(bisq.common.protobuf.StringLongPair.newBuilder()
                 .setKey(KEY)
@@ -247,7 +251,7 @@ public class DistributedDataAnyTest {
     }
 
     @Test
-    public void unknownFieldsOfTheAnyMessageAreNotKept() {
+    public void unknownFieldsOfTheAnyMessageAreNotKept() throws UnresolvableProtobufException {
         Any newerAny = getNewerAny("new field");
         Any anyWithUnknownField = newerAny.toBuilder()
                 .setUnknownFields(UnknownFieldSet.newBuilder()
@@ -261,7 +265,8 @@ public class DistributedDataAnyTest {
     }
 
     @Test
-    public void holdersKeepPayloadAtExtraByteLimit() throws InvalidProtocolBufferException {
+    public void holdersKeepPayloadAtExtraByteLimit()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         // Field 3 has a one-byte tag and a two-byte length prefix.
         Any any = getNewerAny("x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES - 3));
         assertEquals(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES,
@@ -280,7 +285,7 @@ public class DistributedDataAnyTest {
     }
 
     @Test
-    public void extraByteLimitIncludesNestedUnknownFields() {
+    public void extraByteLimitIncludesNestedUnknownFields() throws UnresolvableProtobufException {
         bisq.common.protobuf.Country country = getCountryProto();
         UnknownFieldSet unknownFields = getUnknownBytes(6000);
         assertTrue(unknownFields.getSerializedSize() < DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES);
@@ -298,7 +303,7 @@ public class DistributedDataAnyTest {
     }
 
     @Test
-    public void knownFieldsExcludedFromHashesDoNotConsumeExtraByteAllowance() {
+    public void knownFieldsExcludedFromHashesDoNotConsumeExtraByteAllowance() throws UnresolvableProtobufException {
         Any any = Any.pack(getCountryProto().toBuilder()
                 .setName("x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES + 1)).build());
         assertTrue(any.getValue().size() > DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES);
@@ -354,7 +359,7 @@ public class DistributedDataAnyTest {
         assertArrayEquals(received.serialize(), restored.getMap().get(received.getStorageKey()).serialize());
     }
 
-    private static void assertAllHoldersKeep(Any any) {
+    private static void assertAllHoldersKeep(Any any) throws UnresolvableProtobufException {
         for (bisq.network.protobuf.AuthenticatedData proto : List.of(getDefaultAuthenticatedDataProto(any),
                 getAuthorizedDataProto(any))) {
             AuthenticatedData received = AuthenticatedData.fromProto(proto);
@@ -458,13 +463,15 @@ public class DistributedDataAnyTest {
                 .build();
     }
 
-    private static AuthenticatedData relay(AuthenticatedData authenticatedData) throws InvalidProtocolBufferException {
+    private static AuthenticatedData relay(AuthenticatedData authenticatedData)
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         return AuthenticatedData.fromProto(
                 bisq.network.protobuf.AuthenticatedData.parseFrom(authenticatedData.serialize()));
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends DataRequest> T relay(T dataRequest) throws InvalidProtocolBufferException {
+    private static <T extends DataRequest> T relay(T dataRequest)
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         return (T) DataRequest.fromProto(bisq.network.protobuf.DataRequest.parseFrom(
                 dataRequest.toDataRequestProto(false).toByteArray()));
     }
@@ -482,13 +489,13 @@ public class DistributedDataAnyTest {
         private final String name;
         private final Region region;
 
-        private NestedPayloadData(bisq.common.protobuf.Country proto) {
+        private NestedPayloadData(bisq.common.protobuf.Country proto) throws UnresolvableProtobufException {
             code = proto.getCode();
             name = proto.getName();
             region = Region.fromProto(proto.getRegion());
         }
 
-        private static NestedPayloadData fromAny(Any any) {
+        private static NestedPayloadData fromAny(Any any) throws UnresolvableProtobufException {
             try {
                 return new NestedPayloadData(any.unpack(bisq.common.protobuf.Country.class));
             } catch (InvalidProtocolBufferException e) {
@@ -561,7 +568,7 @@ public class DistributedDataAnyTest {
             this.value = value;
         }
 
-        private static PayloadData fromAny(Any any) {
+        private static PayloadData fromAny(Any any) throws UnresolvableProtobufException {
             try {
                 bisq.common.protobuf.StringLongPair proto = any.unpack(bisq.common.protobuf.StringLongPair.class);
                 return new PayloadData(proto.getKey(), proto.getValue());

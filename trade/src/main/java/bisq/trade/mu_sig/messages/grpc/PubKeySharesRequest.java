@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -44,7 +45,8 @@ public final class PubKeySharesRequest implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static PubKeySharesRequest fromProto(bisq.trade.protobuf.PubKeySharesRequest proto) {
+    public static PubKeySharesRequest fromProto(bisq.trade.protobuf.PubKeySharesRequest proto)
+            throws UnresolvableProtobufException {
         return new PubKeySharesRequest(proto.getTradeId(),
                 Role.fromProto(proto.getMyRole()));
     }

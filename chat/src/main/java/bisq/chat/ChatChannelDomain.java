@@ -19,6 +19,7 @@ package bisq.chat;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,8 @@ public enum ChatChannelDomain implements ProtoEnum {
                 .anyMatch(field -> field.isAnnotationPresent(Deprecated.class));
     }
 
-    public static ChatChannelDomain fromProto(bisq.chat.protobuf.ChatChannelDomain proto) {
+    public static ChatChannelDomain fromProto(bisq.chat.protobuf.ChatChannelDomain proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(ChatChannelDomain.class, proto.name(), BISQ_EASY_OFFERBOOK);
     }
 

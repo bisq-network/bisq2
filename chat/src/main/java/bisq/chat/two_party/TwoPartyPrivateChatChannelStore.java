@@ -19,6 +19,8 @@ package bisq.chat.two_party;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -51,9 +53,11 @@ public final class TwoPartyPrivateChatChannelStore implements PersistableStore<T
         return unsafeToProto(serializeForHash);
     }
 
-    public static TwoPartyPrivateChatChannelStore fromProto(bisq.chat.protobuf.TwoPartyPrivateChatChannelStore proto) {
-        Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = proto.getChannelsList().stream()
-                .map(e -> (TwoPartyPrivateChatChannel) TwoPartyPrivateChatChannel.fromProto(e))
+    public static TwoPartyPrivateChatChannelStore fromProto(bisq.chat.protobuf.TwoPartyPrivateChatChannelStore proto)
+            throws UnresolvableProtobufException {
+        Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = ProtobufUtils.fromProtoStream(
+                        proto.getChannelsList(), 
+                        e -> (TwoPartyPrivateChatChannel) TwoPartyPrivateChatChannel.fromProto(e))
                 .collect(Collectors.toSet());
         return new TwoPartyPrivateChatChannelStore(twoPartyPrivateChatChannels);
     }

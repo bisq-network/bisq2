@@ -19,6 +19,7 @@ package bisq.support.moderator;
 
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -60,7 +61,8 @@ public final class BannedUserModeratorData implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BannedUserModeratorData fromProto(bisq.support.protobuf.BannedUserModeratorData proto) {
+    public static BannedUserModeratorData fromProto(bisq.support.protobuf.BannedUserModeratorData proto)
+            throws UnresolvableProtobufException {
         return new BannedUserModeratorData(
                 proto.getReporterUserProfileId(),
                 proto.getAccusedUserProfileId(),

@@ -18,6 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -69,7 +70,8 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
                 .setIsRemoved(isRemoved);
     }
 
-    public static TwoPartyPrivateChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
+    public static TwoPartyPrivateChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
         bisq.chat.protobuf.TwoPartyPrivateChatMessageReaction privateChatMessageReaction = baseProto.getTwoPartyPrivateChatMessageReaction();
         return new TwoPartyPrivateChatMessageReaction(
                 baseProto.getId(),

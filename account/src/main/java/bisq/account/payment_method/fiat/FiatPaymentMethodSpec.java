@@ -18,6 +18,7 @@
 package bisq.account.payment_method.fiat;
 
 import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -54,7 +55,8 @@ public final class FiatPaymentMethodSpec extends PaymentMethodSpec<FiatPaymentMe
         return unsafeToProto(serializeForHash);
     }
 
-    public static FiatPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
+    public static FiatPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto)
+            throws UnresolvableProtobufException {
         return new FiatPaymentMethodSpec(FiatPaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
     }

@@ -17,6 +17,7 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -59,7 +60,8 @@ public final class FiatPaymentOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static FiatPaymentOption fromProto(bisq.offer.protobuf.FiatPaymentOption proto) {
+    public static FiatPaymentOption fromProto(bisq.offer.protobuf.FiatPaymentOption proto)
+            throws UnresolvableProtobufException {
         return new FiatPaymentOption(proto.getCountyCodeOfBank(), proto.getBankName());
     }
 }

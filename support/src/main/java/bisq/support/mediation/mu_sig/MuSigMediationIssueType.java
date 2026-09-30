@@ -19,6 +19,7 @@ package bisq.support.mediation.mu_sig;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MuSigMediationIssueType implements ProtoEnum {
     UNSPECIFIED,
@@ -31,7 +32,8 @@ public enum MuSigMediationIssueType implements ProtoEnum {
         return bisq.support.protobuf.MuSigMediationIssueType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MuSigMediationIssueType fromProto(bisq.support.protobuf.MuSigMediationIssueType proto) {
+    public static MuSigMediationIssueType fromProto(bisq.support.protobuf.MuSigMediationIssueType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MuSigMediationIssueType.class, proto.name(), UNSPECIFIED);
     }
 }

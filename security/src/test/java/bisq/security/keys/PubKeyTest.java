@@ -17,6 +17,7 @@
 
 package bisq.security.keys;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -70,7 +71,7 @@ class PubKeyTest {
 
     // A received key in another encoding of the same point is encoded again in canonical encoding.
     @Test
-    void receivedCompressedKeyIsEncodedCanonically() throws IOException {
+    void receivedCompressedKeyIsEncodedCanonically() throws IOException, UnresolvableProtobufException {
         PublicKey publicKey = KeyGeneration.generateDefaultEcKeyPair().getPublic();
         byte[] compressedPoint = ((ECPublicKey) publicKey).getQ().getEncoded(true);
         byte[] compressed = new SubjectPublicKeyInfo(

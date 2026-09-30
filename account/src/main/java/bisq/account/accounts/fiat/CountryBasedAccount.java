@@ -22,6 +22,7 @@ import bisq.account.accounts.AccountOrigin;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyType;
 import bisq.common.locale.Country;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -48,7 +49,8 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
         this.country = accountPayload.getCountry();
     }
 
-    public static CountryBasedAccount<?> fromProto(bisq.account.protobuf.Account proto) {
+    public static CountryBasedAccount<?> fromProto(bisq.account.protobuf.Account proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getCountryBasedAccount().getMessageCase()) {
             case BANKACCOUNT -> BankAccount.fromProto(proto);
             case SEPAACCOUNT -> SepaAccount.fromProto(proto);

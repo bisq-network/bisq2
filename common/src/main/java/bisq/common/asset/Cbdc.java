@@ -18,6 +18,7 @@
 package bisq.common.asset;
 
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -53,7 +54,7 @@ public final class Cbdc extends DigitalAsset {
         return unsafeToProto(serializeForHash);
     }
 
-    public static Cbdc fromProto(bisq.common.protobuf.Asset baseProto) {
+    public static Cbdc fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
         bisq.common.protobuf.CentralBankDigitalCurrency proto = baseProto.getDigitalAsset().getCentralBankDigitalCurrency();
         return new Cbdc(baseProto.getCode(), baseProto.getName(),
                 proto.getPegCurrencyCode(),

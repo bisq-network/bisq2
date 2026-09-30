@@ -19,6 +19,7 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -54,7 +55,7 @@ public final class SameBankAccount extends BankAccount<SameBankAccountPayload> {
         return bisq.account.protobuf.SameBankAccount.newBuilder();
     }
 
-    public static SameBankAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static SameBankAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
         KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new SameBankAccount(proto.getId(),

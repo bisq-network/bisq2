@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.user.reputation.WitnessReputationProtocol;
 
 import com.google.protobuf.ByteString;
@@ -55,7 +56,7 @@ public final class SignedWitnessOwnershipResponse implements NetworkProto {
     }
 
     public static SignedWitnessOwnershipResponse fromProto(
-            bisq.bridge.protobuf.SignedWitnessOwnershipResponse proto) {
+            bisq.bridge.protobuf.SignedWitnessOwnershipResponse proto) throws UnresolvableProtobufException {
         return new SignedWitnessOwnershipResponse(
                 proto.getDateBucket(),
                 proto.getWitnessNullifier().toByteArray());

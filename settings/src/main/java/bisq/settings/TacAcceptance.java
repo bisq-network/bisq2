@@ -18,6 +18,7 @@
 package bisq.settings;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public record TacAcceptance(String version, long acceptedAtEpochMillis) implements PersistableProto {
     public static TacAcceptance current() {
@@ -40,7 +41,8 @@ public record TacAcceptance(String version, long acceptedAtEpochMillis) implemen
         return unsafeToProto(serializeForHash);
     }
 
-    public static TacAcceptance fromProto(bisq.settings.protobuf.TacAcceptance proto) {
+    public static TacAcceptance fromProto(bisq.settings.protobuf.TacAcceptance proto)
+            throws UnresolvableProtobufException {
         return new TacAcceptance(proto.getVersion(), proto.getAcceptedAtEpochMillis());
     }
 }

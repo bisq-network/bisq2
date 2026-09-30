@@ -1,6 +1,7 @@
 package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +50,7 @@ public final class KeyBundle implements PersistableProto {
                 .setTorKeyPair(torKeyPair.toProto(serializeForHash));
     }
 
-    public static KeyBundle fromProto(bisq.security.protobuf.KeyBundle proto) {
+    public static KeyBundle fromProto(bisq.security.protobuf.KeyBundle proto) throws UnresolvableProtobufException {
         // From pre 2.1.8 versions we did not have an i2p key, thus we create one when reading the protobuf
         boolean hasI2PKeyPair = proto.hasI2PKeyPair();
         I2PKeyPair i2PKeyPair = hasI2PKeyPair

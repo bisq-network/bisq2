@@ -18,6 +18,8 @@
 package bisq.network.p2p.services.confidential.resend;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -60,10 +62,12 @@ final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
                                 e -> e.getValue().get())));
     }
 
-    public static PersistableStore<?> fromProto(bisq.network.protobuf.ResendMessageStore proto) {
-        return new ResendMessageStore(proto.getResendMessageDataByMessageIdMap().entrySet().stream()
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.ResendMessageStore proto)
+            throws UnresolvableProtobufException {
+        return new ResendMessageStore(ProtobufUtils.fromProtoEntryStream(proto.getResendMessageDataByMessageIdMap(),
+                        ResendMessageData::fromProto)
                 .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> ResendMessageData.fromProto(e.getValue()))),
+                        Map.Entry::getValue)),
                 proto.getNumResendsByMessageIdMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
                                 e -> new AtomicInteger(e.getValue()))));

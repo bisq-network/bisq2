@@ -21,6 +21,8 @@ import bisq.account.accounts.AccountPayload;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.mediation.MediationCaseState;
 import com.google.protobuf.ByteString;
@@ -115,7 +117,8 @@ public class MuSigMediationCase implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigMediationCase fromProto(bisq.support.protobuf.MuSigMediationCase proto) {
+    public static MuSigMediationCase fromProto(bisq.support.protobuf.MuSigMediationCase proto)
+            throws UnresolvableProtobufException {
         return new MuSigMediationCase(MuSigMediationRequest.fromProto(proto.getMuSigMediationRequest()),
                 proto.getRequestDate(),
                 MediationCaseState.fromProto(proto.getMediationCaseState()),
@@ -135,8 +138,7 @@ public class MuSigMediationCase implements PersistableProto {
                         Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
                         Optional.empty(),
                 proto.getMediatorHasLeftChat(),
-                proto.getIssuesList().stream()
-                        .map(MuSigMediationIssue::fromProto)
+                ProtobufUtils.fromProtoStream(proto.getIssuesList(), MuSigMediationIssue::fromProto)
                         .toList());
     }
 

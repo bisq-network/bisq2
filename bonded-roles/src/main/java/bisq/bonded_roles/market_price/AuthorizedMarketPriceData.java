@@ -23,6 +23,8 @@ import bisq.common.application.DevMode;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -32,6 +34,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -99,11 +102,16 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedMarketPriceData fromProto(bisq.bonded_roles.protobuf.AuthorizedMarketPriceData proto) {
-        Map<Market, MarketPrice> map = proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
-                .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
-                .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
-                        e -> MarketPrice.fromProto(e.getValue())));
+    public static AuthorizedMarketPriceData fromProto(bisq.bonded_roles.protobuf.AuthorizedMarketPriceData proto)
+            throws UnresolvableProtobufException {
+        List<Map.Entry<String, bisq.bonded_roles.protobuf.MarketPrice>> entriesOfKnownMarkets =
+                proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
+                        .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
+                        .toList();
+        Map<Market, MarketPrice> map = ProtobufUtils.fromProtoStream(entriesOfKnownMarkets,
+                        e -> Map.entry(MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
+                                MarketPrice.fromProto(e.getValue())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new AuthorizedMarketPriceData(
                 proto.getVersion(),
                 new TreeMap<>(map),

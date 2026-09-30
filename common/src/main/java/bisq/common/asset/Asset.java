@@ -19,6 +19,7 @@ package bisq.common.asset;
 
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -67,7 +68,7 @@ public abstract class Asset implements Comparable<Asset>, PersistableProto {
                 .setName(name);
     }
 
-    public static Asset fromProto(bisq.common.protobuf.Asset proto) {
+    public static Asset fromProto(bisq.common.protobuf.Asset proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case FIATCURRENCY -> FiatCurrency.fromProto(proto);
             case DIGITALASSET -> DigitalAsset.fromProto(proto);

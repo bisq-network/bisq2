@@ -21,6 +21,7 @@ import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -100,7 +101,8 @@ public final class NationalBankAccountPayload extends BankAccountPayload impleme
         return bisq.account.protobuf.NationalBankAccountPayload.newBuilder();
     }
 
-    public static NationalBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static NationalBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
         var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new NationalBankAccountPayload(

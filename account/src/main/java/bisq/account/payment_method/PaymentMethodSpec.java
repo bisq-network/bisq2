@@ -22,6 +22,7 @@ import bisq.account.payment_method.crypto.CryptoPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.stable_coin.StableCoinPaymentMethodSpec;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -74,7 +75,8 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         return builder;
     }
 
-    public static FiatPaymentMethodSpec protoToFiatPaymentMethodSpec(bisq.account.protobuf.PaymentMethodSpec proto) {
+    public static FiatPaymentMethodSpec protoToFiatPaymentMethodSpec(bisq.account.protobuf.PaymentMethodSpec proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
@@ -82,7 +84,8 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         };
     }
 
-    public static BitcoinPaymentMethodSpec protoToBitcoinPaymentMethodSpec(bisq.account.protobuf.PaymentMethodSpec proto) {
+    public static BitcoinPaymentMethodSpec protoToBitcoinPaymentMethodSpec(bisq.account.protobuf.PaymentMethodSpec proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
             case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
@@ -90,7 +93,8 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
         };
     }
 
-    public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto, Class<T> clazz) {
+    public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto, Class<T> clazz)
+            throws UnresolvableProtobufException {
         Object result = switch (proto.getMessageCase()) {
             case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
             case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);

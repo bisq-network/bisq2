@@ -19,6 +19,7 @@ package bisq.api.access.permissions;
 
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.Getter;
 
 import java.util.Comparator;
@@ -81,7 +82,7 @@ public final class PermissionSet implements PersistableProto {
                 .setGrantAll(grantAll);
     }
 
-    public static PermissionSet fromProto(bisq.api.protobuf.PermissionSet proto) {
+    public static PermissionSet fromProto(bisq.api.protobuf.PermissionSet proto) throws UnresolvableProtobufException {
         if (proto.getGrantAll()) {
             return grantAll();
         }

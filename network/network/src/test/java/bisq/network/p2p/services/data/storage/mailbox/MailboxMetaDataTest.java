@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -69,7 +70,7 @@ class MailboxMetaDataTest {
     }
 
     @Test
-    void addMailboxRequestUsesRegisteredMetaData() throws GeneralSecurityException {
+    void addMailboxRequestUsesRegisteredMetaData() throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest request = withForgedMetaData(createAddMailboxRequest());
 
         // The signature does not cover metaData, so a relay can change it
@@ -80,7 +81,8 @@ class MailboxMetaDataTest {
     }
 
     @Test
-    void addMailboxRequestExpiresAfterTtlOfRegisteredMetaData() throws GeneralSecurityException {
+    void addMailboxRequestExpiresAfterTtlOfRegisteredMetaData()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         bisq.network.protobuf.AddMailboxRequest.Builder builder = withForgedMetaData(createAddMailboxRequest())
                 .toValueProto(false).toBuilder();
         builder.getMailboxSequentialDataBuilder().setCreated(System.currentTimeMillis() - SIX_DAYS);
@@ -89,7 +91,7 @@ class MailboxMetaDataTest {
     }
 
     @Test
-    void removeMailboxRequestUsesRegisteredMetaData() throws GeneralSecurityException {
+    void removeMailboxRequestUsesRegisteredMetaData() throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveMailboxRequest request = createRemoveMailboxRequest();
         //noinspection deprecation
         bisq.network.protobuf.RemoveMailboxRequest.Builder forgedBuilder = request.toValueProto(false).toBuilder()
@@ -107,7 +109,7 @@ class MailboxMetaDataTest {
     }
 
     @Test
-    void timeToLiveOfMailboxRequestsIsLimitedByMaxTtl() throws GeneralSecurityException {
+    void timeToLiveOfMailboxRequestsIsLimitedByMaxTtl() throws GeneralSecurityException, UnresolvableProtobufException {
         long twentyDays = TimeUnit.DAYS.toMillis(20);
         MailboxData mailboxData = new MailboxData(LongLivedMailboxMessage.META_DATA,
                 createConfidentialMessage(senderKeyPair));
@@ -128,7 +130,8 @@ class MailboxMetaDataTest {
     }
 
     @Test
-    void typeWhichIsNotRegisteredHasNoMetaDataButACostFactor() throws GeneralSecurityException {
+    void typeWhichIsNotRegisteredHasNoMetaDataButACostFactor()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest request = createAddMailboxRequest();
         bisq.network.protobuf.AddMailboxRequest.Builder builder = request.toValueProto(false).toBuilder();
         builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setClassName("NotRegisteredMailboxMessage");
@@ -145,7 +148,8 @@ class MailboxMetaDataTest {
     // Nodes of earlier versions compute expiry, priority and cost factor from the field metaData. A relay sends them the
     // registered MetaData. The hash does not cover the field, so the signature and the storage key stay the same.
     @Test
-    void relayedMailboxRequestsCarryTheRegisteredMetaData() throws GeneralSecurityException {
+    void relayedMailboxRequestsCarryTheRegisteredMetaData()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest addRequest = createAddMailboxRequest();
         AddMailboxRequest forgedAddRequest = withForgedMetaData(addRequest);
         //noinspection deprecation
@@ -165,7 +169,7 @@ class MailboxMetaDataTest {
     }
 
     @Test
-    void mailboxDataKeepsTheReceivedMetaDataIfTheTypeIsNotRegistered() {
+    void mailboxDataKeepsTheReceivedMetaDataIfTheTypeIsNotRegistered() throws UnresolvableProtobufException {
         MetaData metaDataOfUnknownType = new MetaData(MetaData.TTL_10_DAYS, "NotRegisteredMailboxMessage");
         MailboxData mailboxData = MailboxData.fromProto(
                 new MailboxData(metaDataOfUnknownType, createConfidentialMessage(senderKeyPair)).toProto(false));
@@ -175,7 +179,7 @@ class MailboxMetaDataTest {
     }
 
     @Test
-    void mailboxDataKeepsTheReceivedMetaDataIfTheHashCoversIt() {
+    void mailboxDataKeepsTheReceivedMetaDataIfTheHashCoversIt() throws UnresolvableProtobufException {
         // In version 0 serializeForHash() contains metaData. Another value would change the signature and the storage
         // key of the AddMailboxRequest and the proof of work payload.
         bisq.network.protobuf.MailboxData proto = new MailboxData(FORGED_META_DATA,
@@ -189,7 +193,8 @@ class MailboxMetaDataTest {
     // Nodes of earlier versions compute the cost factor from the field metaData, which carries the registered
     // MetaData. If the registered MetaData differs from the values of the policy, the sender pays the higher value.
     @Test
-    void senderPaysTheCostFactorWhichEarlierVersionsComputeFromMetaData() throws GeneralSecurityException {
+    void senderPaysTheCostFactorWhichEarlierVersionsComputeFromMetaData()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         // The registered MetaData of AckMessage has the values of the policy
         AddMailboxRequest ackRequest = createAddMailboxRequest();
         assertEquals(MessageCostPolicy.getCostFactor(ackRequest), MessageCostPolicy.getCostFactorToPay(ackRequest));
@@ -212,7 +217,8 @@ class MailboxMetaDataTest {
     // that a sender cannot make relays pay more than it paid. The signature of the AddMailboxRequest covers the field
     // of MailboxData; the signature of the RemoveMailboxRequest does not cover its own field.
     @Test
-    void receiverExpectsTheCostFactorOfMetaDataWhichTheHashCovers() throws GeneralSecurityException {
+    void receiverExpectsTheCostFactorOfMetaDataWhichTheHashCovers()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         // FORGED_META_DATA has a time to live of 100 days, which gives a storage cost factor of 1
         MailboxData mailboxData = MailboxData.fromProto(new MailboxData(FORGED_META_DATA,
                 createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
@@ -232,17 +238,19 @@ class MailboxMetaDataTest {
         assertEquals(0.3, MessageCostPolicy.getCostFactorToPay(removeRequest));
     }
 
-    private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException {
+    private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
         return AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
     }
 
-    private RemoveMailboxRequest createRemoveMailboxRequest() throws GeneralSecurityException {
+    private RemoveMailboxRequest createRemoveMailboxRequest()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
         return RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
     }
 
-    private static AddMailboxRequest withForgedMetaData(AddMailboxRequest request) {
+    private static AddMailboxRequest withForgedMetaData(AddMailboxRequest request)
+            throws UnresolvableProtobufException {
         bisq.network.protobuf.AddMailboxRequest.Builder builder = request.toValueProto(false).toBuilder();
         //noinspection deprecation
         builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setMetaData(FORGED_META_DATA.toProto(false));

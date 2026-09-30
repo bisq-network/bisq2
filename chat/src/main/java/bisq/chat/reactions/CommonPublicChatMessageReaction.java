@@ -18,6 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.security.keys.PubKey;
@@ -79,7 +80,8 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
                 .setCommonPublicChatMessageReaction(toCommonPublicChatMessageReactionProto(serializeForHash));
     }
 
-    public static CommonPublicChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
+    public static CommonPublicChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
         return new CommonPublicChatMessageReaction(
                 baseProto.getId(),
                 baseProto.getUserProfileId(),

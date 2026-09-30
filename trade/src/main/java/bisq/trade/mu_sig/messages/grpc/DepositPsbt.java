@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -47,7 +48,7 @@ public final class DepositPsbt implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static DepositPsbt fromProto(bisq.trade.protobuf.DepositPsbt proto) {
+    public static DepositPsbt fromProto(bisq.trade.protobuf.DepositPsbt proto) throws UnresolvableProtobufException {
         return new DepositPsbt(proto.getDepositPsbt().toByteArray());
     }
 

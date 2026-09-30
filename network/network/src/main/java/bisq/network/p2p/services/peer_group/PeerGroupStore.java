@@ -18,6 +18,8 @@
 package bisq.network.p2p.services.peer_group;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.network.Address;
 import bisq.persistence.PersistableStore;
@@ -53,9 +55,10 @@ final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
                 .collect(Collectors.toSet()));
     }
 
-    public static PeerGroupStore fromProto(bisq.network.protobuf.PeerGroupStore proto) {
-        Map<Address, Peer> persistedPeersById = proto.getPersistedPeersList().stream()
-                .map(Peer::fromProto)
+    public static PeerGroupStore fromProto(bisq.network.protobuf.PeerGroupStore proto)
+            throws UnresolvableProtobufException {
+        Map<Address, Peer> persistedPeersById = ProtobufUtils.fromProtoStream(proto.getPersistedPeersList(),
+                        Peer::fromProto)
                 .collect(Collectors.toMap(Peer::getAddress, e -> e));
         return new PeerGroupStore(persistedPeersById);
     }

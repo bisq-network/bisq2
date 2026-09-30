@@ -23,6 +23,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.stable_coin.StableCoinPaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -94,7 +95,8 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
         return bisq.account.protobuf.PaymentMethod.newBuilder().setPaymentRailName(paymentRailName);
     }
 
-    public static PaymentMethod<? extends PaymentRail> fromProto(bisq.account.protobuf.PaymentMethod proto) {
+    public static PaymentMethod<? extends PaymentRail> fromProto(bisq.account.protobuf.PaymentMethod proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case FIATPAYMENTMETHOD -> FiatPaymentMethod.fromProto(proto);
             case BITCOINPAYMENTMETHOD -> BitcoinPaymentMethod.fromProto(proto);

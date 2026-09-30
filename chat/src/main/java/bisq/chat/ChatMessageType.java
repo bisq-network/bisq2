@@ -19,6 +19,7 @@ package bisq.chat;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum ChatMessageType implements ProtoEnum {
     TEXT,
@@ -33,7 +34,8 @@ public enum ChatMessageType implements ProtoEnum {
         return bisq.chat.protobuf.ChatMessageType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static ChatMessageType fromProto(bisq.chat.protobuf.ChatMessageType proto) {
+    public static ChatMessageType fromProto(bisq.chat.protobuf.ChatMessageType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(ChatMessageType.class, proto.name(), TEXT);
     }
 }

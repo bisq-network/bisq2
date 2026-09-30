@@ -22,6 +22,8 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
 import bisq.common.market.Market;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -141,18 +143,20 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyOffer fromProto(bisq.offer.protobuf.Offer proto) {
-        List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
-                .map(TradeProtocolType::fromProto)
+    public static BisqEasyOffer fromProto(bisq.offer.protobuf.Offer proto) throws UnresolvableProtobufException {
+        List<TradeProtocolType> protocolTypes = ProtobufUtils.fromProtoStream(proto.getProtocolTypesList(),
+                        TradeProtocolType::fromProto)
                 .collect(Collectors.toList());
-        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
+        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                        proto.getBaseSidePaymentSpecsList(), 
+                        PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
                 .collect(Collectors.toList());
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(PaymentMethodSpec::protoToFiatPaymentMethodSpec)
+        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                        proto.getQuoteSidePaymentSpecsList(), 
+                        PaymentMethodSpec::protoToFiatPaymentMethodSpec)
                 .collect(Collectors.toList());
-        List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
-                .map(OfferOption::fromProto)
+        List<OfferOption> offerOptions = ProtobufUtils.fromProtoStream(proto.getOfferOptionsList(),
+                        OfferOption::fromProto)
                 .collect(Collectors.toList());
         return new BisqEasyOffer(proto.getId(),
                 proto.getDate(),

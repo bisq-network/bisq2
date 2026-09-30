@@ -19,6 +19,7 @@ package bisq.contract;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
@@ -81,7 +82,8 @@ public final class ContractSignatureData implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ContractSignatureData fromProto(bisq.contract.protobuf.ContractSignatureData proto) {
+    public static ContractSignatureData fromProto(bisq.contract.protobuf.ContractSignatureData proto)
+            throws UnresolvableProtobufException {
         try {
             PublicKey publicKey = KeyGeneration.generatePublic(proto.getPublicKeyBytes().toByteArray());
             return new ContractSignatureData(proto.getContractHash().toByteArray(),

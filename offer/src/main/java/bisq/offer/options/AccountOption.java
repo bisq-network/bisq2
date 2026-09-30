@@ -20,6 +20,7 @@ package bisq.offer.options;
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -89,7 +90,8 @@ public final class AccountOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountOption fromProto(bisq.offer.protobuf.AccountOption proto) {
+    public static AccountOption fromProto(bisq.offer.protobuf.AccountOption proto)
+            throws UnresolvableProtobufException {
         return new AccountOption(PaymentMethod.fromProto(proto.getPaymentMethod()),
                 proto.getSaltedAccountId(),
                 proto.hasCountryCode() ? Optional.of(proto.getCountryCode()) : Optional.empty(),

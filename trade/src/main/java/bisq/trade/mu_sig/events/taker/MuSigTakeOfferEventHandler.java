@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.events.taker;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
@@ -63,6 +64,8 @@ public final class MuSigTakeOfferEventHandler extends MuSigTradeEventHandlerAsMe
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
         } catch (GeneralSecurityException e) {
             log.error("Signing contract failed", e);
+            throw new MuSigProtocolException(e);
+        } catch (UnresolvableProtobufException e) {
             throw new MuSigProtocolException(e);
         }
     }

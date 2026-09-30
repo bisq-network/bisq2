@@ -21,6 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -58,7 +59,8 @@ public final class PerfectMoneyAccount extends Account<FiatPaymentMethod, Perfec
         return bisq.account.protobuf.PerfectMoneyAccount.newBuilder();
     }
 
-    public static PerfectMoneyAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static PerfectMoneyAccount fromProto(bisq.account.protobuf.Account proto)
+            throws UnresolvableProtobufException {
         KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new PerfectMoneyAccount(proto.getId(),

@@ -19,6 +19,7 @@ package bisq.support.arbitration.mu_sig;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.arbitration.ArbitrationPayoutDistributionType;
 import bisq.support.arbitration.ArbitrationResultReason;
@@ -106,7 +107,8 @@ public class MuSigArbitrationResult implements NetworkProto, PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigArbitrationResult fromProto(bisq.support.protobuf.MuSigArbitrationResult proto) {
+    public static MuSigArbitrationResult fromProto(bisq.support.protobuf.MuSigArbitrationResult proto)
+            throws UnresolvableProtobufException {
         return new MuSigArbitrationResult(
                 proto.getDate(),
                 proto.getContractHash().toByteArray(),

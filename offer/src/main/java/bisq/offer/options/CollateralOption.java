@@ -17,6 +17,7 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -63,7 +64,8 @@ public final class CollateralOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto) {
+    public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto)
+            throws UnresolvableProtobufException {
         return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
     }
 }

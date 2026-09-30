@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -75,7 +76,8 @@ public final class WeChatPayAccountPayload extends CountryBasedAccountPayload im
                 .setAccountNr(accountNr);
     }
 
-    public static WeChatPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static WeChatPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var payload = proto.getCountryBasedAccountPayload().getWeChatPayAccountPayload();
         return new WeChatPayAccountPayload(
                 proto.getId(),

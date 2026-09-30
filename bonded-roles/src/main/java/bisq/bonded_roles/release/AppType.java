@@ -19,6 +19,7 @@ package bisq.bonded_roles.release;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 
 public enum AppType implements ProtoEnum {
@@ -32,7 +33,7 @@ public enum AppType implements ProtoEnum {
         return bisq.bonded_roles.protobuf.AppType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static AppType fromProto(bisq.bonded_roles.protobuf.AppType proto) {
+    public static AppType fromProto(bisq.bonded_roles.protobuf.AppType proto) throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(AppType.class, proto.name(), AppType.UNSPECIFIED);
     }
 

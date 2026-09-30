@@ -20,6 +20,7 @@ package bisq.common.monetary;
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.asset.CryptoAsset;
 import bisq.common.asset.Asset;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
 import lombok.EqualsAndHashCode;
@@ -166,7 +167,7 @@ public final class Coin extends Monetary {
         return getMonetaryBuilder().setCoin(bisq.common.protobuf.Coin.newBuilder());
     }
 
-    public static Coin fromProto(bisq.common.protobuf.Monetary baseProto) {
+    public static Coin fromProto(bisq.common.protobuf.Monetary baseProto) throws UnresolvableProtobufException {
         return new Coin(baseProto.getId(),
                 baseProto.getValue(),
                 baseProto.getCode(),

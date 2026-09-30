@@ -22,6 +22,7 @@ import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.asset.StableCoin;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -80,7 +81,7 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
         return unsafeToProto(serializeForHash);
     }
 
-    public static Market fromProto(bisq.common.protobuf.Market proto) {
+    public static Market fromProto(bisq.common.protobuf.Market proto) throws UnresolvableProtobufException {
         return new Market(proto.getBaseCurrencyCode(),
                 proto.getQuoteCurrencyCode(),
                 proto.getBaseCurrencyName(),

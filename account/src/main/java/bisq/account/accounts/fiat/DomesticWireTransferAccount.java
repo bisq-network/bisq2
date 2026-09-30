@@ -19,6 +19,7 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,7 +57,8 @@ public final class DomesticWireTransferAccount extends BankAccount<DomesticWireT
         return bisq.account.protobuf.DomesticWireTransferAccount.newBuilder();
     }
 
-    public static DomesticWireTransferAccount fromProto(bisq.account.protobuf.Account proto) {
+    public static DomesticWireTransferAccount fromProto(bisq.account.protobuf.Account proto)
+            throws UnresolvableProtobufException {
         KeyType keyType = KeyType.fromProto(proto.getKeyType());
         AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
         return new DomesticWireTransferAccount(proto.getId(),

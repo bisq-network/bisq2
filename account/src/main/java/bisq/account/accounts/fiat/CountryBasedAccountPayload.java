@@ -21,6 +21,7 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -55,7 +56,8 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
                 .setCountryBasedAccountPayload(toCountryBasedAccountPayloadProto(serializeForHash));
     }
 
-    public static CountryBasedAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static CountryBasedAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getCountryBasedAccountPayload().getMessageCase()) {
             case BANKACCOUNTPAYLOAD -> BankAccountPayload.fromProto(proto);
             case SEPAACCOUNTPAYLOAD -> SepaAccountPayload.fromProto(proto);

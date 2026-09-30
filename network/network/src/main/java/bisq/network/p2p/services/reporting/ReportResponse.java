@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.reporting;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Response;
 import lombok.EqualsAndHashCode;
@@ -59,7 +60,8 @@ public final class ReportResponse implements EnvelopePayloadMessage, Response {
                 .setReport(report.toProto(serializeForHash));
     }
 
-    public static ReportResponse fromProto(bisq.network.protobuf.ReportResponse proto) {
+    public static ReportResponse fromProto(bisq.network.protobuf.ReportResponse proto)
+            throws UnresolvableProtobufException {
         return new ReportResponse(proto.getRequestId(),
                 Report.fromProto(proto.getReport()));
     }

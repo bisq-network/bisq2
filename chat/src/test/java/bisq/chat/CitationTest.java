@@ -17,6 +17,7 @@
 
 package bisq.chat;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -77,7 +78,7 @@ class CitationTest {
      * a peer actually reads.
      */
     @Test
-    void aChatMessageIdWithinTheLimitStillReachesTheWire() {
+    void aChatMessageIdWithinTheLimitStillReachesTheWire() throws UnresolvableProtobufException {
         Citation citation = citationCiting("cited-message-id");
 
         Citation restored = Citation.fromProto(citation.toProto(false));

@@ -18,6 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -70,7 +71,8 @@ public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
                 .setIsRemoved(isRemoved);
     }
 
-    public static MuSigOpenTradeMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
+    public static MuSigOpenTradeMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
         bisq.chat.protobuf.MuSigOpenTradeMessageReaction privateChatMessageReaction = baseProto.getMuSigOpenTradeMessageReaction();
         return new MuSigOpenTradeMessageReaction(
                 baseProto.getId(),

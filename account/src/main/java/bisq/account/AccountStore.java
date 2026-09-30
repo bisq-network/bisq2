@@ -22,6 +22,8 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -65,11 +67,12 @@ public final class AccountStore implements PersistableStore<AccountStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountStore fromProto(bisq.account.protobuf.AccountStore proto) {
+    public static AccountStore fromProto(bisq.account.protobuf.AccountStore proto)
+            throws UnresolvableProtobufException {
         return new AccountStore(
-                proto.getAccountByNameMap().entrySet().stream()
+                ProtobufUtils.fromProtoEntryStream(proto.getAccountByNameMap(), Account::fromProto)
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> Account.fromProto(e.getValue()))),
+                                Map.Entry::getValue)),
                 proto.hasSelectedAccount() ?
                         Optional.of(Account.fromProto(proto.getSelectedAccount())) :
                         Optional.empty());

@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -70,7 +71,8 @@ public final class CustomPayoutPsbt implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static CustomPayoutPsbt fromProto(bisq.trade.protobuf.CustomPayoutPsbt proto) {
+    public static CustomPayoutPsbt fromProto(bisq.trade.protobuf.CustomPayoutPsbt proto)
+            throws UnresolvableProtobufException {
         return new CustomPayoutPsbt(proto.getPsbt().toByteArray(),
                 proto.getTxId(),
                 proto.getBuyersPayoutAmountIncludingFee(),

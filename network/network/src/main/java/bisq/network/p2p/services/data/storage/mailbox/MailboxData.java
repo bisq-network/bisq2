@@ -22,6 +22,7 @@ import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -100,7 +101,7 @@ public final class MailboxData implements StorageData, Canonical {
                 .setClassName(className);
     }
 
-    public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) {
+    public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) throws UnresolvableProtobufException {
         //noinspection deprecation
         MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
         // Nodes of earlier versions do not send className.

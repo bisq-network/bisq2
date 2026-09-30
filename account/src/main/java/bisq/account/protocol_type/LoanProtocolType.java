@@ -18,6 +18,7 @@
 package bisq.account.protocol_type;
 
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum LoanProtocolType implements ProtocolType {
     COLLATERALIZED,
@@ -28,7 +29,8 @@ public enum LoanProtocolType implements ProtocolType {
         return bisq.account.protobuf.LoanProtocolType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static LoanProtocolType fromProto(bisq.account.protobuf.LoanProtocolType proto) {
+    public static LoanProtocolType fromProto(bisq.account.protobuf.LoanProtocolType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(LoanProtocolType.class, proto.name(), COLLATERALIZED);
     }
 }

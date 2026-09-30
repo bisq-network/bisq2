@@ -18,6 +18,7 @@
 package bisq.account.protocol_type;
 
 import bisq.common.proto.ProtoEnum;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 // TODO (refactoring) does not fit right into the account module. But dependency graph does not provide a lower level module
@@ -25,7 +26,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 // the account, offer and contract modules. So leave it for now here. Maybe we need another low level exchange domain 
 // specific module where it would fit in.
 public interface ProtocolType extends ProtoEnum {
-    static ProtocolType fromProto(bisq.account.protobuf.ProtocolType proto) {
+    static ProtocolType fromProto(bisq.account.protobuf.ProtocolType proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case TRADEPROTOCOLTYPE -> TradeProtocolType.fromProto(proto.getTradeProtocolType());
             case LOANPROTOCOLTYPE -> LoanProtocolType.fromProto(proto.getLoanProtocolType());

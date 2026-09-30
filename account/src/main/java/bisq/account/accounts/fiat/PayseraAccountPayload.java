@@ -24,6 +24,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -86,7 +87,8 @@ public final class PayseraAccountPayload extends AccountPayload<FiatPaymentMetho
                 .setEmail(email);
     }
 
-    public static PayseraAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static PayseraAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         var payload = proto.getPayseraAccountPayload();
         return new PayseraAccountPayload(
                 proto.getId(),

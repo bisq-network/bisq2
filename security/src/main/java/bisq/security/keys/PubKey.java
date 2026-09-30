@@ -19,6 +19,7 @@ package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.DigestUtil;
 import com.google.protobuf.ByteString;
@@ -73,7 +74,7 @@ public final class PubKey implements NetworkProto {
                 .setKeyId(keyId);
     }
 
-    public static PubKey fromProto(bisq.security.protobuf.PubKey proto) {
+    public static PubKey fromProto(bisq.security.protobuf.PubKey proto) throws UnresolvableProtobufException {
         try {
             PublicKey publicKey = KeyGeneration.generatePublic(proto.getPublicKey().toByteArray());
             return new PubKey(publicKey, proto.getKeyId());

@@ -18,6 +18,7 @@
 package bisq.api.access.identity;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -60,7 +61,7 @@ public final class ClientProfile implements PersistableProto {
                 .setClientName(clientName);
     }
 
-    public static ClientProfile fromProto(bisq.api.protobuf.ClientProfile proto) {
+    public static ClientProfile fromProto(bisq.api.protobuf.ClientProfile proto) throws UnresolvableProtobufException {
         return new ClientProfile(proto.getClientId(),
                 proto.getClientSecret(),
                 proto.getClientName());

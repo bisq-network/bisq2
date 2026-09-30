@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilter;
 import bisq.network.p2p.services.data.inventory.filter.mini_sketch.MiniSketchFilter;
@@ -36,7 +37,8 @@ public abstract class InventoryFilter implements NetworkProto {
                 .setInventoryFilterType(inventoryFilterType.toProtoEnum());
     }
 
-    public static InventoryFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {
+    public static InventoryFilter fromProto(bisq.network.protobuf.InventoryFilter proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case HASHSETFILTER -> HashSetFilter.fromProto(proto);
             case MINISKETCHFILTER -> MiniSketchFilter.fromProto(proto);

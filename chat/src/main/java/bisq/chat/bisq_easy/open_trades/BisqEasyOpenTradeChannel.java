@@ -21,6 +21,8 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.identity.UserIdentity;
@@ -131,18 +133,17 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
     }
 
     public static BisqEasyOpenTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                     bisq.chat.protobuf.BisqEasyOpenTradeChannel proto) {
+                                                     bisq.chat.protobuf.BisqEasyOpenTradeChannel proto)
+            throws UnresolvableProtobufException {
         return new BisqEasyOpenTradeChannel(
                 baseProto.getId(),
                 proto.getTradeId(),
                 BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
-                proto.getTradersList().stream()
-                        .map(UserProfile::fromProto)
+                ProtobufUtils.fromProtoStream(proto.getTradersList(), UserProfile::fromProto)
                         .collect(Collectors.toSet()),
                 proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
-                proto.getChatMessagesList().stream()
-                        .map(BisqEasyOpenTradeMessage::fromProto)
+                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), BisqEasyOpenTradeMessage::fromProto)
                         .collect(Collectors.toSet()),
                 proto.getIsInMediation(),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));

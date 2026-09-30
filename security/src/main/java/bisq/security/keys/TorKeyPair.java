@@ -1,6 +1,7 @@
 package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -42,7 +43,7 @@ public final class TorKeyPair implements PersistableProto {
                 .setOnionAddress(onionAddress);
     }
 
-    public static TorKeyPair fromProto(bisq.security.protobuf.TorKeyPair proto) {
+    public static TorKeyPair fromProto(bisq.security.protobuf.TorKeyPair proto) throws UnresolvableProtobufException {
         return new TorKeyPair(proto.getPrivateKey().toByteArray(),
                 proto.getPublicKey().toByteArray(),
                 proto.getOnionAddress());

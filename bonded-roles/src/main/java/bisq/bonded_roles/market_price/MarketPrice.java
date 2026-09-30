@@ -20,6 +20,7 @@ package bisq.bonded_roles.market_price;
 import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -74,7 +75,8 @@ public final class MarketPrice implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto) {
+    public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto)
+            throws UnresolvableProtobufException {
         MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromProto(proto.getMarketPriceProvider());
         MarketPriceProviderInfo marketPriceProviderInfo= new MarketPriceProviderInfo(marketPriceProvider);
         return new MarketPrice(PriceQuote.fromProto(proto.getPriceQuote()),

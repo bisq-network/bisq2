@@ -21,6 +21,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -136,7 +137,7 @@ public class FixPriceSpecTest {
     }
 
     @Test
-    public void honestQuoteSurvivesProtoRoundTrip() {
+    public void honestQuoteSurvivesProtoRoundTrip() throws UnresolvableProtobufException {
         FixPriceSpec spec = new FixPriceSpec(PriceQuote.fromFiatPrice(100_000, "USD"));
         bisq.offer.protobuf.FixPrice proto = bisq.offer.protobuf.FixPrice.newBuilder()
                 .setPriceQuote(spec.getPriceQuote().toProto(false))

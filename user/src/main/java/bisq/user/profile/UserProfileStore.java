@@ -19,6 +19,7 @@ package bisq.user.profile;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -65,7 +66,8 @@ public final class UserProfileStore implements PersistableStore<UserProfileStore
         return unsafeToProto(serializeForHash);
     }
 
-    public static UserProfileStore fromProto(bisq.user.protobuf.UserProfileStore proto) {
+    public static UserProfileStore fromProto(bisq.user.protobuf.UserProfileStore proto)
+            throws UnresolvableProtobufException {
         Set<String> ignoredUserProfileIds = new HashSet<>(proto.getIgnoredUserProfileIdsList());
         return new UserProfileStore(ignoredUserProfileIds);
     }

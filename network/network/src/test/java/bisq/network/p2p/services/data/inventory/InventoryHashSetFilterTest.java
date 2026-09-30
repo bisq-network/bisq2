@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
@@ -127,7 +128,7 @@ class InventoryHashSetFilterTest {
     }
 
     @Test
-    void bothHashSetTypesSurviveProtobufRoundTrip() {
+    void bothHashSetTypesSurviveProtobufRoundTrip() throws UnresolvableProtobufException {
         List<HashSetFilterEntry> entries = List.of(new HashSetFilterEntry(new byte[20], 3));
         for (InventoryFilterType type : List.of(InventoryFilterType.HASH_SET, InventoryFilterType.HASH_SET_V2)) {
             HashSetFilter filter = new HashSetFilter(type, new ArrayList<>(entries));
@@ -410,7 +411,8 @@ class InventoryHashSetFilterTest {
     }
 
     // As a relay of an earlier version sends it
-    private static RemoveDataRequest withoutSignatureV2(RemoveDataRequest removal) {
+    private static RemoveDataRequest withoutSignatureV2(RemoveDataRequest removal)
+            throws UnresolvableProtobufException {
         if (removal instanceof RemoveAuthenticatedDataRequest request) {
             return RemoveAuthenticatedDataRequest.fromProto(request.toValueProto(false).toBuilder()
                     .setVersion(1)

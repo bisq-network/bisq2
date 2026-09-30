@@ -21,6 +21,7 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.offer.Offer;
@@ -63,7 +64,7 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
                 .setTradeProtocolType(protocolType.toProtoEnum());
     }
 
-    public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) {
+    public static Contract<?> fromProto(bisq.contract.protobuf.Contract proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case TWOPARTYCONTRACT -> TwoPartyContract.fromProto(proto);
             case MULTIPARTYCONTRACT -> MultiPartyContract.fromProto(proto);

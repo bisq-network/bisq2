@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
@@ -109,7 +110,7 @@ class RefreshRequestDistributionTest {
     }
 
     @Test
-    void receivedRefreshRequestIsAppliedAndRelayed() {
+    void receivedRefreshRequestIsAppliedAndRelayed() throws UnresolvableProtobufException {
         publishDataToOwnerAndPeer();
         RefreshAuthenticatedDataRequest refreshRequest = refreshDataAtOwner();
         int numMessagesSentByPeer = getNumSentMessages(peerNode);
@@ -127,7 +128,7 @@ class RefreshRequestDistributionTest {
 
     // A broadcast arrives from several peers. Only the first copy is applied and relayed, so the relaying ends.
     @Test
-    void copyOfAppliedRefreshRequestIsNotRelayed() {
+    void copyOfAppliedRefreshRequestIsNotRelayed() throws UnresolvableProtobufException {
         publishDataToOwnerAndPeer();
         RefreshAuthenticatedDataRequest refreshRequest = refreshDataAtOwner();
         peerDataNetworkService.onMessage(asReceived(refreshRequest), mock(Connection.class), null);
@@ -141,7 +142,7 @@ class RefreshRequestDistributionTest {
     }
 
     @Test
-    void refreshRequestWhichARelayChangedIsNotAppliedAndNotRelayed() {
+    void refreshRequestWhichARelayChangedIsNotAppliedAndNotRelayed() throws UnresolvableProtobufException {
         publishDataToOwnerAndPeer();
         RefreshAuthenticatedDataRequest refreshRequest = refreshDataAtOwner();
         RefreshAuthenticatedDataRequest withChangedSequenceNumber = RefreshAuthenticatedDataRequest.fromProto(
@@ -164,7 +165,7 @@ class RefreshRequestDistributionTest {
     // A refresh request contains no data. A node which does not hold the data cannot apply it, and creates no store
     // for the class name which the request names.
     @Test
-    void refreshRequestForDataWhichTheNodeDoesNotHoldIsNotRelayed() {
+    void refreshRequestForDataWhichTheNodeDoesNotHoldIsNotRelayed() throws UnresolvableProtobufException {
         ownerDataService.addAuthenticatedData(authenticatedData, ownerKeyPair).join();
         RefreshAuthenticatedDataRequest refreshRequest = refreshDataAtOwner();
 
@@ -179,7 +180,8 @@ class RefreshRequestDistributionTest {
     // Nodes of versions up to 2.1.13 sign only the hash of the data. A node cannot verify the sequence number and the
     // creation date of such a request.
     @Test
-    void refreshRequestOfEarlierVersionIsNotAppliedAndNotRelayed() throws GeneralSecurityException {
+    void refreshRequestOfEarlierVersionIsNotAppliedAndNotRelayed()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         publishDataToOwnerAndPeer();
         byte[] hash = DigestUtil.hash(authenticatedData.serializeForHash());
         //noinspection deprecation
@@ -205,7 +207,7 @@ class RefreshRequestDistributionTest {
     // Refresh requests are not part of inventory responses. The stores hold the refreshed add request, which a node
     // without the data accepts.
     @Test
-    void storeHoldsTheRefreshedAddRequestForInventoryResponses() {
+    void storeHoldsTheRefreshedAddRequestForInventoryResponses() throws UnresolvableProtobufException {
         publishDataToOwnerAndPeer();
         peerDataNetworkService.onMessage(asReceived(refreshDataAtOwner()), mock(Connection.class), null);
 
@@ -242,7 +244,8 @@ class RefreshRequestDistributionTest {
     }
 
     // A refresh request contains no data, so the test can parse it as a receiving node does
-    private static RefreshAuthenticatedDataRequest asReceived(RefreshAuthenticatedDataRequest refreshRequest) {
+    private static RefreshAuthenticatedDataRequest asReceived(RefreshAuthenticatedDataRequest refreshRequest)
+            throws UnresolvableProtobufException {
         return RefreshAuthenticatedDataRequest.fromProto(refreshRequest.toValueProto(false));
     }
 

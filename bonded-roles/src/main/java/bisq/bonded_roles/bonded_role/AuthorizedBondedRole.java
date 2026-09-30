@@ -25,6 +25,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
@@ -234,7 +235,8 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
+    public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto)
+            throws UnresolvableProtobufException {
         return new AuthorizedBondedRole(
                 proto.getVersion(),
                 proto.getProfileId(),

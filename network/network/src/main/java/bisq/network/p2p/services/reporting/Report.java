@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.reporting;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -79,7 +80,7 @@ public final class Report implements NetworkProto {
                 .setNodeLoad(nodeLoad);
     }
 
-    public static Report fromProto(bisq.network.protobuf.Report proto) {
+    public static Report fromProto(bisq.network.protobuf.Report proto) throws UnresolvableProtobufException {
         return new Report(new TreeMap<>(proto.getAuthorizedDataPerClassNameMap()),
                 new TreeMap<>(proto.getAuthenticatedDataPerClassNameMap()),
                 new TreeMap<>(proto.getMailboxDataPerClassNameMap()),

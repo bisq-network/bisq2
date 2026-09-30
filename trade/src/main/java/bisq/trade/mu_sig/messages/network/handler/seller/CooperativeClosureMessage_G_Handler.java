@@ -18,12 +18,14 @@
 package bisq.trade.mu_sig.messages.network.handler.seller;
 
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.mu_sig.messages.network.CooperativeClosureMessage_G;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.CloseTradeRequest;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -43,17 +45,21 @@ public final class CooperativeClosureMessage_G_Handler extends MuSigTradeMessage
 
     @Override
     protected void process(CooperativeClosureMessage_G message) {
-        peersOutputPrvKeyShare = message.getPeerOutputPrvKeyShare();
+        try {
+            peersOutputPrvKeyShare = message.getPeerOutputPrvKeyShare();
 
-        tradeService.stopCloseTradeTimeout(trade);
+            tradeService.stopCloseTradeTimeout(trade);
 
-        // ClosureType.COOPERATIVE
-        // *** SELLER CLOSES TRADE ***
-        CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersOutputPrvKeyShare.getBytes()))
-                .build();
-        myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
+            // ClosureType.COOPERATIVE
+            // *** SELLER CLOSES TRADE ***
+            CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersOutputPrvKeyShare.getBytes()))
+                    .build();
+            myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

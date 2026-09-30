@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage.auth;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
 import com.google.protobuf.Any;
@@ -57,7 +58,8 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
                 bisq.network.protobuf.DefaultAuthenticatedData.newBuilder());
     }
 
-    public static DefaultAuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
+    public static DefaultAuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto)
+            throws UnresolvableProtobufException {
         Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
         return new DefaultAuthenticatedData(DistributedData.fromAny(proto.getDistributedData()), distributedDataAny);
     }

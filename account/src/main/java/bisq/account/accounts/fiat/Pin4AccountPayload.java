@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.PhoneNumberValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -74,7 +75,8 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
                 .setMobileNr(mobileNr);
     }
 
-    public static Pin4AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static Pin4AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         bisq.account.protobuf.Pin4AccountPayload payload =
                 proto.getCountryBasedAccountPayload().getPin4AccountPayload();
         return new Pin4AccountPayload(proto.getId(),

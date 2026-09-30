@@ -17,6 +17,7 @@
 
 package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class BsqBlocksResponseTest {
     @Test
-    void snapshotHeightRoundTripsEvenWhenTheSparseResponseHasNoBlocks() {
+    void snapshotHeightRoundTripsEvenWhenTheSparseResponseHasNoBlocks() throws UnresolvableProtobufException {
         BsqBlocksResponse response = new BsqBlocksResponse(List.of(), 941_123);
 
         BsqBlocksResponse roundTrip = BsqBlocksResponse.fromProto(response.toProto(false));

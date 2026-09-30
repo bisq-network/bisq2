@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationResponse;
@@ -62,7 +63,8 @@ public class BondedRoleGrpcService implements Service {
         }
     }
 
-    public BondedRolesVerificationResponse requestBondedRoleBatchVerification(List<BondedRoleRegistrationRequest> requests) {
+    public BondedRolesVerificationResponse requestBondedRoleBatchVerification(List<BondedRoleRegistrationRequest> requests)
+            throws UnresolvableProtobufException {
         log.info("Request batch verification for {} bonded-role registrations", requests.size());
         var request = new BondedRolesVerificationRequest(requests.stream()
                 .map(BondedRoleGrpcService::toVerificationRequest)

@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -201,7 +202,8 @@ public final class SwiftAccountPayload extends CountryBasedAccountPayload implem
         return builder;
     }
 
-    public static SwiftAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static SwiftAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.SwiftAccountPayload payload = countryBasedAccountPayload.getSwiftAccountPayload();
         Optional<String> beneficiaryPhone = payload.hasBeneficiaryPhone()

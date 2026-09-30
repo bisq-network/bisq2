@@ -27,6 +27,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -277,7 +279,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     @SuppressWarnings("deprecation")
-    public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
+    public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto)
+            throws UnresolvableProtobufException {
         double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
         if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||
                 maxTradePriceDeviation > MAX_TRADE_PRICE_DEVIATION) {
@@ -330,8 +333,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getMuSigTradeRulesConfirmed(),
                 ChatNotificationType.fromProto(proto.getChatNotificationType()),
                 proto.getIsTacAccepted(),
-                proto.getTacAcceptancesList().stream()
-                        .map(TacAcceptance::fromProto)
+                ProtobufUtils.fromProtoStream(proto.getTacAcceptancesList(), TacAcceptance::fromProto)
                         .collect(Collectors.toList()),
                 new HashSet<>(proto.getConsumedAlertIdsList()),
                 proto.getCloseMyOfferWhenTaken(),
@@ -342,8 +344,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new HashSet<>(proto.getSupportedLanguageTagsList()),
                 proto.getDifficultyAdjustmentFactor(),
                 proto.getIgnoreDiffAdjustmentFromSecManager(),
-                new HashSet<>(proto.getFavouriteMarketsList().stream()
-                        .map(Market::fromProto).collect(Collectors.toSet())),
+                new HashSet<>(ProtobufUtils.fromProtoStream(proto.getFavouriteMarketsList(),
+                                Market::fromProto).collect(Collectors.toSet())),
                 proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
                 maxTradePriceDeviation,
                 proto.getShowBuyOffers(),

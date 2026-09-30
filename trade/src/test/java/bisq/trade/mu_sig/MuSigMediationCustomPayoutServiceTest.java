@@ -26,6 +26,7 @@ import bisq.common.market.Market;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractService;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
@@ -92,7 +93,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenAllTradeStates_whenCheckingSigningEligibility_thenOnlyAllowsSigningWindow()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
 
         for (MuSigTradeState state : MuSigTradeState.values()) {
@@ -106,7 +107,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenMediationIsNotClosed_whenCheckingSigningEligibility_thenRejectsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
         fixture.tradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_RE_OPENED);
 
@@ -115,7 +116,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenMissingResultOrSignature_whenCheckingSigningEligibility_thenRejectsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture missingResult = createSigningFixture(Optional.empty(), SignatureState.MISSING, true);
         SigningFixture missingSignature = createSigningFixture(
                 Optional.of(VALID_CUSTOM_PAYOUT), SignatureState.MISSING, true);
@@ -126,7 +127,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenUnverifiableSignedResult_whenCheckingSigningEligibility_thenRejectsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture invalidSignature = createSigningFixture(
                 Optional.of(VALID_CUSTOM_PAYOUT), SignatureState.INVALID, true);
         SigningFixture mismatchingContractHash = createSigningFixture(
@@ -140,7 +141,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenNoPayoutResult_whenCheckingSigningEligibility_thenRejectsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createSigningFixture(
                 Optional.of(new ResultDefinition(
                         MediationPayoutDistributionType.NO_PAYOUT,
@@ -155,7 +156,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenValidPredefinedPayoutResult_whenCheckingSigningEligibility_thenAllowsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createSigningFixture(
                 Optional.of(new ResultDefinition(
                         MediationPayoutDistributionType.BUYER_GETS_TRADE_AMOUNT,
@@ -170,7 +171,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenInvalidPayoutAmounts_whenCheckingSigningEligibility_thenRejectsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture invalidPayoutAmounts = createSigningFixture(
                 Optional.of(new ResultDefinition(
                         MediationPayoutDistributionType.CUSTOM_PAYOUT,
@@ -185,7 +186,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenEitherPartyRejectedResult_whenCheckingSigningEligibility_thenRejectsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture localRejection = createValidSigningFixture();
         localRejection.myself().setMediationResultRejected();
         SigningFixture peerRejection = createValidSigningFixture();
@@ -197,7 +198,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenLocalCustomPayoutAlreadyExists_whenCheckingSigningEligibility_thenRejectsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
         fixture.myself().setMyCustomPayoutPsbt(new CustomPayoutPsbt(
                 new byte[]{1, 2, 3},
@@ -210,7 +211,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenPeerCustomPayoutAlreadyExists_whenCheckingSigningEligibility_thenStillAllowsSigning()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
         fixture.peer().setPeersCustomPayoutPsbt(new PeerCustomPayoutPsbt(TX_ID, new byte[]{1, 2, 3}));
 
@@ -219,7 +220,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenPeerPsbtArrivesFirst_whenLocalPsbtIsStored_thenCustomPayoutCanBeFinalized()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigTrade trade = createCustomPayoutSignedTrade();
         trade.getPeer().setPeersCustomPayoutPsbt(
                 new PeerCustomPayoutPsbt(TX_ID, new byte[]{1, 2, 3}));
@@ -233,7 +234,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenLocalPsbtExistsFirst_whenPeerPsbtIsStored_thenCustomPayoutCanBeFinalized()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigTrade trade = createCustomPayoutSignedTrade();
         trade.getMyself().setMyCustomPayoutPsbt(createLocalCustomPayoutPsbt(TX_ID));
 
@@ -247,7 +248,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenMismatchingTransactionIds_whenCheckingFinalizationReadiness_thenRejectsFinalization()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigTrade trade = createCustomPayoutSignedTrade();
         trade.getMyself().setMyCustomPayoutPsbt(createLocalCustomPayoutPsbt(TX_ID));
         trade.getPeer().setPeersCustomPayoutPsbt(
@@ -258,7 +259,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenMatchingPsbtsOutsideCustomPayoutSignedState_whenCheckingFinalizationReadiness_thenRejectsFinalization()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
         fixture.myself().setMyCustomPayoutPsbt(createLocalCustomPayoutPsbt(TX_ID));
         fixture.peer().setPeersCustomPayoutPsbt(
@@ -269,7 +270,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenSignedMediationResultAndProtocolVersion_whenCheckingMessageContext_thenContextIsAvailable()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
 
         assertThat(service.hasRequiredMessageContext(fixture.trade())).isTrue();
@@ -277,7 +278,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenIncompleteTradeData_whenCheckingMessageContext_thenContextIsUnavailable()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture missingResult = createSigningFixture(Optional.empty(), SignatureState.MISSING, true);
         SigningFixture missingSignature = createSigningFixture(
                 Optional.of(VALID_CUSTOM_PAYOUT), SignatureState.MISSING, true);
@@ -291,7 +292,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenPendingMessages_whenRemovingAndClearingTrade_thenUpdatesPendingMessages()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
         MuSigCustomPayoutPsbtMessage customPayoutMessage = createMessage(fixture);
         MuSigMediationResultRejectionMessage rejectionMessage = createRejectionMessage(fixture);
@@ -315,7 +316,7 @@ class MuSigMediationCustomPayoutServiceTest {
 
     @Test
     void givenConflictingPendingPsbts_whenReadingPendingMessages_thenPreservesArrivalOrder()
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
         MuSigCustomPayoutPsbtMessage first = createMessage(fixture);
         MuSigCustomPayoutPsbtMessage second = new MuSigCustomPayoutPsbtMessage(
@@ -335,11 +336,11 @@ class MuSigMediationCustomPayoutServiceTest {
                 .containsExactly(first, second);
     }
 
-    private SigningFixture createValidSigningFixture() throws GeneralSecurityException {
+    private SigningFixture createValidSigningFixture() throws GeneralSecurityException, UnresolvableProtobufException {
         return createSigningFixture(Optional.of(VALID_CUSTOM_PAYOUT), SignatureState.VALID, true);
     }
 
-    private MuSigTrade createCustomPayoutSignedTrade() throws GeneralSecurityException {
+    private MuSigTrade createCustomPayoutSignedTrade() throws GeneralSecurityException, UnresolvableProtobufException {
         return copyTradeWithState(createValidSigningFixture().trade(), MuSigTradeState.CUSTOM_PAYOUT_SIGNED);
     }
 
@@ -379,7 +380,8 @@ class MuSigMediationCustomPayoutServiceTest {
                 MuSigMediationResultService.getMediationResultHash(mediationResult));
     }
 
-    private SigningFixture createSigningFixtureWithoutMediator() throws GeneralSecurityException {
+    private SigningFixture createSigningFixtureWithoutMediator()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         return createSigningFixture(
                 Optional.of(VALID_CUSTOM_PAYOUT), SignatureState.VALID, true, false);
     }
@@ -387,7 +389,7 @@ class MuSigMediationCustomPayoutServiceTest {
     private SigningFixture createSigningFixture(Optional<ResultDefinition> optionalResultDefinition,
                                                 SignatureState signatureState,
                                                 boolean matchingContractHash)
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         return createSigningFixture(optionalResultDefinition, signatureState, matchingContractHash, true);
     }
 
@@ -395,7 +397,7 @@ class MuSigMediationCustomPayoutServiceTest {
                                                 SignatureState signatureState,
                                                 boolean matchingContractHash,
                                                 boolean includeMediator)
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         KeyPair mediatorKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         UserProfile mediator = createUserProfile(mediatorKeyPair, 9996, "mediator-key");
         Identity myIdentity = createIdentity(9997, "my-key");
@@ -478,7 +480,7 @@ class MuSigMediationCustomPayoutServiceTest {
     private static MuSigTrade createTrade(MuSigContract contract,
                                           Identity myIdentity,
                                           NetworkId peerNetworkId,
-                                          MuSigTradeState state) {
+                                          MuSigTradeState state) throws UnresolvableProtobufException {
         MuSigTrade initialTrade = new MuSigTrade(
                 contract,
                 true,
@@ -491,7 +493,8 @@ class MuSigMediationCustomPayoutServiceTest {
         return copyTradeWithState(initialTrade, state);
     }
 
-    private static MuSigTrade copyTradeWithState(MuSigTrade trade, MuSigTradeState state) {
+    private static MuSigTrade copyTradeWithState(MuSigTrade trade, MuSigTradeState state)
+            throws UnresolvableProtobufException {
         MuSigTrade copy = MuSigTrade.fromProto(trade.toProto(false).toBuilder()
                 .setState(state.name())
                 .build());

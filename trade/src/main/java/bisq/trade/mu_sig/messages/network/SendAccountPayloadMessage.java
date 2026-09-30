@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -67,7 +68,8 @@ public final class SendAccountPayloadMessage extends MuSigTradeMessage {
                 .setAccountPayload(accountPayload.toProto(serializeForHash));
     }
 
-    public static SendAccountPayloadMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static SendAccountPayloadMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.SendAccountPayloadMessage muSigMessageProto = proto.getMuSigTradeMessage().getSendAccountPayloadMessage();
         return new SendAccountPayloadMessage(
                 proto.getId(),

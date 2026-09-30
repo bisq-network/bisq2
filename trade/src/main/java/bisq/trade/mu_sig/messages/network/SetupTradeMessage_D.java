@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
@@ -73,7 +74,8 @@ public final class SetupTradeMessage_D extends MuSigTradeMessage {
                 .setDepositPsbt(ByteString.copyFrom(depositPsbt));
     }
 
-    public static SetupTradeMessage_D fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static SetupTradeMessage_D fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.SetupTradeMessage_D muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageD();
         return new SetupTradeMessage_D(
                 proto.getId(),

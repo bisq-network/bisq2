@@ -18,6 +18,7 @@
 package bisq.offer.price.spec;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public interface PriceSpec extends NetworkProto {
@@ -31,7 +32,7 @@ public interface PriceSpec extends NetworkProto {
     @Override
     bisq.offer.protobuf.PriceSpec toProto(boolean serializeForHash);
 
-    static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
+    static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case FIXPRICE -> FixPriceSpec.fromProto(proto.getFixPrice());
             case FLOATPRICE -> FloatPriceSpec.fromProto(proto.getFloatPrice());

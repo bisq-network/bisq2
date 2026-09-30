@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -133,7 +134,8 @@ public final class AuthorizedData extends AuthenticatedData {
         return builder;
     }
 
-    public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
+    public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto)
+            throws UnresolvableProtobufException {
         bisq.network.protobuf.AuthorizedData authorizedDataProto = proto.getAuthorizedData();
         byte[] authorizedPublicKeyBytes = authorizedDataProto.getAuthorizedPublicKeyBytes().toByteArray();
         try {

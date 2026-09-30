@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -66,7 +67,8 @@ public final class MuSigMediationResultRejectionMessage extends MuSigTradeMessag
         return resolveBuilder(builder, serializeForHash).build();
     }
 
-    public static MuSigMediationResultRejectionMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static MuSigMediationResultRejectionMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
         bisq.trade.protobuf.MuSigMediationResultRejectionMessage message =
                 proto.getMuSigTradeMessage().getMuSigMediationResultRejectionMessage();
         return new MuSigMediationResultRejectionMessage(

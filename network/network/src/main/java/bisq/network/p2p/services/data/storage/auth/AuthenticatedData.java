@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
@@ -71,7 +72,8 @@ public abstract class AuthenticatedData implements StorageData, Canonical {
                 .setDistributedData(serializeForHash ? distributedData.toAny(true) : distributedDataAny);
     }
 
-    public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
+    public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case DEFAULTAUTHENTICATEDDATA -> DefaultAuthenticatedData.fromProto(proto);
             case AUTHORIZEDDATA -> AuthorizedData.fromProto(proto);

@@ -17,6 +17,7 @@
 
 package bisq.offer.amount.spec;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -46,7 +47,7 @@ public abstract class FixedAmountSpec implements AmountSpec {
         return bisq.offer.protobuf.FixedAmountSpec.newBuilder().setAmount(amount);
     }
 
-    static FixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {
+    static FixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case BASESIDEFIXEDAMOUNTSPEC -> BaseSideFixedAmountSpec.fromProto(proto);
             case QUOTESIDEFIXEDAMOUNTSPEC -> QuoteSideFixedAmountSpec.fromProto(proto);

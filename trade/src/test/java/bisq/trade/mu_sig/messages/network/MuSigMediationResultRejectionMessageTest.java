@@ -20,6 +20,7 @@ package bisq.trade.mu_sig.messages.network;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
@@ -33,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MuSigMediationResultRejectionMessageTest {
     @Test
-    void roundTripsThroughTradeMessageResolver() {
+    void roundTripsThroughTradeMessageResolver() throws UnresolvableProtobufException {
         MuSigMediationResultRejectionMessage message = createMessage(createMediationResultHash());
 
         bisq.trade.protobuf.TradeMessage proto = message.resolveValueProto(false);

@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
@@ -90,33 +91,37 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
 
     @Override
     protected void process(SetupTradeMessage_A message) {
-        peersPubKeyShares = message.getPubKeyShares();
+        try {
+            peersPubKeyShares = message.getPubKeyShares();
 
-        myUserIdentity = serviceProvider.getUserService().getUserIdentityService().findUserIdentity(trade.getMyIdentity().getId())
-                .orElseThrow();
-        peersUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(message.getSender().getId())
-                .orElseThrow();
+            myUserIdentity = serviceProvider.getUserService().getUserIdentityService().findUserIdentity(trade.getMyIdentity().getId())
+                    .orElseThrow();
+            peersUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(message.getSender().getId())
+                    .orElseThrow();
 
-        Role role = trade.isBuyer() ? Role.BUYER_AS_MAKER : Role.SELLER_AS_MAKER;
-        PubKeySharesRequest pubKeySharesRequest = PubKeySharesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setMyRole(role)
-                .build();
-        myPubKeySharesResponse = PubKeySharesResponse.fromProto(blockingStub.initTrade(pubKeySharesRequest));
+            Role role = trade.isBuyer() ? Role.BUYER_AS_MAKER : Role.SELLER_AS_MAKER;
+            PubKeySharesRequest pubKeySharesRequest = PubKeySharesRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setMyRole(role)
+                    .build();
+            myPubKeySharesResponse = PubKeySharesResponse.fromProto(blockingStub.initTrade(pubKeySharesRequest));
 
-        NonceSharesRequest nonceSharesRequest = NonceSharesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
-                .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
-                .setPeersMultisigScriptKey(ByteString.copyFrom(peersPubKeyShares.getMultisigScriptKey()))
-                .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
-                .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
-                .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
-                .setBuyersSecurityDeposit(NonceSharesRequestUtil.getBuyerSecurityDeposit())
-                .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
-                .setTradeFeeReceiver(NonceSharesRequestUtil.getTradeFeeReceiver())
-                .build();
-        myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
+            NonceSharesRequest nonceSharesRequest = NonceSharesRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
+                    .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
+                    .setPeersMultisigScriptKey(ByteString.copyFrom(peersPubKeyShares.getMultisigScriptKey()))
+                    .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
+                    .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
+                    .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
+                    .setBuyersSecurityDeposit(NonceSharesRequestUtil.getBuyerSecurityDeposit())
+                    .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
+                    .setTradeFeeReceiver(NonceSharesRequestUtil.getTradeFeeReceiver())
+                    .build();
+            myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

@@ -23,6 +23,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -112,7 +113,8 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
                 .addAllAcceptedCountryCodes(acceptedCountryCodes);
     }
 
-    public static SepaAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
+    public static SepaAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
         bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
         bisq.account.protobuf.SepaAccountPayload payload = countryBasedAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getId(),

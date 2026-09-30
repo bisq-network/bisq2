@@ -18,6 +18,7 @@
 package bisq.user.reputation;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -56,7 +57,8 @@ final class SignedWitnessStore implements PersistableStore<SignedWitnessStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static SignedWitnessStore fromProto(bisq.user.protobuf.SignedWitnessStore proto) {
+    public static SignedWitnessStore fromProto(bisq.user.protobuf.SignedWitnessStore proto)
+            throws UnresolvableProtobufException {
         return new SignedWitnessStore(new HashSet<>(proto.getJsonRequestsList()), proto.getLastRequested());
     }
 

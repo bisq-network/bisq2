@@ -24,6 +24,8 @@ import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.chat.reactions.ChatMessageReaction;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -176,7 +178,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
         return builder;
     }
 
-    public static BisqEasyOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static BisqEasyOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
         Optional<Citation> citation = baseProto.hasCitation() ?
                 Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
@@ -202,8 +205,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
                 mediator,
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 bisqEasyOffer,
-                protoMessage.getChatMessageReactionsList().stream()
-                        .map(BisqEasyOpenTradeMessageReaction::fromProto)
+                ProtobufUtils.fromProtoStream(protoMessage.getChatMessageReactionsList(),
+                                BisqEasyOpenTradeMessageReaction::fromProto)
                         .collect(Collectors.toSet())
         );
     }

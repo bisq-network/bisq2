@@ -23,6 +23,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.persistence.PersistenceService;
 import bisq.wallet.protobuf.GetNewAddressResponse;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
@@ -42,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -139,16 +142,25 @@ public class WalletService implements Service {
 
     public CompletableFuture<List<Transaction>> listTransactions() {
         return client.listTransactions()
-                .thenApply(response -> response.getTransactionsList().stream()
-                        .map(Transaction::fromProto)
-                        .toList());
+                .thenApply(response -> {
+                    try {
+                        return ProtobufUtils.fromProtoStream(response.getTransactionsList(), Transaction::fromProto)
+                                .toList();
+                    } catch (UnresolvableProtobufException e) {
+                        throw new CompletionException(e);
+                    }
+                });
     }
 
     public CompletableFuture<List<Utxo>> listUtxos() {
         return client.listUtxos()
-                .thenApply(response -> response.getUtxosList().stream()
-                        .map(Utxo::fromProto)
-                        .toList());
+                .thenApply(response -> {
+                    try {
+                        return ProtobufUtils.fromProtoStream(response.getUtxosList(), Utxo::fromProto).toList();
+                    } catch (UnresolvableProtobufException e) {
+                        throw new CompletionException(e);
+                    }
+                });
     }
 
     public CompletableFuture<ReadOnlyObservableSet<AddressBalance>> requestAddressBalances() {
@@ -215,9 +227,13 @@ public class WalletService implements Service {
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
         return client.listTransactions()
                 .thenApply(response -> {
-                    transactions.setAll(response.getTransactionsList().stream()
-                            .map(Transaction::fromProto)
-                            .toList());
+                    try {
+                        transactions.setAll(ProtobufUtils.fromProtoStream(response.getTransactionsList(),
+                                        Transaction::fromProto)
+                                .toList());
+                    } catch (UnresolvableProtobufException e) {
+                        throw new CompletionException(e);
+                    }
                     return transactions;
                 });
     }

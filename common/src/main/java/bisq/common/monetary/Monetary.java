@@ -19,6 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.asset.Asset;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -110,7 +111,7 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
                 .setLowPrecision(lowPrecision);
     }
 
-    public static Monetary fromProto(bisq.common.protobuf.Monetary proto) {
+    public static Monetary fromProto(bisq.common.protobuf.Monetary proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case COIN -> Coin.fromProto(proto);
             case FIAT -> Fiat.fromProto(proto);

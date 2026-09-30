@@ -19,6 +19,8 @@ package bisq.support.mediation.bisq_easy;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
@@ -122,13 +124,13 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static BisqEasyMediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
+    public static BisqEasyMediationRequest fromProto(bisq.support.protobuf.MediationRequest proto)
+            throws UnresolvableProtobufException {
         return new BisqEasyMediationRequest(proto.getTradeId(),
                 BisqEasyContract.fromProto(proto.getContract()),
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()),
-                proto.getChatMessagesList().stream()
-                        .map(BisqEasyOpenTradeMessage::fromProto)
+                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), BisqEasyOpenTradeMessage::fromProto)
                         .collect(Collectors.toList()),
                 NetworkId.fromProto(proto.getMediatorNetworkId()));
     }

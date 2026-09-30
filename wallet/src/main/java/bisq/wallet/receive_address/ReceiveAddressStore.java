@@ -20,6 +20,8 @@ package bisq.wallet.receive_address;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -56,9 +58,10 @@ public final class ReceiveAddressStore implements PersistableStore<ReceiveAddres
         return unsafeToProto(serializeForHash);
     }
 
-    public static ReceiveAddressStore fromProto(bisq.wallet.protobuf.ReceiveAddressStore proto) {
-        return new ReceiveAddressStore(new HashSet<>(proto.getReceiveAddressEntriesList().stream()
-                .map(ReceiveAddressEntry::fromProto)
+    public static ReceiveAddressStore fromProto(bisq.wallet.protobuf.ReceiveAddressStore proto)
+            throws UnresolvableProtobufException {
+        return new ReceiveAddressStore(new HashSet<>(ProtobufUtils.fromProtoStream(proto.getReceiveAddressEntriesList(),
+                        ReceiveAddressEntry::fromProto)
                 .collect(Collectors.toSet())));
     }
 

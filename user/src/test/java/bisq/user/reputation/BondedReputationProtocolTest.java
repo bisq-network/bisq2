@@ -18,6 +18,7 @@
 package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.NetworkService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
@@ -36,7 +37,7 @@ class BondedReputationProtocolTest {
     private static final String UNLOCK_TX_ID = "34".repeat(32);
 
     @Test
-    void currentDataSignsItsVersionAndUnlockStatus() {
+    void currentDataSignsItsVersionAndUnlockStatus() throws UnresolvableProtobufException {
         AuthorizedBondedReputationData lockup = currentData(Optional.empty());
         AuthorizedBondedReputationData unlock = AuthorizedBondedReputationData.fromProto(
                 lockup.toProto(false).toBuilder().setUnlockTxId(UNLOCK_TX_ID).build());
@@ -47,7 +48,7 @@ class BondedReputationProtocolTest {
     }
 
     @Test
-    void legacyMalleableDataIsParseableButContributesNoScore() {
+    void legacyMalleableDataIsParseableButContributesNoScore() throws UnresolvableProtobufException {
         bisq.user.protobuf.AuthorizedBondedReputationData.Builder legacyBuilder =
                 currentData(Optional.empty()).toProto(false).toBuilder()
                         .setVersion(AuthorizedBondedReputationData.LEGACY_VERSION);
@@ -81,7 +82,8 @@ class BondedReputationProtocolTest {
     }
 
     private static AuthorizedBondedReputationData fromProtoWithVersion(AuthorizedBondedReputationData data,
-                                                                        int version) {
+                                                                        int version)
+            throws UnresolvableProtobufException {
         return AuthorizedBondedReputationData.fromProto(
                 data.toProto(false).toBuilder().setVersion(version).build());
     }

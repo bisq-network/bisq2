@@ -19,6 +19,8 @@ package bisq.oracle_node.bisq1_bridge.grpc.dto;
 
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -56,9 +58,10 @@ public final class BurningmanBlockDto implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BurningmanBlockDto fromProto(bisq.bridge.protobuf.BurningmanBlockDto proto) {
+    public static BurningmanBlockDto fromProto(bisq.bridge.protobuf.BurningmanBlockDto proto)
+            throws UnresolvableProtobufException {
         return new BurningmanBlockDto(proto.getHeight(),
-                proto.getItemsList().stream().map(BurningmanDto::fromProto).toList()
+                ProtobufUtils.fromProtoStream(proto.getItemsList(), BurningmanDto::fromProto).toList()
         );
     }
 }

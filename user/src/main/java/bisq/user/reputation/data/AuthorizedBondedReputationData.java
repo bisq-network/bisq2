@@ -22,6 +22,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -146,7 +147,8 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedBondedReputationData fromProto(bisq.user.protobuf.AuthorizedBondedReputationData proto) {
+    public static AuthorizedBondedReputationData fromProto(bisq.user.protobuf.AuthorizedBondedReputationData proto)
+            throws UnresolvableProtobufException {
         return new AuthorizedBondedReputationData(
                 proto.getVersion(),
                 proto.getBlockTime(),

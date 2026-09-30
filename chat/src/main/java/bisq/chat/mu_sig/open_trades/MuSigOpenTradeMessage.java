@@ -23,6 +23,8 @@ import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.MuSigOpenTradeMessageReaction;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -167,7 +169,8 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
         return builder;
     }
 
-    public static MuSigOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static MuSigOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
         Optional<Citation> citation = baseProto.hasCitation() ?
                 Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
@@ -197,8 +200,8 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
                 arbitrator,
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 muSigOffer,
-                protoMessage.getChatMessageReactionsList().stream()
-                        .map(MuSigOpenTradeMessageReaction::fromProto)
+                ProtobufUtils.fromProtoStream(protoMessage.getChatMessageReactionsList(),
+                                MuSigOpenTradeMessageReaction::fromProto)
                         .collect(Collectors.toSet())
         );
     }

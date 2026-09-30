@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.authorization.token.hash_cash;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.security.pow.ProofOfWork;
@@ -67,7 +68,8 @@ public final class HashCashToken extends AuthorizationToken {
                         .setMessageCounter(messageCounter));
     }
 
-    public static HashCashToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
+    public static HashCashToken fromProto(bisq.network.protobuf.AuthorizationToken proto)
+            throws UnresolvableProtobufException {
         bisq.network.protobuf.HashCashToken hashCashTokenProto = proto.getHashCashToken();
         return new HashCashToken(AuthorizationTokenType.fromProto(proto.getAuthorizationTokenType()),
                 ProofOfWork.fromProto(hashCashTokenProto.getProofOfWork()),

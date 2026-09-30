@@ -19,6 +19,7 @@ package bisq.contract;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum Role implements ProtoEnum {
     MAKER,
@@ -30,7 +31,7 @@ public enum Role implements ProtoEnum {
         return bisq.contract.protobuf.Role.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static Role fromProto(bisq.contract.protobuf.Role proto) {
+    public static Role fromProto(bisq.contract.protobuf.Role proto) throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(Role.class, proto.name(), TAKER);
     }
 }

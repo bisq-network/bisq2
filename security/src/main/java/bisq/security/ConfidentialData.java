@@ -23,6 +23,7 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.EcPublicKeyValidation;
 import com.google.protobuf.ByteString;
@@ -82,7 +83,8 @@ public final class ConfidentialData implements NetworkProto, Canonical {
                 .setSignature(ByteString.copyFrom(signature));
     }
 
-    public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto) {
+    public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto)
+            throws UnresolvableProtobufException {
         return new ConfidentialData(proto.getSenderPublicKey().toByteArray(),
                 proto.getIv().toByteArray(),
                 proto.getCipherText().toByteArray(),
