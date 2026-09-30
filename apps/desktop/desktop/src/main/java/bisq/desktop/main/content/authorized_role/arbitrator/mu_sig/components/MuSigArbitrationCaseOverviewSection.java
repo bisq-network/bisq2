@@ -1,0 +1,540 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.content.authorized_role.arbitrator.mu_sig.components;
+
+import bisq.account.accounts.AccountPayload;
+import bisq.common.observable.Pin;
+import bisq.contract.Role;
+import bisq.contract.mu_sig.MuSigContract;
+import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.main.content.authorized_role.arbitrator.mu_sig.MuSigArbitrationCaseListItem;
+import bisq.desktop.main.content.mu_sig.trade.components.MuSigAmountAndPriceDisplay;
+import bisq.i18n.Res;
+import bisq.offer.Direction;
+import bisq.offer.mu_sig.MuSigOffer;
+import bisq.support.arbitration.ArbitrationCaseState;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationCase;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationIssue;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationIssueType;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationRequest;
+import bisq.support.arbitration.mu_sig.MuSigArbitratorService;
+import bisq.trade.mu_sig.MuSigTradeFormatter;
+import bisq.user.profile.UserProfile;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.createAndGetDescriptionAndValueBox;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getCopyButton;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getDescriptionLabel;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getValueLabel;
+
+public class MuSigArbitrationCaseOverviewSection {
+
+    private final Controller controller;
+
+    public MuSigArbitrationCaseOverviewSection(ServiceProvider serviceProvider, boolean isCompactView) {
+        this.controller = new Controller(serviceProvider, isCompactView);
+    }
+
+    public VBox getRoot() {
+        return controller.view.getRoot();
+    }
+
+    public void setArbitrationCaseListItem(MuSigArbitrationCaseListItem item) {
+        controller.setArbitrationCaseListItem(item);
+    }
+
+    @Slf4j
+    private static class Controller implements bisq.desktop.common.view.Controller {
+
+        @Getter
+        private final View view;
+        private final Model model;
+
+        private final MuSigArbitratorService muSigArbitratorService;
+        private final Set<Pin> pins = new HashSet<>();
+
+        private Controller(ServiceProvider serviceProvider, boolean isCompactView) {
+            model = new Model();
+            model.setCompactView(isCompactView);
+            view = new View(new VBox(), model, this);
+            muSigArbitratorService = serviceProvider.getSupportService().getMuSigArbitratorService();
+        }
+
+        private void setArbitrationCaseListItem(MuSigArbitrationCaseListItem item) {
+            model.setMuSigArbitrationCaseListItem(item);
+        }
+
+        @Override
+        public void onActivate() {
+            MuSigArbitrationCaseListItem muSigArbitrationCaseListItem = model.getMuSigArbitrationCaseListItem();
+            MuSigArbitrationCase muSigArbitrationCase = muSigArbitrationCaseListItem.getMuSigArbitrationCase();
+            MuSigArbitrationRequest muSigArbitrationRequest = muSigArbitrationCase.getMuSigArbitrationRequest();
+            MuSigContract contract = muSigArbitrationRequest.getContract();
+            model.setContract(contract);
+            MuSigOffer offer = contract.getOffer();
+
+            MuSigArbitrationCaseListItem.Trader maker = muSigArbitrationCaseListItem.getMaker();
+            MuSigArbitrationCaseListItem.Trader taker = muSigArbitrationCaseListItem.getTaker();
+            Direction displayDirection = offer.getDisplayDirection();
+            MuSigArbitrationCaseListItem.Trader buyer = displayDirection.isBuy() ? maker : taker;
+            MuSigArbitrationCaseListItem.Trader seller = displayDirection.isSell() ? maker : taker;
+
+            model.setBuyerUserName(formatUserNameWithMakerTakerRole(buyer, maker));
+            model.setSellerUserName(formatUserNameWithMakerTakerRole(seller, maker));
+            model.setBuyerBotId(buyer.getUserProfile().getNym());
+            model.setBuyerUserId(buyer.getUserProfile().getId());
+
+            CaseCounts buyerCaseCounts = getCaseCounts(buyer.getUserProfile());
+            CaseCounts sellerCaseCounts = getCaseCounts(seller.getUserProfile());
+
+            model.setBuyerCaseCountTotal(buyerCaseCounts.total());
+            model.setBuyerCaseCountOpen(buyerCaseCounts.open());
+            model.setBuyerCaseCountClosed(buyerCaseCounts.closed());
+            model.setSellerBotId(seller.getUserProfile().getNym());
+            model.setSellerUserId(seller.getUserProfile().getId());
+            model.setSellerCaseCountTotal(sellerCaseCounts.total());
+            model.setSellerCaseCountOpen(sellerCaseCounts.open());
+            model.setSellerCaseCountClosed(sellerCaseCounts.closed());
+
+            model.setPaymentMethod(contract.getNonBtcSidePaymentMethodSpec().getShortDisplayString());
+            model.setPaymentMethodsBoxVisible(offer.getMarket().isBaseCurrencyBitcoin());
+            model.getHasPaymentAccountData().set(false);
+            model.getWaitingForPaymentAccountDataResponse().set(false);
+            model.getTakerPaymentAccountData().set("");
+            model.getMakerPaymentAccountData().set("");
+            model.getTakerPaymentAccountIssueVisible().set(false);
+            model.getMakerPaymentAccountIssueVisible().set(false);
+            model.getTakerPaymentAccountIssueTooltip().set("");
+            model.getMakerPaymentAccountIssueTooltip().set("");
+            maybeAddPaymentAccountDataObservers();
+
+            model.setDepositTxId(Res.get("muSig.trade.details.dataNotYetProvided"));
+            model.setDepositTxIdEmpty(true);
+        }
+
+        private void requestPaymentAccountData() {
+            MuSigArbitrationCaseListItem muSigArbitrationCaseListItem = model.getMuSigArbitrationCaseListItem();
+            if (muSigArbitrationCaseListItem == null) {
+                return;
+            }
+            model.getHasPaymentAccountData().set(false);
+            boolean requestSent = muSigArbitratorService.requestPaymentDetails(muSigArbitrationCaseListItem.getMuSigArbitrationCase());
+            model.getWaitingForPaymentAccountDataResponse().set(requestSent);
+        }
+
+        @Override
+        public void onDeactivate() {
+            clearPins();
+        }
+
+        private CaseCounts getCaseCounts(UserProfile userProfile) {
+            var counts = muSigArbitratorService.getArbitrationCases().stream()
+                    .filter(arbitrationCase -> {
+                        MuSigArbitrationRequest request = arbitrationCase.getMuSigArbitrationRequest();
+                        return userProfile.equals(request.getRequester()) || userProfile.equals(request.getPeer());
+                    })
+                    .collect(Collectors.partitioningBy(arbitrationCase ->
+                                    arbitrationCase.getArbitrationCaseState() == ArbitrationCaseState.CLOSED,
+                            Collectors.counting()));
+            int closed = counts.getOrDefault(true, 0L).intValue();
+            int open = counts.getOrDefault(false, 0L).intValue();
+            return new CaseCounts(open + closed, open, closed);
+        }
+
+        private record CaseCounts(int total, int open, int closed) {
+        }
+
+        private String formatUserNameWithMakerTakerRole(MuSigArbitrationCaseListItem.Trader trader,
+                                                        MuSigArbitrationCaseListItem.Trader maker) {
+            boolean isMaker = trader.getUserProfile().getId().equals(maker.getUserProfile().getId());
+            String makerTakerRole = MuSigTradeFormatter.getMakerTakerRole(isMaker);
+            return String.format("%s (%s)",
+                    trader.getUserName(),
+                    makerTakerRole.toLowerCase());
+        }
+
+        private void maybeAddPaymentAccountDataObservers() {
+            if (model.isCompactView()) {
+                return;
+            }
+            clearPins();
+
+            MuSigArbitrationCaseListItem muSigArbitrationCaseListItem = model.getMuSigArbitrationCaseListItem();
+            if (muSigArbitrationCaseListItem == null) {
+                return;
+            }
+
+            MuSigArbitrationCase caseModel = muSigArbitrationCaseListItem.getMuSigArbitrationCase();
+            pins.add(caseModel.takerAccountPayloadObservable().addObserver(payload -> UIThread.run(() -> {
+                model.getTakerPaymentAccountData().set(payload.map(AccountPayload::getAccountDataDisplayString).orElse(""));
+                applyHasPaymentAccountDataState(caseModel);
+            })));
+            pins.add(caseModel.makerAccountPayloadObservable().addObserver(payload -> UIThread.run(() -> {
+                model.getMakerPaymentAccountData().set(payload.map(AccountPayload::getAccountDataDisplayString).orElse(""));
+                applyHasPaymentAccountDataState(caseModel);
+            })));
+            pins.add(caseModel.issuesObservable().addObserver(issues ->
+                    UIThread.run(() -> applyPaymentAccountIssueState(issues))));
+        }
+
+        private void clearPins() {
+            pins.forEach(Pin::unbind);
+            pins.clear();
+        }
+
+        private void applyHasPaymentAccountDataState(MuSigArbitrationCase muSigArbitrationCase) {
+            boolean hasBothPayloads = muSigArbitrationCase.getTakerAccountPayload().isPresent()
+                    && muSigArbitrationCase.getMakerAccountPayload().isPresent();
+            model.getHasPaymentAccountData().set(hasBothPayloads);
+            if (hasBothPayloads) {
+                model.getWaitingForPaymentAccountDataResponse().set(false);
+            }
+        }
+
+        private void applyPaymentAccountIssueState(List<MuSigArbitrationIssue> issues) {
+            List<MuSigArbitrationIssue> takerIssues = findFirstIssuesByTypeAndRole(issues, MuSigArbitrationIssueType.TAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH);
+            List<MuSigArbitrationIssue> makerIssues = findFirstIssuesByTypeAndRole(issues, MuSigArbitrationIssueType.MAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH);
+            boolean hasIssue = !takerIssues.isEmpty() || !makerIssues.isEmpty();
+
+            model.getTakerPaymentAccountIssueVisible().set(!takerIssues.isEmpty());
+            model.getMakerPaymentAccountIssueVisible().set(!makerIssues.isEmpty());
+            model.getTakerPaymentAccountIssueTooltip().set(takerIssues.isEmpty() ? "" : toIssueTooltip(takerIssues));
+            model.getMakerPaymentAccountIssueTooltip().set(makerIssues.isEmpty() ? "" : toIssueTooltip(makerIssues));
+            if (hasIssue) {
+                model.getWaitingForPaymentAccountDataResponse().set(false);
+            }
+            if (!takerIssues.isEmpty() && model.getTakerPaymentAccountData().get().isEmpty()) {
+                model.getTakerPaymentAccountData().set(Res.get("data.na"));
+            }
+            if (!makerIssues.isEmpty() && model.getMakerPaymentAccountData().get().isEmpty()) {
+                model.getMakerPaymentAccountData().set(Res.get("data.na"));
+            }
+        }
+
+        private List<MuSigArbitrationIssue> findFirstIssuesByTypeAndRole(List<MuSigArbitrationIssue> issues,
+                                                                       MuSigArbitrationIssueType type) {
+            return Stream.of(Role.TAKER, Role.MAKER)
+                    .flatMap(role -> issues.stream()
+                            .filter(issue -> issue.getType() == type && issue.getCausingRole() == role)
+                            .findFirst()
+                            .stream())
+                    .toList();
+        }
+
+        private String toIssueTooltip(List<MuSigArbitrationIssue> issues) {
+            String key = "authorizedRole.disputeActor.disputeCaseDetails.paymentAccountData.issue.accountPayloadHashMismatch";
+            List<String> lines = new ArrayList<>();
+            for (MuSigArbitrationIssue issue : issues) {
+                String causingRole = MuSigTradeFormatter.getMakerTakerRole(issue.getCausingRole() == Role.MAKER).toLowerCase();
+                StringBuilder builder = new StringBuilder(Res.get(key, causingRole));
+                issue.getDetails().ifPresent(details -> builder.append("\n").append(details));
+                lines.add(builder.toString());
+            }
+            return String.join("\n\n", lines);
+        }
+    }
+
+    @Slf4j
+    @Getter
+    @Setter
+    private static class Model implements bisq.desktop.common.view.Model {
+        private MuSigArbitrationCaseListItem muSigArbitrationCaseListItem;
+
+        private boolean isCompactView;
+
+        private String buyerUserName;
+        private String sellerUserName;
+        private String buyerBotId;
+        private String buyerUserId;
+        private int buyerCaseCountTotal;
+        private int buyerCaseCountOpen;
+        private int buyerCaseCountClosed;
+        private String sellerBotId;
+        private String sellerUserId;
+        private int sellerCaseCountTotal;
+        private int sellerCaseCountOpen;
+        private int sellerCaseCountClosed;
+        private MuSigContract contract;
+
+        private String paymentMethod;
+        private boolean isPaymentMethodsBoxVisible;
+        private final BooleanProperty hasPaymentAccountData = new SimpleBooleanProperty(false);
+        private final BooleanProperty waitingForPaymentAccountDataResponse = new SimpleBooleanProperty(false);
+        private final StringProperty takerPaymentAccountData = new SimpleStringProperty("");
+        private final StringProperty makerPaymentAccountData = new SimpleStringProperty("");
+        private final BooleanProperty takerPaymentAccountIssueVisible = new SimpleBooleanProperty(false);
+        private final BooleanProperty makerPaymentAccountIssueVisible = new SimpleBooleanProperty(false);
+        private final StringProperty takerPaymentAccountIssueTooltip = new SimpleStringProperty("");
+        private final StringProperty makerPaymentAccountIssueTooltip = new SimpleStringProperty("");
+
+        private String depositTxId;
+        private boolean isDepositTxIdEmpty;
+    }
+
+    @Slf4j
+    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
+
+        private final MuSigAmountAndPriceDisplay amountAndPriceDisplay;
+        private Label buyerUserNameLabel, sellerUserNameLabel, paymentMethodLabel, depositTxTitleLabel, depositTxDetailsLabel;
+        private Label paymentAccountDataWaitingLabel, takerPaymentAccountDataLabel, makerPaymentAccountDataLabel;
+        private Button takerPaymentAccountIssueButton, makerPaymentAccountIssueButton;
+        private Tooltip takerPaymentAccountIssueTooltip, makerPaymentAccountIssueTooltip;
+        private BisqMenuItem buyerUserNameCopyButton, sellerUserNameCopyButton, depositTxCopyButton,
+                paymentAccountDataRefreshButton;
+        private HBox paymentMethodsBox, paymentAccountDataBox, takerPaymentAccountDataBox, makerPaymentAccountDataBox;
+
+        public View(VBox root, Model model, Controller controller) {
+            super(root, model, controller);
+
+            // Amount and price
+            amountAndPriceDisplay = new MuSigAmountAndPriceDisplay();
+            HBox amountAndPriceBox = createAndGetDescriptionAndValueBox("muSig.trade.details.amountAndPrice", amountAndPriceDisplay);
+
+            VBox content;
+
+            if (!model.isCompactView()) {
+                // UserNames
+                buyerUserNameLabel = getValueLabel();
+                buyerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.disputeActor.disputeCaseDetails.buyerUserName.copy"));
+                HBox buyerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.disputeActor.disputeCaseDetails.buyerUserName",
+                        buyerUserNameLabel, buyerUserNameCopyButton);
+
+                sellerUserNameLabel = getValueLabel();
+                sellerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.disputeActor.disputeCaseDetails.sellerUserName.copy"));
+                HBox sellerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.disputeActor.disputeCaseDetails.sellerUserName",
+                        sellerUserNameLabel, sellerUserNameCopyButton);
+
+                // Payment and settlement methods
+                paymentMethodLabel = getValueLabel();
+                HBox paymentMethodsDetailsHBox = new HBox(5, paymentMethodLabel);
+                paymentMethodsDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
+                paymentMethodsBox = createAndGetDescriptionAndValueBox("muSig.trade.details.paymentAndSettlementMethod",
+                        paymentMethodsDetailsHBox);
+
+                // Deposit transaction ID
+                depositTxTitleLabel = getDescriptionLabel("");
+                depositTxDetailsLabel = getValueLabel();
+                depositTxCopyButton = getCopyButton("");
+                HBox depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel,
+                        depositTxDetailsLabel, depositTxCopyButton);
+
+                paymentAccountDataWaitingLabel = getValueLabel();
+                takerPaymentAccountDataLabel = getValueLabel();
+                paymentAccountDataRefreshButton = new BisqMenuItem("try-again-grey", "try-again-white");
+                paymentAccountDataRefreshButton.setTooltip(Res.get("authorizedRole.disputeActor.disputeCaseDetails.paymentAccountData.fetch"));
+                takerPaymentAccountIssueTooltip = new Tooltip();
+                makerPaymentAccountIssueTooltip = new Tooltip();
+                HBox paymentAccountDataDetailsBox = new HBox(8, paymentAccountDataRefreshButton, paymentAccountDataWaitingLabel);
+                paymentAccountDataDetailsBox.setAlignment(Pos.BASELINE_LEFT);
+                paymentAccountDataBox = createAndGetDescriptionAndValueBox(
+                        "authorizedRole.disputeActor.disputeCaseDetails.paymentAccountData",
+                        paymentAccountDataDetailsBox
+                );
+                takerPaymentAccountDataBox = createAndGetDescriptionAndValueBox(
+                        "authorizedRole.disputeActor.disputeCaseDetails.paymentAccountData.taker",
+                        createPaymentAccountDataWithIssueBox(true)
+                );
+                makerPaymentAccountDataLabel = getValueLabel();
+                makerPaymentAccountDataBox = createAndGetDescriptionAndValueBox(
+                        "authorizedRole.disputeActor.disputeCaseDetails.paymentAccountData.maker",
+                        createPaymentAccountDataWithIssueBox(false)
+                );
+                paymentAccountDataWaitingLabel.setText(Res.get("authorizedRole.disputeActor.disputeCaseDetails.paymentAccountData.waitingForResponse"));
+                paymentAccountDataWaitingLabel.getStyleClass().clear();
+                paymentAccountDataWaitingLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+                takerPaymentAccountDataLabel.getStyleClass().clear();
+                takerPaymentAccountDataLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+                makerPaymentAccountDataLabel.getStyleClass().clear();
+                makerPaymentAccountDataLabel.getStyleClass().addAll("text-fill-white", "normal-text");
+
+                content = new VBox(10,
+                        buyerUserNameBox,
+                        sellerUserNameBox,
+                        amountAndPriceBox,
+                        paymentMethodsBox,
+                        paymentAccountDataBox,
+                        takerPaymentAccountDataBox,
+                        makerPaymentAccountDataBox,
+                        depositTxBox);
+            } else {
+                content = new VBox(10,
+                        amountAndPriceBox);
+            }
+
+            content.setAlignment(Pos.CENTER_LEFT);
+            root.getChildren().add(content);
+        }
+
+        @Override
+        protected void onViewAttached() {
+            if (!model.isCompactView()) {
+                buyerUserNameLabel.setText(String.format("%s (%d)", model.getBuyerUserName(), model.getBuyerCaseCountTotal()));
+                sellerUserNameLabel.setText(String.format("%s (%d)", model.getSellerUserName(), model.getSellerCaseCountTotal()));
+                buyerUserNameLabel.setTooltip(new Tooltip(Res.get(
+                        "authorizedRole.disputeActor.caseCounts.tooltip",
+                        model.getBuyerBotId(),
+                        model.getBuyerUserId(),
+                        model.getBuyerCaseCountOpen(),
+                        model.getBuyerCaseCountClosed()
+                )));
+                sellerUserNameLabel.setTooltip(new Tooltip(Res.get(
+                        "authorizedRole.disputeActor.caseCounts.tooltip",
+                        model.getSellerBotId(),
+                        model.getSellerUserId(),
+                        model.getSellerCaseCountOpen(),
+                        model.getSellerCaseCountClosed()
+                )));
+                buyerUserNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getBuyerUserName()));
+                sellerUserNameCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getSellerUserName()));
+
+                paymentMethodLabel.setText(model.getPaymentMethod());
+                paymentMethodsBox.setVisible(model.isPaymentMethodsBoxVisible());
+                paymentMethodsBox.setManaged(model.isPaymentMethodsBoxVisible());
+
+                depositTxDetailsLabel.setText(model.getDepositTxId());
+                depositTxTitleLabel.setText(Res.get("muSig.trade.details.depositTxId"));
+                depositTxCopyButton.setTooltip(Res.get("muSig.trade.details.depositTxId.copy"));
+                depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
+                depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
+                depositTxDetailsLabel.getStyleClass().clear();
+                depositTxDetailsLabel.getStyleClass().add(model.isDepositTxIdEmpty()
+                        ? "text-fill-grey-dimmed"
+                        : "text-fill-white");
+                depositTxDetailsLabel.getStyleClass().add("normal-text");
+                depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
+                paymentAccountDataBox.visibleProperty().bind(
+                        model.getHasPaymentAccountData().not()
+                                .and(model.getTakerPaymentAccountIssueVisible().not())
+                                .and(model.getMakerPaymentAccountIssueVisible().not())
+                );
+                paymentAccountDataBox.managedProperty().bind(
+                        model.getHasPaymentAccountData().not()
+                                .and(model.getTakerPaymentAccountIssueVisible().not())
+                                .and(model.getMakerPaymentAccountIssueVisible().not())
+                );
+                paymentAccountDataRefreshButton.visibleProperty().bind(
+                        model.getHasPaymentAccountData().not().and(model.getWaitingForPaymentAccountDataResponse().not())
+                );
+                paymentAccountDataRefreshButton.managedProperty().bind(
+                        model.getHasPaymentAccountData().not().and(model.getWaitingForPaymentAccountDataResponse().not())
+                );
+                paymentAccountDataWaitingLabel.visibleProperty().bind(
+                        model.getHasPaymentAccountData().not().and(model.getWaitingForPaymentAccountDataResponse())
+                );
+                paymentAccountDataWaitingLabel.managedProperty().bind(
+                        model.getHasPaymentAccountData().not().and(model.getWaitingForPaymentAccountDataResponse())
+                );
+                takerPaymentAccountDataBox.visibleProperty().bind(
+                        model.getTakerPaymentAccountData().isNotEmpty()
+                                .or(model.getTakerPaymentAccountIssueVisible())
+                );
+                takerPaymentAccountDataBox.managedProperty().bind(
+                        model.getTakerPaymentAccountData().isNotEmpty()
+                                .or(model.getTakerPaymentAccountIssueVisible())
+                );
+                makerPaymentAccountDataBox.visibleProperty().bind(
+                        model.getMakerPaymentAccountData().isNotEmpty()
+                                .or(model.getMakerPaymentAccountIssueVisible())
+                );
+                makerPaymentAccountDataBox.managedProperty().bind(
+                        model.getMakerPaymentAccountData().isNotEmpty()
+                                .or(model.getMakerPaymentAccountIssueVisible())
+                );
+                takerPaymentAccountDataLabel.textProperty().bind(model.getTakerPaymentAccountData());
+                makerPaymentAccountDataLabel.textProperty().bind(model.getMakerPaymentAccountData());
+                takerPaymentAccountIssueButton.visibleProperty().bind(model.getTakerPaymentAccountIssueVisible());
+                takerPaymentAccountIssueButton.managedProperty().bind(model.getTakerPaymentAccountIssueVisible());
+                makerPaymentAccountIssueButton.visibleProperty().bind(model.getMakerPaymentAccountIssueVisible());
+                makerPaymentAccountIssueButton.managedProperty().bind(model.getMakerPaymentAccountIssueVisible());
+                takerPaymentAccountIssueTooltip.textProperty().bind(model.getTakerPaymentAccountIssueTooltip());
+                makerPaymentAccountIssueTooltip.textProperty().bind(model.getMakerPaymentAccountIssueTooltip());
+                paymentAccountDataRefreshButton.setOnAction(e -> controller.requestPaymentAccountData());
+            }
+
+            amountAndPriceDisplay.setContract(model.getContract());
+        }
+
+        @Override
+        protected void onViewDetached() {
+            if (!model.isCompactView()) {
+                buyerUserNameCopyButton.setOnAction(null);
+                sellerUserNameCopyButton.setOnAction(null);
+                depositTxCopyButton.setOnAction(null);
+                paymentAccountDataRefreshButton.setOnAction(null);
+                paymentAccountDataBox.visibleProperty().unbind();
+                paymentAccountDataBox.managedProperty().unbind();
+                paymentAccountDataRefreshButton.visibleProperty().unbind();
+                paymentAccountDataRefreshButton.managedProperty().unbind();
+                paymentAccountDataWaitingLabel.visibleProperty().unbind();
+                paymentAccountDataWaitingLabel.managedProperty().unbind();
+                takerPaymentAccountDataBox.visibleProperty().unbind();
+                takerPaymentAccountDataBox.managedProperty().unbind();
+                makerPaymentAccountDataBox.visibleProperty().unbind();
+                makerPaymentAccountDataBox.managedProperty().unbind();
+                takerPaymentAccountDataLabel.textProperty().unbind();
+                makerPaymentAccountDataLabel.textProperty().unbind();
+                takerPaymentAccountIssueButton.visibleProperty().unbind();
+                takerPaymentAccountIssueButton.managedProperty().unbind();
+                makerPaymentAccountIssueButton.visibleProperty().unbind();
+                makerPaymentAccountIssueButton.managedProperty().unbind();
+                takerPaymentAccountIssueTooltip.textProperty().unbind();
+                makerPaymentAccountIssueTooltip.textProperty().unbind();
+            }
+        }
+
+        private HBox createPaymentAccountDataWithIssueBox(boolean taker) {
+            Button issueButton = bisq.desktop.components.controls.BisqIconButton.createInfoIconButton();
+            issueButton.getGraphic().getStyleClass().add("overlay-icon-warning");
+            issueButton.setVisible(false);
+            issueButton.setManaged(false);
+            if (taker) {
+                takerPaymentAccountIssueButton = issueButton;
+                issueButton.setTooltip(takerPaymentAccountIssueTooltip);
+            } else {
+                makerPaymentAccountIssueButton = issueButton;
+                issueButton.setTooltip(makerPaymentAccountIssueTooltip);
+            }
+            Label valueLabel = taker ? takerPaymentAccountDataLabel : makerPaymentAccountDataLabel;
+            HBox box = new HBox(6, valueLabel, issueButton);
+            box.setAlignment(Pos.BASELINE_LEFT);
+            return box;
+        }
+    }
+}

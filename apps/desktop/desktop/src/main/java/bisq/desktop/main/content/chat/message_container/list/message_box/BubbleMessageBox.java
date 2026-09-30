@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
+import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.Citation;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
@@ -33,6 +34,9 @@ import bisq.desktop.components.controls.SelectableLabel;
 import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListController;
+import bisq.desktop.main.content.chat.message_container.list.message_box.markdown.SupportMarkdownDocument;
+import bisq.desktop.main.content.chat.message_container.list.message_box.markdown.SupportMarkdownParser;
+import bisq.desktop.main.content.chat.message_container.list.message_box.markdown.SupportMarkdownRenderer;
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ActiveReactionsDisplayBox;
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ReactMenuBox;
 import bisq.desktop.main.content.chat.message_container.list.reactions_box.ToggleReaction;
@@ -42,6 +46,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -51,6 +56,7 @@ import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
@@ -82,6 +88,7 @@ public abstract class BubbleMessageBox extends MessageBox {
     protected Label userName;
     protected Label dateTime;
     protected final SelectableLabel message;
+    protected final Region messageNode;
     protected HBox userNameAndDateHBox;
     protected final HBox messageBgHBox;
     protected final HBox messageHBox;
@@ -114,6 +121,7 @@ public abstract class BubbleMessageBox extends MessageBox {
         quotedMessageVBox = createAndGetQuotedMessageBox();
         handleQuoteMessageBox();
         message = createAndGetMessage();
+        messageNode = createAndGetMessageNode();
         messageBgHBox = createAndGetMessageBackground();
         messageHBox = createAndGetMessageBox();
 
@@ -325,6 +333,55 @@ public abstract class BubbleMessageBox extends MessageBox {
         label.setPadding(new Insets(10));
         label.getStyleClass().addAll("text-fill-white", "normal-text", "font-default");
         return label;
+    }
+
+    private Region createAndGetMessageNode() {
+        if (item.getChatChannel().getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
+            SupportMarkdownDocument markdownDocument = SupportMarkdownParser.parse(item.getMessage());
+            if (markdownDocument.hasMarkdownFormatting()) {
+                VBox markdownRoot = SupportMarkdownRenderer.render(markdownDocument, Pos.CENTER_LEFT);
+                markdownRoot.setPadding(new Insets(10));
+                markdownRoot.setMaxWidth(Double.MAX_VALUE);
+                markdownRoot.getStyleClass().add("chat-markdown-message");
+                return markdownRoot;
+            }
+        }
+        return message;
+    }
+
+    protected void setMessageAlignment(Pos alignment) {
+        if (messageNode == message) {
+            message.setAlignment(alignment);
+        } else {
+            SupportMarkdownRenderer.applyAlignment((VBox) messageNode, alignment);
+        }
+    }
+
+    protected void bindMessageMaxWidth(ObservableValue<? extends Number> observable) {
+        messageNode.maxWidthProperty().bind(observable);
+        if (messageNode != message) {
+            messageNode.prefWidthProperty().bind(observable);
+        }
+    }
+
+    protected void unbindMessageMaxWidth() {
+        messageNode.maxWidthProperty().unbind();
+        if (messageNode != message) {
+            messageNode.prefWidthProperty().unbind();
+        }
+    }
+
+    protected double getMessageNodeHeight() {
+        return messageNode.getBoundsInLocal().getHeight();
+    }
+
+    protected void setMessageNodeVisibleManaged(boolean visible) {
+        messageNode.setVisible(visible);
+        messageNode.setManaged(visible);
+    }
+
+    protected String getRawMessageTextForEditing() {
+        return item.getChatMessage().getTextOrNA();
     }
 
     private HBox createAndGetMessageBackground() {

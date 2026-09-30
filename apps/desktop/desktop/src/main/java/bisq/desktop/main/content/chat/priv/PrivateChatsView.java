@@ -22,6 +22,7 @@ import bisq.desktop.common.Layout;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -33,6 +34,8 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -40,6 +43,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -60,9 +64,11 @@ import java.util.Optional;
 public abstract class PrivateChatsView extends ChatView<PrivateChatsView, PrivateChatsModel> {
     private BisqTableView<ListItem> tableView;
     private VBox openChatsSelectionList, chatHeaderVBox;
-    private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin;
+    private Subscription noOpenChatsPin, tableViewSelectionPin, selectedModelItemPin, peersUserProfilePin,
+            peersUserProfileIgnoredPin;
     private UserProfileDisplay chatPeerUserProfileDisplay;
     private DropdownBisqMenuItem leaveChatButton;
+    private final Tooltip headerIgnoredPeerTooltip = new BisqTooltip(Res.get("chat.private.ignoredPeer.tooltip"));
 
     public PrivateChatsView(PrivateChatsModel model,
                             PrivateChatsController controller,
@@ -114,6 +120,12 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             }
         });
 
+        peersUserProfileIgnoredPin = EasyBind.subscribe(model.getPeersUserProfileIgnored(), ignored -> {
+            if (chatPeerUserProfileDisplay != null) {
+                applyPeerIgnoredState(chatPeerUserProfileDisplay, headerIgnoredPeerTooltip, ignored);
+            }
+        });
+
         leaveChatButton.setOnAction(e -> getController().onLeaveChat());
 
         ellipsisMenu.visibleProperty().bind(model.getNoOpenChats().not());
@@ -133,6 +145,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         tableViewSelectionPin.unsubscribe();
         noOpenChatsPin.unsubscribe();
         peersUserProfilePin.unsubscribe();
+        peersUserProfileIgnoredPin.unsubscribe();
 
         leaveChatButton.setOnAction(null);
         ellipsisMenu.visibleProperty().unbind();
@@ -141,7 +154,12 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         tableView.visibleProperty().unbind();
         tableView.managedProperty().unbind();
 
+        disposeChatPeerUserProfileDisplay();
+    }
+
+    private void disposeChatPeerUserProfileDisplay() {
         if (chatPeerUserProfileDisplay != null) {
+            Tooltip.uninstall(chatPeerUserProfileDisplay, headerIgnoredPeerTooltip);
             chatPeerUserProfileDisplay.dispose();
             chatPeerUserProfileDisplay = null;
         }
@@ -212,6 +230,8 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             private final UserProfileDisplay userProfileDisplay = new UserProfileDisplay();
             private final HBox hBox = new HBox(5);
             private final Badge badge = new Badge(Pos.CENTER_RIGHT);
+            private final Tooltip ignoredPeerTooltip = new BisqTooltip(Res.get("chat.private.ignoredPeer.tooltip"));
+            private Subscription peerIgnoredPin;
 
             {
                 getStyleClass().add("user-profile-table-cell");
@@ -222,19 +242,36 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             protected void updateItem(ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
+                if (peerIgnoredPin != null) {
+                    peerIgnoredPin.unsubscribe();
+                    peerIgnoredPin = null;
+                }
+
                 if (item != null && !empty) {
                     userProfileDisplay.setUserProfile(item.getPeersUserProfile(), false);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     badge.textProperty().bind(item.getNumNotificationsString());
+                    peerIgnoredPin = EasyBind.subscribe(item.getPeerIgnored(), ignored ->
+                            applyPeerIgnoredState(userProfileDisplay, ignoredPeerTooltip, ignored));
 
                     setGraphic(hBox);
                 } else {
                     badge.textProperty().unbind();
+                    Tooltip.uninstall(userProfileDisplay, ignoredPeerTooltip);
                     userProfileDisplay.dispose();
                     setGraphic(null);
                 }
             }
         };
+    }
+
+    private static void applyPeerIgnoredState(UserProfileDisplay userProfileDisplay, Tooltip tooltip, boolean ignored) {
+        userProfileDisplay.setOpacity(ignored ? 0.4 : 1);
+        if (ignored) {
+            Tooltip.install(userProfileDisplay, tooltip);
+        } else {
+            Tooltip.uninstall(userProfileDisplay, tooltip);
+        }
     }
 
     protected PrivateChatsModel getModel() {
@@ -246,9 +283,12 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
     }
 
     private void createHeaderVBox(boolean hasPeerToDisplay) {
+        disposeChatPeerUserProfileDisplay();
         chatHeaderVBox.getChildren().clear();
         if (hasPeerToDisplay) {
             chatPeerUserProfileDisplay = new UserProfileDisplay(34);
+            applyPeerIgnoredState(chatPeerUserProfileDisplay, headerIgnoredPeerTooltip,
+                    getModel().getPeersUserProfileIgnored().get());
             chatHeaderVBox.getChildren().add(chatPeerUserProfileDisplay);
             chatHeaderVBox.setAlignment(Pos.CENTER_LEFT);
         } else {
@@ -278,6 +318,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
         private final String totalReputationScoreString, profileAgeString;
         private final ReputationScore reputationScore;
         private final StringProperty numNotificationsString = new SimpleStringProperty();
+        private final BooleanProperty peerIgnored = new SimpleBooleanProperty();
 
         public ListItem(TwoPartyPrivateChatChannel channel,
                         ReputationService reputationService,
@@ -285,6 +326,7 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
             this.channel = channel;
 
             peersUserProfile = userProfileService.getManagedUserProfile(channel.getPeer());
+            peerIgnored.set(userProfileService.isChatUserIgnored(peersUserProfile));
 
             peersUserName = peersUserProfile.getUserName();
             myUserName = channel.getMyUserIdentity().getUserName();
@@ -302,6 +344,10 @@ public abstract class PrivateChatsView extends ChatView<PrivateChatsView, Privat
 
         public void setNumNotifications(long numNotifications) {
             numNotificationsString.set(numNotifications == 0 ? "" : String.valueOf(numNotifications));
+        }
+
+        public void setPeerIgnored(boolean ignored) {
+            peerIgnored.set(ignored);
         }
     }
 }

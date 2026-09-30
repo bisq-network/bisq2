@@ -91,6 +91,7 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
         }
         controller.onDeactivateInternal();
         onViewDetachedInternal();
+        ViewLifecycleObservers.onViewDetached(this);
         isViewAttached = false;
     }
 
@@ -99,6 +100,7 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
         // correct state.
         controller.onActivateInternal();
         onViewAttachedInternal();
+        ViewLifecycleObservers.onViewAttached(this);
         isViewAttached = true;
     }
 

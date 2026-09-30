@@ -17,6 +17,7 @@
 
 package bisq.offer.price.spec;
 
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -35,6 +36,11 @@ public final class MarketPriceSpec implements PriceSpec {
 
     @Override
     public void verify() {
+    }
+
+    @Override
+    public String getDisplayName() {
+        return Res.get("priceSpec.marketPriceSpec");
     }
 
     @Override

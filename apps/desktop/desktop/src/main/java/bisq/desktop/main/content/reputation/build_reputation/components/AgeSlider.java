@@ -28,11 +28,15 @@ import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class AgeSlider {
     private final Controller controller;
 
     public AgeSlider(int min, int max, int value) {
+        checkArgument(min <= max, "Min value must not be larger than max");
+        checkArgument(value >= min && value <= max, "Value must not exceed min or max");
         controller = new Controller(min, max, value);
     }
 

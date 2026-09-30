@@ -17,42 +17,44 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.bond.tab2;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.Browser;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import lombok.Getter;
+import bisq.desktop.main.content.reputation.build_reputation.Tab2Controller;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.i18n.Res;
+import bisq.user.reputation.BondedReputationService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BondedReputationTab2Controller implements Controller {
-    @Getter
-    private final BondedReputationTab2View view;
-
+public class BondedReputationTab2Controller extends Tab2Controller<BondedReputationTab2Model, BondedReputationTab2View, BondScoreSimulation> {
     public BondedReputationTab2Controller(ServiceProvider serviceProvider) {
-        BondedReputationTab2Model model = new BondedReputationTab2Model();
-        BondScoreSimulation simulation = new BondScoreSimulation();
-        view = new BondedReputationTab2View(model, this, simulation.getViewRoot());
+        super(serviceProvider);
     }
 
     @Override
-    public void onActivate() {
+    protected BondedReputationTab2Model createModel() {
+        return new BondedReputationTab2Model(Res.get("reputation.bond.score.info"),
+                String.valueOf(BondedReputationService.WEIGHT),
+                Res.get("reputation.bond.formula"));
     }
 
     @Override
-    public void onDeactivate() {
+    protected BondScoreSimulation createSimulation() {
+        return new BondScoreSimulation();
     }
 
-    void onBack() {
+    @Override
+    protected BondedReputationTab2View createView(BondedReputationTab2Model model, BondScoreSimulation simulation) {
+        return new BondedReputationTab2View(model, this, simulation.getViewRoot());
+    }
+
+    @Override
+    public void onBack() {
         Navigation.navigateTo(NavigationTarget.BSQ_BOND_TAB_1);
     }
 
-    void onNext() {
+    @Override
+    public void onNext() {
         Navigation.navigateTo(NavigationTarget.BSQ_BOND_TAB_3);
-    }
-
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/Reputation");
     }
 }

@@ -20,6 +20,7 @@ package bisq.desktop.main.content.mu_sig.offer.listing;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
@@ -53,6 +54,7 @@ public class MuSigMarketItem {
     private final SimpleLongProperty numOffers = new SimpleLongProperty(0);
     private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
     private final SimpleStringProperty numMarketNotifications = new SimpleStringProperty();
+    private final String relevantMarketCode, relevantCurrencyDisplayName;
     private Pin offersPin;
 
     MuSigMarketItem(Market market,
@@ -65,6 +67,14 @@ public class MuSigMarketItem {
         this.marketPriceService = marketPriceService;
         this.userProfileService = userProfileService;
         this.muSigService = muSigService;
+
+        if (market.isCrypto()) {
+            relevantMarketCode = market.getBaseCurrencyCode();
+            relevantCurrencyDisplayName = StringUtils.capitalize(market.getBaseCurrencyDisplayName());
+        } else {
+            relevantMarketCode = market.getQuoteCurrencyCode();
+            relevantCurrencyDisplayName = StringUtils.capitalize(market.getQuoteCurrencyDisplayName());
+        }
 
 //        refreshNotifications();
         initialize();

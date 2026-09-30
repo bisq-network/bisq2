@@ -59,6 +59,30 @@ public class MonetaryTest {
     }
 
     @Test
+    void testClampWithMonetaryRange() {
+        Monetary min = Coin.asBtcFromFaceValue(0.5);
+        Monetary max = Coin.asBtcFromFaceValue(1.5);
+        MonetaryRange limits = new MonetaryRange(min, max);
+
+        Monetary belowMin = Coin.asBtcFromFaceValue(0.1);
+        Monetary inRange = Coin.asBtcFromFaceValue(1.0);
+        Monetary aboveMax = Coin.asBtcFromFaceValue(2.0);
+
+        assertEquals(min, belowMin.clamp(limits));
+        assertEquals(inRange, inRange.clamp(limits));
+        assertEquals(max, aboveMax.clamp(limits));
+    }
+
+    @Test
+    void testClampThrowsIfCodeDoesNotMatch() {
+        Monetary value = Coin.asBtcFromFaceValue(1.0);
+        Monetary min = Fiat.fromFaceValue(10, "USD");
+        Monetary max = Coin.asBtcFromFaceValue(2.0);
+
+        assertThrows(IllegalArgumentException.class, () -> value.clamp(min, max));
+    }
+
+    @Test
     void testGetRoundedValueForLowPrecision() {
         Monetary monetary = Monetary.from(123456789, "BTC");
         assertEquals(123460000, monetary.getRoundedValueForLowPrecision());
@@ -129,6 +153,27 @@ public class MonetaryTest {
         assertEquals(12345678, Coin.parse("0.12345678 UNDEFINED").getValue());
         assertEquals(123456780000L, Coin.parse("0.12345678 XMR").getValue());
         Assertions.assertThrows(IllegalArgumentException.class, () -> assertEquals(1234567800, Coin.parse("123456.78 USD").getValue()));
+    }
+
+    @Test
+    void testIsBitcoinMatchesOnlyTheExactCode() {
+        assertTrue(Coin.fromFaceValue(1, "BTC").isBitcoin());
+        // L-BTC and LN-BTC are distinct assets whose units must never be treated as
+        // satoshis (e.g. by TradeAmount.getBitcoinSideAmount).
+        assertFalse(Coin.fromFaceValue(1, "L-BTC").isBitcoin());
+        assertFalse(Coin.fromFaceValue(1, "LN-BTC").isBitcoin());
+        assertFalse(Fiat.fromFaceValue(1, "USD").isBitcoin());
+    }
+
+    @Test
+    void testBitcoinSideOfLiquidBitcoinMarketTradeAmount() {
+        // 40 L-BTC at 0.0025 BTC/L-BTC: the Bitcoin side is the 0.1 BTC quote amount,
+        // not the 40 * 10^8 L-BTC base units.
+        Monetary lbtcAmount = Coin.fromFaceValue(40, "L-BTC");
+        Monetary btcAmount = Coin.fromFaceValue(0.1, "BTC");
+        TradeAmount tradeAmount = new TradeAmount(lbtcAmount, btcAmount);
+        assertEquals(btcAmount.getValue(), tradeAmount.getBitcoinSideAmount().getValue());
+        assertEquals(lbtcAmount.getValue(), tradeAmount.getNonBitcoinSideAmount().getValue());
     }
 
     @Test
@@ -230,16 +275,7 @@ public class MonetaryTest {
         assertEquals(666667, priceQuote.getValue());
         assertEquals(0.00666667, priceQuote.asDouble());
 
-        //noinspection CatchMayIgnoreException
-        try {
-            // overflow as we movePointRight by 12 with xmr
-            xmr = Coin.asXmrFromFaceValue(15000000d);
-            btc = Coin.asBtcFromFaceValue(100000.0);
-            priceQuote = PriceQuote.from(xmr, btc);
-            assertEquals(666667, priceQuote.getValue());
-            assertEquals(0.00666667, priceQuote.asDouble());
-        } catch (Exception e) {
-            assertInstanceOf(ArithmeticException.class, e);
-        }
+        // overflow as we movePointRight by 12 with xmr
+        assertThrows(ArithmeticException.class, () -> Coin.asXmrFromFaceValue(15000000d));
     }
 }

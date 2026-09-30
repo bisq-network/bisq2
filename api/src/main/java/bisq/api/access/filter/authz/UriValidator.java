@@ -24,8 +24,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class UriValidator {
-    private static final Pattern DEFAULT_SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-,.:=~]*$");
-    private static final Pattern DEFAULT_SAFE_QUERY = Pattern.compile("^[a-zA-Z0-9/_\\-,.:?&=~]*$");
+    private static final Pattern DEFAULT_SAFE_PATH = Pattern.compile("^[a-zA-Z0-9/_\\-,.:=~ ]*$");
+    private static final Pattern DEFAULT_SAFE_QUERY = Pattern.compile("^[^\\p{Cc}]*$");
     private static final int MAX_PATH_LENGTH = 2000;
 
     private final Pattern safePathPattern;

@@ -17,137 +17,56 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.accountAge.tab2;
 
-import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.main.content.reputation.build_reputation.components.AgeSlider;
-import bisq.i18n.Res;
+import bisq.desktop.main.content.reputation.build_reputation.ScoreSimulation;
 import bisq.user.reputation.AccountAgeService;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
-public class AccountAgeScoreSimulation {
-
-    private final Controller controller;
-
+public class AccountAgeScoreSimulation extends ScoreSimulation {
     public AccountAgeScoreSimulation() {
-        controller = new Controller();
+        super();
     }
 
-    public VBox getViewRoot() {
-        return controller.getView().getRoot();
+    @Override
+    protected Controller createController() {
+        return new AccountAgeScoreSimulation.Controller();
     }
 
     @Slf4j
-    public static class Controller implements bisq.desktop.common.view.Controller {
-        @Getter
-        private final View view;
-        private final Model model;
-        private Subscription agePin, ageAsStringPin, scorePin;
-
+    public static class Controller extends ScoreSimulation.Controller<Model, View> {
         private Controller() {
-            model = new Model();
-            view = new View(model, this);
-
-            model.getAge().set(0);
-            model.getAgeAsString().set("0");
+            super(0,
+                    0,
+                    (int) AccountAgeService.MAX_DAYS_AGE_SCORE);
         }
 
         @Override
-        public void onActivate() {
-            agePin = EasyBind.subscribe(model.getAge(), age -> model.getAgeAsString().set(String.valueOf(age)));
-            ageAsStringPin = EasyBind.subscribe(model.getAgeAsString(), ageAsString -> {
-                try {
-                    model.getAge().set(Integer.parseInt(ageAsString));
-                } catch (Exception e) {
-                    log.error("Exception", e);
-                }
-            });
-
-            scorePin = EasyBind.subscribe(model.getAge(), age -> model.getScore().set(calculateSimScore(age)));
+        protected Model createModel(int defaultAge, int ageSliderMin, int ageSliderMax) {
+            return new Model(defaultAge, ageSliderMin, ageSliderMax);
         }
 
         @Override
-        public void onDeactivate() {
-            agePin.unsubscribe();
-            ageAsStringPin.unsubscribe();
-            scorePin.unsubscribe();
+        protected View createView(Model model) {
+            return new View(model, this);
         }
 
-        private String calculateSimScore(Number age) {
-            try {
-                long ageInDays = Math.max(0, age.intValue());
-                long totalScore = AccountAgeService.doCalculateScore(ageInDays);
-                return String.valueOf(totalScore);
-            } catch (Exception e) {
-                return "";
-            }
+        @Override
+        protected void calculateScore() {
+            long score = AccountAgeService.doCalculateScore(model.getAge().get());
+            applyScore(score);
         }
     }
 
     @Getter
-    private static class Model implements bisq.desktop.common.view.Model {
-        private final IntegerProperty age = new SimpleIntegerProperty();
-        private final StringProperty ageAsString = new SimpleStringProperty();
-        private final StringProperty score = new SimpleStringProperty();
+    protected static class Model extends ScoreSimulation.Model {
+        public Model(int defaultAge, int ageSliderMin, int ageSliderMax) {
+            super(defaultAge, ageSliderMin, ageSliderMax);
+        }
     }
 
-    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private static final double MATERIAL_FIELD_WIDTH = 280;
-
-        private final AgeSlider simAgeSlider;
-        private final MaterialTextField simScore;
-        private final MaterialTextField ageField;
-
+    protected static class View extends ScoreSimulation.View<Model, Controller> {
         private View(Model model, Controller controller) {
-            super(new VBox(10), model, controller);
-
-            Label simHeadline = new Label(Res.get("reputation.sim.headline"));
-            simHeadline.getStyleClass().addAll("bisq-text-1");
-            ageField = getInputField("reputation.sim.age");
-            simAgeSlider = new AgeSlider(0, (int) AccountAgeService.MAX_DAYS_AGE_SCORE, 0);
-            simScore = getField(Res.get("reputation.sim.score"));
-            VBox.setMargin(simAgeSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
-            root.getChildren().addAll(simHeadline,
-                    ageField,
-                    simAgeSlider.getView().getRoot(),
-                    simScore);
-        }
-
-        @Override
-        protected void onViewAttached() {
-            simAgeSlider.valueProperty().bindBidirectional(model.getAge());
-            ageField.textProperty().bindBidirectional(model.getAgeAsString());
-            simScore.textProperty().bind(model.getScore());
-        }
-
-        @Override
-        protected void onViewDetached() {
-            simAgeSlider.valueProperty().unbindBidirectional(model.getAge());
-            ageField.textProperty().unbindBidirectional(model.getAgeAsString());
-            simScore.textProperty().unbind();
-        }
-
-        private MaterialTextField getField(String description) {
-            MaterialTextField field = new MaterialTextField(description);
-            field.setEditable(false);
-            field.setMinWidth(MATERIAL_FIELD_WIDTH);
-            field.setMaxWidth(MATERIAL_FIELD_WIDTH);
-            return field;
-        }
-
-        private MaterialTextField getInputField(String key) {
-            MaterialTextField field = new MaterialTextField(Res.get(key), Res.get(key + ".prompt"));
-            field.setMinWidth(MATERIAL_FIELD_WIDTH);
-            field.setMaxWidth(MATERIAL_FIELD_WIDTH);
-            return field;
+            super(model, controller);
         }
     }
 }

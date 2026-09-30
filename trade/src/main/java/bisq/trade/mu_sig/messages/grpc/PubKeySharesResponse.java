@@ -27,13 +27,16 @@ import java.util.Arrays;
 public final class PubKeySharesResponse implements Proto {
     private final byte[] buyerOutputPubKeyShare;
     private final byte[] sellerOutputPubKeyShare;
+    private final byte[] multisigScriptKey;
     private final int currentBlockHeight;
 
     public PubKeySharesResponse(byte[] buyerOutputPubKeyShare,
                                 byte[] sellerOutputPubKeyShare,
+                                byte[] multisigScriptKey,
                                 int currentBlockHeight) {
         this.buyerOutputPubKeyShare = buyerOutputPubKeyShare;
         this.sellerOutputPubKeyShare = sellerOutputPubKeyShare;
+        this.multisigScriptKey = multisigScriptKey;
         this.currentBlockHeight = currentBlockHeight;
     }
 
@@ -42,6 +45,7 @@ public final class PubKeySharesResponse implements Proto {
         return bisq.trade.protobuf.PubKeySharesResponse.newBuilder()
                 .setBuyerOutputPubKeyShare(ByteString.copyFrom(buyerOutputPubKeyShare))
                 .setSellerOutputPubKeyShare(ByteString.copyFrom(sellerOutputPubKeyShare))
+                .setMultisigScriptKey(ByteString.copyFrom(multisigScriptKey))
                 .setCurrentBlockHeight(currentBlockHeight);
     }
 
@@ -53,6 +57,7 @@ public final class PubKeySharesResponse implements Proto {
     public static PubKeySharesResponse fromProto(bisq.trade.protobuf.PubKeySharesResponse proto) {
         return new PubKeySharesResponse(proto.getBuyerOutputPubKeyShare().toByteArray(),
                 proto.getSellerOutputPubKeyShare().toByteArray(),
+                proto.getMultisigScriptKey().toByteArray(),
                 proto.getCurrentBlockHeight());
     }
 
@@ -62,13 +67,15 @@ public final class PubKeySharesResponse implements Proto {
 
         return currentBlockHeight == that.currentBlockHeight &&
                 Arrays.equals(buyerOutputPubKeyShare, that.buyerOutputPubKeyShare) &&
-                Arrays.equals(sellerOutputPubKeyShare, that.sellerOutputPubKeyShare);
+                Arrays.equals(sellerOutputPubKeyShare, that.sellerOutputPubKeyShare) &&
+                Arrays.equals(multisigScriptKey, that.multisigScriptKey);
     }
 
     @Override
     public int hashCode() {
         int result = Arrays.hashCode(buyerOutputPubKeyShare);
         result = 31 * result + Arrays.hashCode(sellerOutputPubKeyShare);
+        result = 31 * result + Arrays.hashCode(multisigScriptKey);
         result = 31 * result + currentBlockHeight;
         return result;
     }

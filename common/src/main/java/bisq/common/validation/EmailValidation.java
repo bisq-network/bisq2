@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 public class EmailValidation {
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^(?!.*\\.\\.)[A-Z0-9._%+-]+@" +                   // Local part, no consecutive dots
+            "^(?!.*\\.\\.)[A-Z0-9_%+-]+(?:\\.[A-Z0-9_%+-]+)*@" + // Local part: no consecutive/leading/trailing dots
                     "(?:[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?\\.)+" +         // Domain labels: no leading/trailing hyphens
                     "[A-Z]{2,}$",                                       // TLD: at least 2 letters
             Pattern.CASE_INSENSITIVE

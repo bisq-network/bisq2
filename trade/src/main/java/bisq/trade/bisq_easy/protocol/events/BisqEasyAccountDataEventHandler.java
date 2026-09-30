@@ -23,6 +23,8 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 
+import java.util.Optional;
+
 public class BisqEasyAccountDataEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyAccountDataEvent> {
     private String paymentAccountData;
 
@@ -37,7 +39,7 @@ public class BisqEasyAccountDataEventHandler extends BisqEasyTradeEventHandlerAs
 
     @Override
     protected void commit() {
-        trade.getPaymentAccountData().set(paymentAccountData);
+        trade.setPaymentAccountData(Optional.of(paymentAccountData));
     }
 
     @Override

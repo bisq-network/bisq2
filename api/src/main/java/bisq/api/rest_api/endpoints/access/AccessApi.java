@@ -67,12 +67,12 @@ public class AccessApi extends RestApiBase {
             summary = "Request API client pairing",
             description = """
                     Performs pairing of an API client.
-                    
+
                     The client submits a signed pairing request containing:
                     - protocol version
                     - pairing code identifier (from QR code)
                     - client name
-                    
+
                     On success, client credentials and a short-lived session ID are returned.
                     """
     )
@@ -136,10 +136,10 @@ public class AccessApi extends RestApiBase {
             description = """
                     Creates a new short-lived session for a client using a
                     client identifier and shared client secret.
-                    
+
                     This endpoint is intentionally unauthenticated and is used during
                     initial client bootstrap or re-sessioning.
-                    
+
                     If the credentials are valid, a new session ID is issued together
                     with its expiration timestamp. The session ID must be supplied in
                     subsequent authenticated requests.

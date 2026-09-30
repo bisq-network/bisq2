@@ -46,7 +46,9 @@ public abstract class ProtoResolverMap<T extends Proto> {
         try {
             return resolver.fromAny(anyProto);
         } catch (Exception e) {
-            log.error("Could not resolve proto {}. protoTypeName={}", anyProto, protoTypeName, e);
+            // Never log the Any itself, it can hold private keys or payment account data.
+            log.error("Could not resolve proto. protoTypeName={}, {} bytes",
+                    protoTypeName, anyProto.getValue().size(), e);
             throw new UnresolvableProtobufMessageException(anyProto, e);
         }
     }

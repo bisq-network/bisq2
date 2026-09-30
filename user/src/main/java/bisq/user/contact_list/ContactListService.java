@@ -18,6 +18,7 @@
 package bisq.user.contact_list;
 
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.network.p2p.services.data.DataService;
 import bisq.persistence.DbSubDirectory;
@@ -28,6 +29,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +49,10 @@ public class ContactListService extends RateLimitedPersistenceClient<ContactList
     private final Persistence<ContactListStore> persistence;
     @Getter
     private final Map<String, Set<String>> nymsByNickName = new ConcurrentHashMap<>();
+    // Tag/notes/trustScore edits mutate an entry in place, so the observable set never fires for
+    // them; observers that need edits too (the API push) watch this counter alongside the set.
+    @Getter
+    private final Observable<Long> numContactListEntryEdits = new Observable<>(0L);
 
     public ContactListService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
@@ -93,6 +99,12 @@ public class ContactListService extends RateLimitedPersistenceClient<ContactList
                 .anyMatch(contactListEntry -> contactListEntry.getUserProfile().getId().equals(userProfile.getId()));
     }
 
+    public Optional<ContactListEntry> findContactListEntry(String userProfileId) {
+        return persistableStore.getContactListEntries().stream()
+                .filter(contactListEntry -> contactListEntry.getUserProfile().getId().equals(userProfileId))
+                .findAny();
+    }
+
     public Optional<ContactListEntry> findContactListEntry(UserProfile userProfile) {
         return persistableStore.getContactListEntries().stream()
                 .filter(contactListEntry -> contactListEntry.getUserProfile().getId().equals(userProfile.getId()))
@@ -100,47 +112,74 @@ public class ContactListService extends RateLimitedPersistenceClient<ContactList
     }
 
     public void setTag(ContactListEntry contactListEntry, String newTag) {
-        if (newTag == null || newTag.length() > CONTACT_LIST_ENTRY_MAX_TAG_LENGTH) {
-            return;
-        }
-
-        findContactListEntry(contactListEntry).ifPresent(cle -> {
-            if (cle.getTag().isPresent() && cle.getTag().get().equals(newTag)) {
-                return;
-            }
-            cle.setTag(newTag);
-            persist();
-        });
+        updateAnnotations(contactListEntry, newTag, null, null);
     }
 
     public void setNotes(ContactListEntry contactListEntry, String newNotes) {
-        if (newNotes == null || newNotes.length() > CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH) {
-            return;
-        }
-
-        findContactListEntry(contactListEntry).ifPresent(cle -> {
-            if (cle.getNotes().isPresent() && cle.getNotes().get().equals(newNotes)) {
-                return;
-            }
-            cle.setNotes(newNotes);
-            persist();
-        });
+        updateAnnotations(contactListEntry, null, newNotes, null);
     }
 
     public void setTrustScore(ContactListEntry contactListEntry, Double newTrustScore) {
-        if (newTrustScore == null
+        updateAnnotations(contactListEntry, null, null, newTrustScore);
+    }
+
+    /**
+     * Applies all provided annotations as one edit: one persist request and one edit notification.
+     * Per-field application persisted and notified per field, so a multi-field save could hit the
+     * persistence rate limit with only some fields captured by the async snapshot, and subscribers
+     * saw intermediate states. Null means "leave unchanged"; if any provided value is invalid,
+     * nothing is applied. Returns whether anything changed.
+     * <p>
+     * Synchronized because every annotation mutation funnels through here: without it, two
+     * concurrent edits of the same entry both read the old values and the loser's write is
+     * silently dropped.
+     */
+    public synchronized boolean updateAnnotations(ContactListEntry contactListEntry,
+                                     @Nullable String newTag,
+                                     @Nullable String newNotes,
+                                     @Nullable Double newTrustScore) {
+        if (newTag != null && newTag.length() > CONTACT_LIST_ENTRY_MAX_TAG_LENGTH) {
+            return false;
+        }
+        if (newNotes != null && newNotes.length() > CONTACT_LIST_ENTRY_MAX_NOTES_LENGTH) {
+            return false;
+        }
+        // isFinite: NaN passes plain range checks (both comparisons are false) and would poison
+        // the persisted store and the JSON snapshot, where it serializes as a string.
+        if (newTrustScore != null
+                && (!Double.isFinite(newTrustScore)
                 || newTrustScore < CONTACT_LIST_ENTRY_MIN_TRUST_SCORE
-                || newTrustScore > CONTACT_LIST_ENTRY_MAX_TRUST_SCORE) {
-            return;
+                || newTrustScore > CONTACT_LIST_ENTRY_MAX_TRUST_SCORE)) {
+            return false;
         }
 
-        findContactListEntry(contactListEntry).ifPresent(cle -> {
-            if (cle.getTrustScore().isPresent() && cle.getTrustScore().get().equals(newTrustScore)) {
-                return;
+        return findContactListEntry(contactListEntry).map(cle -> {
+            boolean changed = false;
+            if (newTag != null && !cle.getTag().equals(Optional.of(newTag))) {
+                cle.setTag(newTag);
+                changed = true;
             }
-            cle.setTrustScore(newTrustScore);
-            persist();
-        });
+            if (newNotes != null && !cle.getNotes().equals(Optional.of(newNotes))) {
+                cle.setNotes(newNotes);
+                changed = true;
+            }
+            if (newTrustScore != null && !cle.getTrustScore().equals(Optional.of(newTrustScore))) {
+                cle.setTrustScore(newTrustScore);
+                changed = true;
+            }
+            if (changed) {
+                persist();
+                notifyContactListEntryEdited();
+            }
+            return changed;
+        }).orElse(false);
+    }
+
+    // Synchronized: two concurrent edits doing a plain read-modify-write could write the same
+    // value, and Observable.set drops an equal value without notifying — silently losing the
+    // second edit's change notification.
+    private synchronized void notifyContactListEntryEdited() {
+        numContactListEntryEdits.set(numContactListEntryEdits.get() + 1);
     }
 
     private Optional<ContactListEntry> findContactListEntry(ContactListEntry contactListEntry) {

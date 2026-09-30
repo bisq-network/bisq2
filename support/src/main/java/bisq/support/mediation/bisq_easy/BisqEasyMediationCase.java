@@ -18,19 +18,22 @@
 package bisq.support.mediation.bisq_easy;
 
 import bisq.common.observable.Observable;
+import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Optional;
 
-@Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BisqEasyMediationCase implements PersistableProto {
     @EqualsAndHashCode.Include
+    @Getter
     private final BisqEasyMediationRequest bisqEasyMediationRequest;
+    @Getter
     private final long requestDate;
     private final Observable<Boolean> isClosed = new Observable<>();
+    @Getter
     private Optional<Long> closeCaseDate;
 
     public BisqEasyMediationCase(BisqEasyMediationRequest bisqEasyMediationRequest) {
@@ -72,6 +75,14 @@ public class BisqEasyMediationCase implements PersistableProto {
                 proto.getRequestDate(),
                 proto.getIsClosed(),
                 proto.hasCloseCaseDate() ? Optional.of(proto.getCloseCaseDate()) : Optional.empty());
+    }
+
+    public boolean isClosed() {
+        return isClosed.get();
+    }
+
+    public ReadOnlyObservable<Boolean> isClosedObservable() {
+        return isClosed;
     }
 
     public boolean setClosed(boolean closed) {

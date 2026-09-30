@@ -24,6 +24,8 @@ import bisq.chat.reactions.Reaction;
 import bisq.common.util.StringUtils;
 import bisq.api.dto.DtoMappings;
 import bisq.api.rest_api.endpoints.RestApiBase;
+import bisq.api.rest_api.endpoints.chat.SendChatMessageReactionRequest;
+import bisq.api.rest_api.endpoints.chat.SendChatMessageRequest;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;

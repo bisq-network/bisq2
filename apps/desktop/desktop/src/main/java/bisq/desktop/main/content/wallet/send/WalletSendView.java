@@ -18,12 +18,18 @@
 package bisq.desktop.main.content.wallet.send;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.validator.NumberValidator;
+import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,21 +37,39 @@ import lombok.extern.slf4j.Slf4j;
 public class WalletSendView extends View<VBox, WalletSendModel, WalletSendController> {
     private final MaterialTextField address, amount;
     private final MaterialPasswordField password;
-    private final Button sendButton;
+    private final Button sendButton, closeIconButton, closeButton;
 
     public WalletSendView(WalletSendModel model, WalletSendController controller) {
-        super(new VBox(20), model, controller);
+        super(new VBox(30), model, controller);
 
-        root.setPadding(new Insets(0, 40, 40, 40));
+        root.setPrefWidth(OverlayModel.WIDTH - 20);
+        root.setPrefHeight(OverlayModel.HEIGHT - 20);
+        root.setAlignment(Pos.TOP_LEFT);
+
+        closeIconButton = BisqIconButton.createIconButton("close");
+        HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeIconButton);
+        closeButtonRow.setPadding(new Insets(15, 15, 0, 0));
+
+        Label titleLabel = new Label(Res.get("wallet.send.header"));
+        titleLabel.getStyleClass().add("bisq-text-headline-2");
+        HBox headlineBox = new HBox(Spacer.fillHBox(), titleLabel, Spacer.fillHBox());
 
         address = new MaterialTextField(Res.get("wallet.send.address"), null, null);
         amount = new MaterialTextField(Res.get("wallet.send.amount"), null, null);
         amount.setValidator(new NumberValidator());
         password = new MaterialPasswordField(Res.get("wallet.send.password"), null, null);
+
+        VBox contentBox = new VBox(20);
+        contentBox.setPadding(new Insets(0, 70, 0, 70));
+        contentBox.getChildren().addAll(address, amount, password);
+
+        closeButton = new Button(Res.get("action.close"));
         sendButton = new Button(Res.get("wallet.send.sendBtc"));
         sendButton.setDefaultButton(true);
+        HBox buttonsBox = new HBox(20, closeButton, sendButton);
+        buttonsBox.setAlignment(Pos.CENTER);
 
-        root.getChildren().addAll(address, amount, password, sendButton);
+        root.getChildren().setAll(closeButtonRow, headlineBox, contentBox, buttonsBox);
     }
 
     @Override
@@ -55,7 +79,10 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
         password.textProperty().bindBidirectional(model.getPassword());
         password.visibleProperty().bind(model.getIsPasswordVisible());
         password.managedProperty().bind(model.getIsPasswordVisible());
+
         sendButton.setOnAction(e -> controller.onSend());
+        closeIconButton.setOnAction(e -> controller.onClose());
+        closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
@@ -65,7 +92,11 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
         password.textProperty().unbindBidirectional(model.getPassword());
         password.visibleProperty().unbind();
         password.managedProperty().unbind();
+
         sendButton.setOnAction(null);
+        closeIconButton.setOnAction(null);
+        closeButton.setOnAction(null);
+
         amount.resetValidation();
     }
 }

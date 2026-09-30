@@ -29,4 +29,4 @@ Related commits: [8a3326539c](https://github.com/bisq-network/bisq2/commit/8a332
 ## Release Preparation
 
 - Transifex CI installation and synchronization were hardened.
-- This checkout still declares version `2.1.11`; update all version declarations and release artifacts before publishing `2.1.12`.
+- The release version is `2.1.12`; regenerate release artifacts before publishing.

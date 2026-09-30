@@ -20,6 +20,7 @@ package bisq.desktop.main.content.mu_sig.trade.pending;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
+import bisq.chat.mu_sig.open_trades.MuSigDisputeAgentType;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.notifications.ChatNotificationService;
@@ -58,7 +59,7 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
     private Pin channelsPin, tradesPin, tradeRulesConfirmedPin;
     private MuSigPendingTradesWelcome muSigOpenTradesWelcome;
     private MuSigTradeDataHeader muSigTradeDataHeader;
-    private final Map<String, Pin> isInMediationPinMap = new HashMap<>();
+    private final Map<String, Pin> disputeAgentTypePinMap = new HashMap<>();
 
     public MuSigPendingTradesController(ServiceProvider serviceProvider) {
         super(serviceProvider, ChatChannelDomain.MU_SIG_OPEN_TRADES, NavigationTarget.MU_SIG_OPEN_TRADES);
@@ -156,8 +157,8 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
         channelsPin.unbind();
         tradesPin.unbind();
         selectedChannelPin.unbind();
-        isInMediationPinMap.values().forEach(Pin::unbind);
-        isInMediationPinMap.clear();
+        disputeAgentTypePinMap.values().forEach(Pin::unbind);
+        disputeAgentTypePinMap.clear();
         doCloseChatWindow();
         model.reset();
         resetSelectedChildTarget();
@@ -303,15 +304,15 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
                     userProfileService));
 
             String tradeId = trade.getId();
-            if (isInMediationPinMap.containsKey(tradeId)) {
-                isInMediationPinMap.get(tradeId).unbind();
+            if (disputeAgentTypePinMap.containsKey(tradeId)) {
+                disputeAgentTypePinMap.get(tradeId).unbind();
             }
-            Pin pin = channel.isInMediationObservable().addObserver(isInMediation -> {
-                if (isInMediation != null) {
+            Pin pin = channel.disputeAgentTypeObservable().addObserver(disputeAgentType -> {
+                if (disputeAgentType != null) {
                     updateIsAnyTradeInMediation();
                 }
             });
-            isInMediationPinMap.put(tradeId, pin);
+            disputeAgentTypePinMap.put(tradeId, pin);
 
             updatePredicate();
             maybeSelectFirst();
@@ -331,9 +332,9 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
             item.dispose();
             model.getListItems().remove(item);
 
-            if (isInMediationPinMap.containsKey(tradeId)) {
-                isInMediationPinMap.get(tradeId).unbind();
-                isInMediationPinMap.remove(trade.getId());
+            if (disputeAgentTypePinMap.containsKey(tradeId)) {
+                disputeAgentTypePinMap.get(tradeId).unbind();
+                disputeAgentTypePinMap.remove(trade.getId());
             }
             updateIsAnyTradeInMediation();
 
@@ -348,8 +349,8 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
             model.getListItems().forEach(MuSigPendingTradeListItem::dispose);
             model.getListItems().clear();
 
-            isInMediationPinMap.values().forEach(Pin::unbind);
-            isInMediationPinMap.clear();
+            disputeAgentTypePinMap.values().forEach(Pin::unbind);
+            disputeAgentTypePinMap.clear();
             updateIsAnyTradeInMediation();
 
             updatePredicate();
@@ -383,7 +384,7 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
     private void updateIsAnyTradeInMediation() {
         UIThread.runOnNextRenderFrame(() -> {
             boolean value = channelService.getChannels().stream()
-                    .anyMatch(MuSigOpenTradeChannel::isInMediation);
+                    .anyMatch(channel -> channel.getDisputeAgentType() == MuSigDisputeAgentType.MEDIATOR);
             model.getIsAnyTradeInMediation().set(value);
         });
     }

@@ -18,14 +18,13 @@
 package bisq.desktop.main.content.mu_sig.trade.pending.trade_state;
 
 import bisq.account.payment_method.TradeDuration;
+import bisq.chat.mu_sig.open_trades.MuSigDisputeAgentType;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
-import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.data.Triple;
 import bisq.common.market.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Layout;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIClock;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
@@ -36,7 +35,6 @@ import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
-import bisq.support.mediation.mu_sig.MuSigMediationRequestService;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeService;
 import javafx.beans.property.BooleanProperty;
@@ -97,14 +95,10 @@ class MuSigTradePhaseBox {
         private final Model model;
         @Getter
         private final View view;
-        private final MuSigMediationRequestService muSigMediationRequestService;
-        private final MuSigOpenTradeChannelService channelService;
         private final MuSigTradeService tradeService;
-        private Pin muSigTradeStatePin, isInMediationPin, secondTickPin;
+        private Pin muSigTradeStatePin, disputeAgentTypePin, secondTickPin;
 
         private Controller(ServiceProvider serviceProvider) {
-            muSigMediationRequestService = serviceProvider.getSupportService().getMuSigMediationRequestService();
-            channelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
             tradeService = serviceProvider.getTradeService().getMuSigTradeService();
 
             model = new Model();
@@ -113,12 +107,16 @@ class MuSigTradePhaseBox {
 
         private void setSelectedChannel(@Nullable MuSigOpenTradeChannel channel) {
             model.setSelectedChannel(channel);
-            if (isInMediationPin != null) {
-                isInMediationPin.unbind();
-                isInMediationPin = null;
+            if (disputeAgentTypePin != null) {
+                disputeAgentTypePin.unbind();
+                disputeAgentTypePin = null;
             }
             if (channel != null) {
-                isInMediationPin = FxBindings.bind(model.getIsInMediation()).to(channel.isInMediationObservable());
+                disputeAgentTypePin = channel.disputeAgentTypeObservable().addObserver(disputeAgentType -> {
+                    if (disputeAgentType != null) {
+                        model.getIsInMediation().set(disputeAgentType == MuSigDisputeAgentType.MEDIATOR);
+                    }
+                });
             }
         }
 
@@ -214,9 +212,9 @@ class MuSigTradePhaseBox {
 
         @Override
         public void onDeactivate() {
-            if (isInMediationPin != null) {
-                isInMediationPin.unbind();
-                isInMediationPin = null;
+            if (disputeAgentTypePin != null) {
+                disputeAgentTypePin.unbind();
+                disputeAgentTypePin = null;
             }
 
             if (muSigTradeStatePin != null) {
@@ -231,9 +229,7 @@ class MuSigTradePhaseBox {
         }
 
         void onRequestMediation() {
-            MuSigPendingTTradesUtils.requestMediation(model.getSelectedChannel(),
-                    model.getTrade().getContract(),
-                    muSigMediationRequestService, channelService, tradeService);
+            MuSigPendingTTradesUtils.requestMediation(model.getTrade(), tradeService);
         }
 
         private void unbindSecondTickPin() {

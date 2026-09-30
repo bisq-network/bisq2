@@ -17,11 +17,23 @@
 
 package bisq.chat.reactions;
 
+import java.util.Optional;
+
 public enum Reaction {
     THUMBS_UP,
     THUMBS_DOWN,
     HAPPY,
     LAUGH,
     HEART,
-    PARTY
+    PARTY;
+
+    public static boolean isSupportedOrdinal(int ordinal) {
+        return ordinal >= 0 && ordinal < values().length;
+    }
+
+    public static Optional<Reaction> fromOrdinal(int ordinal) {
+        return isSupportedOrdinal(ordinal)
+                ? Optional.of(values()[ordinal])
+                : Optional.empty();
+    }
 }

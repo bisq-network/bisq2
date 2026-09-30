@@ -62,6 +62,13 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract(), "Takers contract must not be null");
         BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer(), "Offer from takers contract must not be null");
 
+        if (serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(message.getSender().getId())) {
+            log.warn("We reject the take offer request because we have ignored the taker's user profile. " +
+                    "We do not disclose that to the taker but send a generic rejection reason. takersOffer={}", takersOffer);
+            throw new TradeProtocolException("The maker has rejected the take offer request because the offer is not available anymore.",
+                    TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+        }
+
         // The offer in an offerbook message is not bound to the message author by the network layer, so we
         // require the author to be the offer's maker, which is us.
         List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
@@ -119,6 +126,7 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
             String errorMessage = String.format("Mediators do not match.\n" +
                     "Maker's mediator: %s\n" +
                     "Taker's mediator: %s", mediator, takersContract.getMediator());
+            log.warn(errorMessage);
             throw new TradeProtocolException(errorMessage, TradeProtocolFailure.MEDIATORS_NOT_MATCHING);
         }
 
@@ -188,8 +196,17 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 takersContract.getPriceSpec(), market);
         checkArgument(priceQuote.isPresent(),
                 "PriceQuote is empty. Might be that no market price is available. marketPrice=" + marketPrice);
-        Optional<Monetary> amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
-                market.getQuoteCurrencyCode())));
+        Optional<Monetary> amount;
+        try {
+            amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
+                    market.getQuoteCurrencyCode())));
+        } catch (ArithmeticException e) {
+            // The contract amounts and, for a fixed price spec, the price quote come from the
+            // peer's request: a conversion that overflows or divides by zero marks a malformed
+            // request, rejected like any other failed amount validation.
+            throw new IllegalArgumentException("Converting the take offer request's quote side amount " +
+                    takersContract.getQuoteSideAmount() + " at the contract price failed: " + e.getMessage());
+        }
 
         long takersAmount = takersContract.getBaseSideAmount();
         long myAmount = amount.get().getValue(); // I am maker

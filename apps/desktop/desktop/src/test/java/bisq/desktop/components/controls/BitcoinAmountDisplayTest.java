@@ -18,14 +18,16 @@
 package bisq.desktop.components.controls;
 
 import bisq.common.locale.LocaleRepository;
+import bisq.common.util.StringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BitcoinAmountDisplayTest {
 
@@ -35,7 +37,7 @@ class BitcoinAmountDisplayTest {
     @BeforeEach
     void setUp() {
         Locale.setDefault(Locale.US);
-        decimalSeparator = DecimalFormatSymbols.getInstance(Locale.getDefault()).getDecimalSeparator();
+        decimalSeparator = StringUtils.getDecimalSeparator(Locale.getDefault());
         bitcoinAmountDisplay = new BitcoinAmountDisplay("0.12345678");
     }
 
@@ -314,7 +316,7 @@ class BitcoinAmountDisplayTest {
         try {
             LocaleRepository.setDefaultLocale(Locale.GERMANY);
             BitcoinAmountDisplay germanDisplay = new BitcoinAmountDisplay("1,234");
-            char germanSeparator = DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
+            char germanSeparator = StringUtils.getDecimalSeparator();
 
             assertEquals(',', germanSeparator);
             assertEquals("1" + germanSeparator, germanDisplay.getIntegerPart().getText());
@@ -335,7 +337,7 @@ class BitcoinAmountDisplayTest {
             BitcoinAmountDisplay frenchDisplaySmall = new BitcoinAmountDisplay("0,00123");
             BitcoinAmountDisplay frenchDisplayLarge = new BitcoinAmountDisplay("123,456");
 
-            char frenchSeparator = DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
+            char frenchSeparator = StringUtils.getDecimalSeparator();
 
             assertEquals("0" + frenchSeparator, frenchDisplayZero.getIntegerPart().getText());
             assertEquals("0" + frenchSeparator, frenchDisplaySmall.getIntegerPart().getText());
@@ -349,5 +351,64 @@ class BitcoinAmountDisplayTest {
         } finally {
             LocaleRepository.setDefaultLocale(originalLocale);
         }
+    }
+
+    @Test
+    void testNonNumericAmountIsRenderedVerbatimWithoutCrashing() {
+        bitcoinAmountDisplay.setBtcAmount("N/A");
+        assertEquals("N/A", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertFalse(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
+
+    @Test
+    void testMalformedAmountAfterValidAmountDoesNotLeaveStaleDigitsVisible() {
+        bitcoinAmountDisplay.setBtcAmount("1.5");
+        assertEquals("50 000 000", bitcoinAmountDisplay.getSignificantDigits().getText());
+        bitcoinAmountDisplay.setBtcAmount("1.5x");
+        assertEquals("1.5x", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertFalse(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
+
+    @Test
+    void testNonNumericHidesBtcCodeEvenWhenConstructedWithBtcCode() {
+        BitcoinAmountDisplay display = new BitcoinAmountDisplay("N/A", true);
+        assertEquals("N/A", display.getIntegerPart().getText());
+        assertFalse(display.getBtcCode().isVisible());
+    }
+
+    @Test
+    void testNonNumericResetsDimmedIntegerStyleFromPreviousRender() {
+        bitcoinAmountDisplay.setBtcAmount("0.0");
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        bitcoinAmountDisplay.setBtcAmount("N/A");
+        assertFalse(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part-dimmed"));
+        assertTrue(bitcoinAmountDisplay.getIntegerPart().getStyleClass().contains("bitcoin-amount-display-integer-part"));
+    }
+
+    @Test
+    void testNonNumericFractionalPartIsRenderedVerbatim() {
+        bitcoinAmountDisplay.setBtcAmount("1.N/A");
+        assertEquals("1.N/A", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertEquals("", bitcoinAmountDisplay.getLeadingZeros().getText());
+        assertEquals("", bitcoinAmountDisplay.getSignificantDigits().getText());
+        assertFalse(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
+
+    @Test
+    void testPositiveSignedAmountIsFormattedNumerically() {
+        bitcoinAmountDisplay.setBtcAmount("+1.2");
+        assertEquals("+1.", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertTrue(bitcoinAmountDisplay.getBtcCode().isVisible());
+    }
+
+    @Test
+    void testMultipleDecimalSeparatorsAreRenderedVerbatim() {
+        bitcoinAmountDisplay.setBtcAmount("1.2.3");
+        assertEquals("1.2.3", bitcoinAmountDisplay.getIntegerPart().getText());
+        assertFalse(bitcoinAmountDisplay.getBtcCode().isVisible());
     }
 }

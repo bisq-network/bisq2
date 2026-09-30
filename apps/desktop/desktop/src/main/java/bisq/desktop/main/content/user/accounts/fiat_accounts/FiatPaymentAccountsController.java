@@ -422,6 +422,7 @@ public class FiatPaymentAccountsController implements Controller {
                     new SwiftAccountDetails((SwiftAccount) account, accountTimestampService);
             case SWISH ->
                     new SwishAccountDetails((SwishAccount) account, accountTimestampService);
+            case TELE_BIRR -> throw new UnsupportedOperationException("Not yet implemented:  " + fiatPaymentRail);
             case UPHOLD ->
                     new UpholdAccountDetails((UpholdAccount) account, accountTimestampService);
             case UPI ->

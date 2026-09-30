@@ -17,18 +17,20 @@
 
 package bisq.api.web_socket.domain.trades;
 
+import bisq.api.dto.DtoMappings;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.subscription.ModificationType;
+import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.api.dto.DtoMappings;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +76,7 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                 pins.add(observePeersErrorMessage(bisqEasyTrade, tradeId));
                 pins.add(observePeersErrorStackTrace(bisqEasyTrade, tradeId));
                 pins.add(observePeersTradeProtocolFailure(bisqEasyTrade, tradeId));
+                pins.add(observeTradeCompletedDate(bisqEasyTrade, tradeId));
             }
 
             @Override
@@ -116,30 +119,30 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
     }
 
     private Pin observePaymentAccountData(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        return bisqEasyTrade.getPaymentAccountData().addObserver(value -> {
-            if (value != null) {
+        return bisqEasyTrade.paymentAccountDataObservable().addObserver(value -> {
+            if (value.isPresent()) {
                 var data = new TradePropertiesDto();
-                data.paymentAccountData = Optional.of(value);
+                data.paymentAccountData = value;
                 send(Map.of(tradeId, data));
             }
         });
     }
 
     private Pin observeBitcoinPaymentData(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        return bisqEasyTrade.getBitcoinPaymentData().addObserver(value -> {
-            if (value != null) {
+        return bisqEasyTrade.bitcoinPaymentDataObservable().addObserver(value -> {
+            if (value.isPresent()) {
                 var data = new TradePropertiesDto();
-                data.bitcoinPaymentData = Optional.of(value);
+                data.bitcoinPaymentData = value;
                 send(Map.of(tradeId, data));
             }
         });
     }
 
     private Pin observePaymentProof(BisqEasyTrade bisqEasyTrade, String tradeId) {
-        return bisqEasyTrade.getPaymentProof().addObserver(value -> {
-            if (value != null) {
+        return bisqEasyTrade.paymentProofObservable().addObserver(value -> {
+            if (value.isPresent()) {
                 var data = new TradePropertiesDto();
-                data.paymentProof = Optional.of(value);
+                data.paymentProof = value;
                 send(Map.of(tradeId, data));
             }
         });
@@ -194,11 +197,22 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
             }
         });
     }
+
     private Pin observePeersTradeProtocolFailure(BisqEasyTrade bisqEasyTrade, String tradeId) {
         return bisqEasyTrade.peersTradeProtocolFailureObservable().addObserver(value -> {
             if (value != null) {
                 var data = new TradePropertiesDto();
                 data.peersTradeProtocolFailure = Optional.of(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(value));
+                send(Map.of(tradeId, data));
+            }
+        });
+    }
+
+    private Pin observeTradeCompletedDate(BisqEasyTrade bisqEasyTrade, String tradeId) {
+        return bisqEasyTrade.tradeCompletedDateObservable().addObserver(value -> {
+            if (value.isPresent()) {
+                var data = new TradePropertiesDto();
+                data.tradeCompletedDate = value;
                 send(Map.of(tradeId, data));
             }
         });
@@ -222,15 +236,16 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
                     var data = new TradePropertiesDto();
                     data.tradeState = Optional.ofNullable(DtoMappings.BisqEasyTradeStateMapping.fromBisq2Model(bisqEasyTrade.getTradeState()));
                     data.interruptTradeInitiator = Optional.ofNullable(DtoMappings.RoleMapping.fromBisq2Model(bisqEasyTrade.getInterruptTradeInitiator().get()));
-                    data.paymentAccountData = Optional.ofNullable(bisqEasyTrade.getPaymentAccountData().get());
-                    data.bitcoinPaymentData = Optional.ofNullable(bisqEasyTrade.getBitcoinPaymentData().get());
-                    data.paymentProof = Optional.ofNullable(bisqEasyTrade.getPaymentProof().get());
+                    data.paymentAccountData = bisqEasyTrade.getPaymentAccountData();
+                    data.bitcoinPaymentData = bisqEasyTrade.getBitcoinPaymentData();
+                    data.paymentProof = bisqEasyTrade.getPaymentProof();
                     data.errorMessage = Optional.ofNullable(bisqEasyTrade.getErrorMessage());
                     data.errorStackTrace = Optional.ofNullable(bisqEasyTrade.getErrorStackTrace());
                     data.tradeProtocolFailure = Optional.ofNullable(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(bisqEasyTrade.getTradeProtocolFailure()));
                     data.peersErrorMessage = Optional.ofNullable(bisqEasyTrade.getPeersErrorMessage());
                     data.peersErrorStackTrace = Optional.ofNullable(bisqEasyTrade.getPeersErrorStackTrace());
                     data.peersTradeProtocolFailure = Optional.ofNullable(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(bisqEasyTrade.getPeersTradeProtocolFailure()));
+                    data.tradeCompletedDate = bisqEasyTrade.getTradeCompletedDate();
                     return Map.of(bisqEasyTrade.getId(), data);
                 })
                 .collect(Collectors.toList());
@@ -243,10 +258,13 @@ public class TradePropertiesWebSocketService extends BaseWebSocketService {
 
     private void send(List<Map<String, TradePropertiesDto>> maps) {
         // The payload is defined as a list to support batch data delivery at subscribe.
-        toJson(maps).ifPresent(json -> {
-            subscriberRepository.findSubscribers(topic)
-                    .ifPresent(subscribers -> subscribers
-                            .forEach(subscriber -> send(json, subscriber, ModificationType.REPLACE)));
-        });
+        List<Subscriber> subscribers = subscriberRepository.findSubscribers(topic).values().stream()
+                .flatMap(Collection::stream)
+                .toList();
+        if (subscribers.isEmpty()) {
+            return;
+        }
+        toJson(maps).ifPresent(json ->
+                subscribers.forEach(subscriber -> send(json, subscriber, ModificationType.REPLACE)));
     }
 }

@@ -1,32 +1,30 @@
-# Developer guide lines
+# Developer Guide
 
-_Note: Some of the documents might not be up-to-date but still should serve for getting an overview._
+Bisq development conventions are split into focused documents.
+Use this page as the index and entry point.
 
-## Contributing
+## Scope
 
-See [contributing.md](contributing.md)
+This guide covers active developer documentation under `docs/dev/`.
+Some older docs may still exist for historical context, but new work should follow the linked documents below.
 
-## General code guidelines
+## Essential documents
 
-See [code-guidelines.md](code-guidelines.md)
+- [Contributing](contributing.md)
+- [Code Guidelines](code-guidelines.md)
+- [Architecture](architecture.md)
+- [MVC Pattern](mvc-pattern.md)
+- [Observable Framework](observable-framework.md)
+- [Input validation policy](input_validation_policy.md)
+- [Testing](testing.md)
 
-## Dependencies
 
-We try to avoid adding dependencies as far as possible to reduce the risk for supply chain attacks. Sticking to plain
-Java libraries is preferred over using 3rd party libraries.
+## Additional resources
 
-## Asynchronous handling
-
-We use the CompletableFutures framework for dealing with asynchronous code.
-
-## MVC pattern
-
-See [mvc-model.md](mvc-model.md)
-
-## Protobuf
-
-See [protobuf-notes.md](protobuf-notes.md)
-
-## P2P network
-
-See [network.md](network.md)
+- [Build](build.md)
+- [Protobuf Notes](protobuf-notes.md)
+- [P2P Network](network.md)
+- [Nullability and Optional](nullability-and-optional.md)
+- [Backward Compatibility](backward-compatibility.md)
+- [Payment Account Domain](payment-account-domain.md)
+- [Reputation-Based Trade Amount](reputation-based-trade-amount.md)

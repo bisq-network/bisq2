@@ -47,14 +47,15 @@ import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.offer.mu_sig.MuSigOfferMessage;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationRequest;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.support.mediation.bisq_easy.BisqEasyMediatorsResponse;
+import bisq.support.dispute.mu_sig.MuSigDisputeCaseDataMessage;
+import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
+import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsResponse;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
-import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
-import bisq.support.mediation.mu_sig.MuSigMediatorsResponse;
-import bisq.support.mediation.mu_sig.MuSigPaymentDetailsRequest;
-import bisq.support.mediation.mu_sig.MuSigPaymentDetailsResponse;
 import bisq.support.moderator.ReportToModeratorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
@@ -67,6 +68,8 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
 import bisq.trade.mu_sig.messages.network.CooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.MuSigCustomPayoutPsbtMessage;
+import bisq.trade.mu_sig.messages.network.MuSigMediationResultRejectionMessage;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.PaymentReceivedMessage_F;
@@ -92,54 +95,55 @@ public class ResolverConfig {
     public static void config() {
         // Register resolvers for distributedData
         // Abstract classes
-        DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
-        DistributedDataResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.getDistributedDataResolver());
+        DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.class, ChatMessage.getDistributedDataResolver());
+        DistributedDataResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.class, ChatMessageReaction.getDistributedDataResolver());
 
         // Final classes
-        DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedOracleNode", AuthorizedOracleNode.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRole", AuthorizedBondedRole.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedAlertData", AuthorizedAlertData.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedDifficultyAdjustmentData", AuthorizedDifficultyAdjustmentData.getResolver());
+        DistributedDataResolver.addResolver("user.UserProfile", UserProfile.class, UserProfile.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedOracleNode", AuthorizedOracleNode.class, AuthorizedOracleNode.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedBondedRole", AuthorizedBondedRole.class, AuthorizedBondedRole.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedAlertData", AuthorizedAlertData.class, AuthorizedAlertData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedDifficultyAdjustmentData", AuthorizedDifficultyAdjustmentData.class, AuthorizedDifficultyAdjustmentData.getResolver());
         //noinspection deprecation
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedMinRequiredReputationScoreData", AuthorizedMinRequiredReputationScoreData.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.ReleaseNotification", ReleaseNotification.getResolver());
-        DistributedDataResolver.addResolver("bonded_roles.AuthorizedMarketPriceData", AuthorizedMarketPriceData.getResolver());
-        DistributedDataResolver.addResolver("user.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
-        DistributedDataResolver.addResolver("user.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
-        DistributedDataResolver.addResolver("user.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
-        DistributedDataResolver.addResolver("user.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
-        DistributedDataResolver.addResolver("user.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
-        DistributedDataResolver.addResolver("user.BannedUserProfileData", BannedUserProfileData.getResolver());
-        DistributedDataResolver.addResolver("offer.MuSigOfferMessage", MuSigOfferMessage.getResolver());
-        DistributedDataResolver.addResolver("burningman.AuthorizedBurningmanListByBlock", AuthorizedBurningmanListByBlock.getResolver());
-        DistributedDataResolver.addResolver("account.AccountTimestamp", AccountTimestamp.getResolver());
-        DistributedDataResolver.addResolver("account.AuthorizedAccountTimestamp", AuthorizedAccountTimestamp.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedMinRequiredReputationScoreData", AuthorizedMinRequiredReputationScoreData.class, AuthorizedMinRequiredReputationScoreData.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.ReleaseNotification", ReleaseNotification.class, ReleaseNotification.getResolver());
+        DistributedDataResolver.addResolver("bonded_roles.AuthorizedMarketPriceData", AuthorizedMarketPriceData.class, AuthorizedMarketPriceData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.class, AuthorizedProofOfBurnData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedBondedReputationData", AuthorizedBondedReputationData.class, AuthorizedBondedReputationData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedAccountAgeData", AuthorizedAccountAgeData.class, AuthorizedAccountAgeData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.class, AuthorizedSignedWitnessData.getResolver());
+        DistributedDataResolver.addResolver("user.AuthorizedTimestampData", AuthorizedTimestampData.class, AuthorizedTimestampData.getResolver());
+        DistributedDataResolver.addResolver("user.BannedUserProfileData", BannedUserProfileData.class, BannedUserProfileData.getResolver());
+        DistributedDataResolver.addResolver("offer.MuSigOfferMessage", MuSigOfferMessage.class, MuSigOfferMessage.getResolver());
+        DistributedDataResolver.addResolver("burningman.AuthorizedBurningmanListByBlock", AuthorizedBurningmanListByBlock.class, AuthorizedBurningmanListByBlock.getResolver());
+        DistributedDataResolver.addResolver("account.AccountTimestamp", AccountTimestamp.class, AccountTimestamp.getResolver());
+        DistributedDataResolver.addResolver("account.AuthorizedAccountTimestamp", AuthorizedAccountTimestamp.class, AuthorizedAccountTimestamp.getResolver());
 
         // Register resolvers for networkMessages 
         // Abstract classes
-        NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.class, ChatMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.class, TradeMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("chat.ChatMessageReaction", ChatMessageReaction.class, ChatMessageReaction.getNetworkMessageResolver());
 
         // Final classes
-        NetworkMessageResolver.addResolver("user.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("user.AuthorizeSignedWitnessRequest", AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("user.AuthorizeTimestampRequest", AuthorizeTimestampRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("bonded_roles.BondedRoleRegistrationRequest", BondedRoleRegistrationRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("user.AuthorizeAccountAgeRequest", AuthorizeAccountAgeRequest.class, AuthorizeAccountAgeRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("user.AuthorizeSignedWitnessRequest", AuthorizeSignedWitnessRequest.class, AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("user.AuthorizeTimestampRequest", AuthorizeTimestampRequest.class, AuthorizeTimestampRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("bonded_roles.BondedRoleRegistrationRequest", BondedRoleRegistrationRequest.class, BondedRoleRegistrationRequest.getNetworkMessageResolver());
         // Keep proto name for backward compatibility
-        NetworkMessageResolver.addResolver("support.MediationRequest", BisqEasyMediationRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MediationRequest", BisqEasyMediationRequest.class, BisqEasyMediationRequest.getNetworkMessageResolver());
         // Keep proto name for backward compatibility
-        NetworkMessageResolver.addResolver("support.MediatorsResponse", BisqEasyMediatorsResponse.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MuSigMediationRequest", MuSigMediationRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MuSigMediatorsResponse", MuSigMediatorsResponse.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MuSigMediationStateChangeMessage", MuSigMediationStateChangeMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MuSigMediationResultAcceptanceMessage", MuSigMediationResultAcceptanceMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MuSigPaymentDetailsRequest", MuSigPaymentDetailsRequest.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.MuSigPaymentDetailsResponse", MuSigPaymentDetailsResponse.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampV1Request", AuthorizeAccountTimestampV1Request.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampV2Request", AuthorizeAccountTimestampV2Request.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MediatorsResponse", BisqEasyMediatorsResponse.class, BisqEasyMediatorsResponse.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigDisputeCaseDataMessage", MuSigDisputeCaseDataMessage.class, MuSigDisputeCaseDataMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigMediationRequest", MuSigMediationRequest.class, MuSigMediationRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigMediationStateChangeMessage", MuSigMediationStateChangeMessage.class, MuSigMediationStateChangeMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigDisputeCasePaymentDetailsRequest", MuSigDisputeCasePaymentDetailsRequest.class, MuSigDisputeCasePaymentDetailsRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigDisputeCasePaymentDetailsResponse", MuSigDisputeCasePaymentDetailsResponse.class, MuSigDisputeCasePaymentDetailsResponse.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigArbitrationRequest", MuSigArbitrationRequest.class, MuSigArbitrationRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MuSigArbitrationStateChangeMessage", MuSigArbitrationStateChangeMessage.class, MuSigArbitrationStateChangeMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.ReportToModeratorMessage", ReportToModeratorMessage.class, ReportToModeratorMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampV1Request", AuthorizeAccountTimestampV1Request.class, AuthorizeAccountTimestampV1Request.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("account.AuthorizeAccountTimestampV2Request", AuthorizeAccountTimestampV2Request.class, AuthorizeAccountTimestampV2Request.getNetworkMessageResolver());
 
 
         // The network storage accepts only the types registered here. It takes their MetaData only from the
@@ -173,12 +177,13 @@ public class ResolverConfig {
         StorableTypesRegistry.register(BondedRoleRegistrationRequest.class, BondedRoleRegistrationRequest.META_DATA);
         StorableTypesRegistry.register(BisqEasyMediationRequest.class, BisqEasyMediationRequest.META_DATA);
         StorableTypesRegistry.register(BisqEasyMediatorsResponse.class, BisqEasyMediatorsResponse.META_DATA);
+        StorableTypesRegistry.register(MuSigDisputeCaseDataMessage.class, MuSigDisputeCaseDataMessage.META_DATA);
         StorableTypesRegistry.register(MuSigMediationRequest.class, MuSigMediationRequest.META_DATA);
-        StorableTypesRegistry.register(MuSigMediatorsResponse.class, MuSigMediatorsResponse.META_DATA);
         StorableTypesRegistry.register(MuSigMediationStateChangeMessage.class, MuSigMediationStateChangeMessage.META_DATA);
-        StorableTypesRegistry.register(MuSigMediationResultAcceptanceMessage.class, MuSigMediationResultAcceptanceMessage.META_DATA);
-        StorableTypesRegistry.register(MuSigPaymentDetailsRequest.class, MuSigPaymentDetailsRequest.META_DATA);
-        StorableTypesRegistry.register(MuSigPaymentDetailsResponse.class, MuSigPaymentDetailsResponse.META_DATA);
+        StorableTypesRegistry.register(MuSigDisputeCasePaymentDetailsRequest.class, MuSigDisputeCasePaymentDetailsRequest.META_DATA);
+        StorableTypesRegistry.register(MuSigDisputeCasePaymentDetailsResponse.class, MuSigDisputeCasePaymentDetailsResponse.META_DATA);
+        StorableTypesRegistry.register(MuSigArbitrationRequest.class, MuSigArbitrationRequest.META_DATA);
+        StorableTypesRegistry.register(MuSigArbitrationStateChangeMessage.class, MuSigArbitrationStateChangeMessage.META_DATA);
         StorableTypesRegistry.register(ReportToModeratorMessage.class, ReportToModeratorMessage.META_DATA);
         StorableTypesRegistry.register(AuthorizeAccountTimestampV1Request.class, AuthorizeAccountTimestampV1Request.META_DATA);
         StorableTypesRegistry.register(AuthorizeAccountTimestampV2Request.class, AuthorizeAccountTimestampV2Request.META_DATA);
@@ -213,6 +218,8 @@ public class ResolverConfig {
         StorableTypesRegistry.register(PaymentInitiatedMessage_E.class, PaymentInitiatedMessage_E.META_DATA);
         StorableTypesRegistry.register(PaymentReceivedMessage_F.class, PaymentReceivedMessage_F.META_DATA);
         StorableTypesRegistry.register(CooperativeClosureMessage_G.class, CooperativeClosureMessage_G.META_DATA);
+        StorableTypesRegistry.register(MuSigCustomPayoutPsbtMessage.class, MuSigCustomPayoutPsbtMessage.META_DATA);
+        StorableTypesRegistry.register(MuSigMediationResultRejectionMessage.class, MuSigMediationResultRejectionMessage.META_DATA);
 
         // ChatMessageReaction subclasses
         StorableTypesRegistry.register(CommonPublicChatMessageReaction.class, CommonPublicChatMessageReaction.META_DATA);

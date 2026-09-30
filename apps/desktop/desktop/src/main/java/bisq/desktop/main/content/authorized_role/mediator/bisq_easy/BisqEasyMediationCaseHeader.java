@@ -130,7 +130,7 @@ public class BisqEasyMediationCaseHeader {
 
         void onLeaveChannel() {
             if (dontShowAgainService.showAgain(MEDIATOR_LEAVE_CHANNEL_WARNING)) {
-                new Popup().warning(Res.get("authorizedRole.mediator.leaveChannel.warning"))
+                new Popup().warning(Res.get("authorizedRole.disputeActor.leaveChannel.warning"))
                         .dontShowAgainId(MEDIATOR_LEAVE_CHANNEL_WARNING)
                         .actionButtonText(Res.get("confirmation.yes"))
                         .onAction(this::doLeave)
@@ -231,10 +231,10 @@ public class BisqEasyMediationCaseHeader {
 
             tradeId = getElements(Res.get("bisqEasy.tradeState.header.tradeId"));
 
-            Triple<Text, UserProfileDisplay, VBox> maker = getUserProfileElements(Res.get("authorizedRole.mediator.table.maker"));
+            Triple<Text, UserProfileDisplay, VBox> maker = getUserProfileElements(Res.get("authorizedRole.disputeActor.table.maker"));
             makerProfileDisplay = maker.getSecond();
 
-            Triple<Text, UserProfileDisplay, VBox> taker = getUserProfileElements(Res.get("authorizedRole.mediator.table.taker"));
+            Triple<Text, UserProfileDisplay, VBox> taker = getUserProfileElements(Res.get("authorizedRole.disputeActor.table.taker"));
             takerProfileDisplay = taker.getSecond();
 
             directionalTitle = new Label();
@@ -247,16 +247,16 @@ public class BisqEasyMediationCaseHeader {
             openCloseButton.setMinWidth(120);
             openCloseButton.setStyle("-fx-padding: 5 16 5 16");
 
-            leaveButton = new Button(Res.get("authorizedRole.mediator.leave"));
+            leaveButton = new Button(Res.get("authorizedRole.disputeActor.leave"));
             leaveButton.getStyleClass().add("outlined-button");
             leaveButton.setMinWidth(120);
             leaveButton.setStyle("-fx-padding: 5 16 5 16");
 
-            removeButton = new Button(Res.get("authorizedRole.mediator.remove"));
+            removeButton = new Button(Res.get("authorizedRole.disputeActor.remove"));
             removeButton.setMinWidth(120);
             removeButton.setStyle("-fx-padding: 5 16 5 16");
 
-            detailsButton = new Button(Res.get("authorizedRole.mediator.mediationCaseDetails.show"));
+            detailsButton = new Button(Res.get("authorizedRole.disputeActor.disputeCaseDetails.show"));
             detailsButton.getStyleClass().add("grey-transparent-outlined-button");
             detailsButton.setMinWidth(160);
 
@@ -275,6 +275,10 @@ public class BisqEasyMediationCaseHeader {
         protected void onViewAttached() {
             mediationCaseListItemPin = EasyBind.subscribe(model.getMediationCaseListItem(), item -> {
                 if (item != null) {
+                    makerProfileDisplay.setVisible(true);
+                    makerProfileDisplay.setManaged(true);
+                    takerProfileDisplay.setVisible(true);
+                    takerProfileDisplay.setManaged(true);
                     makerProfileDisplay.getStyleClass().remove("mediator-header-requester");
                     takerProfileDisplay.getStyleClass().remove("mediator-header-requester");
                     makerProfileDisplay.setUserProfile(item.getMaker().getUserProfile());
@@ -302,8 +306,10 @@ public class BisqEasyMediationCaseHeader {
 
                     tradeId.getSecond().setText(item.getShortTradeId());
                 } else {
-                    makerProfileDisplay.dispose();
-                    takerProfileDisplay.dispose();
+                    makerProfileDisplay.setVisible(false);
+                    makerProfileDisplay.setManaged(false);
+                    takerProfileDisplay.setVisible(false);
+                    takerProfileDisplay.setManaged(false);
                     directionalTitle.setText(null);
                     tradeId.getSecond().setText(null);
                 }
@@ -318,7 +324,7 @@ public class BisqEasyMediationCaseHeader {
 
                         openCloseButton.setText(showClosedCases ?
                                 Res.get("authorizedRole.mediator.reOpen") :
-                                Res.get("authorizedRole.mediator.close"))
+                                Res.get("authorizedRole.disputeActor.close"))
                         ;
                     });
             openCloseButton.setOnAction(e -> controller.onToggleOpenClose());

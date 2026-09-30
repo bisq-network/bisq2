@@ -58,6 +58,8 @@ tasks {
         val version = VersionUtil.getVersionFromFile(project)
         archiveClassifier.set("$version-all")
         mergeServiceFiles()
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
     }
 
     distZip {

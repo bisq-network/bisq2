@@ -19,14 +19,14 @@ package bisq.desktop.webcam;
 
 import bisq.common.webcam.WebcamControlSignals;
 import bisq.common.webcam.WebcamIpcMessage;
-import bisq.common.webcam.WebcamIpcMessageSerializer;
+import bisq.common.webcam.WebcamIpcFrameCodec;
 import bisq.common.webcam.WebcamIpcWireMessage;
 import bisq.common.webcam.WebcamIpcWireMessageValidation;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.Socket;
+import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -55,9 +55,9 @@ public class InputHandler {
         sessionSecret = null;
     }
 
-    public void onSocket(Socket socket) {
+    public void onInputStream(InputStream inputStream) {
         try {
-            WebcamIpcWireMessage wireMessage = WebcamIpcMessageSerializer.readFrame(socket.getInputStream());
+            WebcamIpcWireMessage wireMessage = WebcamIpcFrameCodec.readFrame(inputStream);
             processMessage(wireMessage);
         } catch (SocketTimeoutException e) {
             throw new IllegalArgumentException("Timed out reading webcam IPC frame", e);

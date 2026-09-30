@@ -20,11 +20,9 @@ package bisq.desktop.overlay.update;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AlertType;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
@@ -110,44 +108,8 @@ public class UpdaterController implements Controller {
             });
         });
 
-        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
-            @Override
-            public void onAdded(AuthorizedAlertData authorizedAlertData) {
-                UIThread.run(() -> {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
-                            authorizedAlertData.isRequireVersionForTrading() &&
-                            authorizedAlertData.getAppType() == AppType.DESKTOP) {
-                        model.setRequireVersionForTrading(true);
-                        model.setMinRequiredVersionForTrading(authorizedAlertData.getMinVersion());
-                        updateIgnoreVersionState();
-                    }
-                });
-            }
-
-            @Override
-            public void onRemoved(Object element) {
-                UIThread.run(() -> {
-                    if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                        if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY &&
-                                authorizedAlertData.isRequireVersionForTrading() &&
-                                authorizedAlertData.getAppType() == AppType.DESKTOP) {
-                            model.setRequireVersionForTrading(false);
-                            model.setMinRequiredVersionForTrading(Optional.empty());
-                            updateIgnoreVersionState();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            public void onCleared() {
-                UIThread.run(() -> {
-                    model.setRequireVersionForTrading(false);
-                    model.setMinRequiredVersionForTrading(Optional.empty());
-                    updateIgnoreVersionState();
-                });
-            }
-        });
+        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(() ->
+                UIThread.run(this::updateVersionForTradingRequirement));
 
         updateIgnoreVersionState();
         model.getFilteredList().setPredicate(
@@ -212,6 +174,14 @@ public class UpdaterController implements Controller {
         return model.isRequireVersionForTrading() &&
                 minRequiredVersionForTrading.isPresent() &&
                 new Version(minRequiredVersionForTrading.get()).above(ApplicationVersion.getVersion());
+    }
+
+    private void updateVersionForTradingRequirement() {
+        Optional<String> minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                alertService.getAuthorizedAlertDataSet().stream(), AppType.DESKTOP);
+        model.setRequireVersionForTrading(minRequiredVersionForTrading.isPresent());
+        model.setMinRequiredVersionForTrading(minRequiredVersionForTrading);
+        updateIgnoreVersionState();
     }
 
     private void updateIgnoreVersionState() {

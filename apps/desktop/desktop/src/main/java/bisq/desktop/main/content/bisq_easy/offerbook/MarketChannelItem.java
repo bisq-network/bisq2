@@ -57,7 +57,7 @@ public class MarketChannelItem {
     private final SimpleIntegerProperty numOffers = new SimpleIntegerProperty(0);
     private final SimpleBooleanProperty isFavourite = new SimpleBooleanProperty(false);
     private final SimpleStringProperty numMarketNotifications = new SimpleStringProperty();
-    private Pin channelPin;
+    private Pin channelPin, offerValidityRevisionPin;
 
     MarketChannelItem(BisqEasyOfferbookChannel channel,
                       FavouriteMarketsService favouriteMarketsService,
@@ -80,10 +80,13 @@ public class MarketChannelItem {
 
     private void initialize() {
         channelPin = channel.getChatMessages().addObserver(this::updateNumOffers);
+        offerValidityRevisionPin = bisqEasyOfferbookMessageService.getOfferValidityRevision()
+                .addObserver(revision -> updateNumOffers());
     }
 
     public void dispose() {
         channelPin.unbind();
+        offerValidityRevisionPin.unbind();
     }
 
     void refreshNotifications() {

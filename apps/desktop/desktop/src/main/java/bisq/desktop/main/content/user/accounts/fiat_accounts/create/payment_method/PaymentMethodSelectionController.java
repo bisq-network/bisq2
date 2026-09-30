@@ -45,8 +45,7 @@ public class PaymentMethodSelectionController implements Controller {
 
     public PaymentMethodSelectionController() {
         List<PaymentMethodItem> items = FiatPaymentRailUtil.getPaymentRails().stream()
-                .filter(rail -> rail != FiatPaymentRail.CUSTOM)
-                .filter(rail -> rail != FiatPaymentRail.CASH_APP)
+                .filter(FiatPaymentRail::supportsStandardAccountCreation)
                 //.filter(rail -> rail == FiatPaymentRail.CASH_BY_MAIL) //todo
                 .map(FiatPaymentMethod::fromPaymentRail)
                 .map(PaymentMethodItem::new)

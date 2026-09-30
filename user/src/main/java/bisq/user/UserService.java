@@ -36,6 +36,21 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class UserService implements Service {
+    @Getter
+    public static class Config {
+        private final boolean rateLimitEnabled;
+
+        public Config(boolean rateLimitEnabled) {
+            this.rateLimitEnabled = rateLimitEnabled;
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.hasPath("rateLimitEnabled")
+                    ? config.getBoolean("rateLimitEnabled")
+                    : true);
+        }
+    }
+
     private final BannedUserService bannedUserService;
     private final RepublishUserProfileService republishUserProfileService;
 
@@ -48,7 +63,8 @@ public class UserService implements Service {
                        SecurityService securityService,
                        IdentityService identityService,
                        NetworkService networkService,
-                       BondedRolesService bondedRolesService) {
+                       BondedRolesService bondedRolesService,
+                       Config config) {
         contactListService = new ContactListService(persistenceService);
 
         userProfileService = new UserProfileService(persistenceService, securityService, networkService, contactListService);
@@ -61,7 +77,8 @@ public class UserService implements Service {
         republishUserProfileService = new RepublishUserProfileService(userIdentityService, networkService);
 
         bannedUserService = new BannedUserService(persistenceService,
-                bondedRolesService.getAuthorizedBondedRolesService());
+                bondedRolesService.getAuthorizedBondedRolesService(),
+                config.isRateLimitEnabled());
 
         reputationService = new ReputationService(persistenceService,
                 networkService,

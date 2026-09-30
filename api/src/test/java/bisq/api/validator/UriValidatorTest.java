@@ -119,6 +119,38 @@ class UriValidatorTest {
                 () -> validator.validate("/foo/bar?path=../secret"));
     }
 
+    @Test
+    void validPathWithSpacesAccepted() {
+        UriValidator validator =
+                new UriValidator();
+
+        // In practice, URIs arrive already parsed by the HTTP server.
+        // Spaces in paths are decoded by URI.getPath(), so test via URI object.
+        assertDoesNotThrow(() -> validator.validate(URI.create("/foo/my%20account%20name")));
+    }
+
+    @Test
+    void queryWithSpecialCharactersAccepted() {
+        UriValidator validator =
+                new UriValidator();
+
+        // Query params with special characters (parentheses, spaces) should be allowed.
+        // URI.getQuery() decodes percent-encoded values.
+        assertDoesNotThrow(() ->
+                validator.validate(URI.create("/foo/bar?accountName=My%20Bank%20(EUR)")));
+    }
+
+    @Test
+    void queryWithControlCharactersRejected() {
+        UriValidator validator =
+                new UriValidator();
+
+        // Control characters in query should be rejected.
+        // Build URI directly to bypass URI.create encoding restrictions.
+        assertThrows(AuthorizationException.class,
+                () -> validator.validate(URI.create("/foo/bar?x=value%00bad")));
+    }
+
     /* ---------- Raw URI parsing ---------- */
 
     @Test

@@ -25,6 +25,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
@@ -149,7 +150,7 @@ public class MuSigState1bWaitForDepositTxConfirmation extends MuSigBaseState {
         }
 
         void onSkipWaitForConfirmation() {
-            muSigTradeService.skipWaitForConfirmation(model.getTrade());
+            TradeExceptionHandler.run(() -> muSigTradeService.skipWaitForConfirmation(model.getTrade()));
         }
 
         private void requestTx() {

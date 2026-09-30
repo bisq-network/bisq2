@@ -144,7 +144,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         INFORMATION(AnimationType.FadeInAtCenter),
         INSTRUCTION(AnimationType.ScaleFromCenter),
         ATTENTION(AnimationType.ScaleFromCenter),
-        CONFIRMATION(AnimationType.ScaleYFromCenter),
+        CONFIRMATION(AnimationType.SlideDownFromCenterTop),
 
         WARNING(AnimationType.ScaleDownToCenter),
         INVALID(AnimationType.SlideDownFromCenterTop, Transitions.Type.LIGHT_BLUR_LIGHT),

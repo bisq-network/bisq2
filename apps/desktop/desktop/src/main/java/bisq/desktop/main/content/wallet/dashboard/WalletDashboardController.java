@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.wallet.dashboard;
 
+import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.MarketRepository;
 import bisq.common.util.StringUtils;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
@@ -30,8 +31,8 @@ import bisq.desktop.common.view.Navigation;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.wallet.WalletService;
+import bisq.wallet.vo.AddressBalance;
 import bisq.wallet.vo.Transaction;
-import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
 import lombok.Getter;
@@ -55,7 +56,8 @@ public class WalletDashboardController implements Controller {
     private final WalletService walletService;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
-    private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin, selectedMarketPin;
+    private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin, selectedMarketPin,
+            addressBalancesPin, shouldShowLatestTxsPin;
     private Subscription balanceAsCoinPin, selectedMarketItemPin;
 
     public WalletDashboardController(ServiceProvider serviceProvider) {
@@ -77,6 +79,10 @@ public class WalletDashboardController implements Controller {
         transactionsPin = FxBindings.<Transaction, WalletTxListItem>bind(model.getWalletTxListItems())
                 .map(WalletTxListItem::new)
                 .to(walletService.getTransactions());
+
+        addressBalancesPin = FxBindings.<AddressBalance, WalletAddressBalanceListItem>bind(model.getWalletAddressBalanceListItems())
+                .map(WalletAddressBalanceListItem::new)
+                .to(walletService.getAddressBalances());
 
         balanceAsCoinPin = EasyBind.subscribe(model.getBalanceAsCoinProperty(), balance ->
                 UIThread.run(() -> {
@@ -107,12 +113,16 @@ public class WalletDashboardController implements Controller {
         selectedMarketPin = FxBindings.bindBiDir(model.getSelectedMarket())
                 .to(settingsService.getSelectedWalletMarket(), settingsService::setSelectedWalletMarket);
 
+        shouldShowLatestTxsPin = FxBindings.bindBiDir(model.getShouldShowLatestTxs())
+                .to(settingsService.getShowLatestTxs(), settingsService::setShowLatestTxs);
+
         walletService.requestBalance().whenComplete((balance, throwable) -> {
                     if (throwable == null) {
                         UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
                     }
                 });
         walletService.requestTransactions();
+        walletService.requestAddressBalances();
 
         setSelectedMarket();
     }
@@ -121,10 +131,12 @@ public class WalletDashboardController implements Controller {
     public void onDeactivate() {
         balancePin.unbind();
         transactionsPin.unbind();
+        addressBalancesPin.unbind();
         balanceAsCoinPin.unsubscribe();
         selectedMarketItemPin.unsubscribe();
         marketPriceByCurrencyMapPin.unbind();
         selectedMarketPin.unbind();
+        shouldShowLatestTxsPin.unbind();
     }
 
     void onSend() {
@@ -150,6 +162,14 @@ public class WalletDashboardController implements Controller {
                             || marketItem.getMarket().getMarketDisplayName().toLowerCase().contains(string);
                 });
         updateFilteredMarketListItems();
+    }
+
+    void onSelectLatestTxsMenuItem() {
+        model.getShouldShowLatestTxs().set(true);
+    }
+
+    void onSelectFundsMenuItem() {
+        model.getShouldShowLatestTxs().set(false);
     }
 
     private void updateCurrencyConverterBalance() {

@@ -26,6 +26,8 @@ public class EmailValidationTest {
         assertFalse(EmailValidation.isValid("user@domain..com"));
         assertFalse(EmailValidation.isValid("user@domain.c")); // too short TLD
         assertFalse(EmailValidation.isValid("user@@domain.com"));
+        assertFalse(EmailValidation.isValid(".a@x.com"));
+        assertFalse(EmailValidation.isValid("a.@x.com"));
         assertFalse(EmailValidation.isValid("user@domain.com."));
         assertFalse(EmailValidation.isValid("user@-domain.com"));
         assertFalse(EmailValidation.isValid("user@domain-.com"));

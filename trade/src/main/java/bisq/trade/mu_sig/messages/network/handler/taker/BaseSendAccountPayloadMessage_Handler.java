@@ -20,9 +20,12 @@ package bisq.trade.mu_sig.messages.network.handler.taker;
 import bisq.account.accounts.AccountPayload;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
+import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandler;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadMessage;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class BaseSendAccountPayloadMessage_Handler extends MuSigTradeMessageHandler<MuSigTrade, SendAccountPayloadMessage> {
@@ -34,6 +37,10 @@ public abstract class BaseSendAccountPayloadMessage_Handler extends MuSigTradeMe
 
     @Override
     protected void verify(SendAccountPayloadMessage message) {
+        checkArgument(MuSigTradeUtils.findPeersContractSaltedAccountPayloadHash(trade).isPresent(),
+                "Peer salted account payload hash must be present in contract");
+        checkArgument(MuSigTradeUtils.doesPeerAccountPayloadMatchContract(trade, message.getAccountPayload()),
+                "Peer account payload does not match the salted account payload hash from the contract");
     }
 
     @Override

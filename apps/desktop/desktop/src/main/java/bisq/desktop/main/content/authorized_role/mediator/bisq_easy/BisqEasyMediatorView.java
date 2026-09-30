@@ -47,6 +47,7 @@ public class BisqEasyMediatorView extends View<ScrollPane, BisqEasyMediatorModel
     private final Button toggleChatWindowButton;
     private final BisqEasyMediationTableView bisqEasyMediationTableView;
     private Subscription noOpenCasesPin, chatWindowPin;
+    private Stage detachedChatWindow;
 
     public BisqEasyMediatorView(BisqEasyMediatorModel model,
                                 BisqEasyMediatorController controller,
@@ -105,6 +106,13 @@ public class BisqEasyMediatorView extends View<ScrollPane, BisqEasyMediatorModel
     }
 
     private void chatWindowChanged(Stage chatWindow) {
+        if (detachedChatWindow != null) {
+            detachedChatWindow.titleProperty().unbind();
+            detachedChatWindow.setOnCloseRequest(null);
+            detachedChatWindow.setScene(null);
+            detachedChatWindow = null;
+        }
+
         if (chatWindow == null) {
             ImageView icon = ImageUtil.getImageViewById("detach");
             toggleChatWindowButton.setText(Res.get("bisqEasy.openTrades.chat.detach"));
@@ -114,6 +122,7 @@ public class BisqEasyMediatorView extends View<ScrollPane, BisqEasyMediatorModel
                 centerVBox.getChildren().add(chatVBox);
             }
         } else {
+            detachedChatWindow = chatWindow;
             ImageView icon = ImageUtil.getImageViewById("attach");
             toggleChatWindowButton.setText(Res.get("bisqEasy.openTrades.chat.attach"));
             toggleChatWindowButton.setTooltip(new BisqTooltip(Res.get("bisqEasy.openTrades.chat.attach.tooltip")));
@@ -148,6 +157,10 @@ public class BisqEasyMediatorView extends View<ScrollPane, BisqEasyMediatorModel
 
             centerVBox.getChildren().remove(chatVBox);
             UIThread.runOnNextRenderFrame(() -> {
+                if (detachedChatWindow != chatWindow || model.getChatWindow().get() != chatWindow) {
+                    return;
+                }
+
                 ScrollPane scrollPane = new ScrollPane(chatVBox);
                 scrollPane.setFitToHeight(true);
                 scrollPane.setFitToWidth(true);

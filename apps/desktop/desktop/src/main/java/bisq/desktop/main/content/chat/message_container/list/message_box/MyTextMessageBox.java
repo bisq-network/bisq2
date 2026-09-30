@@ -19,7 +19,6 @@ package bisq.desktop.main.content.chat.message_container.list.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
@@ -36,12 +35,12 @@ import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 public final class MyTextMessageBox extends BubbleMessageBox {
-    private final static String EDITED_POST_FIX = " " + Res.get("chat.message.wasEdited");
     private MessageDeliveryStatusBox messageDeliveryStatusBox;
 
     private final Subscription setAsEditingPin;
@@ -59,12 +58,15 @@ public final class MyTextMessageBox extends BubbleMessageBox {
 
         quotedMessageVBox.setId("chat-message-quote-box-my-msg");
         setUpEditFunctionality();
-        message.setAlignment(Pos.CENTER_RIGHT);
+        setMessageAlignment(Pos.CENTER_RIGHT);
         messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
 
-        VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
+        VBox messageVBox = new VBox(quotedMessageVBox, messageNode, editInputField);
+        messageVBox.setFillWidth(true);
+        messageVBox.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(messageVBox, Priority.SOMETIMES);
 
-        message.maxWidthProperty().bind(list.widthProperty().subtract(140));
+        bindMessageMaxWidth(list.widthProperty().subtract(140));
         userProfileIcon.setSize(30);
         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
         actionsHBox.getChildren().setAll(Spacer.fillHBox(), reactMenuBox, editAction, copy, deleteAction);
@@ -74,7 +76,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
 
         activeReactionsDisplayHBox.getStyleClass().add("my-text-message-box-active-reactions");
-        editInputField.maxWidthProperty().bind(message.widthProperty());
+        editInputField.maxWidthProperty().bind(messageNode.widthProperty());
         messageHBox.getChildren().setAll(Spacer.fillHBox(), activeReactionsDisplayHBox, messageBgHBox);
         contentVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, actionsHBox);
 
@@ -171,10 +173,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     protected void addActionsHandlers() {
         ChatMessage chatMessage = item.getChatMessage();
         boolean isPublicChannel = item.isPublicChannel();
-        boolean allowEditing = isPublicChannel;
-        if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-            allowEditing = allowEditing && bisqEasyOfferbookMessage.getBisqEasyOffer().isEmpty();
-        }
+        boolean allowEditing = item.canEditMessage();
 
         copy.setOnAction(e -> onCopyMessage(chatMessage));
         if (allowEditing) {
@@ -207,14 +206,13 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         actionsHBox.setVisible(false);
         editInputField.setVisible(true);
         editInputField.setManaged(true);
-        editInputField.setInitialHeight(message.getBoundsInLocal().getHeight());
-        editInputField.setText(message.getText().replace(EDITED_POST_FIX, ""));
+        editInputField.setInitialHeight(getMessageNodeHeight());
+        editInputField.setText(getRawMessageTextForEditing());
         editInputField.requestFocus();
-        editInputField.positionCaret(message.getText().length());
+        editInputField.positionCaret(editInputField.getText().length());
         editButtonsHBox.setVisible(true);
         editButtonsHBox.setManaged(true);
-        message.setVisible(false);
-        message.setManaged(false);
+        setMessageNodeVisibleManaged(false);
         editInputField.addEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
     }
 
@@ -223,8 +221,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
         editInputField.setManaged(false);
         editButtonsHBox.setVisible(false);
         editButtonsHBox.setManaged(false);
-        message.setVisible(true);
-        message.setManaged(true);
+        setMessageNodeVisibleManaged(true);
         editInputField.removeEventFilter(KeyEvent.KEY_PRESSED, editInputFieldKeyPressedFilter);
     }
 
@@ -232,7 +229,7 @@ public final class MyTextMessageBox extends BubbleMessageBox {
     public void dispose() {
         super.dispose();
 
-        message.maxWidthProperty().unbind();
+        unbindMessageMaxWidth();
         editInputField.maxWidthProperty().unbind();
 
         saveEditButton.setOnAction(null);

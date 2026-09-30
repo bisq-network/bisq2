@@ -21,6 +21,7 @@ import bisq.common.util.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -41,7 +42,10 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     public RateLimitedPersistenceClient() {
         //todo (Critical) check if we want to use ShutdownHook here
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("RateLimitedPersistenceClient.shutdownHook-" + StringUtils.truncate(getPersistence().getStorePath(), 8));
+            Path storePath = getPersistence().getStorePath();
+            if (storePath != null) {
+                Thread.currentThread().setName("RateLimitedPersistenceClient.shutdownHook-" + StringUtils.truncate(storePath, 8));
+            }
             persistOnShutdown();
         }));
     }

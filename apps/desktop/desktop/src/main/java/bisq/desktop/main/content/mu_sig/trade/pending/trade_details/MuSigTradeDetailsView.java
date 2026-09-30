@@ -22,6 +22,7 @@ import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.main.content.mu_sig.trade.components.MuSigAmountAndPriceDisplay;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -35,23 +36,28 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.ValueLabelStyle.DIMMED;
 import static bisq.desktop.components.helpers.LabeledValueRowFactory.createAndGetDescriptionAndValueBox;
 import static bisq.desktop.components.helpers.LabeledValueRowFactory.createSeparatorLine;
 import static bisq.desktop.components.helpers.LabeledValueRowFactory.getCopyButton;
 import static bisq.desktop.components.helpers.LabeledValueRowFactory.getDescriptionLabel;
+import static bisq.desktop.components.helpers.LabeledValueRowFactory.getValueBox;
 import static bisq.desktop.components.helpers.LabeledValueRowFactory.getValueLabel;
 
 @Slf4j
-public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetailsModel, MuSigTradeDetailsController> {
+class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetailsModel, MuSigTradeDetailsController> {
     private final Button closeButton;
-    private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, nonBtcAmountLabel,
-            nonBtcCurrencyLabel, btcAmountLabel, priceLabel, priceCodesLabel, priceSpecLabel, paymentMethodValue,
+    private final Label tradeDateLabel, tradeDurationLabel, meLabel, peerLabel, offerTypeLabel, marketLabel, paymentMethodValue,
+            securityDepositAmountLabel, securityDepositPercentLabel, feeAmountLabel, feePercentLabel,
             tradeIdLabel, peerNetworkAddressLabel,
             peersPaymentAccountData, depositTxDetailsLabel, peersAccountPayloadDescription,
             assignedMediatorLabel;
     private final BisqMenuItem tradersAndRoleCopyButton, tradeIdCopyButton, peerNetworkAddressCopyButton,
-            depositTxCopyButton, peersAccountDataCopyButton;
+            depositTxCopyButton, depositTxExplorerLinkButton, depositTxExplorerButton, peersAccountDataCopyButton;
     private final HBox assignedMediatorBox, depositTxBox, tradeDurationBox, paymentMethodsBox;
+    private final MuSigAmountAndPriceDisplay amountAndPriceDisplay;
 
     public MuSigTradeDetailsView(MuSigTradeDetailsModel model, MuSigTradeDetailsController controller) {
         super(new VBox(10), model, controller);
@@ -88,57 +94,42 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         tradeDurationBox = createAndGetDescriptionAndValueBox("muSig.trade.details.tradeDuration", tradeDurationLabel);
 
         // Traders / Roles
-        Label mePrefixLabel = new Label(Res.get("muSig.trade.details.tradersAndRole.me"));
-        mePrefixLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        Label mePrefixLabel = getValueLabel(DIMMED, Res.get("muSig.trade.details.tradersAndRole.me"));
         meLabel = getValueLabel();
-        Label offerTypeAndRoleSlashLabel = new Label("/");
-        offerTypeAndRoleSlashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        Label peerPrefixLabel = new Label(Res.get("muSig.trade.details.tradersAndRole.peer"));
-        peerPrefixLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        Label offerTypeAndRoleSlashLabel = getValueLabel(DIMMED, "/");
+        Label peerPrefixLabel = getValueLabel(DIMMED, Res.get("muSig.trade.details.tradersAndRole.peer"));
         peerLabel = getValueLabel();
-        HBox tradersAndRoleDetailsHBox = new HBox(5, mePrefixLabel, meLabel, offerTypeAndRoleSlashLabel, peerPrefixLabel, peerLabel);
-        tradersAndRoleDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox tradersAndRoleDetailsHBox = getValueBox(mePrefixLabel, meLabel, offerTypeAndRoleSlashLabel, peerPrefixLabel, peerLabel);
         tradersAndRoleCopyButton = getCopyButton(Res.get("muSig.trade.details.tradersAndRole.copy"));
         HBox tradersAndRoleBox = createAndGetDescriptionAndValueBox("muSig.trade.details.tradersAndRole",
                 tradersAndRoleDetailsHBox, tradersAndRoleCopyButton);
 
         // Offer type and market
         offerTypeLabel = getValueLabel();
-        Label offerAndMarketslashLabel = new Label("/");
-        offerAndMarketslashLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
+        Label offerAndMarketslashLabel = getValueLabel(DIMMED, "/");
         marketLabel = getValueLabel();
-        HBox offerTypeAndMarketDetailsHBox = new HBox(5, offerTypeLabel, offerAndMarketslashLabel, marketLabel);
-        offerTypeAndMarketDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox offerTypeAndMarketBox = createAndGetDescriptionAndValueBox("muSig.trade.details.offerTypeAndMarket",
-                offerTypeAndMarketDetailsHBox);
+        HBox offerTypeAndMarketDetailsHBox = getValueBox(offerTypeLabel, offerAndMarketslashLabel, marketLabel);
+        HBox offerTypeAndMarketBox = createAndGetDescriptionAndValueBox( "muSig.trade.details.offerTypeAndMarket", offerTypeAndMarketDetailsHBox);
 
         // Amount and price
-        nonBtcAmountLabel = getValueLabel();
-        nonBtcCurrencyLabel = new Label();
-        nonBtcCurrencyLabel.getStyleClass().addAll("text-fill-white", "small-text");
+        amountAndPriceDisplay = new MuSigAmountAndPriceDisplay();
+        HBox amountAndPriceBox = createAndGetDescriptionAndValueBox("muSig.trade.details.amountAndPrice", amountAndPriceDisplay);
 
-        Label openParenthesisLabel = new Label("(");
-        openParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        btcAmountLabel = getValueLabel();
-        btcAmountLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        btcAmountLabel.setPadding(new Insets(0, 5, 0, 0));
-        Label btcLabel = new Label("BTC");
-        btcLabel.getStyleClass().addAll("text-fill-grey-dimmed", "small-text");
-        Label closingParenthesisLabel = new Label(")");
-        closingParenthesisLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        HBox btcAmountHBox = new HBox(openParenthesisLabel, btcAmountLabel, btcLabel, closingParenthesisLabel);
-        btcAmountHBox.setAlignment(Pos.BASELINE_LEFT);
-        Label atLabel = new Label("@");
-        atLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        priceLabel = getValueLabel();
-        priceCodesLabel = new Label();
-        priceCodesLabel.getStyleClass().addAll("text-fill-white", "small-text");
-        priceSpecLabel = new Label();
-        priceSpecLabel.getStyleClass().addAll("text-fill-grey-dimmed", "normal-text");
-        HBox amountAndPriceDetailsHBox = new HBox(5, nonBtcAmountLabel, nonBtcCurrencyLabel, btcAmountHBox,
-                atLabel, priceLabel, priceCodesLabel, priceSpecLabel);
-        amountAndPriceDetailsHBox.setAlignment(Pos.BASELINE_LEFT);
-        HBox amountAndPriceBox = createAndGetDescriptionAndValueBox("muSig.trade.details.amountAndPrice", amountAndPriceDetailsHBox);
+        // Security deposits
+        securityDepositAmountLabel = getValueLabel();
+        securityDepositPercentLabel = getValueLabel(DIMMED);
+        HBox securityDepositPercentBox = new HBox(getValueLabel(DIMMED, "("), securityDepositPercentLabel, getValueLabel(DIMMED, ")"));
+        securityDepositPercentBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox securityDepositValueBox = getValueBox(securityDepositAmountLabel, securityDepositPercentBox);
+        HBox securityDepositBox = createAndGetDescriptionAndValueBox("muSig.trade.details.securityDeposit", securityDepositValueBox);
+
+        // Fee
+        feeAmountLabel = getValueLabel();
+        feePercentLabel = getValueLabel(DIMMED);
+        HBox feePercentBox = new HBox(getValueLabel(DIMMED, "("), feePercentLabel, getValueLabel(DIMMED, ")"));
+        feePercentBox.setAlignment(Pos.BASELINE_LEFT);
+        HBox feeValueBox = getValueBox(feeAmountLabel, feePercentBox);
+        HBox feeBox = createAndGetDescriptionAndValueBox("muSig.trade.details.feeDescription", feeValueBox);
 
         // Payment method
         paymentMethodValue = getValueLabel();
@@ -167,8 +158,12 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         Label depositTxTitleLabel = getDescriptionLabel(Res.get("muSig.trade.details.depositTxId"));
         depositTxDetailsLabel = getValueLabel();
         depositTxCopyButton = getCopyButton(Res.get("muSig.trade.details.depositTxId.copy"));
-        depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel,
-                depositTxDetailsLabel, depositTxCopyButton);
+        depositTxExplorerLinkButton = new BisqMenuItem("link-grey", "link-white");
+        depositTxExplorerLinkButton.setTooltip(Res.get("muSig.trade.details.depositTxId.copy.explorerLink.tooltip"));
+        depositTxExplorerButton = new BisqMenuItem("open-link-grey", "open-link-white");
+        depositTxExplorerButton.setTooltip(Res.get("muSig.trade.details.depositTxId.open.explorerLink.tooltip"));
+        depositTxBox = createAndGetDescriptionAndValueBox(depositTxTitleLabel, depositTxDetailsLabel,
+                List.of(depositTxCopyButton, depositTxExplorerLinkButton, depositTxExplorerButton));
 
         // Assigned mediator
         assignedMediatorLabel = getValueLabel();
@@ -197,6 +192,8 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 tradeIdBox,
                 tradeDateBox,
                 tradeDurationBox,
+                securityDepositBox,
+                feeBox,
                 offerTypeAndMarketBox,
                 peerNetworkAddressBox,
                 assignedMediatorBox
@@ -218,12 +215,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         peerLabel.setText(model.getPeer());
         offerTypeLabel.setText(model.getOfferType());
         marketLabel.setText(model.getMarket());
-        nonBtcAmountLabel.setText(model.getNonBtcAmount());
-        nonBtcCurrencyLabel.setText(model.getNonBtcCurrency());
-        btcAmountLabel.setText(model.getBtcAmount());
-        priceLabel.setText(model.getPrice());
-        priceCodesLabel.setText(model.getPriceCodes());
-        priceSpecLabel.setText(model.getPriceSpec());
+        amountAndPriceDisplay.setContract(model.getContract());
         paymentMethodValue.setText(model.getPaymentMethod());
         paymentMethodsBox.setVisible(model.isPaymentMethodsBoxVisible());
         paymentMethodsBox.setManaged(model.isPaymentMethodsBoxVisible());
@@ -233,6 +225,7 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         depositTxDetailsLabel.setText(model.getDepositTxId());
         depositTxBox.setVisible(model.isDepositTxIdVisible());
         depositTxBox.setManaged(model.isDepositTxIdVisible());
+        showBlockExplorerLink(model.isBlockExplorerLinkVisible());
 
         peersAccountPayloadDescription.setText(model.getPeersPaymentAccountDataDescription());
         peersPaymentAccountData.setText(model.getPeersPaymentAccountData());
@@ -242,7 +235,6 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         assignedMediatorLabel.setText(model.getAssignedMediator());
         assignedMediatorBox.setVisible(model.isHasMediatorBeenAssigned());
         assignedMediatorBox.setManaged(model.isHasMediatorBeenAssigned());
-
 
         depositTxCopyButton.setVisible(!model.isDepositTxIdEmpty());
         depositTxCopyButton.setManaged(!model.isDepositTxIdEmpty());
@@ -259,12 +251,20 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
                 : "text-fill-white");
         depositTxDetailsLabel.getStyleClass().add("normal-text");
 
+        securityDepositAmountLabel.setText(model.getSecurityDepositInfo().btcAmountAsString());
+        securityDepositPercentLabel.setText(model.getSecurityDepositInfo().percentAsString());
+
+        feeAmountLabel.setText(model.getFeeAmount());
+        feePercentLabel.setText(model.getFeePercent());
+
         closeButton.setOnAction(e -> controller.onClose());
         tradersAndRoleCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeer()));
         tradeIdCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getTradeId()));
         peerNetworkAddressCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeerNetworkAddress()));
         peersAccountDataCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getPeersPaymentAccountData()));
         depositTxCopyButton.setOnAction(e -> ClipboardUtil.copyToClipboard(model.getDepositTxId()));
+        depositTxExplorerLinkButton.setOnAction(e -> controller.onCopyExplorerLink());
+        depositTxExplorerButton.setOnAction(e -> controller.openExplorer());
     }
 
     @Override
@@ -275,5 +275,14 @@ public class MuSigTradeDetailsView extends NavigationView<VBox, MuSigTradeDetail
         peerNetworkAddressCopyButton.setOnAction(null);
         peersAccountDataCopyButton.setOnAction(null);
         depositTxCopyButton.setOnAction(null);
+        depositTxExplorerLinkButton.setOnAction(null);
+        depositTxExplorerButton.setOnAction(null);
+    }
+
+    private void showBlockExplorerLink(boolean value) {
+        depositTxExplorerLinkButton.setVisible(value);
+        depositTxExplorerLinkButton.setManaged(value);
+        depositTxExplorerButton.setVisible(value);
+        depositTxExplorerButton.setManaged(value);
     }
 }

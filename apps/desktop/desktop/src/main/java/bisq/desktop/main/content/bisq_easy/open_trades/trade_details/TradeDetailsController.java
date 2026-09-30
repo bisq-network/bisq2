@@ -115,29 +115,29 @@ public class TradeDetailsController extends NavigationController implements Init
         model.setTradeId(trade.getId());
         model.setPeerNetworkAddress(model.getPeerProfile().getAddressByTransportDisplayString(50));
 
-        model.setPaymentAccountDataEmpty(trade.getPaymentAccountData().get() == null);
+        Optional<String> paymentAccountData = trade.getPaymentAccountData();
+        model.setPaymentAccountDataEmpty(paymentAccountData.isEmpty());
         model.setAssignedMediator(model.getMediator().map(UserProfile::getUserName).orElse(""));
         model.setHasMediatorBeenAssigned(model.getMediator().isPresent());
 
-        model.setPaymentAccountData(trade.getPaymentAccountData().get() == null
-                ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getPaymentAccountData().get());
+        model.setPaymentAccountData(paymentAccountData
+                .orElseGet(() -> Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")));
 
-        model.setBtcPaymentAddress(trade.getBitcoinPaymentData().get() == null
-                ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getBitcoinPaymentData().get());
-        model.setBtcPaymentDataEmpty(trade.getBitcoinPaymentData().get() == null);
+        Optional<String> bitcoinPaymentData = trade.getBitcoinPaymentData();
+        model.setBtcPaymentAddress(bitcoinPaymentData
+                .orElseGet(() -> Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")));
+        model.setBtcPaymentDataEmpty(bitcoinPaymentData.isEmpty());
 
-        model.setPaymentProof(trade.getPaymentProof().get() == null
-                ? Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")
-                : trade.getPaymentProof().get());
-        model.setPaymentProofEmpty(trade.getPaymentProof().get() == null);
+        Optional<String> paymentProof = trade.getPaymentProof();
+        model.setPaymentProof(paymentProof
+                .orElseGet(() -> Res.get("bisqEasy.openTrades.tradeDetails.dataNotYetProvided")));
+        model.setPaymentProofEmpty(paymentProof.isEmpty());
 
         boolean isOnChainSettlement = contract.getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
         model.setOnChainSettlement(isOnChainSettlement);
 
         // At LN its optional, so we show it only if set
-        model.setPaymentProofVisible(isOnChainSettlement || trade.getPaymentProof().get() != null);
+        model.setPaymentProofVisible(isOnChainSettlement || paymentProof.isPresent());
     }
 
     @Override

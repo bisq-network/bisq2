@@ -92,6 +92,13 @@ public class WizardOverlay extends VBox {
         return this;
     }
 
+    public WizardOverlay instruction() {
+        ImageView icon = ImageUtil.getImageViewById("instruction-green");
+        headlineLabel.setGraphic(icon);
+        headlineLabel.getStyleClass().add("default-instruction");
+        return this;
+    }
+
     public WizardOverlay headlineFromI18nKey(String i18nKey) {
         return headline(Res.get(i18nKey));
     }

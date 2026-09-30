@@ -17,7 +17,6 @@
 
 package bisq.bi2p;
 
-
 import bisq.bi2p.common.standby.PreventStandbyModeService;
 import bisq.bi2p.common.utils.ImageUtil;
 import bisq.bi2p.common.utils.KeyHandlerUtil;
@@ -37,8 +36,10 @@ import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -157,9 +158,26 @@ public class Bi2pApp extends Application {
             PopupMenu popupMenu = new PopupMenu();
 
             systemTray = SystemTray.getSystemTray();
-            URL iconUrl = getClass().getResource("/images/tray_icon/bi2p-tray_32@2x.png");
-            java.awt.Image icon = Toolkit.getDefaultToolkit().getImage(iconUrl);
+            String resourceName = "/images/tray_icon/bi2p-tray_32@2x.png";
+            URL iconUrl = getClass().getResource(resourceName);
+            if (iconUrl == null) {
+                log.error("Tray icon resource not found: {}", resourceName);
+                return;
+            }
+
+            java.awt.Image icon;
+            try {
+                icon = ImageIO.read(iconUrl);
+                if (icon == null) {
+                    throw new IOException("ImageIO returned null for tray icon: " + iconUrl);
+                }
+            } catch (IOException e) {
+                log.error("Error loading transparent tray icon via ImageIO, falling back to Toolkit", e);
+                icon = Toolkit.getDefaultToolkit().getImage(iconUrl);
+            }
+
             trayIcon = new TrayIcon(icon, "Bisq I2P Router", popupMenu);
+
             trayIcon.setImageAutoSize(true);
             try {
                 systemTray.add(trayIcon);
@@ -200,7 +218,6 @@ public class Bi2pApp extends Application {
                     }));
         }
 
-        //stage.getIcons().add(I2PRouterApp.getImageByPath("images/tray-icon.png"));
         stage.setX(0);
         stage.setY(0);
         stage.show();
@@ -225,4 +242,3 @@ public class Bi2pApp extends Application {
         Res.setAndApplyLanguageTag(languageTag);
     }
 }
-

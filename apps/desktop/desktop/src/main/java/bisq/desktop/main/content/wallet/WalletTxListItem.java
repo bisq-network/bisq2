@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class WalletTxListItem implements DateTableItem {
+public final class WalletTxListItem implements DateTableItem {
     @EqualsAndHashCode.Include
     private final Transaction transaction;
 

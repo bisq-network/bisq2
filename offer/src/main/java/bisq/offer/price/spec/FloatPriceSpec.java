@@ -17,6 +17,7 @@
 
 package bisq.offer.price.spec;
 
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -47,6 +48,11 @@ public final class FloatPriceSpec implements PriceSpec {
     public void verify() {
         checkArgument(percentage >= -1 && percentage <= 1,
                 "Percentage must be in the range of -100% - 100%");
+    }
+
+    @Override
+    public String getDisplayName() {
+        return Res.get("priceSpec.floatPriceSpec");
     }
 
     @Override

@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TradeSettingsModel implements Model {
     private final BooleanProperty closeMyOfferWhenTaken = new SimpleBooleanProperty();
     private final DoubleProperty maxTradePriceDeviation = new SimpleDoubleProperty();
+    private final DoubleProperty priceDeviationWarningThreshold = new SimpleDoubleProperty();
     private final IntegerProperty numDaysAfterRedactingTradeData = new SimpleIntegerProperty();
 
     private final PercentageStringConverter maxTradePriceDeviationConverter = new PercentageStringConverter(SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION);
@@ -42,6 +43,11 @@ public class TradeSettingsModel implements Model {
             new PercentageValidator(Res.get("settings.trade.maxTradePriceDeviation.invalid",
                     SettingsService.MIN_TRADE_PRICE_DEVIATION * 100, SettingsService.MAX_TRADE_PRICE_DEVIATION * 100),
                     SettingsService.MIN_TRADE_PRICE_DEVIATION, SettingsService.MAX_TRADE_PRICE_DEVIATION);
+    private final PercentageStringConverter priceDeviationWarningThresholdConverter = new PercentageStringConverter(SettingsService.DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD);
+    private final ValidatorBase priceDeviationWarningThresholdValidator =
+            new PercentageValidator(Res.get("settings.trade.priceDeviationWarningThreshold.invalid",
+                    SettingsService.MIN_PRICE_DEVIATION_WARNING_THRESHOLD * 100, SettingsService.MAX_PRICE_DEVIATION_WARNING_THRESHOLD * 100),
+                    SettingsService.MIN_PRICE_DEVIATION_WARNING_THRESHOLD, SettingsService.MAX_PRICE_DEVIATION_WARNING_THRESHOLD);
 
     private final LongStringConverter numDaysAfterRedactingTradeDataConverter = new LongStringConverter(SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA);
     private final ValidatorBase numDaysAfterRedactingTradeDataValidator =

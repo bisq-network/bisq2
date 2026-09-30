@@ -77,10 +77,6 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigOpenTradeMessage) {
             processMessage((MuSigOpenTradeMessage) envelopePayloadMessage);
-            if (!pendingMessages.isEmpty()) {
-                log.info("Processing pendingMessages messages");
-                pendingMessages.forEach(this::processMessage);
-            }
         } else if (envelopePayloadMessage instanceof MuSigOpenTradeMessageReaction) {
             processMessageReaction((MuSigOpenTradeMessageReaction) envelopePayloadMessage);
         }
@@ -94,19 +90,15 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
     public MuSigOpenTradeChannel traderFindOrCreatesChannel(String tradeId,
                                                             UserIdentity myUserIdentity,
                                                             UserProfile peer,
-                                                            Optional<UserProfile> mediator) {
+                                                            Optional<UserProfile> mediator,
+                                                            Optional<UserProfile> arbitrator) {
         return findChannelByTradeId(tradeId)
-                .orElseGet(() -> traderCreatesChannel(tradeId, myUserIdentity, peer, mediator));
-    }
-
-    public MuSigOpenTradeChannel traderCreatesChannel(String tradeId,
-                                                      UserIdentity myUserIdentity,
-                                                      UserProfile peer,
-                                                      Optional<UserProfile> mediator) {
-        MuSigOpenTradeChannel channel = MuSigOpenTradeChannel.createByTrader(tradeId, myUserIdentity, peer, mediator);
-        getChannels().add(channel);
-        persist();
-        return channel;
+                .orElseGet(() -> createAndAddChannel(tradeId,
+                        myUserIdentity,
+                        Set.of(peer),
+                        mediator,
+                        arbitrator,
+                        MuSigDisputeAgentType.NONE));
     }
 
     public MuSigOpenTradeChannel mediatorFindOrCreatesChannel(String tradeId,
@@ -114,15 +106,25 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                                                               UserProfile requestingTrader,
                                                               UserProfile nonRequestingTrader) {
         return findChannelByTradeId(tradeId)
-                .orElseGet(() -> {
-                    MuSigOpenTradeChannel channel = MuSigOpenTradeChannel.createByMediator(tradeId,
-                            myUserIdentity,
-                            requestingTrader,
-                            nonRequestingTrader);
-                    getChannels().add(channel);
-                    persist();
-                    return channel;
-                });
+                .orElseGet(() -> createAndAddChannel(tradeId,
+                        myUserIdentity,
+                        Set.of(requestingTrader, nonRequestingTrader),
+                        Optional.of(myUserIdentity.getUserProfile()),
+                        Optional.empty(),
+                        MuSigDisputeAgentType.MEDIATOR));
+    }
+
+    public MuSigOpenTradeChannel arbitratorFindOrCreatesChannel(String tradeId,
+                                                              UserIdentity myUserIdentity,
+                                                              UserProfile requestingTrader,
+                                                              UserProfile nonRequestingTrader) {
+        return findChannelByTradeId(tradeId)
+                .orElseGet(() -> createAndAddChannel(tradeId,
+                        myUserIdentity,
+                        Set.of(requestingTrader, nonRequestingTrader),
+                        Optional.empty(),
+                        Optional.of(myUserIdentity.getUserProfile()),
+                        MuSigDisputeAgentType.ARBITRATOR));
     }
 
     public CompletableFuture<SendMessageResult> sendTradeLogMessage(String text,
@@ -142,15 +144,20 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                                                              MuSigOpenTradeChannel channel) {
         String messageId = StringUtils.createUid();
         long date = System.currentTimeMillis();
-        if (channel.isInMediation() && channel.getMediator().isPresent()) {
+        if (channel.getDisputeAgentType() != MuSigDisputeAgentType.NONE) {
             String senderId = channel.getMyUserIdentity().getId();
             List<CompletableFuture<SendMessageResult>> futures = channel.getTraders().stream()
                     .filter(peer -> !peer.getId().equals(senderId))
                     .map(peer -> sendMessage(messageId, text, citation, channel, peer, chatMessageType, date))
                     .collect(Collectors.toList());
-            channel.getMediator()
-                    .filter(mediator -> !mediator.getId().equals(senderId))
-                    .map(mediator -> sendMessage(messageId, text, citation, channel, mediator, chatMessageType, date))
+            Optional<UserProfile> disputeAgent = switch (channel.getDisputeAgentType()) {
+                case MEDIATOR -> channel.getMediator();
+                case ARBITRATOR -> channel.getArbitrator();
+                case NONE -> Optional.empty();
+            };
+            disputeAgent
+                    .filter(userProfile -> !userProfile.getId().equals(senderId))
+                    .map(userProfile -> sendMessage(messageId, text, citation, channel, userProfile, chatMessageType, date))
                     .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
                     .thenApply(list -> list.get(0)); //TODO return list?
@@ -172,7 +179,8 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
 
         // We want to send a leave message even the peer has not sent any message so far (is not participant yet).
         long date = System.currentTimeMillis();
-        Stream.concat(channel.getTraders().stream(), channel.getMediator().stream())
+        Stream.concat(Stream.concat(channel.getTraders().stream(), channel.getMediator().stream()),
+                        channel.getArbitrator().stream())
                 .filter(userProfile -> allowSendLeaveMessage(channel, userProfile))
                 .forEach(userProfile -> sendLeaveMessage(channel, userProfile, date));
     }
@@ -182,15 +190,21 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
         return persistableStore.getChannels();
     }
 
-    public void setIsInMediation(MuSigOpenTradeChannel channel, boolean isInMediation) {
-        channel.setIsInMediation(isInMediation);
+    public void setDisputeAgentType(MuSigOpenTradeChannel channel, MuSigDisputeAgentType disputeAgentType) {
+        channel.setDisputeAgentType(disputeAgentType);
         persist();
     }
 
-    public void addMediatorsResponseMessage(MuSigOpenTradeChannel channel, String text) {
-        setIsInMediation(channel, true);
+    public void addMediationOpenedMessage(MuSigOpenTradeChannel channel, String text) {
+        setDisputeAgentType(channel, MuSigDisputeAgentType.MEDIATOR);
         checkArgument(channel.getMediator().isPresent());
         addChatMessage(channel, channel.getMediator().orElseThrow(), text);
+    }
+
+    public void addArbitrationOpenedMessage(MuSigOpenTradeChannel channel, String text) {
+        setDisputeAgentType(channel, MuSigDisputeAgentType.ARBITRATOR);
+        checkArgument(channel.getArbitrator().isPresent());
+        addChatMessage(channel, channel.getArbitrator().orElseThrow(), text);
     }
 
     private void addChatMessage(MuSigOpenTradeChannel channel, UserProfile senderUserProfile, String text) {
@@ -207,6 +221,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                 System.currentTimeMillis(),
                 false,
                 channel.getMediator(),
+                channel.getArbitrator(),
                 ChatMessageType.PROTOCOL_LOG_MESSAGE,
                 Optional.empty(),
                 new HashSet<>());
@@ -232,6 +247,26 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
     /* --------------------------------------------------------------------- */
 
     @Override
+    protected void processMessage(MuSigOpenTradeMessage message) {
+        if (canProcessMessage(message)) {
+            findChannel(message)
+                    .or(() -> {
+                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                            log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
+                                    "sent a leave message around the same time as we have closed the channel.");
+                        } else {
+                            if (pendingMessages.add(message)) {
+                                log.info("Channel for trade {} does not exist yet. We add the message to pendingMessages.",
+                                        message.getTradeId());
+                            }
+                        }
+                        return Optional.empty();
+                    })
+                    .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+        }
+    }
+
+    @Override
     protected MuSigOpenTradeMessage createAndGetNewPrivateChatMessage(String messageId,
                                                                       MuSigOpenTradeChannel channel,
                                                                       UserProfile senderUserProfile,
@@ -241,8 +276,9 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                                                                       long time,
                                                                       boolean wasEdited,
                                                                       ChatMessageType chatMessageType) {
-        // We send mediator only at first message
+        // We send mediator and arbitrator only at first message.
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
+        Optional<UserProfile> arbitrator = channel.getChatMessages().isEmpty() ? channel.getArbitrator() : Optional.empty();
         return new MuSigOpenTradeMessage(
                 channel.getTradeId(),
                 messageId,
@@ -255,6 +291,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                 time,
                 wasEdited,
                 mediator,
+                arbitrator,
                 chatMessageType,
                 Optional.empty(),
                 new HashSet<>());
@@ -304,14 +341,34 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
 
     @Override
     protected Optional<MuSigOpenTradeChannel> createNewChannelFromReceivedMessage(MuSigOpenTradeMessage message) {
-        return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
-                .map(myUserIdentity -> traderCreatesChannel(message.getTradeId(),
-                        myUserIdentity,
-                        message.getSenderUserProfile(),
-                        message.getMediator()));
+        return Optional.empty();
+    }
+
+    private MuSigOpenTradeChannel createAndAddChannel(String tradeId,
+                                                      UserIdentity myUserIdentity,
+                                                      Set<UserProfile> traders,
+                                                      Optional<UserProfile> mediator,
+                                                      Optional<UserProfile> arbitrator,
+                                                      MuSigDisputeAgentType disputeAgentType) {
+        MuSigOpenTradeChannel channel = MuSigOpenTradeChannel.create(tradeId,
+                myUserIdentity,
+                traders,
+                mediator,
+                arbitrator,
+                disputeAgentType);
+        getChannels().add(channel);
+        persist();
+        processPendingMessages(tradeId);
+        return channel;
     }
 
     private boolean allowSendLeaveMessage(MuSigOpenTradeChannel channel, UserProfile userProfile) {
         return channel.getUserProfileIdsOfSendingLeaveMessage().contains(userProfile.getId());
+    }
+
+    private void processPendingMessages(String tradeId) {
+        pendingMessages.stream()
+                .filter(message -> message.getTradeId().equals(tradeId))
+                .forEach(this::processMessage);
     }
 }

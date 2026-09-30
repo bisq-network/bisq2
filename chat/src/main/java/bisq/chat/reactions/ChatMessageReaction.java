@@ -61,7 +61,7 @@ public abstract class ChatMessageReaction implements NetworkProto {
 
     @Override
     public void verify() {
-        checkArgument(reactionId >= 0 && reactionId < Reaction.values().length, "Invalid reaction id: " + reactionId);
+        checkArgument(reactionId >= 0, "Invalid reaction id: " + reactionId);
 
         NetworkDataValidation.validateProfileId(userProfileId);
         NetworkDataValidation.validateText(chatChannelId, 200); // For private channels we combine user profile IDs for channelId

@@ -19,8 +19,8 @@ package bisq.offer.price.spec;
 
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
-import bisq.common.data.Pair;
 import bisq.common.market.Market;
+import bisq.common.monetary.PriceQuote;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import bisq.offer.price.OfferPriceFormatter;
@@ -95,42 +95,60 @@ public class PriceSpecFormatter {
 
     }
 
-    public static Pair<String, String> getFormattedPricePair(PriceSpec priceSpec,
-                                                             MarketPriceService marketPriceService,
-                                                             Market market) {
-        String missingPriceInfo = Res.get("data.na");
-        if (market == null) {
-            log.warn("No market price selected");
-            return new Pair<>(missingPriceInfo, "");
-        }
-
-        Optional<MarketPrice> marketPrice = marketPriceService.findMarketPrice(market);
-        if (marketPrice.isEmpty()) {
-            log.warn("No market price available for selected market {}", market);
-            return new Pair<>(missingPriceInfo, "");
-        }
-
-        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
-            String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-            String percentage = marketPrice.map(MarketPrice::getPriceQuote)
-                    .map(priceQuote -> PriceUtil.getPercentageToMarketPrice(priceQuote, fixPriceSpec.getPriceQuote()))
-                    .map(PercentageFormatter::formatToPercentWithSignAndSymbol)
-                    .orElse(missingPriceInfo);
-            return new Pair<>(price, percentage);
+    /**
+     * Calculates the price as a percentage relative to the market price at the time of the contract creation.
+     *
+     * @param priceQuote       The price quote that was agreed upon (from BisqEasyContract.getPriceQuote())
+     * @param priceSpec        The price specification to determine the markup type
+     * @param marketPriceValue The market price value at the time (from BisqEasyContract.getMarketPrice())
+     * @param market           The market
+     * @return A String with the formatted percentage relative to historical market price
+     */
+    public static String getFormattedPriceAsPercentage(PriceQuote priceQuote,
+                                                       PriceSpec priceSpec,
+                                                       long marketPriceValue,
+                                                       Market market) {
+        if (priceSpec instanceof FixPriceSpec) {
+            if (market == null) {
+                log.warn("No market selected");
+                return "";
+            }
+            if (priceQuote == null) {
+                log.warn("Price quote is null");
+                return "";
+            }
+            if (marketPriceValue <= 0) {
+                log.warn("Invalid market price value: {}", marketPriceValue);
+                return "";
+            }
+            // For fixed price, calculate the percentage relative to historical market price
+            PriceQuote historicalMarketPrice = PriceQuote.fromPrice(marketPriceValue, market);
+            double percentage = PriceUtil.getPercentageToMarketPrice(historicalMarketPrice, priceQuote);
+            return PercentageFormatter.formatToPercentWithSignAndSymbol(percentage);
         }
 
         if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
-            double percentage = floatPriceSpec.getPercentage();
-            String currentPrice = marketPrice.map(MarketPrice::getPriceQuote)
-                    .map(priceQuote -> PriceUtil.fromMarketPriceMarkup(priceQuote, percentage))
-                    .map(priceQuote -> PriceFormatter.formatWithCode(priceQuote, true))
-                    .orElse(missingPriceInfo);
-            String percentageAsString = PercentageFormatter.formatToPercentWithSignAndSymbol(percentage);
-            return new Pair<>(currentPrice, percentageAsString);
+            return PercentageFormatter.formatToPercentWithSignAndSymbol(floatPriceSpec.getPercentage());
         }
 
-        // Market price
-        return new Pair<>(PriceFormatter.formatWithCode(marketPrice.get().getPriceQuote(), true), PercentageFormatter.formatToPercentWithSignAndSymbol(0));
+        // market price
+        return PercentageFormatter.formatToPercentWithSignAndSymbol(0);
+    }
+
+    public static String getFormattedPriceSpecWithoutPrice(PriceSpec priceSpec) {
+        if (priceSpec instanceof FixPriceSpec) {
+            return Res.get("priceSpecFormatter.fixPrice");
+        }
+
+        if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
+            String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
+            return Res.get(floatPriceSpec.getPercentage() >= 0
+                            ? "priceSpecFormatter.floatPrice.above"
+                            : "priceSpecFormatter.floatPrice.below",
+                    percent);
+        }
+        // market price
+        return Res.get("priceSpecFormatter.marketPrice");
     }
 
     public static String getFormattedPriceSpecWithOfferPrice(PriceSpec priceSpec,
@@ -143,18 +161,18 @@ public class PriceSpecFormatter {
     public static String getFormattedPriceSpecWithPrice(PriceSpec priceSpec, String formattedPrice) {
         if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
             String price = PriceFormatter.formatWithCode(fixPriceSpec.getPriceQuote());
-            return Res.get("priceSpecFormatter.fixPrice", price);
+            return String.format("%s\n%s", Res.get("priceSpecFormatter.fixPrice"), price);
         }
 
         if (priceSpec instanceof FloatPriceSpec floatPriceSpec) {
             String percent = PercentageFormatter.formatToPercentWithSymbol(Math.abs(floatPriceSpec.getPercentage()));
-            return Res.get(floatPriceSpec.getPercentage() >= 0
-                            ? "priceSpecFormatter.floatPrice.above"
-                            : "priceSpecFormatter.floatPrice.below",
-                    percent,
+            return String.format("%s\n%s", Res.get(floatPriceSpec.getPercentage() >= 0
+                                    ? "priceSpecFormatter.floatPrice.above"
+                                    : "priceSpecFormatter.floatPrice.below",
+                            percent),
                     formattedPrice);
         }
         // market price
-        return Res.get("priceSpecFormatter.marketPrice", formattedPrice);
+        return String.format("%s\n%s", Res.get("priceSpecFormatter.marketPrice"), formattedPrice);
     }
 }

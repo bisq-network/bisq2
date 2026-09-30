@@ -27,9 +27,12 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 
+import java.util.List;
 import java.util.Optional;
 
 public class LabeledValueRowFactory {
+
+    public static final double DESCRIPTION_LABEL_WIDTH = 180;
 
     public static HBox createAndGetDescriptionAndValueBox(String descriptionKey, Node valueNode) {
         return createAndGetDescriptionAndValueBox(descriptionKey, valueNode, Optional.empty());
@@ -56,18 +59,24 @@ public class LabeledValueRowFactory {
     public static HBox createAndGetDescriptionAndValueBox(Label descriptionLabel,
                                                           Node detailsNode,
                                                           Optional<BisqMenuItem> button) {
-        double width = 180;
-        descriptionLabel.setMaxWidth(width);
-        descriptionLabel.setMinWidth(width);
-        descriptionLabel.setPrefWidth(width);
+        return createAndGetDescriptionAndValueBox(descriptionLabel, detailsNode, button.map(List::of).orElse(List.of()));
+    }
 
-        HBox hBox = new HBox(descriptionLabel, detailsNode);
-        hBox.setAlignment(Pos.BASELINE_LEFT);
+    public static HBox createAndGetDescriptionAndValueBox(Label descriptionLabel,
+                                                          Node detailsNode,
+                                                          List<BisqMenuItem> buttons) {
+        descriptionLabel.setMaxWidth(DESCRIPTION_LABEL_WIDTH);
+        descriptionLabel.setMinWidth(DESCRIPTION_LABEL_WIDTH);
+        descriptionLabel.setPrefWidth(DESCRIPTION_LABEL_WIDTH);
 
-        if (button.isPresent()) {
-            button.get().useIconOnly(17);
-            HBox.setMargin(button.get(), new Insets(0, 0, 0, 40));
-            hBox.getChildren().addAll(Spacer.fillHBox(), button.get());
+        HBox hBox = getValueBox(descriptionLabel, detailsNode);
+
+        if (!buttons.isEmpty()) {
+            HBox hBoxButtons = new HBox(5);
+            hBoxButtons.getChildren().addAll(buttons);
+            buttons.forEach(button -> button.useIconOnly(17));
+            HBox.setMargin(hBoxButtons, new Insets(0, 0, 0, 40));
+            hBox.getChildren().addAll(Spacer.fillHBox(), hBoxButtons);
         }
         return hBox;
     }
@@ -79,9 +88,25 @@ public class LabeledValueRowFactory {
     }
 
     public static Label getValueLabel() {
-        Label label = new Label();
-        label.getStyleClass().addAll("text-fill-white", "normal-text", "font-light");
+        return getValueLabel(ValueLabelStyle.NORMAL);
+    }
+
+    public static Label getValueLabel(ValueLabelStyle style, String text) {
+        Label label = getValueLabel(style);
+        label.setText(text);
         return label;
+    }
+
+    public static Label getValueLabel(ValueLabelStyle style) {
+        Label label = new Label();
+        label.getStyleClass().addAll(style.textColor, style.textSize, "font-light");
+        return label;
+    }
+
+    public static HBox getValueBox(Node... children) {
+        HBox box = new HBox(5, children);
+        box.setAlignment(Pos.BASELINE_LEFT);
+        return box;
     }
 
     public static BisqMenuItem getCopyButton(String tooltip) {
@@ -97,5 +122,24 @@ public class LabeledValueRowFactory {
         line.getStyleClass().add("separator-line");
         line.setPadding(new Insets(9, 0, 8, 0));
         return line;
+    }
+
+    //
+    // Style enums
+    //
+
+    public enum ValueLabelStyle {
+
+        NORMAL("normal-text", "text-fill-white"),
+        SMALL("small-text", "text-fill-white"),
+        DIMMED("normal-text", "text-fill-grey-dimmed"),
+        SMALL_DIMMED("small-text", "text-fill-grey-dimmed");
+
+        private final String textColor, textSize;
+
+        ValueLabelStyle(String textSize, String textColor) {
+            this.textColor = textColor;
+            this.textSize = textSize;
+        }
     }
 }

@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.handler.taker;
 
 import bisq.common.util.StringUtils;
+import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.trade.ServiceProvider;
@@ -28,6 +29,7 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_C;
+import bisq.trade.mu_sig.messages.network.handler.MuSigContractVerifier;
 import bisq.trade.mu_sig.messages.network.handler.NonceSharesRequestUtil;
 import bisq.trade.mu_sig.messages.network.handler.PartialSignaturesRequestUtil;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
@@ -37,6 +39,8 @@ import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class BaseSetupTradeMessage_B_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SetupTradeMessage_B> {
@@ -52,7 +56,18 @@ public abstract class BaseSetupTradeMessage_B_Handler extends MuSigTradeMessageH
 
     @Override
     protected void verify(SetupTradeMessage_B message) {
-        // TODO verify both contracts are the same, and verify peers signature
+        MuSigContract peersContract = message.getContract();
+        ContractSignatureData peersContractSignatureData = message.getContractSignatureData();
+        MuSigContract myContract = trade.getContract();
+        ContractSignatureData myContractSignatureData = trade.getMyself().getContractSignatureData().get();
+        checkArgument(myContractSignatureData != null,
+                "myContractSignatureData must not be null before handling SetupTradeMessage_B");
+        ContractService contractService = serviceProvider.getContractService();
+        MuSigContractVerifier.verifyPeer(contractService,
+                myContract,
+                myContractSignatureData,
+                peersContract,
+                peersContractSignatureData);
     }
 
     @Override
@@ -66,6 +81,7 @@ public abstract class BaseSetupTradeMessage_B_Handler extends MuSigTradeMessageH
                 .setTradeId(trade.getId())
                 .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
                 .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
+                .setPeersMultisigScriptKey(ByteString.copyFrom(peersPubKeyShares.getMultisigScriptKey()))
                 .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
                 .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
                 .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))

@@ -61,7 +61,7 @@ public class ContractService implements Service {
         return Arrays.equals(publicKey.getEncoded(), expectedPublicKey.getEncoded());
     }
 
-    private <T extends Offer<?, ?>> byte[] getContractHash(Contract<T> contract) {
+    public static <T extends Offer<?, ?>> byte[] getContractHash(Contract<T> contract) {
         return DigestUtil.hash(contract.serializeForHash());
     }
 }

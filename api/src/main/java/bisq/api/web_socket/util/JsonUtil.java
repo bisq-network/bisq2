@@ -21,6 +21,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JsonUtil {
+    /**
+     * Clients released before the node derived the request identity from the WebSocket handshake put
+     * their session id into the message payload. The node ignores it, but a raw message must never
+     * reach a log file with it still readable, so it is blanked before logging.
+     *
+     * <p>Only the session id is treated as a secret. The client id is an identifier the node logs
+     * elsewhere anyway, and keeping it visible is what makes such a log line useful.
+     */
+    private static final Pattern SESSION_ID_PATTERN = Pattern.compile(
+            "(\"Bisq-Session-Id\"\\s*:\\s*\")[^\"]*(\")", Pattern.CASE_INSENSITIVE);
+    private static final String REDACTED = "$1***$2";
+
+    public static String redactCredentials(String json) {
+        return SESSION_ID_PATTERN.matcher(json).replaceAll(REDACTED);
+    }
+
     // We use by convention same class name. We get the type field set by the client.
     public static boolean hasExpectedJsonClassName(Class<?> clazz, String json) {
         String regex = "\"type\":\\s*\"([^\"]+)\""; // We use simple name

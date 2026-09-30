@@ -18,6 +18,7 @@
 package bisq.desktop.main.content.mu_sig.trade.pending.trade_details;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
+import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -30,9 +31,10 @@ import java.util.Optional;
 @Slf4j
 @Getter
 @Setter
-public class MuSigTradeDetailsModel extends NavigationModel {
+class MuSigTradeDetailsModel extends NavigationModel {
     private MuSigTrade trade;
     private MuSigOpenTradeChannel channel;
+    private MuSigContract contract;
 
     private String tradeDate;
     private Optional<String> tradeDuration = Optional.empty();
@@ -40,12 +42,6 @@ public class MuSigTradeDetailsModel extends NavigationModel {
     private String peer;
     private String offerType;
     private String market;
-    private String nonBtcAmount;
-    private String nonBtcCurrency;
-    private String btcAmount;
-    private String price;
-    private String priceCodes;
-    private String priceSpec;
     private String paymentMethod;
     private boolean isPaymentMethodsBoxVisible;
     private String tradeId;
@@ -53,11 +49,18 @@ public class MuSigTradeDetailsModel extends NavigationModel {
     private String depositTxId;
     private boolean isDepositTxIdEmpty;
     private boolean isDepositTxIdVisible;
+    private boolean isBlockExplorerLinkVisible;
     private String peersPaymentAccountDataDescription;
     private String peersPaymentAccountData;
     private boolean isPaymentAccountDataEmpty;
     private String assignedMediator;
     private boolean hasMediatorBeenAssigned;
+    private SecurityDepositInfo securityDepositInfo;
+    private String feeAmount;
+    private String feePercent;
+
+    record SecurityDepositInfo(String percentAsString, String btcAmountAsString) {
+    }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

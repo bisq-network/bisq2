@@ -148,7 +148,7 @@ public class BisqEasyMediationCaseDetailsController extends NavigationController
                     BisqEasyMediationRequest request = mediationCase.getBisqEasyMediationRequest();
                     return userProfile.equals(request.getRequester()) || userProfile.equals(request.getPeer());
                 })
-                .collect(Collectors.partitioningBy(mediationCase -> mediationCase.getIsClosed().get(),
+                .collect(Collectors.partitioningBy(BisqEasyMediationCase::isClosed,
                         Collectors.counting()));
         int closed = counts.getOrDefault(true, 0L).intValue();
         int open = counts.getOrDefault(false, 0L).intValue();

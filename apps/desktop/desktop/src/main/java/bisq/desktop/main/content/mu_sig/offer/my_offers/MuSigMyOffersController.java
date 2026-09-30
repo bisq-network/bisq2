@@ -30,7 +30,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.mu_sig.offer.MuSigOfferListItem;
-import bisq.desktop.main.content.mu_sig.offer.create_offer.MuSigCreateOfferController;
+import bisq.desktop.main.content.mu_sig.offer.draft.create_offer.MuSigCreateOfferController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -176,7 +176,7 @@ public class MuSigMyOffersController implements Controller {
                         || item.getOfferDateString().toLowerCase().contains(string)
                         || item.getBaseAmountAsString().contains(string)
                         || item.getQuoteAmountAsString().contains(string)
-                        || item.getPrice().contains(string)
+                        || item.getPriceWithCodeString().contains(string)
                         || item.getPaymentMethodsAsString().toLowerCase().contains(string));
         applyPredicates();
     }

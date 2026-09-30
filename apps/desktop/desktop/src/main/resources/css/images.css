@@ -283,6 +283,18 @@
     -fx-image: url("/images/icons/chevron-drop-menu-grey.png");
 }
 
+#chevron-drop-menu-up-green {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-green.png");
+}
+
+#chevron-drop-menu-up-white {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-white.png");
+}
+
+#chevron-drop-menu-up-grey {
+    -fx-image: url("/images/icons/chevron-drop-menu-up-grey.png");
+}
+
 #close-mini-black {
     -fx-image: url("/images/icons/close-mini-black.png");
 }
@@ -796,6 +808,10 @@
     -fx-image: url("/images/payment/swish.png");
 }
 
+#TELE_BIRR {
+    -fx-image: url("/images/payment/telebirr.png");
+}
+
 #UPHOLD {
     -fx-image: url("/images/payment/uphold.png");
 }
@@ -1105,6 +1121,14 @@
     -fx-image: url("/images/icons/market/market-grey.png");
 }
 
+#fiat-markets{
+    -fx-image: url("/images/markets/fiat-markets.png");
+}
+
+#other-markets{
+    -fx-image: url("/images/markets/other-markets.png");
+}
+
 #language-green {
     -fx-image: url("/images/icons/language/language_green.png");
 }
@@ -1174,23 +1198,27 @@
 }
 
 #close-mid-grey {
-    -fx-image: url("/images/icons/close-mid-icon-grey.png");
+    -fx-image: url("/images/icons/close-mid-grey.png");
 }
 
 #close-mid-white {
-    -fx-image: url("/images/icons/close-mid-icon-white.png");
+    -fx-image: url("/images/icons/close-mid-white.png");
 }
 
-#save-grey {
-    -fx-image: url("/images/icons/save-icon-grey.png");
+#close-mid-green {
+    -fx-image: url("/images/icons/close-mid-green.png");
 }
 
-#save-white {
-    -fx-image: url("/images/icons/save-icon-white.png");
+#tac-decentr {
+    -fx-image: url("/images/tac/tac_decentr.png");
 }
 
-#save-green {
-    -fx-image: url("/images/icons/save-icon-green.png");
+#tac-refund {
+    -fx-image: url("/images/tac/tac_refund.png");
+}
+
+#tac-warning-green {
+    -fx-image: url("/images/tac/warning-green.png");
 }
 
 #warning-grey {
@@ -1225,6 +1253,10 @@
     -fx-image: url("/images/icons/info-green.png");
 }
 
+#instruction-green {
+    -fx-image: url("/images/icons/instruction-green.png");
+}
+
 #btcoins-grey {
     -fx-image: url("/images/icons/btcoins-grey.png");
 }
@@ -1247,6 +1279,42 @@
 
 #download-green {
     -fx-image: url("/images/icons/download-green.png");
+}
+
+#qr-code-grey {
+    -fx-image: url("/images/icons/qr-code-grey.png");
+}
+
+#qr-code-white {
+    -fx-image: url("/images/icons/qr-code-white.png");
+}
+
+#qr-code-green {
+    -fx-image: url("/images/icons/qr-code-green.png");
+}
+
+#new-address-grey {
+    -fx-image: url("/images/icons/new-address-grey.png");
+}
+
+#new-address-white {
+    -fx-image: url("/images/icons/new-address-white.png");
+}
+
+#new-address-green {
+    -fx-image: url("/images/icons/new-address-green.png");
+}
+
+#save-mid-grey {
+    -fx-image: url("/images/icons/save-mid-grey.png");
+}
+
+#save-mid-white {
+    -fx-image: url("/images/icons/save-mid-white.png");
+}
+
+#save-mid-green {
+    -fx-image: url("/images/icons/save-mid-green.png");
 }
 
 
@@ -1941,6 +2009,50 @@
 
 #latest-txs-grey {
     -fx-image: url("/images/wallet/calendar-grey.png");
+}
+
+#latest-txs-white {
+    -fx-image: url("/images/wallet/calendar-white.png");
+}
+
+#latest-txs-green {
+    -fx-image: url("/images/wallet/calendar-green.png");
+}
+
+#latest-txs-menu-grey {
+    -fx-image: url("/images/wallet/calendar-grey-m.png");
+}
+
+#latest-txs-menu-white {
+    -fx-image: url("/images/wallet/calendar-white-m.png");
+}
+
+#latest-txs-menu-green {
+    -fx-image: url("/images/wallet/calendar-green-m.png");
+}
+
+#funds-grey {
+    -fx-image: url("/images/wallet/funds-grey.png");
+}
+
+#funds-white {
+    -fx-image: url("/images/wallet/funds-white.png");
+}
+
+#funds-green {
+    -fx-image: url("/images/wallet/funds-green.png");
+}
+
+#funds-menu-grey {
+    -fx-image: url("/images/wallet/funds-grey-m.png");
+}
+
+#funds-menu-white {
+    -fx-image: url("/images/wallet/funds-white-m.png");
+}
+
+#funds-menu-green {
+    -fx-image: url("/images/wallet/funds-green-m.png");
 }
 
 

@@ -18,12 +18,12 @@
 package bisq.desktop.main.content.mu_sig.offer;
 
 import bisq.account.payment_method.PaymentMethod;
-import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BitcoinAmountDisplay;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.main.content.mu_sig.MuSigViewUtils;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -51,6 +51,10 @@ public class MuSigOfferUtil {
                 if (item != null && !empty) {
                     userProfileDisplay = new UserProfileDisplay(item.getMakerUserProfile(), true, true);
                     userProfileDisplay.setReputationScore(item.getReputationScore());
+                    if (item.isMakerIgnored()) {
+                        userProfileDisplay.setOpacity(0.4);
+                        Tooltip.install(userProfileDisplay, new BisqTooltip(Res.get("offer.takeOffer.makerIgnored.tooltip")));
+                    }
                     setGraphic(userProfileDisplay);
                 } else {
                     if (userProfileDisplay != null) {
@@ -120,10 +124,11 @@ public class MuSigOfferUtil {
                 if (item != null && !empty) {
                     hbox.getChildren().clear();
 
-                    Pair<String, String> pricePair = item.getPricePair();
-                    Label price = new Label(pricePair.getFirst());
+                    Label price = new Label(item.getPriceWithCodeString());
+                    price.setMinWidth(Label.USE_PREF_SIZE);
                     setupPriceIconLabel(item.isHasFixPrice());
-                    Label pricePercentage = new Label(pricePair.getSecond());
+                    Label pricePercentage = new Label(item.getFormattedPercentagePrice());
+                    pricePercentage.setMinWidth(Label.USE_PREF_SIZE);
                     hbox.getChildren().addAll(price, priceIconLabel, pricePercentage);
 
                     tooltip.setText(item.getPriceTooltip());

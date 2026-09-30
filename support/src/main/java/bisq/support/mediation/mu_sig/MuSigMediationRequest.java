@@ -24,9 +24,12 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
+import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
+import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
+import bisq.support.dispute.SerializedSizeExceededException;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -34,20 +37,22 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
-import static com.google.common.base.Preconditions.checkArgument;
+import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 
 @Slf4j
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MuSigMediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage {
+public final class MuSigMediationRequest implements MailboxMessage, ExternalNetworkMessage, AckRequestingMessage,
+        SenderPublicKeyProvidingPayload, ReceiverPublicKeyProvidingPayload {
     public static String createMessageId(String tradeId) {
         return MuSigMediationRequest.class.getSimpleName() + "." + tradeId;
     }
@@ -63,19 +68,19 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
     @EqualsAndHashCode.Exclude
     private final List<MuSigOpenTradeMessage> chatMessages;
     @EqualsAndHashCode.Exclude
-    private final Optional<NetworkId> mediatorNetworkId;
+    private final NetworkId mediatorNetworkId;
 
     public MuSigMediationRequest(String tradeId,
                                  MuSigContract contract,
                                  UserProfile requester,
                                  UserProfile peer,
                                  List<MuSigOpenTradeMessage> chatMessages,
-                                 Optional<NetworkId> mediatorNetworkId) {
+                                 NetworkId mediatorNetworkId) {
         this.tradeId = tradeId;
         this.contract = contract;
         this.requester = requester;
         this.peer = peer;
-        this.chatMessages = maybePrune(chatMessages);
+        this.chatMessages = new ArrayList<>(chatMessages);
         this.mediatorNetworkId = mediatorNetworkId;
 
         // We need to sort deterministically as the data is used in the proof of work check
@@ -87,7 +92,10 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
     @Override
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
-        checkArgument(chatMessages.size() < 1000);
+        if (getSerializedSize() > MAX_SERIALIZED_SIZE) {
+            throw new SerializedSizeExceededException(
+                    "Serialized mediation request size must not exceed " + MAX_SERIALIZED_SIZE + " bytes");
+        }
     }
 
     /**
@@ -96,16 +104,15 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
 
     @Override
     public bisq.support.protobuf.MuSigMediationRequest.Builder getValueBuilder(boolean serializeForHash) {
-        bisq.support.protobuf.MuSigMediationRequest.Builder builder = bisq.support.protobuf.MuSigMediationRequest.newBuilder()
+        return bisq.support.protobuf.MuSigMediationRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setContract(contract.toProto(serializeForHash))
                 .setRequester(requester.toProto(serializeForHash))
                 .setPeer(peer.toProto(serializeForHash))
+                .setMediatorNetworkId(mediatorNetworkId.toProto(serializeForHash))
                 .addAllChatMessages(chatMessages.stream()
                         .map(e -> e.toValueProto(serializeForHash))
                         .collect(Collectors.toList()));
-        mediatorNetworkId.ifPresent(mediatorNetworkId -> builder.setMediatorNetworkId(mediatorNetworkId.toProto(serializeForHash)));
-        return builder;
     }
 
     @Override
@@ -121,9 +128,7 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
                 proto.getChatMessagesList().stream()
                         .map(MuSigOpenTradeMessage::fromProto)
                         .collect(Collectors.toList()),
-                proto.hasMediatorNetworkId()
-                        ? Optional.of(NetworkId.fromProto(proto.getMediatorNetworkId()))
-                        : Optional.empty());
+                NetworkId.fromProto(proto.getMediatorNetworkId()));
     }
 
 
@@ -143,13 +148,7 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
 
     @Override
     public NetworkId getReceiver() {
-        // We access it only after checking with allFieldsValid
-        return mediatorNetworkId.orElseThrow();
-    }
-
-    @Override
-    public boolean allFieldsValid() {
-        return mediatorNetworkId.isPresent();
+        return mediatorNetworkId;
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -168,20 +167,14 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
         return META_DATA;
     }
 
-    private List<MuSigOpenTradeMessage> maybePrune(List<MuSigOpenTradeMessage> chatMessages) {
-        StringBuilder sb = new StringBuilder();
-        List<MuSigOpenTradeMessage> result = chatMessages.stream()
-                .filter(message -> {
-                    sb.append(message.getTextOrNA());
-                    return sb.toString().length() < 10_000;
-                })
-                .collect(Collectors.toList());
-        if (result.size() != chatMessages.size()) {
-            log.warn("chatMessages pruned for trade {}: kept={}, dropped={}, maxTotalChars=10000",
-                    tradeId,
-                    result.size(),
-                    chatMessages.size() - result.size());
-        }
-        return result;
+    @Override
+    public PublicKey getSenderPublicKey() {
+        return requester.getPublicKey();
     }
+
+    @Override
+    public PublicKey getReceiverPublicKey() {
+        return mediatorNetworkId.getPubKey().getPublicKey();
+    }
+
 }

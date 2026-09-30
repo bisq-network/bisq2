@@ -17,42 +17,44 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.burn.tab2;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.Browser;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import lombok.Getter;
+import bisq.desktop.main.content.reputation.build_reputation.Tab2Controller;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.i18n.Res;
+import bisq.user.reputation.ProofOfBurnService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BurnBsqTab2Controller implements Controller {
-    @Getter
-    private final BurnBsqTab2View view;
-
+public class BurnBsqTab2Controller extends Tab2Controller<BurnBsqTab2Model, BurnBsqTab2View, BurnBsqScoreSimulation> {
     public BurnBsqTab2Controller(ServiceProvider serviceProvider) {
-        BurnBsqTab2Model model = new BurnBsqTab2Model();
-        BurnScoreSimulation simulation = new BurnScoreSimulation();
-        view = new BurnBsqTab2View(model, this, simulation.getViewRoot());
+        super(serviceProvider);
     }
 
     @Override
-    public void onActivate() {
+    protected BurnBsqTab2Model createModel() {
+        return new BurnBsqTab2Model(Res.get("reputation.burnedBsq.score.info"),
+                String.valueOf(ProofOfBurnService.WEIGHT),
+                Res.get("reputation.burnedBsq.formula"));
     }
 
     @Override
-    public void onDeactivate() {
+    protected BurnBsqScoreSimulation createSimulation() {
+        return new BurnBsqScoreSimulation();
     }
 
-    void onBack() {
+    @Override
+    protected BurnBsqTab2View createView(BurnBsqTab2Model model, BurnBsqScoreSimulation simulation) {
+        return new BurnBsqTab2View(model, this, simulation.getViewRoot());
+    }
+
+    @Override
+    public void onBack() {
         Navigation.navigateTo(NavigationTarget.BURN_BSQ_TAB_1);
     }
 
-    void onNext() {
+    @Override
+    public void onNext() {
         Navigation.navigateTo(NavigationTarget.BURN_BSQ_TAB_3);
-    }
-
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/Reputation");
     }
 }

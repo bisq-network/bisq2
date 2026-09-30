@@ -22,18 +22,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode
 public final class PartialSignaturesRequest implements Proto {
     private final String tradeId;
-    private final NonceSharesMessage peersNonceShares;
+    private final Optional<NonceSharesMessage> peersNonceShares;
     private final List<ReceiverAddressAndAmount> redirectionReceivers;
     private final boolean buyerReadyToRelease;
 
     public PartialSignaturesRequest(String tradeId,
-                                    NonceSharesMessage peersNonceShares,
+                                    Optional<NonceSharesMessage> peersNonceShares,
                                     List<ReceiverAddressAndAmount> redirectionReceivers,
                                     boolean buyerReadyToRelease) {
         this.tradeId = tradeId;
@@ -44,13 +45,14 @@ public final class PartialSignaturesRequest implements Proto {
 
     @Override
     public bisq.trade.protobuf.PartialSignaturesRequest.Builder getBuilder(boolean serializeForHash) {
-        return bisq.trade.protobuf.PartialSignaturesRequest.newBuilder()
+        var builder = bisq.trade.protobuf.PartialSignaturesRequest.newBuilder()
                 .setTradeId(tradeId)
-                .setPeersNonceShares(peersNonceShares.toProto(serializeForHash))
                 .addAllRedirectionReceivers(redirectionReceivers.stream()
                         .map(e -> e.toProto(serializeForHash))
                         .collect(Collectors.toList()))
                 .setBuyerReadyToRelease(buyerReadyToRelease);
+        peersNonceShares.ifPresent(e -> builder.setPeersNonceShares(e.toProto(serializeForHash)));
+        return builder;
     }
 
     @Override
@@ -60,7 +62,9 @@ public final class PartialSignaturesRequest implements Proto {
 
     public static PartialSignaturesRequest fromProto(bisq.trade.protobuf.PartialSignaturesRequest proto) {
         return new PartialSignaturesRequest(proto.getTradeId(),
-                NonceSharesMessage.fromProto(proto.getPeersNonceShares()),
+                proto.hasPeersNonceShares()
+                        ? Optional.of(NonceSharesMessage.fromProto(proto.getPeersNonceShares()))
+                        : Optional.empty(),
                 proto.getRedirectionReceiversList().stream()
                         .map(ReceiverAddressAndAmount::fromProto)
                         .collect(Collectors.toList()),

@@ -18,17 +18,20 @@
 package bisq.api.web_socket;
 
 import bisq.api.ApiConfig;
+import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.network.NetworkService;
 import bisq.trade.TradeService;
 import bisq.user.UserService;
 import lombok.Getter;
@@ -60,18 +63,25 @@ public class WebSocketService implements Service {
     public WebSocketService(ApiConfig apiConfig,
                             TlsContextService tlsContextService,
                             BondedRolesService bondedRolesService,
+                            AlertNotificationsService alertNotificationsService,
                             ChatService chatService,
                             TradeService tradeService,
                             UserService userService,
                             BisqEasyService bisqEasyService,
-                            OpenTradeItemsService openTradeItemsService) {
+                            NetworkService networkService,
+                            OpenTradeItemsService openTradeItemsService,
+                            PermissionService permissionService) {
         this.apiConfig = apiConfig;
         subscriptionService = new SubscriptionService(bondedRolesService,
+                alertNotificationsService,
                 chatService,
                 tradeService,
                 userService,
                 bisqEasyService,
-                openTradeItemsService);
+                networkService,
+                openTradeItemsService,
+                permissionService,
+                apiConfig.isAuthorizationRequired());
         webSocketRestApiService = new WebSocketRestApiService(apiConfig, tlsContextService);
         webSocketConnectionHandler = new WebSocketConnectionHandler(subscriptionService, webSocketRestApiService);
     }
@@ -101,6 +111,10 @@ public class WebSocketService implements Service {
 
     public ObservableSet<WebSocketClient> getWebsocketClients() {
         return webSocketConnectionHandler.getWebsocketClients();
+    }
+
+    public void disconnectClient(String clientId) {
+        webSocketConnectionHandler.disconnectClient(clientId);
     }
 
     public ReadOnlyObservable<State> getState() {

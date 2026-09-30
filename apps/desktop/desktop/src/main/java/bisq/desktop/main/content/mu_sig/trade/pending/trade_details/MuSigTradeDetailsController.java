@@ -18,20 +18,24 @@
 package bisq.desktop.main.content.mu_sig.trade.pending.trade_details;
 
 import bisq.account.accounts.AccountPayload;
+import bisq.bonded_roles.explorer.ExplorerService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
-import bisq.common.market.Market;
+import bisq.common.monetary.Monetary;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.Browser;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.offer.price.spec.FixPriceSpec;
-import bisq.offer.price.spec.PriceSpecFormatter;
+import bisq.offer.amount.OfferAmountFormatter;
+import bisq.offer.amount.OfferAmountUtil;
+import bisq.offer.options.OfferOptionUtil;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.presentation.formatters.PriceFormatter;
+import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeFormatter;
@@ -64,9 +68,13 @@ public class MuSigTradeDetailsController extends NavigationController implements
     @Getter
     private final MuSigTradeDetailsView view;
 
+    private final ExplorerService explorerService;
+
 
     public MuSigTradeDetailsController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MU_SIG_TRADE_DETAILS);
+
+        explorerService = serviceProvider.getBondedRolesService().getExplorerService();
 
         model = new MuSigTradeDetailsModel();
         view = new MuSigTradeDetailsView(model, this);
@@ -83,8 +91,8 @@ public class MuSigTradeDetailsController extends NavigationController implements
         MuSigTrade trade = model.getTrade();
         MuSigOpenTradeChannel channel = model.getChannel();
         MuSigContract contract = trade.getContract();
-        Market market = trade.getMarket();
-        boolean isBaseCurrencyBitcoin = market.isBaseCurrencyBitcoin();
+        model.setContract(contract);
+        boolean isBaseCurrencyBitcoin = trade.getMarket().isBaseCurrencyBitcoin();
 
         model.setTradeDate(DateFormatter.formatDateTime(contract.getTakeOfferDate()));
 
@@ -99,17 +107,7 @@ public class MuSigTradeDetailsController extends NavigationController implements
                 ? Res.get("muSig.trade.details.offerTypeAndMarket.buyOffer")
                 : Res.get("muSig.trade.details.offerTypeAndMarket.sellOffer"));
         model.setMarket(Res.get("muSig.trade.details.offerTypeAndMarket.nonBtcMarket",
-                trade.getOffer().getMarket().getNonBtcCurrencyCode()));
-
-        model.setNonBtcAmount(MuSigTradeFormatter.formatNonBtcSideAmount(trade));
-        model.setNonBtcCurrency(trade.getOffer().getMarket().getNonBtcCurrencyCode());
-        model.setBtcAmount(MuSigTradeFormatter.formatBtcSideAmount(trade));
-
-        model.setPrice(PriceFormatter.format(MuSigTradeUtils.getPriceQuote(contract), isBaseCurrencyBitcoin));
-        model.setPriceCodes(trade.getOffer().getMarket().getMarketCodes());
-        model.setPriceSpec(trade.getOffer().getPriceSpec() instanceof FixPriceSpec
-                ? ""
-                : String.format("(%s)", PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec(), true)));
+                trade.getOffer().getMarket().getRelevantCurrencyCode()));
 
         model.setPaymentMethod(contract.getNonBtcSidePaymentMethodSpec().getShortDisplayString());
         model.setPaymentMethodsBoxVisible(isBaseCurrencyBitcoin);
@@ -122,7 +120,7 @@ public class MuSigTradeDetailsController extends NavigationController implements
 
         model.setPeersPaymentAccountDataDescription(isBaseCurrencyBitcoin
                 ? Res.get("muSig.trade.details.paymentAccountData.fiat")
-                : Res.get("muSig.trade.details.paymentAccountData.crypto", market.getNonBtcCurrencyCode())
+                : Res.get("muSig.trade.details.paymentAccountData.crypto", trade.getMarket().getRelevantCurrencyCode())
         );
         model.setPeersPaymentAccountData(peersAccountPayload.isEmpty()
                 ? Res.get("muSig.trade.details.dataNotYetProvided")
@@ -131,12 +129,22 @@ public class MuSigTradeDetailsController extends NavigationController implements
         model.setAssignedMediator(channel.getMediator().map(UserProfile::getUserName).orElse(""));
         model.setHasMediatorBeenAssigned(channel.getMediator().isPresent());
 
+        String depositTxId = trade.getDepositTxId();
+        boolean hasDepositTxId = depositTxId != null && !depositTxId.isBlank();
+        model.setDepositTxId(hasDepositTxId
+                ? depositTxId
+                : Res.get("muSig.trade.details.dataNotYetProvided"));
+        model.setDepositTxIdEmpty(!hasDepositTxId);
+        model.setDepositTxIdVisible(hasDepositTxId);
 
-        model.setDepositTxId(trade.getDepositTxId() == null
-                ? Res.get("muSig.trade.details.dataNotYetProvided")
-                : trade.getDepositTxId());
-        model.setDepositTxIdEmpty(trade.getDepositTxId() == null);
-        model.setDepositTxIdVisible(trade.getDepositTxId() != null);
+        boolean hasExplorerProvider = explorerService.getExplorerServiceProvider().isPresent();
+        model.setBlockExplorerLinkVisible(hasDepositTxId && hasExplorerProvider);
+
+        model.setSecurityDepositInfo(createSecurityDepositInfo(contract));
+
+        // todo: set real fee amount and percent once we have that information, for now we set it to N/A
+        model.setFeeAmount(Res.get("data.na"));
+        model.setFeePercent(Res.get("data.na"));
     }
 
     @Override
@@ -151,4 +159,32 @@ public class MuSigTradeDetailsController extends NavigationController implements
     void onClose() {
         OverlayController.hide();
     }
+
+    void openExplorer() {
+        Browser.open(getBlockExplorerUrl());
+    }
+
+    void onCopyExplorerLink() {
+        ClipboardUtil.copyToClipboard(getBlockExplorerUrl());
+    }
+
+    private String getBlockExplorerUrl() {
+        return getBlockExplorerUrl(explorerService, model.getDepositTxId());
+    }
+
+    private static String getBlockExplorerUrl(ExplorerService explorerService, String txId) {
+        return explorerService.getExplorerServiceProvider()
+                .map(provider -> provider.getBaseUrl() + "/" + provider.getTxPath() + "/" + txId)
+                .orElse(Res.get("data.na"));
+    }
+
+    private static MuSigTradeDetailsModel.SecurityDepositInfo createSecurityDepositInfo(MuSigContract contract) {
+        double percent = OfferOptionUtil.findSymmetricSecurityDepositPercent(contract.getOffer().getOfferOptions())
+                .orElseThrow(() -> new IllegalArgumentException("CollateralOption must be present"));
+        Monetary btcAmount = OfferAmountUtil.calculateSecurityDepositAsBTC(MuSigTradeUtils.getBtcSideMonetary(contract), percent);
+        return new MuSigTradeDetailsModel.SecurityDepositInfo(
+                PercentageFormatter.formatToPercentWithSymbol(percent, 0),
+                OfferAmountFormatter.formatDepositAmountAsBTC(btcAmount));
+    }
 }
+

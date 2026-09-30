@@ -109,7 +109,8 @@ public class AuthorizedRoleView extends ContentTabView<AuthorizedRoleModel, Auth
                 break;
             }
         }
-        Navigation.navigateTo(model.getSelectedTabButton().get().getNavigationTarget());
+        // Automatic selection of the first visible role tab, not a user click, so skip history.
+        Navigation.navigateToWithoutAddingToHistory(model.getSelectedTabButton().get().getNavigationTarget());
     }
 
     @Override

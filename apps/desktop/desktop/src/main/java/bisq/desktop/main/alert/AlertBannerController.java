@@ -20,6 +20,7 @@ package bisq.desktop.main.alert;
 import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
@@ -27,7 +28,6 @@ import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
@@ -73,7 +73,7 @@ public class AlertBannerController implements Controller {
     private void showAlertBanner() {
         UIThread.run(() -> {
             Optional<AuthorizedAlertData> mostRelevantAlert = alertNotificationsService.getUnconsumedAlerts().stream()
-                        .max(Comparator.comparing(AuthorizedAlertData::getAlertType).thenComparing(AuthorizedAlertData::getDate));
+                    .max(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR);
             if (mostRelevantAlert.isPresent() && !mostRelevantAlert.get().equals(model.getDisplayedAuthorizedAlertData())) {
                 model.reset();
                 add(mostRelevantAlert.get());

@@ -153,6 +153,69 @@
     -fx-background-color: -bisq-dark-grey-50 !important;
 }
 
+.chat-markdown-message {
+    -fx-spacing: 3;
+}
+
+.chat-markdown-line {
+    -fx-line-spacing: 2px;
+}
+
+.chat-markdown-heading-3-line {
+    -fx-line-spacing: 3px;
+}
+
+.chat-markdown-rule {
+    -fx-background-color: -bisq-mid-grey-20;
+    -fx-opacity: 0.55;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.chat-markdown-text {
+    -fx-fill: -fx-light-text-color;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.chat-markdown-bold {
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.chat-markdown-italic {
+    -fx-font-style: italic;
+}
+
+.chat-markdown-code {
+    -fx-font-family: "IBM Plex Mono";
+    -fx-fill: -bisq-light-grey-20;
+}
+
+.chat-markdown-heading-3 {
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 1.22em;
+}
+
+.chat-markdown-link.hyperlink {
+    -fx-padding: 0;
+    -fx-text-fill: -bisq2-green;
+    -fx-underline: true;
+}
+
+.chat-markdown-link.hyperlink:hover,
+.chat-markdown-link.hyperlink:hover:visited {
+    -fx-text-fill: derive(-bisq2-green, 25%);
+}
+
+.chat-markdown-link.hyperlink:visited {
+    -fx-text-fill: -bisq2-green;
+}
+
+.chat-markdown-image {
+    -fx-translate-y: 1;
+}
+
 /* Peer Message Background */
 .chat-message-bg-peer-message,
 .chat-peer-offer-message-bg {
@@ -321,6 +384,12 @@
     -fx-alignment: center-left;
     -fx-padding: 5 15 5 15;
     -fx-background-radius: 8;
+}
+
+/* The opaque button covers the cell, so the keyboard selection highlight must target it. */
+.chat-mention-list-view .list-cell:selected .chat-mention-list-button {
+    -fx-background-color: -bisq-dark-grey-50;
+    -fx-text-fill: -bisq2-green;
 }
 
 .chat-mention-placeholder-label {

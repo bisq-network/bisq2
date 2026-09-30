@@ -65,7 +65,7 @@ class BisqEasyMediationTableView extends VBox {
         Label headlineLabel = new Label(Res.get("authorizedRole.mediator.table.headline"));
         headlineLabel.getStyleClass().add("bisq-easy-container-headline");
 
-        showClosedCasesSwitch = new Switch(Res.get("authorizedRole.mediator.showClosedCases"));
+        showClosedCasesSwitch = new Switch(Res.get("authorizedRole.disputeActor.showClosedCases"));
 
         searchBox = new SearchBox();
         searchBox.setPrefWidth(90);
@@ -253,7 +253,7 @@ class BisqEasyMediationTableView extends VBox {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
-                .title(Res.get("authorizedRole.mediator.table.maker"))
+                .title(Res.get("authorizedRole.disputeActor.table.maker"))
                 .minWidth(120)
                 .left()
                 .comparator(Comparator.comparing(item -> item.getMaker().getUserName()))
@@ -267,7 +267,7 @@ class BisqEasyMediationTableView extends VBox {
                 .includeForCsv(false)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
-                .title(Res.get("authorizedRole.mediator.table.taker"))
+                .title(Res.get("authorizedRole.disputeActor.table.taker"))
                 .minWidth(120)
                 .left()
                 .comparator(Comparator.comparing(item -> item.getTaker().getUserName()))
@@ -311,7 +311,7 @@ class BisqEasyMediationTableView extends VBox {
                 .tooltipSupplier(BisqEasyMediationCaseListItem::getPaymentMethod)
                 .build());
         closeCaseDateColumn = new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
-                .title(Res.get("authorizedRole.mediator.table.header.closeCaseDate"))
+                .title(Res.get("authorizedRole.disputeActor.table.header.closeCaseDate"))
                 .minWidth(130)
                 .right()
                 .comparator(Comparator.comparing(BisqEasyMediationCaseListItem::getCloseCaseDate))
@@ -325,21 +325,27 @@ class BisqEasyMediationTableView extends VBox {
     private Callback<TableColumn<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>,
             TableCell<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>> getCloseDateCellFactory() {
         return column -> new TableCell<>() {
+            private final Label date = new Label();
+            private final Label time = new Label();
+            private final VBox vBox = new VBox(3, date, time);
 
-            private final Label label = new Label();
+            {
+                date.getStyleClass().add("table-view-date-column-date");
+                time.getStyleClass().add("table-view-date-column-time");
+                vBox.setAlignment(Pos.CENTER);
+                setAlignment(Pos.CENTER);
+            }
 
             @Override
             protected void updateItem(BisqEasyMediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
+                date.textProperty().unbind();
+                time.textProperty().unbind();
+
                 if (item != null && !empty) {
-                    Label date = new Label(item.getCloseCaseDateString());
-                    date.getStyleClass().add("table-view-date-column-date");
-                    Label time = new Label(item.getCloseCaseTimeString());
-                    time.getStyleClass().add("table-view-date-column-time");
-                    VBox vBox = new VBox(3, date, time);
-                    vBox.setAlignment(Pos.CENTER);
-                    setAlignment(Pos.CENTER);
+                    date.textProperty().bind(item.getCloseCaseDateStringProperty());
+                    time.textProperty().bind(item.getCloseCaseTimeStringProperty());
                     setGraphic(vBox);
                 } else {
                     setGraphic(null);

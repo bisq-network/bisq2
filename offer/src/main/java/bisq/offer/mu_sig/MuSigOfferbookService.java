@@ -18,6 +18,7 @@
 package bisq.offer.mu_sig;
 
 import bisq.common.application.Service;
+import bisq.common.market.Market;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.util.CompletableFutureUtils;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class MuSigOfferbookService implements Service, DataService.Listener {
@@ -128,6 +130,12 @@ public class MuSigOfferbookService implements Service, DataService.Listener {
 
     public Set<MuSigOffer> getOffers() {
         return offers.getUnmodifiableSet();
+    }
+
+    public Set<MuSigOffer> getOffersForMarket(Market market) {
+        return getOffers().stream()
+                .filter(offer -> offer.getMarket().equals(market))
+                .collect(Collectors.toSet());
     }
 
 

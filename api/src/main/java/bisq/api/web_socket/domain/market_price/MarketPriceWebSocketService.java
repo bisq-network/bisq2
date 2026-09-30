@@ -17,6 +17,8 @@
 
 package bisq.api.web_socket.domain.market_price;
 
+import bisq.api.dto.DtoMappings;
+import bisq.api.dto.common.monetary.PriceQuoteDto;
 import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.Topic;
@@ -25,9 +27,7 @@ import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.observable.Pin;
-import bisq.common.observable.map.ObservableHashMap;
-import bisq.api.dto.DtoMappings;
-import bisq.api.dto.common.monetary.PriceQuoteDto;
+import bisq.common.observable.map.ReadOnlyObservableMap;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MarketPriceWebSocketService extends SimpleObservableWebSocketService<ObservableHashMap<Market, MarketPrice>, Map<String, PriceQuoteDto>> {
+public class MarketPriceWebSocketService extends SimpleObservableWebSocketService<ReadOnlyObservableMap<Market, MarketPrice>, Map<String, PriceQuoteDto>> {
     private final MarketPriceService marketPriceService;
 
     public MarketPriceWebSocketService(SubscriberRepository subscriberRepository,
@@ -45,13 +45,13 @@ public class MarketPriceWebSocketService extends SimpleObservableWebSocketServic
     }
 
     @Override
-    protected ObservableHashMap<Market, MarketPrice> getObservable() {
+    protected ReadOnlyObservableMap<Market, MarketPrice> getObservable() {
         return marketPriceService.getMarketPriceByCurrencyMap();
     }
 
     @Override
-    protected HashMap<String, PriceQuoteDto> toPayload(ObservableHashMap<Market, MarketPrice> observable) {
-        return getObservable()
+    protected HashMap<String, PriceQuoteDto> toPayload(ReadOnlyObservableMap<Market, MarketPrice> observable) {
+        return observable
                 .entrySet().stream()
                 .filter(MarketPriceWebSocketService::isBaseCurrencyBtc)
                 .collect(Collectors.toMap(

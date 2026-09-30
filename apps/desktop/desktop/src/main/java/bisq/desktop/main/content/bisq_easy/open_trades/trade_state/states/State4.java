@@ -28,7 +28,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
+import bisq.desktop.main.content.bisq_easy.TradesUtils;
 import bisq.desktop.main.content.components.UserProfileDisplay;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
@@ -89,9 +89,9 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
             String name = paymentRail.name();
             model.setPaymentProofDescription(Res.get("bisqEasy.tradeState.paymentProof." + name));
             model.setBlockExplorerLinkVisible(paymentRail.equals(BitcoinPaymentRail.MAIN_CHAIN));
-            String paymentProof = bisqEasyTrade.getPaymentProof().get();
-            model.setPaymentProof(paymentProof);
-            model.setPaymentProofVisible(paymentProof != null);
+            Optional<String> paymentProof = bisqEasyTrade.getPaymentProof();
+            model.setPaymentProof(paymentProof.orElse(null));
+            model.setPaymentProofVisible(paymentProof.isPresent());
             UserProfile tradePeer = model.getChannel().getPeer();
             model.setTradePeer(tradePeer);
             model.setBuyer(bisqEasyTrade.isBuyer());
@@ -151,7 +151,7 @@ public abstract class State4<C extends State4.Controller<?, ?>> extends BaseStat
         }
 
         protected void onExportTrade() {
-            OpenTradesUtils.exportTrade(model.getTrade(), getView().getRoot().getScene());
+            TradesUtils.exportTrade(model.getTrade(), getView().getRoot().getScene());
         }
 
         public void openExplorer() {

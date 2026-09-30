@@ -40,19 +40,22 @@ public final class AccountOption implements OfferOption {
     private final List<String> acceptedCountryCodes;
     private final Optional<String> bankId;
     private final List<String> acceptedBanks;
+    private final byte[] saltedAccountPayloadHash;
 
     public AccountOption(PaymentMethod<? extends PaymentRail> paymentMethod,
                          String saltedAccountId,
                          Optional<String> countryCode,
                          List<String> acceptedCountryCodes,
                          Optional<String> bankId,
-                         List<String> acceptedBanks) {
+                         List<String> acceptedBanks,
+                         byte[] saltedAccountPayloadHash) {
         this.paymentMethod = paymentMethod;
         this.saltedAccountId = saltedAccountId;
         this.countryCode = countryCode;
         this.acceptedCountryCodes = acceptedCountryCodes;
         this.bankId = bankId;
         this.acceptedBanks = acceptedBanks;
+        this.saltedAccountPayloadHash = saltedAccountPayloadHash.clone();
 
         verify();
     }
@@ -66,6 +69,7 @@ public final class AccountOption implements OfferOption {
         bankId.ifPresent(e -> NetworkDataValidation.validateText(e, BankAccountPayload.BANK_ID_MIN_LENGTH, BankAccountPayload.BANK_ID_MAX_LENGTH));
         checkArgument(acceptedBanks.size() < 10, "acceptedBanks must be < 100 items");
         checkArgument(acceptedBanks.toString().length() < 500, "Length of acceptedBanks must be < 500");
+        NetworkDataValidation.validateHash(saltedAccountPayloadHash);
     }
 
     public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
@@ -73,7 +77,8 @@ public final class AccountOption implements OfferOption {
                 .setPaymentMethod(paymentMethod.toProto(serializeForHash))
                 .setSaltedAccountId(saltedAccountId)
                 .addAllAcceptedCountryCodes(acceptedCountryCodes)
-                .addAllAcceptedBanks(acceptedBanks);
+                .addAllAcceptedBanks(acceptedBanks)
+                .setSaltedAccountPayloadHash(com.google.protobuf.ByteString.copyFrom(saltedAccountPayloadHash));
         countryCode.ifPresent(builder::setCountryCode);
         bankId.ifPresent(builder::setBankId);
         return getOfferOptionBuilder(serializeForHash).setAccountOption(builder);
@@ -90,7 +95,12 @@ public final class AccountOption implements OfferOption {
                 proto.hasCountryCode() ? Optional.of(proto.getCountryCode()) : Optional.empty(),
                 proto.getAcceptedCountryCodesList(),
                 proto.hasBankId() ? Optional.of(proto.getBankId()) : Optional.empty(),
-                proto.getAcceptedBanksList()
+                proto.getAcceptedBanksList(),
+                proto.getSaltedAccountPayloadHash().toByteArray()
         );
+    }
+
+    public byte[] getSaltedAccountPayloadHash() {
+        return saltedAccountPayloadHash.clone();
     }
 }

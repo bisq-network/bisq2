@@ -17,42 +17,44 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.accountAge.tab2;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.Browser;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import lombok.Getter;
+import bisq.desktop.main.content.reputation.build_reputation.Tab2Controller;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.i18n.Res;
+import bisq.user.reputation.AccountAgeService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AccountAgeTab2Controller implements Controller {
-    @Getter
-    private final AccountAgeTab2View view;
-
+public class AccountAgeTab2Controller extends Tab2Controller<AccountAgeTab2Model, AccountAgeTab2View, AccountAgeScoreSimulation> {
     public AccountAgeTab2Controller(ServiceProvider serviceProvider) {
-        AccountAgeTab2Model model = new AccountAgeTab2Model();
-        AccountAgeScoreSimulation simulation = new AccountAgeScoreSimulation();
-        view = new AccountAgeTab2View(model, this, simulation.getViewRoot());
+        super(serviceProvider);
     }
 
     @Override
-    public void onActivate() {
+    protected AccountAgeTab2Model createModel() {
+        return new AccountAgeTab2Model(Res.get("reputation.accountAge.score.info"),
+                String.valueOf(AccountAgeService.WEIGHT),
+                Res.get("reputation.accountAge.formula"));
     }
 
     @Override
-    public void onDeactivate() {
+    protected AccountAgeScoreSimulation createSimulation() {
+        return new AccountAgeScoreSimulation();
     }
 
-    void onBack() {
+    @Override
+    protected AccountAgeTab2View createView(AccountAgeTab2Model model, AccountAgeScoreSimulation simulation) {
+        return new AccountAgeTab2View(model, this, simulation.getViewRoot());
+    }
+
+    @Override
+    public void onBack() {
         Navigation.navigateTo(NavigationTarget.ACCOUNT_AGE_TAB_1);
     }
 
-    void onNext() {
+    @Override
+    public void onNext() {
         Navigation.navigateTo(NavigationTarget.ACCOUNT_AGE_TAB_3);
-    }
-
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/Reputation");
     }
 }

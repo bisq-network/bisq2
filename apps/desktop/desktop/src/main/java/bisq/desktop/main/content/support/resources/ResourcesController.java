@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.support.resources;
 
+import bisq.application.InstanceLock;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.observable.Pin;
 import bisq.common.platform.PlatformUtils;
@@ -29,6 +30,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.desktop.overlay.tac.TacController;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
 import bisq.persistence.PersistenceService;
@@ -135,8 +137,14 @@ public class ResourcesController implements Controller {
                             return;
                         }
                         try {
-                            // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy
-                            FileMutatorUtils.copyDirectory(appDataDirPath, destinationPath, Set.of("log"));
+                            // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy.
+                            // We must not copy the instance lock file. On POSIX systems record locks belong to the process, not to
+                            // the file descriptor, thus reading the file for the copy would release our own lock and disable the
+                            // single instance protection for the rest of the session.
+                            FileMutatorUtils.copyDirectory(appDataDirPath,
+                                    destinationPath,
+                                    Set.of("log"),
+                                    Set.of(InstanceLock.LOCK_FILE_NAME));
                             new Popup().feedback(Res.get("support.resources.backup.success", destinationPath)).show();
                         } catch (IOException e) {
                             new Popup().error(e).show();
@@ -164,7 +172,7 @@ public class ResourcesController implements Controller {
     }
 
     void onTac() {
-        Navigation.navigateTo(NavigationTarget.TAC);
+        Navigation.navigateTo(NavigationTarget.TAC, new TacController.InitData(TacController.Mode.READ_ONLY));
     }
 
     void onOpenLicense() {

@@ -18,7 +18,6 @@
 package bisq.common.locale;
 
 import bisq.common.util.LocaleFactory;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -34,17 +33,23 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class CountryRepository {
-    @Getter
     private static Country defaultCountry;
     private static final List<Country> ALL_COUNTRIES;
     private static final List<String> ALL_COUNTRY_CODES;
+
+    public static Country getDefaultCountry() {
+        if (defaultCountry == null) {
+            applyDefaultLocale(Locale.getDefault());
+        }
+        return defaultCountry;
+    }
 
     public static void setDefaultCountry(Country defaultCountry) {
         CountryRepository.defaultCountry = defaultCountry;
     }
 
     public static void applyDefaultLocale(Locale defaultLocale) {
-        CountryRepository.defaultCountry = findCountry(defaultLocale).orElseGet(() -> findCountry(Locale.US).orElseThrow());
+        defaultCountry = findCountry(defaultLocale).orElseGet(() -> findCountry(Locale.US).orElseThrow());
     }
 
     public static Optional<Country> findCountry(Locale locale) {

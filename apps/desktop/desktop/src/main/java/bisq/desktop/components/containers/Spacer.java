@@ -36,17 +36,25 @@ public class Spacer {
         return region;
     }
 
-    public static Region height(int height) {
+    public static Region height(double height) {
         Region region = new Region();
         region.setMinHeight(height);
         region.setMaxHeight(height);
         return region;
     }
 
-    public static Region width(int width) {
+    public static Region height(int width) {
+        return height(Double.valueOf(width));
+    }
+
+    public static Region width(double width) {
         Region region = new Region();
         region.setMinWidth(width);
         region.setMaxWidth(width);
         return region;
+    }
+
+    public static Region width(int width) {
+        return width(Double.valueOf(width));
     }
 }

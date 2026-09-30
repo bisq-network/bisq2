@@ -24,6 +24,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.monetary.Coin;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.BitcoinAddressValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
@@ -32,6 +33,7 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
 import bisq.desktop.components.controls.validator.BitcoinTransactionValidator;
 import bisq.desktop.components.controls.validator.ExplorerResultValidator;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.trade.WaitingAnimation;
 import bisq.desktop.main.content.bisq_easy.components.trade.WaitingState;
@@ -97,8 +99,8 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         public void onActivate() {
             super.onActivate();
 
-            model.setPaymentProof(model.getTrade().getPaymentProof().get());
-            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().get());
+            model.setPaymentProof(model.getTrade().getPaymentProof().orElse(null));
+            model.setBitcoinPaymentData(model.getTrade().getBitcoinPaymentData().orElse(null));
 
             if (model.getConfirmationState().get() == null) {
                 model.getConfirmationState().set(Model.ConfirmationState.REQUEST_STARTED);
@@ -167,7 +169,7 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         private void doCompleteTrade() {
             // todo should we send a system message? if so we should change the text
             //sendTradeLogMessage(Res.get("bisqEasy.tradeState.info.phase3b.tradeLogMessage", model.getChannel().getMyUserIdentity().getUserName()));
-            bisqEasyTradeService.btcConfirmed(model.getTrade());
+            TradeExceptionHandler.run(() -> bisqEasyTradeService.btcConfirmed(model.getTrade()));
         }
 
         private void requestTx() {
@@ -245,8 +247,9 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
         }
 
         private List<Long> findTxOutputValuesForAddress(Tx tx, String address) {
+            String canonicalAddress = BitcoinAddressValidation.canonicalize(address);
             return tx.getOutputs().stream()
-                    .filter(output -> address.equals(output.getAddress()))
+                    .filter(output -> canonicalAddress.equals(output.getAddress()))
                     .map(Output::getValue)
                     .toList();
         }

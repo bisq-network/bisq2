@@ -36,7 +36,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -44,33 +43,47 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, LanguageSettingsController> {
     private final Button addLanguageButton;
-    private final AutoCompleteComboBox<String> languageSelection, supportedLanguagesComboBox;
-    private Subscription getSelectedSupportedLanguageCodePin;
+    private final AutoCompleteComboBox<String> languageSelection, countrySelection, currencySelection,
+            supportedLanguagesComboBox;
+    private Subscription getSelectedSupportedLanguageCodePin, selectedLanguageTagPin;
 
     public LanguageSettingsView(LanguageSettingsModel model, LanguageSettingsController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_LEFT);
 
-        // Language
-        Label languageSelectionHeadline = SettingsViewUtils.getHeadline(Res.get("settings.language.headline"));
+        // --- MAIN HEADLINE ---
+        Label mainHeadline = SettingsViewUtils.getHeadline(Res.get("settings.language.headline"));
 
+        // 1. Language Selector
         languageSelection = new AutoCompleteComboBox<>(model.getLanguageTags(), Res.get("settings.language.select"));
-        languageSelection.setPrefWidth(300);
-        languageSelection.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(String languageCode) {
-                return languageCode != null ? controller.getDisplayLanguage(languageCode) : "";
-            }
-
-            @Override
-            public String fromString(String string) {
-                return null;
-            }
-        });
+        int comboBoxMinWidth = 250;
+        languageSelection.setMinWidth(comboBoxMinWidth);
+        languageSelection.setConverter(model.getLanguageStringConverter());
         languageSelection.validateOnNoItemSelectedWithMessage(Res.get("settings.language.select.invalid"));
+        languageSelection.setMaxWidth(Double.MAX_VALUE);
 
-        // Supported languages
+        // 2. Country Selector
+        countrySelection = new AutoCompleteComboBox<>(model.getCountryCodes(), Res.get("settings.language.region.country"));
+        countrySelection.setMinWidth(comboBoxMinWidth);
+        countrySelection.setConverter(model.getCountryStringConverter());
+        countrySelection.setMaxWidth(Double.MAX_VALUE);
+
+        // 3. Currency Selector
+        currencySelection = new AutoCompleteComboBox<>(model.getCurrencyCodes(), Res.get("settings.language.region.currency"));
+        currencySelection.setMinWidth(comboBoxMinWidth);
+        currencySelection.setConverter(model.getCurrencyStringConverter());
+        currencySelection.setMaxWidth(Double.MAX_VALUE);
+
+        // --- SELECTORS ROW ---
+        HBox.setHgrow(languageSelection, Priority.ALWAYS);
+        HBox.setHgrow(countrySelection, Priority.ALWAYS);
+        HBox.setHgrow(currencySelection, Priority.ALWAYS);
+        HBox selectorsRow = new HBox(20, languageSelection, countrySelection, currencySelection);
+        // selectorsRow.setMaxWidth(Double.MAX_VALUE);
+        VBox.setMargin(selectorsRow, new Insets(0, 5, 0, 5));
+
+        // --- SUPPORTED LANGUAGES SECTION ---
         Label supportedLanguagesHeadline = SettingsViewUtils.getHeadline(Res.get("settings.language.supported.headline"));
 
         GridPane supportedLanguageGridPane = new GridPane();
@@ -89,18 +102,8 @@ public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, Lang
         supportedLanguagesComboBox = new AutoCompleteComboBox<>(model.getSupportedLanguageTagsFilteredList(),
                 Res.get("settings.language.supported.select"));
         supportedLanguagesComboBox.setMinWidth(150);
-        supportedLanguagesComboBox.setMaxWidth(Double.MAX_VALUE); // Needed to force scale to available space
-        supportedLanguagesComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(String languageCode) {
-                return languageCode != null ? controller.getDisplayLanguage(languageCode) : "";
-            }
-
-            @Override
-            public String fromString(String string) {
-                return null;
-            }
-        });
+        supportedLanguagesComboBox.setMaxWidth(Double.MAX_VALUE);
+        supportedLanguagesComboBox.setConverter(model.getLanguageStringConverter());
         supportedLanguagesComboBox.validateOnNoItemSelectedWithMessage(Res.get("settings.language.supported.invalid"));
 
         addLanguageButton = BisqIconButton.createIconButton("arrow-right-sign",
@@ -125,16 +128,19 @@ public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, Lang
         supportedLanguageGridPane.setMaxHeight(150);
         supportedLanguageGridPane.add(supportedLanguageListView, 1, ++rowIndex);
 
-        Insets insets = new Insets(0, 5, 0, 5);
-        VBox.setMargin(languageSelection, insets);
-        VBox.setMargin(supportedLanguageGridPane, insets);
+        VBox.setMargin(supportedLanguageGridPane, new Insets(0, 5, 0, 5));
+
+        // --- FINAL UI ASSEMBLY ---
         VBox contentBox = new VBox(50);
-        contentBox.getChildren().addAll(languageSelectionHeadline,
+        contentBox.getChildren().addAll(
+                mainHeadline,
                 SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()),
-                languageSelection,
+                selectorsRow,
                 supportedLanguagesHeadline,
                 SettingsViewUtils.getLineAfterHeadline(contentBox.getSpacing()),
-                supportedLanguageGridPane);
+                supportedLanguageGridPane
+        );
+
         contentBox.getStyleClass().add("bisq-common-bg");
         root.getChildren().add(contentBox);
         root.setPadding(new Insets(0, 40, 20, 40));
@@ -142,19 +148,43 @@ public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, Lang
 
     @Override
     protected void onViewAttached() {
-        languageSelection.getSelectionModel().select(model.getSelectedLanguageTag());
         languageSelection.setOnChangeConfirmed(e -> {
             if (languageSelection.getSelectionModel().getSelectedItem() == null) {
-                languageSelection.getSelectionModel().select(model.getSelectedLanguageTag());
+                languageSelection.getSelectionModel().select(model.getSelectedLanguageTag().get());
                 return;
             }
             controller.onSelectLanguageTag(languageSelection.getSelectionModel().getSelectedItem());
+        });
+        selectedLanguageTagPin = EasyBind.subscribe(model.getSelectedLanguageTag(), selectedLanguageTag -> {
+            if (selectedLanguageTag != null) {
+                languageSelection.getSelectionModel().select(selectedLanguageTag);
+            }
+        });
+
+        countrySelection.getSelectionModel().select(model.getSelectedCountryCode());
+        countrySelection.setOnChangeConfirmed(e -> {
+            if (countrySelection.getSelectionModel().getSelectedItem() == null) {
+                countrySelection.getSelectionModel().select(model.getSelectedCountryCode());
+                return;
+            }
+            controller.onSelectCountryCode(countrySelection.getSelectionModel().getSelectedItem());
+            currencySelection.getSelectionModel().select(model.getSelectedCurrencyCode());
+        });
+
+        currencySelection.getSelectionModel().select(model.getSelectedCurrencyCode());
+        currencySelection.setOnChangeConfirmed(e -> {
+            if (currencySelection.getSelectionModel().getSelectedItem() == null) {
+                currencySelection.getSelectionModel().select(model.getSelectedCurrencyCode());
+                return;
+            }
+            controller.onSelectCurrencyCode(currencySelection.getSelectionModel().getSelectedItem());
         });
 
         supportedLanguagesComboBox.getSelectionModel().select(model.getSelectedLSupportedLanguageTag().get());
         supportedLanguagesComboBox.setOnChangeConfirmed(e -> {
             if (supportedLanguagesComboBox.getSelectionModel().getSelectedItem() == null) {
                 supportedLanguagesComboBox.getSelectionModel().select(model.getSelectedLSupportedLanguageTag().get());
+                return;
             }
             controller.onSelectSupportedLanguage(supportedLanguagesComboBox.getSelectionModel().getSelectedItem());
         });
@@ -176,11 +206,16 @@ public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, Lang
     @Override
     protected void onViewDetached() {
         getSelectedSupportedLanguageCodePin.unsubscribe();
+        selectedLanguageTagPin.unsubscribe();
         addLanguageButton.setOnAction(null);
         languageSelection.setOnChangeConfirmed(null);
+        countrySelection.setOnChangeConfirmed(null);
+        currencySelection.setOnChangeConfirmed(null);
         supportedLanguagesComboBox.setOnChangeConfirmed(null);
 
         languageSelection.resetValidation();
+        countrySelection.resetValidation();
+        currencySelection.resetValidation();
         supportedLanguagesComboBox.resetValidation();
     }
 
@@ -203,7 +238,7 @@ public class LanguageSettingsView extends View<VBox, LanguageSettingsModel, Lang
                         super.updateItem(languageCode, empty);
 
                         if (languageCode != null && !empty) {
-                            label.setText(controller.getDisplayLanguage(languageCode));
+                            label.setText(model.getLanguageStringConverter().toString(languageCode));
                             button.setOnAction(e -> controller.onRemoveSupportedLanguage(languageCode));
                             setGraphic(hBox);
                         } else {

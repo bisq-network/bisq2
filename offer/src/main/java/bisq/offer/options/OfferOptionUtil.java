@@ -18,8 +18,10 @@
 package bisq.offer.options;
 
 import bisq.account.accounts.Account;
+import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.encoding.Hex;
+import bisq.common.util.ByteArrayUtils;
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,6 +78,17 @@ public class OfferOptionUtil {
                 .findAny();
     }
 
+    // DEFAULT_BUYER_SECURITY_DEPOSIT and DEFAULT_SELLER_SECURITY_DEPOSIT are the same
+    public static Optional<Double> findSymmetricSecurityDepositPercent(Collection<OfferOption> offerOptions) {
+        return findCollateralOption(offerOptions)
+                .map(collateralOption -> {
+                    checkArgument(Double.compare(collateralOption.getSellerSecurityDeposit(),
+                                    collateralOption.getBuyerSecurityDeposit()) == 0,
+                            "SellerSecurityDeposit and BuyerSecurityDeposit are expected to be equal");
+                    return collateralOption.getBuyerSecurityDeposit();
+                });
+    }
+
     public static Optional<FiatPaymentOption> findFiatPaymentOption(Collection<OfferOption> offerOptions) {
         return offerOptions.stream()
                 .filter(FiatPaymentOption.class::isInstance)
@@ -110,6 +123,12 @@ public class OfferOptionUtil {
         byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8));
         log.info("createdSaltedAccountId Hex.encode(hash)={}", Hex.encode(hash));
         return Hex.encode(hash);
+    }
+
+    public static byte[] createSaltedAccountPayloadHash(AccountPayload<?> accountPayload, String offerId) {
+        return DigestUtil.hash(ByteArrayUtils.concat(
+                accountPayload.serializeForHash(),
+                offerId.getBytes(StandardCharsets.UTF_8)));
     }
 
     public static Optional<Account<? extends PaymentMethod<?>, ?>> findAccountFromSaltedAccountId(Set<Account<? extends PaymentMethod<?>, ?>> accounts,

@@ -38,7 +38,10 @@ public class NodeMonitorApp extends Executable<NodeMonitorApplicationService> {
     @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         applicationService.getHttpServerBootstrapService()
-                .ifPresent(svc -> svc.addStaticFileHandler("/node-monitor", "/node-monitor/"));
+                .ifPresent(svc -> {
+                    svc.addRedirectHandler("", "/node-monitor/");
+                    svc.addStaticFileHandler("/node-monitor", "/node-monitor/");
+                });
     }
 
     @Override

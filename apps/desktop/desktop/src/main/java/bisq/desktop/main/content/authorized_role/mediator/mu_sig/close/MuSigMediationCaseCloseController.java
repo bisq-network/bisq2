@@ -64,7 +64,7 @@ public class MuSigMediationCaseCloseController extends NavigationController impl
         super(NavigationTarget.MU_SIG_MEDIATION_CASE_CLOSE);
 
         muSigMediationCaseOverviewSection = new MuSigMediationCaseOverviewSection(serviceProvider, true);
-        muSigMediationCaseDetailSection = new MuSigMediationCaseDetailSection(serviceProvider, true);
+        muSigMediationCaseDetailSection = new MuSigMediationCaseDetailSection(true);
         muSigMediationResultSection = new MuSigMediationResultSection(serviceProvider);
 
         model = new MuSigMediationCaseCloseModel();

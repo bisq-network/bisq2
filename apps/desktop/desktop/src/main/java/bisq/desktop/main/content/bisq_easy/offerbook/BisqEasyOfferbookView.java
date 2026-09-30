@@ -56,8 +56,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Optional;
-
 import static bisq.bisq_easy.BisqEasyMarketFilter.ALL;
 import static bisq.bisq_easy.BisqEasyMarketFilter.FAVOURITES;
 import static bisq.bisq_easy.BisqEasyMarketFilter.WITH_OFFERS;

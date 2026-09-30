@@ -50,7 +50,7 @@ public class MuSigMediationCaseCloseView extends NavigationView<VBox, MuSigMedia
         HBox closeButtonRow = new HBox(Spacer.fillHBox(), closeButton);
         closeButtonRow.setPadding(new Insets(15, 15, 0, 0));
 
-        closeCaseButton = new Button(Res.get("authorizedRole.mediator.mediationCaseClose.closeCase"));
+        closeCaseButton = new Button(Res.get("authorizedRole.disputeActor.disputeCaseClose.closeCase"));
         closeCaseButton.setDefaultButton(true);
         HBox closeCaseButtonRow = new HBox(closeCaseButton);
         closeCaseButtonRow.setAlignment(Pos.CENTER);

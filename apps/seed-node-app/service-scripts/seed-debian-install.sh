@@ -9,8 +9,8 @@ echo "[*] Upgrading apt packages"
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt update -q
 sudo -H -i -u "${ROOT_USER}" DEBIAN_FRONTEND=noninteractive apt upgrade -qq -y
 
-echo "[*] Installing OpenJDK 17"
-sudo -H -i -u "${ROOT_USER}" apt install -qq -y openjdk-17-jdk
+echo "[*] Installing OpenJDK 21"
+sudo -H -i -u "${ROOT_USER}" apt install -qq -y openjdk-21-jdk
 
 echo "[*] Installing Git"
 sudo -H -i -u "${ROOT_USER}" apt install -qq -y git

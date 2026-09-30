@@ -21,13 +21,11 @@ import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AlertType;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
@@ -47,6 +45,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
+import bisq.trade.TradeRestrictedException;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsTakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
@@ -105,9 +104,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
     private final ContactListService contactListService;
     private final UserProfileService userProfileService;
-    private boolean haltTrading;
-    private boolean requireVersionForTrading;
-    private Optional<String> minRequiredVersionForTrading = Optional.empty();
+    // Written from the alert-set observer thread, read from trade calls on other threads
+    private volatile boolean haltTrading;
+    private volatile Optional<String> minRequiredVersionForTrading = Optional.empty();
     @Nullable
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     @Nullable
@@ -142,42 +141,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                 .forEach(this::onMessage);
         networkService.addConfidentialMessageListener(this);
 
-        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
-            @Override
-            public void onAdded(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
-                    if (authorizedAlertData.isHaltTrading()) {
-                        haltTrading = true;
-                    }
-                    if (authorizedAlertData.isRequireVersionForTrading()) {
-                        requireVersionForTrading = true;
-                        minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
-                    }
-                }
-            }
-
-            @Override
-            public void onRemoved(Object element) {
-                if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
-                        if (authorizedAlertData.isHaltTrading()) {
-                            haltTrading = false;
-                        }
-                        if (authorizedAlertData.isRequireVersionForTrading()) {
-                            requireVersionForTrading = false;
-                            minRequiredVersionForTrading = Optional.empty();
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCleared() {
-                haltTrading = false;
-                requireVersionForTrading = false;
-                minRequiredVersionForTrading = Optional.empty();
-            }
-        });
+        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
         numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                 .host(this)
@@ -214,8 +178,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
-            verifyTradingNotOnHalt();
-            verifyMinVersionForTrading();
+            try {
+                verifyTradingNotOnHalt();
+                verifyMinVersionForTrading();
+            } catch (TradeRestrictedException e) {
+                log.warn("Ignoring inbound trade message as trading is currently not allowed: {}", e.getMessage());
+                return;
+            }
 
             if (bannedUserService.isUserProfileBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
@@ -468,16 +437,24 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return tradeProtocol;
     }
 
+    private void updateTradeRestrictions() {
+        haltTrading = AuthorizedAlertDataUtils.isTradingHalted(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+        minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+    }
+
     private void verifyTradingNotOnHalt() {
-        checkArgument(!haltTrading, "Trading is on halt for security reasons. " +
-                "The Bisq security manager has published an emergency alert with haltTrading set to true");
+        if (haltTrading) {
+            throw TradeRestrictedException.haltTrading();
+        }
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+        Optional<String> minRequiredVersion = minRequiredVersionForTrading;
+        if (minRequiredVersion.isPresent()
+                && !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersion.get()))) {
+            throw TradeRestrictedException.minVersionRequired(minRequiredVersion.get());
         }
     }
 
@@ -496,15 +473,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         String redactedMarker = Res.get("data.redacted");
         long numChanges = getAllTrades().stream()
                 .filter(trade -> {
-                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get()) ||
-                            trade.getPaymentAccountData().get().equals(redactedMarker)) {
+                    if (trade.getPaymentAccountData().map(data -> StringUtils.isEmpty(data) || data.equals(redactedMarker)).orElse(true)) {
                         return false;
                     }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
                     if (doRedaction) {
 
-                        trade.getPaymentAccountData().set(redactedMarker);
+                        trade.setPaymentAccountData(Optional.of(redactedMarker));
                     }
                     return doRedaction;
                 })

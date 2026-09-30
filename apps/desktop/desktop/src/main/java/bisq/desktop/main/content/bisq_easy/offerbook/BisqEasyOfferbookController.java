@@ -20,8 +20,8 @@ package bisq.desktop.main.content.bisq_easy.offerbook;
 import bisq.bisq_easy.BisqEasyMarketFilter;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
@@ -90,7 +90,7 @@ public final class BisqEasyOfferbookController extends ChatController<BisqEasyOf
         settingsService = serviceProvider.getSettingsService();
         marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
-        favouriteMarketsService = serviceProvider.getFavouriteMarketsService();
+        favouriteMarketsService = serviceProvider.getSettingsService().getFavouriteMarketsService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
         bisqEasySellersReputationBasedTradeAmountService = serviceProvider.getBisqEasyService().getBisqEasySellersReputationBasedTradeAmountService();
         bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
