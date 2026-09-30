@@ -41,6 +41,10 @@ The committed verification files are:
 The root `resolveAndVerifyDependencies` task resolves every resolvable configuration in the Bisq 2 composite build,
 including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, and `network/tor` included builds.
 
+IDE import can also resolve `-sources.jar` and `-javadoc.jar` artifacts that normal builds and the task above do not
+request. When adding a dependency, include verification metadata for these IDE artifacts after verifying their
+signatures or checksums. A successful build alone does not verify that IDE import has all required metadata.
+
 To verify the current metadata without rewriting it:
 
 ```bash
