@@ -18,6 +18,7 @@
 package bisq.persistence;
 
 import bisq.common.file.FileMutatorUtils;
+import bisq.common.fsm.SnapshotLockTimeoutException;
 import bisq.persistence.backup.BackupFileInfo;
 import bisq.persistence.backup.RestoreService;
 import com.google.protobuf.Any;
@@ -70,6 +71,13 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
                 Files.deleteIfExists(storeFilePath);
             }
             storeFileManager.renameTempFileToCurrentFile();
+        } catch (SnapshotLockTimeoutException e) {
+            // Transient by design (see FsmModel#getStateAndEventQueueSnapshot): a live FSM transition held the
+            // model lock past the bounded wait, so no consistent snapshot could be serialized this cycle. Unlike
+            // the failures below, this must not be swallowed - rethrow so the caller's persist future completes
+            // exceptionally and the client keeps a retry pending (see RateLimitedPersistenceClient#persist).
+            // The previous store file on disk is left untouched.
+            throw e;
         } catch (CouldNotSerializePersistableStore e) {
             log.error("Couldn't serialize {}", persistableStore, e);
         } catch (Exception e) {
