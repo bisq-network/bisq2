@@ -4,7 +4,7 @@ plugins {
 }
 
 javafx {
-    version = "21.0.6"
+    version = "21.0.11"
     modules = listOf("javafx.controls", "javafx.media", "javafx.swing")
 }
 
