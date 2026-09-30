@@ -285,7 +285,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         CanonicalSchema<RemoveMailboxRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
-            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RemoveMailboxRequest");
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for RemoveMailboxRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
             case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };
