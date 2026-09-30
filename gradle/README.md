@@ -45,6 +45,30 @@ IDE import can also resolve `-sources.jar` and `-javadoc.jar` artifacts that nor
 request. When adding a dependency, include verification metadata for these IDE artifacts after verifying their
 signatures or checksums. A successful build alone does not verify that IDE import has all required metadata.
 
+### Sources and Javadoc requested by the IDE
+
+`--write-verification-metadata` records artifacts requested during the run; it does not request additional classifiers.
+Refreshing signing keys or regenerating the signature report also does not resolve sources or Javadoc archives.
+
+To generate their metadata for a specific dependency, run this command from the repository root:
+
+```bash
+./gradlew :resolveIdeArtifactsForVerification \
+  --init-script gradle/resolve-ide-artifacts.gradle \
+  -PverificationDependency=org.testfx:openjfx-monocle:21.0.2 \
+  --write-verification-metadata pgp,sha256
+```
+
+The [init script](resolve-ide-artifacts.gradle) registers the task for this invocation. Replace the coordinate with
+`group:name:version` for another dependency. The helper requests both sources and Javadoc; both archives must be
+published. Omit `--write-verification-metadata pgp,sha256` to verify them against the existing metadata instead.
+
+Review the generated diff and verify new signatures or checksums before committing. Metadata generation records
+downloaded artifacts; it does not independently establish their trustworthiness. This helper handles one dependency;
+`resolveAndVerifyDependencies` still does not automatically resolve IDE artifacts for every dependency.
+
+### Verifying and refreshing build dependencies
+
 To verify the current metadata without rewriting it:
 
 ```bash
