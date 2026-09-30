@@ -89,6 +89,17 @@ in ordinary cases, for example:
 Limitation: the requester does not get the requests after that response from that peer. It gets them from other peers,
 or by broadcast. A requester of an earlier version does not follow rule 6.
 
+## Entries which a node cannot parse
+
+7. A requester skips an entry of an inventory response which it cannot parse, and processes the other entries of the
+   response. A skipped entry counts as a request which the stores did not accept (rule 6).
+
+Reason: the entries are requests of other nodes, which the responder only stores. A responder of another version can
+hold a request which the requester cannot parse, and the responder cannot know which requests the requester can parse.
+One such entry must not remove the other entries of the response.
+
+Limitation: a requester of an earlier version drops the whole response when it cannot parse one entry.
+
 ## Configuration
 
 Nodes of this version support both filter types, prefer `HASH_SET_V2` and fall back to `HASH_SET`:

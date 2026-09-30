@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.data.ByteArray;
 import bisq.common.proto.NetworkProto;
-import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.DataRequest;
 import lombok.EqualsAndHashCode;
@@ -32,7 +31,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -93,8 +94,27 @@ public final class Inventory implements NetworkProto {
 
     public static Inventory fromProto(bisq.network.protobuf.Inventory proto) throws UnresolvableProtobufException {
         try {
+            // The entries are requests of other nodes, which the responder only stores. A responder of another version
+            // can hold a request which this node cannot parse. We skip such an entry and keep the other entries (see
+            // docs/specifications/network/inventory-hash-set-filter.md).
             List<bisq.network.protobuf.DataRequest> entriesList = proto.getEntriesList();
-            List<DataRequest> entries = ProtobufUtils.fromProtoStream(entriesList, DataRequest::fromProto)
+            AtomicInteger numErrors = new AtomicInteger(0);
+            List<DataRequest> entries = entriesList.stream()
+                    .map(dataRequest -> {
+                        try {
+                            return DataRequest.fromProto(dataRequest);
+                        } catch (UnresolvableProtobufException e) {
+                            // Log only the type and the size of the entry, as users share their log files
+                            // (see UnresolvableProtobufMessageException).
+                            if (numErrors.incrementAndGet() <= 3) {
+                                log.error("Could not create data request from protobuf data request. " +
+                                                "messageCase={}, {} bytes",
+                                        dataRequest.getMessageCase(), dataRequest.getSerializedSize(), e);
+                            }
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
             return new Inventory(entries, proto.getMaxSizeReached(), Optional.of(proto.getSerializedSize()));
         } catch (RuntimeException e) {

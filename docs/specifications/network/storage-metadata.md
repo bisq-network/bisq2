@@ -106,9 +106,8 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   bytes. The preimage of signature V2 contains it; nodes of earlier versions do not verify signature V2.
 - If `className` is empty, the class name of `metaData` is used. This covers messages from nodes of earlier versions,
   messages relayed by such nodes, and data persisted by them.
-- `className` is not validated when a message is parsed. The store accepts only registered class names. Parsing stays
-  as lenient as in earlier versions, because a parse failure of one entry makes a node drop a whole inventory
-  response.
+- `className` is not validated when a message is parsed. The store accepts only registered class names. The check
+  depends on the types which the node registers, not only on the format of the message, so the store applies it.
 - Each node applies its own MetaData. If two versions have different MetaData for a type, their entries can expire at
   different times. The cost factor of messages does not depend on MetaData. Nodes of earlier versions compute it
   from the MetaData in the message (see [Message cost](message-cost.md#compatibility)).
