@@ -165,6 +165,66 @@ class AuthorizedBondedRolePublisherTest {
         assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).doesNotContain(mediatorRole);
     }
 
+    // Several oracle nodes publish the same role, each with its own authorized key. The removal of one publication must
+    // not remove the role while another oracle node publishes it. Otherwise the observer of OracleNodeService would
+    // also remove the publication of its own oracle node, and the removal would spread to all oracle nodes (finding F3
+    // of the review 2026-09-29_16-18-18-fable-5.1).
+    @Test
+    void roleStaysWhileAnotherOracleNodePublishesIt() throws GeneralSecurityException {
+        KeyPair otherOracleKeyPair = addOracleNode("c".repeat(40));
+        AuthorizedData publicationOfOtherOracle = authorize(mediatorRole, otherOracleKeyPair);
+        assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
+                .isSuccess()).isTrue();
+        assertThat(store.add(AddAuthenticatedDataRequest.from(store, publicationOfOtherOracle, otherOracleKeyPair))
+                .isSuccess()).isTrue();
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).contains(mediatorRole);
+
+        assertThat(store.remove(RemoveAuthenticatedDataRequest.from(store, publicationOfOtherOracle, otherOracleKeyPair))
+                .isSuccess()).isTrue();
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).contains(mediatorRole);
+
+        assertThat(store.remove(RemoveAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
+                .isSuccess()).isTrue();
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).doesNotContain(mediatorRole);
+    }
+
+    // The case of finding F3: before the cutoff date of signature V1, a node stores the copy of the publication of
+    // another oracle node without signature V2, which a node of an earlier version relayed. From the cutoff date on, the
+    // prune task removes the copy and notifies the applications as at expiry. The role stays, because the node still
+    // holds the publication of its own oracle node.
+    @Test
+    void removalOfACopyWithoutSignatureV2AtTheCutoffDateKeepsTheRole() throws GeneralSecurityException {
+        KeyPair otherOracleKeyPair = addOracleNode("c".repeat(40));
+        AuthorizedData publicationOfOtherOracle = authorize(mediatorRole, otherOracleKeyPair);
+        assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
+                .isSuccess()).isTrue();
+        AddAuthenticatedDataRequest copyWithoutSignatureV2 = createEntryOf(publicationOfOtherOracle, otherOracleKeyPair);
+        assertThat(store.add(copyWithoutSignatureV2).isSuccess()).isTrue();
+
+        // As DataStorageService.isToPrune and AuthenticatedDataStorageService.pruneExpired do at the cutoff date
+        store.getPersistableStore().getMap().remove(copyWithoutSignatureV2.getStorageKey());
+        dataService.onRemoved(publicationOfOtherOracle);
+
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).contains(mediatorRole);
+    }
+
+    // A publication counts only if an oracle node authorized it. Anyone can publish role data which the own key
+    // authorizes.
+    @Test
+    void publicationWhichNoOracleNodeAuthorizedDoesNotKeepTheRole() throws GeneralSecurityException {
+        KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        AuthorizedData publicationOfOtherKey = authorize(mediatorRole, otherKeyPair);
+        assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
+                .isSuccess()).isTrue();
+        assertThat(store.add(AddAuthenticatedDataRequest.from(store, publicationOfOtherKey, otherKeyPair))
+                .isSuccess()).isTrue();
+
+        assertThat(store.remove(RemoveAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
+                .isSuccess()).isTrue();
+
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).doesNotContain(mediatorRole);
+    }
+
     // After a restart, with the startup of the bonded role service, the node still holds the remove request of the
     // oracle node. It rejects a replay of the removed entry, which a node which missed the removal can send.
     @Test
@@ -204,19 +264,45 @@ class AuthorizedBondedRolePublisherTest {
         }
     }
 
+    // An oracle node whose role the node knows. Its key authorizes roles.
+    private KeyPair addOracleNode(String profileId) {
+        KeyPair oracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        authorizedBondedRolesService.getBondedRoles().add(new BondedRole(new AuthorizedBondedRole(profileId,
+                Hex.encode(oracleKeyPair.getPublic().getEncoded()),
+                BondedRoleType.ORACLE_NODE,
+                "oracle " + profileId.charAt(0),
+                "signature",
+                Optional.empty(),
+                createNetworkId(),
+                Optional.empty(),
+                false)));
+        return oracleKeyPair;
+    }
+
+    private static AuthorizedData authorize(AuthorizedBondedRole role, KeyPair keyPair) throws GeneralSecurityException {
+        return new AuthorizedData(role,
+                Optional.of(SignatureUtil.sign(role.serializeForHash(), keyPair.getPrivate())),
+                keyPair.getPublic());
+    }
+
     // The entry which the oracle node of the earlier version published with the key pair of its network identity
     private AddAuthenticatedDataRequest createEntryOfEarlierVersion() throws GeneralSecurityException {
         return createEntryOf(identityKeyPair);
     }
 
-    // An add request as nodes of earlier versions created it: without signature V2
     private AddAuthenticatedDataRequest createEntryOf(KeyPair publisherKeyPair) throws GeneralSecurityException {
+        return createEntryOf(authorizedMediatorRole, publisherKeyPair);
+    }
+
+    // An add request as nodes of earlier versions created it: without signature V2
+    private AddAuthenticatedDataRequest createEntryOf(AuthorizedData authorizedData, KeyPair publisherKeyPair)
+            throws GeneralSecurityException {
         // The transition rule accepts such entries only if they were created before the cutoff date. After the cutoff
         // date plus the time to live, none is valid anymore, and the transition rule and these tests can be removed.
         long cutoffDate = AuthorizedData.LEGACY_OWNER_CUTOFF_DATE.getTime();
         assumeTrue(System.currentTimeMillis() < cutoffDate + AuthorizedBondedRole.META_DATA.getTtl(),
                 "The transition of the publisher of authorized data has ended");
-        AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authorizedMediatorRole,
+        AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authorizedData,
                 1,
                 DigestUtil.hash(publisherKeyPair.getPublic().getEncoded()),
                 Math.min(System.currentTimeMillis(), cutoffDate - 1));

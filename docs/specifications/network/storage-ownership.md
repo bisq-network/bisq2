@@ -221,9 +221,10 @@ earlier creation date, which are the copies described in [Known limitations](#kn
   - Who decides: the developers, together with the operators of oracle and seed nodes.
 - **Nodes of earlier versions** stay affected by the problem until they update.
 - **Several publications of the same data.** Several oracle nodes can authorize the same data with different authorized
-  keys. Their entries are separate, and each has its own owner. Applications still remove the data when one of the
-  entries is removed or expires. This is not a question of ownership. It needs applications which keep track of each
-  publication.
+  keys. Their entries are separate, and each has its own owner. Most applications still remove the data when one of
+  the entries is removed or expires. This is not a question of ownership. It needs applications which keep track of
+  each publication. The bonded role service does this: it keeps a role while another publication of it remains (see
+  [`../bonded-roles/registration.md`](../bonded-roles/registration.md#several-oracle-nodes)).
 
 ## Verification
 
