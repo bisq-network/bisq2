@@ -20,6 +20,8 @@ package bisq.network.p2p.services.data.inventory;
 import bisq.common.data.ByteUnit;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +32,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class InventoryPrinter {
+    @VisibleForTesting
+    static final String UNREGISTERED_TYPE = "[unregistered type]";
+
     static void print(InventoryResponse response,
                       Connection connection,
                       Map<String, Long> requestTimestampByConnectionId) {
@@ -61,7 +66,7 @@ public class InventoryPrinter {
         inventory.getEntries()
                 .forEach(dataRequest -> {
                     String dataRequestName = dataRequest.getClass().getSimpleName();
-                    String payloadName = dataRequest.getClassName();
+                    String payloadName = getPayloadName(dataRequest);
                     dataRequestMap.putIfAbsent(dataRequestName, new HashMap<>());
                     Map<String, AtomicInteger> payloadMap = dataRequestMap.get(dataRequestName);
                     dataRequestMap.put(dataRequestName, payloadMap);
@@ -79,5 +84,14 @@ public class InventoryPrinter {
                         .collect(Collectors.joining("\n")))
                 .collect(Collectors.joining("\n"));
         return report.isEmpty() ? "No items received" : report;
+    }
+
+    // Remove requests, refresh requests and mailbox data carry the class name as a field which the peer sets. It is not
+    // validated when the request is parsed and can have any length and any characters (see
+    // docs/specifications/network/storage-metadata.md). The stores accept only registered class names, so only those
+    // are written to the log.
+    private static String getPayloadName(DataRequest dataRequest) {
+        String className = dataRequest.getClassName();
+        return StorableTypesRegistry.findMetaData(className).isPresent() ? className : UNREGISTERED_TYPE;
     }
 }
