@@ -1,5 +1,6 @@
 plugins {
     id("bisq.java-library")
+    id("bisq.javafx-tests")
     alias(libs.plugins.openjfx)
 }
 
@@ -60,7 +61,7 @@ dependencies {
 
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.hamcrest)
-    testRuntimeOnly(libs.testfx.monocle)
+    testImplementation(libs.junit.platform.launcher)
 }
 
 // Test classes annotated with @DesktopUiTest drive mouse and keyboard input with a TestFX robot. On a real
@@ -68,9 +69,12 @@ dependencies {
 // Accessibility permission. They are excluded from the default test run and run only with uiTest.
 val desktopUiTestTag = "ui"
 
-tasks.named<Test>("test") {
-    useJUnitPlatform {
-        excludeTags(desktopUiTestTag)
+tasks.withType<Test>().configureEach {
+    if (name != "uiTest") {
+        useJUnitPlatform {
+            excludeTags(desktopUiTestTag)
+        }
+        systemProperty("bisq.uiTest", "false")
     }
 }
 
@@ -87,16 +91,11 @@ tasks.register<Test>("uiTest") {
     useJUnitPlatform {
         includeTags(desktopUiTestTag)
     }
+    systemProperty("bisq.uiTest", "true")
 
-    systemProperty("testfx.robot", "glass")
     if (uiTestNative.get()) {
         systemProperty("testfx.headless", "false")
-    } else {
-        systemProperty("testfx.headless", "true")
-        systemProperty("glass.platform", "Monocle")
-        systemProperty("monocle.platform", "Headless")
-        systemProperty("prism.order", "sw")
-        systemProperty("prism.text", "t2k")
-        systemProperty("java.awt.headless", "true")
+        systemProperties.keys.removeAll(listOf("glass.platform", "monocle.platform", "prism.order"))
+        systemProperty("java.awt.headless", "false")
     }
 }
