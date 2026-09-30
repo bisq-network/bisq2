@@ -83,8 +83,9 @@ in ordinary cases, for example:
 
 - The requester holds a removal, and the responder missed it and still holds the earlier add request. The requester
   rejects the add request.
-- The responder is a node of an earlier version, and the requester is a node of this version after the cutoff date of
-  signature V1. The requester rejects every request without signature V2.
+- The responder is a node of an earlier version, and the requester is a node of this version which sent the request
+  shortly before the cutoff date of signature V1 and gets the response after it. It rejects every request without
+  signature V2. From the cutoff date on, rule 8 prevents such requests.
 
 Limitation: the requester does not get the requests after that response from that peer. It gets them from other peers,
 or by broadcast. A requester of an earlier version does not follow rule 6.
@@ -121,12 +122,22 @@ Nodes of this version support both filter types, prefer `HASH_SET_V2` and fall b
 | --- | --- | --- |
 | this version | this version | `HASH_SET_V2`, storage key V2 |
 | earlier version | this version | `HASH_SET`, the responder derives storage key V1 from its requests |
-| this version | earlier version | `HASH_SET`, the requester derives storage key V1 from its requests |
+| this version | earlier version | `HASH_SET`, the requester derives storage key V1 from its requests; from the cutoff date of signature V1 on, no request (rule 8) |
 | earlier version | earlier version | unchanged |
+
+8. From the cutoff date of signature V1 on (see
+   [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)), a node does not use
+   `HASH_SET` for its own requests. So it does not request inventory from peers which support only `HASH_SET`. It still
+   answers requests with `HASH_SET`. The node compares the cutoff date with its own time.
 
 Reason for the fallback: as long as the seed nodes and most peers run earlier versions, a node which requests only
 `HASH_SET_V2` finds no responder and receives no inventory. The fallback keeps nodes of this version synchronized
 during the update of the network. Its cost is described in [Limitations](#limitations).
+
+Reason for rule 8: only nodes of earlier versions need `HASH_SET`. They do not know signature V2, so all signed requests
+which they serve lack it, and from the cutoff date on a node of this version rejects all of them. A request to such a
+peer then only costs traffic, and a response below the size limit would count as a completed inventory request. A node
+which stays on this version keeps this rule after the cutoff date, so it must be part of this version.
 
 ## Limitations
 
@@ -148,8 +159,15 @@ during the update of the network. Its cost is described in [Limitations](#limita
   the requester of the earlier version, which may not be able to store it, for example a remove request of another
   owner for data which the requester holds. The requester's filter then does not change, and it can receive the same
   request again with the next response. If such requests fill a response up to the size limit, repeated requests do
-  not make progress. This follows from the code paths; it is not reproduced in a test. A requester of this version
-  stops such requests ([rule 6](#repeated-requests)); a requester of an earlier version does not.
+  not make progress. A requester of this version stops such requests ([rule 6](#repeated-requests)); a requester of an
+  earlier version does not.
+  - This is the normal case after the migration of the publisher of authorized data (rule 14 of
+    [`storage-ownership.md`](storage-ownership.md)): a responder of this version holds the remove request of the
+    network identity with sequence number `n + 1` and the entry of the authorized key with `n + 2`, both with storage
+    key V1 `K1`. A requester of an earlier version which holds `(K1, n + 2)` gets the remove request with every response
+    and rejects it, until the remove request expires (20 to 100 days). The review 2026-09-29_16-18-18-fable-5.1 found
+    this by reading the code (finding F8, case A); the number of such requests depends on the number of migrated
+    entries.
   - Why it cannot be removed now: the filter of a node of an earlier version contains no owner, and its code cannot be
     changed. The responder cannot know which owner's request the requester holds.
   - What removes it: ending the support of `HASH_SET` when nodes of earlier versions are no longer supported.

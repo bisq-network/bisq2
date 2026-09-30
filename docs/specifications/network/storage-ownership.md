@@ -137,6 +137,11 @@ identity, not with their authorized key pair:
     owner has a remove request in the store, and they ignore expired entries. They remove an entry of their network
     identity only if their store accepted the new entry, or if the owner removed the data. If the store rejects the
     new entry, for example because it is full, the entry stays for a later run of the migration.
+    - The node broadcasts the requests of the migration one at a time, with a pause of 500 ms, and only while it has a
+      connection. For each store, it sends the new entries before the remove requests.
+    - At the first run after a start, the node broadcasts the requests of the runs before the restart again. It finds
+      them in its store: the remove requests with signature V2 of its network identity, and the entries of its
+      authorized key pair for the same data. A later run at the same start sends only new requests.
 15. Oracle and seed nodes update to this version before the users. Applications of updated nodes do not get data which
     an oracle or seed node has not published with its authorized key pair yet (rule 11).
 
@@ -159,6 +164,14 @@ Reasons:
   only with their authorized key pair. The remove request of the network identity stays in the stores, so a replay of
   the removed entry is rejected, and nodes of earlier versions which missed the migration receive it with the
   inventory.
+- Rule 14, broadcast: an oracle node can have thousands of entries to migrate, and for some types (timestamps,
+  account age, signed witness and account timestamps) the migration is their only source. A connection sends with a
+  queue of 100 messages; if more messages wait, it rejects the message and closes, and the messages in its queue are
+  lost. A broadcast sends each message on every connection, so a burst would close all connections of the node. The
+  migration applies its requests to the store before it sends them, so a later run finds nothing to migrate; without
+  sending the stored requests again, requests which were not sent before a restart would never be sent. The new
+  entries are sent first, so that nodes of earlier versions receive the entry of the authorized key before the removal
+  of the entry of the network identity; otherwise they remove the data until the new entry arrives.
 - Rule 15: the developers and operators control the oracle and seed nodes. So the migration of rule 14 can run before
   the users update.
 
@@ -214,8 +227,11 @@ earlier creation date, which are the copies described in [Known limitations](#kn
 - The migration publishes the data again with the authorized key pair and a higher sequence number and removes the
   entry of the network identity. It runs once, does not publish data again which the owner removed, and ignores entries
   of other publishers, data of other authorities and expired entries. If the store rejects the new entry, the entry of
-  the network identity stays, and a later run migrates it. Oracle nodes remove bonded roles only with their authorized
-  key pair.
+  the network identity stays, and a later run migrates it. A failure at one entry does not stop the migration of the
+  others. Oracle nodes remove bonded roles only with their authorized key pair.
+- The node broadcasts the requests of the migration one at a time, the new entries before the removals, and not twice
+  at the same start. After a restart it broadcasts the requests of the earlier runs again. Removals of the network
+  identity without signature V2 are not requests of the migration.
 - After a restart with the startup of the bonded role service, a node still holds the remove request of the owner and
   rejects a replay of the removed entry.
 - Persisted entries of another publisher are removed when a store is loaded. A refresh of such an entry is rejected.

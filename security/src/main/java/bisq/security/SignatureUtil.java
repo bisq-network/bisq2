@@ -19,6 +19,8 @@ package bisq.security;
 
 import bisq.common.encoding.Base64;
 import bisq.common.encoding.Hex;
+import bisq.common.validation.NetworkDataValidation;
+import com.google.common.annotations.VisibleForTesting;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
@@ -35,6 +37,7 @@ import java.security.interfaces.ECKey;
 public class SignatureUtil {
     public static final String SHA256withECDSA = "SHA256withECDSA";
     public static final String SHA256withDSA = "SHA256withDSA";
+    private static final int MAX_SIGNING_ATTEMPTS = 10;
 
     static {
         if (java.security.Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -60,12 +63,36 @@ public class SignatureUtil {
                 }
                 // For each ECDSA signature (r, s), the signature (r, n - s) is valid as well. Only the low-S form is
                 // created, so that verifiers can reject the other form (see verifyLowS). All verifiers accept it.
-                yield toLowS(signWithProvider(message, privateKey, algorithm), ecKey.getParams().getOrder());
+                BigInteger curveOrder = ecKey.getParams().getOrder();
+                yield signWithAcceptedLength(() -> toLowS(signWithProvider(message, privateKey, algorithm), curveOrder));
             }
             case SHA256withDSA -> signWithProvider(message, privateKey, algorithm);
             default -> throw new NoSuchAlgorithmException("Unsupported signature algorithm: " + algorithm +
                     ". Supported are " + SHA256withECDSA + " and " + SHA256withDSA);
         };
+    }
+
+    @FunctionalInterface
+    interface EcdsaSigner {
+        byte[] sign() throws GeneralSecurityException;
+    }
+
+    /**
+     * Nodes of all versions reject an ECDSA signature whose DER encoding has fewer than
+     * {@link NetworkDataValidation#MIN_EC_SIGNATURE_LENGTH} bytes. The encoding is shorter if r or s has leading zero
+     * bytes. This happens for about 1 of 8 million low-S signatures. The provider signs with a random nonce, so we sign
+     * again. The low-S form never makes the encoding longer than {@link NetworkDataValidation#MAX_EC_SIGNATURE_LENGTH}.
+     */
+    @VisibleForTesting
+    static byte[] signWithAcceptedLength(EcdsaSigner signer) throws GeneralSecurityException {
+        for (int attempt = 0; attempt < MAX_SIGNING_ATTEMPTS; attempt++) {
+            byte[] signature = signer.sign();
+            if (signature.length >= NetworkDataValidation.MIN_EC_SIGNATURE_LENGTH) {
+                return signature;
+            }
+        }
+        throw new SignatureException("No ECDSA signature with at least " +
+                NetworkDataValidation.MIN_EC_SIGNATURE_LENGTH + " bytes after " + MAX_SIGNING_ATTEMPTS + " attempts");
     }
 
     private static byte[] signWithProvider(byte[] message, PrivateKey privateKey, String algorithm) throws GeneralSecurityException {

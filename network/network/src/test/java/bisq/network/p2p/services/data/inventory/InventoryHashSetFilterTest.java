@@ -67,6 +67,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_AT_CUTOFF;
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
 import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -274,6 +275,8 @@ class InventoryHashSetFilterTest {
 
     // With the preference list of the app configurations, a node uses HASH_SET_V2 if the peer supports it, and falls back
     // to HASH_SET for peers of earlier versions. The order of the list decides, not the order of the peer's features.
+    // The node has a time before the cutoff date of signature V1, so the test does not depend on the date at which it
+    // runs.
     @Test
     void factoryPrefersV2AndFallsBackToV1ForPeersOfEarlierVersions() throws Exception {
         addStoreContent();
@@ -281,7 +284,8 @@ class InventoryHashSetFilterTest {
                 Set.of(Feature.INVENTORY_HASH_SET, Feature.INVENTORY_HASH_SET_V2),
                 dataService,
                 new InventoryService.Config(2000, 600_000, 3, 8, 7, 4, 3,
-                        List.of(InventoryFilterType.HASH_SET_V2, InventoryFilterType.HASH_SET)));
+                        List.of(InventoryFilterType.HASH_SET_V2, InventoryFilterType.HASH_SET)),
+                CLOCK_BEFORE_CUTOFF);
 
         List<Feature> featuresOfThisVersion = List.of(Feature.INVENTORY_HASH_SET, Feature.INVENTORY_HASH_SET_V2);
         assertEquals(Optional.of(InventoryFilterType.HASH_SET_V2), factory.getPreferredFilterType(featuresOfThisVersion));
@@ -304,6 +308,29 @@ class InventoryHashSetFilterTest {
         assertEquals(InventoryFilterType.HASH_SET_V2, filterV2.getInventoryFilterType());
         assertSameFilter(createFilterOfRequester(InventoryFilterType.HASH_SET_V2, DataRequest::getStorageKeyV2),
                 (HashSetFilter) filterV2);
+    }
+
+    // From the cutoff date of signature V1 on, a node rejects every request without signature V2, and peers of earlier
+    // versions serve only such requests. So the node does not request inventory from them anymore. It still responds to
+    // their requests.
+    @Test
+    void factoryDoesNotRequestWithV1FromTheCutoffDateOn() throws Exception {
+        addStoreContent();
+        InventoryFilterFactory factory = new InventoryFilterFactory(
+                Set.of(Feature.INVENTORY_HASH_SET, Feature.INVENTORY_HASH_SET_V2),
+                dataService,
+                new InventoryService.Config(2000, 600_000, 3, 8, 7, 4, 3,
+                        List.of(InventoryFilterType.HASH_SET_V2, InventoryFilterType.HASH_SET)),
+                CLOCK_AT_CUTOFF);
+
+        List<Feature> featuresOfEarlierVersion = List.of(Feature.INVENTORY_HASH_SET, Feature.AUTHORIZATION_HASH_CASH);
+        assertTrue(factory.getPreferredFilterType(featuresOfEarlierVersion).isEmpty());
+        assertThrows(IllegalStateException.class, () -> factory.createInventoryFilterForRequest(featuresOfEarlierVersion));
+        List<Feature> featuresOfThisVersion = List.of(Feature.INVENTORY_HASH_SET, Feature.INVENTORY_HASH_SET_V2);
+        assertEquals(Optional.of(InventoryFilterType.HASH_SET_V2), factory.getPreferredFilterType(featuresOfThisVersion));
+
+        HashSetFilter emptyLegacyFilter = new HashSetFilter(InventoryFilterType.HASH_SET, new ArrayList<>());
+        assertFalse(factory.createInventoryForResponse(new InventoryRequest(emptyLegacyFilter, 1)).getEntries().isEmpty());
     }
 
     // The fallback needs the service of the type: a node registers services only for the features it advertises

@@ -17,6 +17,8 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.proto.UnresolvableProtobufException;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -62,6 +65,9 @@ class AuthorizedDataPublisherMigrationTest {
     private AuthorizedData authorizedData;
     // A full store accepts no entry for a new storage key
     private boolean isStoreFull;
+    // The store throws at the add request of this data
+    @Nullable
+    private AuthorizedData dataWhoseAddThrows;
 
     @BeforeEach
     void setUp() throws GeneralSecurityException {
@@ -74,6 +80,14 @@ class AuthorizedDataPublisherMigrationTest {
             @Override
             protected boolean isExceedingMapSize() {
                 return isStoreFull || super.isExceedingMapSize();
+            }
+
+            @Override
+            public DataStorageResult add(AddAuthenticatedDataRequest request) {
+                if (request.getAuthenticatedSequentialData().getAuthenticatedData().equals(dataWhoseAddThrows)) {
+                    throw new IllegalStateException("Simulated failure");
+                }
+                return super.add(request);
             }
         };
         authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -142,6 +156,72 @@ class AuthorizedDataPublisherMigrationTest {
         assertEquals(addRequest, store.getPersistableStore().getMap().get(addRequest.getStorageKey()));
         assertInstanceOf(RemoveAuthenticatedDataRequest.class,
                 store.getPersistableStore().getMap().get(entryOfEarlierVersion.getStorageKey()));
+    }
+
+    // An exception at one entry, for example at the creation of a signature, must not stop the migration of the other
+    // entries. The entry stays, and a later run migrates it.
+    @Test
+    void failureAtOneEntryDoesNotStopTheMigrationOfTheOthers() throws GeneralSecurityException {
+        AuthorizedData otherAuthorizedData = authorize("other content", authorizedKeyPair);
+        AddAuthenticatedDataRequest entryWhichFails = createRequestOfEarlierVersion(authorizedData, 1);
+        AddAuthenticatedDataRequest otherEntry = createRequestOfEarlierVersion(otherAuthorizedData, 1);
+        assertTrue(store.add(entryWhichFails).isSuccess());
+        assertTrue(store.add(otherEntry).isSuccess());
+        dataWhoseAddThrows = authorizedData;
+
+        List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.migrate(store, identityKeyPair,
+                authorizedKeyPair);
+
+        assertEquals(2, requests.size());
+        assertInstanceOf(RemoveAuthenticatedDataRequest.class,
+                store.getPersistableStore().getMap().get(otherEntry.getStorageKey()));
+        assertEquals(entryWhichFails, store.getPersistableStore().getMap().get(entryWhichFails.getStorageKey()));
+
+        dataWhoseAddThrows = null;
+        assertEquals(2, AuthorizedDataPublisherMigration.migrate(store, identityKeyPair, authorizedKeyPair).size());
+        assertInstanceOf(RemoveAuthenticatedDataRequest.class,
+                store.getPersistableStore().getMap().get(entryWhichFails.getStorageKey()));
+    }
+
+    // A run applies its requests to the store first, so a run after a restart finds nothing to migrate. The node finds the
+    // requests of the earlier runs in the store and broadcasts them again. The entries come before the removals, so that
+    // nodes of earlier versions receive the entry of the authorized key pair first.
+    @Test
+    void requestsOfEarlierRunsAreFoundInTheStoreWithTheEntriesFirst() throws GeneralSecurityException {
+        AuthorizedData otherAuthorizedData = authorize("other content", authorizedKeyPair);
+        assertTrue(store.add(createRequestOfEarlierVersion(authorizedData, 1)).isSuccess());
+        assertTrue(store.add(createRequestOfEarlierVersion(otherAuthorizedData, 3)).isSuccess());
+        List<AuthenticatedDataRequest> requestsOfFirstRun = AuthorizedDataPublisherMigration.migrate(store,
+                identityKeyPair, authorizedKeyPair);
+        assertTrue(AuthorizedDataPublisherMigration.migrate(store, identityKeyPair, authorizedKeyPair).isEmpty());
+
+        List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.findMigrationRequests(store,
+                identityKeyPair.getPublic(), authorizedKeyPair.getPublic());
+
+        assertEquals(4, requests.size());
+        assertTrue(requests.containsAll(requestsOfFirstRun));
+        assertInstanceOf(AddAuthenticatedDataRequest.class, requests.get(0));
+        assertInstanceOf(AddAuthenticatedDataRequest.class, requests.get(1));
+        assertInstanceOf(RemoveAuthenticatedDataRequest.class, requests.get(2));
+        assertInstanceOf(RemoveAuthenticatedDataRequest.class, requests.get(3));
+    }
+
+    // Oracle nodes of earlier versions removed bonded roles with the key pair of their network identity, with signature
+    // V1 only. These removals are not part of the migration.
+    @Test
+    void removalsWithoutSignatureV2AreNotRequestsOfTheMigration()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        RemoveAuthenticatedDataRequest removalOfEarlierVersion = RemoveAuthenticatedDataRequest.fromProto(
+                RemoveAuthenticatedDataRequest.from(store, authorizedData, identityKeyPair)
+                        .toValueProto(false)
+                        .toBuilder()
+                        .clearSignatureV2()
+                        .build());
+        assertTrue(store.remove(removalOfEarlierVersion).isSuccess());
+        assertEquals(1, store.getPersistableStore().getMap().size());
+
+        assertTrue(AuthorizedDataPublisherMigration.findMigrationRequests(store, identityKeyPair.getPublic(),
+                authorizedKeyPair.getPublic()).isEmpty());
     }
 
     // For example, the oracle node removed a bonded role with its authorized key pair before the migration ran
