@@ -1,6 +1,6 @@
 # Dependency Signature Report
 
-Generated from `gradle/verification-metadata.xml` after resolving 703 configurations.
+Generated from `gradle/verification-metadata.xml` after resolving 724 configurations.
 
 Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.
 
@@ -19,13 +19,13 @@ Refresh the metadata before regenerating this report:
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 224 |
-| Modules with PGP-signed artifacts only | 220 |
+| Resolved external modules | 225 |
+| Modules with PGP-signed artifacts only | 221 |
 | Modules using checksum-only artifacts only | 4 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 324 |
-| PGP-signed artifacts | 318 |
+| Verified artifacts | 330 |
+| PGP-signed artifacts | 324 |
 | Checksum-only artifacts | 6 |
 | Resolved executable artifacts missing explicit metadata | 0 |
 | Stale executable metadata entries for unresolved versions | 0 |
@@ -79,7 +79,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `com.google.protobuf:protobuf-gradle-plugin:0.9.4` | direct | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.protobuf:protobuf-java-util:3.25.8` | transitive | PGP signed | 1 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.protobuf:protobuf-java:4.28.2` | direct | PGP signed | 2 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
-| `com.google.protobuf:protoc:4.28.2` | direct | PGP signed | 5 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
+| `com.google.protobuf:protoc:4.28.2` | direct | PGP signed | 6 signed / 0 checksum | `1A55F091AD28C07F831FA44D7905DE25C78AD456`<br>created 2023-07-10<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.zxing:core:3.5.4` | direct | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
 | `com.google.zxing:javase:3.5.4` | direct | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`CE3285F320685193D11FEA01F6CE9695C9318406`<br>Sean Owen (ZXing)<br>`srowen@gmail.com`<br>created 2013-07-05 |
 | `com.googlecode.libphonenumber:libphonenumber:9.0.30` | direct | PGP signed | 3 signed / 0 checksum | `4759F2DC7BBF3AEC20B12D894DE0E3360046F74C`<br>rohini nidhi<br>`rnidhi@google.com`<br>created 2024-07-10<br><br>`76DF4612A2C7D5821832A8A2665487B2DBDA9781`<br>Kavitha Keshava<br>`kkeshava@google.com`<br>created 2025-09-25 |
@@ -106,7 +106,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `io.grpc:grpc-stub:1.81.0` | direct | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-testing:1.81.0` | direct | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-util:1.81.0` | transitive | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
-| `io.grpc:protoc-gen-grpc-java:1.81.0` | direct | PGP signed | 5 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
+| `io.grpc:protoc-gen-grpc-java:1.81.0` | direct | PGP signed | 6 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.perfmark:perfmark-api:0.27.0` | transitive | PGP signed | 1 signed / 0 checksum | `C6F7D1C804C821F49AF3BFC13AD93C3C677A106E`<br>Carl Mastrangelo<br>`carl@carlmastrangelo.com`<br>created 2019-05-31 |
 | `io.swagger.core.v3:swagger-annotations-jakarta:2.2.50` | transitive | PGP signed | 1 signed / 0 checksum | `3E61D8C230332482009D7F0EDB901B24CAD38BC4`<br>swaggerapi<br>`devops@smartbear.com`<br>created 2020-07-21 |
 | `io.swagger.core.v3:swagger-annotations:2.2.50` | direct | PGP signed | 1 signed / 0 checksum | `3E61D8C230332482009D7F0EDB901B24CAD38BC4`<br>swaggerapi<br>`devops@smartbear.com`<br>created 2020-07-21 |
@@ -202,7 +202,6 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0` | direct | checksum fallback | 0 signed / 1 checksum | - |
 | `org.gradle.kotlin:gradle-kotlin-dsl-plugins:4.4.0` | transitive | PGP signed | 2 signed / 0 checksum | `1BD97A6A154E7810EE0BC832E2F38302C8075E3D`<br>Gradle Inc.<br>`maven-publishing@gradle.com`<br>created 2022-12-29 |
 | `org.hamcrest:hamcrest-core:1.3` | transitive | PGP signed | 2 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14 |
-| `org.hamcrest:hamcrest:2.1` | transitive | PGP signed | 1 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480`<br>created 2018-11-21 |
 | `org.hamcrest:hamcrest:3.0` | direct | PGP signed | 1 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480`<br>created 2018-11-21 |
 | `org.javassist:javassist:3.30.2-GA` | transitive | PGP signed | 2 signed / 0 checksum | `E5C3B1929191DF06136CCB2B164779204E106A76`<br>Shigeru Chiba (Javassist Developer)<br>`chiba@javassist.org`<br>created 2021-05-07 |
 | `org.jcommander:jcommander:1.85` | transitive | PGP signed | 3 signed / 0 checksum | `1D85469D8559C2E1DF5F925131D2D79DF7E85DD3`<br>Markus KARG<br>`markus@headcrashing.eu`<br>created 2023-08-04 |
@@ -261,14 +260,16 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0` | direct | checksum fallback | 0 signed / 1 checksum | - |
 | `org.openjfx:javafx-base:21.0.11` | transitive | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.openjfx:javafx-controls:21.0.11` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
-| `org.openjfx:javafx-graphics:21.0.11` | transitive | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-graphics:21.0.11` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.openjfx:javafx-media:21.0.11` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | checksum fallback | 0 signed / 3 checksum | - |
+| `org.openjfx:javafx-swing:21.0.11` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.opentest4j:opentest4j:1.3.0` | transitive | PGP signed | 1 signed / 0 checksum | `FF6E2C001948C5F2F38B0CC385911F425EC61B51`<br>Marc Philipp<br>`marc@junit.org`<br>created 2018-04-08 |
 | `org.osgi:org.osgi.core:6.0.0` | transitive | PGP signed | 1 signed / 0 checksum | `1AF010D408C1852AB6EFD4B651CDB4A9DAAC1CBC`<br>Raymond Auge (I love OSS!)<br>`rotty3000@gmail.com`<br>created 2014-07-09 |
 | `org.projectlombok:lombok:1.18.46` | direct | PGP signed | 1 signed / 0 checksum | `D421D1DF4570BFB13E485D0BF95ADD0A28D2F139`<br>created 2011-03-08 |
 | `org.reactfx:reactfx:2.0-M5` | transitive | PGP signed | 2 signed / 0 checksum | `5E13B520F0BCBB359C6ED54A4A23006A8E767508`<br>Tomas Mikula<br>`tomas.mikula@gmail.com`<br>created 2014-03-05 |
 | `org.slf4j:slf4j-api:2.0.18` | direct | PGP signed | 1 signed / 0 checksum | `475F3B8E59E6E63AA78067482C7B12F2A511E325`<br>created 2012-04-26<br><br>`60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
+| `org.testfx:openjfx-monocle:21.0.2` | direct | PGP signed | 4 signed / 0 checksum | `8756C4F765C9AC3CB6B85D62379CE192D401AB61`<br>Bintray (by JFrog)<br>`bintray@bintray.com`<br>created 2015-02-17 |
 | `org.testfx:testfx-core:4.0.18` | transitive | PGP signed | 3 signed / 0 checksum | `8756C4F765C9AC3CB6B85D62379CE192D401AB61`<br>Bintray (by JFrog)<br>`bintray@bintray.com`<br>created 2015-02-17 |
 | `org.testfx:testfx-junit5:4.0.18` | direct | PGP signed | 3 signed / 0 checksum | `8756C4F765C9AC3CB6B85D62379CE192D401AB61`<br>Bintray (by JFrog)<br>`bintray@bintray.com`<br>created 2015-02-17 |
 | `org.tukaani:xz:1.12` | direct | PGP signed | 1 signed / 0 checksum | `3690C240CE51B4670D30AD1C38EE757D69184620`<br>Lasse Collin<br>`lasse.collin@tukaani.org`<br>created 2010-10-24 |
