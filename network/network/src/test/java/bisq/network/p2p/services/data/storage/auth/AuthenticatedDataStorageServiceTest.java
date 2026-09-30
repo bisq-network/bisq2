@@ -22,6 +22,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -294,6 +296,28 @@ class AuthenticatedDataStorageServiceTest {
 
         assertFalse(result.isSuccess());
         assertTrue(result.isRequestAlreadyReceived(), result.toString());
+    }
+
+    // A store accepts at most DataStorageService.MAX_MAP_SIZE entries (see
+    // docs/specifications/network/storage-metadata.md)
+    @Test
+    void storeWithTheMaximumNumberOfEntriesAcceptsNoNewEntry() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(peerStore, authenticatedData, ownerKeyPair);
+        Map<ByteArray, AuthenticatedDataRequest> map = peerStore.getPersistableStore().getMap();
+        // The limit counts entries, so the same request under other keys fills the map
+        for (int i = 0; i < DataStorageService.MAX_MAP_SIZE; i++) {
+            map.put(new ByteArray(ByteBuffer.allocate(Integer.BYTES).putInt(i).array()), addRequest);
+        }
+
+        DataStorageResult resultOfAdd = peerStore.add(addRequest);
+        DataStorageResult resultOfRemovalWithoutEntry = peerStore.remove(RemoveAuthenticatedDataRequest.from(peerStore,
+                createData("other content"), ownerKeyPair));
+
+        assertTrue(resultOfAdd.isMaxMapSizeReached(), resultOfAdd.toString());
+        assertTrue(resultOfRemovalWithoutEntry.isMaxMapSizeReached(), resultOfRemovalWithoutEntry.toString());
+        assertEquals(DataStorageService.MAX_MAP_SIZE, map.size());
+        // The pending write of the other tests would have to serialize all entries
+        map.clear();
     }
 
     // A node parses each copy of a request which it receives, so the copies are different objects with equal values.

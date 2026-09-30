@@ -156,9 +156,10 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         return true;
     }
 
+    // Whether one more entry would exceed the limit. The stores call it before they add an entry under a new key.
     protected boolean isExceedingMapSize() {
         int size = persistableStore.getMap().size();
-        boolean isExceeding = size > MAX_MAP_SIZE;
+        boolean isExceeding = size >= MAX_MAP_SIZE;
         if (isExceeding) {
             log.warn("Max. map size reached for {}. map.size()={}, MAX_MAP_SIZE={}", storeKey, size, MAX_MAP_SIZE);
         }
