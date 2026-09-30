@@ -35,8 +35,9 @@ public class Scheduler implements TaskScheduler {
     private Optional<ScheduledExecutorService> executor = Optional.empty();
     private final Runnable task;
     private volatile boolean stopped;
+    // Only the executor thread increments the counter. Other threads read it with getCounter().
     @Getter
-    private long counter;
+    private volatile long counter;
     private Optional<String> runnableName = Optional.empty();
     private Optional<String> hostClassName = Optional.empty();
 

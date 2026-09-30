@@ -33,18 +33,18 @@ class SchedulerTest {
     @Test
     void repeatedTaskRunsAgainAfterAnException() throws InterruptedException {
         AtomicInteger runs = new AtomicInteger();
-        CountDownLatch allRunsDone = new CountDownLatch(3);
         Scheduler scheduler = Scheduler.run(() -> {
                     runs.incrementAndGet();
-                    allRunsDone.countDown();
                     throw new IllegalStateException("Simulated failure");
                 })
                 .repeated(0, 10, TimeUnit.MILLISECONDS, 3);
 
         try {
-            assertTrue(allRunsDone.await(10, TimeUnit.SECONDS));
-            assertEquals(3, runs.get());
+            // The scheduler counts a run after the task has thrown and the exception has been logged. A signal from
+            // inside the task would arrive before the last run is counted.
+            awaitCounter(scheduler, 3);
             assertEquals(3, scheduler.getCounter());
+            assertEquals(3, runs.get());
         } finally {
             scheduler.stop();
         }
@@ -63,6 +63,13 @@ class SchedulerTest {
             assertTrue(secondRunDone.await(10, TimeUnit.SECONDS));
         } finally {
             scheduler.stop();
+        }
+    }
+
+    private static void awaitCounter(Scheduler scheduler, long expectedCounter) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (scheduler.getCounter() < expectedCounter && System.nanoTime() < deadline) {
+            Thread.sleep(1);
         }
     }
 }
