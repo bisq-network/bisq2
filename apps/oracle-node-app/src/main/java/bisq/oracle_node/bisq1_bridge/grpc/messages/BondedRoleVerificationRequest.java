@@ -19,6 +19,7 @@ package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -91,14 +92,19 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BondedRoleVerificationRequest fromProto(bisq.bridge.protobuf.BondedRoleVerificationRequest proto) {
-        return new BondedRoleVerificationRequest(proto.getBondUserName(),
-                proto.getRoleType(),
-                proto.getProfileId(),
-                proto.getSignatureBase64(),
-                proto.getProposalTxId(),
-                proto.getLockupTxId(),
-                BondedRoleRegistrationProtocol.versionFromProto(proto.hasProtocolVersion(), proto.getProtocolVersion())
-        );
+    public static BondedRoleVerificationRequest fromProto(bisq.bridge.protobuf.BondedRoleVerificationRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BondedRoleVerificationRequest(proto.getBondUserName(),
+                    proto.getRoleType(),
+                    proto.getProfileId(),
+                    proto.getSignatureBase64(),
+                    proto.getProposalTxId(),
+                    proto.getLockupTxId(),
+                    BondedRoleRegistrationProtocol.versionFromProto(proto.hasProtocolVersion(), proto.getProtocolVersion())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

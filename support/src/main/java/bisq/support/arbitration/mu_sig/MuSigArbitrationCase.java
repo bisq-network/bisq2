@@ -21,6 +21,8 @@ import bisq.account.accounts.AccountPayload;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.arbitration.ArbitrationCaseState;
 import com.google.protobuf.ByteString;
@@ -104,26 +106,30 @@ public class MuSigArbitrationCase implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigArbitrationCase fromProto(bisq.support.protobuf.MuSigArbitrationCase proto) {
-        return new MuSigArbitrationCase(MuSigArbitrationRequest.fromProto(proto.getMuSigArbitrationRequest()),
-                proto.getRequestDate(),
-                ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
-                proto.hasMuSigArbitrationResult() ?
-                        Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult())) :
-                        Optional.empty(),
-                proto.hasArbitrationResultSignature() ?
-                        Optional.of(proto.getArbitrationResultSignature().toByteArray()) :
-                        Optional.empty(),
-                proto.hasTakerAccountPayload() ?
-                        Optional.of(AccountPayload.fromProto(proto.getTakerAccountPayload())) :
-                        Optional.empty(),
-                proto.hasMakerAccountPayload() ?
-                        Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
-                        Optional.empty(),
-                proto.getArbitratorHasLeftChat(),
-                proto.getIssuesList().stream()
-                        .map(MuSigArbitrationIssue::fromProto)
-                        .toList());
+    public static MuSigArbitrationCase fromProto(bisq.support.protobuf.MuSigArbitrationCase proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigArbitrationCase(MuSigArbitrationRequest.fromProto(proto.getMuSigArbitrationRequest()),
+                    proto.getRequestDate(),
+                    ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
+                    proto.hasMuSigArbitrationResult() ?
+                            Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult())) :
+                            Optional.empty(),
+                    proto.hasArbitrationResultSignature() ?
+                            Optional.of(proto.getArbitrationResultSignature().toByteArray()) :
+                            Optional.empty(),
+                    proto.hasTakerAccountPayload() ?
+                            Optional.of(AccountPayload.fromProto(proto.getTakerAccountPayload())) :
+                            Optional.empty(),
+                    proto.hasMakerAccountPayload() ?
+                            Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
+                            Optional.empty(),
+                    proto.getArbitratorHasLeftChat(),
+                    ProtobufUtils.fromProtoStream(proto.getIssuesList(), MuSigArbitrationIssue::fromProto)
+                            .toList());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public boolean setArbitrationCaseState(ArbitrationCaseState state) {

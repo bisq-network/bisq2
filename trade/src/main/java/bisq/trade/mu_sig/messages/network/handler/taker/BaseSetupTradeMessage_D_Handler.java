@@ -19,6 +19,7 @@ package bisq.trade.mu_sig.messages.network.handler.taker;
 
 import bisq.account.accounts.AccountPayload;
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -29,6 +30,7 @@ import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadAndDepositTxMessage;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_D;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.PublishDepositTxRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -49,21 +51,25 @@ public abstract class BaseSetupTradeMessage_D_Handler extends MuSigTradeMessageH
 
     @Override
     protected void process(SetupTradeMessage_D message) {
-        peersPartialSignatures = message.getPartialSignatures();
-        peersDepositPsbt = new DepositPsbt(message.getDepositPsbt());
+        try {
+            peersPartialSignatures = message.getPartialSignatures();
+            peersDepositPsbt = new DepositPsbt(message.getDepositPsbt());
 
-        PartialSignaturesMessage peersPartialSignaturesMessage = PartialSignaturesMessage.from(peersPartialSignatures);
-        DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setPeersPartialSignatures(peersPartialSignaturesMessage.toProto(true))
-                .build();
-        myDepositPsbt = DepositPsbt.fromProto(blockingStub.signDepositTx(depositTxSignatureRequest));
+            PartialSignaturesMessage peersPartialSignaturesMessage = PartialSignaturesMessage.from(peersPartialSignatures);
+            DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setPeersPartialSignatures(peersPartialSignaturesMessage.toProto(true))
+                    .build();
+            myDepositPsbt = DepositPsbt.fromProto(blockingStub.signDepositTx(depositTxSignatureRequest));
 
-        PublishDepositTxRequest publishDepositTxRequest = PublishDepositTxRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setPeersDepositPsbt(peersDepositPsbt.toProto(true))
-                .build();
-        blockingStub.publishDepositTx(publishDepositTxRequest);
+            PublishDepositTxRequest publishDepositTxRequest = PublishDepositTxRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setPeersDepositPsbt(peersDepositPsbt.toProto(true))
+                    .build();
+            blockingStub.publishDepositTx(publishDepositTxRequest);
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

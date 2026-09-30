@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -82,17 +83,22 @@ public final class MuSigReportErrorMessage extends MuSigTradeMessage {
                 .setTradeProtocolFailure(tradeProtocolFailure.toProtoEnum());
     }
 
-    public static MuSigReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        var muSigReportErrorMessage = proto.getMuSigTradeMessage().getMuSigReportErrorMessage();
-        return new MuSigReportErrorMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                muSigReportErrorMessage.getErrorMessage(),
-                muSigReportErrorMessage.getStackTrace(),
-                TradeProtocolFailure.fromProto(muSigReportErrorMessage.getTradeProtocolFailure()));
+    public static MuSigReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            var muSigReportErrorMessage = proto.getMuSigTradeMessage().getMuSigReportErrorMessage();
+            return new MuSigReportErrorMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    muSigReportErrorMessage.getErrorMessage(),
+                    muSigReportErrorMessage.getStackTrace(),
+                    TradeProtocolFailure.fromProto(muSigReportErrorMessage.getTradeProtocolFailure()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

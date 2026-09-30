@@ -17,6 +17,7 @@
 
 package bisq.security.keys;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,18 +38,23 @@ public class KeyPairProtoUtil {
                 .build();
     }
 
-    public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair) {
-        return fromProto(keyPair, KeyGeneration.ECDH);
+    public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair)
+            throws UnresolvableProtobufException {
+        try {
+            return fromProto(keyPair, KeyGeneration.ECDH);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
-    public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair, String keyAlgorithm) {
+    public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair, String keyAlgorithm)
+            throws UnresolvableProtobufException {
         try {
             PrivateKey privateKey = KeyGeneration.generatePrivate(keyPair.getPrivateKey().toByteArray(), keyAlgorithm);
             PublicKey publicKey = KeyGeneration.generatePublic(keyPair.getPublicKey().toByteArray(), keyAlgorithm);
             return new java.security.KeyPair(publicKey, privateKey);
-        } catch (GeneralSecurityException e) {
-            log.error("fromProto failed", e);
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 }

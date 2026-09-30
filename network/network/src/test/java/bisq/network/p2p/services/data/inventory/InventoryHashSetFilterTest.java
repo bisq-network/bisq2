@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
@@ -50,6 +51,7 @@ import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,8 +69,10 @@ import java.util.function.Function;
 
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
 import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -127,7 +131,7 @@ class InventoryHashSetFilterTest {
     }
 
     @Test
-    void bothHashSetTypesSurviveProtobufRoundTrip() {
+    void bothHashSetTypesSurviveProtobufRoundTrip() throws UnresolvableProtobufException {
         List<HashSetFilterEntry> entries = List.of(new HashSetFilterEntry(new byte[20], 3));
         for (InventoryFilterType type : List.of(InventoryFilterType.HASH_SET, InventoryFilterType.HASH_SET_V2)) {
             HashSetFilter filter = new HashSetFilter(type, new ArrayList<>(entries));
@@ -156,7 +160,40 @@ class InventoryHashSetFilterTest {
         bisq.network.protobuf.InventoryFilter miniSketchType = proto.toBuilder()
                 .setInventoryFilterType(bisq.network.protobuf.InventoryFilterType.INVENTORYFILTERTYPE_MINI_SKETCH)
                 .build();
-        assertThrows(IllegalArgumentException.class, () -> InventoryFilter.fromProto(miniSketchType));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> InventoryFilter.fromProto(miniSketchType)).getCause());
+    }
+
+    // Rule 7: an entry which the requester cannot parse does not remove the other entries of the response
+    @Test
+    void entriesWhichCannotBeParsedAreSkipped() throws Exception {
+        RemoveDataRequest removal = createRemovalsOfBothStoreTypes().get(0);
+        bisq.network.protobuf.DataRequest valid = removal.toProto(false).getDataRequest();
+        bisq.network.protobuf.DataRequest withoutRequest = bisq.network.protobuf.DataRequest.getDefaultInstance();
+        bisq.network.protobuf.DataRequest withInvalidKey = valid.toBuilder()
+                .setRemoveAuthenticatedDataRequest(valid.getRemoveAuthenticatedDataRequest().toBuilder()
+                        .setOwnerPublicKeyBytes(ByteString.copyFrom(new byte[]{1, 2, 3})))
+                .build();
+        assertThrows(UnresolvableProtobufException.class, () -> DataRequest.fromProto(withoutRequest));
+        assertThrows(UnresolvableProtobufException.class, () -> DataRequest.fromProto(withInvalidKey));
+
+        int maxSize = Inventory.maxSize;
+        Inventory.setMaxSize(MAX_SIZE);
+        try {
+            Inventory inventory = Inventory.fromProto(bisq.network.protobuf.Inventory.newBuilder()
+                    .addEntries(withoutRequest)
+                    .addEntries(valid)
+                    .addEntries(withInvalidKey)
+                    .setMaxSizeReached(true)
+                    .build());
+
+            assertEquals(1, inventory.getEntries().size());
+            assertArrayEquals(removal.serialize(), inventory.getEntries().get(0).serialize());
+            assertTrue(inventory.isMaxSizeReached());
+        } finally {
+            Inventory.setMaxSize(maxSize);
+        }
     }
 
     // With equal state, a responder sends nothing, for requesters of both versions
@@ -410,7 +447,8 @@ class InventoryHashSetFilterTest {
     }
 
     // As a relay of an earlier version sends it
-    private static RemoveDataRequest withoutSignatureV2(RemoveDataRequest removal) {
+    private static RemoveDataRequest withoutSignatureV2(RemoveDataRequest removal)
+            throws UnresolvableProtobufException {
         if (removal instanceof RemoveAuthenticatedDataRequest request) {
             return RemoveAuthenticatedDataRequest.fromProto(request.toValueProto(false).toBuilder()
                     .setVersion(1)

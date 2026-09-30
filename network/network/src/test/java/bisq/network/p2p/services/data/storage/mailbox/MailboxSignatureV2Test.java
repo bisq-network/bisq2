@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.EcPublicKeyVariants;
 import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
@@ -40,6 +41,7 @@ import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMes
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -64,7 +66,8 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void addMailboxRequestHasValidSignaturesAfterProtobufRoundTrip() throws GeneralSecurityException {
+    void addMailboxRequestHasValidSignaturesAfterProtobufRoundTrip()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest request = createAddMailboxRequest();
         AddMailboxRequest received = AddMailboxRequest.fromProto(request.toValueProto(false));
 
@@ -76,23 +79,28 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void mailboxReceiverHashMustIdentifyTheReceiverUsedByTheStorageKey() throws GeneralSecurityException {
+    void mailboxReceiverHashMustIdentifyTheReceiverUsedByTheStorageKey()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         bisq.network.protobuf.MailboxSequentialData proto = createAddMailboxRequest()
                 .getMailboxSequentialData().toProto(false);
         byte[] otherPublicKeyBytes = KeyGeneration.generateDefaultEcKeyPair().getPublic().getEncoded();
 
         // Otherwise the receiver's removal finds the entry but fails the hash check, while a removal
         // signed by the key of the supplied hash looks up another storage key. Neither can remove it.
-        assertThrows(IllegalArgumentException.class, () -> MailboxSequentialData.fromProto(proto.toBuilder()
-                .setReceiversPubKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)))
-                .build()));
-        assertThrows(IllegalArgumentException.class, () -> MailboxSequentialData.fromProto(proto.toBuilder()
-                .setReceiversPubKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
-                .build()));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> MailboxSequentialData.fromProto(proto.toBuilder()
+                                .setReceiversPubKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)))
+                                .build())).getCause());
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> MailboxSequentialData.fromProto(proto.toBuilder()
+                                .setReceiversPubKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
+                                .build())).getCause());
     }
 
     @Test
-    void addMailboxRequestWithChangedFieldIsRejected() throws GeneralSecurityException {
+    void addMailboxRequestWithChangedFieldIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         bisq.network.protobuf.AddMailboxRequest proto = createAddMailboxRequest().toValueProto(false);
 
         // Signature V1 does not cover the version and className of MailboxData. Signature V2 covers them.
@@ -108,7 +116,8 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void addMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
+    void addMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest request = createAddMailboxRequest();
 
         AddMailboxRequest asFromEarlierVersion = AddMailboxRequest.fromProto(
@@ -123,7 +132,8 @@ class MailboxSignatureV2Test {
     // Signature V1 is valid, but it does not cover all fields of the request. From the cutoff date on, a node does not
     // accept it alone.
     @Test
-    void addMailboxRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOn() throws GeneralSecurityException {
+    void addMailboxRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOn()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest asFromEarlierVersion = AddMailboxRequest.fromProto(
                 createAddMailboxRequest().toValueProto(false).toBuilder().clearSignatureV2().clearVersion().build());
 
@@ -133,7 +143,8 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void mailboxRequestsWithSignatureV2AreValidBeforeAndAfterTheCutoffDate() throws GeneralSecurityException {
+    void mailboxRequestsWithSignatureV2AreValidBeforeAndAfterTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest addRequest = createAddMailboxRequest();
         RemoveMailboxRequest removeRequest = createRemoveMailboxRequest();
 
@@ -146,7 +157,8 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void removeMailboxRequestHasValidSignaturesAfterProtobufRoundTrip() throws GeneralSecurityException {
+    void removeMailboxRequestHasValidSignaturesAfterProtobufRoundTrip()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveMailboxRequest request = createRemoveMailboxRequest();
         RemoveMailboxRequest received = RemoveMailboxRequest.fromProto(request.toValueProto(false));
 
@@ -157,7 +169,8 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void removeMailboxRequestWithChangedFieldIsRejected() throws GeneralSecurityException {
+    void removeMailboxRequestWithChangedFieldIsRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         bisq.network.protobuf.RemoveMailboxRequest proto = createRemoveMailboxRequest().toValueProto(false);
 
         // Signature V1 covers only the hash. Signature V2 covers these fields as well.
@@ -170,7 +183,8 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void removeMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
+    void removeMailboxRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveMailboxRequest request = createRemoveMailboxRequest();
 
         RemoveMailboxRequest withoutSignatureV2 = RemoveMailboxRequest.fromProto(
@@ -183,7 +197,8 @@ class MailboxSignatureV2Test {
     // Signature V1 of a remove request does not cover the creation date. The time of the node decides, so an earlier
     // creation date, which a relay can set, does not make the request valid.
     @Test
-    void removeMailboxRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOnForAnyCreationDate() throws GeneralSecurityException {
+    void removeMailboxRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOnForAnyCreationDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveMailboxRequest request = createRemoveMailboxRequest();
 
         RemoveMailboxRequest withEarlierCreationDate = RemoveMailboxRequest.fromProto(
@@ -202,17 +217,21 @@ class MailboxSignatureV2Test {
     // Signature V1 of a remove request does not cover the public key. A relay could replace the key with another
     // encoding of the same key, and the request would get another storage key. Only the canonical encoding is valid.
     @Test
-    void removeMailboxRequestWithOtherEncodingOfReceiverKeyIsRejected() throws GeneralSecurityException {
+    void removeMailboxRequestWithOtherEncodingOfReceiverKeyIsRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         bisq.network.protobuf.RemoveMailboxRequest proto = createRemoveMailboxRequest().toValueProto(false).toBuilder()
                 .clearSignatureV2()
                 .setReceiverPublicKeyBytes(EcPublicKeyVariants.toCompressed(receiverKeyPair.getPublic()))
                 .build();
 
-        assertThrows(IllegalArgumentException.class, () -> RemoveMailboxRequest.fromProto(proto));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> RemoveMailboxRequest.fromProto(proto)).getCause());
     }
 
     @Test
-    void addMailboxRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException {
+    void addMailboxRequestWithHighSSignatureV2IsRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         bisq.network.protobuf.AddMailboxRequest proto = createAddMailboxRequest().toValueProto(false);
 
         assertTrue(AddMailboxRequest.fromProto(proto.toBuilder()
@@ -229,7 +248,8 @@ class MailboxSignatureV2Test {
     }
 
     @Test
-    void removeMailboxRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException {
+    void removeMailboxRequestWithHighSSignatureV2IsRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         bisq.network.protobuf.RemoveMailboxRequest proto = createRemoveMailboxRequest().toValueProto(false);
 
         assertTrue(RemoveMailboxRequest.fromProto(proto.toBuilder()
@@ -247,7 +267,8 @@ class MailboxSignatureV2Test {
     // The preimages of signature V2 are new messages. Their layout is written here independently with protobuf's
     // CodedOutputStream.
     @Test
-    void removeMailboxRequestSignatureV2PreimageHasFixedLayout() throws GeneralSecurityException, IOException {
+    void removeMailboxRequestSignatureV2PreimageHasFixedLayout()
+            throws GeneralSecurityException, IOException, UnresolvableProtobufException {
         RemoveMailboxRequest request = createRemoveMailboxRequest();
         bisq.network.protobuf.RemoveMailboxRequest proto = request.toValueProto(false);
 
@@ -268,7 +289,7 @@ class MailboxSignatureV2Test {
     // The SIGNATURE encoding of MailboxData is part of the preimage of signature V2 of AddMailboxRequest. Like the
     // preimages, it has its own field numbers, not those of the protobuf message MailboxData. It has no metaData.
     @Test
-    void mailboxDataSignatureEncodingHasFixedLayout() throws IOException {
+    void mailboxDataSignatureEncodingHasFixedLayout() throws IOException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
 
         ByteArrayOutputStream expected = new ByteArrayOutputStream();
@@ -281,12 +302,13 @@ class MailboxSignatureV2Test {
         assertArrayEquals(expected.toByteArray(), mailboxData.encodeCanonical(EncodingPurpose.SIGNATURE));
     }
 
-    private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException {
+    private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
         return AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
     }
 
-    private RemoveMailboxRequest createRemoveMailboxRequest() throws GeneralSecurityException {
+    private RemoveMailboxRequest createRemoveMailboxRequest()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
         return RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
     }

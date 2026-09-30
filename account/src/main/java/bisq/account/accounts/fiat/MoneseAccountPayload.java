@@ -24,6 +24,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.PaymentAccountValidation;
@@ -92,15 +93,20 @@ public final class MoneseAccountPayload extends AccountPayload<FiatPaymentMethod
                 .setMobileNr(mobileNr);
     }
 
-    public static MoneseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var payload = proto.getMoneseAccountPayload();
-        return new MoneseAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getHolderName(),
-                payload.getMobileNr()
-        );
+    public static MoneseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var payload = proto.getMoneseAccountPayload();
+            return new MoneseAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getHolderName(),
+                    payload.getMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

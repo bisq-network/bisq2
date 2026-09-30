@@ -19,6 +19,7 @@ package bisq.support.mediation.bisq_easy;
 
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -89,11 +90,16 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
         return builder;
     }
 
-    public static BisqEasyMediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto) {
-        Optional<NetworkId> senderNetworkId = proto.hasSenderNetworkId()
-                ? Optional.of(NetworkId.fromProto(proto.getSenderNetworkId()))
-                : Optional.empty();
-        return new BisqEasyMediatorsResponse(proto.getVersion(), proto.getTradeId(), senderNetworkId);
+    public static BisqEasyMediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            Optional<NetworkId> senderNetworkId = proto.hasSenderNetworkId()
+                    ? Optional.of(NetworkId.fromProto(proto.getSenderNetworkId()))
+                    : Optional.empty();
+            return new BisqEasyMediatorsResponse(proto.getVersion(), proto.getTradeId(), senderNetworkId);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

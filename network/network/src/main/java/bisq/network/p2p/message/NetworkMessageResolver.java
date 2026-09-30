@@ -20,6 +20,7 @@ package bisq.network.p2p.message;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.NetworkProtoResolverMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.Any;
 
 public class NetworkMessageResolver {
@@ -30,7 +31,7 @@ public class NetworkMessageResolver {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 
-    static ExternalNetworkMessage fromAny(Any any) {
+    static ExternalNetworkMessage fromAny(Any any) throws UnresolvableProtobufException {
         return protoResolverMap.fromAny(any);
     }
 }

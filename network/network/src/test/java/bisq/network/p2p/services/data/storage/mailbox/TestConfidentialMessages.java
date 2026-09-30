@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import com.google.protobuf.ByteString;
 
@@ -30,7 +31,8 @@ public final class TestConfidentialMessages {
     private TestConfidentialMessages() {
     }
 
-    public static ConfidentialMessage createConfidentialMessage(KeyPair senderKeyPair) {
+    public static ConfidentialMessage createConfidentialMessage(KeyPair senderKeyPair)
+            throws UnresolvableProtobufException {
         return ConfidentialMessage.fromProto(bisq.network.protobuf.ConfidentialMessage.newBuilder()
                 .setConfidentialData(bisq.security.protobuf.ConfidentialData.newBuilder()
                         .setSenderPublicKey(ByteString.copyFrom(senderKeyPair.getPublic().getEncoded()))

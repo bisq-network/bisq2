@@ -19,6 +19,7 @@ package bisq.account.timestamp;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import lombok.Getter;
@@ -42,7 +43,7 @@ public enum KeyType implements ProtoEnum {
         return bisq.account.protobuf.KeyType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static KeyType fromProto(bisq.account.protobuf.KeyType proto) {
+    public static KeyType fromProto(bisq.account.protobuf.KeyType proto) throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(KeyType.class, proto.name(), EC);
     }
 }

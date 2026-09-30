@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -89,18 +90,23 @@ public final class MuSigCustomPayoutPsbtMessage extends MuSigTradeMessage {
                 .setPsbt(ByteString.copyFrom(psbt));
     }
 
-    public static MuSigCustomPayoutPsbtMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.MuSigCustomPayoutPsbtMessage message =
-                proto.getMuSigTradeMessage().getMuSigCustomPayoutPsbtMessage();
-        return new MuSigCustomPayoutPsbtMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                message.getMediationResultHash().toByteArray(),
-                message.getTxId(),
-                message.getPsbt().toByteArray());
+    public static MuSigCustomPayoutPsbtMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.MuSigCustomPayoutPsbtMessage message =
+                    proto.getMuSigTradeMessage().getMuSigCustomPayoutPsbtMessage();
+            return new MuSigCustomPayoutPsbtMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    message.getMediationResultHash().toByteArray(),
+                    message.getTxId(),
+                    message.getPsbt().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

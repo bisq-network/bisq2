@@ -21,6 +21,7 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.locale.Country;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -70,8 +71,13 @@ public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return FiatPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
+    public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
+            throws UnresolvableProtobufException {
+        try {
+            return FiatPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

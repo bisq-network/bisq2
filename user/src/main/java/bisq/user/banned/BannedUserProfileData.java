@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -89,12 +90,17 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto) {
-        return new BannedUserProfileData(
-                proto.getVersion(),
-                UserProfile.fromProto(proto.getUserProfile()),
-                proto.getStaticPublicKeysProvided()
-        );
+    public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BannedUserProfileData(
+                    proto.getVersion(),
+                    UserProfile.fromProto(proto.getUserProfile()),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

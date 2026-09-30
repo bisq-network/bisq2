@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.NetworkProtoResolverMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.Any;
 
 public class DistributedDataResolver {
@@ -30,7 +31,7 @@ public class DistributedDataResolver {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 
-    static DistributedData fromAny(Any any) {
+    static DistributedData fromAny(Any any) throws UnresolvableProtobufException {
         return protoResolverMap.fromAny(any);
     }
 }

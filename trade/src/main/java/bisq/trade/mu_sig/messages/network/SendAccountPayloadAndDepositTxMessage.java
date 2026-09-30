@@ -19,6 +19,7 @@ package bisq.trade.mu_sig.messages.network;
 
 import bisq.account.accounts.AccountPayload;
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -75,16 +76,21 @@ public final class SendAccountPayloadAndDepositTxMessage extends MuSigTradeMessa
                 .setAccountPayload(accountPayload.toProto(serializeForHash));
     }
 
-    public static SendAccountPayloadAndDepositTxMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.SendAccountPayloadAndDepositTxMessage muSigMessageProto = proto.getMuSigTradeMessage().getSendAccountPayloadAndDepositTxMessage();
-        return new SendAccountPayloadAndDepositTxMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                ByteArray.fromProto(muSigMessageProto.getDepositTx()),
-                AccountPayload.fromProto(muSigMessageProto.getAccountPayload()));
+    public static SendAccountPayloadAndDepositTxMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.SendAccountPayloadAndDepositTxMessage muSigMessageProto = proto.getMuSigTradeMessage().getSendAccountPayloadAndDepositTxMessage();
+            return new SendAccountPayloadAndDepositTxMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    ByteArray.fromProto(muSigMessageProto.getDepositTx()),
+                    AccountPayload.fromProto(muSigMessageProto.getAccountPayload()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

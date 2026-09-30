@@ -18,6 +18,7 @@
 package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.user.banned.BannedUserService;
@@ -36,7 +37,7 @@ class LegacyWitnessReputationContainmentTest {
     private static final String PROFILE_ID = "12".repeat(20);
 
     @Test
-    void legacyAccountAgeDataContributesNoScore() {
+    void legacyAccountAgeDataContributesNoScore() throws UnresolvableProtobufException {
         AccountAgeService service = new AccountAgeService(
                 mock(PersistenceService.class),
                 mock(NetworkService.class),
@@ -56,7 +57,7 @@ class LegacyWitnessReputationContainmentTest {
     }
 
     @Test
-    void legacySignedWitnessDataContributesNoScore() {
+    void legacySignedWitnessDataContributesNoScore() throws UnresolvableProtobufException {
         SignedWitnessService service = new SignedWitnessService(
                 mock(PersistenceService.class),
                 mock(NetworkService.class),

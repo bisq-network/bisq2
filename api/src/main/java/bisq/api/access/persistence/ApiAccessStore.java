@@ -21,6 +21,8 @@ import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -122,21 +124,27 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto) {
-        Map<String, ClientProfile> clientProfileByIdMap = proto.getClientProfileByIdMapMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> ClientProfile.fromProto(e.getValue())));
-        Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
-        boolean anyPromoted = false;
-        for (Map.Entry<String, bisq.api.protobuf.PermissionSet> e : proto.getPermissionsByClientIdMap().entrySet()) {
-            PermissionSet loaded = PermissionSet.fromProto(e.getValue());
-            PermissionSet effective = promoteIfFullStandardGrant(e.getKey(), loaded);
-            anyPromoted |= effective != loaded;
-            permissionsByClientId.put(e.getKey(), effective);
+    public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Map<String, ClientProfile> clientProfileByIdMap = ProtobufUtils.fromProtoEntryStream(
+                            proto.getClientProfileByIdMapMap(), ClientProfile::fromProto)
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            Map.Entry::getValue));
+            Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
+            boolean anyPromoted = false;
+            for (Map.Entry<String, bisq.api.protobuf.PermissionSet> e : proto.getPermissionsByClientIdMap().entrySet()) {
+                PermissionSet loaded = PermissionSet.fromProto(e.getValue());
+                PermissionSet effective = promoteIfFullStandardGrant(e.getKey(), loaded);
+                anyPromoted |= effective != loaded;
+                permissionsByClientId.put(e.getKey(), effective);
+            }
+            ApiAccessStore store = new ApiAccessStore(clientProfileByIdMap, permissionsByClientId);
+            store.promotedEntriesDuringLoad = anyPromoted;
+            return store;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        ApiAccessStore store = new ApiAccessStore(clientProfileByIdMap, permissionsByClientId);
-        store.promotedEntriesDuringLoad = anyPromoted;
-        return store;
     }
 
     /**

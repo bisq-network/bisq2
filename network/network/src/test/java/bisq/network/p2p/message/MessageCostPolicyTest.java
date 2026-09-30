@@ -22,6 +22,7 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.network.Address;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
@@ -152,7 +153,8 @@ class MessageCostPolicyTest {
     @ParameterizedTest
     @CsvSource({"0, 0.1", "32, 0.1", "1999, 0.1", "2000, 0.1", "2001, 0.10005",
             "10000, 0.5", "19999, 0.99995", "20000, 1.0"})
-    void confidentialMessagesKeepTheirHistoricalCostAtSizeBoundaries(int cipherTextSize, double cost) {
+    void confidentialMessagesKeepTheirHistoricalCostAtSizeBoundaries(int cipherTextSize, double cost)
+            throws UnresolvableProtobufException {
         assertCosts(createConfidentialMessage(cipherTextSize), cost, cost, "cipherTextSize=" + cipherTextSize);
     }
 
@@ -162,7 +164,7 @@ class MessageCostPolicyTest {
                                                                              long ttl,
                                                                              int maxMapSize,
                                                                              double historicalStorageCost)
-            throws GeneralSecurityException {
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MetaData historicalMetaData = new MetaData(ttl, className, maxMapSize);
         double storageCost = storageCostAfterDocumentedRounding(className, historicalStorageCost);
         assertEquals(Optional.of(storageCost), MessageCostPolicy.findStorageCostFactor(className), className);
@@ -260,7 +262,7 @@ class MessageCostPolicyTest {
     }
 
     @Test
-    void removeAndRefreshRequestsUseTheStorageCostFactorOfTheirClassName() {
+    void removeAndRefreshRequestsUseTheStorageCostFactorOfTheirClassName() throws UnresolvableProtobufException {
         // 0.12 is inside the bounds 0.1 and 0.3
         assertEquals(0.12, MessageCostPolicy.getCostFactor(createRemoveRequest("MuSigOfferMessage")));
         assertEquals(0.3, MessageCostPolicy.getCostFactor(createRemoveRequest("UserProfile")));
@@ -272,7 +274,8 @@ class MessageCostPolicyTest {
     }
 
     @Test
-    void mailboxRequestsUseTheStorageCostFactorOfTheirClassName() throws GeneralSecurityException {
+    void mailboxRequestsUseTheStorageCostFactorOfTheirClassName()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         // AddMailboxRequest.from() takes the MetaData of the type from the registry
         StorableTypesRegistry.register(AckMessage.class, AckMessage.META_DATA);
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(10_000));
@@ -285,7 +288,8 @@ class MessageCostPolicyTest {
     }
 
     @Test
-    void senderPaysTheCostFactorOfThePolicyForMessagesWithoutMetaDataField() throws GeneralSecurityException {
+    void senderPaysTheCostFactorOfThePolicyForMessagesWithoutMetaDataField()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         Ping ping = new Ping(1);
         assertEquals(MessageCostPolicy.getCostFactor(ping), MessageCostPolicy.getCostFactorToPay(ping));
         AddAuthenticatedDataRequest addRequest = createAddRequest("UserProfile");
@@ -301,7 +305,7 @@ class MessageCostPolicyTest {
         assertEquals(1, MessageCostPolicy.getCostFactor(new AckMessage("id")));
     }
 
-    private ConfidentialMessage createConfidentialMessage(int cipherTextSize) {
+    private ConfidentialMessage createConfidentialMessage(int cipherTextSize) throws UnresolvableProtobufException {
         // The policy does not decrypt the message, so the content does not need to be valid cipher text.
         return ConfidentialMessage.fromProto(bisq.network.protobuf.ConfidentialMessage.newBuilder()
                 .setConfidentialData(bisq.security.protobuf.ConfidentialData.newBuilder()
@@ -327,11 +331,12 @@ class MessageCostPolicyTest {
                 keyPair.getPublic(), new byte[]{}, 0);
     }
 
-    private RemoveAuthenticatedDataRequest createRemoveRequest(String className) {
+    private RemoveAuthenticatedDataRequest createRemoveRequest(String className) throws UnresolvableProtobufException {
         return createRemoveRequest(new MetaData(MetaData.TTL_10_DAYS, className), 1);
     }
 
-    private RemoveAuthenticatedDataRequest createRemoveRequest(MetaData metaData, int version) {
+    private RemoveAuthenticatedDataRequest createRemoveRequest(MetaData metaData, int version)
+            throws UnresolvableProtobufException {
         //noinspection deprecation
         return RemoveAuthenticatedDataRequest.fromProto(bisq.network.protobuf.RemoveAuthenticatedDataRequest
                 .newBuilder()
@@ -346,11 +351,13 @@ class MessageCostPolicyTest {
                 .build());
     }
 
-    private RefreshAuthenticatedDataRequest createRefreshRequest(String className) {
+    private RefreshAuthenticatedDataRequest createRefreshRequest(String className)
+            throws UnresolvableProtobufException {
         return createRefreshRequest(new MetaData(MetaData.TTL_10_DAYS, className), 1);
     }
 
-    private RefreshAuthenticatedDataRequest createRefreshRequest(MetaData metaData, int version) {
+    private RefreshAuthenticatedDataRequest createRefreshRequest(MetaData metaData, int version)
+            throws UnresolvableProtobufException {
         //noinspection deprecation
         return RefreshAuthenticatedDataRequest.fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest
                 .newBuilder()
@@ -365,11 +372,12 @@ class MessageCostPolicyTest {
                 .build());
     }
 
-    private RemoveMailboxRequest createRemoveMailboxRequest(String className) {
+    private RemoveMailboxRequest createRemoveMailboxRequest(String className) throws UnresolvableProtobufException {
         return createRemoveMailboxRequest(new MetaData(MetaData.TTL_10_DAYS, className), 1);
     }
 
-    private RemoveMailboxRequest createRemoveMailboxRequest(MetaData metaData, int version) {
+    private RemoveMailboxRequest createRemoveMailboxRequest(MetaData metaData, int version)
+            throws UnresolvableProtobufException {
         //noinspection deprecation
         return RemoveMailboxRequest.fromProto(bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
                 .setMetaData(metaData.toProto(false))

@@ -18,6 +18,7 @@
 package bisq.offer.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -59,8 +60,13 @@ public final class MuSigOfferMessage implements OwnershipVerifiableData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigOfferMessage fromProto(bisq.offer.protobuf.MuSigOfferMessage proto) {
-        return new MuSigOfferMessage(MuSigOffer.fromProto(proto.getOffer()));
+    public static MuSigOfferMessage fromProto(bisq.offer.protobuf.MuSigOfferMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigOfferMessage(MuSigOffer.fromProto(proto.getOffer()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

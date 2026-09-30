@@ -18,6 +18,7 @@
 package bisq.offer.amount.spec;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public interface AmountSpec extends NetworkProto {
@@ -28,7 +29,7 @@ public interface AmountSpec extends NetworkProto {
         return bisq.offer.protobuf.AmountSpec.newBuilder();
     }
 
-    static AmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) {
+    static AmountSpec fromProto(bisq.offer.protobuf.AmountSpec proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case FIXEDAMOUNTSPEC -> FixedAmountSpec.fromProto(proto.getFixedAmountSpec());
             case RANGEAMOUNTSPEC -> RangeAmountSpec.fromProto(proto.getRangeAmountSpec());

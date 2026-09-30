@@ -18,6 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.security.keys.PubKey;
@@ -81,15 +82,20 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
                 .setBisqEasyOfferbookMessageReaction(toBisqEasyOfferbookMessageReactionProto(serializeForHash));
     }
 
-    public static BisqEasyOfferbookMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
-        return new BisqEasyOfferbookMessageReaction(
-                baseProto.getId(),
-                baseProto.getUserProfileId(),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate());
+    public static BisqEasyOfferbookMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyOfferbookMessageReaction(
+                    baseProto.getId(),
+                    baseProto.getUserProfileId(),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private bisq.chat.protobuf.BisqEasyOfferbookMessageReaction toBisqEasyOfferbookMessageReactionProto(boolean serializeForHash) {

@@ -23,7 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -81,6 +84,35 @@ public class ProtobufUtils {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes)) {
             return Any.parseDelimitedFrom(inputStream);
         }
+    }
+
+    /**
+     * Converts all protos with the converter and returns the results in the order of the protos. Use it instead of
+     * {@code protos.stream().map(Foo::fromProto)}, which does not compile with a checked exception. The conversion is
+     * eager, so the first failure is thrown to the caller.
+     */
+    public static <P, T> Stream<T> fromProtoStream(Collection<P> protos,
+                                                   ProtoConverter<P, T> converter)
+                                                           throws UnresolvableProtobufException {
+        List<T> results = new ArrayList<>(protos.size());
+        for (P proto : protos) {
+            results.add(converter.fromProto(proto));
+        }
+        return results.stream();
+    }
+
+    /**
+     * Converts the values of a protobuf map with the converter and keeps the keys, in the order of the map. Use it
+     * instead of a lambda like {@code e -> Foo.fromProto(e.getValue())} in a collector.
+     */
+    public static <K, P, T> Stream<Map.Entry<K, T>> fromProtoEntryStream(Map<K, P> protos,
+                                                                          ProtoConverter<P, T> converter)
+            throws UnresolvableProtobufException {
+        List<Map.Entry<K, T>> results = new ArrayList<>(protos.size());
+        for (Map.Entry<K, P> entry : protos.entrySet()) {
+            results.add(Map.entry(entry.getKey(), converter.fromProto(entry.getValue())));
+        }
+        return results.stream();
     }
 
     // Convert list of proto enums to a stream of Enums. If the enumFromProto fails we skip the enum.

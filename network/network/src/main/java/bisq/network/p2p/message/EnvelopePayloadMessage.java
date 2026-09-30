@@ -18,6 +18,7 @@
 package bisq.network.p2p.message;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
@@ -66,7 +67,8 @@ public interface EnvelopePayloadMessage extends NetworkProto {
     }
 
 
-    static EnvelopePayloadMessage fromProto(bisq.network.protobuf.EnvelopePayloadMessage proto) {
+    static EnvelopePayloadMessage fromProto(bisq.network.protobuf.EnvelopePayloadMessage proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case CONNECTIONHANDSHAKEREQUEST ->
                     ConnectionHandshake.Request.fromProto(proto.getConnectionHandshakeRequest());

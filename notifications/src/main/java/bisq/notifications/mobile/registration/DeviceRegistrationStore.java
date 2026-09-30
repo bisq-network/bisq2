@@ -19,6 +19,8 @@ package bisq.notifications.mobile.registration;
 
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -53,12 +55,17 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
         return unsafeToProto(serializeForHash);
     }
 
-    public static DeviceRegistrationStore fromProto(bisq.notifications.protobuf.DeviceRegistrationStore proto) {
-        return new DeviceRegistrationStore(
-                proto.getDeviceByDeviceIdMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> MobileDeviceProfile.fromProto(e.getValue())
-                        )));
+    public static DeviceRegistrationStore fromProto(bisq.notifications.protobuf.DeviceRegistrationStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new DeviceRegistrationStore(
+                    ProtobufUtils.fromProtoEntryStream(proto.getDeviceByDeviceIdMap(), MobileDeviceProfile::fromProto)
+                            .collect(Collectors.toMap(Map.Entry::getKey,
+                                    Map.Entry::getValue
+                            )));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

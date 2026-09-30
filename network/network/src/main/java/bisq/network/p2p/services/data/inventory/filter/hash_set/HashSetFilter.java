@@ -19,6 +19,8 @@ package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
 
 import bisq.common.data.ByteUnit;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.EqualsAndHashCode;
@@ -79,11 +81,17 @@ public final class HashSetFilter extends InventoryFilter {
                                 .collect(Collectors.toList())));
     }
 
-    public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {
-        List<HashSetFilterEntry> entries = proto.getHashSetFilter().getFilterEntriesList().stream()
-                .map(HashSetFilterEntry::fromProto)
-                .collect(Collectors.toList());
-        return new HashSetFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()), entries);
+    public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto)
+            throws UnresolvableProtobufException {
+        try {
+            List<HashSetFilterEntry> entries = ProtobufUtils.fromProtoStream(
+                            proto.getHashSetFilter().getFilterEntriesList(), 
+                            HashSetFilterEntry::fromProto)
+                    .collect(Collectors.toList());
+            return new HashSetFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()), entries);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

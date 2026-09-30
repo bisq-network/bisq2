@@ -18,6 +18,7 @@
 package bisq.contract.bisq_easy;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.Party;
 import bisq.contract.Role;
 import bisq.contract.TwoPartyContract;
@@ -129,21 +130,26 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto) {
-        bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        bisq.contract.protobuf.BisqEasyContract bisqEasyContract = twoPartyContractProto.getBisqEasyContract();
-        return new BisqEasyContract(proto.getTakeOfferDate(),
-                BisqEasyOffer.fromProto(proto.getOffer()),
-                TradeProtocolType.fromProto(proto.getTradeProtocolType()),
-                Party.fromProto(twoPartyContractProto.getTaker()),
-                bisqEasyContract.getBaseSideAmount(),
-                bisqEasyContract.getQuoteSideAmount(),
-                PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(bisqEasyContract.getBaseSidePaymentMethodSpec()),
-                PaymentMethodSpec.protoToFiatPaymentMethodSpec(bisqEasyContract.getQuoteSidePaymentMethodSpec()),
-                bisqEasyContract.hasMediator() ?
-                        Optional.of(UserProfile.fromProto(bisqEasyContract.getMediator())) :
-                        Optional.empty(),
-                PriceSpec.fromProto(bisqEasyContract.getPriceSpec()),
-                bisqEasyContract.getMarketPrice());
+    public static BisqEasyContract fromProto(bisq.contract.protobuf.Contract proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
+            bisq.contract.protobuf.BisqEasyContract bisqEasyContract = twoPartyContractProto.getBisqEasyContract();
+            return new BisqEasyContract(proto.getTakeOfferDate(),
+                    BisqEasyOffer.fromProto(proto.getOffer()),
+                    TradeProtocolType.fromProto(proto.getTradeProtocolType()),
+                    Party.fromProto(twoPartyContractProto.getTaker()),
+                    bisqEasyContract.getBaseSideAmount(),
+                    bisqEasyContract.getQuoteSideAmount(),
+                    PaymentMethodSpec.protoToBitcoinPaymentMethodSpec(bisqEasyContract.getBaseSidePaymentMethodSpec()),
+                    PaymentMethodSpec.protoToFiatPaymentMethodSpec(bisqEasyContract.getQuoteSidePaymentMethodSpec()),
+                    bisqEasyContract.hasMediator() ?
+                            Optional.of(UserProfile.fromProto(bisqEasyContract.getMediator())) :
+                            Optional.empty(),
+                    PriceSpec.fromProto(bisqEasyContract.getPriceSpec()),
+                    bisqEasyContract.getMarketPrice());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

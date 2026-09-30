@@ -146,7 +146,8 @@ Reasons:
   creation date only for add requests would accept the add requests of a node of an earlier version and reject its
   remove requests. Then data which its owner removed would stay in the stores.
 - Rule 7: nodes of earlier versions verify only signature V1, and the preimage of signature V2 contains signature V1.
-- Rule 8: a node which cannot parse one entry drops the whole inventory response.
+- Rule 8: the rule depends on the time of the node, not only on the format of the request. The stores apply it when
+  they receive a request, and to the requests which they hold (rule 9).
 - Rule 9: a store would otherwise hold requests which it does not accept, and which other nodes do not accept from its
   inventory responses. A request which a relay changed before the cutoff date would also stay until it expires. A
   remove request contains no data. In the mailbox store it rejects the add request of the removed message until it

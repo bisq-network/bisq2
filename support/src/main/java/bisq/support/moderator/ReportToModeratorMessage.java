@@ -19,6 +19,7 @@ package bisq.support.moderator;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -84,12 +85,17 @@ public final class ReportToModeratorMessage implements MailboxMessage, ExternalN
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static ReportToModeratorMessage fromProto(bisq.support.protobuf.ReportToModeratorMessage proto) {
-        return new ReportToModeratorMessage(proto.getDate(),
-                proto.getReporterUserProfileId(),
-                UserProfile.fromProto(proto.getAccusedUserProfile()),
-                proto.getMessage(),
-                ChatChannelDomain.fromProto(proto.getChatChannelDomain()));
+    public static ReportToModeratorMessage fromProto(bisq.support.protobuf.ReportToModeratorMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ReportToModeratorMessage(proto.getDate(),
+                    proto.getReporterUserProfileId(),
+                    UserProfile.fromProto(proto.getAccusedUserProfile()),
+                    proto.getMessage(),
+                    ChatChannelDomain.fromProto(proto.getChatChannelDomain()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

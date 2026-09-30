@@ -19,6 +19,7 @@ package bisq.bonded_roles.registration;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
@@ -119,21 +120,26 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
         return resolveValueProto(serializeForHash);
     }
 
-    public static BondedRoleRegistrationRequest fromProto(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto) {
-        return new BondedRoleRegistrationRequest(proto.getProfileId(),
-                proto.getAuthorizedPublicKey(),
-                BondedRoleType.fromProto(proto.getBondedRoleType()),
-                proto.getBondUserName(),
-                proto.getSignatureBase64(),
-                proto.hasAddressByTransportTypeMap() ?
-                        Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
-                        Optional.empty(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.getIsCancellationRequest(),
-                BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
-                        proto.getRegistrationProtocolVersion()),
-                proto.getProposalTxId(),
-                proto.getLockupTxId());
+    public static BondedRoleRegistrationRequest fromProto(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BondedRoleRegistrationRequest(proto.getProfileId(),
+                    proto.getAuthorizedPublicKey(),
+                    BondedRoleType.fromProto(proto.getBondedRoleType()),
+                    proto.getBondUserName(),
+                    proto.getSignatureBase64(),
+                    proto.hasAddressByTransportTypeMap() ?
+                            Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
+                            Optional.empty(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.getIsCancellationRequest(),
+                    BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
+                            proto.getRegistrationProtocolVersion()),
+                    proto.getProposalTxId(),
+                    proto.getLockupTxId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

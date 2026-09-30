@@ -19,6 +19,8 @@ package bisq.persistence;
 
 import bisq.common.data.StringLongPair;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
@@ -54,9 +56,9 @@ final class TimestampStore implements PersistableStore<TimestampStore> {
                         .collect(Collectors.toSet()));
     }
 
-    public static TimestampStore fromProto(bisq.persistence.protobuf.TimestampStore proto) {
-        Map<String, Long> map = proto.getStringLongPairsList().stream()
-                .map(StringLongPair::fromProto)
+    public static TimestampStore fromProto(bisq.persistence.protobuf.TimestampStore proto)
+            throws UnresolvableProtobufException {
+        Map<String, Long> map = ProtobufUtils.fromProtoStream(proto.getStringLongPairsList(), StringLongPair::fromProto)
                 .collect(Collectors.toMap(StringLongPair::getKey, StringLongPair::getValue));
         return new TimestampStore(map);
     }

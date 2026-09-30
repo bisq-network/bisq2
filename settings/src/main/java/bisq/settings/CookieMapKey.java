@@ -17,6 +17,7 @@
 
 package bisq.settings;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -51,8 +52,12 @@ class CookieMapKey {
         }
     }
 
-    static CookieMapKey fromProto(String key, Optional<String> subKey) {
-        CookieKey cookieKey = CookieKey.valueOf(CookieKey.class, key);
-        return new CookieMapKey(cookieKey, subKey);
+    static CookieMapKey fromProto(String key, Optional<String> subKey) throws UnresolvableProtobufException {
+        try {
+            CookieKey cookieKey = CookieKey.valueOf(CookieKey.class, key);
+            return new CookieMapKey(cookieKey, subKey);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

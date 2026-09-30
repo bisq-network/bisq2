@@ -2,6 +2,7 @@ package bisq.network.p2p.services.confidential.ack;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.Getter;
 
 @Getter
@@ -33,7 +34,8 @@ public enum MessageDeliveryStatus implements ProtoEnum {
         return bisq.network.protobuf.MessageDeliveryStatus.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MessageDeliveryStatus fromProto(bisq.network.protobuf.MessageDeliveryStatus proto) {
+    public static MessageDeliveryStatus fromProto(bisq.network.protobuf.MessageDeliveryStatus proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MessageDeliveryStatus.class, proto.name(), CONNECTING);
     }
 }

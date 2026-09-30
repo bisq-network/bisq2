@@ -19,6 +19,7 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.bridge.protobuf.BsqBlockGrpcServiceGrpc;
 import bisq.bridge.protobuf.BsqBlockSubscriptionEvent;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.ProofOfBurnDto;
@@ -128,7 +129,7 @@ class BsqBlockGrpcServiceTest {
     }
 
     @Test
-    void subscriptionReadyEventRequestsCatchUpWithoutAdvancingTheCursor() {
+    void subscriptionReadyEventRequestsCatchUpWithoutAdvancingTheCursor() throws UnresolvableProtobufException {
         BsqBlockGrpcService service = spy(new BsqBlockGrpcService(false,
                 mock(GrpcClient.class),
                 ignored -> {

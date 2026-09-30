@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.network_load;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -72,8 +73,12 @@ public final class NetworkLoad implements NetworkProto {
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor);
     }
 
-    public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) {
-        double difficultyAdjustmentFactor = proto.getDifficultyAdjustmentFactor();
-        return new NetworkLoad(proto.getLoad(), difficultyAdjustmentFactor);
+    public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) throws UnresolvableProtobufException {
+        try {
+            double difficultyAdjustmentFactor = proto.getDifficultyAdjustmentFactor();
+            return new NetworkLoad(proto.getLoad(), difficultyAdjustmentFactor);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

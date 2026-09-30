@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.events.buyer;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -25,6 +26,7 @@ import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 
 public class PaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessageSender<MuSigTrade, PaymentInitiatedEvent> {
@@ -36,15 +38,19 @@ public class PaymentInitiatedEventHandler extends MuSigTradeEventHandlerAsMessag
 
     @Override
     public void process(PaymentInitiatedEvent event) {
-        // Buyer calls 'GetPartialSignatures' a second time, this time with the ready-to-release flag set, so that his
-        // previously withheld swapTxInputPartialSignature is revealed, to pass to the seller.
-        PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setBuyerReadyToRelease(true)
-                .build();
-        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
+        try {
+            // Buyer calls 'GetPartialSignatures' a second time, this time with the ready-to-release flag set, so that his
+            // previously withheld swapTxInputPartialSignature is revealed, to pass to the seller.
+            PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setBuyerReadyToRelease(true)
+                    .build();
+            myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
 
-        tradeService.startCloseTradeTimeout(trade, new BuyersCloseTradeTimeoutEvent());
+            tradeService.startCloseTradeTimeout(trade, new BuyersCloseTradeTimeoutEvent());
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

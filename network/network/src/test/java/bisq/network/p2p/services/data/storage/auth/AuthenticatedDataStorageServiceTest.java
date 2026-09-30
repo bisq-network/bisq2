@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -133,7 +134,7 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void refreshWithModifiedCreationDateIsRejected() throws GeneralSecurityException {
+    void refreshWithModifiedCreationDateIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         addToOwnerAndPeer();
         RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         bisq.network.protobuf.RefreshAuthenticatedDataRequest modifiedProto = refreshRequest.toValueProto(false).toBuilder()
@@ -148,7 +149,7 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void refreshWithModifiedVersionIsRejected() throws GeneralSecurityException {
+    void refreshWithModifiedVersionIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         addToOwnerAndPeer();
         RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         RefreshAuthenticatedDataRequest modifiedRefreshRequest = RefreshAuthenticatedDataRequest.fromProto(
@@ -166,7 +167,8 @@ class AuthenticatedDataStorageServiceTest {
     // not relay refresh requests, so only a relay which removes signature V2 on purpose creates such a request.
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void refreshWithoutSignatureV2IsRejected(boolean beforeCutoffDate) throws GeneralSecurityException {
+    void refreshWithoutSignatureV2IsRejected(boolean beforeCutoffDate)
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = beforeCutoffDate ? BEFORE_CUTOFF : AT_CUTOFF;
         addToOwnerAndPeer();
         RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
@@ -189,7 +191,8 @@ class AuthenticatedDataStorageServiceTest {
     // minutes while the user is active, so the result is not a severe failure.
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void refreshOfEarlierVersionIsRejected(boolean beforeCutoffDate) throws GeneralSecurityException {
+    void refreshOfEarlierVersionIsRejected(boolean beforeCutoffDate)
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = beforeCutoffDate ? BEFORE_CUTOFF : AT_CUTOFF;
         addToOwnerAndPeer();
         AuthenticatedDataRequest storedRequest = peerStore.getPersistableStore().getMap().values().iterator().next();
@@ -218,7 +221,7 @@ class AuthenticatedDataStorageServiceTest {
     // A broadcast arrives from several peers. The node applies the first copy of a refresh request. For the later
     // copies the sequence number has not increased.
     @Test
-    void copyOfAppliedRefreshIsNotAppliedAgain() throws GeneralSecurityException {
+    void copyOfAppliedRefreshIsNotAppliedAgain() throws GeneralSecurityException, UnresolvableProtobufException {
         addToOwnerAndPeer();
         List<AuthenticatedData> refreshedData = new ArrayList<>();
         peerStore.addListener(new AuthenticatedDataStorageService.Listener() {
@@ -289,7 +292,8 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void removeRequestWithInvalidSignatureIsNotStoredWithoutEntry() throws GeneralSecurityException {
+    void removeRequestWithInvalidSignatureIsNotStoredWithoutEntry()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         RemoveAuthenticatedDataRequest otherRemoveRequest = RemoveAuthenticatedDataRequest.from(ownerStore,
                 new DefaultAuthenticatedData(new TestDistributedData("other content", ownerKeyPair.getPublic())),
@@ -319,7 +323,8 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void removeRequestWithoutEntryExpiresAfterTtlOfRegisteredMetaData() throws GeneralSecurityException {
+    void removeRequestWithoutEntryExpiresAfterTtlOfRegisteredMetaData()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         // Signature V1 covers only the hash of the data. Signature V2 also covers created, but before the cutoff date
@@ -345,7 +350,8 @@ class AuthenticatedDataStorageServiceTest {
     // Nodes of earlier versions compute expiry, priority and cost factor from the field metaData. A relay sends them the
     // registered MetaData. The hash does not cover the field, so the signature and the storage key stay the same.
     @Test
-    void relayedRemoveAndRefreshRequestsCarryTheRegisteredMetaData() throws GeneralSecurityException {
+    void relayedRemoveAndRefreshRequestsCarryTheRegisteredMetaData()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MetaData forgedMetaData = new MetaData(MetaData.TTL_2_DAYS, MetaData.HIGHEST_PRIORITY,
                 TestDistributedData.class.getSimpleName(), 0);
 
@@ -386,7 +392,8 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void forgedMetaDataOfRemoveRequestChangesNeitherCostFactorNorPriority() throws GeneralSecurityException {
+    void forgedMetaDataOfRemoveRequestChangesNeitherCostFactorNorPriority()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         //noinspection deprecation
         RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
@@ -414,7 +421,8 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void removeRequestWithClassNameOfOtherTypeIsRejected() throws GeneralSecurityException {
+    void removeRequestWithClassNameOfOtherTypeIsRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         // A relay can change className, because the signature does not cover it
         RemoveAuthenticatedDataRequest requestWithOtherClassName = RemoveAuthenticatedDataRequest.fromProto(
@@ -482,7 +490,8 @@ class AuthenticatedDataStorageServiceTest {
 
     @ParameterizedTest
     @ValueSource(ints = {1, 2, Integer.MAX_VALUE})
-    void verifiedRemovalReplacesLegacyRemovalRegardlessOfLegacySequence(int legacySequence) throws GeneralSecurityException {
+    void verifiedRemovalReplacesLegacyRemovalRegardlessOfLegacySequence(int legacySequence)
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(ownerStore.add(add).isSuccess());
@@ -519,7 +528,7 @@ class AuthenticatedDataStorageServiceTest {
     // The store accepts a removal only if it stores it. A node relays the removals which its store accepts (see
     // docs/specifications/network/storage-request-relay.md).
     @Test
-    void removalIsAcceptedOnlyIfTheStoreStoresIt() throws GeneralSecurityException {
+    void removalIsAcceptedOnlyIfTheStoreStoresIt() throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(ownerStore.add(add).isSuccess());
@@ -543,7 +552,7 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void legacyRemovalCannotDiscardVerifiedRemoval() throws GeneralSecurityException {
+    void legacyRemovalCannotDiscardVerifiedRemoval() throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(peerStore.remove(verified).isSuccess());
@@ -556,7 +565,7 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void invalidSignatureV2CannotReplaceLegacyRemoval() throws GeneralSecurityException {
+    void invalidSignatureV2CannotReplaceLegacyRemoval() throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         RemoveAuthenticatedDataRequest legacy = RemoveAuthenticatedDataRequest.fromProto(verified.toValueProto(false).toBuilder()
@@ -571,7 +580,8 @@ class AuthenticatedDataStorageServiceTest {
     }
 
     @Test
-    void legacyRemovalCannotBlockAddWithForgedSequence() throws GeneralSecurityException {
+    void legacyRemovalCannotBlockAddWithForgedSequence()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         RemoveAuthenticatedDataRequest remove = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
@@ -588,7 +598,8 @@ class AuthenticatedDataStorageServiceTest {
     // signature V2 to Integer.MAX_VALUE. If the owner continued from that number, it could not create any request for
     // the data anymore.
     @Test
-    void ownerRepublishesDataAfterLegacyRemovalWithForgedSequence() throws GeneralSecurityException {
+    void ownerRepublishesDataAfterLegacyRemovalWithForgedSequence()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(ownerStore.add(add).isSuccess());
@@ -613,7 +624,8 @@ class AuthenticatedDataStorageServiceTest {
     // Also a removal without signature V2 which the store of an earlier version holds. A removal with signature V2
     // replaces it regardless of the sequence numbers, and the owner continues from the signed number.
     @Test
-    void ownerReplacesPersistedLegacyRemovalWithForgedSequence() throws GeneralSecurityException {
+    void ownerReplacesPersistedLegacyRemovalWithForgedSequence()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         RemoveAuthenticatedDataRequest forged = withoutSignatureV2(
                 RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair), Integer.MAX_VALUE);
@@ -654,7 +666,8 @@ class AuthenticatedDataStorageServiceTest {
     // sequence number and the creation date, which signature V1 does not cover. The creation date does not decide:
     // the node uses its own time.
     @Test
-    void removalWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate() throws GeneralSecurityException {
+    void removalWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(ownerStore.add(add).isSuccess());
         assertTrue(peerStore.add(add).isSuccess());
@@ -737,7 +750,8 @@ class AuthenticatedDataStorageServiceTest {
     // A store which accepted requests without signature V2 does not keep them after the cutoff date. It would not
     // accept them anymore, and other nodes do not accept them from its inventory.
     @Test
-    void entriesWithoutSignatureV2AreRemovedAtLoadFromTheCutoffDateOn() throws GeneralSecurityException {
+    void entriesWithoutSignatureV2AreRemovedAtLoadFromTheCutoffDateOn()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         AddAuthenticatedDataRequest legacyAdd = withoutSignatureV2(
                 AddAuthenticatedDataRequest.from(peerStore, authenticatedData, ownerKeyPair));
@@ -1030,7 +1044,8 @@ class AuthenticatedDataStorageServiceTest {
     // A removal as a relay can change it: without signature V2, and with a sequence number which signature V1 does not
     // cover
     private static RemoveAuthenticatedDataRequest withoutSignatureV2(RemoveAuthenticatedDataRequest request,
-                                                                     int sequenceNumber) {
+                                                                     int sequenceNumber)
+            throws UnresolvableProtobufException {
         return RemoveAuthenticatedDataRequest.fromProto(request.toValueProto(false).toBuilder()
                 .setVersion(1)
                 .clearSignatureV2()

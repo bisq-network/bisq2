@@ -18,6 +18,7 @@
 package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.util.AccountUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -84,18 +85,23 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
         return bisq.account.protobuf.OtherCryptoAssetAccountPayload.newBuilder();
     }
 
-    public static OtherCryptoAssetAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
-        return new OtherCryptoAssetAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                cryptoAssetAccountPayload.getCurrencyCode(),
-                cryptoAssetAccountPayload.getAddress(),
-                cryptoAssetAccountPayload.getIsInstant(),
-                cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty());
+    public static OtherCryptoAssetAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
+            return new OtherCryptoAssetAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    cryptoAssetAccountPayload.getCurrencyCode(),
+                    cryptoAssetAccountPayload.getAddress(),
+                    cryptoAssetAccountPayload.getIsInstant(),
+                    cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -19,6 +19,8 @@ package bisq.support.mediation.mu_sig;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -53,10 +55,15 @@ final class MuSigMediatorStore implements PersistableStore<MuSigMediatorStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigMediatorStore fromProto(bisq.support.protobuf.MuSigMediatorStore proto) {
-        return new MuSigMediatorStore(proto.getMuSigMediationCasesList()
-                .stream().map(MuSigMediationCase::fromProto)
-                .collect(Collectors.toSet()));
+    public static MuSigMediatorStore fromProto(bisq.support.protobuf.MuSigMediatorStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigMediatorStore(ProtobufUtils.fromProtoStream(proto.getMuSigMediationCasesList(),
+                            MuSigMediationCase::fromProto)
+                    .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

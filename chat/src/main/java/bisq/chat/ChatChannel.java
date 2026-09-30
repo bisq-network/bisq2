@@ -26,6 +26,7 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -72,7 +73,8 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
         return unsafeToProto(serializeForHash);
     }
 
-    public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
+    public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case TWOPARTYPRIVATECHATCHANNEL ->
                     TwoPartyPrivateChatChannel.fromProto(proto, proto.getTwoPartyPrivateChatChannel());

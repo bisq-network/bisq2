@@ -20,6 +20,7 @@ package bisq.trade.mu_sig;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.support.arbitration.mu_sig.MuSigArbitrationResult;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
@@ -69,22 +70,27 @@ public final class MuSigTradeDispute implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigTradeDispute fromProto(bisq.trade.protobuf.MuSigTradeDispute proto) {
-        return new MuSigTradeDispute(
-                MuSigDisputeState.fromProto(proto.getDisputeState()),
-                proto.hasMuSigMediationResult()
-                        ? Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult()))
-                        : Optional.empty(),
-                proto.hasMediationResultSignature()
-                        ? Optional.of(proto.getMediationResultSignature().toByteArray())
-                        : Optional.empty(),
-                proto.hasMuSigArbitrationResult()
-                        ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
-                        : Optional.empty(),
-                proto.hasArbitrationResultSignature()
-                        ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
-                        : Optional.empty()
-        );
+    public static MuSigTradeDispute fromProto(bisq.trade.protobuf.MuSigTradeDispute proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigTradeDispute(
+                    MuSigDisputeState.fromProto(proto.getDisputeState()),
+                    proto.hasMuSigMediationResult()
+                            ? Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult()))
+                            : Optional.empty(),
+                    proto.hasMediationResultSignature()
+                            ? Optional.of(proto.getMediationResultSignature().toByteArray())
+                            : Optional.empty(),
+                    proto.hasMuSigArbitrationResult()
+                            ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
+                            : Optional.empty(),
+                    proto.hasArbitrationResultSignature()
+                            ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
+                            : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public void setDisputeState(MuSigDisputeState disputeState) {

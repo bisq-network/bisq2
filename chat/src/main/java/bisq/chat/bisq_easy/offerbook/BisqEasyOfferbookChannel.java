@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.common.market.Market;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
@@ -62,11 +63,16 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
     }
 
     public static BisqEasyOfferbookChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                     bisq.chat.protobuf.BisqEasyOfferbookChannel proto) {
-        return new BisqEasyOfferbookChannel(
-                baseProto.getId(),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
-                Market.fromProto(proto.getMarket()));
+                                                     bisq.chat.protobuf.BisqEasyOfferbookChannel proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyOfferbookChannel(
+                    baseProto.getId(),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
+                    Market.fromProto(proto.getMarket()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

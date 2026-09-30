@@ -174,6 +174,44 @@ public static Channel<? extends ChatMessage> fromProto(bisq.social.protobuf.Chan
     }
 ```
 
+### Errors in fromProto
+
+Every `fromProto` and `fromAny` method declares the checked `UnresolvableProtobufException`. A protobuf message which
+a node receives from the network or reads from disk can describe an invalid object, so each caller has to decide how
+to handle this case.
+
+- `UnresolvableProtobufMessageException` (unknown message type or `Any` type) and `UnresolvableProtobufEnumException`
+  (unknown enum value without a fallback) are subclasses of `UnresolvableProtobufException`.
+- A `fromProto` method converts every `RuntimeException` of its own code into `UnresolvableProtobufException`, for
+  example the `IllegalArgumentException` of the `verify` method of a constructor. So a caller does not need to catch
+  `RuntimeException`. The conversion is only needed where the method itself can fail, not in a method which only
+  selects another `fromProto` method or converts an enum with a fallback value.
+- The functional interfaces of `java.util.function` cannot throw checked exceptions. Use
+  `ProtobufUtils.fromProtoStream(list, Foo::fromProto)` instead of `list.stream().map(Foo::fromProto)`, and
+  `ProtobufUtils.fromProtoEntryStream(map, Foo::fromProto)` to convert the values of a protobuf map.
+
+A caller handles the exception or declares it:
+
+- A caller which converts a collection decides what fails: one entry or the whole collection. For example
+  `DataStore` skips a persisted entry which it cannot convert and keeps the other entries.
+- `ProtoResolverMap` propagates conversion failures without logging them. The caller owns recovery and reporting,
+  including any limit on diagnostics for a collection. Logging inside the resolver would bypass that limit.
+- A caller which cannot throw a checked exception, for example a gRPC `StreamObserver` or a `CompletableFuture`
+  stage, rethrows it as an unchecked exception. A caller which converts its own data, for example to copy an object,
+  does the same, as a failure is a bug.
+
+```
+public static PeerExchangeRequest fromProto(bisq.network.protobuf.PeerExchangeRequest proto)
+        throws UnresolvableProtobufException {
+    try {
+        return new PeerExchangeRequest(proto.getNonce(),
+                ProtobufUtils.fromProtoStream(proto.getPeersList(), Peer::fromProto).collect(Collectors.toList()));
+    } catch (RuntimeException e) {
+        throw new UnresolvableProtobufException(e);
+    }
+}
+```
+
 ### Maps in protobuf
 
 [Maps](https://developers.google.com/protocol-buffers/docs/proto3#maps) in protobuf have some limitations. If we need a

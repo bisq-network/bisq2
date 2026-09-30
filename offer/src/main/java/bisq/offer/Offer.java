@@ -22,6 +22,7 @@ import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.market.Market;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -150,7 +151,8 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
     }
 
 
-    public static Offer<? extends PaymentMethodSpec<?>, ? extends PaymentMethodSpec<?>> fromProto(bisq.offer.protobuf.Offer proto) {
+    public static Offer<? extends PaymentMethodSpec<?>, ? extends PaymentMethodSpec<?>> fromProto(bisq.offer.protobuf.Offer proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case BISQEASYOFFER -> BisqEasyOffer.fromProto(proto);
             case MUSIGOFFER -> MuSigOffer.fromProto(proto);

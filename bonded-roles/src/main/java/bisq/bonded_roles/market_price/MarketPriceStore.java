@@ -22,6 +22,8 @@ import bisq.common.market.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -30,6 +32,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -59,12 +62,21 @@ final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MarketPriceStore fromProto(bisq.bonded_roles.protobuf.MarketPriceStore proto) {
-        Map<Market, MarketPrice> map = proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
-                .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
-                .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
-                        e -> MarketPrice.fromProto(e.getValue())));
-        return new MarketPriceStore(map, Market.fromProto(proto.getSelectedMarket()));
+    public static MarketPriceStore fromProto(bisq.bonded_roles.protobuf.MarketPriceStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            List<Map.Entry<String, bisq.bonded_roles.protobuf.MarketPrice>> entriesOfKnownMarkets =
+                    proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
+                            .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
+                            .toList();
+            Map<Market, MarketPrice> map = ProtobufUtils.fromProtoStream(entriesOfKnownMarkets,
+                            e -> Map.entry(MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
+                                    MarketPrice.fromProto(e.getValue())))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            return new MarketPriceStore(map, Market.fromProto(proto.getSelectedMarket()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

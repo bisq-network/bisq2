@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.security.keys.KeyGeneration;
@@ -41,7 +42,8 @@ class DataRequestVersionTest {
             new MetaData(MetaData.TTL_10_DAYS, "TestDistributedData").toProto(false);
 
     @Test
-    void removeAuthenticatedDataRequestExcludesMetaDataFromHashInVersion1() throws InvalidProtocolBufferException {
+    void removeAuthenticatedDataRequestExcludesMetaDataFromHashInVersion1()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.fromProto(
                 bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
                         .setVersion(1)
@@ -59,7 +61,8 @@ class DataRequestVersionTest {
     }
 
     @Test
-    void removeMailboxRequestExcludesMetaDataFromHashInVersion1() throws InvalidProtocolBufferException {
+    void removeMailboxRequestExcludesMetaDataFromHashInVersion1()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         RemoveMailboxRequest request = RemoveMailboxRequest.fromProto(
                 bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
                         .setVersion(1)
@@ -76,7 +79,8 @@ class DataRequestVersionTest {
     }
 
     @Test
-    void removeAuthenticatedDataRequestExcludesClassNameFromHash() throws InvalidProtocolBufferException {
+    void removeAuthenticatedDataRequestExcludesClassNameFromHash()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.fromProto(
                 removeAuthenticatedDataRequestProto().setClassName("TestDistributedData").build());
 
@@ -86,7 +90,7 @@ class DataRequestVersionTest {
     }
 
     @Test
-    void removeAuthenticatedDataRequestWithoutClassNameUsesClassNameOfMetaData() {
+    void removeAuthenticatedDataRequestWithoutClassNameUsesClassNameOfMetaData() throws UnresolvableProtobufException {
         // Nodes of earlier versions send no className
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.fromProto(
                 removeAuthenticatedDataRequestProto().build());
@@ -95,7 +99,7 @@ class DataRequestVersionTest {
     }
 
     @Test
-    void refreshAuthenticatedDataRequestReportsVersion() {
+    void refreshAuthenticatedDataRequestReportsVersion() throws UnresolvableProtobufException {
         RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.fromProto(
                 refreshAuthenticatedDataRequestProto().build());
 
@@ -103,7 +107,8 @@ class DataRequestVersionTest {
     }
 
     @Test
-    void refreshAuthenticatedDataRequestExcludesClassNameFromHash() throws InvalidProtocolBufferException {
+    void refreshAuthenticatedDataRequestExcludesClassNameFromHash()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
         RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.fromProto(
                 refreshAuthenticatedDataRequestProto().setClassName("TestDistributedData").build());
 
@@ -114,7 +119,7 @@ class DataRequestVersionTest {
     }
 
     @Test
-    void refreshAuthenticatedDataRequestWithoutClassNameUsesClassNameOfMetaData() {
+    void refreshAuthenticatedDataRequestWithoutClassNameUsesClassNameOfMetaData() throws UnresolvableProtobufException {
         // Nodes of earlier versions send no className
         RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.fromProto(
                 refreshAuthenticatedDataRequestProto().build());

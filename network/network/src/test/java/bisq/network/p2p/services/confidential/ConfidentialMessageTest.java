@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.confidential;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.ConfidentialData;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -34,7 +36,7 @@ class ConfidentialMessageTest {
     private static final String RECEIVER_KEY_ID = "receiverKeyId";
 
     @Test
-    void validMessageIsCreated() {
+    void validMessageIsCreated() throws UnresolvableProtobufException {
         ConfidentialMessage message = ConfidentialMessage.fromProto(createProto());
 
         assertFalse(message.isDataInvalid());
@@ -48,7 +50,7 @@ class ConfidentialMessageTest {
     }
 
     @Test
-    void messageWithoutReceiverKeyIdCannotBeCreated() {
+    void messageWithoutReceiverKeyIdCannotBeCreated() throws UnresolvableProtobufException {
         ConfidentialData confidentialData = ConfidentialMessage.fromProto(createProto()).getConfidentialData();
 
         assertThrows(NullPointerException.class, () -> new ConfidentialMessage(confidentialData, null));
@@ -60,7 +62,9 @@ class ConfidentialMessageTest {
     void receivedMessageWithoutConfidentialDataIsRejected() {
         bisq.network.protobuf.ConfidentialMessage proto = createProto().toBuilder().clearConfidentialData().build();
 
-        assertThrows(IllegalArgumentException.class, () -> ConfidentialMessage.fromProto(proto));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> ConfidentialMessage.fromProto(proto)).getCause());
     }
 
     // The storage layer does not decrypt the message, so the content does not need to be valid cipher text

@@ -23,6 +23,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -181,9 +182,10 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                 .setSignatureV2(ByteString.copyFrom(signatureV2));
     }
 
-    public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto) {
-        byte[] receiverPublicKeyBytes = proto.getReceiverPublicKeyBytes().toByteArray();
+    public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto)
+            throws UnresolvableProtobufException {
         try {
+            byte[] receiverPublicKeyBytes = proto.getReceiverPublicKeyBytes().toByteArray();
             PublicKey receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
             //noinspection deprecation
             MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
@@ -209,9 +211,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                     className,
                     proto.getSignatureV2().toByteArray()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key");
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 
@@ -283,7 +284,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         CanonicalSchema<RemoveMailboxRequest> schema = switch (encodingPurpose) {
             case DEFAULT -> DEFAULT_SCHEMA;
             case SIGNATURE -> SIGNATURE_V2_SCHEMA;
-            case STORAGE_KEY -> throw new IllegalArgumentException("Storage key not supported for RemoveMailboxRequest");
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for RemoveMailboxRequest");
             case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
             case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
         };

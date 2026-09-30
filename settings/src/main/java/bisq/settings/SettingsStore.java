@@ -27,6 +27,8 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.node.network_load.NetworkLoad;
@@ -277,92 +279,96 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     @SuppressWarnings("deprecation")
-    public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
-        double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
-        if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||
-                maxTradePriceDeviation > MAX_TRADE_PRICE_DEVIATION) {
-            maxTradePriceDeviation = DEFAULT_MAX_TRADE_PRICE_DEVIATION;
-        }
+    public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
+            if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||
+                    maxTradePriceDeviation > MAX_TRADE_PRICE_DEVIATION) {
+                maxTradePriceDeviation = DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+            }
 
-        // Absent proto3 doubles deserialize as 0; normalize to the default like maxTradePriceDeviation.
-        double priceDeviationWarningThreshold = proto.getPriceDeviationWarningThreshold();
-        // Negated inclusive-range form so NaN also normalizes to the default.
-        if (!(priceDeviationWarningThreshold >= MIN_PRICE_DEVIATION_WARNING_THRESHOLD &&
-                priceDeviationWarningThreshold <= MAX_PRICE_DEVIATION_WARNING_THRESHOLD)) {
-            priceDeviationWarningThreshold = DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD;
-        }
+            // Absent proto3 doubles deserialize as 0; normalize to the default like maxTradePriceDeviation.
+            double priceDeviationWarningThreshold = proto.getPriceDeviationWarningThreshold();
+            // Negated inclusive-range form so NaN also normalizes to the default.
+            if (!(priceDeviationWarningThreshold >= MIN_PRICE_DEVIATION_WARNING_THRESHOLD &&
+                    priceDeviationWarningThreshold <= MAX_PRICE_DEVIATION_WARNING_THRESHOLD)) {
+                priceDeviationWarningThreshold = DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD;
+            }
 
-        double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
-        if (totalMaxBackupSizeInMB == 0) {
-            totalMaxBackupSizeInMB = DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
-        }
+            double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
+            if (totalMaxBackupSizeInMB == 0) {
+                totalMaxBackupSizeInMB = DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
+            }
 
-        int numDaysAfterRedactingTradeData = proto.getNumDaysAfterRedactingTradeData();
-        if (numDaysAfterRedactingTradeData < MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
-                numDaysAfterRedactingTradeData > MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
-            numDaysAfterRedactingTradeData = DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
-        }
+            int numDaysAfterRedactingTradeData = proto.getNumDaysAfterRedactingTradeData();
+            if (numDaysAfterRedactingTradeData < MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
+                    numDaysAfterRedactingTradeData > MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
+                numDaysAfterRedactingTradeData = DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+            }
 
-        String countryCode = proto.getCountryCode();
-        if (StringUtils.isEmpty(countryCode)) {
-            countryCode = CountryRepository.getDefaultCountry().getCode();
-        }
+            String countryCode = proto.getCountryCode();
+            if (StringUtils.isEmpty(countryCode)) {
+                countryCode = CountryRepository.getDefaultCountry().getCode();
+            }
 
-        String currencyCode = proto.getCurrencyCode();
-        if (StringUtils.isEmpty(currencyCode)) {
-            currencyCode = FiatCurrencyRepository.getDefaultCurrency().getCode();
+            String currencyCode = proto.getCurrencyCode();
+            if (StringUtils.isEmpty(currencyCode)) {
+                currencyCode = FiatCurrencyRepository.getDefaultCurrency().getCode();
+            }
+    // ,
+            Market muSigLastSelectedFiatMarket = proto.hasMuSigLastSelectedFiatMarket()
+                    ? Market.fromProto(proto.getMuSigLastSelectedFiatMarket())
+                    : MarketRepository.getDefaultBtcFiatMarket();
+            Market muSigLastSelectedOtherMarket = proto.hasMuSigLastSelectedOtherMarket()
+                    ? Market.fromProto(proto.getMuSigLastSelectedOtherMarket())
+                    : MarketRepository.getDefaultCryptoBtcMarket();
+            return new SettingsStore(Cookie.fromProto(proto.getCookie()),
+                    proto.getDontShowAgainMapMap().entrySet().stream()
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+                    proto.getUseAnimations(),
+                    Market.fromProto(proto.getSelectedMuSigMarket()),
+                    proto.getMinRequiredReputationScore(),
+                    proto.getOffersOnly(),
+                    proto.getBisqEasyTradeRulesConfirmed(),
+                    proto.getMuSigTradeRulesConfirmed(),
+                    ChatNotificationType.fromProto(proto.getChatNotificationType()),
+                    proto.getIsTacAccepted(),
+                    ProtobufUtils.fromProtoStream(proto.getTacAcceptancesList(), TacAcceptance::fromProto)
+                            .collect(Collectors.toList()),
+                    new HashSet<>(proto.getConsumedAlertIdsList()),
+                    proto.getCloseMyOfferWhenTaken(),
+                    proto.getLanguageTag(),
+                    countryCode,
+                    currencyCode,
+                    proto.getPreventStandbyMode(),
+                    new HashSet<>(proto.getSupportedLanguageTagsList()),
+                    proto.getDifficultyAdjustmentFactor(),
+                    proto.getIgnoreDiffAdjustmentFromSecManager(),
+                    new HashSet<>(ProtobufUtils.fromProtoStream(proto.getFavouriteMarketsList(),
+                                    Market::fromProto).collect(Collectors.toSet())),
+                    proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
+                    maxTradePriceDeviation,
+                    proto.getShowBuyOffers(),
+                    proto.getShowOfferListExpanded(),
+                    proto.getShowMarketSelectionListCollapsed(),
+                    proto.getBackupLocation(),
+                    proto.getShowMyOffersOnly(),
+                    totalMaxBackupSizeInMB,
+                    ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
+                    numDaysAfterRedactingTradeData,
+                    proto.getMuSigActivated(),
+                    proto.getAutoAddToContactsList(),
+                    muSigLastSelectedFiatMarket,
+                    muSigLastSelectedOtherMarket,
+                    proto.hasSelectedWalletMarket()
+                            ? Market.fromProto(proto.getSelectedWalletMarket())
+                            : MarketRepository.getDefaultBtcFiatMarket(),
+                    proto.getShowLatestTxs(),
+                    priceDeviationWarningThreshold);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-// ,
-        Market muSigLastSelectedFiatMarket = proto.hasMuSigLastSelectedFiatMarket()
-                ? Market.fromProto(proto.getMuSigLastSelectedFiatMarket())
-                : MarketRepository.getDefaultBtcFiatMarket();
-        Market muSigLastSelectedOtherMarket = proto.hasMuSigLastSelectedOtherMarket()
-                ? Market.fromProto(proto.getMuSigLastSelectedOtherMarket())
-                : MarketRepository.getDefaultCryptoBtcMarket();
-        return new SettingsStore(Cookie.fromProto(proto.getCookie()),
-                proto.getDontShowAgainMapMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
-                proto.getUseAnimations(),
-                Market.fromProto(proto.getSelectedMuSigMarket()),
-                proto.getMinRequiredReputationScore(),
-                proto.getOffersOnly(),
-                proto.getBisqEasyTradeRulesConfirmed(),
-                proto.getMuSigTradeRulesConfirmed(),
-                ChatNotificationType.fromProto(proto.getChatNotificationType()),
-                proto.getIsTacAccepted(),
-                proto.getTacAcceptancesList().stream()
-                        .map(TacAcceptance::fromProto)
-                        .collect(Collectors.toList()),
-                new HashSet<>(proto.getConsumedAlertIdsList()),
-                proto.getCloseMyOfferWhenTaken(),
-                proto.getLanguageTag(),
-                countryCode,
-                currencyCode,
-                proto.getPreventStandbyMode(),
-                new HashSet<>(proto.getSupportedLanguageTagsList()),
-                proto.getDifficultyAdjustmentFactor(),
-                proto.getIgnoreDiffAdjustmentFromSecManager(),
-                new HashSet<>(proto.getFavouriteMarketsList().stream()
-                        .map(Market::fromProto).collect(Collectors.toSet())),
-                proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
-                maxTradePriceDeviation,
-                proto.getShowBuyOffers(),
-                proto.getShowOfferListExpanded(),
-                proto.getShowMarketSelectionListCollapsed(),
-                proto.getBackupLocation(),
-                proto.getShowMyOffersOnly(),
-                totalMaxBackupSizeInMB,
-                ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
-                numDaysAfterRedactingTradeData,
-                proto.getMuSigActivated(),
-                proto.getAutoAddToContactsList(),
-                muSigLastSelectedFiatMarket,
-                muSigLastSelectedOtherMarket,
-                proto.hasSelectedWalletMarket()
-                        ? Market.fromProto(proto.getSelectedWalletMarket())
-                        : MarketRepository.getDefaultBtcFiatMarket(),
-                proto.getShowLatestTxs(),
-                priceDeviationWarningThreshold);
     }
 
     @Override

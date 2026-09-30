@@ -23,6 +23,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.SignatureValidation;
@@ -148,9 +149,10 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                 .setSignatureV2(ByteString.copyFrom(signatureV2));
     }
 
-    public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto) {
-        byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
+    public static RefreshAuthenticatedDataRequest fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest proto)
+            throws UnresolvableProtobufException {
         try {
+            byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
             //noinspection deprecation
             MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
@@ -174,9 +176,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
                     className,
                     proto.getSignatureV2().toByteArray()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key");
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

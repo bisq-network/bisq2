@@ -18,6 +18,7 @@
 package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -59,8 +60,13 @@ public final class AuthorizeTimestampRequest implements MailboxMessage, External
                 .setDate(date);
     }
 
-    public static AuthorizeTimestampRequest fromProto(bisq.user.protobuf.AuthorizeTimestampRequest proto) {
-        return new AuthorizeTimestampRequest(proto.getProfileId(), proto.getDate());
+    public static AuthorizeTimestampRequest fromProto(bisq.user.protobuf.AuthorizeTimestampRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizeTimestampRequest(proto.getProfileId(), proto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

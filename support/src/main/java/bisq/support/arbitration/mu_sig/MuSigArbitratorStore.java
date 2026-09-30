@@ -19,6 +19,8 @@ package bisq.support.arbitration.mu_sig;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -53,10 +55,15 @@ final class MuSigArbitratorStore implements PersistableStore<MuSigArbitratorStor
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigArbitratorStore fromProto(bisq.support.protobuf.MuSigArbitratorStore proto) {
-        return new MuSigArbitratorStore(proto.getMuSigArbitrationCasesList()
-                .stream().map(MuSigArbitrationCase::fromProto)
-                .collect(Collectors.toSet()));
+    public static MuSigArbitratorStore fromProto(bisq.support.protobuf.MuSigArbitratorStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigArbitratorStore(ProtobufUtils.fromProtoStream(proto.getMuSigArbitrationCasesList(),
+                            MuSigArbitrationCase::fromProto)
+                    .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

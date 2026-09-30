@@ -19,6 +19,8 @@ package bisq.support.arbitration.mu_sig;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.mu_sig.MuSigContract;
@@ -125,17 +127,21 @@ public final class MuSigArbitrationRequest implements
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static MuSigArbitrationRequest fromProto(bisq.support.protobuf.MuSigArbitrationRequest proto) {
-        return new MuSigArbitrationRequest(proto.getTradeId(),
-                MuSigContract.fromProto(proto.getContract()),
-                MuSigMediationResult.fromProto(proto.getMuSigMediationResult()),
-                proto.getMediationResultSignature().toByteArray(),
-                UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()),
-                proto.getChatMessagesList().stream()
-                        .map(MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()),
-                NetworkId.fromProto(proto.getArbitratorNetworkId()));
+    public static MuSigArbitrationRequest fromProto(bisq.support.protobuf.MuSigArbitrationRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigArbitrationRequest(proto.getTradeId(),
+                    MuSigContract.fromProto(proto.getContract()),
+                    MuSigMediationResult.fromProto(proto.getMuSigMediationResult()),
+                    proto.getMediationResultSignature().toByteArray(),
+                    UserProfile.fromProto(proto.getRequester()),
+                    UserProfile.fromProto(proto.getPeer()),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList()),
+                    NetworkId.fromProto(proto.getArbitratorNetworkId()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

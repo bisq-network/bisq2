@@ -23,6 +23,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.SignatureValidation;
@@ -157,9 +158,10 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                 .setVersion(version);
     }
 
-    public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto) {
-        byte[] senderPublicKeyBytes = proto.getSenderPublicKeyBytes().toByteArray();
+    public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto)
+            throws UnresolvableProtobufException {
         try {
+            byte[] senderPublicKeyBytes = proto.getSenderPublicKeyBytes().toByteArray();
             PublicKey senderPublicKey = KeyGeneration.generatePublic(senderPublicKeyBytes);
             return new AddMailboxRequest(
                     MailboxSequentialData.fromProto(proto.getMailboxSequentialData()),
@@ -169,9 +171,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                     proto.getSignatureV2().toByteArray(),
                     proto.getVersion()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key", e);
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

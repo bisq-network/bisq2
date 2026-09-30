@@ -22,6 +22,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -120,7 +121,11 @@ public final class FixPriceSpec implements PriceSpec {
         return unsafeToProto(serializeForHash);
     }
 
-    public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) {
-        return new FixPriceSpec(PriceQuote.fromProto(proto.getPriceQuote()));
+    public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) throws UnresolvableProtobufException {
+        try {
+            return new FixPriceSpec(PriceQuote.fromProto(proto.getPriceQuote()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }
