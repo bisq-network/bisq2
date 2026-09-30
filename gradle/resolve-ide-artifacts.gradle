@@ -1,0 +1,19 @@
+gradle.rootProject { root ->
+    root.tasks.register('resolveIdeArtifactsForVerification') {
+        group = 'verification'
+        description = 'Resolves sources and Javadoc for the dependency specified by verificationDependency.'
+
+        doLast {
+            def coordinate = root.findProperty('verificationDependency')
+            if (!coordinate) {
+                throw new GradleException('Supply -PverificationDependency=group:name:version')
+            }
+            ['sources', 'javadoc'].each { classifier ->
+                def dependency = root.dependencies.create("${coordinate}:${classifier}@jar")
+                root.configurations.detachedConfiguration(dependency).resolve().each {
+                    println("Resolved IDE artifact: ${it.name}")
+                }
+            }
+        }
+    }
+}
