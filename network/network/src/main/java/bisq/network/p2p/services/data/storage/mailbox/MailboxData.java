@@ -22,6 +22,7 @@ import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -100,24 +101,28 @@ public final class MailboxData implements StorageData, Canonical {
                 .setClassName(className);
     }
 
-    public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) {
-        //noinspection deprecation
-        MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
-        // Nodes of earlier versions do not send className.
-        String className = proto.getClassName().isEmpty() ?
-                receivedMetaData.getClassName() :
-                proto.getClassName();
-        // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or relay
-        // chose. In these versions serializeForHash() does not contain metaData, so the signature and the storage key
-        // of the AddMailboxRequest and the proof of work payload do not change.
-        MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
-                StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
-                receivedMetaData;
-        return new MailboxData(
-                proto.getVersion(),
-                metaData,
-                ConfidentialMessage.fromProto(proto.getConfidentialMessage()),
-                className);
+    public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) throws UnresolvableProtobufException {
+        try {
+            //noinspection deprecation
+            MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
+            // Nodes of earlier versions do not send className.
+            String className = proto.getClassName().isEmpty() ?
+                    receivedMetaData.getClassName() :
+                    proto.getClassName();
+            // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or relay
+            // chose. In these versions serializeForHash() does not contain metaData, so the signature and the storage key
+            // of the AddMailboxRequest and the proof of work payload do not change.
+            MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
+                    StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
+                    receivedMetaData;
+            return new MailboxData(
+                    proto.getVersion(),
+                    metaData,
+                    ConfidentialMessage.fromProto(proto.getConfidentialMessage()),
+                    className);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

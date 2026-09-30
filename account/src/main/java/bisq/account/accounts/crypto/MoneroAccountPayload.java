@@ -20,6 +20,7 @@ package bisq.account.accounts.crypto;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -127,26 +128,31 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
         return builder;
     }
 
-    public static MoneroAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
-        var monero = cryptoAssetAccountPayload.getMoneroAccountPayload();
-        return new MoneroAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                cryptoAssetAccountPayload.getCurrencyCode(),
-                cryptoAssetAccountPayload.getAddress(),
-                cryptoAssetAccountPayload.getIsInstant(),
-                cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty(),
-                monero.getUseSubAddresses(),
-                monero.hasMainAddress() ? Optional.of(monero.getMainAddress()) : Optional.empty(),
-                monero.hasPrivateViewKey() ? Optional.of(monero.getPrivateViewKey()) : Optional.empty(),
-                monero.hasSubAddress() ? Optional.of(monero.getSubAddress()) : Optional.empty(),
-                monero.hasAccountIndex() ? Optional.of(monero.getAccountIndex()) : Optional.empty(),
-                monero.hasInitialSubAddressIndex() ? Optional.of(monero.getInitialSubAddressIndex()) : Optional.empty()
-        );
+    public static MoneroAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
+            var monero = cryptoAssetAccountPayload.getMoneroAccountPayload();
+            return new MoneroAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    cryptoAssetAccountPayload.getCurrencyCode(),
+                    cryptoAssetAccountPayload.getAddress(),
+                    cryptoAssetAccountPayload.getIsInstant(),
+                    cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty(),
+                    monero.getUseSubAddresses(),
+                    monero.hasMainAddress() ? Optional.of(monero.getMainAddress()) : Optional.empty(),
+                    monero.hasPrivateViewKey() ? Optional.of(monero.getPrivateViewKey()) : Optional.empty(),
+                    monero.hasSubAddress() ? Optional.of(monero.getSubAddress()) : Optional.empty(),
+                    monero.hasAccountIndex() ? Optional.of(monero.getAccountIndex()) : Optional.empty(),
+                    monero.hasInitialSubAddressIndex() ? Optional.of(monero.getInitialSubAddressIndex()) : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

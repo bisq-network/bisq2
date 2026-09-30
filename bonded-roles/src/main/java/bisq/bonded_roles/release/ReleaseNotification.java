@@ -22,6 +22,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.platform.Version;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -150,19 +151,24 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto) {
-        return new ReleaseNotification(
-                proto.getVersion(),
-                proto.getId(),
-                proto.getDate(),
-                proto.getIsPreRelease(),
-                proto.getIsLauncherUpdate(),
-                proto.getReleaseNotes(),
-                proto.getVersionString(),
-                proto.getReleaseManagerProfileId(),
-                proto.getStaticPublicKeysProvided(),
-                AppType.fromProto(proto.getAppType())
-        );
+    public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ReleaseNotification(
+                    proto.getVersion(),
+                    proto.getId(),
+                    proto.getDate(),
+                    proto.getIsPreRelease(),
+                    proto.getIsLauncherUpdate(),
+                    proto.getReleaseNotes(),
+                    proto.getVersionString(),
+                    proto.getReleaseManagerProfileId(),
+                    proto.getStaticPublicKeysProvided(),
+                    AppType.fromProto(proto.getAppType())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

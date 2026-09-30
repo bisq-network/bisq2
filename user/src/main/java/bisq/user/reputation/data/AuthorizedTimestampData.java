@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -100,13 +101,18 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto) {
-        return new AuthorizedTimestampData(
-                proto.getVersion(),
-                proto.getProfileId(),
-                proto.getDate(),
-                proto.getStaticPublicKeysProvided()
-        );
+    public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizedTimestampData(
+                    proto.getVersion(),
+                    proto.getProfileId(),
+                    proto.getDate(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

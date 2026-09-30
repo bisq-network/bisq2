@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.PaymentAccountValidation;
@@ -89,14 +90,19 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
                 .setEmailOrMobileNr(emailOrMobileNr);
     }
 
-    public static MoneyBeamAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var payload = proto.getCountryBasedAccountPayload().getMoneyBeamAccountPayload();
-        return new MoneyBeamAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                proto.getCountryBasedAccountPayload().getCountryCode(),
-                payload.getHolderName(),
-                payload.getEmailOrMobileNr());
+    public static MoneyBeamAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getMoneyBeamAccountPayload();
+            return new MoneyBeamAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    proto.getCountryBasedAccountPayload().getCountryCode(),
+                    payload.getHolderName(),
+                    payload.getEmailOrMobileNr());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.network.Address;
 import bisq.common.network.DefaultPeerSocket;
 import bisq.common.network.PeerSocket;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -120,11 +121,16 @@ public final class ConnectionHandshake {
             return builder;
         }
 
-        public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
-            return new Request(Capability.fromProto(proto.getCapability()),
-                    proto.hasAddressOwnershipProof() ? Optional.of(proto.getAddressOwnershipProof().toByteArray()) : Optional.empty(),
-                    NetworkLoad.fromProto(proto.getNetworkLoad()),
-                    proto.getSignatureDate());
+        public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto)
+                throws UnresolvableProtobufException {
+            try {
+                return new Request(Capability.fromProto(proto.getCapability()),
+                        proto.hasAddressOwnershipProof() ? Optional.of(proto.getAddressOwnershipProof().toByteArray()) : Optional.empty(),
+                        NetworkLoad.fromProto(proto.getNetworkLoad()),
+                        proto.getSignatureDate());
+            } catch (RuntimeException e) {
+                throw new UnresolvableProtobufException(e);
+            }
         }
     }
 
@@ -163,9 +169,14 @@ public final class ConnectionHandshake {
                     .setNetworkLoad(networkLoad.toProto(serializeForHash));
         }
 
-        public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto) {
-            return new Response(Capability.fromProto(proto.getCapability()),
-                    NetworkLoad.fromProto(proto.getNetworkLoad()));
+        public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto)
+                throws UnresolvableProtobufException {
+            try {
+                return new Response(Capability.fromProto(proto.getCapability()),
+                        NetworkLoad.fromProto(proto.getNetworkLoad()));
+            } catch (RuntimeException e) {
+                throw new UnresolvableProtobufException(e);
+            }
         }
     }
 

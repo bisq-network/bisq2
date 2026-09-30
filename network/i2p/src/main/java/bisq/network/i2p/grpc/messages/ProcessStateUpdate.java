@@ -19,6 +19,7 @@ package bisq.network.i2p.grpc.messages;
 
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.i2p.router.state.ProcessState;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,7 +53,12 @@ public final class ProcessStateUpdate implements Proto {
                 .setValue(value.toProtoEnum());
     }
 
-    public static ProcessStateUpdate fromProto(bisq.bi2p.protobuf.ProcessStateUpdate proto) {
-        return new ProcessStateUpdate(ProcessState.fromProto(proto.getValue()));
+    public static ProcessStateUpdate fromProto(bisq.bi2p.protobuf.ProcessStateUpdate proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ProcessStateUpdate(ProcessState.fromProto(proto.getValue()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -18,6 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -70,19 +71,24 @@ public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
                 .setIsRemoved(isRemoved);
     }
 
-    public static MuSigOpenTradeMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
-        bisq.chat.protobuf.MuSigOpenTradeMessageReaction privateChatMessageReaction = baseProto.getMuSigOpenTradeMessageReaction();
-        return new MuSigOpenTradeMessageReaction(
-                baseProto.getId(),
-                UserProfile.fromProto(privateChatMessageReaction.getSender()),
-                privateChatMessageReaction.getReceiverUserProfileId(),
-                NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate(),
-                privateChatMessageReaction.getIsRemoved());
+    public static MuSigOpenTradeMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.chat.protobuf.MuSigOpenTradeMessageReaction privateChatMessageReaction = baseProto.getMuSigOpenTradeMessageReaction();
+            return new MuSigOpenTradeMessageReaction(
+                    baseProto.getId(),
+                    UserProfile.fromProto(privateChatMessageReaction.getSender()),
+                    privateChatMessageReaction.getReceiverUserProfileId(),
+                    NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate(),
+                    privateChatMessageReaction.getIsRemoved());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

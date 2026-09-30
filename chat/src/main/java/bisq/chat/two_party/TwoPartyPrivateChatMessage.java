@@ -23,6 +23,8 @@ import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -91,27 +93,32 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
                         .collect(Collectors.toList()));
     }
 
-    public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation()
-                ? Optional.of(Citation.fromProto(baseProto.getCitation()))
-                : Optional.empty();
-        bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
-        return new TwoPartyPrivateChatMessage(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                UserProfile.fromProto(privateChatMessage.getSender()),
-                privateChatMessage.getReceiverUserProfileId(),
-                NetworkId.fromProto(privateChatMessage.getReceiverNetworkId()),
-                baseProto.getText(),
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                privateChatMessage.getChatMessageReactionsList().stream()
-                        .map(TwoPartyPrivateChatMessageReaction::fromProto)
-                        .collect(Collectors.toSet())
-        );
+    public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            Optional<Citation> citation = baseProto.hasCitation()
+                    ? Optional.of(Citation.fromProto(baseProto.getCitation()))
+                    : Optional.empty();
+            bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
+            return new TwoPartyPrivateChatMessage(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    UserProfile.fromProto(privateChatMessage.getSender()),
+                    privateChatMessage.getReceiverUserProfileId(),
+                    NetworkId.fromProto(privateChatMessage.getReceiverNetworkId()),
+                    baseProto.getText(),
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                    ProtobufUtils.fromProtoStream(privateChatMessage.getChatMessageReactionsList(),
+                                    TwoPartyPrivateChatMessageReaction::fromProto)
+                            .collect(Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

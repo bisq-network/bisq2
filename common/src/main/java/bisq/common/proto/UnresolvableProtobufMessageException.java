@@ -21,7 +21,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
-public class UnresolvableProtobufMessageException extends RuntimeException {
+public class UnresolvableProtobufMessageException extends UnresolvableProtobufException {
     public UnresolvableProtobufMessageException(String message, Message proto) {
         super(message + ". Message case not found for proto message: " + describe(proto));
     }

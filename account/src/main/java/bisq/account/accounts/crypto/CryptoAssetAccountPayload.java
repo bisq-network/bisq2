@@ -21,6 +21,7 @@ import bisq.account.accounts.AccountPayload;
 import bisq.account.accounts.SingleCurrencyAccountPayload;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
@@ -80,12 +81,17 @@ public abstract class CryptoAssetAccountPayload extends AccountPayload<CryptoPay
         return builder;
     }
 
-    public static CryptoAssetAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return switch (proto.getCryptoAssetAccountPayload().getMessageCase()) {
-            case MONEROACCOUNTPAYLOAD -> MoneroAccountPayload.fromProto(proto);
-            case OTHERCRYPTOASSETACCOUNTPAYLOAD -> OtherCryptoAssetAccountPayload.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+    public static CryptoAssetAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            return switch (proto.getCryptoAssetAccountPayload().getMessageCase()) {
+                case MONEROACCOUNTPAYLOAD -> MoneroAccountPayload.fromProto(proto);
+                case OTHERCRYPTOASSETACCOUNTPAYLOAD -> OtherCryptoAssetAccountPayload.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

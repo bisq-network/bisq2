@@ -20,6 +20,7 @@ package bisq.network.p2p.services.data;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.broadcast.BroadcastMessage;
 import bisq.network.p2p.services.data.storage.StorageKeyV2;
@@ -63,7 +64,7 @@ public interface DataRequest extends BroadcastMessage, Expirable, StorageConstra
 
     bisq.network.protobuf.DataRequest.Builder getDataRequestBuilder(boolean serializeForHash);
 
-    static DataRequest fromProto(bisq.network.protobuf.DataRequest proto) {
+    static DataRequest fromProto(bisq.network.protobuf.DataRequest proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case ADDAUTHENTICATEDDATAREQUEST ->
                     AddAuthenticatedDataRequest.fromProto(proto.getAddAuthenticatedDataRequest());

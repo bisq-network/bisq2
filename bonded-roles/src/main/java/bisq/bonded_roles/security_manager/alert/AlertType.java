@@ -19,6 +19,7 @@ package bisq.bonded_roles.security_manager.alert;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum AlertType implements ProtoEnum {
     INFO,
@@ -32,7 +33,7 @@ public enum AlertType implements ProtoEnum {
         return bisq.bonded_roles.protobuf.AlertType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static AlertType fromProto(bisq.bonded_roles.protobuf.AlertType proto) {
+    public static AlertType fromProto(bisq.bonded_roles.protobuf.AlertType proto) throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(AlertType.class, proto.name(), INFO);
     }
 

@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
@@ -85,18 +86,23 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
                 .setEmailOrMobileNr(emailOrMobileNr);
     }
 
-    public static AmazonGiftCardAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload =
-                proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.AmazonGiftCardAccountPayload amazonGiftCardAccountPayload =
-                countryBasedAccountPayload.getAmazonGiftCardAccountPayload();
-        return new AmazonGiftCardAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                amazonGiftCardAccountPayload.getSelectedCurrencyCode(),
-                amazonGiftCardAccountPayload.getEmailOrMobileNr()
-        );
+    public static AmazonGiftCardAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload =
+                    proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.AmazonGiftCardAccountPayload amazonGiftCardAccountPayload =
+                    countryBasedAccountPayload.getAmazonGiftCardAccountPayload();
+            return new AmazonGiftCardAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    amazonGiftCardAccountPayload.getSelectedCurrencyCode(),
+                    amazonGiftCardAccountPayload.getEmailOrMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

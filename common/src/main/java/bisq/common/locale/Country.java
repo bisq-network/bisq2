@@ -18,6 +18,7 @@
 package bisq.common.locale;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -54,7 +55,11 @@ public final class Country implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static Country fromProto(bisq.common.protobuf.Country proto) {
-        return new Country(proto.getCode(), proto.getName(), Region.fromProto(proto.getRegion()));
+    public static Country fromProto(bisq.common.protobuf.Country proto) throws UnresolvableProtobufException {
+        try {
+            return new Country(proto.getCode(), proto.getName(), Region.fromProto(proto.getRegion()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

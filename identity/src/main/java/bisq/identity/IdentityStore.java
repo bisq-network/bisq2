@@ -18,6 +18,8 @@
 package bisq.identity;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -66,11 +68,16 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto) {
-        return new IdentityStore(Optional.of(Identity.fromProto(proto.getDefaultIdentity())),
-                proto.getActiveIdentityByDomainIdMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> Identity.fromProto(e.getValue()))),
-                proto.getRetiredList().stream().map(Identity::fromProto).collect(Collectors.toSet()));
+    public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new IdentityStore(Optional.of(Identity.fromProto(proto.getDefaultIdentity())),
+                    ProtobufUtils.fromProtoEntryStream(proto.getActiveIdentityByDomainIdMap(), Identity::fromProto)
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+                    ProtobufUtils.fromProtoStream(proto.getRetiredList(), Identity::fromProto).collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

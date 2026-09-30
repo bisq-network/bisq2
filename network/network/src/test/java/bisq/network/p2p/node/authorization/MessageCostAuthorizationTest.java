@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.authorization;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2Token;
@@ -78,7 +79,8 @@ class MessageCostAuthorizationTest {
     }
 
     @Test
-    void relayedRequestWithReplacedMetaDataIsAuthorized() throws GeneralSecurityException {
+    void relayedRequestWithReplacedMetaDataIsAuthorized()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         // A relay receives a request whose metaData a sender or another relay changed. Parsing replaces it.
         bisq.network.protobuf.AddMailboxRequest.Builder builder = createAddMailboxRequest(AckMessage.META_DATA)
                 .toValueProto(false).toBuilder();
@@ -95,7 +97,8 @@ class MessageCostAuthorizationTest {
     }
 
     @Test
-    void requestOfVersion0KeepsItsMetaDataAndIsAuthorized() throws GeneralSecurityException {
+    void requestOfVersion0KeepsItsMetaDataAndIsAuthorized()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         // In version 0 the proof of work payload contains metaData, so parsing keeps the received value
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage());
         //noinspection deprecation
@@ -114,7 +117,8 @@ class MessageCostAuthorizationTest {
     }
 
     @Test
-    void senderPaysTheHigherCostWhichEarlierVersionsExpect() throws GeneralSecurityException {
+    void senderPaysTheHigherCostWhichEarlierVersionsExpect()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest request = createAddMailboxRequest(TypeWithoutPolicyValue.META_DATA);
         double costFactorToPay = MessageCostPolicy.getCostFactorToPay(request);
         assertTrue(costFactorToPay > MessageCostPolicy.getCostFactor(request));
@@ -131,7 +135,8 @@ class MessageCostAuthorizationTest {
     }
 
     // Sends the message and the token as protobuf. The receiver parses both, as Connection does.
-    private boolean isAuthorizedAfterTransfer(EnvelopePayloadMessage message, AuthorizationToken token) {
+    private boolean isAuthorizedAfterTransfer(EnvelopePayloadMessage message, AuthorizationToken token)
+            throws UnresolvableProtobufException {
         EnvelopePayloadMessage receivedMessage = EnvelopePayloadMessage.fromProto(message.toProto(false));
         AuthorizationToken receivedToken = AuthorizationToken.fromProto(token.toProto(false));
         return tokenService.isAuthorized(receivedMessage,
@@ -146,12 +151,13 @@ class MessageCostAuthorizationTest {
         return HashCashV2TokenService.TARGET_DIFFICULTY * costFactor * LOAD * 1;
     }
 
-    private AddMailboxRequest createAddMailboxRequest(MetaData metaData) throws GeneralSecurityException {
+    private AddMailboxRequest createAddMailboxRequest(MetaData metaData)
+            throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(metaData, createConfidentialMessage());
         return AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
     }
 
-    private ConfidentialMessage createConfidentialMessage() {
+    private ConfidentialMessage createConfidentialMessage() throws UnresolvableProtobufException {
         // The token service does not decrypt the message, so the content does not need to be valid cipher text.
         return ConfidentialMessage.fromProto(bisq.network.protobuf.ConfidentialMessage.newBuilder()
                 .setConfidentialData(bisq.security.protobuf.ConfidentialData.newBuilder()

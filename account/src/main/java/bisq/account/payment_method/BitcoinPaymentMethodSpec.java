@@ -17,6 +17,7 @@
 
 package bisq.account.payment_method;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -53,8 +54,13 @@ public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPay
         return unsafeToProto(serializeForHash);
     }
 
-    public static BitcoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
-        return new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+    public static BitcoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

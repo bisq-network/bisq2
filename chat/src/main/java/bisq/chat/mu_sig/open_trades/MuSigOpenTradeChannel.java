@@ -21,6 +21,8 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -132,21 +134,24 @@ public final class MuSigOpenTradeChannel extends PrivateGroupChatChannel<MuSigOp
     }
 
     public static MuSigOpenTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                  bisq.chat.protobuf.MuSigOpenTradeChannel proto) {
-        return new MuSigOpenTradeChannel(
-                baseProto.getId(),
-                proto.getTradeId(),
-                UserIdentity.fromProto(proto.getMyUserIdentity()),
-                proto.getTradersList().stream()
-                        .map(UserProfile::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
-                proto.hasArbitrator() ? Optional.of(UserProfile.fromProto(proto.getArbitrator())) : Optional.empty(),
-                proto.getChatMessagesList().stream()
-                        .map(MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toSet()),
-                MuSigDisputeAgentType.fromProto(proto.getDisputeAgentType()),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+                                                  bisq.chat.protobuf.MuSigOpenTradeChannel proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigOpenTradeChannel(
+                    baseProto.getId(),
+                    proto.getTradeId(),
+                    UserIdentity.fromProto(proto.getMyUserIdentity()),
+                    ProtobufUtils.fromProtoStream(proto.getTradersList(), UserProfile::fromProto)
+                            .collect(Collectors.toSet()),
+                    proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
+                    proto.hasArbitrator() ? Optional.of(UserProfile.fromProto(proto.getArbitrator())) : Optional.empty(),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toSet()),
+                    MuSigDisputeAgentType.fromProto(proto.getDisputeAgentType()),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

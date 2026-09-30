@@ -19,6 +19,7 @@ package bisq.network.i2p.grpc.messages;
 
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.i2p.router.state.TunnelInfo;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,7 +53,12 @@ public final class TunnelInfoUpdate implements Proto {
                 .setValue(value.toProto(serializeForHash));
     }
 
-    public static TunnelInfoUpdate fromProto(bisq.bi2p.protobuf.TunnelInfoUpdate proto) {
-        return new TunnelInfoUpdate(TunnelInfo.fromProto(proto.getValue()));
+    public static TunnelInfoUpdate fromProto(bisq.bi2p.protobuf.TunnelInfoUpdate proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new TunnelInfoUpdate(TunnelInfo.fromProto(proto.getValue()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

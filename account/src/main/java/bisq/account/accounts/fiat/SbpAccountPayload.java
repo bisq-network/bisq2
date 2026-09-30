@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -91,15 +92,20 @@ public final class SbpAccountPayload extends CountryBasedAccountPayload implemen
                 .setBankName(bankName);
     }
 
-    public static SbpAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var sbpAccountPayload = proto.getCountryBasedAccountPayload().getSbpAccountPayload();
-        return new SbpAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                sbpAccountPayload.getHolderName(),
-                sbpAccountPayload.getMobileNumber(),
-                sbpAccountPayload.getBankName()
-        );
+    public static SbpAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var sbpAccountPayload = proto.getCountryBasedAccountPayload().getSbpAccountPayload();
+            return new SbpAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    sbpAccountPayload.getHolderName(),
+                    sbpAccountPayload.getMobileNumber(),
+                    sbpAccountPayload.getBankName()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

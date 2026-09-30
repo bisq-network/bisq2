@@ -18,6 +18,7 @@
 package bisq.security;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -81,12 +82,17 @@ public final class ScryptParameters implements PersistableProto {
                 .setKeyLength(keyLength);
     }
 
-    public static ScryptParameters fromProto(bisq.security.protobuf.ScryptParameters proto) {
-        return new ScryptParameters(proto.getSalt().toByteArray(),
-                proto.getCost(),
-                proto.getBlockSize(),
-                proto.getParallelization(),
-                proto.getKeyLength());
+    public static ScryptParameters fromProto(bisq.security.protobuf.ScryptParameters proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ScryptParameters(proto.getSalt().toByteArray(),
+                    proto.getCost(),
+                    proto.getBlockSize(),
+                    proto.getParallelization(),
+                    proto.getKeyLength());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

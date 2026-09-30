@@ -20,6 +20,7 @@ package bisq.trade.mu_sig;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
@@ -41,7 +42,7 @@ class MuSigCustomPayoutPartyDataTest {
     private static final byte[] PEER_PSBT = {4, 5, 6};
 
     @Test
-    void localPartyDataRoundTripsThroughTradeParty() {
+    void localPartyDataRoundTripsThroughTradeParty() throws UnresolvableProtobufException {
         MuSigTradeParty party = new MuSigTradeParty(createNetworkId());
         CustomPayoutPsbt localPsbt = new CustomPayoutPsbt(LOCAL_PSBT, TX_ID, 60_000, 40_000);
         CustomCloseTradeResponse closeResponse = new CustomCloseTradeResponse(new byte[]{7, 8, 9});
@@ -61,7 +62,7 @@ class MuSigCustomPayoutPartyDataTest {
     }
 
     @Test
-    void peerPartyDataRoundTripsThroughTradeParty() {
+    void peerPartyDataRoundTripsThroughTradeParty() throws UnresolvableProtobufException {
         MuSigTradeParty party = new MuSigTradeParty(createNetworkId());
         PeerCustomPayoutPsbt peerPsbt = createPeerPsbt();
 
@@ -110,7 +111,7 @@ class MuSigCustomPayoutPartyDataTest {
     }
 
     @Test
-    void peerPsbtSizeLimitIsEnforcedDuringDeserialization() {
+    void peerPsbtSizeLimitIsEnforcedDuringDeserialization() throws UnresolvableProtobufException {
         bisq.trade.protobuf.PeerCustomPayoutPsbt proto = bisq.trade.protobuf.PeerCustomPayoutPsbt.newBuilder()
                 .setTxId(TX_ID)
                 .setPsbt(ByteString.copyFrom(new byte[4_096]))
@@ -123,7 +124,8 @@ class MuSigCustomPayoutPartyDataTest {
                 .build();
 
         assertThatThrownBy(() -> PeerCustomPayoutPsbt.fromProto(oversized))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -141,15 +143,18 @@ class MuSigCustomPayoutPartyDataTest {
                         .build();
 
         assertThatThrownBy(() -> MuSigCustomPayoutPartyData.fromProto(empty))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> MuSigCustomPayoutPartyData.fromProto(incompleteLocal))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> MuSigCustomPayoutPartyData.fromProto(mixedOwnership))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void rejectionRoundTripsThroughTradeParty() {
+    void rejectionRoundTripsThroughTradeParty() throws UnresolvableProtobufException {
         MuSigTradeParty rejectingParty = new MuSigTradeParty(createNetworkId());
 
         rejectingParty.setMediationResultRejected();
@@ -161,7 +166,7 @@ class MuSigCustomPayoutPartyDataTest {
     }
 
     @Test
-    void rejectionObservableReportsInitialAndStoredState() {
+    void rejectionObservableReportsInitialAndStoredState() throws UnresolvableProtobufException {
         MuSigTradeParty party = new MuSigTradeParty(createNetworkId());
         List<Boolean> observedValues = new ArrayList<>();
         var pin = party.mediationResultRejectedObservable().addObserver(observedValues::add);
@@ -208,7 +213,8 @@ class MuSigCustomPayoutPartyDataTest {
                 .build();
 
         assertThatThrownBy(() -> MuSigTradeParty.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     private static CustomPayoutPsbt createLocalPsbt() {

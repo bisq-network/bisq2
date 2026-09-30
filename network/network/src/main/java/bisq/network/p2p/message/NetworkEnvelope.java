@@ -18,6 +18,7 @@
 package bisq.network.p2p.message;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.EqualsAndHashCode;
@@ -79,10 +80,15 @@ public final class NetworkEnvelope implements NetworkProto {
                 .setNetworkMessage(envelopePayloadMessage.toProto(serializeForHash));
     }
 
-    public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {
-        return new NetworkEnvelope(proto.getVersion(),
-                AuthorizationToken.fromProto(proto.getAuthorizationToken()),
-                EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()));
+    public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new NetworkEnvelope(proto.getVersion(),
+                    AuthorizationToken.fromProto(proto.getAuthorizationToken()),
+                    EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public void verifyVersion() throws ConnectionException {

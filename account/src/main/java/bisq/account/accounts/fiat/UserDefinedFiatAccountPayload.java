@@ -24,6 +24,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -70,11 +71,16 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
                 .setAccountData(accountData);
     }
 
-    public static UserDefinedFiatAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new UserDefinedFiatAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                proto.getUserDefinedFiatAccountPayload().getAccountData());
+    public static UserDefinedFiatAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new UserDefinedFiatAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    proto.getUserDefinedFiatAccountPayload().getAccountData());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

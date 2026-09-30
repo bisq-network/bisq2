@@ -19,6 +19,7 @@ package bisq.common.data;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -43,8 +44,12 @@ public final class ByteArray implements PersistableProto, Comparable<ByteArray> 
         return bisq.common.protobuf.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes));
     }
 
-    public static ByteArray fromProto(bisq.common.protobuf.ByteArray proto) {
-        return new ByteArray(proto.getBytes().toByteArray());
+    public static ByteArray fromProto(bisq.common.protobuf.ByteArray proto) throws UnresolvableProtobufException {
+        try {
+            return new ByteArray(proto.getBytes().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

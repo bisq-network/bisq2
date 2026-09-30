@@ -20,7 +20,7 @@ package bisq.trade.bisq_easy;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
-import bisq.common.proto.UnresolvableProtobufEnumException;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.Role;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -116,53 +116,57 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
         return builder;
     }
 
-    public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) throws UnresolvableProtobufEnumException {
-        BisqEasyTradeState state = ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState());
-        BisqEasyTrade trade = new BisqEasyTrade(BisqEasyContract.fromProto(proto.getContract()),
-                state,
-                proto.getId(),
-                TradeRole.fromProto(proto.getTradeRole()),
-                Identity.fromProto(proto.getMyIdentity()),
-                TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
-                TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
-                TradeLifecycleState.fromProto(proto.getLifecycleState()));
-        if (proto.hasErrorMessage()) {
-            trade.setErrorMessage(proto.getErrorMessage());
-        }
-        if (proto.hasErrorStackTrace()) {
-            trade.setErrorStackTrace(proto.getErrorStackTrace());
-        }
-        if (proto.hasPeersErrorMessage()) {
-            trade.setPeersErrorMessage(proto.getPeersErrorMessage());
-        }
-        if (proto.hasPeersErrorStackTrace()) {
-            trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
-        }
-        if (proto.hasTradeProtocolFailure()) {
-            trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
-        }
-        if (proto.hasPeersTradeProtocolFailure()) {
-            trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
-        }
+    public static BisqEasyTrade fromProto(bisq.trade.protobuf.Trade proto) throws UnresolvableProtobufException {
+        try {
+            BisqEasyTradeState state = ProtobufUtils.enumFromProto(BisqEasyTradeState.class, proto.getState());
+            BisqEasyTrade trade = new BisqEasyTrade(BisqEasyContract.fromProto(proto.getContract()),
+                    state,
+                    proto.getId(),
+                    TradeRole.fromProto(proto.getTradeRole()),
+                    Identity.fromProto(proto.getMyIdentity()),
+                    TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
+                    TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
+                    TradeLifecycleState.fromProto(proto.getLifecycleState()));
+            if (proto.hasErrorMessage()) {
+                trade.setErrorMessage(proto.getErrorMessage());
+            }
+            if (proto.hasErrorStackTrace()) {
+                trade.setErrorStackTrace(proto.getErrorStackTrace());
+            }
+            if (proto.hasPeersErrorMessage()) {
+                trade.setPeersErrorMessage(proto.getPeersErrorMessage());
+            }
+            if (proto.hasPeersErrorStackTrace()) {
+                trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
+            }
+            if (proto.hasTradeProtocolFailure()) {
+                trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
+            }
+            if (proto.hasPeersTradeProtocolFailure()) {
+                trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
+            }
 
-        bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();
-        if (bisqEasyTradeProto.hasPaymentAccountData()) {
-            trade.setPaymentAccountData(Optional.of(bisqEasyTradeProto.getPaymentAccountData()));
-        }
-        if (bisqEasyTradeProto.hasBitcoinPaymentData()) {
-            trade.setBitcoinPaymentData(Optional.of(bisqEasyTradeProto.getBitcoinPaymentData()));
-        }
-        if (bisqEasyTradeProto.hasPaymentProof()) {
-            trade.setPaymentProof(Optional.of(bisqEasyTradeProto.getPaymentProof()));
-        }
-        if (bisqEasyTradeProto.hasInterruptTradeInitiator()) {
-            trade.getInterruptTradeInitiator().set(Role.fromProto(bisqEasyTradeProto.getInterruptTradeInitiator()));
-        }
-        if (bisqEasyTradeProto.hasTradeCompletedDate()) {
-            trade.setTradeCompletedDate(Optional.of(bisqEasyTradeProto.getTradeCompletedDate()));
-        }
+            bisq.trade.protobuf.BisqEasyTrade bisqEasyTradeProto = proto.getBisqEasyTrade();
+            if (bisqEasyTradeProto.hasPaymentAccountData()) {
+                trade.setPaymentAccountData(Optional.of(bisqEasyTradeProto.getPaymentAccountData()));
+            }
+            if (bisqEasyTradeProto.hasBitcoinPaymentData()) {
+                trade.setBitcoinPaymentData(Optional.of(bisqEasyTradeProto.getBitcoinPaymentData()));
+            }
+            if (bisqEasyTradeProto.hasPaymentProof()) {
+                trade.setPaymentProof(Optional.of(bisqEasyTradeProto.getPaymentProof()));
+            }
+            if (bisqEasyTradeProto.hasInterruptTradeInitiator()) {
+                trade.getInterruptTradeInitiator().set(Role.fromProto(bisqEasyTradeProto.getInterruptTradeInitiator()));
+            }
+            if (bisqEasyTradeProto.hasTradeCompletedDate()) {
+                trade.setTradeCompletedDate(Optional.of(bisqEasyTradeProto.getTradeCompletedDate()));
+            }
 
-        return trade;
+            return trade;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public BisqEasyTradeState getTradeState() {

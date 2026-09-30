@@ -19,6 +19,7 @@ package bisq.common.asset;
 
 
 import bisq.common.locale.LocaleRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -59,8 +60,12 @@ public final class FiatCurrency extends Asset {
         return getAssetBuilder().setFiatCurrency(bisq.common.protobuf.FiatCurrency.newBuilder());
     }
 
-    public static FiatCurrency fromProto(bisq.common.protobuf.Asset baseProto) {
-        return new FiatCurrency(baseProto.getCode(), baseProto.getName());
+    public static FiatCurrency fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
+        try {
+            return new FiatCurrency(baseProto.getCode(), baseProto.getName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // The name field is the displayName using the US locale. For display purpose we use the name based on the user's locale.

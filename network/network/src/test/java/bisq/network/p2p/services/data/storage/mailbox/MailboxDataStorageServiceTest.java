@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -72,7 +73,7 @@ class MailboxDataStorageServiceTest {
     }
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws UnresolvableProtobufException {
         store = new MailboxDataStorageService(new PersistenceService(tempDir),
                 new PruneExpiredEntriesService() {
                     @Override
@@ -93,7 +94,8 @@ class MailboxDataStorageServiceTest {
 
     @ParameterizedTest
     @CsvSource({"false, false", "false, true", "true, false", "true, true"})
-    void removalPreventsLaterAdd(boolean legacy, boolean addFirst) throws GeneralSecurityException {
+    void removalPreventsLaterAdd(boolean legacy, boolean addFirst)
+            throws GeneralSecurityException, UnresolvableProtobufException {
         if (legacy) {
             time = BEFORE_CUTOFF;
         }
@@ -117,7 +119,7 @@ class MailboxDataStorageServiceTest {
     }
 
     @Test
-    void v2RemovalReplacesLegacyRemoval() throws GeneralSecurityException {
+    void v2RemovalReplacesLegacyRemoval() throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
         RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
@@ -132,7 +134,7 @@ class MailboxDataStorageServiceTest {
     }
 
     @Test
-    void legacyRemovalDoesNotReplaceV2Removal() throws GeneralSecurityException {
+    void legacyRemovalDoesNotReplaceV2Removal() throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
         assertTrue(store.remove(verified).isSuccess());
@@ -159,7 +161,7 @@ class MailboxDataStorageServiceTest {
     // The store accepts a removal only if it stores it. A node relays the removals which its store accepts (see
     // docs/specifications/network/storage-request-relay.md).
     @Test
-    void removalIsAcceptedOnlyIfTheStoreStoresIt() throws GeneralSecurityException {
+    void removalIsAcceptedOnlyIfTheStoreStoresIt() throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
         RemoveMailboxRequest legacy = toLegacy(verified);
@@ -185,7 +187,7 @@ class MailboxDataStorageServiceTest {
     }
 
     @Test
-    void invalidSignatureV2CannotReplaceLegacyRemoval() throws GeneralSecurityException {
+    void invalidSignatureV2CannotReplaceLegacyRemoval() throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
         RemoveMailboxRequest legacy = toLegacy(verified);
@@ -199,12 +201,12 @@ class MailboxDataStorageServiceTest {
         assertSame(legacy, store.getPersistableStore().getMap().get(legacy.getStorageKey()));
     }
 
-    private static RemoveMailboxRequest toLegacy(RemoveMailboxRequest request) {
+    private static RemoveMailboxRequest toLegacy(RemoveMailboxRequest request) throws UnresolvableProtobufException {
         return RemoveMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
                 .setVersion(1).clearSignatureV2().build());
     }
 
-    private static AddMailboxRequest toLegacy(AddMailboxRequest request) {
+    private static AddMailboxRequest toLegacy(AddMailboxRequest request) throws UnresolvableProtobufException {
         return AddMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
                 .clearVersion().clearSignatureV2().build());
     }
@@ -212,7 +214,8 @@ class MailboxDataStorageServiceTest {
     // From the cutoff date of signature V1 on, a node accepts only requests with signature V2 (see
     // docs/specifications/network/storage-request-signatures.md). The same request is accepted before that date.
     @Test
-    void addWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate() throws GeneralSecurityException {
+    void addWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest legacy = toLegacy(AddMailboxRequest.from(mailboxData, senderKeyPair,
                 receiverKeyPair.getPublic()));
         assertFalse(legacy.isSignatureV1Invalid());
@@ -232,7 +235,8 @@ class MailboxDataStorageServiceTest {
 
     // Signature V1 of a removal does not cover the creation date, so the node uses its own time
     @Test
-    void removalWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate() throws GeneralSecurityException {
+    void removalWithoutSignatureV2IsAcceptedOnlyBeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
         assertTrue(store.add(add).isSuccess());
         RemoveMailboxRequest remove = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
@@ -257,7 +261,8 @@ class MailboxDataStorageServiceTest {
     // A store which accepted add requests without signature V2 does not keep them after the cutoff date: neither when
     // the node loads the store, nor while the node runs. It keeps the remove requests until they expire.
     @Test
-    void addRequestsWithoutSignatureV2AreRemovedFromTheCutoffDateOn() throws GeneralSecurityException {
+    void addRequestsWithoutSignatureV2AreRemovedFromTheCutoffDateOn()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         // The storage key contains the key of the receiver, so each receiver has an entry of its own
         AddMailboxRequest legacyAdd = toLegacy(AddMailboxRequest.from(mailboxData, senderKeyPair,
@@ -297,7 +302,8 @@ class MailboxDataStorageServiceTest {
     // The receiver removed the message with a node of an earlier version. The remove request still rejects the add
     // request from the cutoff date on. Otherwise the receiver would get the message again.
     @Test
-    void removalWithoutSignatureV2StillPreventsLaterAddFromTheCutoffDateOn() throws GeneralSecurityException {
+    void removalWithoutSignatureV2StillPreventsLaterAddFromTheCutoffDateOn()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         time = BEFORE_CUTOFF;
         AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
         RemoveMailboxRequest legacyRemoval = toLegacy(RemoveMailboxRequest.from(mailboxData, receiverKeyPair));
@@ -344,7 +350,7 @@ class MailboxDataStorageServiceTest {
     }
 
     @Test
-    void addRequestWithClassNameOfOtherTypeIsRejected() throws GeneralSecurityException {
+    void addRequestWithClassNameOfOtherTypeIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
         // A relay can change className, because the signature does not cover it
         bisq.network.protobuf.AddMailboxRequest.Builder builder = addRequest.toValueProto(false).toBuilder();
@@ -359,7 +365,8 @@ class MailboxDataStorageServiceTest {
     }
 
     @Test
-    void removeRequestWithClassNameOfOtherTypeIsRejected() throws GeneralSecurityException {
+    void removeRequestWithClassNameOfOtherTypeIsRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveMailboxRequest removeRequest = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
         RemoveMailboxRequest requestWithOtherClassName = RemoveMailboxRequest.fromProto(
                 removeRequest.toValueProto(false).toBuilder()

@@ -24,6 +24,7 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.encoding.Hex;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
@@ -345,7 +346,7 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
-    void skipsNetworkDataThatCannotBeReconstructedForRemoval() {
+    void skipsNetworkDataThatCannotBeReconstructedForRemoval() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest request = createCurrentRequest();
         var authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         AuthorizedBondedRole role = AuthorizedBondedRole.fromProto(new AuthorizedBondedRole(request.getProfileId(),
@@ -496,7 +497,7 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
-    void malformedBatchResponseRetainsEveryRegistration() {
+    void malformedBatchResponseRetainsEveryRegistration() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest first = createCurrentRequest(1234, "b".repeat(64));
         BondedRoleRegistrationRequest second = createCurrentRequest(4321, "c".repeat(64));
         BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
@@ -513,7 +514,7 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
-    void bridgeFailureRetainsEveryRegistration() {
+    void bridgeFailureRetainsEveryRegistration() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest request = createCurrentRequest();
         BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
         when(bondedRoleGrpcService.requestBondedRoleBatchVerification(any()))
@@ -527,7 +528,7 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
-    void invalidBatchEntryRemovesOnlyItsExactRegistration() {
+    void invalidBatchEntryRemovesOnlyItsExactRegistration() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest invalid = createCurrentRequest(1234, "b".repeat(64));
         BondedRoleRegistrationRequest valid = createCurrentRequest(4321, "c".repeat(64));
         BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
@@ -551,7 +552,7 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
-    void oneUnverifiableRegistrationDoesNotStopRevalidationOfTheRemainingOnes() {
+    void oneUnverifiableRegistrationDoesNotStopRevalidationOfTheRemainingOnes() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest valid = createCurrentRequest();
         // A record which passes its own structural validation but cannot be expressed as a bridge message. The
         // bridge has no way to find a bond without a bond user name, so it can never be verified.
@@ -584,7 +585,7 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
-    void batchAboveLimitRetainsRegistrationsWithoutCallingTheBridge() {
+    void batchAboveLimitRetainsRegistrationsWithoutCallingTheBridge() throws UnresolvableProtobufException {
         BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
         Bisq1BridgeRequestService service = createServiceWithBondedRoleGrpcService(bondedRoleGrpcService);
         int registrationCount = MAX_REGISTRATIONS + 1;
@@ -600,7 +601,7 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
-    void rejectedRevalidationSubmissionDoesNotWedgeLaterTriggers() {
+    void rejectedRevalidationSubmissionDoesNotWedgeLaterTriggers() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest request = createCurrentRequest();
         BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
         when(bondedRoleGrpcService.requestBondedRoleBatchVerification(any()))
@@ -621,7 +622,7 @@ class Bisq1BridgeRequestServiceTest {
     }
 
     @Test
-    void sharedRequestExecutorRejectionDoesNotDiscardRevalidation() {
+    void sharedRequestExecutorRejectionDoesNotDiscardRevalidation() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest request = createCurrentRequest();
         BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
         when(bondedRoleGrpcService.requestBondedRoleBatchVerification(any()))

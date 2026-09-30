@@ -19,6 +19,7 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -100,7 +101,7 @@ class WitnessReputationRemovalTest {
     }
 
     @Test
-    void futureAccountAgeRemovalDoesNotMatchCurrentAuthorization() {
+    void futureAccountAgeRemovalDoesNotMatchCurrentAuthorization() throws UnresolvableProtobufException {
         AccountAgeService service = new AccountAgeService(
                 mock(PersistenceService.class),
                 mock(NetworkService.class),
@@ -129,7 +130,7 @@ class WitnessReputationRemovalTest {
     }
 
     @Test
-    void futureSignedWitnessRemovalDoesNotMatchCurrentAuthorization() {
+    void futureSignedWitnessRemovalDoesNotMatchCurrentAuthorization() throws UnresolvableProtobufException {
         SignedWitnessService service = new SignedWitnessService(
                 mock(PersistenceService.class),
                 mock(NetworkService.class),

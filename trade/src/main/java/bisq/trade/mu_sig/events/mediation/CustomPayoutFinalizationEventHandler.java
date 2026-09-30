@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.events.mediation;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.trade.MuSigDisputeState;
@@ -28,6 +29,7 @@ import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
 import bisq.trade.mu_sig.messages.grpc.CustomCloseTradeRequest;
 import bisq.trade.mu_sig.messages.grpc.CustomCloseTradeResponse;
 import bisq.trade.mu_sig.messages.grpc.CustomPayoutPsbt;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -71,18 +73,22 @@ public final class CustomPayoutFinalizationEventHandler
 
     @Override
     protected void process(CustomPayoutFinalizationEvent event) {
-        PeerCustomPayoutPsbt peersCustomPayoutPsbt = trade.getPeer().getCustomPayoutData()
-                .flatMap(MuSigCustomPayoutPartyData::getPeersCustomPayoutPsbt)
-                .orElseThrow();
-        CustomCloseTradeRequest request = new CustomCloseTradeRequest(
-                trade.getId(),
-                peersCustomPayoutPsbt.getPsbt());
-        customCloseTradeResponse = CustomCloseTradeResponse.fromProto(
-                blockingStub.customCloseTrade(request.toProto(false)));
-        checkArgument(customCloseTradeResponse.getCustomPayoutTx().length > 0,
-                "Custom payout transaction must not be empty");
+        try {
+            PeerCustomPayoutPsbt peersCustomPayoutPsbt = trade.getPeer().getCustomPayoutData()
+                    .flatMap(MuSigCustomPayoutPartyData::getPeersCustomPayoutPsbt)
+                    .orElseThrow();
+            CustomCloseTradeRequest request = new CustomCloseTradeRequest(
+                    trade.getId(),
+                    peersCustomPayoutPsbt.getPsbt());
+            customCloseTradeResponse = CustomCloseTradeResponse.fromProto(
+                    blockingStub.customCloseTrade(request.toProto(false)));
+            checkArgument(customCloseTradeResponse.getCustomPayoutTx().length > 0,
+                    "Custom payout transaction must not be empty");
 
-        tradeService.stopCloseTradeTimeout(trade);
+            tradeService.stopCloseTradeTimeout(trade);
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

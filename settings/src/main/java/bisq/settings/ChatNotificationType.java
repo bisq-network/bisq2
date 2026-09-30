@@ -19,6 +19,7 @@ package bisq.settings;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum ChatNotificationType implements ProtoEnum {
     ALL,
@@ -30,7 +31,8 @@ public enum ChatNotificationType implements ProtoEnum {
         return bisq.settings.protobuf.ChatNotificationType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static ChatNotificationType fromProto(bisq.settings.protobuf.ChatNotificationType proto) {
+    public static ChatNotificationType fromProto(bisq.settings.protobuf.ChatNotificationType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(ChatNotificationType.class, proto.name(), ALL);
     }
 }

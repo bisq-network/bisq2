@@ -28,6 +28,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
@@ -108,7 +109,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void validRequestPasses() throws GeneralSecurityException {
+    void validRequestPasses() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
 
@@ -117,7 +118,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void senderNotMatchingContractTakerIsRejected() throws GeneralSecurityException {
+    void senderNotMatchingContractTakerIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, OTHER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
 
@@ -125,7 +126,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void signatureFromForeignKeyIsRejected() throws GeneralSecurityException {
+    void signatureFromForeignKeyIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         KeyPair attackerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         // The signature is internally consistent - hash and key match the signature - but the
@@ -136,7 +137,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void tamperedSignatureIsRejected() throws GeneralSecurityException {
+    void tamperedSignatureIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         ContractSignatureData signatureData = sign(contract, TAKER_KEY_PAIR);
         byte[] tamperedSignature = signatureData.getSignature().clone();
@@ -153,7 +154,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void receiverNotMatchingOfferMakerIsRejected() throws GeneralSecurityException {
+    void receiverNotMatchingOfferMakerIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, OTHER_NETWORK_ID,
                 sign(contract, TAKER_KEY_PAIR),
@@ -165,7 +166,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void tradeIdNotDerivedFromContractIsRejected() throws GeneralSecurityException {
+    void tradeIdNotDerivedFromContractIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         // The contract itself is validly signed; only the claimed trade id differs from the id
         // the maker derives, which would otherwise persist a failed trade per crafted message.
@@ -176,7 +177,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void activatedOwnOfferPasses() throws GeneralSecurityException {
+    void activatedOwnOfferPasses() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
         MyMuSigOffersService myOffers = org.mockito.Mockito.mock(MyMuSigOffersService.class);
@@ -189,7 +190,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void unknownOrDeactivatedOfferIsRejected() throws GeneralSecurityException {
+    void unknownOrDeactivatedOfferIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
         // claimActivatedOffer covers both cases: an unknown offer and a retained-but-deactivated
@@ -201,7 +202,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void embeddedOfferDifferingFromOwnOfferIsRejected() throws GeneralSecurityException {
+    void embeddedOfferDifferingFromOwnOfferIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
         // Same id, different terms: the taker altered the embedded offer while keeping the id
@@ -215,7 +216,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void contractWithForgedProtocolTypeIsRejected() throws GeneralSecurityException {
+    void contractWithForgedProtocolTypeIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         // Contract.verify checks only the date, so a taker can serialize a MuSigContract that
         // declares BISQ_EASY; MuSigContract.fromProto keeps the forged value. The maker must not
         // double-sign it. The wire mutation is reproduced by round-tripping through proto.
@@ -233,7 +234,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void contractWithForgedTakerRoleIsRejected() throws GeneralSecurityException {
+    void contractWithForgedTakerRoleIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         // A taker can serialize its own Party with role MAKER; verification never checks it.
         MuSigContract genuine = createContract();
         bisq.contract.protobuf.Contract proto = genuine.toProto(false);
@@ -252,7 +253,8 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void embeddedOfferWithAForgedCurrencyNameIsRejected() throws GeneralSecurityException {
+    void embeddedOfferWithAForgedCurrencyNameIsRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         // Market.equals excludes the currency names, but they are part of the contract hash (not
         // @ExcludeForHash). Starting from the maker's own offer, the taker forges only the base
         // currency name; equals still passes (names excluded, same date and economic fields),
@@ -273,7 +275,8 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void embeddedOfferDifferingOnlyInTradeProtocolVersionIsAccepted() throws GeneralSecurityException {
+    void embeddedOfferDifferingOnlyInTradeProtocolVersionIsAccepted()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         // tradeProtocolVersion is excluded from both equals and the hash (@ExcludeForHash), so a
         // peer whose copy carries a different version must still pass the hash-relevant comparison.
         MuSigOffer makersOffer = createOffer(new BaseSideFixedAmountSpec(2_000_000L));
@@ -292,7 +295,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void unknownTakerProfileIsRejected() throws GeneralSecurityException {
+    void unknownTakerProfileIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, sign(contract, TAKER_KEY_PAIR));
         bisq.user.profile.UserProfileService userProfileService =
@@ -305,7 +308,7 @@ class MuSigTakeOfferRequestValidatorTest {
     }
 
     @Test
-    void missingAccountPayloadCommitmentIsRejected() {
+    void missingAccountPayloadCommitmentIsRejected() throws UnresolvableProtobufException {
         // An ABSENT commitment survives deserialization because Party.verify validates the
         // hash only when present; the case is built through the actual wire path by clearing
         // the field from a valid contract's proto. Dev mode isolates the commitment check from
@@ -954,7 +957,7 @@ class MuSigTakeOfferRequestValidatorTest {
                         .isEqualTo(expectedFailure));
     }
 
-    private SetupTradeMessage_A economicsMessage(MuSigContract contract) {
+    private SetupTradeMessage_A economicsMessage(MuSigContract contract) throws UnresolvableProtobufException {
         try {
             // The economics checks never read the signature; a donor signature from the plain
             // fixture contract avoids serializing the mocked dispute-agent profiles.
@@ -986,7 +989,8 @@ class MuSigTakeOfferRequestValidatorTest {
 
     private static SetupTradeMessage_A createMessage(MuSigContract contract,
                                                      NetworkId sender,
-                                                     ContractSignatureData contractSignatureData) {
+                                                     ContractSignatureData contractSignatureData)
+            throws UnresolvableProtobufException {
         return createMessage(contract, sender, OFFER_MAKER_NETWORK_ID, contractSignatureData,
                 Trade.createId(contract.getOffer().getId(),
                         contract.getTaker().getNetworkId().getId(),
@@ -997,7 +1001,7 @@ class MuSigTakeOfferRequestValidatorTest {
                                                      NetworkId sender,
                                                      NetworkId receiver,
                                                      ContractSignatureData contractSignatureData,
-                                                     String tradeId) {
+                                                     String tradeId) throws UnresolvableProtobufException {
         return new SetupTradeMessage_A("message-id",
                 tradeId,
                 "1.0.0",

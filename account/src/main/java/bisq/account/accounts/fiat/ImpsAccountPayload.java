@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -89,15 +90,20 @@ public final class ImpsAccountPayload extends CountryBasedAccountPayload impleme
                 .setIfsc(ifsc);
     }
 
-    public static ImpsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var payload = proto.getCountryBasedAccountPayload().getImpsAccountPayload();
-        return new ImpsAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getAccountNr(),
-                payload.getIfsc()
-        );
+    public static ImpsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getImpsAccountPayload();
+            return new ImpsAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getAccountNr(),
+                    payload.getIfsc()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -19,6 +19,7 @@ package bisq.user.contact_list;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 
 public enum ContactReason implements ProtoEnum {
@@ -32,7 +33,7 @@ public enum ContactReason implements ProtoEnum {
         return bisq.user.protobuf.ContactReason.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static ContactReason fromProto(bisq.user.protobuf.ContactReason proto) {
+    public static ContactReason fromProto(bisq.user.protobuf.ContactReason proto) throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(ContactReason.class, proto.name(), MANUALLY_ADDED);
     }
 

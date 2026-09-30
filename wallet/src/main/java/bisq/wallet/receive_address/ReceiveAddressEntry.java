@@ -18,6 +18,7 @@
 package bisq.wallet.receive_address;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -55,9 +56,14 @@ public final class ReceiveAddressEntry implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ReceiveAddressEntry fromProto(bisq.wallet.protobuf.ReceiveAddressEntry proto) {
-        return new ReceiveAddressEntry(proto.getAddress(),
-                proto.getCreatedAt(),
-                OptionalUtils.optionalIf(proto.hasNote(), proto::getNote));
+    public static ReceiveAddressEntry fromProto(bisq.wallet.protobuf.ReceiveAddressEntry proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ReceiveAddressEntry(proto.getAddress(),
+                    proto.getCreatedAt(),
+                    OptionalUtils.optionalIf(proto.hasNote(), proto::getNote));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

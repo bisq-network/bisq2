@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.dto;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -72,11 +73,16 @@ public final class BondedReputationDto implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BondedReputationDto fromProto(bisq.bridge.protobuf.BondedReputationDto proto) {
-        return new BondedReputationDto(proto.getAmount(),
-                proto.getBondedReputationHash().toByteArray(),
-                proto.getLockTime(),
-                proto.getLockupTxId(),
-                proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty());
+    public static BondedReputationDto fromProto(bisq.bridge.protobuf.BondedReputationDto proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BondedReputationDto(proto.getAmount(),
+                    proto.getBondedReputationHash().toByteArray(),
+                    proto.getLockTime(),
+                    proto.getLockupTxId(),
+                    proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

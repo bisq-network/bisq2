@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -105,19 +106,24 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
                 .setState(state);
     }
 
-    public static MoneyGramAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getMoneyGramAccountPayload();
+    public static MoneyGramAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            var payload = countryBasedAccountPayload.getMoneyGramAccountPayload();
 
-        return new MoneyGramAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getHolderName(),
-                payload.getEmail(),
-                payload.getState()
-        );
+            return new MoneyGramAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getHolderName(),
+                    payload.getEmail(),
+                    payload.getState()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

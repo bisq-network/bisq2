@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -45,8 +46,13 @@ public final class SwapTxSignatureResponse implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static SwapTxSignatureResponse fromProto(bisq.trade.protobuf.SwapTxSignatureResponse proto) {
-        return new SwapTxSignatureResponse(proto.getSwapTx().toByteArray(), proto.getPeerOutputPrvKeyShare().toByteArray());
+    public static SwapTxSignatureResponse fromProto(bisq.trade.protobuf.SwapTxSignatureResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new SwapTxSignatureResponse(proto.getSwapTx().toByteArray(), proto.getPeerOutputPrvKeyShare().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

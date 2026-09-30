@@ -19,6 +19,7 @@ package bisq.common.asset;
 
 
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -70,16 +71,20 @@ public final class StableCoin extends DigitalAsset {
         return unsafeToProto(serializeForHash);
     }
 
-    public static StableCoin fromProto(bisq.common.protobuf.Asset baseProto) {
-        bisq.common.protobuf.StableCoin stableCoinCurrencyProto = baseProto.getDigitalAsset().getStableCoin();
-        Network network = ProtobufUtils.enumFromProto(Network.class, stableCoinCurrencyProto.getNetwork(), Network.UNDEFINED);
-        TokenStandard standard = ProtobufUtils.enumFromProto(TokenStandard.class, stableCoinCurrencyProto.getTokenStandard(), TokenStandard.UNDEFINED);
-        Issuer issuer = ProtobufUtils.enumFromProto(Issuer.class, stableCoinCurrencyProto.getIssuer(), Issuer.UNDEFINED);
-        return new StableCoin(baseProto.getCode(), baseProto.getName(),
-                stableCoinCurrencyProto.getPegCurrencyCode(),
-                network,
-                standard,
-                issuer);
+    public static StableCoin fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
+        try {
+            bisq.common.protobuf.StableCoin stableCoinCurrencyProto = baseProto.getDigitalAsset().getStableCoin();
+            Network network = ProtobufUtils.enumFromProto(Network.class, stableCoinCurrencyProto.getNetwork(), Network.UNDEFINED);
+            TokenStandard standard = ProtobufUtils.enumFromProto(TokenStandard.class, stableCoinCurrencyProto.getTokenStandard(), TokenStandard.UNDEFINED);
+            Issuer issuer = ProtobufUtils.enumFromProto(Issuer.class, stableCoinCurrencyProto.getIssuer(), Issuer.UNDEFINED);
+            return new StableCoin(baseProto.getCode(), baseProto.getName(),
+                    stableCoinCurrencyProto.getPegCurrencyCode(),
+                    network,
+                    standard,
+                    issuer);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

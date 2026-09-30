@@ -19,6 +19,7 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,15 +57,20 @@ public final class USPostalMoneyOrderAccount extends CountryBasedAccount<USPosta
         return bisq.account.protobuf.USPostalMoneyOrderAccount.newBuilder();
     }
 
-    public static USPostalMoneyOrderAccount fromProto(bisq.account.protobuf.Account proto) {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new USPostalMoneyOrderAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                USPostalMoneyOrderAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin);
+    public static USPostalMoneyOrderAccount fromProto(bisq.account.protobuf.Account proto)
+            throws UnresolvableProtobufException {
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new USPostalMoneyOrderAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    USPostalMoneyOrderAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

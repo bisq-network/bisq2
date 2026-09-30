@@ -17,6 +17,7 @@
 
 package bisq.offer.amount.spec;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -48,7 +49,12 @@ public final class BaseSideRangeAmountSpec extends RangeAmountSpec implements Ba
         return unsafeToProto(serializeForHash);
     }
 
-    public static BaseSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {
-        return new BaseSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
+    public static BaseSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BaseSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

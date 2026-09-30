@@ -19,6 +19,7 @@ package bisq.support.mediation;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MediationResultReason implements ProtoEnum {
     OTHER,
@@ -36,7 +37,8 @@ public enum MediationResultReason implements ProtoEnum {
         return bisq.support.protobuf.MediationResultReason.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MediationResultReason fromProto(bisq.support.protobuf.MediationResultReason proto) {
+    public static MediationResultReason fromProto(bisq.support.protobuf.MediationResultReason proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MediationResultReason.class, proto.name(), OTHER);
     }
 }

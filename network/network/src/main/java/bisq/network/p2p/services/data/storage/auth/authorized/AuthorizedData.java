@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -133,10 +134,11 @@ public final class AuthorizedData extends AuthenticatedData {
         return builder;
     }
 
-    public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
-        bisq.network.protobuf.AuthorizedData authorizedDataProto = proto.getAuthorizedData();
-        byte[] authorizedPublicKeyBytes = authorizedDataProto.getAuthorizedPublicKeyBytes().toByteArray();
+    public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto)
+            throws UnresolvableProtobufException {
         try {
+            bisq.network.protobuf.AuthorizedData authorizedDataProto = proto.getAuthorizedData();
+            byte[] authorizedPublicKeyBytes = authorizedDataProto.getAuthorizedPublicKeyBytes().toByteArray();
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(authorizedPublicKeyBytes);
             Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
             DistributedData distributedData = DistributedData.fromAny(proto.getDistributedData());
@@ -151,11 +153,10 @@ public final class AuthorizedData extends AuthenticatedData {
                         authorizedPublicKeyBytes
                 );
             } else {
-                throw new RuntimeException("DistributedData must be type of AuthorizedDistributedData");
+                throw new UnresolvableProtobufException("DistributedData must be type of AuthorizedDistributedData");
             }
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

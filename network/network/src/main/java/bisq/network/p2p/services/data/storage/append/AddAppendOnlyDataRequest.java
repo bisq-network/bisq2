@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
@@ -92,10 +93,15 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
                 .setAppendOnlyData(serializeForHash ? appendOnlyData.toAny(true) : appendOnlyDataAny);
     }
 
-    public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto) {
-        Any appendOnlyDataAny = DistributedDataAny.retain(proto.getAppendOnlyData());
-        return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()),
-                appendOnlyDataAny);
+    public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            Any appendOnlyDataAny = DistributedDataAny.retain(proto.getAppendOnlyData());
+            return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()),
+                    appendOnlyDataAny);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

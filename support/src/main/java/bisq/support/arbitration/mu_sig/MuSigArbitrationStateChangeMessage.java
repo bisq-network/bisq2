@@ -18,6 +18,7 @@
 package bisq.support.arbitration.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -87,19 +88,24 @@ public final class MuSigArbitrationStateChangeMessage implements MailboxMessage,
         return builder;
     }
 
-    public static MuSigArbitrationStateChangeMessage fromProto(bisq.support.protobuf.MuSigArbitrationStateChangeMessage proto) {
-        return new MuSigArbitrationStateChangeMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
-                proto.hasMuSigArbitrationResult()
-                        ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
-                        : Optional.empty(),
-                proto.hasArbitrationResultSignature()
-                        ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
-                        : Optional.empty()
-        );
+    public static MuSigArbitrationStateChangeMessage fromProto(bisq.support.protobuf.MuSigArbitrationStateChangeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigArbitrationStateChangeMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
+                    proto.hasMuSigArbitrationResult()
+                            ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
+                            : Optional.empty(),
+                    proto.hasArbitrationResultSignature()
+                            ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
+                            : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

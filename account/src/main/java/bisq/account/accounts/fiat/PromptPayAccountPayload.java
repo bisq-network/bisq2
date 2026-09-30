@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -76,14 +77,19 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
                 .setPromptPayId(promptPayId);
     }
 
-    public static PromptPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.PromptPayAccountPayload payload = countryBasedAccountPayload.getPromptPayAccountPayload();
-        return new PromptPayAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getPromptPayId()
-        );
+    public static PromptPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.PromptPayAccountPayload payload = countryBasedAccountPayload.getPromptPayAccountPayload();
+            return new PromptPayAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getPromptPayId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

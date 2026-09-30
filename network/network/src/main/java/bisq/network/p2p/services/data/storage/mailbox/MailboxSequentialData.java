@@ -23,6 +23,7 @@ import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.DigestUtil;
 import bisq.security.keys.EcPublicKeyValidation;
@@ -99,9 +100,10 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
                 .setSequenceNumber(sequenceNumber);
     }
 
-    public static MailboxSequentialData fromProto(bisq.network.protobuf.MailboxSequentialData proto) {
-        byte[] receiversPubKeyBytes = proto.getReceiversPubKeyBytes().toByteArray();
+    public static MailboxSequentialData fromProto(bisq.network.protobuf.MailboxSequentialData proto)
+            throws UnresolvableProtobufException {
         try {
+            byte[] receiversPubKeyBytes = proto.getReceiversPubKeyBytes().toByteArray();
             PublicKey receiversPubKey = KeyGeneration.generatePublic(receiversPubKeyBytes);
             return new MailboxSequentialData(
                     MailboxData.fromProto(proto.getMailboxData()),
@@ -112,9 +114,8 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
                     proto.getCreated(),
                     proto.getSequenceNumber()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key");
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

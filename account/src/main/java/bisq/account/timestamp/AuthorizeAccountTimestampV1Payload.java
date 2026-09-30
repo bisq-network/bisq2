@@ -18,6 +18,7 @@
 package bisq.account.timestamp;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -77,14 +78,19 @@ public final class AuthorizeAccountTimestampV1Payload implements NetworkProto {
                 .setPublicKey(ByteString.copyFrom(publicKey));
     }
 
-    public static AuthorizeAccountTimestampV1Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV1Payload proto) {
-        return new AuthorizeAccountTimestampV1Payload(
-                proto.getDate(),
-                proto.getHash().toByteArray(),
-                proto.getFingerprint().toByteArray(),
-                proto.getSaltedFingerprint().toByteArray(),
-                proto.getPublicKey().toByteArray()
-        );
+    public static AuthorizeAccountTimestampV1Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV1Payload proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizeAccountTimestampV1Payload(
+                    proto.getDate(),
+                    proto.getHash().toByteArray(),
+                    proto.getFingerprint().toByteArray(),
+                    proto.getSaltedFingerprint().toByteArray(),
+                    proto.getPublicKey().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

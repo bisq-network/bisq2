@@ -17,6 +17,7 @@
 
 package bisq.common.asset;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.Validation;
 import bisq.common.validation.crypto.CryptoAddressValidationRepository;
 import lombok.EqualsAndHashCode;
@@ -65,12 +66,16 @@ public final class CryptoAsset extends DigitalAsset {
         return unsafeToProto(serializeForHash);
     }
 
-    public static CryptoAsset fromProto(bisq.common.protobuf.Asset baseProto) {
-        // Precision is not part of the Asset proto; re-derive it from the repository (custom -> 8).
-        int precision = CryptoAssetRepository.find(baseProto.getCode())
-                .map(CryptoAsset::getPrecision)
-                .orElse(8);
-        return new CryptoAsset(baseProto.getCode(), baseProto.getName(), precision);
+    public static CryptoAsset fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
+        try {
+            // Precision is not part of the Asset proto; re-derive it from the repository (custom -> 8).
+            int precision = CryptoAssetRepository.find(baseProto.getCode())
+                    .map(CryptoAsset::getPrecision)
+                    .orElse(8);
+            return new CryptoAsset(baseProto.getCode(), baseProto.getName(), precision);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

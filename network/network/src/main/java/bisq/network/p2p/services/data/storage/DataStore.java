@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.persistence.PersistableStore;
@@ -64,18 +65,23 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
         return bisq.network.protobuf.DataStore.newBuilder().addAllMapEntries(mapEntries);
     }
 
-    public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto) {
-        return new DataStore<>(proto.getMapEntriesList().stream()
-                .map(e -> {
-                    try {
-                        return Map.entry(ByteArray.fromProto(e.getKey()), DataRequest.fromProto(e.getValue()));
-                    } catch (Exception ex) {
-                        log.warn("Could not create map entry from protobuf map entry {}", e.toString(), ex);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new DataStore<>(proto.getMapEntriesList().stream()
+                    .map(e -> {
+                        try {
+                            return Map.entry(ByteArray.fromProto(e.getKey()), DataRequest.fromProto(e.getValue()));
+                        } catch (Exception ex) {
+                            log.warn("Could not create map entry from protobuf map entry {}", e.toString(), ex);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

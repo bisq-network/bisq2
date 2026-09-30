@@ -22,6 +22,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -102,27 +103,32 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
         return builder;
     }
 
-    public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
-        Optional<String> text = baseProto.hasText() ?
-                Optional.of(baseProto.getText()) :
-                Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOfferbookMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOfferbookMessage().getBisqEasyOffer())) :
-                Optional.empty();
-        return new BisqEasyOfferbookMessage(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                baseProto.getAuthorUserProfileId(),
-                bisqEasyOffer,
-                text,
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()));
+    public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            Optional<Citation> citation = baseProto.hasCitation() ?
+                    Optional.of(Citation.fromProto(baseProto.getCitation())) :
+                    Optional.empty();
+            Optional<String> text = baseProto.hasText() ?
+                    Optional.of(baseProto.getText()) :
+                    Optional.empty();
+            Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOfferbookMessage().hasBisqEasyOffer() ?
+                    Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOfferbookMessage().getBisqEasyOffer())) :
+                    Optional.empty();
+            return new BisqEasyOfferbookMessage(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    baseProto.getAuthorUserProfileId(),
+                    bisqEasyOffer,
+                    text,
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

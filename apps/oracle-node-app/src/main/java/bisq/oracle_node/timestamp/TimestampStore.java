@@ -19,6 +19,8 @@ package bisq.oracle_node.timestamp;
 
 import bisq.common.data.StringLongPair;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -55,11 +57,15 @@ final class TimestampStore implements PersistableStore<TimestampStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static TimestampStore fromProto(bisq.oracle_node.protobuf.TimestampStore proto) {
-        Map<String, Long> map = proto.getStringLongPairsList().stream()
-                .map(StringLongPair::fromProto)
-                .collect(Collectors.toMap(StringLongPair::getKey, StringLongPair::getValue));
-        return new TimestampStore(map);
+    public static TimestampStore fromProto(bisq.oracle_node.protobuf.TimestampStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Map<String, Long> map = ProtobufUtils.fromProtoStream(proto.getStringLongPairsList(), StringLongPair::fromProto)
+                    .collect(Collectors.toMap(StringLongPair::getKey, StringLongPair::getValue));
+            return new TimestampStore(map);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

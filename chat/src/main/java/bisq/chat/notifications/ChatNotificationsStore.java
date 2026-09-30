@@ -19,6 +19,8 @@ package bisq.chat.notifications;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -52,11 +54,15 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
         return unsafeToProto(serializeForHash);
     }
 
-    public static PersistableStore<?> fromProto(bisq.chat.protobuf.ChatNotificationsStore proto) {
-        return new ChatNotificationsStore(
-                proto.getChatNotificationsList().stream()
-                        .map(ChatNotification::fromProto)
-                        .collect(Collectors.toSet()));
+    public static PersistableStore<?> fromProto(bisq.chat.protobuf.ChatNotificationsStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ChatNotificationsStore(
+                    ProtobufUtils.fromProtoStream(proto.getChatNotificationsList(), ChatNotification::fromProto)
+                            .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

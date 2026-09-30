@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -61,13 +62,18 @@ public final class BisqEasyConfirmFiatReceiptMessage extends BisqEasyTradeMessag
         return bisq.trade.protobuf.BisqEasyConfirmFiatReceiptMessage.newBuilder();
     }
 
-    public static BisqEasyConfirmFiatReceiptMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        return new BisqEasyConfirmFiatReceiptMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()));
+    public static BisqEasyConfirmFiatReceiptMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyConfirmFiatReceiptMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -19,6 +19,8 @@ package bisq.support.dispute.mu_sig;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -89,15 +91,19 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
                         .collect(Collectors.toList()));
     }
 
-    public static MuSigDisputeCaseDataMessage fromProto(bisq.support.protobuf.MuSigDisputeCaseDataMessage proto) {
-        return new MuSigDisputeCaseDataMessage(
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                proto.getContractHash().toByteArray(),
-                proto.getChatMessagesList().stream()
-                        .map(MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList())
-        );
+    public static MuSigDisputeCaseDataMessage fromProto(bisq.support.protobuf.MuSigDisputeCaseDataMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigDisputeCaseDataMessage(
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    proto.getContractHash().toByteArray(),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

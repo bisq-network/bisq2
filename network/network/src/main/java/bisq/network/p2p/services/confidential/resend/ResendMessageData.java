@@ -19,6 +19,7 @@ package bisq.network.p2p.services.confidential.resend;
 
 import bisq.common.observable.Observable;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
@@ -110,14 +111,19 @@ public final class ResendMessageData implements NetworkProto {
                 .setDate(date);
     }
 
-    public static ResendMessageData fromProto(bisq.network.protobuf.ResendMessageData proto) {
-        return new ResendMessageData(EnvelopePayloadMessage.fromProto(proto.getEnvelopePayloadMessage()),
-                NetworkId.fromProto(proto.getReceiverNetworkId()),
-                KeyPairProtoUtil.fromProto(proto.getSenderKeyPair()),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                MessageDeliveryStatus.fromProto(proto.getMessageDeliveryStatus()),
-                proto.getDate()
-        );
+    public static ResendMessageData fromProto(bisq.network.protobuf.ResendMessageData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ResendMessageData(EnvelopePayloadMessage.fromProto(proto.getEnvelopePayloadMessage()),
+                    NetworkId.fromProto(proto.getReceiverNetworkId()),
+                    KeyPairProtoUtil.fromProto(proto.getSenderKeyPair()),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    MessageDeliveryStatus.fromProto(proto.getMessageDeliveryStatus()),
+                    proto.getDate()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getId() {

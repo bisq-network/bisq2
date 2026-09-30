@@ -1,5 +1,6 @@
 package bisq.network.p2p.services.confidential.ack;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -51,8 +52,12 @@ public final class AckMessage implements MailboxMessage, Response {
         return bisq.network.protobuf.AckMessage.newBuilder().setId(id);
     }
 
-    public static AckMessage fromProto(bisq.network.protobuf.AckMessage proto) {
-        return new AckMessage(proto.getId());
+    public static AckMessage fromProto(bisq.network.protobuf.AckMessage proto) throws UnresolvableProtobufException {
+        try {
+            return new AckMessage(proto.getId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

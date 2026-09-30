@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.node.envelope.parser.nio;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.envelope.parser.ProtoBufMessageLengthParser;
 import bisq.network.protobuf.NetworkEnvelope;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -101,6 +102,8 @@ public class NetworkEnvelopeDeserializer {
 
         } catch (InvalidProtocolBufferException e) {
             log.error("Couldn't parse protocol buffer message.", e);
+        } catch (UnresolvableProtobufException e) {
+            throw new RuntimeException(e);
         } finally {
             resetState();
         }

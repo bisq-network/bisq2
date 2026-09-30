@@ -18,6 +18,7 @@
 package bisq.user.reputation;
 
 import bisq.common.encoding.Hex;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.user.reputation.data.AuthorizedAccountAgeData;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
 import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
@@ -37,7 +38,7 @@ class AccountAgeProtocolTest {
     private static final String PROFILE_ID = "12".repeat(20);
 
     @Test
-    void missingRequestVersionIsReadAsLegacy() {
+    void missingRequestVersionIsReadAsLegacy() throws UnresolvableProtobufException {
         bisq.user.protobuf.AuthorizeAccountAgeRequest proto =
                 bisq.user.protobuf.AuthorizeAccountAgeRequest.newBuilder()
                         .setProfileId(PROFILE_ID)
@@ -54,7 +55,7 @@ class AccountAgeProtocolTest {
     }
 
     @Test
-    void currentRequestCarriesTheHashPreimage() {
+    void currentRequestCarriesTheHashPreimage() throws UnresolvableProtobufException {
         AuthorizeAccountAgeRequest request = new AuthorizeAccountAgeRequest(
                 PROFILE_ID,
                 "34".repeat(20),
@@ -81,7 +82,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -98,11 +100,12 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void anUnknownAccountAgeRequestVersionIsOnlyBoundedStructurally() {
+    void anUnknownAccountAgeRequestVersionIsOnlyBoundedStructurally() throws UnresolvableProtobufException {
         // An unknown version cannot be assumed to use the current field layout, so neither the preimage nor the
         // date rules of version 2 are applied to it. The oracle rejects it by version before it is used.
         bisq.user.protobuf.AuthorizeAccountAgeRequest proto =
@@ -131,11 +134,12 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void legacyAuthorizedDataRemainsParseableButIsNotCurrent() {
+    void legacyAuthorizedDataRemainsParseableButIsNotCurrent() throws UnresolvableProtobufException {
         long date = 1_700_000_000_000L;
         bisq.user.protobuf.AuthorizedAccountAgeData proto =
                 bisq.user.protobuf.AuthorizedAccountAgeData.newBuilder()
@@ -153,7 +157,7 @@ class AccountAgeProtocolTest {
     }
 
     @Test
-    void currentAuthorizedDataSignsTheUnlinkableWitnessIdentity() {
+    void currentAuthorizedDataSignsTheUnlinkableWitnessIdentity() throws UnresolvableProtobufException {
         AuthorizedAccountAgeData data = new AuthorizedAccountAgeData(
                 PROFILE_ID,
                 dateBucket(),
@@ -187,7 +191,7 @@ class AccountAgeProtocolTest {
     }
 
     @Test
-    void currentAccountAgeDataSignsItsVersion() {
+    void currentAccountAgeDataSignsItsVersion() throws UnresolvableProtobufException {
         AuthorizedAccountAgeData current = new AuthorizedAccountAgeData(
                 PROFILE_ID,
                 dateBucket(),
@@ -202,7 +206,7 @@ class AccountAgeProtocolTest {
     }
 
     @Test
-    void currentSignedWitnessRequestCarriesTheHashPreimage() {
+    void currentSignedWitnessRequestCarriesTheHashPreimage() throws UnresolvableProtobufException {
         AuthorizeSignedWitnessRequest request = new AuthorizeSignedWitnessRequest(
                 PROFILE_ID,
                 "34".repeat(20),
@@ -219,7 +223,7 @@ class AccountAgeProtocolTest {
     }
 
     @Test
-    void missingSignedWitnessRequestVersionIsReadAsLegacy() {
+    void missingSignedWitnessRequestVersionIsReadAsLegacy() throws UnresolvableProtobufException {
         bisq.user.protobuf.AuthorizeSignedWitnessRequest proto =
                 bisq.user.protobuf.AuthorizeSignedWitnessRequest.newBuilder()
                         .setProfileId(PROFILE_ID)
@@ -248,7 +252,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @ParameterizedTest
@@ -267,7 +272,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -282,11 +288,12 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void currentSignedWitnessDataSignsTheUnlinkableWitnessIdentity() {
+    void currentSignedWitnessDataSignsTheUnlinkableWitnessIdentity() throws UnresolvableProtobufException {
         AuthorizedSignedWitnessData data = new AuthorizedSignedWitnessData(
                 PROFILE_ID,
                 dateBucket(),
@@ -305,7 +312,7 @@ class AccountAgeProtocolTest {
     }
 
     @Test
-    void currentSignedWitnessDataSignsItsVersion() {
+    void currentSignedWitnessDataSignsItsVersion() throws UnresolvableProtobufException {
         AuthorizedSignedWitnessData current = new AuthorizedSignedWitnessData(
                 PROFILE_ID,
                 dateBucket(),

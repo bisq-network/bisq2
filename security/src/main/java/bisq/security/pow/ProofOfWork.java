@@ -19,6 +19,7 @@ package bisq.security.pow;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.protobuf.ByteString;
@@ -94,15 +95,19 @@ public final class ProofOfWork implements NetworkProto {
         return builder;
     }
 
-    public static ProofOfWork fromProto(bisq.security.protobuf.ProofOfWork proto) {
-        return new ProofOfWork(
-                proto.getPayload().toByteArray(),
-                proto.getCounter(),
-                proto.getChallenge().isEmpty() ? null : proto.getChallenge().toByteArray(),
-                proto.getDifficulty(),
-                proto.getSolution().toByteArray(),
-                proto.getDuration()
-        );
+    public static ProofOfWork fromProto(bisq.security.protobuf.ProofOfWork proto) throws UnresolvableProtobufException {
+        try {
+            return new ProofOfWork(
+                    proto.getPayload().toByteArray(),
+                    proto.getCounter(),
+                    proto.getChallenge().isEmpty() ? null : proto.getChallenge().toByteArray(),
+                    proto.getDifficulty(),
+                    proto.getSolution().toByteArray(),
+                    proto.getDuration()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public double getLog2Difficulty() {

@@ -18,6 +18,8 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -60,14 +62,18 @@ public final class PartialSignaturesRequest implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static PartialSignaturesRequest fromProto(bisq.trade.protobuf.PartialSignaturesRequest proto) {
-        return new PartialSignaturesRequest(proto.getTradeId(),
-                proto.hasPeersNonceShares()
-                        ? Optional.of(NonceSharesMessage.fromProto(proto.getPeersNonceShares()))
-                        : Optional.empty(),
-                proto.getRedirectionReceiversList().stream()
-                        .map(ReceiverAddressAndAmount::fromProto)
-                        .collect(Collectors.toList()),
-                proto.getBuyerReadyToRelease());
+    public static PartialSignaturesRequest fromProto(bisq.trade.protobuf.PartialSignaturesRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new PartialSignaturesRequest(proto.getTradeId(),
+                    proto.hasPeersNonceShares()
+                            ? Optional.of(NonceSharesMessage.fromProto(proto.getPeersNonceShares()))
+                            : Optional.empty(),
+                    ProtobufUtils.fromProtoStream(proto.getRedirectionReceiversList(), ReceiverAddressAndAmount::fromProto)
+                            .collect(Collectors.toList()),
+                    proto.getBuyerReadyToRelease());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -24,6 +24,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
@@ -55,7 +56,7 @@ class AuthorizedBondedRoleRegistrationProofTest {
                     "0d2bc0b1067a72896a98525c052e1208746573742d6b6579";
 
     @Test
-    void legacyAuthorizedRoleKeepsVersionOneHashShapeAndEmptyProof() {
+    void legacyAuthorizedRoleKeepsVersionOneHashShapeAndEmptyProof() throws UnresolvableProtobufException {
         AuthorizedBondedRole legacy = new AuthorizedBondedRole(PROFILE_ID,
                 "public-key",
                 BondedRoleType.MEDIATOR,
@@ -94,7 +95,7 @@ class AuthorizedBondedRoleRegistrationProofTest {
     }
 
     @Test
-    void versionTwoAuthorizedRoleSignsTheExactRegistrationBinding() {
+    void versionTwoAuthorizedRoleSignsTheExactRegistrationBinding() throws UnresolvableProtobufException {
         AuthorizedBondedRole first = createBoundRole(LOCKUP_TX_ID);
         AuthorizedBondedRole second = createBoundRole("c".repeat(64));
 
@@ -106,7 +107,8 @@ class AuthorizedBondedRoleRegistrationProofTest {
     }
 
     @Test
-    void domainValidationRejectsAProtocolVersionWithoutTheMatchingNetworkDataVersion() {
+    void domainValidationRejectsAProtocolVersionWithoutTheMatchingNetworkDataVersion()
+            throws UnresolvableProtobufException {
         bisq.bonded_roles.protobuf.AuthorizedBondedRole malformed = createBoundRole(LOCKUP_TX_ID)
                 .toProto(false)
                 .toBuilder()
@@ -119,7 +121,7 @@ class AuthorizedBondedRoleRegistrationProofTest {
     }
 
     @Test
-    void futureDataVersionRemainsResolvableWithoutApplyingKnownVersionMappings() {
+    void futureDataVersionRemainsResolvableWithoutApplyingKnownVersionMappings() throws UnresolvableProtobufException {
         bisq.bonded_roles.protobuf.AuthorizedBondedRole future = createBoundRole(LOCKUP_TX_ID)
                 .toProto(false)
                 .toBuilder()

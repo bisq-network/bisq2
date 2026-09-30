@@ -18,6 +18,7 @@
 package bisq.account.protocol_type;
 
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum TradeProtocolType implements ProtocolType {
     BISQ_EASY,
@@ -35,7 +36,8 @@ public enum TradeProtocolType implements ProtocolType {
         return bisq.account.protobuf.TradeProtocolType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static TradeProtocolType fromProto(bisq.account.protobuf.TradeProtocolType proto) {
+    public static TradeProtocolType fromProto(bisq.account.protobuf.TradeProtocolType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(TradeProtocolType.class, proto.name(), BISQ_EASY);
     }
 }

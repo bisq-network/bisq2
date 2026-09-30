@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.EcPublicKeyVariants;
 import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
@@ -42,6 +43,7 @@ import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFO
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -76,7 +78,8 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void addRequestHasValidSignaturesAfterProtobufRoundTrip() throws GeneralSecurityException {
+    void addRequestHasValidSignaturesAfterProtobufRoundTrip()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         AddAuthenticatedDataRequest received = fromProto(request.toValueProto(false), request);
 
@@ -88,7 +91,7 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void addRequestWithChangedVersionIsRejected() throws GeneralSecurityException {
+    void addRequestWithChangedVersionIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
 
         AddAuthenticatedDataRequest changed = fromProto(request.toValueProto(false).toBuilder()
@@ -107,7 +110,8 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void addRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
+    void addRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
 
         AddAuthenticatedDataRequest asFromEarlierVersion = fromProto(
@@ -122,7 +126,8 @@ class AuthenticatedDataSignatureV2Test {
     // Signature V1 is valid, but it does not cover all fields of the request. From the cutoff date on, a node does not
     // accept it alone.
     @Test
-    void addRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOn() throws GeneralSecurityException {
+    void addRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOn()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
 
         AddAuthenticatedDataRequest asFromEarlierVersion = fromProto(
@@ -149,7 +154,8 @@ class AuthenticatedDataSignatureV2Test {
 
     // The cutoff date does not make a request with an invalid signature V2 fall back to signature V1
     @Test
-    void requestWithInvalidSignatureV2IsInvalidBeforeTheCutoffDate() throws GeneralSecurityException {
+    void requestWithInvalidSignatureV2IsInvalidBeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         RemoveAuthenticatedDataRequest changed = RemoveAuthenticatedDataRequest.fromProto(
                 request.toValueProto(false).toBuilder().setSequenceNumber(request.getSequenceNumber() + 1).build());
@@ -160,7 +166,8 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void removeRequestHasValidSignaturesAfterProtobufRoundTrip() throws GeneralSecurityException {
+    void removeRequestHasValidSignaturesAfterProtobufRoundTrip()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         RemoveAuthenticatedDataRequest received = RemoveAuthenticatedDataRequest.fromProto(request.toValueProto(false));
 
@@ -171,7 +178,7 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void removeRequestWithChangedFieldIsRejected() throws GeneralSecurityException {
+    void removeRequestWithChangedFieldIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         bisq.network.protobuf.RemoveAuthenticatedDataRequest proto = request.toValueProto(false);
 
@@ -189,7 +196,8 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void removeRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate() throws GeneralSecurityException {
+    void removeRequestWithoutSignatureV2IsVerifiedWithSignatureV1BeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
 
         RemoveAuthenticatedDataRequest withoutSignatureV2 = RemoveAuthenticatedDataRequest.fromProto(
@@ -202,7 +210,8 @@ class AuthenticatedDataSignatureV2Test {
     // Signature V1 of a remove request does not cover the creation date. The time of the node decides, so an earlier
     // creation date, which a relay can set, does not make the request valid.
     @Test
-    void removeRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOnForAnyCreationDate() throws GeneralSecurityException {
+    void removeRequestWithoutSignatureV2IsInvalidFromTheCutoffDateOnForAnyCreationDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
 
         RemoveAuthenticatedDataRequest withEarlierCreationDate = RemoveAuthenticatedDataRequest.fromProto(
@@ -226,13 +235,15 @@ class AuthenticatedDataSignatureV2Test {
                 .setOwnerPublicKeyBytes(EcPublicKeyVariants.toCompressed(ownerKeyPair.getPublic()))
                 .build();
 
-        assertThrows(IllegalArgumentException.class, () -> RemoveAuthenticatedDataRequest.fromProto(proto));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> RemoveAuthenticatedDataRequest.fromProto(proto)).getCause());
     }
 
     // Nodes of this version sign in low-S form. A relay can create the high-S form of a signature without the private
     // key. Signature V2 accepts only the low-S form, signature V1 accepts both (nodes of earlier versions create both).
     @Test
-    void addRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException {
+    void addRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         bisq.network.protobuf.AddAuthenticatedDataRequest proto = request.toValueProto(false);
 
@@ -250,7 +261,7 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void removeRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException {
+    void removeRequestWithHighSSignatureV2IsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         bisq.network.protobuf.RemoveAuthenticatedDataRequest proto = request.toValueProto(false);
 
@@ -267,7 +278,8 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void refreshRequestHasSameProofOfWorkPayloadWithoutSignatureV2() throws GeneralSecurityException {
+    void refreshRequestHasSameProofOfWorkPayloadWithoutSignatureV2()
+            throws GeneralSecurityException, UnresolvableProtobufException {
         RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
 
         RefreshAuthenticatedDataRequest withoutSignatureV2 = RefreshAuthenticatedDataRequest.fromProto(
@@ -319,7 +331,8 @@ class AuthenticatedDataSignatureV2Test {
     // Like AddAuthenticatedDataRequest.fromProto, but with the sequential data of the given request. The test data has
     // no resolver, so it cannot be parsed from its Any.
     private static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto,
-                                                         AddAuthenticatedDataRequest request) {
+                                                         AddAuthenticatedDataRequest request)
+            throws UnresolvableProtobufException {
         return new AddAuthenticatedDataRequest(request.getAuthenticatedSequentialData(),
                 proto.getSignature().toByteArray(),
                 proto.getOwnerPublicKeyBytes().toByteArray(),

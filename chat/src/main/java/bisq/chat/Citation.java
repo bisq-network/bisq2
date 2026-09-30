@@ -19,6 +19,7 @@ package bisq.chat;
 
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -69,10 +70,14 @@ public final class Citation implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static Citation fromProto(bisq.chat.protobuf.Citation proto) {
-        return new Citation(proto.getAuthorUserProfileId(),
-                proto.getText(),
-                proto.hasChatMessageId() ? Optional.of(proto.getChatMessageId()) : Optional.empty());
+    public static Citation fromProto(bisq.chat.protobuf.Citation proto) throws UnresolvableProtobufException {
+        try {
+            return new Citation(proto.getAuthorUserProfileId(),
+                    proto.getText(),
+                    proto.hasChatMessageId() ? Optional.of(proto.getChatMessageId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public boolean isValid() {

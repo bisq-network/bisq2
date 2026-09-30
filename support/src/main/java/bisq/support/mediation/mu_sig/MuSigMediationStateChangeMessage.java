@@ -18,6 +18,7 @@
 package bisq.support.mediation.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -87,19 +88,24 @@ public final class MuSigMediationStateChangeMessage implements MailboxMessage, E
         return builder;
     }
 
-    public static MuSigMediationStateChangeMessage fromProto(bisq.support.protobuf.MuSigMediationStateChangeMessage proto) {
-        return new MuSigMediationStateChangeMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                MediationCaseState.fromProto(proto.getMediationCaseState()),
-                proto.hasMuSigMediationResult()
-                        ? Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult()))
-                        : Optional.empty(),
-                proto.hasMediationResultSignature()
-                        ? Optional.of(proto.getMediationResultSignature().toByteArray())
-                        : Optional.empty()
-        );
+    public static MuSigMediationStateChangeMessage fromProto(bisq.support.protobuf.MuSigMediationStateChangeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigMediationStateChangeMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    MediationCaseState.fromProto(proto.getMediationCaseState()),
+                    proto.hasMuSigMediationResult()
+                            ? Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult()))
+                            : Optional.empty(),
+                    proto.hasMediationResultSignature()
+                            ? Optional.of(proto.getMediationResultSignature().toByteArray())
+                            : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

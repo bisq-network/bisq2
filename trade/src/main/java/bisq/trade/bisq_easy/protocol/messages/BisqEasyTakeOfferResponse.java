@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -68,15 +69,20 @@ public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
                 .setContractSignatureData(contractSignatureData.toProto(serializeForHash));
     }
 
-    public static BisqEasyTakeOfferResponse fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.BisqEasyTakeOfferResponse response = proto.getBisqEasyTradeMessage().getBisqEasyTakeOfferResponse();
-        return new BisqEasyTakeOfferResponse(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                ContractSignatureData.fromProto(response.getContractSignatureData()));
+    public static BisqEasyTakeOfferResponse fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.BisqEasyTakeOfferResponse response = proto.getBisqEasyTradeMessage().getBisqEasyTakeOfferResponse();
+            return new BisqEasyTakeOfferResponse(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    ContractSignatureData.fromProto(response.getContractSignatureData()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

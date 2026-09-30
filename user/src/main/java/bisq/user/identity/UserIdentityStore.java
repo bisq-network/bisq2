@@ -21,6 +21,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.security.AesGcm;
@@ -122,21 +123,26 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {
-        if (proto.hasEncryptedData() && proto.hasScryptParameters()) {
-            checkArgument(!proto.hasSelectedUserIdentityId());
-            checkArgument(proto.getUserIdentitiesList().isEmpty());
-            EncryptedData encryptedData = EncryptedData.fromProto(proto.getEncryptedData());
-            ScryptParameters scryptParameters = ScryptParameters.fromProto(proto.getScryptParameters());
-            return new UserIdentityStore(encryptedData, scryptParameters);
-        } else {
-            checkArgument(!proto.hasEncryptedData());
-            checkArgument(!proto.hasScryptParameters());
-            String selectedUserIdentityId = proto.hasSelectedUserIdentityId() ? proto.getSelectedUserIdentityId() : null;
-            Set<UserIdentity> userIdentitySet = proto.getUserIdentitiesList().stream()
-                    .map(UserIdentity::fromProto)
-                    .collect(Collectors.toSet());
-            return new UserIdentityStore(selectedUserIdentityId, userIdentitySet);
+    public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            if (proto.hasEncryptedData() && proto.hasScryptParameters()) {
+                checkArgument(!proto.hasSelectedUserIdentityId());
+                checkArgument(proto.getUserIdentitiesList().isEmpty());
+                EncryptedData encryptedData = EncryptedData.fromProto(proto.getEncryptedData());
+                ScryptParameters scryptParameters = ScryptParameters.fromProto(proto.getScryptParameters());
+                return new UserIdentityStore(encryptedData, scryptParameters);
+            } else {
+                checkArgument(!proto.hasEncryptedData());
+                checkArgument(!proto.hasScryptParameters());
+                String selectedUserIdentityId = proto.hasSelectedUserIdentityId() ? proto.getSelectedUserIdentityId() : null;
+                Set<UserIdentity> userIdentitySet = ProtobufUtils.fromProtoStream(proto.getUserIdentitiesList(),
+                                UserIdentity::fromProto)
+                        .collect(Collectors.toSet());
+                return new UserIdentityStore(selectedUserIdentityId, userIdentitySet);
+            }
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 
@@ -249,7 +255,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
                 setSelectedUserIdentityId(decrypted.getSelectedUserIdentityId());
                 log.info("decrypt took {} ms", System.currentTimeMillis() - ts);
                 return null;
-            } catch (GeneralSecurityException | IOException e) {
+            } catch (GeneralSecurityException | IOException | UnresolvableProtobufException e) {
                 throw new RuntimeException(e);
             }
         }, commonForkJoinPool());

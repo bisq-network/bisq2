@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.events.seller;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -24,6 +25,7 @@ import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.SwapTxSignatureResponse;
 import bisq.trade.mu_sig.messages.network.PaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.SwapTxSignatureRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,12 +39,16 @@ public final class PaymentReceiptConfirmedEventHandler extends MuSigTradeEventHa
 
     @Override
     public void process(PaymentReceiptConfirmedEvent event) {
-        mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(blockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setSellerReadyToRelease(true)
-                .build()));
+        try {
+            mySwapTxSignatureResponse = SwapTxSignatureResponse.fromProto(blockingStub.signSwapTx(SwapTxSignatureRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setSellerReadyToRelease(true)
+                    .build()));
 
-        tradeService.startCloseTradeTimeout(trade, new SellersCloseTradeTimeoutEvent());
+            tradeService.startCloseTradeTimeout(trade, new SellersCloseTradeTimeoutEvent());
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

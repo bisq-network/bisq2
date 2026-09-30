@@ -33,6 +33,7 @@ import bisq.account.accounts.fiat.WiseAccount;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.timestamp.KeyType;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
@@ -91,7 +92,7 @@ public abstract class Account<M extends PaymentMethod<?>, P extends AccountPaylo
                 .setAccountOrigin(accountOrigin.toProtoEnum());
     }
 
-    public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) {
+    public static Account<?, ?> fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case USERDEFINEDFIATACCOUNT -> UserDefinedFiatAccount.fromProto(proto);
             case REVOLUTACCOUNT -> RevolutAccount.fromProto(proto);

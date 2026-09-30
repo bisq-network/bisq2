@@ -23,6 +23,7 @@ import bisq.bonded_roles.release.AppType;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -186,24 +187,29 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto) {
-        AlertType alertType = AlertType.fromProto(proto.getAlertType());
-        return new AuthorizedAlertData(
-                proto.getVersion(),
-                proto.getId(),
-                proto.getDate(),
-                alertType,
-                proto.hasHeadline() ? Optional.of(proto.getHeadline()) : getDefaultHeadline(alertType),
-                proto.hasMessage() ? Optional.of(proto.getMessage()) : Optional.empty(),
-                proto.getHaltTrading(),
-                proto.getRequireVersionForTrading(),
-                proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
-                proto.hasBannedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getBannedRole())) : Optional.empty(),
-                proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided(),
-                proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty(),
-                AppType.fromProto(proto.getAppType())
-        );
+    public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto)
+            throws UnresolvableProtobufException {
+        try {
+            AlertType alertType = AlertType.fromProto(proto.getAlertType());
+            return new AuthorizedAlertData(
+                    proto.getVersion(),
+                    proto.getId(),
+                    proto.getDate(),
+                    alertType,
+                    proto.hasHeadline() ? Optional.of(proto.getHeadline()) : getDefaultHeadline(alertType),
+                    proto.hasMessage() ? Optional.of(proto.getMessage()) : Optional.empty(),
+                    proto.getHaltTrading(),
+                    proto.getRequireVersionForTrading(),
+                    proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
+                    proto.hasBannedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getBannedRole())) : Optional.empty(),
+                    proto.getSecurityManagerProfileId(),
+                    proto.getStaticPublicKeysProvided(),
+                    proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty(),
+                    AppType.fromProto(proto.getAppType())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private static Optional<String> getDefaultHeadline(AlertType alertType) {

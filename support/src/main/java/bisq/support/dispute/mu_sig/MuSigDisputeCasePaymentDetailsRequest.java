@@ -18,6 +18,7 @@
 package bisq.support.dispute.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -64,11 +65,16 @@ public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessa
                 .setSenderNetworkId(senderNetworkId.toProto(serializeForHash));
     }
 
-    public static MuSigDisputeCasePaymentDetailsRequest fromProto(bisq.support.protobuf.MuSigDisputeCasePaymentDetailsRequest proto) {
-        return new MuSigDisputeCasePaymentDetailsRequest(
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId())
-        );
+    public static MuSigDisputeCasePaymentDetailsRequest fromProto(bisq.support.protobuf.MuSigDisputeCasePaymentDetailsRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigDisputeCasePaymentDetailsRequest(
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

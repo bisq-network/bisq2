@@ -19,13 +19,14 @@ package bisq.persistence;
 
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.Any;
 
 /**
  * Interface for the outside envelope object persisted to disk.
  */
 public interface PersistableStore<T> extends PersistableProto {
-    static PersistableStore<?> fromAny(Any anyProto) {
+    static PersistableStore<?> fromAny(Any anyProto) throws UnresolvableProtobufException {
         return PersistableStoreResolver.fromAny(anyProto);
     }
 

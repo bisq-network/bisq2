@@ -19,6 +19,7 @@ package bisq.offer.options;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +38,8 @@ public final class FeeOption implements OfferOption {
             return bisq.offer.protobuf.FeeOption.FeeType.valueOf(getProtobufEnumPrefix() + name());
         }
 
-        public static FeeType fromProto(bisq.offer.protobuf.FeeOption.FeeType proto) {
+        public static FeeType fromProto(bisq.offer.protobuf.FeeOption.FeeType proto)
+                throws UnresolvableProtobufException {
             return ProtobufUtils.enumFromProto(FeeType.class, proto.name(), BSQ);
         }
     }
@@ -73,9 +75,13 @@ public final class FeeOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) {
-        return new FeeOption(FeeType.fromProto(proto.getFeeType()),
-                proto.getBlockHeightAtFeePayment(),
-                proto.getFeeTxId());
+    public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) throws UnresolvableProtobufException {
+        try {
+            return new FeeOption(FeeType.fromProto(proto.getFeeType()),
+                    proto.getBlockHeightAtFeePayment(),
+                    proto.getFeeTxId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

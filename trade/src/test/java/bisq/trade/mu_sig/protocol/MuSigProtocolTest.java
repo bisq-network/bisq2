@@ -29,6 +29,7 @@ import bisq.common.market.Market;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
@@ -147,7 +148,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenQueuedPaymentReceivedMessage_whenStateBecomesEligible_thenClosesNormallyOnReplay() {
+    void givenQueuedPaymentReceivedMessage_whenStateBecomesEligible_thenClosesNormallyOnReplay()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), DEPOSIT_TX_CONFIRMED);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
         PaymentReceivedMessage_F paymentReceivedMessage = createPaymentReceivedMessage(trade);
@@ -171,7 +173,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenBuyerAcceptsMediationFirst_whenPaymentReceivedMessageArrives_thenKeepsCustomPayoutPath() {
+    void givenBuyerAcceptsMediationFirst_whenPaymentReceivedMessageArrives_thenKeepsCustomPayoutPath()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(true, false), BUYER_INITIATED_PAYMENT);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
         PaymentReceivedMessage_F paymentReceivedMessage = createPaymentReceivedMessage(trade);
@@ -190,7 +193,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenPaymentReceivedMessageQueuedAtDepositConfirmation_whenBuyerAcceptsMediation_thenConsumesMessage() {
+    void givenPaymentReceivedMessageQueuedAtDepositConfirmation_whenBuyerAcceptsMediation_thenConsumesMessage()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(true, false), DEPOSIT_TX_CONFIRMED);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
         PaymentReceivedMessage_F paymentReceivedMessage = createPaymentReceivedMessage(trade);
@@ -210,7 +214,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenMismatchingPeerPsbt_whenMediationResultAccepted_thenCommitsAndSendsLocalPsbt() {
+    void givenMismatchingPeerPsbt_whenMediationResultAccepted_thenCommitsAndSendsLocalPsbt()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(true, false), BUYER_INITIATED_PAYMENT);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
         trade.getPeer().setPeersCustomPayoutPsbt(
@@ -269,7 +274,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenBuyerClosesNormallyFirst_whenMediationResultAccepted_thenKeepsNormalClosePath() {
+    void givenBuyerClosesNormallyFirst_whenMediationResultAccepted_thenKeepsNormalClosePath()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(true, false), BUYER_INITIATED_PAYMENT);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
         PaymentReceivedMessage_F paymentReceivedMessage = createPaymentReceivedMessage(trade);
@@ -290,7 +296,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenSellerAcceptsMediationFirst_whenPaymentReceiptConfirmed_thenKeepsCustomPayoutPath() {
+    void givenSellerAcceptsMediationFirst_whenPaymentReceiptConfirmed_thenKeepsCustomPayoutPath()
+            throws UnresolvableProtobufException {
         MuSigTrade sellerTrade = copyTradeWithState(
                 createTrade(false, false),
                 SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE);
@@ -352,7 +359,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("customPayoutAcceptanceTransitionCases")
     void givenEligibleTradeState_whenMediationResultAccepted_thenTransitionsToCustomPayoutSigned(
-            CustomPayoutAcceptanceTransitionCase testCase) {
+            CustomPayoutAcceptanceTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 testCase.sourceState());
@@ -369,7 +376,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenStoredLocalPsbt_whenMediationResultAccepted_thenDoesNotCallRpcOrReplacePsbt() {
+    void givenStoredLocalPsbt_whenMediationResultAccepted_thenDoesNotCallRpcOrReplacePsbt()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         setCustomPayoutMediationResult(trade);
         CustomPayoutPsbt customPayoutPsbt = new CustomPayoutPsbt(
@@ -391,7 +399,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenLocalRejection_whenMediationResultAccepted_thenDoesNotCallRpcOrStorePsbt() {
+    void givenLocalRejection_whenMediationResultAccepted_thenDoesNotCallRpcOrStorePsbt()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         setCustomPayoutMediationResult(trade);
         trade.getMyself().setMediationResultRejected();
@@ -409,7 +418,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("customPayoutReceiveTransitionCases")
     void givenPeerCustomPayoutPsbt_whenHandled_thenProcessesWithoutChangingTradeState(
-            CustomPayoutAcceptanceTransitionCase testCase) {
+            CustomPayoutAcceptanceTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 testCase.sourceState());
@@ -437,7 +446,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("customPayoutPreConfirmationTransitionCases")
     void givenPeerCustomPayoutPsbtBeforeDepositConfirmation_whenDepositConfirms_thenProcessesQueuedMessage(
-            CustomPayoutAcceptanceTransitionCase testCase) {
+            CustomPayoutAcceptanceTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 testCase.sourceState());
@@ -463,7 +472,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("sellerPostFTransitionCases")
     void givenPeerCustomPayoutPsbtAfterSellerCommittedMessageF_whenHandled_thenConsumesWithoutProcessing(
-            CustomPayoutAcceptanceTransitionCase testCase) {
+            CustomPayoutAcceptanceTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 testCase.sourceState());
@@ -482,7 +491,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("customPayoutSignedTransitionCases")
     void givenCustomPayoutSigned_whenNormalClosureInputArrives_thenConsumesWithoutChangingState(
-            CustomPayoutAcceptanceTransitionCase testCase) {
+            CustomPayoutAcceptanceTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 CUSTOM_PAYOUT_SIGNED);
@@ -501,7 +510,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("customPayoutSignedTransitionCases")
     void givenMatchingLocalAndPeerPsbt_whenFinalizingCustomPayout_thenClosesTrade(
-            CustomPayoutAcceptanceTransitionCase testCase) {
+            CustomPayoutAcceptanceTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 CUSTOM_PAYOUT_SIGNED);
@@ -537,7 +546,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenStoredCustomCloseResponse_whenFinalizingCustomPayout_thenDoesNotCallRpcOrReplaceResponse() {
+    void givenStoredCustomCloseResponse_whenFinalizingCustomPayout_thenDoesNotCallRpcOrReplaceResponse()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), CUSTOM_PAYOUT_SIGNED);
         setCustomPayoutMediationResult(trade);
         trade.getMyself().setMyCustomPayoutPsbt(new CustomPayoutPsbt(
@@ -563,7 +573,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenMismatchingTransactionIds_whenFinalizingCustomPayout_thenDoesNotCallRpc() {
+    void givenMismatchingTransactionIds_whenFinalizingCustomPayout_thenDoesNotCallRpc()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), CUSTOM_PAYOUT_SIGNED);
         setCustomPayoutMediationResult(trade);
         trade.getMyself().setMyCustomPayoutPsbt(new CustomPayoutPsbt(
@@ -587,7 +598,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenCustomPayoutSigned_whenPaymentReceivedMessageHasUnexpectedSender_thenFailsTrade() {
+    void givenCustomPayoutSigned_whenPaymentReceivedMessageHasUnexpectedSender_thenFailsTrade()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(true, false), CUSTOM_PAYOUT_SIGNED);
         MuSigProtocol buyerProtocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
         NetworkId unexpectedSender = trade.getMyself().getNetworkId();
@@ -606,7 +618,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenCustomPayoutSigned_whenPaymentReceivedMessageHasUnexpectedTradeId_thenFailsTrade() {
+    void givenCustomPayoutSigned_whenPaymentReceivedMessageHasUnexpectedTradeId_thenFailsTrade()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(true, false), CUSTOM_PAYOUT_SIGNED);
         MuSigProtocol buyerProtocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
         PaymentReceivedMessage_F message = new PaymentReceivedMessage_F(
@@ -625,7 +638,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenPeerCustomPayoutPsbtWithUnexpectedSender_whenHandled_thenFailsTrade() {
+    void givenPeerCustomPayoutPsbtWithUnexpectedSender_whenHandled_thenFailsTrade()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         MuSigMediationResult mediationResult = setCustomPayoutMediationResult(trade);
         MuSigProtocol buyerProtocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
@@ -651,7 +665,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenPeerCustomPayoutPsbtWithUnexpectedTradeId_whenHandled_thenFailsTrade() {
+    void givenPeerCustomPayoutPsbtWithUnexpectedTradeId_whenHandled_thenFailsTrade()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         MuSigMediationResult mediationResult = setCustomPayoutMediationResult(trade);
         MuSigProtocol buyerProtocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
@@ -673,7 +688,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenValidMediationResult_whenLocalTraderRejectsTwice_thenStoresAndSendsRejectionOnce() {
+    void givenValidMediationResult_whenLocalTraderRejectsTwice_thenStoresAndSendsRejectionOnce()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         MuSigMediationResult mediationResult = setCustomPayoutMediationResult(trade);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
@@ -700,7 +716,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenMissingMediationResult_whenLocalTraderRejects_thenIgnoresRejection() {
+    void givenMissingMediationResult_whenLocalTraderRejects_thenIgnoresRejection()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         trade.getTradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_CLOSED);
         trade.getTradeDispute().setMediationResultSignature(new byte[]{1});
@@ -717,7 +734,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenNoPayoutMediationResult_whenLocalTraderRejects_thenIgnoresRejection() {
+    void givenNoPayoutMediationResult_whenLocalTraderRejects_thenIgnoresRejection()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         MuSigMediationResult mediationResult = new MuSigMediationResult(
                 new byte[20],
@@ -743,7 +761,7 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenLocalCustomPayoutData_whenLocalTraderRejects_thenIgnoresRejection() {
+    void givenLocalCustomPayoutData_whenLocalTraderRejects_thenIgnoresRejection() throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         setCustomPayoutMediationResult(trade);
         CustomPayoutPsbt customPayoutPsbt = new CustomPayoutPsbt(
@@ -768,7 +786,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenRepeatedMatchingPeerRejection_whenHandled_thenStoresItWithoutChangingTradeState() {
+    void givenRepeatedMatchingPeerRejection_whenHandled_thenStoresItWithoutChangingTradeState()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         setCustomPayoutMediationResult(trade);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
@@ -784,7 +803,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("mediationRejectionBoundaryTransitionCases")
     void givenTradeStateAllowsRejection_whenLocalTraderRejects_thenStoresWithoutChangingState(
-            MediationRejectionTransitionCase testCase) {
+            MediationRejectionTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 testCase.sourceState());
@@ -801,7 +820,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("mediationRejectionBoundaryTransitionCases")
     void givenTradeStateAllowsRejection_whenPeerRejects_thenStoresWithoutChangingState(
-            MediationRejectionTransitionCase testCase) {
+            MediationRejectionTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 testCase.sourceState());
@@ -818,7 +837,7 @@ class MuSigProtocolTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("customPayoutSignedTransitionCases")
     void givenCustomPayoutSigned_whenPeerRejects_thenStoresWithoutChangingState(
-            CustomPayoutAcceptanceTransitionCase testCase) {
+            CustomPayoutAcceptanceTransitionCase testCase) throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(
                 createTrade(testCase.isBuyer(), testCase.isTaker()),
                 CUSTOM_PAYOUT_SIGNED);
@@ -838,7 +857,7 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenMismatchingPeerRejection_whenHandled_thenIgnoresIt() {
+    void givenMismatchingPeerRejection_whenHandled_thenIgnoresIt() throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         setCustomPayoutMediationResult(trade);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
@@ -860,7 +879,8 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenPeerRejectionWithUnexpectedSender_whenHandled_thenIgnoresWithoutFailingTrade() {
+    void givenPeerRejectionWithUnexpectedSender_whenHandled_thenIgnoresWithoutFailingTrade()
+            throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         MuSigMediationResult mediationResult = setCustomPayoutMediationResult(trade);
         MuSigProtocol protocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
@@ -884,7 +904,7 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenPeerRejectionBeforePeerPsbt_whenHandled_thenRejectionWins() {
+    void givenPeerRejectionBeforePeerPsbt_whenHandled_thenRejectionWins() throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         setCustomPayoutMediationResult(trade);
         MuSigProtocol buyerProtocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
@@ -898,7 +918,7 @@ class MuSigProtocolTest {
     }
 
     @Test
-    void givenPeerPsbtBeforePeerRejection_whenHandled_thenPsbtWins() {
+    void givenPeerPsbtBeforePeerRejection_whenHandled_thenPsbtWins() throws UnresolvableProtobufException {
         MuSigTrade trade = copyTradeWithState(createTrade(), BUYER_INITIATED_PAYMENT);
         setCustomPayoutMediationResult(trade);
         MuSigProtocol buyerProtocol = new MuSigBuyerAsMakerProtocol(serviceProvider, trade);
@@ -1180,7 +1200,8 @@ class MuSigProtocolTest {
                 makerNetworkId);
     }
 
-    private static MuSigTrade copyTradeWithState(MuSigTrade trade, MuSigTradeState state) {
+    private static MuSigTrade copyTradeWithState(MuSigTrade trade, MuSigTradeState state)
+            throws UnresolvableProtobufException {
         MuSigTrade copy = MuSigTrade.fromProto(trade.toProto(false).toBuilder()
                 .setState(state.name())
                 .build());
@@ -1188,7 +1209,8 @@ class MuSigProtocolTest {
         return copy;
     }
 
-    private static PaymentReceivedMessage_F createPaymentReceivedMessage(MuSigTrade trade) {
+    private static PaymentReceivedMessage_F createPaymentReceivedMessage(MuSigTrade trade)
+            throws UnresolvableProtobufException {
         return createPaymentReceivedMessage(
                 trade,
                 "message-f",
@@ -1229,7 +1251,8 @@ class MuSigProtocolTest {
                                                                           String messageId,
                                                                           NetworkId sender,
                                                                           NetworkId receiver,
-                                                                          String protocolVersion) {
+                                                                          String protocolVersion)
+            throws UnresolvableProtobufException {
         SwapTxSignature swapTxSignature = SwapTxSignature.fromProto(
                 bisq.trade.protobuf.SwapTxSignature.newBuilder()
                         .setSwapTx(ByteString.copyFrom(new byte[]{1, 2, 3}))

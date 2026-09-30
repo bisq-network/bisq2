@@ -17,6 +17,7 @@
 
 package bisq.wallet.vo;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,13 +34,18 @@ public final class TransactionInput {
     private final byte[] scriptSig;
     private final String witness;
 
-    public static TransactionInput fromProto(bisq.wallet.protobuf.TransactionInput input) {
-        return new TransactionInput(
-                input.getPrevOutTxId(),
-                input.getPrevOutIndex(),
-                input.getSequenceNumber(),
-                input.getScriptSig().toByteArray(),
-                input.getWitness()
-        );
+    public static TransactionInput fromProto(bisq.wallet.protobuf.TransactionInput input)
+            throws UnresolvableProtobufException {
+        try {
+            return new TransactionInput(
+                    input.getPrevOutTxId(),
+                    input.getPrevOutIndex(),
+                    input.getSequenceNumber(),
+                    input.getScriptSig().toByteArray(),
+                    input.getWitness()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

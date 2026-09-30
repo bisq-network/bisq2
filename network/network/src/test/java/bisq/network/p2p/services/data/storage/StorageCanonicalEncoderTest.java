@@ -23,6 +23,7 @@ import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
@@ -165,7 +166,8 @@ public class StorageCanonicalEncoderTest {
     }
 
     @Test
-    public void removeAndRefreshAuthenticatedDataRequestsContainFieldsExcludedFromHash() {
+    public void removeAndRefreshAuthenticatedDataRequestsContainFieldsExcludedFromHash()
+            throws UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest removeRequest = getRemoveAuthenticatedDataRequest();
         assertArrayEquals(removeRequest.serialize(), removeRequest.encodeCanonical());
         // serializeForHash() omits metaData, version, className and signatureV2
@@ -177,7 +179,7 @@ public class StorageCanonicalEncoderTest {
     }
 
     @Test
-    public void confidentialMessageMatchesProtobufWithAndWithoutEnvelope() {
+    public void confidentialMessageMatchesProtobufWithAndWithoutEnvelope() throws UnresolvableProtobufException {
         ConfidentialMessage message = ConfidentialMessage.fromProto(getConfidentialMessageProto());
 
         assertArrayEquals(message.serialize(), message.encodeCanonical());
@@ -188,7 +190,7 @@ public class StorageCanonicalEncoderTest {
     }
 
     @Test
-    public void mailboxDataAndRequestsMatchProtobuf() {
+    public void mailboxDataAndRequestsMatchProtobuf() throws UnresolvableProtobufException {
         MailboxData mailboxData = getMailboxData();
         assertArrayEquals(mailboxData.serialize(), mailboxData.encodeCanonical());
         // serializeForHash() omits metaData and version
@@ -238,7 +240,7 @@ public class StorageCanonicalEncoderTest {
     // preimage of signature V2, so only their STORAGE_KEY, PROOF_OF_WORK and TRADE_CONTRACT purposes equal
     // serializeForHash().
     @Test
-    public void hashPurposesMatchSerializeForHash() {
+    public void hashPurposesMatchSerializeForHash() throws UnresolvableProtobufException {
         assertHashPurposesMatchSerializeForHash(getMetaData(), "");
         assertStorageKeyMatchesSerializeForHash(new DefaultAuthenticatedData(new ExternalData("content", 7)));
         for (AuthenticatedData authenticatedData : List.of(getDefaultAuthenticatedData(), getAuthorizedData())) {
@@ -284,7 +286,7 @@ public class StorageCanonicalEncoderTest {
     // serialization, also when it has a field excluded from the hash. TRADE_CONTRACT selects the same bytes for the
     // classes which a contract does not contain.
     @Test
-    public void nestedHashPurposesMatchSerializeForHashOfEveryMessage() {
+    public void nestedHashPurposesMatchSerializeForHashOfEveryMessage() throws UnresolvableProtobufException {
         List<Proto> messages = new ArrayList<>();
         for (AuthenticatedData authenticatedData : List.of(getDefaultAuthenticatedData(),
                 getAuthorizedData(),
@@ -416,11 +418,13 @@ public class StorageCanonicalEncoderTest {
                 2);
     }
 
-    private static RemoveAuthenticatedDataRequest getRemoveAuthenticatedDataRequest() {
+    private static RemoveAuthenticatedDataRequest getRemoveAuthenticatedDataRequest()
+            throws UnresolvableProtobufException {
         return getRemoveAuthenticatedDataRequest(1);
     }
 
-    private static RemoveAuthenticatedDataRequest getRemoveAuthenticatedDataRequest(int version) {
+    private static RemoveAuthenticatedDataRequest getRemoveAuthenticatedDataRequest(int version)
+            throws UnresolvableProtobufException {
         return RemoveAuthenticatedDataRequest.fromProto(bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
                 .setMetaData(getMetaData().toProto(false))
                 .setHash(ByteString.copyFrom(HASH))
@@ -433,11 +437,13 @@ public class StorageCanonicalEncoderTest {
                 .build());
     }
 
-    private static RefreshAuthenticatedDataRequest getRefreshAuthenticatedDataRequest() {
+    private static RefreshAuthenticatedDataRequest getRefreshAuthenticatedDataRequest()
+            throws UnresolvableProtobufException {
         return getRefreshAuthenticatedDataRequest(1);
     }
 
-    private static RefreshAuthenticatedDataRequest getRefreshAuthenticatedDataRequest(int version) {
+    private static RefreshAuthenticatedDataRequest getRefreshAuthenticatedDataRequest(int version)
+            throws UnresolvableProtobufException {
         return RefreshAuthenticatedDataRequest.fromProto(bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
                 .setMetaData(getMetaData().toProto(false))
                 .setHash(ByteString.copyFrom(HASH))
@@ -461,11 +467,11 @@ public class StorageCanonicalEncoderTest {
                 .build();
     }
 
-    private static MailboxData getMailboxData() {
+    private static MailboxData getMailboxData() throws UnresolvableProtobufException {
         return getMailboxData(1);
     }
 
-    private static MailboxData getMailboxData(int version) {
+    private static MailboxData getMailboxData(int version) throws UnresolvableProtobufException {
         return MailboxData.fromProto(bisq.network.protobuf.MailboxData.newBuilder()
                 .setConfidentialMessage(getConfidentialMessageProto())
                 .setMetaData(getMetaData().toProto(false))
@@ -473,7 +479,7 @@ public class StorageCanonicalEncoderTest {
                 .build());
     }
 
-    private static MailboxSequentialData getMailboxSequentialData() {
+    private static MailboxSequentialData getMailboxSequentialData() throws UnresolvableProtobufException {
         return getMailboxSequentialData(getMailboxData());
     }
 
@@ -487,11 +493,12 @@ public class StorageCanonicalEncoderTest {
                 1);
     }
 
-    private static AddMailboxRequest getAddMailboxRequest() {
+    private static AddMailboxRequest getAddMailboxRequest() throws UnresolvableProtobufException {
         return getAddMailboxRequest(getMailboxSequentialData());
     }
 
-    private static AddMailboxRequest getAddMailboxRequest(MailboxSequentialData mailboxSequentialData) {
+    private static AddMailboxRequest getAddMailboxRequest(MailboxSequentialData mailboxSequentialData)
+            throws UnresolvableProtobufException {
         return AddMailboxRequest.fromProto(bisq.network.protobuf.AddMailboxRequest.newBuilder()
                 .setMailboxSequentialData(mailboxSequentialData.toProto(false))
                 .setSignature(ByteString.copyFrom(SIGNATURE))
@@ -501,11 +508,11 @@ public class StorageCanonicalEncoderTest {
                 .build());
     }
 
-    private static RemoveMailboxRequest getRemoveMailboxRequest() {
+    private static RemoveMailboxRequest getRemoveMailboxRequest() throws UnresolvableProtobufException {
         return getRemoveMailboxRequest(1);
     }
 
-    private static RemoveMailboxRequest getRemoveMailboxRequest(int version) {
+    private static RemoveMailboxRequest getRemoveMailboxRequest(int version) throws UnresolvableProtobufException {
         return RemoveMailboxRequest.fromProto(bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
                 .setMetaData(getMetaData().toProto(false))
                 .setHash(ByteString.copyFrom(HASH))

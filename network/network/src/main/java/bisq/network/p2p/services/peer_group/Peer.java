@@ -19,6 +19,7 @@ package bisq.network.p2p.services.peer_group;
 
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.network.Address;
 import bisq.network.p2p.node.Capability;
@@ -79,11 +80,15 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
                 .setCreated(created);
     }
 
-    public static Peer fromProto(bisq.network.protobuf.Peer proto) {
-        return new Peer(Capability.fromProto(proto.getCapability()),
-                NetworkLoad.fromProto(proto.getNetworkLoad()),
-                proto.getIsOutboundConnection(),
-                proto.getCreated());
+    public static Peer fromProto(bisq.network.protobuf.Peer proto) throws UnresolvableProtobufException {
+        try {
+            return new Peer(Capability.fromProto(proto.getCapability()),
+                    NetworkLoad.fromProto(proto.getNetworkLoad()),
+                    proto.getIsOutboundConnection(),
+                    proto.getCreated());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public Date getDate() {

@@ -19,6 +19,7 @@ package bisq.api.access.persistence;
 
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
+import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -45,7 +46,7 @@ class ApiAccessStoreTest {
             Permission.MOBILE_DEVICES);
 
     @Test
-    void fullPermissionSetIsPromotedToGrantAllOnLoad() {
+    void fullPermissionSetIsPromotedToGrantAllOnLoad() throws UnresolvableProtobufException {
         // An entry already covering every permission of the running version is promoted to
         // grantAll: promotion grants nothing extra at that moment, it only keeps the grant
         // covering permissions added later — which is what every full grant was issued to mean.
@@ -65,7 +66,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void releasedFullGrantIsPromotedAfterTheRunningVersionGainedPermissions() {
+    void releasedFullGrantIsPromotedAfterTheRunningVersionGainedPermissions() throws UnresolvableProtobufException {
         // The case the test above cannot reach: it builds its entry from the RUNNING enum, so it
         // keeps matching whatever gets added and stays green straight through the regression this
         // one pins. Here the list is hardcoded to what v2.1.12 actually wrote, which is the shape
@@ -99,7 +100,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void restrictedGrantEqualToAReleasedFullSetIsStillPromoted() {
+    void restrictedGrantEqualToAReleasedFullSetIsStillPromoted() throws UnresolvableProtobufException {
         // The released-set branch does not fade with versions, and this pins the cost of that as
         // current behaviour: a grant of exactly the v2.1.12 set is promoted whatever wrote it,
         // including this binary stamping the current schema version, which is what a deliberate
@@ -129,7 +130,8 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void legacyGrantStampedByABuildThatDidNotKnowTheReleasedShapesIsStillPromoted() {
+    void legacyGrantStampedByABuildThatDidNotKnowTheReleasedShapesIsStillPromoted()
+            throws UnresolvableProtobufException {
         // The builds between grantAll and the released-set rule (the base of this change) promote
         // only their own running set, yet stamp permissionsSchemaVersion on every persist. A client
         // paired on v2.1.9 whose node ran such a build has its 10-permission entry sitting under
@@ -154,7 +156,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void subsetEntryIsNeverPromotedRegardlessOfSchemaVersion() {
+    void subsetEntryIsNeverPromotedRegardlessOfSchemaVersion() throws UnresolvableProtobufException {
         // The schema version cannot gate promotion: a pre-grantAll node rewrites the store
         // from its own model and drops the version field, so it does not survive a downgrade.
         // A subset must stay a subset whatever version stamp the store carries.
@@ -175,7 +177,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void downgradeRewriteCycleDoesNotEscalateRestrictedEntries() {
+    void downgradeRewriteCycleDoesNotEscalateRestrictedEntries() throws UnresolvableProtobufException {
         // new -> old -> new: a store written by this version, then rewritten by a pre-grantAll
         // node (which rebuilds the proto from its own model: grantAll entries were loaded as
         // their expanded permission list, and the grantAll + schemaVersion fields are dropped),
@@ -205,7 +207,8 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void fullGrantRewrittenByAnOlderNodeThatKnowsFewerPermissionsIsStillPromoted() {
+    void fullGrantRewrittenByAnOlderNodeThatKnowsFewerPermissionsIsStillPromoted()
+            throws UnresolvableProtobufException {
         // The rewrite the test above does not model: an old node drops every enum value it cannot
         // resolve (ProtobufUtils#fromProtoEnumStream) before rebuilding the list, so what comes
         // back is that release's own full set, not this version's expansion. The same shape is on
@@ -222,7 +225,9 @@ class ApiAccessStoreTest {
         Map<String, Permission> lastPermissionKnownByRelease = Map.of(
                 "v2.1.9", Permission.USER_PROFILES,
                 "v2.1.12", Permission.MOBILE_DEVICES);
-        lastPermissionKnownByRelease.forEach((release, lastKnown) -> {
+        for (Map.Entry<String, Permission> releaseAndLastKnown : lastPermissionKnownByRelease.entrySet()) {
+            String release = releaseAndLastKnown.getKey();
+            Permission lastKnown = releaseAndLastKnown.getValue();
             bisq.api.protobuf.ApiAccessStore.Builder oldNodeRewrite = bisq.api.protobuf.ApiAccessStore.newBuilder();
             currentProto.getPermissionsByClientIdMap().forEach((clientId, entry) ->
                     oldNodeRewrite.putPermissionsByClientId(clientId,
@@ -238,7 +243,7 @@ class ApiAccessStoreTest {
                     "full grant rewritten by " + release + " must be promoted again");
             assertTrue(reloaded.hadPromotedEntriesDuringLoad(),
                     "and written back so the store stops depending on the rule");
-        });
+        }
     }
 
     @Test
@@ -256,7 +261,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void grantAllEntrySurvivesStoreRoundTrip() {
+    void grantAllEntrySurvivesStoreRoundTrip() throws UnresolvableProtobufException {
         ApiAccessStore store = new ApiAccessStore();
         store.getPermissionsByClientId().put("client-1", PermissionSet.grantAll());
 
@@ -270,7 +275,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void explicitSubsetSurvivesStoreRoundTrip() {
+    void explicitSubsetSurvivesStoreRoundTrip() throws UnresolvableProtobufException {
         ApiAccessStore store = new ApiAccessStore();
         store.getPermissionsByClientId().put("client-1", new PermissionSet(Set.of(Permission.MARKET_PRICE)));
 

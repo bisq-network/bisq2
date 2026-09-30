@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -79,16 +80,21 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
                 .setBisqEasyOffer(bisqEasyOffer.toProto(serializeForHash));
     }
 
-    public static BisqEasyBtcAddressMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage = proto.getBisqEasyTradeMessage().getBisqEasyBtcAddressMessage();
-        return new BisqEasyBtcAddressMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyBtcAddressMessage.getBitcoinPaymentData(),
-                BisqEasyOffer.fromProto(bisqEasyBtcAddressMessage.getBisqEasyOffer()));
+    public static BisqEasyBtcAddressMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage = proto.getBisqEasyTradeMessage().getBisqEasyBtcAddressMessage();
+            return new BisqEasyBtcAddressMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    bisqEasyBtcAddressMessage.getBitcoinPaymentData(),
+                    BisqEasyOffer.fromProto(bisqEasyBtcAddressMessage.getBisqEasyOffer()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -17,6 +17,7 @@
 
 package bisq.offer.amount.spec;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -51,7 +52,12 @@ public final class QuoteSideFixedAmountSpec extends FixedAmountSpec implements Q
         return unsafeToProto(serializeForHash);
     }
 
-    public static QuoteSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto) {
-        return new QuoteSideFixedAmountSpec(proto.getAmount());
+    public static QuoteSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new QuoteSideFixedAmountSpec(proto.getAmount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

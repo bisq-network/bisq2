@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
@@ -84,32 +85,37 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyTradeStore fromProto(bisq.trade.protobuf.BisqEasyTradeStore proto) {
-        var trades = proto.getTradesList().stream()
-                .map(tradeProto -> {
-                    try {
-                        return BisqEasyTrade.fromProto(tradeProto);
-                    } catch (Exception e) {
-                        log.error("Could not create BisqEasyClosedTrade from proto {}", tradeProto, e);
-                        return null;
-                    }
+    public static BisqEasyTradeStore fromProto(bisq.trade.protobuf.BisqEasyTradeStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            var trades = proto.getTradesList().stream()
+                    .map(tradeProto -> {
+                        try {
+                            return BisqEasyTrade.fromProto(tradeProto);
+                        } catch (Exception e) {
+                            log.error("Could not create BisqEasyClosedTrade from proto {}", tradeProto, e);
+                            return null;
+                        }
 
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        var closedTrades = proto.getBisqEasyClosedTradesList().stream()
-                .map(closedTradeProto -> {
-                    try {
-                        return BisqEasyClosedTrade.fromProto(closedTradeProto);
-                    } catch (Exception e) {
-                        log.error("Could not create BisqEasyClosedTrade from proto {}", closedTradeProto, e);
-                        return null;
-                    }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            var closedTrades = proto.getBisqEasyClosedTradesList().stream()
+                    .map(closedTradeProto -> {
+                        try {
+                            return BisqEasyClosedTrade.fromProto(closedTradeProto);
+                        } catch (Exception e) {
+                            log.error("Could not create BisqEasyClosedTrade from proto {}", closedTradeProto, e);
+                            return null;
+                        }
 
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        return new BisqEasyTradeStore(trades, new HashSet<>(proto.getTradeIdsList()), closedTrades);
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            return new BisqEasyTradeStore(trades, new HashSet<>(proto.getTradeIdsList()), closedTrades);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

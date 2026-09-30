@@ -18,6 +18,8 @@
 package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Response;
 import bisq.network.p2p.services.peer_group.Peer;
@@ -81,9 +83,14 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
                         .collect(Collectors.toList()));
     }
 
-    public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto) {
-        return new PeerExchangeResponse(proto.getNonce(),
-                proto.getPeersList().stream().map(Peer::fromProto).collect(Collectors.toList()));
+    public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new PeerExchangeResponse(proto.getNonce(),
+                    ProtobufUtils.fromProtoStream(proto.getPeersList(), Peer::fromProto).collect(Collectors.toList()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

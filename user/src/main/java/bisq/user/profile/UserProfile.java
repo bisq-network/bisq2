@@ -22,6 +22,7 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -174,15 +175,19 @@ public final class UserProfile implements OwnershipVerifiableData, PublishDateAw
         return unsafeToProto(serializeForHash);
     }
 
-    public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) {
-        return new UserProfile(proto.getVersion(),
-                proto.getNickName(),
-                ProofOfWork.fromProto(proto.getProofOfWork()),
-                proto.getAvatarVersion(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.getTerms(),
-                proto.getStatement(),
-                proto.getApplicationVersion());
+    public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) throws UnresolvableProtobufException {
+        try {
+            return new UserProfile(proto.getVersion(),
+                    proto.getNickName(),
+                    ProofOfWork.fromProto(proto.getProofOfWork()),
+                    proto.getAvatarVersion(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.getTerms(),
+                    proto.getStatement(),
+                    proto.getApplicationVersion());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

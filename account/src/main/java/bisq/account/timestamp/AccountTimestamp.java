@@ -20,6 +20,7 @@ package bisq.account.timestamp;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -70,8 +71,13 @@ public final class AccountTimestamp implements DistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountTimestamp fromProto(bisq.account.protobuf.AccountTimestamp proto) {
-        return new AccountTimestamp(proto.getHash().toByteArray(), proto.getDate());
+    public static AccountTimestamp fromProto(bisq.account.protobuf.AccountTimestamp proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AccountTimestamp(proto.getHash().toByteArray(), proto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

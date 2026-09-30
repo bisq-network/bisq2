@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network;
 
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -67,15 +68,20 @@ public final class CooperativeClosureMessage_G extends MuSigTradeMessage {
                 .setPeerOutputPrvKeyShare(peerOutputPrvKeyShare.toProto(serializeForHash));
     }
 
-    public static CooperativeClosureMessage_G fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.CooperativeClosureMessage_G muSigMessageProto = proto.getMuSigTradeMessage().getCooperativeClosureMessageG();
-        return new CooperativeClosureMessage_G(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                ByteArray.fromProto(muSigMessageProto.getPeerOutputPrvKeyShare()));
+    public static CooperativeClosureMessage_G fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.CooperativeClosureMessage_G muSigMessageProto = proto.getMuSigTradeMessage().getCooperativeClosureMessageG();
+            return new CooperativeClosureMessage_G(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    ByteArray.fromProto(muSigMessageProto.getPeerOutputPrvKeyShare()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

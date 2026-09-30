@@ -20,6 +20,7 @@ package bisq.oracle_node.bisq1_bridge;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
 import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,8 @@ class Bisq1BridgeRequestStoreTest {
             "0, 0, 1700000000001",
             "1700000000000, 1700000000000, 1700000000001"
     })
-    void migratesVersionTwoDatesWithoutLosingStoredBindings(long accountDate, long signedAccountDate, long signDate) {
+    void migratesVersionTwoDatesWithoutLosingStoredBindings(long accountDate, long signedAccountDate, long signDate)
+            throws UnresolvableProtobufException {
         AuthorizeAccountAgeRequest account = accountAgeRequest("12".repeat(20), "34".repeat(20));
         AuthorizeAccountAgeRequest migratedAccount = accountAgeRequest("56".repeat(20), "78".repeat(20));
         AuthorizeSignedWitnessRequest signed = signedWitnessRequest("12".repeat(20), "34".repeat(20));
@@ -77,7 +79,7 @@ class Bisq1BridgeRequestStoreTest {
 
     @ParameterizedTest
     @ValueSource(ints = {-1, 0, 1, 3})
-    void preservesDatesOutsideVersionTwo(int version) {
+    void preservesDatesOutsideVersionTwo(int version) throws UnresolvableProtobufException {
         var account = accountAgeRequest("12".repeat(20), "34".repeat(20)).toValueProto(false).toBuilder()
                 .setDate(1_700_000_000_000L);
         var signed = signedWitnessRequest("12".repeat(20), "34".repeat(20)).toValueProto(false).toBuilder()
@@ -113,14 +115,16 @@ class Bisq1BridgeRequestStoreTest {
 
         assertThatThrownBy(() -> Bisq1BridgeRequestStore.fromProto(
                 bisq.oracle_node.protobuf.Bisq1BridgeRequestStore.newBuilder().addAccountAgeRequests(account).build()))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> Bisq1BridgeRequestStore.fromProto(
                 bisq.oracle_node.protobuf.Bisq1BridgeRequestStore.newBuilder().addSignedWitnessRequests(signed).build()))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void persistsSignedWitnessOwnershipProofs() {
+    void persistsSignedWitnessOwnershipProofs() throws UnresolvableProtobufException {
         AuthorizeSignedWitnessRequest request = new AuthorizeSignedWitnessRequest(
                 "12".repeat(20),
                 "34".repeat(20),
@@ -136,7 +140,7 @@ class Bisq1BridgeRequestStoreTest {
     }
 
     @Test
-    void persistsCompleteBondedRoleRegistrationRequests() {
+    void persistsCompleteBondedRoleRegistrationRequests() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest request = createCurrentRequest();
         Bisq1BridgeRequestStore store = new Bisq1BridgeRequestStore();
         store.getBondedRoleRegistrationRequests().add(request);
@@ -181,7 +185,7 @@ class Bisq1BridgeRequestStoreTest {
     }
 
     @Test
-    void ignoresCancellationCommandsInThePersistedRegistrationSet() {
+    void ignoresCancellationCommandsInThePersistedRegistrationSet() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest request = createCurrentRequest();
         bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest cancellation = request.toValueProto(false)
                 .toBuilder()

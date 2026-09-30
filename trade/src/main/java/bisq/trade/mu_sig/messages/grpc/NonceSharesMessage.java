@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -115,21 +116,26 @@ public final class NonceSharesMessage implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static NonceSharesMessage fromProto(bisq.trade.protobuf.NonceSharesMessage proto) {
-        return new NonceSharesMessage(proto.getWarningTxFeeBumpAddress(),
-                proto.getRedirectTxFeeBumpAddress(),
-                proto.getClaimTxPayoutAddress(),
-                proto.getHalfDepositPsbt().toByteArray(),
-                proto.getRedirectionAmountMsat(),
-                proto.getSwapTxInputNonceShare().toByteArray(),
-                proto.getBuyersWarningTxBuyerInputNonceShare().toByteArray(),
-                proto.getBuyersWarningTxSellerInputNonceShare().toByteArray(),
-                proto.getSellersWarningTxBuyerInputNonceShare().toByteArray(),
-                proto.getSellersWarningTxSellerInputNonceShare().toByteArray(),
-                proto.getBuyersRedirectTxInputNonceShare().toByteArray(),
-                proto.getSellersRedirectTxInputNonceShare().toByteArray(),
-                proto.getBuyersClaimTxInputNonceShare().toByteArray(),
-                proto.getSellersClaimTxInputNonceShare().toByteArray());
+    public static NonceSharesMessage fromProto(bisq.trade.protobuf.NonceSharesMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new NonceSharesMessage(proto.getWarningTxFeeBumpAddress(),
+                    proto.getRedirectTxFeeBumpAddress(),
+                    proto.getClaimTxPayoutAddress(),
+                    proto.getHalfDepositPsbt().toByteArray(),
+                    proto.getRedirectionAmountMsat(),
+                    proto.getSwapTxInputNonceShare().toByteArray(),
+                    proto.getBuyersWarningTxBuyerInputNonceShare().toByteArray(),
+                    proto.getBuyersWarningTxSellerInputNonceShare().toByteArray(),
+                    proto.getSellersWarningTxBuyerInputNonceShare().toByteArray(),
+                    proto.getSellersWarningTxSellerInputNonceShare().toByteArray(),
+                    proto.getBuyersRedirectTxInputNonceShare().toByteArray(),
+                    proto.getSellersRedirectTxInputNonceShare().toByteArray(),
+                    proto.getBuyersClaimTxInputNonceShare().toByteArray(),
+                    proto.getSellersClaimTxInputNonceShare().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

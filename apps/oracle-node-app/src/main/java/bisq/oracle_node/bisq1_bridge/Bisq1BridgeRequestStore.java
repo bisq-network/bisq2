@@ -21,6 +21,8 @@ import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -91,41 +93,48 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
         return unsafeToProto(serializeForHash);
     }
 
-    public static Bisq1BridgeRequestStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeRequestStore proto) {
-        return new Bisq1BridgeRequestStore(
-                proto.getAccountAgeRequestsList().stream()
-                        .map(Bisq1BridgeRequestStore::fromPersistedAccountAgeRequest)
-                        .collect(Collectors.toSet()),
-                proto.getSignedWitnessRequestsList().stream()
-                        .map(Bisq1BridgeRequestStore::fromPersistedSignedWitnessRequest)
-                        .collect(Collectors.toSet()),
-                proto.getAccountTimestampDateByHashMap().entrySet().stream()
-                        .collect(Collectors.toMap(
-                                e -> new ByteArray(Hex.decode(e.getKey())),
-                                Map.Entry::getValue
-                        )),
-                proto.getBondedRoleRegistrationRequestsList().stream()
-                        .map(BondedRoleRegistrationRequest::fromProto)
-                        .filter(request -> {
-                            if (request.isCancellationRequest()) {
-                                log.warn("Ignoring cancellation request found in the persisted bonded-role registration set");
-                                return false;
-                            }
-                            return true;
-                        })
-                        .collect(Collectors.toSet()));
+    public static Bisq1BridgeRequestStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeRequestStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new Bisq1BridgeRequestStore(
+                    ProtobufUtils.fromProtoStream(proto.getAccountAgeRequestsList(),
+                                    Bisq1BridgeRequestStore::fromPersistedAccountAgeRequest)
+                            .collect(Collectors.toSet()),
+                    ProtobufUtils.fromProtoStream(proto.getSignedWitnessRequestsList(),
+                                    Bisq1BridgeRequestStore::fromPersistedSignedWitnessRequest)
+                            .collect(Collectors.toSet()),
+                    proto.getAccountTimestampDateByHashMap().entrySet().stream()
+                            .collect(Collectors.toMap(
+                                    e -> new ByteArray(Hex.decode(e.getKey())),
+                                    Map.Entry::getValue
+                            )),
+                    ProtobufUtils.fromProtoStream(proto.getBondedRoleRegistrationRequestsList(),
+                                    BondedRoleRegistrationRequest::fromProto)
+                            .filter(request -> {
+                                if (request.isCancellationRequest()) {
+                                    log.warn("Ignoring cancellation request found in the persisted bonded-role registration set");
+                                    return false;
+                                }
+                                return true;
+                            })
+                            .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // Earlier version-2 requests could persist unused dates. Normalize them only at this persistence boundary
     // so their ownership bindings survive stricter network validation without changing the proof.
-    private static AuthorizeAccountAgeRequest fromPersistedAccountAgeRequest(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {
+    private static AuthorizeAccountAgeRequest fromPersistedAccountAgeRequest(bisq.user.protobuf.AuthorizeAccountAgeRequest proto)
+            throws UnresolvableProtobufException {
         if (proto.getProtocolVersion() == WITNESS_REQUEST_VERSION_WITH_UNUSED_DATES) {
             proto = proto.toBuilder().clearDate().build();
         }
         return AuthorizeAccountAgeRequest.fromProto(proto);
     }
 
-    private static AuthorizeSignedWitnessRequest fromPersistedSignedWitnessRequest(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto) {
+    private static AuthorizeSignedWitnessRequest fromPersistedSignedWitnessRequest(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto)
+            throws UnresolvableProtobufException {
         if (proto.getProtocolVersion() == WITNESS_REQUEST_VERSION_WITH_UNUSED_DATES) {
             proto = proto.toBuilder().clearAccountAgeWitnessDate().clearWitnessSignDate().build();
         }

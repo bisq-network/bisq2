@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -64,10 +65,14 @@ public final class PubKeyShares implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static PubKeyShares fromProto(bisq.trade.protobuf.PubKeyShares proto) {
-        return new PubKeyShares(proto.getBuyerOutputPubKeyShare().toByteArray(),
-                proto.getSellerOutputPubKeyShare().toByteArray(),
-                proto.getMultisigScriptKey().toByteArray());
+    public static PubKeyShares fromProto(bisq.trade.protobuf.PubKeyShares proto) throws UnresolvableProtobufException {
+        try {
+            return new PubKeyShares(proto.getBuyerOutputPubKeyShare().toByteArray(),
+                    proto.getSellerOutputPubKeyShare().toByteArray(),
+                    proto.getMultisigScriptKey().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

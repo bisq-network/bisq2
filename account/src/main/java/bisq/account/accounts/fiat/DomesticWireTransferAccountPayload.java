@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.util.BankAccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -105,19 +106,24 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
                 .setHolderAddress(holderAddress);
     }
 
-    public static DomesticWireTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
-        var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        var domesticWireAccountPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
-        checkArgument(bankAccountPayload.hasBankName(), "Bank name for DomesticWireTransfer must be present");
-        checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for DomesticWireTransfer must be present");
-        return new DomesticWireTransferAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                bankAccountPayload.getHolderName(),
-                domesticWireAccountPayload.getHolderAddress(),
-                bankAccountPayload.getBankName(),
-                bankAccountPayload.getBankId(),
-                bankAccountPayload.getAccountNr());
+    public static DomesticWireTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
+            var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+            var domesticWireAccountPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
+            checkArgument(bankAccountPayload.hasBankName(), "Bank name for DomesticWireTransfer must be present");
+            checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for DomesticWireTransfer must be present");
+            return new DomesticWireTransferAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    bankAccountPayload.getHolderName(),
+                    domesticWireAccountPayload.getHolderAddress(),
+                    bankAccountPayload.getBankName(),
+                    bankAccountPayload.getBankId(),
+                    bankAccountPayload.getAccountNr());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

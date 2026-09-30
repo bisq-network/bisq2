@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.authorization;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashToken;
 import bisq.network.p2p.node.authorization.token.hash_cash.HashCashToken;
@@ -40,19 +41,24 @@ public abstract class AuthorizationToken implements NetworkProto {
                 .setAuthorizationTokenType(authorizationTokenType.toProtoEnum());
     }
 
-    public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
-        switch (proto.getMessageCase()) {
-            case HASHCASHTOKEN: {
-                //noinspection deprecation
-                return HashCashToken.fromProto(proto);
+    public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto)
+            throws UnresolvableProtobufException {
+        try {
+            switch (proto.getMessageCase()) {
+                case HASHCASHTOKEN: {
+                    //noinspection deprecation
+                    return HashCashToken.fromProto(proto);
+                }
+                case EQUIHASHTOKEN: {
+                    return EquiHashToken.fromProto(proto);
+                }
+                case HASHCASHV2TOKEN: {
+                    return HashCashV2Token.fromProto(proto);
+                }
             }
-            case EQUIHASHTOKEN: {
-                return EquiHashToken.fromProto(proto);
-            }
-            case HASHCASHV2TOKEN: {
-                return HashCashV2Token.fromProto(proto);
-            }
+            throw new UnresolvableProtobufMessageException(proto);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        throw new UnresolvableProtobufMessageException(proto);
     }
 }

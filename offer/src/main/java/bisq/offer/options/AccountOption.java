@@ -20,6 +20,7 @@ package bisq.offer.options;
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -89,15 +90,20 @@ public final class AccountOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountOption fromProto(bisq.offer.protobuf.AccountOption proto) {
-        return new AccountOption(PaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.getSaltedAccountId(),
-                proto.hasCountryCode() ? Optional.of(proto.getCountryCode()) : Optional.empty(),
-                proto.getAcceptedCountryCodesList(),
-                proto.hasBankId() ? Optional.of(proto.getBankId()) : Optional.empty(),
-                proto.getAcceptedBanksList(),
-                proto.getSaltedAccountPayloadHash().toByteArray()
-        );
+    public static AccountOption fromProto(bisq.offer.protobuf.AccountOption proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AccountOption(PaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.getSaltedAccountId(),
+                    proto.hasCountryCode() ? Optional.of(proto.getCountryCode()) : Optional.empty(),
+                    proto.getAcceptedCountryCodesList(),
+                    proto.hasBankId() ? Optional.of(proto.getBankId()) : Optional.empty(),
+                    proto.getAcceptedBanksList(),
+                    proto.getSaltedAccountPayloadHash().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getSaltedAccountPayloadHash() {

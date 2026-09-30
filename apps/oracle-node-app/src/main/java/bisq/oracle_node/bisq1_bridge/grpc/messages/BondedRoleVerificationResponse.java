@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
@@ -51,7 +52,12 @@ public final class BondedRoleVerificationResponse implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BondedRoleVerificationResponse fromProto(bisq.bridge.protobuf.BondedRoleVerificationResponse proto) {
-        return new BondedRoleVerificationResponse(OptionalUtils.optionalIf(proto.hasErrorMessage(), proto::getErrorMessage));
+    public static BondedRoleVerificationResponse fromProto(bisq.bridge.protobuf.BondedRoleVerificationResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BondedRoleVerificationResponse(OptionalUtils.optionalIf(proto.hasErrorMessage(), proto::getErrorMessage));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

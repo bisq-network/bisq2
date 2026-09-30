@@ -17,6 +17,7 @@
 
 package bisq.offer.price.spec;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -67,7 +68,11 @@ public final class FloatPriceSpec implements PriceSpec {
         return unsafeToProto(serializeForHash);
     }
 
-    public static FloatPriceSpec fromProto(bisq.offer.protobuf.FloatPrice proto) {
-        return new FloatPriceSpec(proto.getPercentage());
+    public static FloatPriceSpec fromProto(bisq.offer.protobuf.FloatPrice proto) throws UnresolvableProtobufException {
+        try {
+            return new FloatPriceSpec(proto.getPercentage());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -18,6 +18,7 @@
 package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -127,17 +128,22 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
                 .setAccountInputDataWithSalt(ByteString.copyFrom(accountInputDataWithSalt));
     }
 
-    public static AuthorizeSignedWitnessRequest fromProto(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto) {
-        return new AuthorizeSignedWitnessRequest(proto.hasProtocolVersion()
-                ? proto.getProtocolVersion()
-                : LEGACY_VERSION,
-                proto.getProfileId(),
-                proto.getHashAsHex(),
-                proto.getAccountAgeWitnessDate(),
-                proto.getWitnessSignDate(),
-                proto.getAccountInputDataWithSalt().toByteArray(),
-                proto.getPubKeyBase64(),
-                proto.getSignatureBase64());
+    public static AuthorizeSignedWitnessRequest fromProto(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizeSignedWitnessRequest(proto.hasProtocolVersion()
+                    ? proto.getProtocolVersion()
+                    : LEGACY_VERSION,
+                    proto.getProfileId(),
+                    proto.getHashAsHex(),
+                    proto.getAccountAgeWitnessDate(),
+                    proto.getWitnessSignDate(),
+                    proto.getAccountInputDataWithSalt().toByteArray(),
+                    proto.getPubKeyBase64(),
+                    proto.getSignatureBase64());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

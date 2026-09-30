@@ -22,6 +22,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -146,17 +147,22 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedBondedReputationData fromProto(bisq.user.protobuf.AuthorizedBondedReputationData proto) {
-        return new AuthorizedBondedReputationData(
-                proto.getVersion(),
-                proto.getBlockTime(),
-                proto.getAmount(),
-                proto.getHash().toByteArray(),
-                proto.getLockTime(),
-                proto.getBlockHeight(),
-                proto.getLockupTxId(),
-                proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty(),
-                proto.getStaticPublicKeysProvided());
+    public static AuthorizedBondedReputationData fromProto(bisq.user.protobuf.AuthorizedBondedReputationData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizedBondedReputationData(
+                    proto.getVersion(),
+                    proto.getBlockTime(),
+                    proto.getAmount(),
+                    proto.getHash().toByteArray(),
+                    proto.getLockTime(),
+                    proto.getBlockHeight(),
+                    proto.getLockupTxId(),
+                    proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty(),
+                    proto.getStaticPublicKeysProvided());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

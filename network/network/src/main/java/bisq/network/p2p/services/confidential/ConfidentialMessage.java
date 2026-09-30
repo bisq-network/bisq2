@@ -21,6 +21,7 @@ import bisq.common.encoding.canonical.Canonical;
 import bisq.common.encoding.canonical.CanonicalEncoder;
 import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -73,11 +74,16 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Owners
                 .setReceiverKeyId(receiverKeyId);
     }
 
-    public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto) {
-        return new ConfidentialMessage(
-                ConfidentialData.fromProto(proto.getConfidentialData()),
-                proto.getReceiverKeyId()
-        );
+    public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ConfidentialMessage(
+                    ConfidentialData.fromProto(proto.getConfidentialData()),
+                    proto.getReceiverKeyId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

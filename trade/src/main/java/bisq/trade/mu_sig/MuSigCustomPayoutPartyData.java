@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.trade.mu_sig.messages.grpc.CustomCloseTradeResponse;
 import bisq.trade.mu_sig.messages.grpc.CustomPayoutPsbt;
 import lombok.EqualsAndHashCode;
@@ -87,17 +88,22 @@ public final class MuSigCustomPayoutPartyData implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigCustomPayoutPartyData fromProto(bisq.trade.protobuf.MuSigCustomPayoutPartyData proto) {
-        return new MuSigCustomPayoutPartyData(
-                proto.hasMyCustomPayoutPsbt()
-                        ? Optional.of(CustomPayoutPsbt.fromProto(proto.getMyCustomPayoutPsbt()))
-                        : Optional.empty(),
-                proto.hasPeersCustomPayoutPsbt()
-                        ? Optional.of(PeerCustomPayoutPsbt.fromProto(proto.getPeersCustomPayoutPsbt()))
-                        : Optional.empty(),
-                proto.hasMyCustomCloseTradeResponse()
-                        ? Optional.of(CustomCloseTradeResponse.fromProto(proto.getMyCustomCloseTradeResponse()))
-                        : Optional.empty());
+    public static MuSigCustomPayoutPartyData fromProto(bisq.trade.protobuf.MuSigCustomPayoutPartyData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigCustomPayoutPartyData(
+                    proto.hasMyCustomPayoutPsbt()
+                            ? Optional.of(CustomPayoutPsbt.fromProto(proto.getMyCustomPayoutPsbt()))
+                            : Optional.empty(),
+                    proto.hasPeersCustomPayoutPsbt()
+                            ? Optional.of(PeerCustomPayoutPsbt.fromProto(proto.getPeersCustomPayoutPsbt()))
+                            : Optional.empty(),
+                    proto.hasMyCustomCloseTradeResponse()
+                            ? Optional.of(CustomCloseTradeResponse.fromProto(proto.getMyCustomCloseTradeResponse()))
+                            : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     boolean isLocalPartyData() {

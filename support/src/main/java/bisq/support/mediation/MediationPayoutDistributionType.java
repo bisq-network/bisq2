@@ -19,6 +19,7 @@ package bisq.support.mediation;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MediationPayoutDistributionType implements ProtoEnum {
     CUSTOM_PAYOUT,
@@ -35,7 +36,8 @@ public enum MediationPayoutDistributionType implements ProtoEnum {
         return bisq.support.protobuf.MediationPayoutDistributionType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MediationPayoutDistributionType fromProto(bisq.support.protobuf.MediationPayoutDistributionType proto) {
+    public static MediationPayoutDistributionType fromProto(bisq.support.protobuf.MediationPayoutDistributionType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MediationPayoutDistributionType.class, proto.name(), CUSTOM_PAYOUT);
     }
 }

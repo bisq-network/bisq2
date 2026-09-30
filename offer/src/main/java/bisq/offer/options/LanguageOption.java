@@ -17,6 +17,7 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -58,7 +59,12 @@ public final class LanguageOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static LanguageOption fromProto(bisq.offer.protobuf.LanguageOption proto) {
-        return new LanguageOption(new ArrayList<>(proto.getSupportedLanguageCodesList()));
+    public static LanguageOption fromProto(bisq.offer.protobuf.LanguageOption proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new LanguageOption(new ArrayList<>(proto.getSupportedLanguageCodesList()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

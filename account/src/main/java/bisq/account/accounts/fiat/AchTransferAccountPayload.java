@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.accounts.util.BankAccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -107,21 +108,26 @@ public final class AchTransferAccountPayload extends BankAccountPayload {
                 .setHolderAddress(holderAddress);
     }
 
-    public static AchTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
-        var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        var achAccountPayload = bankAccountPayload.getAchTransferAccountPayload();
-        checkArgument(bankAccountPayload.hasBankName(), "Bank name for ACH must be present");
-        checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for ACH must be present");
-        checkArgument(bankAccountPayload.hasBankAccountType(), "AccountType for ACH must be present");
-        return new AchTransferAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                bankAccountPayload.getHolderName(),
-                achAccountPayload.getHolderAddress(),
-                bankAccountPayload.getBankName(),
-                bankAccountPayload.getBankId(),
-                bankAccountPayload.getAccountNr(),
-                BankAccountType.fromProto(bankAccountPayload.getBankAccountType()));
+    public static AchTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
+            var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+            var achAccountPayload = bankAccountPayload.getAchTransferAccountPayload();
+            checkArgument(bankAccountPayload.hasBankName(), "Bank name for ACH must be present");
+            checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for ACH must be present");
+            checkArgument(bankAccountPayload.hasBankAccountType(), "AccountType for ACH must be present");
+            return new AchTransferAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    bankAccountPayload.getHolderName(),
+                    achAccountPayload.getHolderAddress(),
+                    bankAccountPayload.getBankName(),
+                    bankAccountPayload.getBankId(),
+                    bankAccountPayload.getAccountNr(),
+                    BankAccountType.fromProto(bankAccountPayload.getBankAccountType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
