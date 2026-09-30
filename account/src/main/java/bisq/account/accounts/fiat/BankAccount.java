@@ -51,13 +51,17 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
     }
 
     public static BankAccount<?> fromProto(Account proto) throws UnresolvableProtobufException {
-        return switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
-            case ACHTRANSFERACCOUNT -> AchTransferAccount.fromProto(proto);
-            case NATIONALBANKACCOUNT -> NationalBankAccount.fromProto(proto);
-            case CASHDEPOSITACCOUNT -> CashDepositAccount.fromProto(proto);
-            case SAMEBANKACCOUNT -> SameBankAccount.fromProto(proto);
-            case DOMESTICWIRETRANSFERACCOUNT -> DomesticWireTransferAccount.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        try {
+            return switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
+                case ACHTRANSFERACCOUNT -> AchTransferAccount.fromProto(proto);
+                case NATIONALBANKACCOUNT -> NationalBankAccount.fromProto(proto);
+                case CASHDEPOSITACCOUNT -> CashDepositAccount.fromProto(proto);
+                case SAMEBANKACCOUNT -> SameBankAccount.fromProto(proto);
+                case DOMESTICWIRETRANSFERACCOUNT -> DomesticWireTransferAccount.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

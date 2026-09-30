@@ -54,6 +54,10 @@ public final class QuoteSideFixedAmountSpec extends FixedAmountSpec implements Q
 
     public static QuoteSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto)
             throws UnresolvableProtobufException {
-        return new QuoteSideFixedAmountSpec(proto.getAmount());
+        try {
+            return new QuoteSideFixedAmountSpec(proto.getAmount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

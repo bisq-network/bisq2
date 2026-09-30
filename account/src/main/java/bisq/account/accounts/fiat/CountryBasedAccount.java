@@ -51,36 +51,40 @@ public abstract class CountryBasedAccount<P extends CountryBasedAccountPayload> 
 
     public static CountryBasedAccount<?> fromProto(bisq.account.protobuf.Account proto)
             throws UnresolvableProtobufException {
-        return switch (proto.getCountryBasedAccount().getMessageCase()) {
-            case BANKACCOUNT -> BankAccount.fromProto(proto);
-            case SEPAACCOUNT -> SepaAccount.fromProto(proto);
-            case SEPAINSTANTACCOUNT -> SepaInstantAccount.fromProto(proto);
-            case F2FACCOUNT -> F2FAccount.fromProto(proto);
-            case PIXACCOUNT -> PixAccount.fromProto(proto);
-            case STRIKEACCOUNT -> StrikeAccount.fromProto(proto);
-            case AMAZONGIFTCARDACCOUNT -> AmazonGiftCardAccount.fromProto(proto);
-            case UPIACCOUNT -> UpiAccount.fromProto(proto);
-            case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
-            case WISEUSDACCOUNT -> WiseUsdAccount.fromProto(proto);
-            case MONEYBEAMACCOUNT -> MoneyBeamAccount.fromProto(proto);
-            case SWISHACCOUNT -> SwishAccount.fromProto(proto);
-            case MONEYGRAMACCOUNT -> MoneyGramAccount.fromProto(proto);
-            case PROMPTPAYACCOUNT -> PromptPayAccount.fromProto(proto);
-            case SBPACCOUNT -> SbpAccount.fromProto(proto);
-            case ZELLEACCOUNT -> ZelleAccount.fromProto(proto);
-            case SWIFTACCOUNT -> SwiftAccount.fromProto(proto);
-            case USPOSTALMONEYORDERACCOUNT -> USPostalMoneyOrderAccount.fromProto(proto);
-            case PAYIDACCOUNT -> PayIdAccount.fromProto(proto);
-            case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
-            case HALCASHACCOUNT -> HalCashAccount.fromProto(proto);
-            case PIN4ACCOUNT -> Pin4Account.fromProto(proto);
-            case FASTERPAYMENTSACCOUNT -> FasterPaymentsAccount.fromProto(proto);
-            case IMPSACCOUNT -> ImpsAccount.fromProto(proto);
-            case NEFTACCOUNT -> NeftAccount.fromProto(proto);
-            case ALIPAYACCOUNT -> AliPayAccount.fromProto(proto);
-            case WECHATPAYACCOUNT -> WeChatPayAccount.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        try {
+            return switch (proto.getCountryBasedAccount().getMessageCase()) {
+                case BANKACCOUNT -> BankAccount.fromProto(proto);
+                case SEPAACCOUNT -> SepaAccount.fromProto(proto);
+                case SEPAINSTANTACCOUNT -> SepaInstantAccount.fromProto(proto);
+                case F2FACCOUNT -> F2FAccount.fromProto(proto);
+                case PIXACCOUNT -> PixAccount.fromProto(proto);
+                case STRIKEACCOUNT -> StrikeAccount.fromProto(proto);
+                case AMAZONGIFTCARDACCOUNT -> AmazonGiftCardAccount.fromProto(proto);
+                case UPIACCOUNT -> UpiAccount.fromProto(proto);
+                case BIZUMACCOUNT -> BizumAccount.fromProto(proto);
+                case WISEUSDACCOUNT -> WiseUsdAccount.fromProto(proto);
+                case MONEYBEAMACCOUNT -> MoneyBeamAccount.fromProto(proto);
+                case SWISHACCOUNT -> SwishAccount.fromProto(proto);
+                case MONEYGRAMACCOUNT -> MoneyGramAccount.fromProto(proto);
+                case PROMPTPAYACCOUNT -> PromptPayAccount.fromProto(proto);
+                case SBPACCOUNT -> SbpAccount.fromProto(proto);
+                case ZELLEACCOUNT -> ZelleAccount.fromProto(proto);
+                case SWIFTACCOUNT -> SwiftAccount.fromProto(proto);
+                case USPOSTALMONEYORDERACCOUNT -> USPostalMoneyOrderAccount.fromProto(proto);
+                case PAYIDACCOUNT -> PayIdAccount.fromProto(proto);
+                case INTERACETRANSFERACCOUNT -> InteracETransferAccount.fromProto(proto);
+                case HALCASHACCOUNT -> HalCashAccount.fromProto(proto);
+                case PIN4ACCOUNT -> Pin4Account.fromProto(proto);
+                case FASTERPAYMENTSACCOUNT -> FasterPaymentsAccount.fromProto(proto);
+                case IMPSACCOUNT -> ImpsAccount.fromProto(proto);
+                case NEFTACCOUNT -> NeftAccount.fromProto(proto);
+                case ALIPAYACCOUNT -> AliPayAccount.fromProto(proto);
+                case WECHATPAYACCOUNT -> WeChatPayAccount.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     protected bisq.account.protobuf.CountryBasedAccount.Builder getCountryBasedAccountBuilder(boolean serializeForHash) {

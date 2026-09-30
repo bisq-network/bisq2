@@ -55,10 +55,14 @@ public final class Cbdc extends DigitalAsset {
     }
 
     public static Cbdc fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
-        bisq.common.protobuf.CentralBankDigitalCurrency proto = baseProto.getDigitalAsset().getCentralBankDigitalCurrency();
-        return new Cbdc(baseProto.getCode(), baseProto.getName(),
-                proto.getPegCurrencyCode(),
-                proto.getCountryCode());
+        try {
+            bisq.common.protobuf.CentralBankDigitalCurrency proto = baseProto.getDigitalAsset().getCentralBankDigitalCurrency();
+            return new Cbdc(baseProto.getCode(), baseProto.getName(),
+                    proto.getPegCurrencyCode(),
+                    proto.getCountryCode());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

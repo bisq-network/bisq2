@@ -57,18 +57,22 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
 
     public static BisqEasyTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        return switch (proto.getBisqEasyTradeMessage().getMessageCase()) {
-            case BISQEASYTAKEOFFERREQUEST -> BisqEasyTakeOfferRequest.fromProto(proto);
-            case BISQEASYTAKEOFFERRESPONSE -> BisqEasyTakeOfferResponse.fromProto(proto);
-            case BISQEASYACCOUNTDATAMESSAGE -> BisqEasyAccountDataMessage.fromProto(proto);
-            case BISQEASYCONFIRMFIATSENTMESSAGE -> BisqEasyConfirmFiatSentMessage.fromProto(proto);
-            case BISQEASYBTCADDRESSMESSAGE -> BisqEasyBtcAddressMessage.fromProto(proto);
-            case BISQEASYCONFIRMBTCSENTMESSAGE -> BisqEasyConfirmBtcSentMessage.fromProto(proto);
-            case BISQEASYCONFIRMFIATRECEIPTMESSAGE -> BisqEasyConfirmFiatReceiptMessage.fromProto(proto);
-            case BISQEASYREJECTTRADEMESSAGE -> BisqEasyRejectTradeMessage.fromProto(proto);
-            case BISQEASYCANCELTRADEMESSAGE -> BisqEasyCancelTradeMessage.fromProto(proto);
-            case BISQEASYREPORTERRORMESSAGE -> BisqEasyReportErrorMessage.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        try {
+            return switch (proto.getBisqEasyTradeMessage().getMessageCase()) {
+                case BISQEASYTAKEOFFERREQUEST -> BisqEasyTakeOfferRequest.fromProto(proto);
+                case BISQEASYTAKEOFFERRESPONSE -> BisqEasyTakeOfferResponse.fromProto(proto);
+                case BISQEASYACCOUNTDATAMESSAGE -> BisqEasyAccountDataMessage.fromProto(proto);
+                case BISQEASYCONFIRMFIATSENTMESSAGE -> BisqEasyConfirmFiatSentMessage.fromProto(proto);
+                case BISQEASYBTCADDRESSMESSAGE -> BisqEasyBtcAddressMessage.fromProto(proto);
+                case BISQEASYCONFIRMBTCSENTMESSAGE -> BisqEasyConfirmBtcSentMessage.fromProto(proto);
+                case BISQEASYCONFIRMFIATRECEIPTMESSAGE -> BisqEasyConfirmFiatReceiptMessage.fromProto(proto);
+                case BISQEASYREJECTTRADEMESSAGE -> BisqEasyRejectTradeMessage.fromProto(proto);
+                case BISQEASYCANCELTRADEMESSAGE -> BisqEasyCancelTradeMessage.fromProto(proto);
+                case BISQEASYREPORTERRORMESSAGE -> BisqEasyReportErrorMessage.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

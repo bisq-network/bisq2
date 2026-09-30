@@ -85,12 +85,16 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
 
     public static FasterPaymentsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var fasterPaymentsPayload = proto.getCountryBasedAccountPayload().getFasterPaymentsAccountPayload();
-        return new FasterPaymentsAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                fasterPaymentsPayload.getHolderName(),
-                fasterPaymentsPayload.getSortCode(),
-                fasterPaymentsPayload.getAccountNr());
+        try {
+            var fasterPaymentsPayload = proto.getCountryBasedAccountPayload().getFasterPaymentsAccountPayload();
+            return new FasterPaymentsAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    fasterPaymentsPayload.getHolderName(),
+                    fasterPaymentsPayload.getSortCode(),
+                    fasterPaymentsPayload.getAccountNr());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

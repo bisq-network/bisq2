@@ -47,7 +47,11 @@ public final class PubKeySharesRequest implements Proto {
 
     public static PubKeySharesRequest fromProto(bisq.trade.protobuf.PubKeySharesRequest proto)
             throws UnresolvableProtobufException {
-        return new PubKeySharesRequest(proto.getTradeId(),
-                Role.fromProto(proto.getMyRole()));
+        try {
+            return new PubKeySharesRequest(proto.getTradeId(),
+                    Role.fromProto(proto.getMyRole()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

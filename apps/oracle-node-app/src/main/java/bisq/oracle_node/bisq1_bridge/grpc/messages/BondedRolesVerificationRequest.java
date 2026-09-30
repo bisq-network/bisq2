@@ -66,8 +66,12 @@ public final class BondedRolesVerificationRequest implements NetworkProto {
 
     public static BondedRolesVerificationRequest fromProto(bisq.bridge.protobuf.BondedRolesVerificationRequest proto)
             throws UnresolvableProtobufException {
-        return new BondedRolesVerificationRequest(ProtobufUtils.fromProtoStream(proto.getRegistrationsList(),
-                        BondedRoleVerificationRequest::fromProto)
-                .toList());
+        try {
+            return new BondedRolesVerificationRequest(ProtobufUtils.fromProtoStream(proto.getRegistrationsList(),
+                            BondedRoleVerificationRequest::fromProto)
+                    .toList());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

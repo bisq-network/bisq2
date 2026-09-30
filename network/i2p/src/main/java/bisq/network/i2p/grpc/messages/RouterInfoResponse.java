@@ -68,11 +68,15 @@ public final class RouterInfoResponse implements Proto {
 
     public static RouterInfoResponse fromProto(bisq.bi2p.protobuf.RouterInfoResponse proto)
             throws UnresolvableProtobufException {
-        return new RouterInfoResponse(
-                ProcessState.fromProto(proto.getProcessState()),
-                NetworkState.fromProto(proto.getNetworkState()),
-                RouterState.fromProto(proto.getRouterState()),
-                TunnelInfo.fromProto(proto.getTunnelInfo())
-        );
+        try {
+            return new RouterInfoResponse(
+                    ProcessState.fromProto(proto.getProcessState()),
+                    NetworkState.fromProto(proto.getNetworkState()),
+                    RouterState.fromProto(proto.getRouterState()),
+                    TunnelInfo.fromProto(proto.getTunnelInfo())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

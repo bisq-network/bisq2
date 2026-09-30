@@ -49,7 +49,11 @@ public final class DepositPsbt implements NetworkProto {
     }
 
     public static DepositPsbt fromProto(bisq.trade.protobuf.DepositPsbt proto) throws UnresolvableProtobufException {
-        return new DepositPsbt(proto.getDepositPsbt().toByteArray());
+        try {
+            return new DepositPsbt(proto.getDepositPsbt().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

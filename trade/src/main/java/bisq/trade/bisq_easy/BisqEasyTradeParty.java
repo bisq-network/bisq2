@@ -42,10 +42,14 @@ public class BisqEasyTradeParty extends TradeParty {
 
     public static BisqEasyTradeParty fromProto(bisq.trade.protobuf.TradeParty proto)
             throws UnresolvableProtobufException {
-        BisqEasyTradeParty tradeParty = new BisqEasyTradeParty(NetworkId.fromProto(proto.getNetworkId()));
-        if (proto.hasContractSignatureData()) {
-            tradeParty.getContractSignatureData().set(ContractSignatureData.fromProto(proto.getContractSignatureData()));
+        try {
+            BisqEasyTradeParty tradeParty = new BisqEasyTradeParty(NetworkId.fromProto(proto.getNetworkId()));
+            if (proto.hasContractSignatureData()) {
+                tradeParty.getContractSignatureData().set(ContractSignatureData.fromProto(proto.getContractSignatureData()));
+            }
+            return tradeParty;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        return tradeParty;
     }
 }

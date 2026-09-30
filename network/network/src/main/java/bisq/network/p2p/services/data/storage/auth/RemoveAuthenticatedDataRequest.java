@@ -197,8 +197,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
 
     public static RemoveAuthenticatedDataRequest fromProto(bisq.network.protobuf.RemoveAuthenticatedDataRequest proto)
             throws UnresolvableProtobufException {
-        byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
         try {
+            byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
             //noinspection deprecation
             MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
@@ -225,9 +225,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                     className,
                     proto.getSignatureV2().toByteArray()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key");
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

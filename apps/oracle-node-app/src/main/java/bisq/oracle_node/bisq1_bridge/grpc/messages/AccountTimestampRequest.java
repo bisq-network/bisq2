@@ -56,6 +56,10 @@ public final class AccountTimestampRequest implements NetworkProto {
 
     public static AccountTimestampRequest fromProto(bisq.bridge.protobuf.AccountTimestampDateRequest proto)
             throws UnresolvableProtobufException {
-        return new AccountTimestampRequest(proto.getHash().toByteArray());
+        try {
+            return new AccountTimestampRequest(proto.getHash().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

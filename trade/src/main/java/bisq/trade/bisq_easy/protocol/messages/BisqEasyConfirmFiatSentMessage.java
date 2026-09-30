@@ -64,12 +64,16 @@ public final class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
 
     public static BisqEasyConfirmFiatSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        return new BisqEasyConfirmFiatSentMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()));
+        try {
+            return new BisqEasyConfirmFiatSentMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -55,7 +55,11 @@ public final class ReputationOption implements OfferOption {
 
     public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto)
             throws UnresolvableProtobufException {
-        //noinspection deprecation
-        return new ReputationOption(proto.getRequiredTotalReputationScore());
+        try {
+            //noinspection deprecation
+            return new ReputationOption(proto.getRequiredTotalReputationScore());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

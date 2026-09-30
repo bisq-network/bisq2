@@ -237,26 +237,30 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
 
     public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedBondedRole(
-                proto.getVersion(),
-                proto.getProfileId(),
-                proto.getAuthorizedPublicKey(),
-                BondedRoleType.fromProto(proto.getBondedRoleType()),
-                proto.getBondUserName(),
-                proto.getSignatureBase64(),
-                proto.hasAddressByTransportTypeMap() ?
-                        Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
-                        Optional.empty(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.hasAuthorizingOracleNode() ?
-                        Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) :
-                        Optional.empty(),
-                proto.getStaticPublicKeysProvided(),
-                BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
-                        proto.getRegistrationProtocolVersion()),
-                proto.getProposalTxId(),
-                proto.getLockupTxId()
-        );
+        try {
+            return new AuthorizedBondedRole(
+                    proto.getVersion(),
+                    proto.getProfileId(),
+                    proto.getAuthorizedPublicKey(),
+                    BondedRoleType.fromProto(proto.getBondedRoleType()),
+                    proto.getBondUserName(),
+                    proto.getSignatureBase64(),
+                    proto.hasAddressByTransportTypeMap() ?
+                            Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
+                            Optional.empty(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.hasAuthorizingOracleNode() ?
+                            Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) :
+                            Optional.empty(),
+                    proto.getStaticPublicKeysProvided(),
+                    BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
+                            proto.getRegistrationProtocolVersion()),
+                    proto.getProposalTxId(),
+                    proto.getLockupTxId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

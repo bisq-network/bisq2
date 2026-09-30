@@ -124,7 +124,8 @@ class MuSigCustomPayoutPartyDataTest {
                 .build();
 
         assertThatThrownBy(() -> PeerCustomPayoutPsbt.fromProto(oversized))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -142,11 +143,14 @@ class MuSigCustomPayoutPartyDataTest {
                         .build();
 
         assertThatThrownBy(() -> MuSigCustomPayoutPartyData.fromProto(empty))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> MuSigCustomPayoutPartyData.fromProto(incompleteLocal))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> MuSigCustomPayoutPartyData.fromProto(mixedOwnership))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -209,7 +213,8 @@ class MuSigCustomPayoutPartyDataTest {
                 .build();
 
         assertThatThrownBy(() -> MuSigTradeParty.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     private static CustomPayoutPsbt createLocalPsbt() {

@@ -45,13 +45,17 @@ public abstract class MultiPartyContract<T extends Offer<?, ?>> extends TwoParty
 
     public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto)
             throws UnresolvableProtobufException {
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (proto.getTwoPartyContract().getMessageCase()) {
-            // no impl yet
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
+        try {
+            //noinspection SwitchStatementWithTooFewBranches
+            switch (proto.getTwoPartyContract().getMessageCase()) {
+                // no impl yet
+                case MESSAGE_NOT_SET: {
+                    throw new UnresolvableProtobufMessageException(proto);
+                }
             }
+            throw new UnresolvableProtobufMessageException(proto);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        throw new UnresolvableProtobufMessageException(proto);
     }
 }

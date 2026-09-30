@@ -70,14 +70,18 @@ public final class SendAccountPayloadMessage extends MuSigTradeMessage {
 
     public static SendAccountPayloadMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.SendAccountPayloadMessage muSigMessageProto = proto.getMuSigTradeMessage().getSendAccountPayloadMessage();
-        return new SendAccountPayloadMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                AccountPayload.fromProto(muSigMessageProto.getAccountPayload()));
+        try {
+            bisq.trade.protobuf.SendAccountPayloadMessage muSigMessageProto = proto.getMuSigTradeMessage().getSendAccountPayloadMessage();
+            return new SendAccountPayloadMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    AccountPayload.fromProto(muSigMessageProto.getAccountPayload()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

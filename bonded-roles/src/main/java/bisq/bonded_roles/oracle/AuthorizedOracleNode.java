@@ -124,15 +124,19 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData, Ow
 
     public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedOracleNode(
-                proto.getVersion(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.getProfileId(),
-                proto.getAuthorizedPublicKey(),
-                proto.getBondUserName(),
-                proto.getSignatureBase64(),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            return new AuthorizedOracleNode(
+                    proto.getVersion(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.getProfileId(),
+                    proto.getAuthorizedPublicKey(),
+                    proto.getBondUserName(),
+                    proto.getSignatureBase64(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

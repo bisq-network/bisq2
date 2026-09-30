@@ -60,14 +60,18 @@ public final class MoneseAccount extends Account<FiatPaymentMethod, MoneseAccoun
     }
 
     public static MoneseAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new MoneseAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                MoneseAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin);
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new MoneseAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    MoneseAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

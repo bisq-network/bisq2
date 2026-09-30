@@ -108,24 +108,28 @@ public class MuSigArbitrationCase implements PersistableProto {
 
     public static MuSigArbitrationCase fromProto(bisq.support.protobuf.MuSigArbitrationCase proto)
             throws UnresolvableProtobufException {
-        return new MuSigArbitrationCase(MuSigArbitrationRequest.fromProto(proto.getMuSigArbitrationRequest()),
-                proto.getRequestDate(),
-                ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
-                proto.hasMuSigArbitrationResult() ?
-                        Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult())) :
-                        Optional.empty(),
-                proto.hasArbitrationResultSignature() ?
-                        Optional.of(proto.getArbitrationResultSignature().toByteArray()) :
-                        Optional.empty(),
-                proto.hasTakerAccountPayload() ?
-                        Optional.of(AccountPayload.fromProto(proto.getTakerAccountPayload())) :
-                        Optional.empty(),
-                proto.hasMakerAccountPayload() ?
-                        Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
-                        Optional.empty(),
-                proto.getArbitratorHasLeftChat(),
-                ProtobufUtils.fromProtoStream(proto.getIssuesList(), MuSigArbitrationIssue::fromProto)
-                        .toList());
+        try {
+            return new MuSigArbitrationCase(MuSigArbitrationRequest.fromProto(proto.getMuSigArbitrationRequest()),
+                    proto.getRequestDate(),
+                    ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
+                    proto.hasMuSigArbitrationResult() ?
+                            Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult())) :
+                            Optional.empty(),
+                    proto.hasArbitrationResultSignature() ?
+                            Optional.of(proto.getArbitrationResultSignature().toByteArray()) :
+                            Optional.empty(),
+                    proto.hasTakerAccountPayload() ?
+                            Optional.of(AccountPayload.fromProto(proto.getTakerAccountPayload())) :
+                            Optional.empty(),
+                    proto.hasMakerAccountPayload() ?
+                            Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
+                            Optional.empty(),
+                    proto.getArbitratorHasLeftChat(),
+                    ProtobufUtils.fromProtoStream(proto.getIssuesList(), MuSigArbitrationIssue::fromProto)
+                            .toList());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public boolean setArbitrationCaseState(ArbitrationCaseState state) {

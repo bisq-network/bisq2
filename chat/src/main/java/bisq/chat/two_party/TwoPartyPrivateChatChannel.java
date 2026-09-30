@@ -86,15 +86,19 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     public static TwoPartyPrivateChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                        bisq.chat.protobuf.TwoPartyPrivateChatChannel proto)
             throws UnresolvableProtobufException {
-        return new TwoPartyPrivateChatChannel(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                UserProfile.fromProto(proto.getPeer()),
-                UserIdentity.fromProto(proto.getMyUserIdentity()),
-                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), TwoPartyPrivateChatMessage::fromProto)
-                        .collect(Collectors.toSet()),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType())
-        );
+        try {
+            return new TwoPartyPrivateChatChannel(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    UserProfile.fromProto(proto.getPeer()),
+                    UserIdentity.fromProto(proto.getMyUserIdentity()),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), TwoPartyPrivateChatMessage::fromProto)
+                            .collect(Collectors.toSet()),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

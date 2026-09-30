@@ -82,7 +82,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -99,7 +100,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -132,7 +134,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeAccountAgeRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -249,7 +252,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @ParameterizedTest
@@ -268,7 +272,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -283,7 +288,8 @@ class AccountAgeProtocolTest {
                         .build();
 
         assertThatThrownBy(() -> AuthorizeSignedWitnessRequest.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

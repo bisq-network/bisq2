@@ -59,8 +59,12 @@ public final class NetworkId implements NetworkProto {
 
     public static NetworkId fromProto(bisq.network.identity.protobuf.NetworkId proto)
             throws UnresolvableProtobufException {
-        return new NetworkId(AddressByTransportTypeMap.fromProto(proto.getAddressByNetworkTypeMap()),
-                PubKey.fromProto(proto.getPubKey()));
+        try {
+            return new NetworkId(AddressByTransportTypeMap.fromProto(proto.getAddressByNetworkTypeMap()),
+                    PubKey.fromProto(proto.getPubKey()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getId() {

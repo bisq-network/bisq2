@@ -92,10 +92,14 @@ public final class Inventory implements NetworkProto {
     }
 
     public static Inventory fromProto(bisq.network.protobuf.Inventory proto) throws UnresolvableProtobufException {
-        List<bisq.network.protobuf.DataRequest> entriesList = proto.getEntriesList();
-        List<DataRequest> entries = ProtobufUtils.fromProtoStream(entriesList, DataRequest::fromProto)
-                .collect(Collectors.toList());
-        return new Inventory(entries, proto.getMaxSizeReached(), Optional.of(proto.getSerializedSize()));
+        try {
+            List<bisq.network.protobuf.DataRequest> entriesList = proto.getEntriesList();
+            List<DataRequest> entries = ProtobufUtils.fromProtoStream(entriesList, DataRequest::fromProto)
+                    .collect(Collectors.toList());
+            return new Inventory(entries, proto.getMaxSizeReached(), Optional.of(proto.getSerializedSize()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // It can be a node has not sent any data but maxSizeReached is false.

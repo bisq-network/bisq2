@@ -79,13 +79,17 @@ public final class PromptPayAccountPayload extends CountryBasedAccountPayload im
 
     public static PromptPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.PromptPayAccountPayload payload = countryBasedAccountPayload.getPromptPayAccountPayload();
-        return new PromptPayAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getPromptPayId()
-        );
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.PromptPayAccountPayload payload = countryBasedAccountPayload.getPromptPayAccountPayload();
+            return new PromptPayAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getPromptPayId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

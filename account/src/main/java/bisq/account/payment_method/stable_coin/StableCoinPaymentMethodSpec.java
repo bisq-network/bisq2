@@ -57,7 +57,11 @@ public final class StableCoinPaymentMethodSpec extends PaymentMethodSpec<StableC
 
     public static StableCoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto)
             throws UnresolvableProtobufException {
-        return new StableCoinPaymentMethodSpec(StableCoinPaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        try {
+            return new StableCoinPaymentMethodSpec(StableCoinPaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

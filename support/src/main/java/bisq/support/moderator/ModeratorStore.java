@@ -70,23 +70,27 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
 
     public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto)
             throws UnresolvableProtobufException {
-        Set<ReportToModeratorMessage> messages = ProtobufUtils.fromProtoStream(proto.getReportToModeratorMessagesList(),
-                        ReportToModeratorMessage::fromProto)
-                .collect(Collectors.toSet());
+        try {
+            Set<ReportToModeratorMessage> messages = ProtobufUtils.fromProtoStream(proto.getReportToModeratorMessagesList(),
+                            ReportToModeratorMessage::fromProto)
+                    .collect(Collectors.toSet());
 
-        Map<String, BannedUserModeratorData> bannedDataMap = new TreeMap<>();
-        if (proto.getBannedUserModeratorDataCount() > 0) {
-            bannedDataMap = ProtobufUtils.fromProtoStream(proto.getBannedUserModeratorDataList(),
-                            BannedUserModeratorData::fromProto)
-                    .collect(Collectors.toMap(
-                            BannedUserModeratorData::getAccusedUserProfileId,
-                            data -> data,
-                            (existing, replacement) -> replacement,
-                            TreeMap::new
-                    ));
+            Map<String, BannedUserModeratorData> bannedDataMap = new TreeMap<>();
+            if (proto.getBannedUserModeratorDataCount() > 0) {
+                bannedDataMap = ProtobufUtils.fromProtoStream(proto.getBannedUserModeratorDataList(),
+                                BannedUserModeratorData::fromProto)
+                        .collect(Collectors.toMap(
+                                BannedUserModeratorData::getAccusedUserProfileId,
+                                data -> data,
+                                (existing, replacement) -> replacement,
+                                TreeMap::new
+                        ));
+            }
+
+            return new ModeratorStore(messages, bannedDataMap);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-
-        return new ModeratorStore(messages, bannedDataMap);
     }
 
     @Override

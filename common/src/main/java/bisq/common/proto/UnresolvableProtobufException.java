@@ -23,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
  * Thrown by fromProto and fromAny if a protobuf message does not describe a valid object: an unknown message type or
  * enum value, a field which fails validation, or an invalid key. The data is received from the network or read from
  * disk, so the caller has to decide how to handle it, for example to skip the entry or to drop the message.
+ * A fromProto method converts every RuntimeException from its own code, for example from the verify method of a
+ * constructor, into this exception. So a caller does not need to catch RuntimeException.
  */
 @Slf4j
 public class UnresolvableProtobufException extends Exception {

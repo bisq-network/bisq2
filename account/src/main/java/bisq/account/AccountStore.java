@@ -69,13 +69,17 @@ public final class AccountStore implements PersistableStore<AccountStore> {
 
     public static AccountStore fromProto(bisq.account.protobuf.AccountStore proto)
             throws UnresolvableProtobufException {
-        return new AccountStore(
-                ProtobufUtils.fromProtoEntryStream(proto.getAccountByNameMap(), Account::fromProto)
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                Map.Entry::getValue)),
-                proto.hasSelectedAccount() ?
-                        Optional.of(Account.fromProto(proto.getSelectedAccount())) :
-                        Optional.empty());
+        try {
+            return new AccountStore(
+                    ProtobufUtils.fromProtoEntryStream(proto.getAccountByNameMap(), Account::fromProto)
+                            .collect(Collectors.toMap(Map.Entry::getKey,
+                                    Map.Entry::getValue)),
+                    proto.hasSelectedAccount() ?
+                            Optional.of(Account.fromProto(proto.getSelectedAccount())) :
+                            Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -57,9 +57,13 @@ public final class PeerCustomPayoutPsbt implements PersistableProto {
 
     public static PeerCustomPayoutPsbt fromProto(bisq.trade.protobuf.PeerCustomPayoutPsbt proto)
             throws UnresolvableProtobufException {
-        return new PeerCustomPayoutPsbt(
-                proto.getTxId(),
-                proto.getPsbt().toByteArray());
+        try {
+            return new PeerCustomPayoutPsbt(
+                    proto.getTxId(),
+                    proto.getPsbt().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getTxId() {

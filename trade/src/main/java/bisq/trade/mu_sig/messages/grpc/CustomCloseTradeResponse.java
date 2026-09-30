@@ -45,7 +45,11 @@ public final class CustomCloseTradeResponse implements Proto {
 
     public static CustomCloseTradeResponse fromProto(bisq.trade.protobuf.CustomCloseTradeResponse proto)
             throws UnresolvableProtobufException {
-        return new CustomCloseTradeResponse(proto.getCustomPayoutTx().toByteArray());
+        try {
+            return new CustomCloseTradeResponse(proto.getCustomPayoutTx().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -109,13 +109,17 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
 
     public static AuthorizedDifficultyAdjustmentData fromProto(bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedDifficultyAdjustmentData(
-                proto.getVersion(),
-                proto.getDate(),
-                proto.getDifficultyAdjustmentFactor(),
-                proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            return new AuthorizedDifficultyAdjustmentData(
+                    proto.getVersion(),
+                    proto.getDate(),
+                    proto.getDifficultyAdjustmentFactor(),
+                    proto.getSecurityManagerProfileId(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

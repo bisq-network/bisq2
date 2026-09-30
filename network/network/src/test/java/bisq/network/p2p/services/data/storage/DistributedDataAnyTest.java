@@ -58,6 +58,7 @@ import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFO
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -244,9 +245,10 @@ public class DistributedDataAnyTest {
                 "common.StringLongPair");
         for (String typeUrl : typeUrls) {
             Any any = newerAny.toBuilder().setTypeUrl(typeUrl).build();
-            assertThrows(IllegalArgumentException.class,
-                    () -> AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any)),
-                    typeUrl);
+            assertInstanceOf(IllegalArgumentException.class,
+                    assertThrows(UnresolvableProtobufException.class,
+                            () -> AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any)),
+                            typeUrl).getCause());
         }
     }
 
@@ -343,7 +345,8 @@ public class DistributedDataAnyTest {
                                                 DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES - 2))))))
                 .build();
         assertEquals(addRequest.getSignature(), padded.getAddAuthenticatedDataRequest().getSignature());
-        assertThrows(IllegalArgumentException.class, () -> DataRequest.fromProto(padded));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class, () -> DataRequest.fromProto(padded)).getCause());
 
         ByteArray oversizedKey = new ByteArray(filledBytes(20, 0x77));
         bisq.network.protobuf.DataStore store = bisq.network.protobuf.DataStore.newBuilder()
@@ -372,12 +375,16 @@ public class DistributedDataAnyTest {
     }
 
     private static void assertAllHoldersReject(Any any) {
-        assertThrows(IllegalArgumentException.class,
-                () -> AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any)));
-        assertThrows(IllegalArgumentException.class,
-                () -> AuthenticatedData.fromProto(getAuthorizedDataProto(any)));
-        assertThrows(IllegalArgumentException.class, () -> AddAppendOnlyDataRequest.fromProto(
-                bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder().setAppendOnlyData(any).build()));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any))).getCause());
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> AuthenticatedData.fromProto(getAuthorizedDataProto(any))).getCause());
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> AddAppendOnlyDataRequest.fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest
+                                .newBuilder().setAppendOnlyData(any).build())).getCause());
     }
 
     private static UnknownFieldSet getUnknownBytes(int length) {

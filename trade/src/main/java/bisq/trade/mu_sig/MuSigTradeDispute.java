@@ -72,21 +72,25 @@ public final class MuSigTradeDispute implements PersistableProto {
 
     public static MuSigTradeDispute fromProto(bisq.trade.protobuf.MuSigTradeDispute proto)
             throws UnresolvableProtobufException {
-        return new MuSigTradeDispute(
-                MuSigDisputeState.fromProto(proto.getDisputeState()),
-                proto.hasMuSigMediationResult()
-                        ? Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult()))
-                        : Optional.empty(),
-                proto.hasMediationResultSignature()
-                        ? Optional.of(proto.getMediationResultSignature().toByteArray())
-                        : Optional.empty(),
-                proto.hasMuSigArbitrationResult()
-                        ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
-                        : Optional.empty(),
-                proto.hasArbitrationResultSignature()
-                        ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
-                        : Optional.empty()
-        );
+        try {
+            return new MuSigTradeDispute(
+                    MuSigDisputeState.fromProto(proto.getDisputeState()),
+                    proto.hasMuSigMediationResult()
+                            ? Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult()))
+                            : Optional.empty(),
+                    proto.hasMediationResultSignature()
+                            ? Optional.of(proto.getMediationResultSignature().toByteArray())
+                            : Optional.empty(),
+                    proto.hasMuSigArbitrationResult()
+                            ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
+                            : Optional.empty(),
+                    proto.hasArbitrationResultSignature()
+                            ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
+                            : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public void setDisputeState(MuSigDisputeState disputeState) {

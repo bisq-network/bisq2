@@ -58,8 +58,12 @@ public final class ReceiveAddressEntry implements PersistableProto {
 
     public static ReceiveAddressEntry fromProto(bisq.wallet.protobuf.ReceiveAddressEntry proto)
             throws UnresolvableProtobufException {
-        return new ReceiveAddressEntry(proto.getAddress(),
-                proto.getCreatedAt(),
-                OptionalUtils.optionalIf(proto.hasNote(), proto::getNote));
+        try {
+            return new ReceiveAddressEntry(proto.getAddress(),
+                    proto.getCreatedAt(),
+                    OptionalUtils.optionalIf(proto.hasNote(), proto::getNote));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

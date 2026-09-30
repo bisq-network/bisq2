@@ -100,14 +100,18 @@ public final class WiseAccountPayload extends AccountPayload<FiatPaymentMethod> 
 
     public static WiseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getWiseAccountPayload();
-        return new WiseAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getHolderName(),
-                payload.getEmail()
-        );
+        try {
+            var payload = proto.getWiseAccountPayload();
+            return new WiseAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getHolderName(),
+                    payload.getEmail()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

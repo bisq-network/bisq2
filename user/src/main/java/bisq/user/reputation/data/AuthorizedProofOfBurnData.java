@@ -129,14 +129,18 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
 
     public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedProofOfBurnData(
-                proto.getVersion(),
-                proto.getBlockTime(),
-                proto.getAmount(),
-                proto.getHash().toByteArray(),
-                proto.getBlockHeight(),
-                proto.getTxId(),
-                proto.getStaticPublicKeysProvided());
+        try {
+            return new AuthorizedProofOfBurnData(
+                    proto.getVersion(),
+                    proto.getBlockTime(),
+                    proto.getAmount(),
+                    proto.getHash().toByteArray(),
+                    proto.getBlockHeight(),
+                    proto.getTxId(),
+                    proto.getStaticPublicKeysProvided());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

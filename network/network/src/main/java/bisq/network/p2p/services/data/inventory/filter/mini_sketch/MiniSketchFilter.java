@@ -65,7 +65,11 @@ public final class MiniSketchFilter extends InventoryFilter {
 
     public static MiniSketchFilter fromProto(bisq.network.protobuf.InventoryFilter proto)
             throws UnresolvableProtobufException {
-        return new MiniSketchFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()));
+        try {
+            return new MiniSketchFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

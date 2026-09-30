@@ -124,23 +124,27 @@ public final class CashDepositAccountPayload extends BankAccountPayload {
 
     public static CashDepositAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
-        var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        var cashDepositAccountPayload = bankAccountPayload.getCashDepositAccountPayload();
-        checkArgument(bankAccountPayload.hasBankName(), "Bank name for Cash Deposit must be present");
-        return new CashDepositAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedPaymentAccountPayload.getCountryCode(),
-                bankAccountPayload.getSelectedCurrencyCode(),
-                bankAccountPayload.getHolderName(),
-                bankAccountPayload.hasHolderId() ? Optional.of(bankAccountPayload.getHolderId()) : Optional.empty(),
-                bankAccountPayload.getBankName(),
-                bankAccountPayload.hasBankId() ? Optional.of(bankAccountPayload.getBankId()) : Optional.empty(),
-                bankAccountPayload.hasBranchId() ? Optional.of(bankAccountPayload.getBranchId()) : Optional.empty(),
-                bankAccountPayload.getAccountNr(),
-                bankAccountPayload.hasBankAccountType() ? Optional.of(BankAccountType.fromProto(bankAccountPayload.getBankAccountType())) : Optional.empty(),
-                bankAccountPayload.hasNationalAccountId() ? Optional.of(bankAccountPayload.getNationalAccountId()) : Optional.empty(),
-                cashDepositAccountPayload.hasRequirements() ? Optional.of(cashDepositAccountPayload.getRequirements()) : Optional.empty());
+        try {
+            var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
+            var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+            var cashDepositAccountPayload = bankAccountPayload.getCashDepositAccountPayload();
+            checkArgument(bankAccountPayload.hasBankName(), "Bank name for Cash Deposit must be present");
+            return new CashDepositAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedPaymentAccountPayload.getCountryCode(),
+                    bankAccountPayload.getSelectedCurrencyCode(),
+                    bankAccountPayload.getHolderName(),
+                    bankAccountPayload.hasHolderId() ? Optional.of(bankAccountPayload.getHolderId()) : Optional.empty(),
+                    bankAccountPayload.getBankName(),
+                    bankAccountPayload.hasBankId() ? Optional.of(bankAccountPayload.getBankId()) : Optional.empty(),
+                    bankAccountPayload.hasBranchId() ? Optional.of(bankAccountPayload.getBranchId()) : Optional.empty(),
+                    bankAccountPayload.getAccountNr(),
+                    bankAccountPayload.hasBankAccountType() ? Optional.of(BankAccountType.fromProto(bankAccountPayload.getBankAccountType())) : Optional.empty(),
+                    bankAccountPayload.hasNationalAccountId() ? Optional.of(bankAccountPayload.getNationalAccountId()) : Optional.empty(),
+                    cashDepositAccountPayload.hasRequirements() ? Optional.of(cashDepositAccountPayload.getRequirements()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

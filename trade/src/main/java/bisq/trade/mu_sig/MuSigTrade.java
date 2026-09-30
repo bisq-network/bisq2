@@ -114,48 +114,52 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     }
 
     public static MuSigTrade fromProto(bisq.trade.protobuf.Trade proto) throws UnresolvableProtobufException {
-        bisq.trade.protobuf.MuSigTrade muSigTradeProto = proto.getMuSigTrade();
-        MuSigTradeState state = ProtobufUtils.enumFromProto(MuSigTradeState.class, proto.getState(), MuSigTradeState.UNSPECIFIED);
-        MuSigTrade trade = new MuSigTrade(MuSigContract.fromProto(proto.getContract()),
-                state,
-                proto.getId(),
-                TradeRole.fromProto(proto.getTradeRole()),
-                Identity.fromProto(proto.getMyIdentity()),
-                TradeParty.protoToMuSigTradeParty(proto.getTaker()),
-                TradeParty.protoToMuSigTradeParty(proto.getMaker()),
-                TradeLifecycleState.fromProto(proto.getLifecycleState()));
-        if (proto.hasErrorMessage()) {
-            trade.setErrorMessage(proto.getErrorMessage());
-        }
-        if (proto.hasErrorStackTrace()) {
-            trade.setErrorStackTrace(proto.getErrorStackTrace());
-        }
-        if (proto.hasPeersErrorMessage()) {
-            trade.setPeersErrorMessage(proto.getPeersErrorMessage());
-        }
-        if (proto.hasPeersErrorStackTrace()) {
-            trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
-        }
-        if (proto.hasTradeProtocolFailure()) {
-            trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
-        }
-        if (proto.hasPeersTradeProtocolFailure()) {
-            trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
-        }
+        try {
+            bisq.trade.protobuf.MuSigTrade muSigTradeProto = proto.getMuSigTrade();
+            MuSigTradeState state = ProtobufUtils.enumFromProto(MuSigTradeState.class, proto.getState(), MuSigTradeState.UNSPECIFIED);
+            MuSigTrade trade = new MuSigTrade(MuSigContract.fromProto(proto.getContract()),
+                    state,
+                    proto.getId(),
+                    TradeRole.fromProto(proto.getTradeRole()),
+                    Identity.fromProto(proto.getMyIdentity()),
+                    TradeParty.protoToMuSigTradeParty(proto.getTaker()),
+                    TradeParty.protoToMuSigTradeParty(proto.getMaker()),
+                    TradeLifecycleState.fromProto(proto.getLifecycleState()));
+            if (proto.hasErrorMessage()) {
+                trade.setErrorMessage(proto.getErrorMessage());
+            }
+            if (proto.hasErrorStackTrace()) {
+                trade.setErrorStackTrace(proto.getErrorStackTrace());
+            }
+            if (proto.hasPeersErrorMessage()) {
+                trade.setPeersErrorMessage(proto.getPeersErrorMessage());
+            }
+            if (proto.hasPeersErrorStackTrace()) {
+                trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
+            }
+            if (proto.hasTradeProtocolFailure()) {
+                trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
+            }
+            if (proto.hasPeersTradeProtocolFailure()) {
+                trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
+            }
 
-        if (muSigTradeProto.hasTradeCompletedDate()) {
-            trade.setTradeCompletedDate(muSigTradeProto.getTradeCompletedDate());
-        }
+            if (muSigTradeProto.hasTradeCompletedDate()) {
+                trade.setTradeCompletedDate(muSigTradeProto.getTradeCompletedDate());
+            }
 
-        if (muSigTradeProto.hasDepositTxId()) {
-            trade.setDepositTxId(muSigTradeProto.getDepositTxId());
-        }
+            if (muSigTradeProto.hasDepositTxId()) {
+                trade.setDepositTxId(muSigTradeProto.getDepositTxId());
+            }
 
-        if (muSigTradeProto.hasTradeDispute()) {
-            trade.setTradeDispute(MuSigTradeDispute.fromProto(muSigTradeProto.getTradeDispute()));
-        }
+            if (muSigTradeProto.hasTradeDispute()) {
+                trade.setTradeDispute(MuSigTradeDispute.fromProto(muSigTradeProto.getTradeDispute()));
+            }
 
-        return trade;
+            return trade;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public MuSigTradeState getTradeState() {

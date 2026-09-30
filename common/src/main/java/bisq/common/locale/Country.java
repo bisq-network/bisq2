@@ -56,6 +56,10 @@ public final class Country implements PersistableProto {
     }
 
     public static Country fromProto(bisq.common.protobuf.Country proto) throws UnresolvableProtobufException {
-        return new Country(proto.getCode(), proto.getName(), Region.fromProto(proto.getRegion()));
+        try {
+            return new Country(proto.getCode(), proto.getName(), Region.fromProto(proto.getRegion()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

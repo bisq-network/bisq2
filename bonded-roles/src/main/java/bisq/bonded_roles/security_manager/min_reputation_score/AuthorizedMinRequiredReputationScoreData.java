@@ -110,13 +110,17 @@ public final class AuthorizedMinRequiredReputationScoreData implements Authorize
 
     public static AuthorizedMinRequiredReputationScoreData fromProto(bisq.bonded_roles.protobuf.AuthorizedMinRequiredReputationScoreData proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedMinRequiredReputationScoreData(
-                proto.getVersion(),
-                proto.getDate(),
-                proto.getMinRequiredReputationScore(),
-                proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            return new AuthorizedMinRequiredReputationScoreData(
+                    proto.getVersion(),
+                    proto.getDate(),
+                    proto.getMinRequiredReputationScore(),
+                    proto.getSecurityManagerProfileId(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

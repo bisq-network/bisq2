@@ -76,8 +76,12 @@ public final class FeeOption implements OfferOption {
     }
 
     public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) throws UnresolvableProtobufException {
-        return new FeeOption(FeeType.fromProto(proto.getFeeType()),
-                proto.getBlockHeightAtFeePayment(),
-                proto.getFeeTxId());
+        try {
+            return new FeeOption(FeeType.fromProto(proto.getFeeType()),
+                    proto.getBlockHeightAtFeePayment(),
+                    proto.getFeeTxId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -57,9 +57,13 @@ final class MuSigArbitratorStore implements PersistableStore<MuSigArbitratorStor
 
     public static MuSigArbitratorStore fromProto(bisq.support.protobuf.MuSigArbitratorStore proto)
             throws UnresolvableProtobufException {
-        return new MuSigArbitratorStore(ProtobufUtils.fromProtoStream(proto.getMuSigArbitrationCasesList(),
-                        MuSigArbitrationCase::fromProto)
-                .collect(Collectors.toSet()));
+        try {
+            return new MuSigArbitratorStore(ProtobufUtils.fromProtoStream(proto.getMuSigArbitrationCasesList(),
+                            MuSigArbitrationCase::fromProto)
+                    .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -45,7 +45,11 @@ public final class ByteArray implements PersistableProto, Comparable<ByteArray> 
     }
 
     public static ByteArray fromProto(bisq.common.protobuf.ByteArray proto) throws UnresolvableProtobufException {
-        return new ByteArray(proto.getBytes().toByteArray());
+        try {
+            return new ByteArray(proto.getBytes().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

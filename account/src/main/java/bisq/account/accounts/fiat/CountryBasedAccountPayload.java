@@ -58,36 +58,40 @@ public abstract class CountryBasedAccountPayload extends AccountPayload<FiatPaym
 
     public static CountryBasedAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        return switch (proto.getCountryBasedAccountPayload().getMessageCase()) {
-            case BANKACCOUNTPAYLOAD -> BankAccountPayload.fromProto(proto);
-            case SEPAACCOUNTPAYLOAD -> SepaAccountPayload.fromProto(proto);
-            case SEPAINSTANTACCOUNTPAYLOAD -> SepaInstantAccountPayload.fromProto(proto);
-            case F2FACCOUNTPAYLOAD -> F2FAccountPayload.fromProto(proto);
-            case PIXACCOUNTPAYLOAD -> PixAccountPayload.fromProto(proto);
-            case STRIKEACCOUNTPAYLOAD -> StrikeAccountPayload.fromProto(proto);
-            case AMAZONGIFTCARDACCOUNTPAYLOAD -> AmazonGiftCardAccountPayload.fromProto(proto);
-            case UPIACCOUNTPAYLOAD -> UpiAccountPayload.fromProto(proto);
-            case BIZUMACCOUNTPAYLOAD -> BizumAccountPayload.fromProto(proto);
-            case WISEUSDACCOUNTPAYLOAD -> WiseUsdAccountPayload.fromProto(proto);
-            case MONEYBEAMACCOUNTPAYLOAD -> MoneyBeamAccountPayload.fromProto(proto);
-            case SWISHACCOUNTPAYLOAD -> SwishAccountPayload.fromProto(proto);
-            case MONEYGRAMACCOUNTPAYLOAD -> MoneyGramAccountPayload.fromProto(proto);
-            case PROMPTPAYACCOUNTPAYLOAD -> PromptPayAccountPayload.fromProto(proto);
-            case ZELLEACCOUNTPAYLOAD -> ZelleAccountPayload.fromProto(proto);
-            case SWIFTACCOUNTPAYLOAD -> SwiftAccountPayload.fromProto(proto);
-            case USPOSTALMONEYORDERACCOUNTPAYLOAD -> USPostalMoneyOrderAccountPayload.fromProto(proto);
-            case PAYIDACCOUNTPAYLOAD -> PayIdAccountPayload.fromProto(proto);
-            case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
-            case HALCASHACCOUNTPAYLOAD -> HalCashAccountPayload.fromProto(proto);
-            case PIN4ACCOUNTPAYLOAD -> Pin4AccountPayload.fromProto(proto);
-            case FASTERPAYMENTSACCOUNTPAYLOAD -> FasterPaymentsAccountPayload.fromProto(proto);
-            case SBPACCOUNTPAYLOAD -> SbpAccountPayload.fromProto(proto);
-            case IMPSACCOUNTPAYLOAD -> ImpsAccountPayload.fromProto(proto);
-            case NEFTACCOUNTPAYLOAD -> NeftAccountPayload.fromProto(proto);
-            case ALIPAYACCOUNTPAYLOAD -> AliPayAccountPayload.fromProto(proto);
-            case WECHATPAYACCOUNTPAYLOAD -> WeChatPayAccountPayload.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        try {
+            return switch (proto.getCountryBasedAccountPayload().getMessageCase()) {
+                case BANKACCOUNTPAYLOAD -> BankAccountPayload.fromProto(proto);
+                case SEPAACCOUNTPAYLOAD -> SepaAccountPayload.fromProto(proto);
+                case SEPAINSTANTACCOUNTPAYLOAD -> SepaInstantAccountPayload.fromProto(proto);
+                case F2FACCOUNTPAYLOAD -> F2FAccountPayload.fromProto(proto);
+                case PIXACCOUNTPAYLOAD -> PixAccountPayload.fromProto(proto);
+                case STRIKEACCOUNTPAYLOAD -> StrikeAccountPayload.fromProto(proto);
+                case AMAZONGIFTCARDACCOUNTPAYLOAD -> AmazonGiftCardAccountPayload.fromProto(proto);
+                case UPIACCOUNTPAYLOAD -> UpiAccountPayload.fromProto(proto);
+                case BIZUMACCOUNTPAYLOAD -> BizumAccountPayload.fromProto(proto);
+                case WISEUSDACCOUNTPAYLOAD -> WiseUsdAccountPayload.fromProto(proto);
+                case MONEYBEAMACCOUNTPAYLOAD -> MoneyBeamAccountPayload.fromProto(proto);
+                case SWISHACCOUNTPAYLOAD -> SwishAccountPayload.fromProto(proto);
+                case MONEYGRAMACCOUNTPAYLOAD -> MoneyGramAccountPayload.fromProto(proto);
+                case PROMPTPAYACCOUNTPAYLOAD -> PromptPayAccountPayload.fromProto(proto);
+                case ZELLEACCOUNTPAYLOAD -> ZelleAccountPayload.fromProto(proto);
+                case SWIFTACCOUNTPAYLOAD -> SwiftAccountPayload.fromProto(proto);
+                case USPOSTALMONEYORDERACCOUNTPAYLOAD -> USPostalMoneyOrderAccountPayload.fromProto(proto);
+                case PAYIDACCOUNTPAYLOAD -> PayIdAccountPayload.fromProto(proto);
+                case INTERACETRANSFERACCOUNTPAYLOAD -> InteracETransferAccountPayload.fromProto(proto);
+                case HALCASHACCOUNTPAYLOAD -> HalCashAccountPayload.fromProto(proto);
+                case PIN4ACCOUNTPAYLOAD -> Pin4AccountPayload.fromProto(proto);
+                case FASTERPAYMENTSACCOUNTPAYLOAD -> FasterPaymentsAccountPayload.fromProto(proto);
+                case SBPACCOUNTPAYLOAD -> SbpAccountPayload.fromProto(proto);
+                case IMPSACCOUNTPAYLOAD -> ImpsAccountPayload.fromProto(proto);
+                case NEFTACCOUNTPAYLOAD -> NeftAccountPayload.fromProto(proto);
+                case ALIPAYACCOUNTPAYLOAD -> AliPayAccountPayload.fromProto(proto);
+                case WECHATPAYACCOUNTPAYLOAD -> WeChatPayAccountPayload.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private bisq.account.protobuf.CountryBasedAccountPayload toCountryBasedAccountPayloadProto(boolean serializeForHash) {

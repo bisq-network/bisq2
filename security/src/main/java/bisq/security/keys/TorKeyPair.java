@@ -44,9 +44,13 @@ public final class TorKeyPair implements PersistableProto {
     }
 
     public static TorKeyPair fromProto(bisq.security.protobuf.TorKeyPair proto) throws UnresolvableProtobufException {
-        return new TorKeyPair(proto.getPrivateKey().toByteArray(),
-                proto.getPublicKey().toByteArray(),
-                proto.getOnionAddress());
+        try {
+            return new TorKeyPair(proto.getPrivateKey().toByteArray(),
+                    proto.getPublicKey().toByteArray(),
+                    proto.getOnionAddress());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getBase64SecretScalar() {

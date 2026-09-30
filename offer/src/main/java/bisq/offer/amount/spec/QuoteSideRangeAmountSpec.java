@@ -51,6 +51,10 @@ public final class QuoteSideRangeAmountSpec extends RangeAmountSpec implements Q
 
     public static QuoteSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto)
             throws UnresolvableProtobufException {
-        return new QuoteSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
+        try {
+            return new QuoteSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -87,17 +87,21 @@ public final class OtherCryptoAssetAccountPayload extends CryptoAssetAccountPayl
 
     public static OtherCryptoAssetAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
-        return new OtherCryptoAssetAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                cryptoAssetAccountPayload.getCurrencyCode(),
-                cryptoAssetAccountPayload.getAddress(),
-                cryptoAssetAccountPayload.getIsInstant(),
-                cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty());
+        try {
+            var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
+            return new OtherCryptoAssetAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    cryptoAssetAccountPayload.getCurrencyCode(),
+                    cryptoAssetAccountPayload.getAddress(),
+                    cryptoAssetAccountPayload.getIsInstant(),
+                    cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

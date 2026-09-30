@@ -72,15 +72,19 @@ public final class StableCoin extends DigitalAsset {
     }
 
     public static StableCoin fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
-        bisq.common.protobuf.StableCoin stableCoinCurrencyProto = baseProto.getDigitalAsset().getStableCoin();
-        Network network = ProtobufUtils.enumFromProto(Network.class, stableCoinCurrencyProto.getNetwork(), Network.UNDEFINED);
-        TokenStandard standard = ProtobufUtils.enumFromProto(TokenStandard.class, stableCoinCurrencyProto.getTokenStandard(), TokenStandard.UNDEFINED);
-        Issuer issuer = ProtobufUtils.enumFromProto(Issuer.class, stableCoinCurrencyProto.getIssuer(), Issuer.UNDEFINED);
-        return new StableCoin(baseProto.getCode(), baseProto.getName(),
-                stableCoinCurrencyProto.getPegCurrencyCode(),
-                network,
-                standard,
-                issuer);
+        try {
+            bisq.common.protobuf.StableCoin stableCoinCurrencyProto = baseProto.getDigitalAsset().getStableCoin();
+            Network network = ProtobufUtils.enumFromProto(Network.class, stableCoinCurrencyProto.getNetwork(), Network.UNDEFINED);
+            TokenStandard standard = ProtobufUtils.enumFromProto(TokenStandard.class, stableCoinCurrencyProto.getTokenStandard(), TokenStandard.UNDEFINED);
+            Issuer issuer = ProtobufUtils.enumFromProto(Issuer.class, stableCoinCurrencyProto.getIssuer(), Issuer.UNDEFINED);
+            return new StableCoin(baseProto.getCode(), baseProto.getName(),
+                    stableCoinCurrencyProto.getPegCurrencyCode(),
+                    network,
+                    standard,
+                    issuer);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

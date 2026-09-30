@@ -90,13 +90,17 @@ public final class AdvancedCashAccountPayload extends AccountPayload<FiatPayment
 
     public static AdvancedCashAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getAdvancedCashAccountPayload();
-        return new AdvancedCashAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getAccountNr()
-        );
+        try {
+            var payload = proto.getAdvancedCashAccountPayload();
+            return new AdvancedCashAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getAccountNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -81,12 +81,16 @@ public final class Report implements NetworkProto {
     }
 
     public static Report fromProto(bisq.network.protobuf.Report proto) throws UnresolvableProtobufException {
-        return new Report(new TreeMap<>(proto.getAuthorizedDataPerClassNameMap()),
-                new TreeMap<>(proto.getAuthenticatedDataPerClassNameMap()),
-                new TreeMap<>(proto.getMailboxDataPerClassNameMap()),
-                proto.getNumConnections(),
-                proto.getMemoryUsed(),
-                proto.getNumThreads(),
-                proto.getNodeLoad());
+        try {
+            return new Report(new TreeMap<>(proto.getAuthorizedDataPerClassNameMap()),
+                    new TreeMap<>(proto.getAuthenticatedDataPerClassNameMap()),
+                    new TreeMap<>(proto.getMailboxDataPerClassNameMap()),
+                    proto.getNumConnections(),
+                    proto.getMemoryUsed(),
+                    proto.getNumThreads(),
+                    proto.getNodeLoad());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

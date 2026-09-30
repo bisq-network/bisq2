@@ -160,8 +160,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     public static AddMailboxRequest fromProto(bisq.network.protobuf.AddMailboxRequest proto)
             throws UnresolvableProtobufException {
-        byte[] senderPublicKeyBytes = proto.getSenderPublicKeyBytes().toByteArray();
         try {
+            byte[] senderPublicKeyBytes = proto.getSenderPublicKeyBytes().toByteArray();
             PublicKey senderPublicKey = KeyGeneration.generatePublic(senderPublicKeyBytes);
             return new AddMailboxRequest(
                     MailboxSequentialData.fromProto(proto.getMailboxSequentialData()),
@@ -171,9 +171,8 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                     proto.getSignatureV2().toByteArray(),
                     proto.getVersion()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key", e);
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

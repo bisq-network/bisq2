@@ -55,7 +55,11 @@ public final class EncryptedData implements PersistableProto {
 
     public static EncryptedData fromProto(bisq.security.protobuf.EncryptedData proto)
             throws UnresolvableProtobufException {
-        return new EncryptedData(proto.getIv().toByteArray(), proto.getCipherText().toByteArray());
+        try {
+            return new EncryptedData(proto.getIv().toByteArray(), proto.getCipherText().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

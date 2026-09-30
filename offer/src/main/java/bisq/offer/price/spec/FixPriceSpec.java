@@ -122,6 +122,10 @@ public final class FixPriceSpec implements PriceSpec {
     }
 
     public static FixPriceSpec fromProto(bisq.offer.protobuf.FixPrice proto) throws UnresolvableProtobufException {
-        return new FixPriceSpec(PriceQuote.fromProto(proto.getPriceQuote()));
+        try {
+            return new FixPriceSpec(PriceQuote.fromProto(proto.getPriceQuote()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

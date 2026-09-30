@@ -58,19 +58,23 @@ public final class OtherCryptoAssetAccount extends CryptoAssetAccount<OtherCrypt
 
     public static OtherCryptoAssetAccount fromProto(bisq.account.protobuf.Account proto)
             throws UnresolvableProtobufException {
-        var cryptoAssetAccount = proto.getCryptoAssetAccount();
-        var monero = cryptoAssetAccount.getOtherCryptoAssetAccount();
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
-        return new OtherCryptoAssetAccount(
-                proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                OtherCryptoAssetAccountPayload.fromProto(proto.getAccountPayload()),
-                keyPair,
-                keyType,
-                accountOrigin
-        );
+        try {
+            var cryptoAssetAccount = proto.getCryptoAssetAccount();
+            var monero = cryptoAssetAccount.getOtherCryptoAssetAccount();
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
+            return new OtherCryptoAssetAccount(
+                    proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    OtherCryptoAssetAccountPayload.fromProto(proto.getAccountPayload()),
+                    keyPair,
+                    keyType,
+                    accountOrigin
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -105,16 +105,20 @@ public final class F2FAccountPayload extends CountryBasedAccountPayload implemen
 
     public static F2FAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.F2FAccountPayload payload = countryBasedAccountPayload.getF2FAccountPayload();
-        return new F2FAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getSelectedCurrencyCode(),
-                payload.getCity(),
-                payload.getContact(),
-                payload.getExtraInfo()
-        );
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.F2FAccountPayload payload = countryBasedAccountPayload.getF2FAccountPayload();
+            return new F2FAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getSelectedCurrencyCode(),
+                    payload.getCity(),
+                    payload.getContact(),
+                    payload.getExtraInfo()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

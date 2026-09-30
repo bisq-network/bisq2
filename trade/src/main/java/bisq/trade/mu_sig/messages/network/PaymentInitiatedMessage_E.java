@@ -70,14 +70,18 @@ public final class PaymentInitiatedMessage_E extends MuSigTradeMessage {
 
     public static PaymentInitiatedMessage_E fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.PaymentInitiatedMessage_E muSigMessageProto = proto.getMuSigTradeMessage().getPaymentInitiatedMessageE();
-        return new PaymentInitiatedMessage_E(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                muSigMessageProto.getSwapTxInputPartialSignature().toByteArray());
+        try {
+            bisq.trade.protobuf.PaymentInitiatedMessage_E muSigMessageProto = proto.getMuSigTradeMessage().getPaymentInitiatedMessageE();
+            return new PaymentInitiatedMessage_E(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    muSigMessageProto.getSwapTxInputPartialSignature().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

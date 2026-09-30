@@ -62,6 +62,10 @@ public final class FiatPaymentOption implements OfferOption {
 
     public static FiatPaymentOption fromProto(bisq.offer.protobuf.FiatPaymentOption proto)
             throws UnresolvableProtobufException {
-        return new FiatPaymentOption(proto.getCountyCodeOfBank(), proto.getBankName());
+        try {
+            return new FiatPaymentOption(proto.getCountyCodeOfBank(), proto.getBankName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -55,10 +55,14 @@ public final class BisqEasyOpenTradeChannelStore implements PersistableStore<Bis
 
     public static BisqEasyOpenTradeChannelStore fromProto(bisq.chat.protobuf.BisqEasyOpenTradeChannelStore proto)
             throws UnresolvableProtobufException {
-        Set<BisqEasyOpenTradeChannel> privateTradeChannels = ProtobufUtils.fromProtoStream(proto.getChannelsList(),
-                        e -> (BisqEasyOpenTradeChannel) BisqEasyOpenTradeChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new BisqEasyOpenTradeChannelStore(privateTradeChannels);
+        try {
+            Set<BisqEasyOpenTradeChannel> privateTradeChannels = ProtobufUtils.fromProtoStream(proto.getChannelsList(),
+                            e -> (BisqEasyOpenTradeChannel) BisqEasyOpenTradeChannel.fromProto(e))
+                    .collect(Collectors.toSet());
+            return new BisqEasyOpenTradeChannelStore(privateTradeChannels);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

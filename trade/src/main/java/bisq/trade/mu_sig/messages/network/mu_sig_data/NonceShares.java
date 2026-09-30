@@ -119,19 +119,23 @@ public final class NonceShares implements NetworkProto {
     }
 
     public static NonceShares fromProto(bisq.trade.protobuf.NonceShares proto) throws UnresolvableProtobufException {
-        return new NonceShares(proto.getWarningTxFeeBumpAddress(),
-                proto.getRedirectTxFeeBumpAddress(),
-                proto.getClaimTxPayoutAddress(),
-                proto.getHalfDepositPsbt().toByteArray(),
-                proto.getSwapTxInputNonceShare().toByteArray(),
-                proto.getBuyersWarningTxBuyerInputNonceShare().toByteArray(),
-                proto.getBuyersWarningTxSellerInputNonceShare().toByteArray(),
-                proto.getSellersWarningTxBuyerInputNonceShare().toByteArray(),
-                proto.getSellersWarningTxSellerInputNonceShare().toByteArray(),
-                proto.getBuyersRedirectTxInputNonceShare().toByteArray(),
-                proto.getSellersRedirectTxInputNonceShare().toByteArray(),
-                proto.getBuyersClaimTxInputNonceShare().toByteArray(),
-                proto.getSellersClaimTxInputNonceShare().toByteArray());
+        try {
+            return new NonceShares(proto.getWarningTxFeeBumpAddress(),
+                    proto.getRedirectTxFeeBumpAddress(),
+                    proto.getClaimTxPayoutAddress(),
+                    proto.getHalfDepositPsbt().toByteArray(),
+                    proto.getSwapTxInputNonceShare().toByteArray(),
+                    proto.getBuyersWarningTxBuyerInputNonceShare().toByteArray(),
+                    proto.getBuyersWarningTxSellerInputNonceShare().toByteArray(),
+                    proto.getSellersWarningTxBuyerInputNonceShare().toByteArray(),
+                    proto.getSellersWarningTxSellerInputNonceShare().toByteArray(),
+                    proto.getBuyersRedirectTxInputNonceShare().toByteArray(),
+                    proto.getSellersRedirectTxInputNonceShare().toByteArray(),
+                    proto.getBuyersClaimTxInputNonceShare().toByteArray(),
+                    proto.getSellersClaimTxInputNonceShare().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -56,10 +56,14 @@ public abstract class CryptoAssetAccount<P extends CryptoAssetAccountPayload> ex
 
     public static CryptoAssetAccount<?> fromProto(bisq.account.protobuf.Account proto)
             throws UnresolvableProtobufException {
-        return switch (proto.getCryptoAssetAccount().getMessageCase()) {
-            case MONEROACCOUNT -> MoneroAccount.fromProto(proto);
-            case OTHERCRYPTOASSETACCOUNT -> OtherCryptoAssetAccount.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        try {
+            return switch (proto.getCryptoAssetAccount().getMessageCase()) {
+                case MONEROACCOUNT -> MoneroAccount.fromProto(proto);
+                case OTHERCRYPTOASSETACCOUNT -> OtherCryptoAssetAccount.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

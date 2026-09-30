@@ -81,18 +81,22 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
 
     public static SepaInstantAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getSepaInstantAccountPayload();
+        try {
+            var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            var payload = countryBasedAccountPayload.getSepaInstantAccountPayload();
 
-        return new SepaInstantAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getIban(),
-                payload.getBic(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getAcceptedCountryCodesList()
-        );
+            return new SepaInstantAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getIban(),
+                    payload.getBic(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getAcceptedCountryCodesList()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

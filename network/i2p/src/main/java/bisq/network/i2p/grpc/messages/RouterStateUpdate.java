@@ -55,6 +55,10 @@ public final class RouterStateUpdate implements Proto {
 
     public static RouterStateUpdate fromProto(bisq.bi2p.protobuf.RouterStateUpdate proto)
             throws UnresolvableProtobufException {
-        return new RouterStateUpdate(RouterState.fromProto(proto.getValue()));
+        try {
+            return new RouterStateUpdate(RouterState.fromProto(proto.getValue()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

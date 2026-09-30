@@ -104,19 +104,23 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
 
     public static CommonPublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
             throws UnresolvableProtobufException {
-        Optional<Citation> citation = baseProto.hasCitation()
-                ? Optional.of(Citation.fromProto(baseProto.getCitation()))
-                : Optional.empty();
-        return new CommonPublicChatMessage(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                baseProto.getAuthorUserProfileId(),
-                Optional.of(baseProto.getText()),
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()));
+        try {
+            Optional<Citation> citation = baseProto.hasCitation()
+                    ? Optional.of(Citation.fromProto(baseProto.getCitation()))
+                    : Optional.empty();
+            return new CommonPublicChatMessage(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    baseProto.getAuthorUserProfileId(),
+                    Optional.of(baseProto.getText()),
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

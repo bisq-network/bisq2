@@ -90,18 +90,22 @@ public final class MuSigArbitrationStateChangeMessage implements MailboxMessage,
 
     public static MuSigArbitrationStateChangeMessage fromProto(bisq.support.protobuf.MuSigArbitrationStateChangeMessage proto)
             throws UnresolvableProtobufException {
-        return new MuSigArbitrationStateChangeMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
-                proto.hasMuSigArbitrationResult()
-                        ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
-                        : Optional.empty(),
-                proto.hasArbitrationResultSignature()
-                        ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
-                        : Optional.empty()
-        );
+        try {
+            return new MuSigArbitrationStateChangeMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
+                    proto.hasMuSigArbitrationResult()
+                            ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
+                            : Optional.empty(),
+                    proto.hasArbitrationResultSignature()
+                            ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
+                            : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

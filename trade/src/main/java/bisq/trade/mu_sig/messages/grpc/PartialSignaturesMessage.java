@@ -86,19 +86,23 @@ public final class PartialSignaturesMessage implements Proto {
 
     public static PartialSignaturesMessage fromProto(bisq.trade.protobuf.PartialSignaturesMessage proto)
             throws UnresolvableProtobufException {
-        return new PartialSignaturesMessage(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
-                proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
-                proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
-                proto.getPeersClaimTxInputPartialSignature().toByteArray(),
-                proto.hasSwapTxInputPartialSignature()
-                        ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
-                        : Optional.empty(),
-                proto.hasSwapTxInputSighash()
-                        ? Optional.of(proto.getSwapTxInputSighash().toByteArray())
-                        : Optional.empty(),
-                proto.hasContractualTxIds()
-                        ? Optional.of(ContractualTxIds.fromProto(proto.getContractualTxIds()))
-                        : Optional.empty());
+        try {
+            return new PartialSignaturesMessage(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
+                    proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
+                    proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
+                    proto.getPeersClaimTxInputPartialSignature().toByteArray(),
+                    proto.hasSwapTxInputPartialSignature()
+                            ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
+                            : Optional.empty(),
+                    proto.hasSwapTxInputSighash()
+                            ? Optional.of(proto.getSwapTxInputSighash().toByteArray())
+                            : Optional.empty(),
+                    proto.hasContractualTxIds()
+                            ? Optional.of(ContractualTxIds.fromProto(proto.getContractualTxIds()))
+                            : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

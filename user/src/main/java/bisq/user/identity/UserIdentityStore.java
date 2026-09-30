@@ -125,20 +125,24 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
 
     public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto)
             throws UnresolvableProtobufException {
-        if (proto.hasEncryptedData() && proto.hasScryptParameters()) {
-            checkArgument(!proto.hasSelectedUserIdentityId());
-            checkArgument(proto.getUserIdentitiesList().isEmpty());
-            EncryptedData encryptedData = EncryptedData.fromProto(proto.getEncryptedData());
-            ScryptParameters scryptParameters = ScryptParameters.fromProto(proto.getScryptParameters());
-            return new UserIdentityStore(encryptedData, scryptParameters);
-        } else {
-            checkArgument(!proto.hasEncryptedData());
-            checkArgument(!proto.hasScryptParameters());
-            String selectedUserIdentityId = proto.hasSelectedUserIdentityId() ? proto.getSelectedUserIdentityId() : null;
-            Set<UserIdentity> userIdentitySet = ProtobufUtils.fromProtoStream(proto.getUserIdentitiesList(),
-                            UserIdentity::fromProto)
-                    .collect(Collectors.toSet());
-            return new UserIdentityStore(selectedUserIdentityId, userIdentitySet);
+        try {
+            if (proto.hasEncryptedData() && proto.hasScryptParameters()) {
+                checkArgument(!proto.hasSelectedUserIdentityId());
+                checkArgument(proto.getUserIdentitiesList().isEmpty());
+                EncryptedData encryptedData = EncryptedData.fromProto(proto.getEncryptedData());
+                ScryptParameters scryptParameters = ScryptParameters.fromProto(proto.getScryptParameters());
+                return new UserIdentityStore(encryptedData, scryptParameters);
+            } else {
+                checkArgument(!proto.hasEncryptedData());
+                checkArgument(!proto.hasScryptParameters());
+                String selectedUserIdentityId = proto.hasSelectedUserIdentityId() ? proto.getSelectedUserIdentityId() : null;
+                Set<UserIdentity> userIdentitySet = ProtobufUtils.fromProtoStream(proto.getUserIdentitiesList(),
+                                UserIdentity::fromProto)
+                        .collect(Collectors.toSet());
+                return new UserIdentityStore(selectedUserIdentityId, userIdentitySet);
+            }
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

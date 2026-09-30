@@ -70,6 +70,7 @@ import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOC
 import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -157,7 +158,9 @@ class InventoryHashSetFilterTest {
         bisq.network.protobuf.InventoryFilter miniSketchType = proto.toBuilder()
                 .setInventoryFilterType(bisq.network.protobuf.InventoryFilterType.INVENTORYFILTERTYPE_MINI_SKETCH)
                 .build();
-        assertThrows(IllegalArgumentException.class, () -> InventoryFilter.fromProto(miniSketchType));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> InventoryFilter.fromProto(miniSketchType)).getCause());
     }
 
     // With equal state, a responder sends nothing, for requesters of both versions

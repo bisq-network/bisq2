@@ -79,7 +79,11 @@ public final class InventoryResponse implements BroadcastMessage, Response {
 
     public static InventoryResponse fromProto(bisq.network.protobuf.InventoryResponse proto)
             throws UnresolvableProtobufException {
-        return new InventoryResponse(proto.getVersion(), Inventory.fromProto(proto.getInventory()), proto.getRequestNonce());
+        try {
+            return new InventoryResponse(proto.getVersion(), Inventory.fromProto(proto.getInventory()), proto.getRequestNonce());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

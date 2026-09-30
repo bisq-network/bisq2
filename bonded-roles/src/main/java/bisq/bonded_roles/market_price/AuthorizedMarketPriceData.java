@@ -104,19 +104,23 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
 
     public static AuthorizedMarketPriceData fromProto(bisq.bonded_roles.protobuf.AuthorizedMarketPriceData proto)
             throws UnresolvableProtobufException {
-        List<Map.Entry<String, bisq.bonded_roles.protobuf.MarketPrice>> entriesOfKnownMarkets =
-                proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
-                        .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
-                        .toList();
-        Map<Market, MarketPrice> map = ProtobufUtils.fromProtoStream(entriesOfKnownMarkets,
-                        e -> Map.entry(MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
-                                MarketPrice.fromProto(e.getValue())))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        return new AuthorizedMarketPriceData(
-                proto.getVersion(),
-                new TreeMap<>(map),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            List<Map.Entry<String, bisq.bonded_roles.protobuf.MarketPrice>> entriesOfKnownMarkets =
+                    proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
+                            .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
+                            .toList();
+            Map<Market, MarketPrice> map = ProtobufUtils.fromProtoStream(entriesOfKnownMarkets,
+                            e -> Map.entry(MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
+                                    MarketPrice.fromProto(e.getValue())))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            return new AuthorizedMarketPriceData(
+                    proto.getVersion(),
+                    new TreeMap<>(map),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

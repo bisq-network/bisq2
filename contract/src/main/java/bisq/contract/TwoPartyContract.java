@@ -50,10 +50,14 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
 
     public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto)
             throws UnresolvableProtobufException {
-        return switch (proto.getTwoPartyContract().getMessageCase()) {
-            case BISQEASYCONTRACT -> BisqEasyContract.fromProto(proto);
-            case MUSIGCONTRACT -> MuSigContract.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        try {
+            return switch (proto.getTwoPartyContract().getMessageCase()) {
+                case BISQEASYCONTRACT -> BisqEasyContract.fromProto(proto);
+                case MUSIGCONTRACT -> MuSigContract.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -135,18 +135,22 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
     public static BisqEasyOpenTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                      bisq.chat.protobuf.BisqEasyOpenTradeChannel proto)
             throws UnresolvableProtobufException {
-        return new BisqEasyOpenTradeChannel(
-                baseProto.getId(),
-                proto.getTradeId(),
-                BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
-                UserIdentity.fromProto(proto.getMyUserIdentity()),
-                ProtobufUtils.fromProtoStream(proto.getTradersList(), UserProfile::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
-                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), BisqEasyOpenTradeMessage::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.getIsInMediation(),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        try {
+            return new BisqEasyOpenTradeChannel(
+                    baseProto.getId(),
+                    proto.getTradeId(),
+                    BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
+                    UserIdentity.fromProto(proto.getMyUserIdentity()),
+                    ProtobufUtils.fromProtoStream(proto.getTradersList(), UserProfile::fromProto)
+                            .collect(Collectors.toSet()),
+                    proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), BisqEasyOpenTradeMessage::fromProto)
+                            .collect(Collectors.toSet()),
+                    proto.getIsInMediation(),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

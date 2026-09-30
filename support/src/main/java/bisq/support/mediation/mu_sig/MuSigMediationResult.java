@@ -122,15 +122,19 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
 
     public static MuSigMediationResult fromProto(bisq.support.protobuf.MuSigMediationResult proto)
             throws UnresolvableProtobufException {
-        return new MuSigMediationResult(
-                proto.getDate(),
-                proto.getContractHash().toByteArray(),
-                MediationResultReason.fromProto(proto.getMediationResultReason()),
-                MediationPayoutDistributionType.fromProto(proto.getMediationPayoutDistributionType()),
-                proto.hasProposedBuyerPayoutAmount() ? Optional.of(proto.getProposedBuyerPayoutAmount()) : Optional.empty(),
-                proto.hasProposedSellerPayoutAmount() ? Optional.of(proto.getProposedSellerPayoutAmount()) : Optional.empty(),
-                proto.hasPayoutAdjustmentPercentage() ? Optional.of(proto.getPayoutAdjustmentPercentage()) : Optional.empty(),
-                proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+        try {
+            return new MuSigMediationResult(
+                    proto.getDate(),
+                    proto.getContractHash().toByteArray(),
+                    MediationResultReason.fromProto(proto.getMediationResultReason()),
+                    MediationPayoutDistributionType.fromProto(proto.getMediationPayoutDistributionType()),
+                    proto.hasProposedBuyerPayoutAmount() ? Optional.of(proto.getProposedBuyerPayoutAmount()) : Optional.empty(),
+                    proto.hasProposedSellerPayoutAmount() ? Optional.of(proto.getProposedSellerPayoutAmount()) : Optional.empty(),
+                    proto.hasPayoutAdjustmentPercentage() ? Optional.of(proto.getPayoutAdjustmentPercentage()) : Optional.empty(),
+                    proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getContractHash() {

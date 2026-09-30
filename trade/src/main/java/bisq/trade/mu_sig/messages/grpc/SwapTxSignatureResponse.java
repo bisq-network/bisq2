@@ -48,7 +48,11 @@ public final class SwapTxSignatureResponse implements Proto {
 
     public static SwapTxSignatureResponse fromProto(bisq.trade.protobuf.SwapTxSignatureResponse proto)
             throws UnresolvableProtobufException {
-        return new SwapTxSignatureResponse(proto.getSwapTx().toByteArray(), proto.getPeerOutputPrvKeyShare().toByteArray());
+        try {
+            return new SwapTxSignatureResponse(proto.getSwapTx().toByteArray(), proto.getPeerOutputPrvKeyShare().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -92,14 +92,18 @@ public final class AccountOption implements OfferOption {
 
     public static AccountOption fromProto(bisq.offer.protobuf.AccountOption proto)
             throws UnresolvableProtobufException {
-        return new AccountOption(PaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.getSaltedAccountId(),
-                proto.hasCountryCode() ? Optional.of(proto.getCountryCode()) : Optional.empty(),
-                proto.getAcceptedCountryCodesList(),
-                proto.hasBankId() ? Optional.of(proto.getBankId()) : Optional.empty(),
-                proto.getAcceptedBanksList(),
-                proto.getSaltedAccountPayloadHash().toByteArray()
-        );
+        try {
+            return new AccountOption(PaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.getSaltedAccountId(),
+                    proto.hasCountryCode() ? Optional.of(proto.getCountryCode()) : Optional.empty(),
+                    proto.getAcceptedCountryCodesList(),
+                    proto.hasBankId() ? Optional.of(proto.getBankId()) : Optional.empty(),
+                    proto.getAcceptedBanksList(),
+                    proto.getSaltedAccountPayloadHash().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getSaltedAccountPayloadHash() {

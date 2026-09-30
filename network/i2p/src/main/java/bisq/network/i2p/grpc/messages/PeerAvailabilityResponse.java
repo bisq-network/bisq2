@@ -57,6 +57,10 @@ public final class PeerAvailabilityResponse implements Proto {
 
     public static PeerAvailabilityResponse fromProto(bisq.bi2p.protobuf.PeerAvailabilityResponse proto)
             throws UnresolvableProtobufException {
-        return new PeerAvailabilityResponse(proto.getWasUnreachable(), proto.getIsEstablished());
+        try {
+            return new PeerAvailabilityResponse(proto.getWasUnreachable(), proto.getIsEstablished());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

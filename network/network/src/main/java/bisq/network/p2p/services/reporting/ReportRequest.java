@@ -56,6 +56,10 @@ public final class ReportRequest implements EnvelopePayloadMessage, Request {
 
     public static ReportRequest fromProto(bisq.network.protobuf.ReportRequest proto)
             throws UnresolvableProtobufException {
-        return new ReportRequest(proto.getRequestId());
+        try {
+            return new ReportRequest(proto.getRequestId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

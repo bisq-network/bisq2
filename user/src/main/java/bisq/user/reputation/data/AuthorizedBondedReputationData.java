@@ -149,16 +149,20 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
 
     public static AuthorizedBondedReputationData fromProto(bisq.user.protobuf.AuthorizedBondedReputationData proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedBondedReputationData(
-                proto.getVersion(),
-                proto.getBlockTime(),
-                proto.getAmount(),
-                proto.getHash().toByteArray(),
-                proto.getLockTime(),
-                proto.getBlockHeight(),
-                proto.getLockupTxId(),
-                proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty(),
-                proto.getStaticPublicKeysProvided());
+        try {
+            return new AuthorizedBondedReputationData(
+                    proto.getVersion(),
+                    proto.getBlockTime(),
+                    proto.getAmount(),
+                    proto.getHash().toByteArray(),
+                    proto.getLockTime(),
+                    proto.getBlockHeight(),
+                    proto.getLockupTxId(),
+                    proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty(),
+                    proto.getStaticPublicKeysProvided());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

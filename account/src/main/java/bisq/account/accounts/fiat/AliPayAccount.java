@@ -58,14 +58,18 @@ public final class AliPayAccount extends CountryBasedAccount<AliPayAccountPayloa
     }
 
     public static AliPayAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new AliPayAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                AliPayAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin);
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new AliPayAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    AliPayAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

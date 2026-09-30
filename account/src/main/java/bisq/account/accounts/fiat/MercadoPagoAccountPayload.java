@@ -86,13 +86,17 @@ public final class MercadoPagoAccountPayload extends AccountPayload<FiatPaymentM
 
     public static MercadoPagoAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getMercadoPagoAccountPayload();
-        return new MercadoPagoAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getHolderId()
-        );
+        try {
+            var payload = proto.getMercadoPagoAccountPayload();
+            return new MercadoPagoAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getHolderId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -53,7 +53,11 @@ public final class Pong implements EnvelopePayloadMessage, Response {
     }
 
     public static Pong fromProto(bisq.network.protobuf.Pong proto) throws UnresolvableProtobufException {
-        return new Pong(proto.getRequestNonce());
+        try {
+            return new Pong(proto.getRequestNonce());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

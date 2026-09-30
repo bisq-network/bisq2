@@ -56,6 +56,10 @@ public final class TradeTermsOption implements OfferOption {
 
     public static TradeTermsOption fromProto(bisq.offer.protobuf.TradeTermsOption proto)
             throws UnresolvableProtobufException {
-        return new TradeTermsOption(proto.getMakersTradeTerms());
+        try {
+            return new TradeTermsOption(proto.getMakersTradeTerms());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

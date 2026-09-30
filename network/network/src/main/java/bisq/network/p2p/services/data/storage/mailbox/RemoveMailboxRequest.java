@@ -184,8 +184,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
 
     public static RemoveMailboxRequest fromProto(bisq.network.protobuf.RemoveMailboxRequest proto)
             throws UnresolvableProtobufException {
-        byte[] receiverPublicKeyBytes = proto.getReceiverPublicKeyBytes().toByteArray();
         try {
+            byte[] receiverPublicKeyBytes = proto.getReceiverPublicKeyBytes().toByteArray();
             PublicKey receiverPublicKey = KeyGeneration.generatePublic(receiverPublicKeyBytes);
             //noinspection deprecation
             MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
@@ -211,9 +211,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
                     className,
                     proto.getSignatureV2().toByteArray()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key");
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

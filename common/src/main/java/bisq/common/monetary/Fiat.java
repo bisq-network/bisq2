@@ -102,11 +102,15 @@ public final class Fiat extends Monetary {
     }
 
     public static Fiat fromProto(bisq.common.protobuf.Monetary baseProto) throws UnresolvableProtobufException {
-        return new Fiat(baseProto.getId(),
-                baseProto.getValue(),
-                baseProto.getCode(),
-                baseProto.getPrecision(),
-                baseProto.getLowPrecision());
+        try {
+            return new Fiat(baseProto.getId(),
+                    baseProto.getValue(),
+                    baseProto.getCode(),
+                    baseProto.getPrecision(),
+                    baseProto.getLowPrecision());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

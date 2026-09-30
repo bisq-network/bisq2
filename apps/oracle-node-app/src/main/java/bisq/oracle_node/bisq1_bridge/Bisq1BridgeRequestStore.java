@@ -95,28 +95,32 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
 
     public static Bisq1BridgeRequestStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeRequestStore proto)
             throws UnresolvableProtobufException {
-        return new Bisq1BridgeRequestStore(
-                ProtobufUtils.fromProtoStream(proto.getAccountAgeRequestsList(),
-                                Bisq1BridgeRequestStore::fromPersistedAccountAgeRequest)
-                        .collect(Collectors.toSet()),
-                ProtobufUtils.fromProtoStream(proto.getSignedWitnessRequestsList(),
-                                Bisq1BridgeRequestStore::fromPersistedSignedWitnessRequest)
-                        .collect(Collectors.toSet()),
-                proto.getAccountTimestampDateByHashMap().entrySet().stream()
-                        .collect(Collectors.toMap(
-                                e -> new ByteArray(Hex.decode(e.getKey())),
-                                Map.Entry::getValue
-                        )),
-                ProtobufUtils.fromProtoStream(proto.getBondedRoleRegistrationRequestsList(),
-                                BondedRoleRegistrationRequest::fromProto)
-                        .filter(request -> {
-                            if (request.isCancellationRequest()) {
-                                log.warn("Ignoring cancellation request found in the persisted bonded-role registration set");
-                                return false;
-                            }
-                            return true;
-                        })
-                        .collect(Collectors.toSet()));
+        try {
+            return new Bisq1BridgeRequestStore(
+                    ProtobufUtils.fromProtoStream(proto.getAccountAgeRequestsList(),
+                                    Bisq1BridgeRequestStore::fromPersistedAccountAgeRequest)
+                            .collect(Collectors.toSet()),
+                    ProtobufUtils.fromProtoStream(proto.getSignedWitnessRequestsList(),
+                                    Bisq1BridgeRequestStore::fromPersistedSignedWitnessRequest)
+                            .collect(Collectors.toSet()),
+                    proto.getAccountTimestampDateByHashMap().entrySet().stream()
+                            .collect(Collectors.toMap(
+                                    e -> new ByteArray(Hex.decode(e.getKey())),
+                                    Map.Entry::getValue
+                            )),
+                    ProtobufUtils.fromProtoStream(proto.getBondedRoleRegistrationRequestsList(),
+                                    BondedRoleRegistrationRequest::fromProto)
+                            .filter(request -> {
+                                if (request.isCancellationRequest()) {
+                                    log.warn("Ignoring cancellation request found in the persisted bonded-role registration set");
+                                    return false;
+                                }
+                                return true;
+                            })
+                            .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // Earlier version-2 requests could persist unused dates. Normalize them only at this persistence boundary

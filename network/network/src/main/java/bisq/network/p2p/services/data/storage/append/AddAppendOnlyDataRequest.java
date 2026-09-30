@@ -95,9 +95,13 @@ public final class AddAppendOnlyDataRequest implements AddDataRequest {
 
     public static AddAppendOnlyDataRequest fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest proto)
             throws UnresolvableProtobufException {
-        Any appendOnlyDataAny = DistributedDataAny.retain(proto.getAppendOnlyData());
-        return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()),
-                appendOnlyDataAny);
+        try {
+            Any appendOnlyDataAny = DistributedDataAny.retain(proto.getAppendOnlyData());
+            return new AddAppendOnlyDataRequest((AppendOnlyData) DistributedData.fromAny(proto.getAppendOnlyData()),
+                    appendOnlyDataAny);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

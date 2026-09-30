@@ -56,6 +56,10 @@ public final class BsqBlocksRequest implements NetworkProto {
 
     public static BsqBlocksRequest fromProto(bisq.bridge.protobuf.BsqBlocksRequest proto)
             throws UnresolvableProtobufException {
-        return new BsqBlocksRequest(proto.getStartBlockHeight());
+        try {
+            return new BsqBlocksRequest(proto.getStartBlockHeight());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

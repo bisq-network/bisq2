@@ -39,12 +39,16 @@ public abstract class DigitalAsset extends Asset {
     }
 
     public static Asset fromProto(bisq.common.protobuf.Asset proto) throws UnresolvableProtobufException {
-        return switch (proto.getDigitalAsset().getMessageCase()) {
-            case CRYPTOASSET -> CryptoAsset.fromProto(proto);
-            case STABLECOIN -> StableCoin.fromProto(proto);
-            case CENTRALBANKDIGITALCURRENCY -> Cbdc.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        try {
+            return switch (proto.getDigitalAsset().getMessageCase()) {
+                case CRYPTOASSET -> CryptoAsset.fromProto(proto);
+                case STABLECOIN -> StableCoin.fromProto(proto);
+                case CENTRALBANKDIGITALCURRENCY -> Cbdc.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

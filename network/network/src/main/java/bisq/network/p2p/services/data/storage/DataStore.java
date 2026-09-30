@@ -67,17 +67,21 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto)
             throws UnresolvableProtobufException {
-        return new DataStore<>(proto.getMapEntriesList().stream()
-                .map(e -> {
-                    try {
-                        return Map.entry(ByteArray.fromProto(e.getKey()), DataRequest.fromProto(e.getValue()));
-                    } catch (Exception ex) {
-                        log.warn("Could not create map entry from protobuf map entry {}", e.toString(), ex);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        try {
+            return new DataStore<>(proto.getMapEntriesList().stream()
+                    .map(e -> {
+                        try {
+                            return Map.entry(ByteArray.fromProto(e.getKey()), DataRequest.fromProto(e.getValue()));
+                        } catch (Exception ex) {
+                            log.warn("Could not create map entry from protobuf map entry {}", e.toString(), ex);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -65,6 +65,10 @@ public final class BurningmanData implements NetworkProto {
 
     public static BurningmanData fromProto(bisq.burningman.protobuf.BurningmanData proto)
             throws UnresolvableProtobufException {
-        return new BurningmanData(proto.getReceiverAddress(), proto.getCappedBurnAmountShare());
+        try {
+            return new BurningmanData(proto.getReceiverAddress(), proto.getCappedBurnAmountShare());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

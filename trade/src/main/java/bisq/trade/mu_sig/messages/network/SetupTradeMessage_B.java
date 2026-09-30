@@ -85,17 +85,21 @@ public final class SetupTradeMessage_B extends MuSigTradeMessage {
 
     public static SetupTradeMessage_B fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.SetupTradeMessage_B muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageB();
-        return new SetupTradeMessage_B(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                MuSigContract.fromProto(muSigMessageProto.getContract()),
-                ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()),
-                PubKeyShares.fromProto(muSigMessageProto.getPubKeyShares()),
-                NonceShares.fromProto(muSigMessageProto.getNonceShares()));
+        try {
+            bisq.trade.protobuf.SetupTradeMessage_B muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageB();
+            return new SetupTradeMessage_B(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    MuSigContract.fromProto(muSigMessageProto.getContract()),
+                    ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()),
+                    PubKeyShares.fromProto(muSigMessageProto.getPubKeyShares()),
+                    NonceShares.fromProto(muSigMessageProto.getNonceShares()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -61,15 +61,19 @@ public final class CashByMailAccount extends Account<FiatPaymentMethod, CashByMa
 
     public static CashByMailAccount fromProto(bisq.account.protobuf.Account proto)
             throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new CashByMailAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                CashByMailAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin
-        );
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new CashByMailAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    CashByMailAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

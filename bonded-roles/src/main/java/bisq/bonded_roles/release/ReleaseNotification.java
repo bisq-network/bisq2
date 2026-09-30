@@ -153,18 +153,22 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
 
     public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto)
             throws UnresolvableProtobufException {
-        return new ReleaseNotification(
-                proto.getVersion(),
-                proto.getId(),
-                proto.getDate(),
-                proto.getIsPreRelease(),
-                proto.getIsLauncherUpdate(),
-                proto.getReleaseNotes(),
-                proto.getVersionString(),
-                proto.getReleaseManagerProfileId(),
-                proto.getStaticPublicKeysProvided(),
-                AppType.fromProto(proto.getAppType())
-        );
+        try {
+            return new ReleaseNotification(
+                    proto.getVersion(),
+                    proto.getId(),
+                    proto.getDate(),
+                    proto.getIsPreRelease(),
+                    proto.getIsLauncherUpdate(),
+                    proto.getReleaseNotes(),
+                    proto.getVersionString(),
+                    proto.getReleaseManagerProfileId(),
+                    proto.getStaticPublicKeysProvided(),
+                    AppType.fromProto(proto.getAppType())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

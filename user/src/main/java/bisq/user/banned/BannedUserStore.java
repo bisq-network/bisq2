@@ -60,9 +60,13 @@ final class BannedUserStore implements PersistableStore<BannedUserStore> {
 
     public static BannedUserStore fromProto(bisq.user.protobuf.BannedUserStore proto)
             throws UnresolvableProtobufException {
-        return new BannedUserStore(ProtobufUtils.fromProtoStream(proto.getBannedUserProfileDataSetList(),
-                        BannedUserProfileData::fromProto)
-                .collect(Collectors.toSet()));
+        try {
+            return new BannedUserStore(ProtobufUtils.fromProtoStream(proto.getBannedUserProfileDataSetList(),
+                            BannedUserProfileData::fromProto)
+                    .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

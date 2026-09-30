@@ -62,7 +62,11 @@ public final class MuSigOfferMessage implements OwnershipVerifiableData {
 
     public static MuSigOfferMessage fromProto(bisq.offer.protobuf.MuSigOfferMessage proto)
             throws UnresolvableProtobufException {
-        return new MuSigOfferMessage(MuSigOffer.fromProto(proto.getOffer()));
+        try {
+            return new MuSigOfferMessage(MuSigOffer.fromProto(proto.getOffer()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

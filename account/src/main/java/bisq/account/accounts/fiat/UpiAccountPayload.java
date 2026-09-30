@@ -65,13 +65,17 @@ public final class UpiAccountPayload extends CountryBasedAccountPayload implemen
 
     public static UpiAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        return new UpiAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
+        try {
+            var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            return new UpiAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
 
-                countryBasedAccountPayload.getCountryCode(),
-                countryBasedAccountPayload.getUpiAccountPayload().getVirtualPaymentAddress());
+                    countryBasedAccountPayload.getCountryCode(),
+                    countryBasedAccountPayload.getUpiAccountPayload().getVirtualPaymentAddress());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

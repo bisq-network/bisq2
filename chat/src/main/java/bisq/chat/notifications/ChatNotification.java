@@ -166,19 +166,23 @@ public class ChatNotification implements Notification, PersistableProto {
 
     public static ChatNotification fromProto(bisq.chat.protobuf.ChatNotification proto)
             throws UnresolvableProtobufException {
-        return new ChatNotification(
-                proto.getId(),
-                proto.getTitle(),
-                proto.getMessage(),
-                proto.getDate(),
-                proto.getChatChannelId(),
-                ChatChannelDomain.fromProto(proto.getChatChannelDomain()),
-                proto.getChatMessageId(),
-                proto.hasTradeId() ? Optional.of(proto.getTradeId()) : Optional.empty(),
-                proto.hasSenderUserProfile() ? Optional.of(UserProfile.fromProto(proto.getSenderUserProfile())) : Optional.empty(),
-                proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
-                proto.getIsConsumed()
-        );
+        try {
+            return new ChatNotification(
+                    proto.getId(),
+                    proto.getTitle(),
+                    proto.getMessage(),
+                    proto.getDate(),
+                    proto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(proto.getChatChannelDomain()),
+                    proto.getChatMessageId(),
+                    proto.hasTradeId() ? Optional.of(proto.getTradeId()) : Optional.empty(),
+                    proto.hasSenderUserProfile() ? Optional.of(UserProfile.fromProto(proto.getSenderUserProfile())) : Optional.empty(),
+                    proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
+                    proto.getIsConsumed()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private static Optional<String> findTradeId(ChatChannel<? extends ChatMessage> chatChannel) {

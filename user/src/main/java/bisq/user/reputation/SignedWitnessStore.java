@@ -59,7 +59,11 @@ final class SignedWitnessStore implements PersistableStore<SignedWitnessStore> {
 
     public static SignedWitnessStore fromProto(bisq.user.protobuf.SignedWitnessStore proto)
             throws UnresolvableProtobufException {
-        return new SignedWitnessStore(new HashSet<>(proto.getJsonRequestsList()), proto.getLastRequested());
+        try {
+            return new SignedWitnessStore(new HashSet<>(proto.getJsonRequestsList()), proto.getLastRequested());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

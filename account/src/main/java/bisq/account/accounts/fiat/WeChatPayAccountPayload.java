@@ -78,12 +78,16 @@ public final class WeChatPayAccountPayload extends CountryBasedAccountPayload im
 
     public static WeChatPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getCountryBasedAccountPayload().getWeChatPayAccountPayload();
-        return new WeChatPayAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getAccountNr()
-        );
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getWeChatPayAccountPayload();
+            return new WeChatPayAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getAccountNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

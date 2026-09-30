@@ -47,6 +47,10 @@ public final class ReceiverAddressAndAmount implements Proto {
 
     public static ReceiverAddressAndAmount fromProto(bisq.trade.protobuf.ReceiverAddressAndAmount proto)
             throws UnresolvableProtobufException {
-        return new ReceiverAddressAndAmount(proto.getAddress(), proto.getAmount());
+        try {
+            return new ReceiverAddressAndAmount(proto.getAddress(), proto.getAmount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

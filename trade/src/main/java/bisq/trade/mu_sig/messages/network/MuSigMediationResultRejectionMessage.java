@@ -69,15 +69,19 @@ public final class MuSigMediationResultRejectionMessage extends MuSigTradeMessag
 
     public static MuSigMediationResultRejectionMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.MuSigMediationResultRejectionMessage message =
-                proto.getMuSigTradeMessage().getMuSigMediationResultRejectionMessage();
-        return new MuSigMediationResultRejectionMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                message.getMediationResultHash().toByteArray());
+        try {
+            bisq.trade.protobuf.MuSigMediationResultRejectionMessage message =
+                    proto.getMuSigTradeMessage().getMuSigMediationResultRejectionMessage();
+            return new MuSigMediationResultRejectionMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    message.getMediationResultHash().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

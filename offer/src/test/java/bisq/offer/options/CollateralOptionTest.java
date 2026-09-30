@@ -77,6 +77,7 @@ class CollateralOptionTest {
                 .setSellerSecurityDeposit(0.25)
                 .build();
         assertThatThrownBy(() -> CollateralOption.fromProto(malformed))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 }

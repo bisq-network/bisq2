@@ -58,14 +58,18 @@ public final class PromptPayAccount extends CountryBasedAccount<PromptPayAccount
     }
 
     public static PromptPayAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new PromptPayAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                PromptPayAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin);
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new PromptPayAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    PromptPayAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

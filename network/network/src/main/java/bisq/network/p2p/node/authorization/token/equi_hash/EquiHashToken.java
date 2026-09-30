@@ -73,9 +73,13 @@ public final class EquiHashToken extends AuthorizationToken {
 
     public static EquiHashToken fromProto(bisq.network.protobuf.AuthorizationToken proto)
             throws UnresolvableProtobufException {
-        bisq.network.protobuf.EquiHashToken equiHashTokenProto = proto.getEquiHashToken();
-        return new EquiHashToken(AuthorizationTokenType.fromProto(proto.getAuthorizationTokenType()),
-                ProofOfWork.fromProto(equiHashTokenProto.getProofOfWork()),
-                equiHashTokenProto.getMessageCounter());
+        try {
+            bisq.network.protobuf.EquiHashToken equiHashTokenProto = proto.getEquiHashToken();
+            return new EquiHashToken(AuthorizationTokenType.fromProto(proto.getAuthorizationTokenType()),
+                    ProofOfWork.fromProto(equiHashTokenProto.getProofOfWork()),
+                    equiHashTokenProto.getMessageCounter());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

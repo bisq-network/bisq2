@@ -73,10 +73,14 @@ public final class UserDefinedFiatAccountPayload extends AccountPayload<FiatPaym
 
     public static UserDefinedFiatAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        return new UserDefinedFiatAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                proto.getUserDefinedFiatAccountPayload().getAccountData());
+        try {
+            return new UserDefinedFiatAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    proto.getUserDefinedFiatAccountPayload().getAccountData());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

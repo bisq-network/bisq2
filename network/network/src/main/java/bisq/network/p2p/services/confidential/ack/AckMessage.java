@@ -53,7 +53,11 @@ public final class AckMessage implements MailboxMessage, Response {
     }
 
     public static AckMessage fromProto(bisq.network.protobuf.AckMessage proto) throws UnresolvableProtobufException {
-        return new AckMessage(proto.getId());
+        try {
+            return new AckMessage(proto.getId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

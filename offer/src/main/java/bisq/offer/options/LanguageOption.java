@@ -61,6 +61,10 @@ public final class LanguageOption implements OfferOption {
 
     public static LanguageOption fromProto(bisq.offer.protobuf.LanguageOption proto)
             throws UnresolvableProtobufException {
-        return new LanguageOption(new ArrayList<>(proto.getSupportedLanguageCodesList()));
+        try {
+            return new LanguageOption(new ArrayList<>(proto.getSupportedLanguageCodesList()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

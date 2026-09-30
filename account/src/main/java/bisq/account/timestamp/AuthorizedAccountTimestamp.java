@@ -94,11 +94,15 @@ public final class AuthorizedAccountTimestamp implements AuthorizedDistributedDa
 
     public static AuthorizedAccountTimestamp fromProto(bisq.account.protobuf.AuthorizedAccountTimestamp proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedAccountTimestamp(
-                proto.getVersion(),
-                AccountTimestamp.fromProto(proto.getAccountTimestamp()),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            return new AuthorizedAccountTimestamp(
+                    proto.getVersion(),
+                    AccountTimestamp.fromProto(proto.getAccountTimestamp()),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

@@ -66,9 +66,13 @@ public final class PubKeyShares implements NetworkProto {
     }
 
     public static PubKeyShares fromProto(bisq.trade.protobuf.PubKeyShares proto) throws UnresolvableProtobufException {
-        return new PubKeyShares(proto.getBuyerOutputPubKeyShare().toByteArray(),
-                proto.getSellerOutputPubKeyShare().toByteArray(),
-                proto.getMultisigScriptKey().toByteArray());
+        try {
+            return new PubKeyShares(proto.getBuyerOutputPubKeyShare().toByteArray(),
+                    proto.getSellerOutputPubKeyShare().toByteArray(),
+                    proto.getMultisigScriptKey().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

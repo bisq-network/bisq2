@@ -95,10 +95,14 @@ public final class CryptoPaymentMethod extends PaymentMethod<CryptoPaymentRail> 
 
     public static CryptoPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
             throws UnresolvableProtobufException {
-        String code = proto.getCryptoPaymentMethod().getCode();
-        CryptoPaymentRail cryptoPaymentRail = CryptoPaymentMethodUtil.getCryptoPaymentRail(code);
-        //String paymentRailName = proto.getPaymentRailName();
-        return new CryptoPaymentMethod(cryptoPaymentRail, code);
+        try {
+            String code = proto.getCryptoPaymentMethod().getCode();
+            CryptoPaymentRail cryptoPaymentRail = CryptoPaymentMethodUtil.getCryptoPaymentRail(code);
+            //String paymentRailName = proto.getPaymentRailName();
+            return new CryptoPaymentMethod(cryptoPaymentRail, code);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

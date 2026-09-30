@@ -55,6 +55,10 @@ public final class NetworkStateUpdate implements Proto {
 
     public static NetworkStateUpdate fromProto(bisq.bi2p.protobuf.NetworkStateUpdate proto)
             throws UnresolvableProtobufException {
-        return new NetworkStateUpdate(NetworkState.fromProto(proto.getValue()));
+        try {
+            return new NetworkStateUpdate(NetworkState.fromProto(proto.getValue()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

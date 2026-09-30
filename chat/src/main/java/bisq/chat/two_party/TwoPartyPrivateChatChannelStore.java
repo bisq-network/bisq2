@@ -55,11 +55,15 @@ public final class TwoPartyPrivateChatChannelStore implements PersistableStore<T
 
     public static TwoPartyPrivateChatChannelStore fromProto(bisq.chat.protobuf.TwoPartyPrivateChatChannelStore proto)
             throws UnresolvableProtobufException {
-        Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = ProtobufUtils.fromProtoStream(
-                        proto.getChannelsList(), 
-                        e -> (TwoPartyPrivateChatChannel) TwoPartyPrivateChatChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new TwoPartyPrivateChatChannelStore(twoPartyPrivateChatChannels);
+        try {
+            Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = ProtobufUtils.fromProtoStream(
+                            proto.getChannelsList(), 
+                            e -> (TwoPartyPrivateChatChannel) TwoPartyPrivateChatChannel.fromProto(e))
+                    .collect(Collectors.toSet());
+            return new TwoPartyPrivateChatChannelStore(twoPartyPrivateChatChannels);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

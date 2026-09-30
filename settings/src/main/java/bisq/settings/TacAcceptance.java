@@ -43,6 +43,10 @@ public record TacAcceptance(String version, long acceptedAtEpochMillis) implemen
 
     public static TacAcceptance fromProto(bisq.settings.protobuf.TacAcceptance proto)
             throws UnresolvableProtobufException {
-        return new TacAcceptance(proto.getVersion(), proto.getAcceptedAtEpochMillis());
+        try {
+            return new TacAcceptance(proto.getVersion(), proto.getAcceptedAtEpochMillis());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -65,8 +65,12 @@ public final class I2PKeyPair implements PersistableProto {
     }
 
     public static I2PKeyPair fromProto(bisq.security.protobuf.I2PKeyPair proto) throws UnresolvableProtobufException {
-        return new I2PKeyPair(proto.getIdentityBytes().toByteArray(),
-                proto.getDestinationBytes().toByteArray());
+        try {
+            return new I2PKeyPair(proto.getIdentityBytes().toByteArray(),
+                    proto.getDestinationBytes().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public Destination getDestination() {

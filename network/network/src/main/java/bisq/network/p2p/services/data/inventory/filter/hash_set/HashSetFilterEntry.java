@@ -58,7 +58,11 @@ public final class HashSetFilterEntry implements NetworkProto, Comparable<HashSe
 
     public static HashSetFilterEntry fromProto(bisq.network.protobuf.HashSetFilterEntry proto)
             throws UnresolvableProtobufException {
-        return new HashSetFilterEntry(proto.getHash().toByteArray(), proto.getSequenceNumber());
+        try {
+            return new HashSetFilterEntry(proto.getHash().toByteArray(), proto.getSequenceNumber());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

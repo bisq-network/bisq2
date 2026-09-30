@@ -73,10 +73,14 @@ public final class CustomPayoutPsbt implements Proto {
 
     public static CustomPayoutPsbt fromProto(bisq.trade.protobuf.CustomPayoutPsbt proto)
             throws UnresolvableProtobufException {
-        return new CustomPayoutPsbt(proto.getPsbt().toByteArray(),
-                proto.getTxId(),
-                proto.getBuyersPayoutAmountIncludingFee(),
-                proto.getSellersPayoutAmountIncludingFee());
+        try {
+            return new CustomPayoutPsbt(proto.getPsbt().toByteArray(),
+                    proto.getTxId(),
+                    proto.getBuyersPayoutAmountIncludingFee(),
+                    proto.getSellersPayoutAmountIncludingFee());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

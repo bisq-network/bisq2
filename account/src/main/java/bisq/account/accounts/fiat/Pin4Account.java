@@ -58,14 +58,18 @@ public final class Pin4Account extends CountryBasedAccount<Pin4AccountPayload> {
     }
 
     public static Pin4Account fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new Pin4Account(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                Pin4AccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin);
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new Pin4Account(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    Pin4AccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

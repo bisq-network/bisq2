@@ -192,8 +192,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
 
     public static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto)
             throws UnresolvableProtobufException {
-        byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
         try {
+            byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
             return new AddAuthenticatedDataRequest(
                     AuthenticatedSequentialData.fromProto(proto.getAuthenticatedSequentialData()),
@@ -203,9 +203,8 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                     proto.getSignatureV2().toByteArray(),
                     proto.getVersion()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key");
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

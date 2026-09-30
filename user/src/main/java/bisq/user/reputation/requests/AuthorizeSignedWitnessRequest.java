@@ -130,16 +130,20 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
 
     public static AuthorizeSignedWitnessRequest fromProto(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto)
             throws UnresolvableProtobufException {
-        return new AuthorizeSignedWitnessRequest(proto.hasProtocolVersion()
-                ? proto.getProtocolVersion()
-                : LEGACY_VERSION,
-                proto.getProfileId(),
-                proto.getHashAsHex(),
-                proto.getAccountAgeWitnessDate(),
-                proto.getWitnessSignDate(),
-                proto.getAccountInputDataWithSalt().toByteArray(),
-                proto.getPubKeyBase64(),
-                proto.getSignatureBase64());
+        try {
+            return new AuthorizeSignedWitnessRequest(proto.hasProtocolVersion()
+                    ? proto.getProtocolVersion()
+                    : LEGACY_VERSION,
+                    proto.getProfileId(),
+                    proto.getHashAsHex(),
+                    proto.getAccountAgeWitnessDate(),
+                    proto.getWitnessSignDate(),
+                    proto.getAccountInputDataWithSalt().toByteArray(),
+                    proto.getPubKeyBase64(),
+                    proto.getSignatureBase64());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

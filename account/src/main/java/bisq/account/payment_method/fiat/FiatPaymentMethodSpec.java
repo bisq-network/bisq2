@@ -57,7 +57,11 @@ public final class FiatPaymentMethodSpec extends PaymentMethodSpec<FiatPaymentMe
 
     public static FiatPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto)
             throws UnresolvableProtobufException {
-        return new FiatPaymentMethodSpec(FiatPaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        try {
+            return new FiatPaymentMethodSpec(FiatPaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

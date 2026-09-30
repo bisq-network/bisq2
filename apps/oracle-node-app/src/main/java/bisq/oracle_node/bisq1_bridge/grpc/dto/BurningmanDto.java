@@ -56,7 +56,11 @@ public final class BurningmanDto implements NetworkProto {
 
     public static BurningmanDto fromProto(bisq.bridge.protobuf.BurningmanDto proto)
             throws UnresolvableProtobufException {
-        return new BurningmanDto(proto.getReceiverAddress(),
-                proto.getCappedBurnAmountShare());
+        try {
+            return new BurningmanDto(proto.getReceiverAddress(),
+                    proto.getCappedBurnAmountShare());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -144,34 +144,38 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
     }
 
     public static BisqEasyOffer fromProto(bisq.offer.protobuf.Offer proto) throws UnresolvableProtobufException {
-        List<TradeProtocolType> protocolTypes = ProtobufUtils.fromProtoStream(proto.getProtocolTypesList(),
-                        TradeProtocolType::fromProto)
-                .collect(Collectors.toList());
-        List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
-                        proto.getBaseSidePaymentSpecsList(), 
-                        PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
-                .collect(Collectors.toList());
-        List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
-                        proto.getQuoteSidePaymentSpecsList(), 
-                        PaymentMethodSpec::protoToFiatPaymentMethodSpec)
-                .collect(Collectors.toList());
-        List<OfferOption> offerOptions = ProtobufUtils.fromProtoStream(proto.getOfferOptionsList(),
-                        OfferOption::fromProto)
-                .collect(Collectors.toList());
-        return new BisqEasyOffer(proto.getId(),
-                proto.getDate(),
-                NetworkId.fromProto(proto.getMakerNetworkId()),
-                Direction.fromProto(proto.getDirection()),
-                Market.fromProto(proto.getMarket()),
-                AmountSpec.fromProto(proto.getAmountSpec()),
-                PriceSpec.fromProto(proto.getPriceSpec()),
-                protocolTypes,
-                baseSidePaymentMethodSpecs,
-                quoteSidePaymentMethodSpecs,
-                offerOptions,
-                new ArrayList<>(proto.getBisqEasyOffer().getSupportedLanguageCodesList()),
-                proto.getVersion(),
-                proto.getTradeProtocolVersion(),
-                proto.getAppVersion());
+        try {
+            List<TradeProtocolType> protocolTypes = ProtobufUtils.fromProtoStream(proto.getProtocolTypesList(),
+                            TradeProtocolType::fromProto)
+                    .collect(Collectors.toList());
+            List<BitcoinPaymentMethodSpec> baseSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                            proto.getBaseSidePaymentSpecsList(), 
+                            PaymentMethodSpec::protoToBitcoinPaymentMethodSpec)
+                    .collect(Collectors.toList());
+            List<FiatPaymentMethodSpec> quoteSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                            proto.getQuoteSidePaymentSpecsList(), 
+                            PaymentMethodSpec::protoToFiatPaymentMethodSpec)
+                    .collect(Collectors.toList());
+            List<OfferOption> offerOptions = ProtobufUtils.fromProtoStream(proto.getOfferOptionsList(),
+                            OfferOption::fromProto)
+                    .collect(Collectors.toList());
+            return new BisqEasyOffer(proto.getId(),
+                    proto.getDate(),
+                    NetworkId.fromProto(proto.getMakerNetworkId()),
+                    Direction.fromProto(proto.getDirection()),
+                    Market.fromProto(proto.getMarket()),
+                    AmountSpec.fromProto(proto.getAmountSpec()),
+                    PriceSpec.fromProto(proto.getPriceSpec()),
+                    protocolTypes,
+                    baseSidePaymentMethodSpecs,
+                    quoteSidePaymentMethodSpecs,
+                    offerOptions,
+                    new ArrayList<>(proto.getBisqEasyOffer().getSupportedLanguageCodesList()),
+                    proto.getVersion(),
+                    proto.getTradeProtocolVersion(),
+                    proto.getAppVersion());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -180,35 +180,39 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
     public static BisqEasyOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
             throws UnresolvableProtobufException {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
-        bisq.chat.protobuf.BisqEasyOpenTradeMessage protoMessage = baseProto.getBisqEasyOpenTradeMessage();
-        Optional<UserProfile> mediator = protoMessage.hasMediator() ?
-                Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
-                Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = protoMessage.hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(protoMessage.getBisqEasyOffer())) :
-                Optional.empty();
-        return new BisqEasyOpenTradeMessage(
-                protoMessage.getTradeId(),
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                UserProfile.fromProto(protoMessage.getSender()),
-                protoMessage.getReceiverUserProfileId(),
-                NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
-                baseProto.getText(),
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                mediator,
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                bisqEasyOffer,
-                ProtobufUtils.fromProtoStream(protoMessage.getChatMessageReactionsList(),
-                                BisqEasyOpenTradeMessageReaction::fromProto)
-                        .collect(Collectors.toSet())
-        );
+        try {
+            Optional<Citation> citation = baseProto.hasCitation() ?
+                    Optional.of(Citation.fromProto(baseProto.getCitation())) :
+                    Optional.empty();
+            bisq.chat.protobuf.BisqEasyOpenTradeMessage protoMessage = baseProto.getBisqEasyOpenTradeMessage();
+            Optional<UserProfile> mediator = protoMessage.hasMediator() ?
+                    Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
+                    Optional.empty();
+            Optional<BisqEasyOffer> bisqEasyOffer = protoMessage.hasBisqEasyOffer() ?
+                    Optional.of(BisqEasyOffer.fromProto(protoMessage.getBisqEasyOffer())) :
+                    Optional.empty();
+            return new BisqEasyOpenTradeMessage(
+                    protoMessage.getTradeId(),
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    UserProfile.fromProto(protoMessage.getSender()),
+                    protoMessage.getReceiverUserProfileId(),
+                    NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
+                    baseProto.getText(),
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    mediator,
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                    bisqEasyOffer,
+                    ProtobufUtils.fromProtoStream(protoMessage.getChatMessageReactionsList(),
+                                    BisqEasyOpenTradeMessageReaction::fromProto)
+                            .collect(Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

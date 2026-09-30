@@ -73,7 +73,11 @@ public final class AccountTimestamp implements DistributedData {
 
     public static AccountTimestamp fromProto(bisq.account.protobuf.AccountTimestamp proto)
             throws UnresolvableProtobufException {
-        return new AccountTimestamp(proto.getHash().toByteArray(), proto.getDate());
+        try {
+            return new AccountTimestamp(proto.getHash().toByteArray(), proto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

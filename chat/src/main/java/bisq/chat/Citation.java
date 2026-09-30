@@ -71,9 +71,13 @@ public final class Citation implements NetworkProto {
     }
 
     public static Citation fromProto(bisq.chat.protobuf.Citation proto) throws UnresolvableProtobufException {
-        return new Citation(proto.getAuthorUserProfileId(),
-                proto.getText(),
-                proto.hasChatMessageId() ? Optional.of(proto.getChatMessageId()) : Optional.empty());
+        try {
+            return new Citation(proto.getAuthorUserProfileId(),
+                    proto.getText(),
+                    proto.hasChatMessageId() ? Optional.of(proto.getChatMessageId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public boolean isValid() {

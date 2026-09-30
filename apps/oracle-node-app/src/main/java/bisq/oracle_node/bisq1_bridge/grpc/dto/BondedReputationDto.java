@@ -75,10 +75,14 @@ public final class BondedReputationDto implements NetworkProto {
 
     public static BondedReputationDto fromProto(bisq.bridge.protobuf.BondedReputationDto proto)
             throws UnresolvableProtobufException {
-        return new BondedReputationDto(proto.getAmount(),
-                proto.getBondedReputationHash().toByteArray(),
-                proto.getLockTime(),
-                proto.getLockupTxId(),
-                proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty());
+        try {
+            return new BondedReputationDto(proto.getAmount(),
+                    proto.getBondedReputationHash().toByteArray(),
+                    proto.getLockTime(),
+                    proto.getLockupTxId(),
+                    proto.hasUnlockTxId() ? Optional.of(proto.getUnlockTxId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

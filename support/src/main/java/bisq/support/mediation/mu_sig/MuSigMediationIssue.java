@@ -78,10 +78,14 @@ public final class MuSigMediationIssue implements PersistableProto {
 
     public static MuSigMediationIssue fromProto(bisq.support.protobuf.MuSigMediationIssue proto)
             throws UnresolvableProtobufException {
-        return new MuSigMediationIssue(
-                proto.getDate(),
-                Role.fromProto(proto.getCausingRole()),
-                MuSigMediationIssueType.fromProto(proto.getType()),
-                proto.hasDetails() ? Optional.of(proto.getDetails()) : Optional.empty());
+        try {
+            return new MuSigMediationIssue(
+                    proto.getDate(),
+                    Role.fromProto(proto.getCausingRole()),
+                    MuSigMediationIssueType.fromProto(proto.getType()),
+                    proto.hasDetails() ? Optional.of(proto.getDetails()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

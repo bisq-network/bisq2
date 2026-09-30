@@ -39,6 +39,10 @@ public interface ExternalNetworkMessage extends EnvelopePayloadMessage {
 
     static EnvelopePayloadMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage)
             throws UnresolvableProtobufException {
-        return NetworkMessageResolver.fromAny(externalNetworkMessage.getPayload());
+        try {
+            return NetworkMessageResolver.fromAny(externalNetworkMessage.getPayload());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

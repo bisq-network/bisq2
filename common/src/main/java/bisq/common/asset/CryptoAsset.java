@@ -67,11 +67,15 @@ public final class CryptoAsset extends DigitalAsset {
     }
 
     public static CryptoAsset fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
-        // Precision is not part of the Asset proto; re-derive it from the repository (custom -> 8).
-        int precision = CryptoAssetRepository.find(baseProto.getCode())
-                .map(CryptoAsset::getPrecision)
-                .orElse(8);
-        return new CryptoAsset(baseProto.getCode(), baseProto.getName(), precision);
+        try {
+            // Precision is not part of the Asset proto; re-derive it from the repository (custom -> 8).
+            int precision = CryptoAssetRepository.find(baseProto.getCode())
+                    .map(CryptoAsset::getPrecision)
+                    .orElse(8);
+            return new CryptoAsset(baseProto.getCode(), baseProto.getName(), precision);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

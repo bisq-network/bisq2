@@ -92,14 +92,18 @@ public final class ImpsAccountPayload extends CountryBasedAccountPayload impleme
 
     public static ImpsAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getCountryBasedAccountPayload().getImpsAccountPayload();
-        return new ImpsAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getAccountNr(),
-                payload.getIfsc()
-        );
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getImpsAccountPayload();
+            return new ImpsAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getAccountNr(),
+                    payload.getIfsc()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

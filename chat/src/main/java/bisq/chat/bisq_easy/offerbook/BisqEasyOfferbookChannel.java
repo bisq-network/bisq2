@@ -65,10 +65,14 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
     public static BisqEasyOfferbookChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                      bisq.chat.protobuf.BisqEasyOfferbookChannel proto)
             throws UnresolvableProtobufException {
-        return new BisqEasyOfferbookChannel(
-                baseProto.getId(),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
-                Market.fromProto(proto.getMarket()));
+        try {
+            return new BisqEasyOfferbookChannel(
+                    baseProto.getId(),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
+                    Market.fromProto(proto.getMarket()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -55,10 +55,14 @@ public final class CommonPublicChatChannelStore implements PersistableStore<Comm
 
     public static CommonPublicChatChannelStore fromProto(bisq.chat.protobuf.CommonPublicChatChannelStore proto)
             throws UnresolvableProtobufException {
-        Set<CommonPublicChatChannel> privateDiscussionChannels = ProtobufUtils.fromProtoStream(proto.getChannelsList(),
-                        e -> (CommonPublicChatChannel) CommonPublicChatChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new CommonPublicChatChannelStore(privateDiscussionChannels);
+        try {
+            Set<CommonPublicChatChannel> privateDiscussionChannels = ProtobufUtils.fromProtoStream(proto.getChannelsList(),
+                            e -> (CommonPublicChatChannel) CommonPublicChatChannel.fromProto(e))
+                    .collect(Collectors.toSet());
+            return new CommonPublicChatChannelStore(privateDiscussionChannels);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

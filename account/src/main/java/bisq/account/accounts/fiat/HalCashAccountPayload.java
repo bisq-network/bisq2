@@ -80,12 +80,16 @@ public final class HalCashAccountPayload extends CountryBasedAccountPayload impl
 
     public static HalCashAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.HalCashAccountPayload payload =
-                proto.getCountryBasedAccountPayload().getHalCashAccountPayload();
-        return new HalCashAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getMobileNr()
-        );
+        try {
+            bisq.account.protobuf.HalCashAccountPayload payload =
+                    proto.getCountryBasedAccountPayload().getHalCashAccountPayload();
+            return new HalCashAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

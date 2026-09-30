@@ -108,18 +108,22 @@ public final class MoneyGramAccountPayload extends CountryBasedAccountPayload im
 
     public static MoneyGramAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getMoneyGramAccountPayload();
+        try {
+            var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            var payload = countryBasedAccountPayload.getMoneyGramAccountPayload();
 
-        return new MoneyGramAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getHolderName(),
-                payload.getEmail(),
-                payload.getState()
-        );
+            return new MoneyGramAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getHolderName(),
+                    payload.getEmail(),
+                    payload.getState()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

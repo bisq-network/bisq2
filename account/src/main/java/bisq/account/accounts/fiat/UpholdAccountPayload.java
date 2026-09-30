@@ -99,14 +99,18 @@ public final class UpholdAccountPayload extends AccountPayload<FiatPaymentMethod
 
     public static UpholdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getUpholdAccountPayload();
-        return new UpholdAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getHolderName(),
-                payload.getAccountId()
-        );
+        try {
+            var payload = proto.getUpholdAccountPayload();
+            return new UpholdAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getHolderName(),
+                    payload.getAccountId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

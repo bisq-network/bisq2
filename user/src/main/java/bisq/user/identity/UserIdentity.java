@@ -58,8 +58,12 @@ public final class UserIdentity implements PersistableProto {
     }
 
     public static UserIdentity fromProto(bisq.user.protobuf.UserIdentity proto) throws UnresolvableProtobufException {
-        return new UserIdentity(Identity.fromProto(proto.getIdentity()),
-                UserProfile.fromProto(proto.getUserProfile()));
+        try {
+            return new UserIdentity(Identity.fromProto(proto.getIdentity()),
+                    UserProfile.fromProto(proto.getUserProfile()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // Delegates

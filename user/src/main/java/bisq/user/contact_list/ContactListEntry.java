@@ -88,13 +88,17 @@ public final class ContactListEntry implements PersistableProto {
 
     public static ContactListEntry fromProto(bisq.user.protobuf.ContactListEntry proto)
             throws UnresolvableProtobufException {
-        return new ContactListEntry(UserProfile.fromProto(proto.getUserProfile()),
-                UserProfile.fromProto(proto.getMyUserProfile()),
-                proto.getDate(),
-                ContactReason.fromProto(proto.getContactReason()),
-                OptionalUtils.optionalIf(proto.hasTrustScore(), proto::getTrustScore),
-                OptionalUtils.optionalIf(proto.hasTag(), proto::getTag),
-                OptionalUtils.optionalIf(proto.hasNotes(), proto::getNotes));
+        try {
+            return new ContactListEntry(UserProfile.fromProto(proto.getUserProfile()),
+                    UserProfile.fromProto(proto.getMyUserProfile()),
+                    proto.getDate(),
+                    ContactReason.fromProto(proto.getContactReason()),
+                    OptionalUtils.optionalIf(proto.hasTrustScore(), proto::getTrustScore),
+                    OptionalUtils.optionalIf(proto.hasTag(), proto::getTag),
+                    OptionalUtils.optionalIf(proto.hasNotes(), proto::getNotes));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     void setTrustScore(Double newTrustScore) {

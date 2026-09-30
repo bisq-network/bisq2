@@ -82,15 +82,19 @@ public final class BisqEasyBtcAddressMessage extends BisqEasyTradeMessage {
 
     public static BisqEasyBtcAddressMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage = proto.getBisqEasyTradeMessage().getBisqEasyBtcAddressMessage();
-        return new BisqEasyBtcAddressMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyBtcAddressMessage.getBitcoinPaymentData(),
-                BisqEasyOffer.fromProto(bisqEasyBtcAddressMessage.getBisqEasyOffer()));
+        try {
+            bisq.trade.protobuf.BisqEasyBtcAddressMessage bisqEasyBtcAddressMessage = proto.getBisqEasyTradeMessage().getBisqEasyBtcAddressMessage();
+            return new BisqEasyBtcAddressMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    bisqEasyBtcAddressMessage.getBitcoinPaymentData(),
+                    BisqEasyOffer.fromProto(bisqEasyBtcAddressMessage.getBisqEasyOffer()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

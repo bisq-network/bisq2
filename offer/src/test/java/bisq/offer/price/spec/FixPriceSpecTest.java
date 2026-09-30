@@ -25,6 +25,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -133,7 +134,8 @@ public class FixPriceSpecTest {
         bisq.offer.protobuf.FixPrice proto = bisq.offer.protobuf.FixPrice.newBuilder()
                 .setPriceQuote(malformed.toProto(false))
                 .build();
-        assertThrows(IllegalArgumentException.class, () -> FixPriceSpec.fromProto(proto));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class, () -> FixPriceSpec.fromProto(proto)).getCause());
     }
 
     @Test

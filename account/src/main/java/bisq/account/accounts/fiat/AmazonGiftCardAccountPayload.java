@@ -88,17 +88,21 @@ public final class AmazonGiftCardAccountPayload extends CountryBasedAccountPaylo
 
     public static AmazonGiftCardAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload =
-                proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.AmazonGiftCardAccountPayload amazonGiftCardAccountPayload =
-                countryBasedAccountPayload.getAmazonGiftCardAccountPayload();
-        return new AmazonGiftCardAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                amazonGiftCardAccountPayload.getSelectedCurrencyCode(),
-                amazonGiftCardAccountPayload.getEmailOrMobileNr()
-        );
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload =
+                    proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.AmazonGiftCardAccountPayload amazonGiftCardAccountPayload =
+                    countryBasedAccountPayload.getAmazonGiftCardAccountPayload();
+            return new AmazonGiftCardAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    amazonGiftCardAccountPayload.getSelectedCurrencyCode(),
+                    amazonGiftCardAccountPayload.getEmailOrMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

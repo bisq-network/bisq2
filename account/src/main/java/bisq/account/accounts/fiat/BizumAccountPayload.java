@@ -76,12 +76,16 @@ public final class BizumAccountPayload extends CountryBasedAccountPayload implem
 
     public static BizumAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        return new BizumAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                countryBasedAccountPayload.getBizumAccountPayload().getMobileNr());
+        try {
+            var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            return new BizumAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    countryBasedAccountPayload.getBizumAccountPayload().getMobileNr());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

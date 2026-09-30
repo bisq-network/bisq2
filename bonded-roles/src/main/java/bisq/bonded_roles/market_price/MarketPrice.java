@@ -77,11 +77,15 @@ public final class MarketPrice implements NetworkProto {
 
     public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto)
             throws UnresolvableProtobufException {
-        MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromProto(proto.getMarketPriceProvider());
-        MarketPriceProviderInfo marketPriceProviderInfo= new MarketPriceProviderInfo(marketPriceProvider);
-        return new MarketPrice(PriceQuote.fromProto(proto.getPriceQuote()),
-                proto.getTimestamp(),
-                marketPriceProviderInfo);
+        try {
+            MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromProto(proto.getMarketPriceProvider());
+            MarketPriceProviderInfo marketPriceProviderInfo= new MarketPriceProviderInfo(marketPriceProvider);
+            return new MarketPrice(PriceQuote.fromProto(proto.getPriceQuote()),
+                    proto.getTimestamp(),
+                    marketPriceProviderInfo);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public Market getMarket() {

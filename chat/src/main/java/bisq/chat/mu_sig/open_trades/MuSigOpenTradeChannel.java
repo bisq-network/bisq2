@@ -136,18 +136,22 @@ public final class MuSigOpenTradeChannel extends PrivateGroupChatChannel<MuSigOp
     public static MuSigOpenTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                   bisq.chat.protobuf.MuSigOpenTradeChannel proto)
             throws UnresolvableProtobufException {
-        return new MuSigOpenTradeChannel(
-                baseProto.getId(),
-                proto.getTradeId(),
-                UserIdentity.fromProto(proto.getMyUserIdentity()),
-                ProtobufUtils.fromProtoStream(proto.getTradersList(), UserProfile::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
-                proto.hasArbitrator() ? Optional.of(UserProfile.fromProto(proto.getArbitrator())) : Optional.empty(),
-                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toSet()),
-                MuSigDisputeAgentType.fromProto(proto.getDisputeAgentType()),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        try {
+            return new MuSigOpenTradeChannel(
+                    baseProto.getId(),
+                    proto.getTradeId(),
+                    UserIdentity.fromProto(proto.getMyUserIdentity()),
+                    ProtobufUtils.fromProtoStream(proto.getTradersList(), UserProfile::fromProto)
+                            .collect(Collectors.toSet()),
+                    proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
+                    proto.hasArbitrator() ? Optional.of(UserProfile.fromProto(proto.getArbitrator())) : Optional.empty(),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toSet()),
+                    MuSigDisputeAgentType.fromProto(proto.getDisputeAgentType()),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

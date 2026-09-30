@@ -57,9 +57,13 @@ public final class SignedWitnessOwnershipResponse implements NetworkProto {
 
     public static SignedWitnessOwnershipResponse fromProto(
             bisq.bridge.protobuf.SignedWitnessOwnershipResponse proto) throws UnresolvableProtobufException {
-        return new SignedWitnessOwnershipResponse(
-                proto.getDateBucket(),
-                proto.getWitnessNullifier().toByteArray());
+        try {
+            return new SignedWitnessOwnershipResponse(
+                    proto.getDateBucket(),
+                    proto.getWitnessNullifier().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getWitnessNullifier() {

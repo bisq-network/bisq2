@@ -51,6 +51,10 @@ public final class BaseSideRangeAmountSpec extends RangeAmountSpec implements Ba
 
     public static BaseSideRangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto)
             throws UnresolvableProtobufException {
-        return new BaseSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
+        try {
+            return new BaseSideRangeAmountSpec(proto.getMinAmount(), proto.getMaxAmount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

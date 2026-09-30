@@ -90,16 +90,20 @@ public final class MuSigCustomPayoutPartyData implements PersistableProto {
 
     public static MuSigCustomPayoutPartyData fromProto(bisq.trade.protobuf.MuSigCustomPayoutPartyData proto)
             throws UnresolvableProtobufException {
-        return new MuSigCustomPayoutPartyData(
-                proto.hasMyCustomPayoutPsbt()
-                        ? Optional.of(CustomPayoutPsbt.fromProto(proto.getMyCustomPayoutPsbt()))
-                        : Optional.empty(),
-                proto.hasPeersCustomPayoutPsbt()
-                        ? Optional.of(PeerCustomPayoutPsbt.fromProto(proto.getPeersCustomPayoutPsbt()))
-                        : Optional.empty(),
-                proto.hasMyCustomCloseTradeResponse()
-                        ? Optional.of(CustomCloseTradeResponse.fromProto(proto.getMyCustomCloseTradeResponse()))
-                        : Optional.empty());
+        try {
+            return new MuSigCustomPayoutPartyData(
+                    proto.hasMyCustomPayoutPsbt()
+                            ? Optional.of(CustomPayoutPsbt.fromProto(proto.getMyCustomPayoutPsbt()))
+                            : Optional.empty(),
+                    proto.hasPeersCustomPayoutPsbt()
+                            ? Optional.of(PeerCustomPayoutPsbt.fromProto(proto.getPeersCustomPayoutPsbt()))
+                            : Optional.empty(),
+                    proto.hasMyCustomCloseTradeResponse()
+                            ? Optional.of(CustomCloseTradeResponse.fromProto(proto.getMyCustomCloseTradeResponse()))
+                            : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     boolean isLocalPartyData() {

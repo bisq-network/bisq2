@@ -69,15 +69,19 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto)
             throws UnresolvableProtobufException {
-        Set<AddressByTransportTypeMap> seeds = ProtobufUtils.fromProtoStream(proto.getSeedNodesList(),
-                        AddressByTransportTypeMap::fromProto)
-                .collect(Collectors.toSet());
-        @SuppressWarnings("deprecation")
-        var networkIdByTag = ProtobufUtils.fromProtoEntryStream(proto.getNetworkIdByTagMap(), NetworkId::fromProto)
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue));
-        return new NetworkServiceStore(seeds,
-                networkIdByTag);
+        try {
+            Set<AddressByTransportTypeMap> seeds = ProtobufUtils.fromProtoStream(proto.getSeedNodesList(),
+                            AddressByTransportTypeMap::fromProto)
+                    .collect(Collectors.toSet());
+            @SuppressWarnings("deprecation")
+            var networkIdByTag = ProtobufUtils.fromProtoEntryStream(proto.getNetworkIdByTagMap(), NetworkId::fromProto)
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            Map.Entry::getValue));
+            return new NetworkServiceStore(seeds,
+                    networkIdByTag);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

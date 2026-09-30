@@ -54,9 +54,13 @@ public final class SwapTxSignatureRequest implements Proto {
 
     public static SwapTxSignatureRequest fromProto(bisq.trade.protobuf.SwapTxSignatureRequest proto)
             throws UnresolvableProtobufException {
-        return new SwapTxSignatureRequest(proto.getTradeId(),
-                proto.getSwapTxInputPeersPartialSignature().toByteArray(),
-                proto.getSellerReadyToRelease());
+        try {
+            return new SwapTxSignatureRequest(proto.getTradeId(),
+                    proto.getSwapTxInputPeersPartialSignature().toByteArray(),
+                    proto.getSellerReadyToRelease());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

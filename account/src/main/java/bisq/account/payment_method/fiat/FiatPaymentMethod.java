@@ -73,7 +73,11 @@ public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
 
     public static FiatPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
             throws UnresolvableProtobufException {
-        return FiatPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
+        try {
+            return FiatPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

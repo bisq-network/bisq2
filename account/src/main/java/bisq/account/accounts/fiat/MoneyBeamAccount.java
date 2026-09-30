@@ -59,14 +59,18 @@ public final class MoneyBeamAccount extends CountryBasedAccount<MoneyBeamAccount
     }
 
     public static MoneyBeamAccount fromProto(Account proto) throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new MoneyBeamAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                MoneyBeamAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin);
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new MoneyBeamAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    MoneyBeamAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

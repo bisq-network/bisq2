@@ -130,25 +130,29 @@ public final class MoneroAccountPayload extends CryptoAssetAccountPayload {
 
     public static MoneroAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
-        var monero = cryptoAssetAccountPayload.getMoneroAccountPayload();
-        return new MoneroAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                cryptoAssetAccountPayload.getCurrencyCode(),
-                cryptoAssetAccountPayload.getAddress(),
-                cryptoAssetAccountPayload.getIsInstant(),
-                cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
-                cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty(),
-                monero.getUseSubAddresses(),
-                monero.hasMainAddress() ? Optional.of(monero.getMainAddress()) : Optional.empty(),
-                monero.hasPrivateViewKey() ? Optional.of(monero.getPrivateViewKey()) : Optional.empty(),
-                monero.hasSubAddress() ? Optional.of(monero.getSubAddress()) : Optional.empty(),
-                monero.hasAccountIndex() ? Optional.of(monero.getAccountIndex()) : Optional.empty(),
-                monero.hasInitialSubAddressIndex() ? Optional.of(monero.getInitialSubAddressIndex()) : Optional.empty()
-        );
+        try {
+            var cryptoAssetAccountPayload = proto.getCryptoAssetAccountPayload();
+            var monero = cryptoAssetAccountPayload.getMoneroAccountPayload();
+            return new MoneroAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    cryptoAssetAccountPayload.getCurrencyCode(),
+                    cryptoAssetAccountPayload.getAddress(),
+                    cryptoAssetAccountPayload.getIsInstant(),
+                    cryptoAssetAccountPayload.hasIsAutoConf() ? Optional.of(cryptoAssetAccountPayload.getIsAutoConf()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfNumConfirmations() ? Optional.of(cryptoAssetAccountPayload.getAutoConfNumConfirmations()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfMaxTradeAmount() ? Optional.of(cryptoAssetAccountPayload.getAutoConfMaxTradeAmount()) : Optional.empty(),
+                    cryptoAssetAccountPayload.hasAutoConfExplorerUrls() ? Optional.of(cryptoAssetAccountPayload.getAutoConfExplorerUrls()) : Optional.empty(),
+                    monero.getUseSubAddresses(),
+                    monero.hasMainAddress() ? Optional.of(monero.getMainAddress()) : Optional.empty(),
+                    monero.hasPrivateViewKey() ? Optional.of(monero.getPrivateViewKey()) : Optional.empty(),
+                    monero.hasSubAddress() ? Optional.of(monero.getSubAddress()) : Optional.empty(),
+                    monero.hasAccountIndex() ? Optional.of(monero.getAccountIndex()) : Optional.empty(),
+                    monero.hasInitialSubAddressIndex() ? Optional.of(monero.getInitialSubAddressIndex()) : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

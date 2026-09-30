@@ -95,14 +95,18 @@ public final class MoneseAccountPayload extends AccountPayload<FiatPaymentMethod
 
     public static MoneseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getMoneseAccountPayload();
-        return new MoneseAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getHolderName(),
-                payload.getMobileNr()
-        );
+        try {
+            var payload = proto.getMoneseAccountPayload();
+            return new MoneseAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getHolderName(),
+                    payload.getMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

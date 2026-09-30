@@ -58,15 +58,19 @@ public final class PayIdAccount extends CountryBasedAccount<PayIdAccountPayload>
     }
 
     public static PayIdAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new PayIdAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                PayIdAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin
-        );
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new PayIdAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    PayIdAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

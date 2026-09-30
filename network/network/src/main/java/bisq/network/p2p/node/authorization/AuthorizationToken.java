@@ -43,18 +43,22 @@ public abstract class AuthorizationToken implements NetworkProto {
 
     public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto)
             throws UnresolvableProtobufException {
-        switch (proto.getMessageCase()) {
-            case HASHCASHTOKEN: {
-                //noinspection deprecation
-                return HashCashToken.fromProto(proto);
+        try {
+            switch (proto.getMessageCase()) {
+                case HASHCASHTOKEN: {
+                    //noinspection deprecation
+                    return HashCashToken.fromProto(proto);
+                }
+                case EQUIHASHTOKEN: {
+                    return EquiHashToken.fromProto(proto);
+                }
+                case HASHCASHV2TOKEN: {
+                    return HashCashV2Token.fromProto(proto);
+                }
             }
-            case EQUIHASHTOKEN: {
-                return EquiHashToken.fromProto(proto);
-            }
-            case HASHCASHV2TOKEN: {
-                return HashCashV2Token.fromProto(proto);
-            }
+            throw new UnresolvableProtobufMessageException(proto);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        throw new UnresolvableProtobufMessageException(proto);
     }
 }

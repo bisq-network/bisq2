@@ -84,11 +84,15 @@ public final class ScryptParameters implements PersistableProto {
 
     public static ScryptParameters fromProto(bisq.security.protobuf.ScryptParameters proto)
             throws UnresolvableProtobufException {
-        return new ScryptParameters(proto.getSalt().toByteArray(),
-                proto.getCost(),
-                proto.getBlockSize(),
-                proto.getParallelization(),
-                proto.getKeyLength());
+        try {
+            return new ScryptParameters(proto.getSalt().toByteArray(),
+                    proto.getCost(),
+                    proto.getBlockSize(),
+                    proto.getParallelization(),
+                    proto.getKeyLength());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

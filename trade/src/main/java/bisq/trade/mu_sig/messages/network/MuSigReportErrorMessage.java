@@ -85,16 +85,20 @@ public final class MuSigReportErrorMessage extends MuSigTradeMessage {
 
     public static MuSigReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        var muSigReportErrorMessage = proto.getMuSigTradeMessage().getMuSigReportErrorMessage();
-        return new MuSigReportErrorMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                muSigReportErrorMessage.getErrorMessage(),
-                muSigReportErrorMessage.getStackTrace(),
-                TradeProtocolFailure.fromProto(muSigReportErrorMessage.getTradeProtocolFailure()));
+        try {
+            var muSigReportErrorMessage = proto.getMuSigTradeMessage().getMuSigReportErrorMessage();
+            return new MuSigReportErrorMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    muSigReportErrorMessage.getErrorMessage(),
+                    muSigReportErrorMessage.getStackTrace(),
+                    TradeProtocolFailure.fromProto(muSigReportErrorMessage.getTradeProtocolFailure()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

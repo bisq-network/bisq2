@@ -123,10 +123,14 @@ public final class ConnectionHandshake {
 
         public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto)
                 throws UnresolvableProtobufException {
-            return new Request(Capability.fromProto(proto.getCapability()),
-                    proto.hasAddressOwnershipProof() ? Optional.of(proto.getAddressOwnershipProof().toByteArray()) : Optional.empty(),
-                    NetworkLoad.fromProto(proto.getNetworkLoad()),
-                    proto.getSignatureDate());
+            try {
+                return new Request(Capability.fromProto(proto.getCapability()),
+                        proto.hasAddressOwnershipProof() ? Optional.of(proto.getAddressOwnershipProof().toByteArray()) : Optional.empty(),
+                        NetworkLoad.fromProto(proto.getNetworkLoad()),
+                        proto.getSignatureDate());
+            } catch (RuntimeException e) {
+                throw new UnresolvableProtobufException(e);
+            }
         }
     }
 
@@ -167,8 +171,12 @@ public final class ConnectionHandshake {
 
         public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto)
                 throws UnresolvableProtobufException {
-            return new Response(Capability.fromProto(proto.getCapability()),
-                    NetworkLoad.fromProto(proto.getNetworkLoad()));
+            try {
+                return new Response(Capability.fromProto(proto.getCapability()),
+                        NetworkLoad.fromProto(proto.getNetworkLoad()));
+            } catch (RuntimeException e) {
+                throw new UnresolvableProtobufException(e);
+            }
         }
     }
 

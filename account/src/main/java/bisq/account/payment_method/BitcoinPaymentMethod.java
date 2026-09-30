@@ -63,7 +63,11 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
 
     public static BitcoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
             throws UnresolvableProtobufException {
-        return BitcoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
+        try {
+            return BitcoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -85,10 +85,14 @@ public final class ConfidentialData implements NetworkProto, Canonical {
 
     public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto)
             throws UnresolvableProtobufException {
-        return new ConfidentialData(proto.getSenderPublicKey().toByteArray(),
-                proto.getIv().toByteArray(),
-                proto.getCipherText().toByteArray(),
-                proto.getSignature().toByteArray());
+        try {
+            return new ConfidentialData(proto.getSenderPublicKey().toByteArray(),
+                    proto.getIv().toByteArray(),
+                    proto.getCipherText().toByteArray(),
+                    proto.getSignature().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

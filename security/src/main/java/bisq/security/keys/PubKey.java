@@ -78,8 +78,8 @@ public final class PubKey implements NetworkProto {
         try {
             PublicKey publicKey = KeyGeneration.generatePublic(proto.getPublicKey().toByteArray());
             return new PubKey(publicKey, proto.getKeyId());
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

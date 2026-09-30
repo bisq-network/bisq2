@@ -89,13 +89,17 @@ public final class PayseraAccountPayload extends AccountPayload<FiatPaymentMetho
 
     public static PayseraAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getPayseraAccountPayload();
-        return new PayseraAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getEmail()
-        );
+        try {
+            var payload = proto.getPayseraAccountPayload();
+            return new PayseraAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getEmail()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

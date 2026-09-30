@@ -82,14 +82,18 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
 
     public static CommonPublicChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
             throws UnresolvableProtobufException {
-        return new CommonPublicChatMessageReaction(
-                baseProto.getId(),
-                baseProto.getUserProfileId(),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate());
+        try {
+            return new CommonPublicChatMessageReaction(
+                    baseProto.getId(),
+                    baseProto.getUserProfileId(),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private bisq.chat.protobuf.CommonPublicChatMessageReaction toCommonPublicChatMessageReactionProto(boolean serializeForHash) {

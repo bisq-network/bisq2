@@ -48,7 +48,11 @@ public final class PublishDepositTxRequest implements Proto {
 
     public static PublishDepositTxRequest fromProto(bisq.trade.protobuf.PublishDepositTxRequest proto)
             throws UnresolvableProtobufException {
-        return new PublishDepositTxRequest(proto.getTradeId(),
-                DepositPsbt.fromProto(proto.getPeersDepositPsbt()));
+        try {
+            return new PublishDepositTxRequest(proto.getTradeId(),
+                    DepositPsbt.fromProto(proto.getPeersDepositPsbt()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -48,7 +48,11 @@ public final class DepositTxSignatureRequest implements Proto {
 
     public static DepositTxSignatureRequest fromProto(bisq.trade.protobuf.DepositTxSignatureRequest proto)
             throws UnresolvableProtobufException {
-        return new DepositTxSignatureRequest(proto.getTradeId(),
-                PartialSignaturesMessage.fromProto(proto.getPeersPartialSignatures()));
+        try {
+            return new DepositTxSignatureRequest(proto.getTradeId(),
+                    PartialSignaturesMessage.fromProto(proto.getPeersPartialSignatures()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

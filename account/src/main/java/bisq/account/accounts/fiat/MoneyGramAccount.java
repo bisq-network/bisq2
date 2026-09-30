@@ -58,15 +58,19 @@ public final class MoneyGramAccount extends CountryBasedAccount<MoneyGramAccount
     }
 
     public static MoneyGramAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new MoneyGramAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                MoneyGramAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin
-        );
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new MoneyGramAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    MoneyGramAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

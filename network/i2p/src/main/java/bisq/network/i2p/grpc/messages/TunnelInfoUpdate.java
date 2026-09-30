@@ -55,6 +55,10 @@ public final class TunnelInfoUpdate implements Proto {
 
     public static TunnelInfoUpdate fromProto(bisq.bi2p.protobuf.TunnelInfoUpdate proto)
             throws UnresolvableProtobufException {
-        return new TunnelInfoUpdate(TunnelInfo.fromProto(proto.getValue()));
+        try {
+            return new TunnelInfoUpdate(TunnelInfo.fromProto(proto.getValue()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

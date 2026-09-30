@@ -115,15 +115,19 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload impleme
 
     public static SepaAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.SepaAccountPayload payload = countryBasedAccountPayload.getSepaAccountPayload();
-        return new SepaAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getIban(),
-                payload.getBic(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getAcceptedCountryCodesList());
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.SepaAccountPayload payload = countryBasedAccountPayload.getSepaAccountPayload();
+            return new SepaAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getIban(),
+                    payload.getBic(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getAcceptedCountryCodesList());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -56,9 +56,13 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
 
     public static PersistableStore<?> fromProto(bisq.chat.protobuf.ChatNotificationsStore proto)
             throws UnresolvableProtobufException {
-        return new ChatNotificationsStore(
-                ProtobufUtils.fromProtoStream(proto.getChatNotificationsList(), ChatNotification::fromProto)
-                        .collect(Collectors.toSet()));
+        try {
+            return new ChatNotificationsStore(
+                    ProtobufUtils.fromProtoStream(proto.getChatNotificationsList(), ChatNotification::fromProto)
+                            .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -102,8 +102,8 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
 
     public static MailboxSequentialData fromProto(bisq.network.protobuf.MailboxSequentialData proto)
             throws UnresolvableProtobufException {
-        byte[] receiversPubKeyBytes = proto.getReceiversPubKeyBytes().toByteArray();
         try {
+            byte[] receiversPubKeyBytes = proto.getReceiversPubKeyBytes().toByteArray();
             PublicKey receiversPubKey = KeyGeneration.generatePublic(receiversPubKeyBytes);
             return new MailboxSequentialData(
                     MailboxData.fromProto(proto.getMailboxData()),
@@ -114,9 +114,8 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
                     proto.getCreated(),
                     proto.getSequenceNumber()
             );
-        } catch (GeneralSecurityException e) {
-            log.error("Failed to generate public key");
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

@@ -101,16 +101,20 @@ public final class WiseUsdAccountPayload extends CountryBasedAccountPayload impl
 
     public static WiseUsdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getWiseUsdAccountPayload();
-        return new WiseUsdAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getHolderName(),
-                payload.getEmail(),
-                payload.getBeneficiaryAddress()
-        );
+        try {
+            var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            var payload = countryBasedAccountPayload.getWiseUsdAccountPayload();
+            return new WiseUsdAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getHolderName(),
+                    payload.getEmail(),
+                    payload.getBeneficiaryAddress()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

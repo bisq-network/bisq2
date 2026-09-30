@@ -80,16 +80,20 @@ public final class SetupTradeMessage_A extends MuSigTradeMessage {
 
     public static SetupTradeMessage_A fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.SetupTradeMessage_A muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageA();
-        return new SetupTradeMessage_A(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                MuSigContract.fromProto(muSigMessageProto.getContract()),
-                ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()),
-                PubKeyShares.fromProto(muSigMessageProto.getPubKeyShares()));
+        try {
+            bisq.trade.protobuf.SetupTradeMessage_A muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageA();
+            return new SetupTradeMessage_A(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    MuSigContract.fromProto(muSigMessageProto.getContract()),
+                    ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()),
+                    PubKeyShares.fromProto(muSigMessageProto.getPubKeyShares()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

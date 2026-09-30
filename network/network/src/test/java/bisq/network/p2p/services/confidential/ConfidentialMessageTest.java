@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -61,7 +62,9 @@ class ConfidentialMessageTest {
     void receivedMessageWithoutConfidentialDataIsRejected() {
         bisq.network.protobuf.ConfidentialMessage proto = createProto().toBuilder().clearConfidentialData().build();
 
-        assertThrows(IllegalArgumentException.class, () -> ConfidentialMessage.fromProto(proto));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> ConfidentialMessage.fromProto(proto)).getCause());
     }
 
     // The storage layer does not decrypt the message, so the content does not need to be valid cipher text

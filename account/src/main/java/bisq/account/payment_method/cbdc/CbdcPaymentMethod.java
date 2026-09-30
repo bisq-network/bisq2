@@ -62,10 +62,14 @@ public class CbdcPaymentMethod extends PaymentMethod<CbdcPaymentRail> implements
 
     public static CbdcPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
             throws UnresolvableProtobufException {
-        return Optional.ofNullable(
-                        CbdcPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Unknown payment method: " + proto.getPaymentRailName()));
+        try {
+            return Optional.ofNullable(
+                            CbdcPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unknown payment method: " + proto.getPaymentRailName()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

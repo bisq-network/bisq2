@@ -117,13 +117,17 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
 
     public static AuthorizedAccountAgeData fromProto(bisq.user.protobuf.AuthorizedAccountAgeData proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedAccountAgeData(
-                proto.getVersion(),
-                proto.getProfileId(),
-                proto.getDateBucket(),
-                proto.getWitnessNullifier().toByteArray(),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            return new AuthorizedAccountAgeData(
+                    proto.getVersion(),
+                    proto.getProfileId(),
+                    proto.getDateBucket(),
+                    proto.getWitnessNullifier().toByteArray(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

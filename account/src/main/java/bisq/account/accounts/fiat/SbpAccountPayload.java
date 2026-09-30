@@ -94,14 +94,18 @@ public final class SbpAccountPayload extends CountryBasedAccountPayload implemen
 
     public static SbpAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var sbpAccountPayload = proto.getCountryBasedAccountPayload().getSbpAccountPayload();
-        return new SbpAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                sbpAccountPayload.getHolderName(),
-                sbpAccountPayload.getMobileNumber(),
-                sbpAccountPayload.getBankName()
-        );
+        try {
+            var sbpAccountPayload = proto.getCountryBasedAccountPayload().getSbpAccountPayload();
+            return new SbpAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    sbpAccountPayload.getHolderName(),
+                    sbpAccountPayload.getMobileNumber(),
+                    sbpAccountPayload.getBankName()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

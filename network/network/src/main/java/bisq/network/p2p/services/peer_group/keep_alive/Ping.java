@@ -56,7 +56,11 @@ public final class Ping implements EnvelopePayloadMessage, Request {
     }
 
     public static Ping fromProto(bisq.network.protobuf.Ping proto) throws UnresolvableProtobufException {
-        return new Ping(proto.getNonce());
+        try {
+            return new Ping(proto.getNonce());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

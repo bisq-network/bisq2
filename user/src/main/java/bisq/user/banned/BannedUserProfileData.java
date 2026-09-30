@@ -92,11 +92,15 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
 
     public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto)
             throws UnresolvableProtobufException {
-        return new BannedUserProfileData(
-                proto.getVersion(),
-                UserProfile.fromProto(proto.getUserProfile()),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            return new BannedUserProfileData(
+                    proto.getVersion(),
+                    UserProfile.fromProto(proto.getUserProfile()),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

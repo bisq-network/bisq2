@@ -49,6 +49,10 @@ public final class StringLongPair implements PersistableProto {
 
     public static StringLongPair fromProto(bisq.common.protobuf.StringLongPair proto)
             throws UnresolvableProtobufException {
-        return new StringLongPair(proto.getKey(), proto.getValue());
+        try {
+            return new StringLongPair(proto.getKey(), proto.getValue());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }
