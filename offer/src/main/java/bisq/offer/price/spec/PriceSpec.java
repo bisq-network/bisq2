@@ -26,6 +26,8 @@ public interface PriceSpec extends NetworkProto {
         return bisq.offer.protobuf.PriceSpec.newBuilder();
     }
 
+    String getDisplayName();
+
     @Override
     bisq.offer.protobuf.PriceSpec toProto(boolean serializeForHash);
 

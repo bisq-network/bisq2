@@ -28,16 +28,20 @@ import java.util.Arrays;
 public final class PubKeyShares implements NetworkProto {
     public static PubKeyShares from(PubKeySharesResponse pubKeySharesResponse) {
         return new PubKeyShares(pubKeySharesResponse.getBuyerOutputPubKeyShare().clone(),
-                pubKeySharesResponse.getSellerOutputPubKeyShare().clone());
+                pubKeySharesResponse.getSellerOutputPubKeyShare().clone(),
+                pubKeySharesResponse.getMultisigScriptKey().clone());
     }
 
     private final byte[] buyerOutputPubKeyShare;
     private final byte[] sellerOutputPubKeyShare;
+    private final byte[] multisigScriptKey;
 
     private PubKeyShares(byte[] buyerOutputPubKeyShare,
-                         byte[] sellerOutputPubKeyShare) {
+                         byte[] sellerOutputPubKeyShare,
+                         byte[] multisigScriptKey) {
         this.buyerOutputPubKeyShare = buyerOutputPubKeyShare;
         this.sellerOutputPubKeyShare = sellerOutputPubKeyShare;
+        this.multisigScriptKey = multisigScriptKey;
 
         verify();
     }
@@ -51,7 +55,8 @@ public final class PubKeyShares implements NetworkProto {
     public bisq.trade.protobuf.PubKeyShares.Builder getBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.PubKeyShares.newBuilder()
                 .setBuyerOutputPubKeyShare(ByteString.copyFrom(buyerOutputPubKeyShare))
-                .setSellerOutputPubKeyShare(ByteString.copyFrom(sellerOutputPubKeyShare));
+                .setSellerOutputPubKeyShare(ByteString.copyFrom(sellerOutputPubKeyShare))
+                .setMultisigScriptKey(ByteString.copyFrom(multisigScriptKey));
     }
 
     @Override
@@ -61,7 +66,8 @@ public final class PubKeyShares implements NetworkProto {
 
     public static PubKeyShares fromProto(bisq.trade.protobuf.PubKeyShares proto) {
         return new PubKeyShares(proto.getBuyerOutputPubKeyShare().toByteArray(),
-                proto.getSellerOutputPubKeyShare().toByteArray());
+                proto.getSellerOutputPubKeyShare().toByteArray(),
+                proto.getMultisigScriptKey().toByteArray());
     }
 
     @Override
@@ -69,13 +75,15 @@ public final class PubKeyShares implements NetworkProto {
         if (!(o instanceof PubKeyShares that)) return false;
 
         return Arrays.equals(buyerOutputPubKeyShare, that.buyerOutputPubKeyShare) &&
-                Arrays.equals(sellerOutputPubKeyShare, that.sellerOutputPubKeyShare);
+                Arrays.equals(sellerOutputPubKeyShare, that.sellerOutputPubKeyShare) &&
+                Arrays.equals(multisigScriptKey, that.multisigScriptKey);
     }
 
     @Override
     public int hashCode() {
         int result = Arrays.hashCode(buyerOutputPubKeyShare);
         result = 31 * result + Arrays.hashCode(sellerOutputPubKeyShare);
+        result = 31 * result + Arrays.hashCode(multisigScriptKey);
         return result;
     }
 }

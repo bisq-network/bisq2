@@ -18,7 +18,7 @@
 package bisq.api.access.persistence;
 
 import bisq.api.access.identity.ClientProfile;
-import bisq.api.access.permissions.Permission;
+import bisq.api.access.permissions.PermissionSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -27,8 +27,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAccessStore> {
@@ -45,12 +43,23 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
         return Map.copyOf(persistableStore.getClientProfileByIdMap());
     }
 
-    public Map<String, Set<Permission>> getPermissionsByClientId() {
-        return persistableStore.getPermissionsByClientId().entrySet().stream()
-                .collect(Collectors.toUnmodifiableMap(
-                        Map.Entry::getKey,
-                        e -> Set.copyOf(e.getValue())
-                ));
+    public Map<String, PermissionSet> getPermissionsByClientId() {
+        return Map.copyOf(persistableStore.getPermissionsByClientId());
+    }
+
+    /**
+     * Write grantAll promotions back to disk on the boot that computed them. Without this, a
+     * node that never pairs a new client keeps the old explicit permission list on disk, and a
+     * later version with additional permissions no longer recognises it as a full standard
+     * grant — the client would silently fall back to a restricted set (see
+     * {@code ApiAccessStore#promoteIfFullStandardGrant}).
+     */
+    @Override
+    public void onPersistedApplied(ApiAccessStore persisted) {
+        if (persisted.hadPromotedEntriesDuringLoad()) {
+            log.info("Persisting grantAll promotions computed while loading the store");
+            persist();
+        }
     }
 
     public void putClientProfile(String clientId, ClientProfile clientProfile) {
@@ -58,8 +67,25 @@ public class ApiAccessStoreService extends RateLimitedPersistenceClient<ApiAcces
         persist();
     }
 
-    public void putPermissions(String clientId, Set<Permission> permissions) {
-        persistableStore.getPermissionsByClientId().put(clientId, permissions);
+    public void putPermissions(String clientId, PermissionSet permissionSet) {
+        persistableStore.getPermissionsByClientId().put(clientId, permissionSet);
         persist();
+    }
+
+    /**
+     * Removes the client profile and associated permissions for the given client ID.
+     * Both removals are applied atomically under a lock and persisted in a single
+     * {@link #persist()} call.
+     *
+     * @param clientId The client ID to remove
+     * @return {@code true} if a profile was present and removed; {@code false} if the client was not found
+     */
+    public boolean removeClientProfile(String clientId) {
+        synchronized (persistableStore) {
+            boolean removed = persistableStore.getClientProfileByIdMap().remove(clientId) != null;
+            persistableStore.getPermissionsByClientId().remove(clientId);
+            persist();
+            return removed;
+        }
     }
 }

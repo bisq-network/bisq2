@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 
+import bisq.desktop.main.content.bisq_easy.TradesUtils;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -226,7 +227,7 @@ class TradePhaseBox {
         }
 
         void onRequestMediation() {
-            OpenTradesUtils.requestMediation(model.getSelectedChannel(),
+            TradesUtils.requestMediation(model.getSelectedChannel(),
                     model.getBisqEasyTrade().getContract(),
                     bisqEasyMediationRequestService, channelService);
         }

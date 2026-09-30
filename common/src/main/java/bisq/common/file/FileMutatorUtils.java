@@ -320,17 +320,27 @@ public class FileMutatorUtils {
         }
     }
 
+    /**
+     * @param sourceDirPath      The directory to copy from
+     * @param destinationDirPath The directory to copy to
+     * @param extensionsToSkip   File extensions without the leading dot, of files which are not copied
+     * @param fileNamesToSkip    Full file names of files which are not copied. Use this for files which must not even
+     *                           be opened for reading, like lock files.
+     * @throws IOException if an I/O error occurs
+     */
     public static void copyDirectory(Path sourceDirPath,
                                      Path destinationDirPath,
-                                     Set<String> extensionsToSkip) throws IOException {
+                                     Set<String> extensionsToSkip,
+                                     Set<String> fileNamesToSkip) throws IOException {
         AtomicReference<IOException> exception = new AtomicReference<>();
         try (Stream<Path> stream = Files.walk(sourceDirPath)) {
             stream.forEach(source -> {
                 boolean shouldSkip = false;
                 if (!Files.isDirectory(source)) {
                     String fileName = source.getFileName().toString();
+                    shouldSkip = fileNamesToSkip.contains(fileName);
                     int lastDotIndex = fileName.lastIndexOf('.');
-                    if (lastDotIndex > 0) {
+                    if (!shouldSkip && lastDotIndex > 0) {
                         String extension = fileName.substring(lastDotIndex + 1);
                         shouldSkip = extensionsToSkip.contains(extension);
                     }

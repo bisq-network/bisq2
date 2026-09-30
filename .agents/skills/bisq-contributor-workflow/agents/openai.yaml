@@ -1,0 +1,8 @@
+interface:
+  display_name: "Bisq Contributor Workflow"
+  short_description: "Implement Bisq changes with architecture and safety checks"
+  brand_color: "#2E8B57"
+  default_prompt: "Use $bisq-contributor-workflow to implement this Bisq issue with focused verification."
+
+policy:
+  allow_implicit_invocation: true

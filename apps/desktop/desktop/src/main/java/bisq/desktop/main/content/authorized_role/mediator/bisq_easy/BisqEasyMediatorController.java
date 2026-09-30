@@ -243,9 +243,9 @@ public class BisqEasyMediatorController implements Controller {
 
     private void applyFilteredListPredicate(boolean showClosedCases) {
         if (showClosedCases) {
-            model.getClosedCasesPredicate().set(item -> item.getBisqEasyMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> item.getBisqEasyMediationCase().isClosed());
         } else {
-            model.getClosedCasesPredicate().set(item -> !item.getBisqEasyMediationCase().getIsClosed().get());
+            model.getClosedCasesPredicate().set(item -> !item.getBisqEasyMediationCase().isClosed());
         }
     }
 

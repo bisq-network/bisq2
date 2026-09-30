@@ -118,7 +118,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
         if (version.isEmpty()) {
             version = Res.get("data.na");
         }
-        versionInfo = Res.get("user.userProfile.version", version);
+        versionInfo = "\n" + Res.get("user.userProfile.version", version);
         updateTooltipText();
 
         if (showTooltip) {
@@ -151,7 +151,7 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     public void setFormattedAge(String formattedAge) {
         this.formattedAge.set(StringUtils.isEmpty(formattedAge) ? Res.get("data.na") : formattedAge);
         if (formattedAge != null) {
-            livenessState = "\n" + Res.get("user.userProfile.livenessState", formattedAge) + "\n";
+            livenessState = "\n" + Res.get("user.userProfile.livenessState", formattedAge);
         } else {
             livenessState = "";
         }
@@ -180,5 +180,9 @@ public class UserProfileIcon extends StackPane implements LivenessScheduler.Form
     public void hideLivenessIndicator() {
         livenessIndicator.hide();
         livenessScheduler.disable();
+    }
+
+    public void hideTooltip() {
+        Tooltip.uninstall(this, tooltip);
     }
 }

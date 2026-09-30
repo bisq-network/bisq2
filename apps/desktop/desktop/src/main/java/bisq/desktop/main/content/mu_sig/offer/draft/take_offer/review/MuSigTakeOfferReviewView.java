@@ -1,0 +1,288 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.content.mu_sig.offer.draft.take_offer.review;
+
+import bisq.common.application.DevMode;
+import bisq.desktop.common.Icons;
+import bisq.desktop.common.Transitions;
+import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.WizardOverlay;
+import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.controls.TextFlowUtils;
+import bisq.desktop.main.content.mu_sig.trade.components.MuSigProtocolWaitingAnimation;
+import bisq.desktop.main.content.mu_sig.trade.components.MuSigProtocolWaitingState;
+import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.TextFlow;
+import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+@Slf4j
+class MuSigTakeOfferReviewView extends View<StackPane, MuSigTakeOfferReviewModel, MuSigTakeOfferReviewController> {
+    public static final String DESCRIPTION_STYLE = "trade-wizard-review-description";
+    public static final String VALUE_STYLE = "trade-wizard-review-value";
+    public static final String DETAILS_STYLE = "trade-wizard-review-details";
+
+    private final WizardOverlay sendTakeOfferMessageOverlay, takeOfferSuccessOverlay;
+    private final Button takeOfferSuccessButton;
+    private final Label priceDetails, paymentMethod, paymentMethodDetails, securityDepositInfoIcon,
+            securityDeposit, securityDepositDetails, fee, feeDetails;
+    private final GridPane gridPane;
+    private final TextFlow price;
+    private final MuSigProtocolWaitingAnimation takeOfferSendMessageWaitingAnimation;
+    private Subscription takeOfferStatusPin;
+    private Subscription priceWithCodeSubscription, priceDetailsSubscription;
+    private boolean minWaitingTimePassed = false;
+    private UIScheduler minWaitingTimeScheduler;
+
+    MuSigTakeOfferReviewView(MuSigTakeOfferReviewModel model,
+                             MuSigTakeOfferReviewController controller,
+                             HBox reviewDataDisplay) {
+        super(new StackPane(), model, controller);
+
+        gridPane = new GridPane();
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+        gridPane.setMouseTransparent(true);
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(25);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(25);
+        ColumnConstraints col3 = new ColumnConstraints();
+        col3.setPercentWidth(25);
+        ColumnConstraints col4 = new ColumnConstraints();
+        col4.setPercentWidth(25);
+        gridPane.getColumnConstraints().addAll(col1, col2, col3, col4);
+
+        int rowIndex = 0;
+        Label headline = new Label(Res.get("muSig.offer.taker.review.headline"));
+        headline.getStyleClass().add("trade-wizard-review-headline");
+        GridPane.setHalignment(headline, HPos.CENTER);
+        GridPane.setMargin(headline, new Insets(10, 0, 30, 0));
+        gridPane.add(headline, 0, rowIndex, 4, 1);
+
+        rowIndex++;
+        Region line1 = getLine();
+        gridPane.add(line1, 0, rowIndex, 4, 1);
+
+        rowIndex++;
+        GridPane.setMargin(reviewDataDisplay, new Insets(0, 0, 10, 0));
+        gridPane.add(reviewDataDisplay, 0, rowIndex, 4, 1);
+
+        rowIndex++;
+        Label detailsHeadline = new Label(Res.get("muSig.offer.taker.review.detailsHeadline").toUpperCase());
+        detailsHeadline.getStyleClass().add("trade-wizard-review-details-headline");
+        gridPane.add(detailsHeadline, 0, rowIndex, 4, 1);
+
+        rowIndex++;
+        Region line2 = getLine();
+        GridPane.setMargin(line2, new Insets(-10, 0, -5, 0));
+        gridPane.add(line2, 0, rowIndex, 4, 1);
+
+        rowIndex++;
+        Label priceDescription = new Label(Res.get("muSig.offer.taker.review.price.price"));
+        priceDescription.getStyleClass().add(DESCRIPTION_STYLE);
+        gridPane.add(priceDescription, 0, rowIndex);
+
+        price = new TextFlow();
+        price.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(price, 1, rowIndex);
+
+        priceDetails = new Label();
+        priceDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(priceDetails, 2, rowIndex, 2, 1);
+
+        rowIndex++;
+        Label paymentMethodDescription = new Label(Res.get("muSig.offer.taker.review.paymentMethod.description"));
+        paymentMethodDescription.getStyleClass().add(DESCRIPTION_STYLE);
+        gridPane.add(paymentMethodDescription, 0, rowIndex);
+
+        paymentMethod = new Label();
+        paymentMethod.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(paymentMethod, 1, rowIndex);
+
+        paymentMethodDetails = new Label();
+        paymentMethodDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(paymentMethodDetails, 2, rowIndex, 2, 1);
+
+        rowIndex++;
+        Label securityDepositDescription = new Label(Res.get("muSig.offer.wizard.review.securityDeposit.description"));
+        securityDepositDescription.getStyleClass().add(DESCRIPTION_STYLE);
+
+        securityDepositInfoIcon = Icons.getIcon(AwesomeIcon.INFO_SIGN, "1.1em");
+        securityDepositInfoIcon.getStyleClass().add("text-fill-grey-dimmed");
+
+        HBox.setMargin(securityDepositInfoIcon, new Insets(0.5, 0, 0, 0));
+        HBox securityDepositDescriptionHBox = new HBox(7.5, securityDepositDescription, securityDepositInfoIcon);
+        gridPane.add(securityDepositDescriptionHBox, 0, rowIndex);
+
+        securityDeposit = new Label();
+        securityDeposit.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(securityDeposit, 1, rowIndex);
+
+        securityDepositDetails = new Label();
+        securityDepositDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(securityDepositDetails, 2, rowIndex, 2, 1);
+
+        rowIndex++;
+        Label feeInfoDescription = new Label(Res.get("muSig.offer.wizard.review.feeDescription"));
+        feeInfoDescription.getStyleClass().add(DESCRIPTION_STYLE);
+        gridPane.add(feeInfoDescription, 0, rowIndex);
+
+        fee = new Label();
+        fee.getStyleClass().add(VALUE_STYLE);
+        gridPane.add(fee, 1, rowIndex);
+
+        feeDetails = new Label();
+        feeDetails.getStyleClass().add(DETAILS_STYLE);
+        gridPane.add(feeDetails, 2, rowIndex, 2, 1);
+
+        rowIndex++;
+        Region line3 = getLine();
+        gridPane.add(line3, 0, rowIndex, 4, 1);
+
+        // Feedback overlay
+        takeOfferSendMessageWaitingAnimation = new MuSigProtocolWaitingAnimation(MuSigProtocolWaitingState.TAKE_OFFER);
+        sendTakeOfferMessageOverlay = new WizardOverlay(root)
+                .headlineIcon(takeOfferSendMessageWaitingAnimation)
+                .headlineFromI18nKey("muSig.offer.taker.review.sendTakeOfferMessageFeedback.headline")
+                .descriptionFromI18nKeys("muSig.offer.taker.review.sendTakeOfferMessageFeedback.subTitle",
+                        "muSig.offer.taker.review.sendTakeOfferMessageFeedback.info")
+                .build();
+
+        takeOfferSuccessButton = new Button(Res.get("muSig.offer.taker.review.takeOfferSuccessButton"));
+        takeOfferSuccessButton.setDefaultButton(true);
+        takeOfferSuccessOverlay = new WizardOverlay(root)
+                .info()
+                .headlineFromI18nKey("muSig.offer.taker.review.takeOfferSuccess.headline")
+                .descriptionFromI18nKey("muSig.offer.taker.review.takeOfferSuccess.subTitle")
+                .buttons(takeOfferSuccessButton)
+                .build();
+
+        StackPane.setMargin(gridPane, new Insets(40));
+        root.getChildren().addAll(gridPane, sendTakeOfferMessageOverlay, takeOfferSuccessOverlay);
+    }
+
+    @Override
+    protected void onViewAttached() {
+        priceWithCodeSubscription = EasyBind.subscribe(model.getPriceWithCode(), value ->
+                TextFlowUtils.updateTextFlow(price, value == null ? "" : value));
+        priceDetailsSubscription = EasyBind.subscribe(model.getPriceDetails(), value ->
+                priceDetails.setText(value == null ? "" : value));
+
+        paymentMethod.setText(model.getPaymentMethodDisplayString());
+        // Null until a payment selection was applied: the review target is reachable by direct
+        // navigation before the payment step ran; the confirmation gate rejects such a take,
+        // but the view must still attach.
+        String paymentMethodDetailsValue = model.getPaymentMethodDetails();
+        paymentMethodDetails.setText(paymentMethodDetailsValue);
+        if (paymentMethodDetailsValue != null && paymentMethodDetailsValue.length() > 50) {
+            paymentMethodDetails.setTooltip(new BisqTooltip(paymentMethodDetailsValue));
+        }
+
+        securityDepositInfoIcon.setTooltip(new BisqTooltip(Res.get("muSig.offer.wizard.review.securityDeposit.info")));
+
+        securityDeposit.setText(model.getFormattedSecurityDepositAsPercent());
+        securityDepositDetails.setText(model.getSecurityDepositAsBtc());
+
+        fee.textProperty().bind(model.getFee());
+        feeDetails.textProperty().bind(model.getFeeDetails());
+
+        takeOfferSuccessButton.setOnAction(e -> controller.onShowOpenTrades());
+
+        takeOfferStatusPin = EasyBind.subscribe(model.getTakeOfferStatus(), this::showTakeOfferStatusFeedback);
+    }
+
+    @Override
+    protected void onViewDetached() {
+        if (priceWithCodeSubscription != null) {
+            priceWithCodeSubscription.unsubscribe();
+            priceWithCodeSubscription = null;
+        }
+        if (priceDetailsSubscription != null) {
+            priceDetailsSubscription.unsubscribe();
+            priceDetailsSubscription = null;
+        }
+        fee.textProperty().unbind();
+        feeDetails.textProperty().unbind();
+        paymentMethodDetails.setTooltip(null);
+        takeOfferSuccessButton.setOnAction(null);
+        takeOfferStatusPin.unsubscribe();
+        takeOfferSendMessageWaitingAnimation.stop();
+        stopMinWaitingTimeScheduler();
+        securityDepositInfoIcon.setTooltip(null);
+    }
+
+    private void showTakeOfferStatusFeedback(MuSigTakeOfferReviewModel.TakeOfferStatus status) {
+        if (status == MuSigTakeOfferReviewModel.TakeOfferStatus.SENT) {
+            minWaitingTimePassed = false;
+            sendTakeOfferMessageOverlay.setVisible(true);
+
+            Transitions.blurStrong(gridPane, 0);
+            Transitions.slideInTop(sendTakeOfferMessageOverlay, 450);
+            takeOfferSendMessageWaitingAnimation.playIndefinitely();
+
+            stopMinWaitingTimeScheduler();
+            minWaitingTimeScheduler = UIScheduler.run(() -> {
+                minWaitingTimePassed = true;
+                if (model.getTakeOfferStatus().get() == MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS) {
+                    sendTakeOfferMessageOverlay.setVisible(false);
+                    takeOfferSuccessOverlay.setVisible(true);
+                    takeOfferSendMessageWaitingAnimation.stop();
+                }
+            }).after(DevMode.isDevMode() ? 500 : 4000);
+        } else if (status == MuSigTakeOfferReviewModel.TakeOfferStatus.SUCCESS && minWaitingTimePassed) {
+            sendTakeOfferMessageOverlay.setVisible(false);
+            takeOfferSuccessOverlay.setVisible(true);
+            takeOfferSendMessageWaitingAnimation.stop();
+        } else if (status == MuSigTakeOfferReviewModel.TakeOfferStatus.NOT_STARTED) {
+            sendTakeOfferMessageOverlay.setVisible(false);
+            takeOfferSuccessOverlay.setVisible(false);
+            takeOfferSendMessageWaitingAnimation.stop();
+            stopMinWaitingTimeScheduler();
+            Transitions.removeEffect(gridPane);
+        }
+    }
+
+    private void stopMinWaitingTimeScheduler() {
+        if (minWaitingTimeScheduler != null) {
+            minWaitingTimeScheduler.stop();
+            minWaitingTimeScheduler = null;
+        }
+    }
+
+    private Region getLine() {
+        Region line = new Region();
+        line.setMinHeight(1);
+        line.setMaxHeight(1);
+        line.getStyleClass().add("separator-line");
+        line.setPadding(new Insets(9, 0, 8, 0));
+        return line;
+    }
+}

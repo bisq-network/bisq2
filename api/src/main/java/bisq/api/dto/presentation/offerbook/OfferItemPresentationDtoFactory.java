@@ -27,7 +27,6 @@ import bisq.api.dto.offer.bisq_easy.BisqEasyOfferDto;
 import bisq.api.dto.user.profile.UserProfileDto;
 import bisq.api.dto.user.reputation.ReputationScoreDto;
 import bisq.i18n.Res;
-import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountFormatter;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;

@@ -33,6 +33,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -46,12 +47,26 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     private final Persistence<BannedUserStore> persistence;
     @Getter
     private final ObservableSet<String> rateLimitExceedingUserProfiles = new ObservableSet<>();
-    private final RateLimiter rateLimiter = new RateLimiter();
+    private final RateLimiter rateLimiter;
+    private final boolean rateLimitEnabled;
 
     public BannedUserService(PersistenceService persistenceService,
-                             AuthorizedBondedRolesService authorizedBondedRolesService) {
+                             AuthorizedBondedRolesService authorizedBondedRolesService,
+                             boolean rateLimitEnabled) {
+        this(persistenceService, authorizedBondedRolesService, new RateLimiter(), rateLimitEnabled);
+    }
+
+    BannedUserService(PersistenceService persistenceService,
+                      AuthorizedBondedRolesService authorizedBondedRolesService,
+                      RateLimiter rateLimiter,
+                      boolean rateLimitEnabled) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
         this.authorizedBondedRolesService = authorizedBondedRolesService;
+        this.rateLimiter = Objects.requireNonNull(rateLimiter, "rateLimiter");
+        this.rateLimitEnabled = rateLimitEnabled;
+        if (!rateLimitEnabled) {
+            log.warn("Chat profile rate limiting disabled. Use only for local/dev testing.");
+        }
     }
 
 
@@ -122,6 +137,9 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     }
 
     public void checkRateLimit(String userProfileId, long timeStamp) {
+        if (!rateLimitEnabled) {
+            return;
+        }
         boolean exceedsLimit = rateLimiter.exceedsLimit(userProfileId, timeStamp);
         if (exceedsLimit) {
             log.warn("User with profile ID {} exceeded rate limit.", userProfileId);
@@ -136,11 +154,17 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     }
 
     public boolean isRateLimitExceeding(String userProfileId) {
+        if (!rateLimitEnabled) {
+            return false;
+        }
         refresh(userProfileId);
         return rateLimitExceedingUserProfiles.contains(userProfileId);
     }
 
     public Optional<String> getExceedsLimitInfo(String userProfileId) {
+        if (!rateLimitEnabled) {
+            return Optional.empty();
+        }
         return rateLimiter.getExceedsLimitInfo(userProfileId);
     }
 

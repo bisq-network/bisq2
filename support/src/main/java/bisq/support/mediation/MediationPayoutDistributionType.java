@@ -27,7 +27,8 @@ public enum MediationPayoutDistributionType implements ProtoEnum {
     BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
     SELLER_GETS_TRADE_AMOUNT,
     SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
-    SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY;
+    SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
+    NO_PAYOUT;
 
     @Override
     public bisq.support.protobuf.MediationPayoutDistributionType toProtoEnum() {

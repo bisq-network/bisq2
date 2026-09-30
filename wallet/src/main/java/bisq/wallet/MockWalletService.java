@@ -20,6 +20,8 @@ package bisq.wallet;
 import bisq.common.application.DevMode;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
+import bisq.persistence.PersistenceService;
+import bisq.wallet.receive_address.ReceiveAddressEntry;
 import bisq.wallet.vo.Transaction;
 import bisq.wallet.vo.TransactionInput;
 import bisq.wallet.vo.TransactionOutput;
@@ -28,12 +30,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class MockWalletService extends WalletService {
-    public MockWalletService(Config config) {
-        super(config);
+    public MockWalletService(Config config, PersistenceService persistenceService) {
+        super(config, persistenceService);
     }
 
     @Override
@@ -69,8 +72,10 @@ public class MockWalletService extends WalletService {
         return CompletableFuture.completedFuture(true);
     }
 
-    public CompletableFuture<String> getUnusedAddress() {
-        return CompletableFuture.completedFuture("39C7fxSzEACPjM72Z7xdPxhf7mKxJwvfMJ");
+    public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {
+        String address = "1433be6e1769d40d8bcd7b7765333a4e6a";
+        return CompletableFuture.completedFuture(address)
+                .thenApply(receiveAddressService::findOrAddReceiveAddressEntry);
     }
 
     public CompletableFuture<ReadOnlyObservableSet<String>> requestWalletAddresses() {
@@ -82,7 +87,26 @@ public class MockWalletService extends WalletService {
     }
 
     public CompletableFuture<List<Utxo>> listUtxos() {
-        return CompletableFuture.completedFuture(List.of());
+        Utxo u1 = new Utxo("tx1", 0, 100000L, "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", 6);
+        Utxo u2 = new Utxo("tx2", 1, 200000L, "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", 3);
+        Utxo u3 = new Utxo("tx3", 0, 50000L, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy", 0);
+        Utxo u4 = new Utxo("tx4", 2, 750000L, "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080", 1);
+        Utxo u5 = new Utxo("tx5", 0, 150000L, "1BoatSLRHtKNngkdXEeobR76b53LETtpyT", 12);
+        Utxo u6 = new Utxo("tx6", 1, 300000L, "3P1oKqQ1oQf2t1Zb1p7b6g9a4n5v8x7y6z", 0);
+        Utxo u7 = new Utxo("tx7", 0, 125000L, "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", 2); // repeated address
+        Utxo u8 = new Utxo("tx8", 0, 28000L, "bc1qxy2kgQGefi2DMPTfTL5SLmv7DivfNayrf2493p", 6);
+        Utxo u9 = new Utxo("tx9", 0, 100000L, "bc1q5fe4gQGefi2DMPTfTL5SLmv7Diyrf2493pvfNa", 5);
+        Utxo u10 = new Utxo("tx10", 0, 300000L, "bc1qx8hEysxRefi2DMPTfTL5SLyrf2493pmv7DvfNa", 6);
+        Utxo u11 = new Utxo("tx11", 0, 250000L, "bc1cs3dkgqGefi2DMPTfTL5SLmv7Dyrf2493pivfNa", 1);
+        return CompletableFuture.completedFuture(List.of(u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11));
+    }
+
+    public CompletableFuture<ReceiveAddressEntry> createReceiveAddress() {
+        String address = "1" + (UUID.randomUUID().toString().replace("-", "")
+                + UUID.randomUUID().toString().replace("-", ""))
+                .substring(0, 33);
+        return CompletableFuture.completedFuture(address)
+                .thenApply(this::addReceiveAddress);
     }
 
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {

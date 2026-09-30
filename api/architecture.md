@@ -65,7 +65,7 @@ api = {
         }
 
         security = {
-            supportSessionHandling = false
+            supportSessionHandling = true
             authorizationRequired = true
 
             session = {
@@ -205,4 +205,3 @@ They validate:
 * **CLEAR** – Standard LAN or public IP communication
 * **TOR** – Onion routing; clients wait until the onion service is published
 * **I2P** – Potential future support (currently not feasible for mobile clients)
-

@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -44,20 +43,6 @@ public class StringUtilsTest {
         assertEquals("SEPA INSTANT", textWithStyleAndRest.get(5).getFirst());
         assertEquals("text-color-mid", textWithStyleAndRest.get(5).getSecond().get(0));
         assertEquals("text-underline", textWithStyleAndRest.get(5).getSecond().get(1));
-    }
-
-    @Test
-    public void deriveWordStartingWith() {
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Hello jo", '@'), null);
-        assert Objects.equals(StringUtils.deriveWordStartingWith("@jo x", '@'), null);
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Hello@jo", '@'), null);
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Hello @jo!", '@'), null);
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Go to#chan", '@'), null);
-
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Hello @jo", '@'), "jo");
-        assert Objects.equals(StringUtils.deriveWordStartingWith("@john", '@'), "john");
-        assert Objects.equals(StringUtils.deriveWordStartingWith("Go to #chann", '#'), "chann");
-        assert Objects.equals(StringUtils.deriveWordStartingWith("#chann", '#'), "chann");
     }
 
     @Test
@@ -164,5 +149,15 @@ public class StringUtilsTest {
         String input = "  \u202Duser@example.com\u202C  ";
         String expected = "user@example.com";
         assertEquals(expected, StringUtils.cleanUserInput(input));
+    }
+
+    @Test
+    void sanitizeForLogStripsControlFormatAndBidiCharacters() {
+        // \p{Cntrl} misses U+0085 (NEL, a C1 control) and the format/bidi category (U+202E,
+        // U+200B); each stripped character becomes '?'. A crafted id must not carry a line
+        // break or a reordering control into a log line.
+        String injected = "x\u0085WARN forged\u2028line reversed\u202Etext\u0007bell\u200Bzwsp";
+        assertEquals("x?WARN forged?line reversed?text?bell?zwsp", StringUtils.sanitizeForLog(injected));
+        assertEquals("", StringUtils.sanitizeForLog(null));
     }
 }

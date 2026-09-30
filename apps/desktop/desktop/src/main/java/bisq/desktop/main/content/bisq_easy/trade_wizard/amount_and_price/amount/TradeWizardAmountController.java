@@ -18,14 +18,17 @@
 package bisq.desktop.main.content.bisq_easy.trade_wizard.amount_and_price.amount;
 
 import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.desktop.navigation.NavigationTarget;
+import bisq.bonded_roles.market_price.MarketBasedAmountConversion;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
-import bisq.common.market.Market;
 import bisq.common.data.Pair;
+import bisq.common.market.Market;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
@@ -36,6 +39,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.components.offer.amount_selection.AmountSelectionController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
@@ -45,9 +49,6 @@ import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.account.payment_method.BitcoinPaymentMethodSpec;
-import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
-import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
@@ -74,7 +75,12 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.*;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.DEFAULT_MIN_USD_TRADE_AMOUNT;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.Result;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.getLowestAndHighestAmountInAvailableOffers;
+import static bisq.bisq_easy.BisqEasyTradeAmountLimits.withTolerance;
 import static bisq.presentation.formatters.AmountFormatter.formatQuoteAmountWithCode;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -567,15 +573,15 @@ public class TradeWizardAmountController implements Controller {
 
     private void applyQuoteSideMinMaxRange() {
         Market market = model.getMarket();
-        Monetary maxRangeValue = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, market, MAX_USD_TRADE_AMOUNT)
+        Monetary maxRangeValue = MarketBasedAmountConversion.usdToFiat(marketPriceService, market, MAX_USD_TRADE_AMOUNT)
                 .orElseThrow().round(0);
-        Monetary minRangeValue = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, market, DEFAULT_MIN_USD_TRADE_AMOUNT)
+        Monetary minRangeValue = MarketBasedAmountConversion.usdToFiat(marketPriceService, market, DEFAULT_MIN_USD_TRADE_AMOUNT)
                 .orElseThrow().round(0);
 
         applyMaxAmountBasedOnReputation();
 
         Fiat defaultUsdAmount = MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION.multiply(2);
-        Monetary defaultFiatAmount = BisqEasyTradeAmountLimits.usdToFiat(marketPriceService, market, defaultUsdAmount)
+        Monetary defaultFiatAmount = MarketBasedAmountConversion.usdToFiat(marketPriceService, market, defaultUsdAmount)
                 .orElseThrow().round(0);
         boolean isCreateOfferMode = model.isCreateOfferMode();
         boolean isBuyer = model.getDirection().isBuy();
@@ -780,54 +786,72 @@ public class TradeWizardAmountController implements Controller {
     }
 
     private boolean isValidAmountRange(BisqEasyOffer peersOffer) {
-        Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
-        Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
-        if (myQuoteSideMinOrFixedAmount.isEmpty() || peersQuoteSideMaxOrFixedAmount.isEmpty()) {
-            return false;
-        }
-        if (myQuoteSideMinOrFixedAmount.get().round(0).getValue() > peersQuoteSideMaxOrFixedAmount.get().round(0).getValue()) {
-            return false;
-        }
+        // A peer offer whose amounts overflow at current prices cannot match; it must not
+        // propagate the conversion failure into the FX thread.
+        try {
+            Optional<Monetary> myQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
+            Optional<Monetary> peersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, peersOffer);
+            if (myQuoteSideMinOrFixedAmount.isEmpty() || peersQuoteSideMaxOrFixedAmount.isEmpty()) {
+                return false;
+            }
+            if (myQuoteSideMinOrFixedAmount.get().round(0).getValue() > peersQuoteSideMaxOrFixedAmount.get().round(0).getValue()) {
+                return false;
+            }
 
-        Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
-        Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
-        if (myQuoteSideMaxOrFixedAmount.isEmpty() || peersQuoteSideMinOrFixedAmount.isEmpty()) {
-            return false;
-        }
-        if (myQuoteSideMaxOrFixedAmount.get().round(0).getValue() < peersQuoteSideMinOrFixedAmount.get().round(0).getValue()) {
-            return false;
-        }
+            Optional<Monetary> myQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, model.getQuoteSideAmountSpec().get(), MARKET_PRICE_SPEC, model.getMarket());
+            Optional<Monetary> peersQuoteSideMinOrFixedAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, peersOffer);
+            if (myQuoteSideMaxOrFixedAmount.isEmpty() || peersQuoteSideMinOrFixedAmount.isEmpty()) {
+                return false;
+            }
+            if (myQuoteSideMaxOrFixedAmount.get().round(0).getValue() < peersQuoteSideMinOrFixedAmount.get().round(0).getValue()) {
+                return false;
+            }
 
-        return true;
+            return true;
+        } catch (ArithmeticException e) {
+            return false;
+        }
     }
 
     private boolean isValidAmountLimit(BisqEasyOffer peersOffer, Monetary quoteSideAmount) {
-        Optional<Result> result = BisqEasyTradeAmountLimits.checkOfferAmountLimitForGivenAmount(reputationService,
-                userIdentityService,
-                userProfileService,
-                marketPriceService,
-                model.getMarket(),
-                quoteSideAmount,
-                peersOffer);
-        if (!result.map(Result::isValid).orElse(false)) {
+        // A peer offer whose amounts overflow at current prices cannot match; it must not
+        // propagate the conversion failure into the FX thread.
+        try {
+            Optional<Result> result = BisqEasyTradeAmountLimits.checkOfferAmountLimitForGivenAmount(reputationService,
+                    userIdentityService,
+                    userProfileService,
+                    marketPriceService,
+                    model.getMarket(),
+                    quoteSideAmount,
+                    peersOffer);
+            if (!result.map(Result::isValid).orElse(false)) {
+                return false;
+            }
+            return true;
+        } catch (ArithmeticException e) {
             return false;
         }
-        return true;
     }
 
 
     private boolean isValidAmountLimit(BisqEasyOffer peersOffer) {
-        if (!BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
-                        userIdentityService,
-                        userProfileService,
-                        marketPriceService,
-                        peersOffer)
-                .map(BisqEasyTradeAmountLimits.Result::isValid)
-                .orElse(false)) {
+        // A peer offer whose amounts overflow at current prices cannot match; it must not
+        // propagate the conversion failure into the FX thread.
+        try {
+            if (!BisqEasyTradeAmountLimits.checkOfferAmountLimitForMaxOrFixedAmount(reputationService,
+                            userIdentityService,
+                            userProfileService,
+                            marketPriceService,
+                            peersOffer)
+                    .map(BisqEasyTradeAmountLimits.Result::isValid)
+                    .orElse(false)) {
+                return false;
+            }
+
+            return true;
+        } catch (ArithmeticException e) {
             return false;
         }
-
-        return true;
     }
 
     // Used for finding best price quote of available matching offers

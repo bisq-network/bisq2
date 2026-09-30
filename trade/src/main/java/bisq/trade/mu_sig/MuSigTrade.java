@@ -25,8 +25,6 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.trade.MuSigDisputeState;
 import bisq.trade.Trade;
 import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
@@ -56,8 +54,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     private final Observable<String> depositTxId = new Observable<>("TODO depositTxId");
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
-    private final Observable<MuSigDisputeState> disputeState = new Observable<>(MuSigDisputeState.NO_DISPUTE);
-    private Optional<MuSigMediationResult> muSigMediationResult = Optional.empty();
+    private MuSigTradeDispute tradeDispute = new MuSigTradeDispute();
 
     public MuSigTrade(MuSigContract contract,
                       boolean isBuyer,
@@ -111,8 +108,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         var builder = bisq.trade.protobuf.MuSigTrade.newBuilder();
         Optional.ofNullable(depositTxId.get()).ifPresent(builder::setDepositTxId);
         tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
-        builder.setDisputeState(disputeState.get().toProtoEnum());
-        muSigMediationResult.ifPresent(result -> builder.setMuSigMediationResult(result.toProto(serializeForHash)));
+        builder.setTradeDispute(tradeDispute.toProto(serializeForHash));
         return builder;
     }
 
@@ -154,10 +150,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
             trade.setDepositTxId(muSigTradeProto.getDepositTxId());
         }
 
-        trade.setDisputeState(MuSigDisputeState.fromProto(muSigTradeProto.getDisputeState()));
-
-        if (muSigTradeProto.hasMuSigMediationResult()) {
-            trade.setMuSigMediationResult(MuSigMediationResult.fromProto(muSigTradeProto.getMuSigMediationResult()));
+        if (muSigTradeProto.hasTradeDispute()) {
+            trade.setTradeDispute(MuSigTradeDispute.fromProto(muSigTradeProto.getTradeDispute()));
         }
 
         return trade;
@@ -217,27 +211,11 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         return getOffer().getMarket();
     }
 
-    public void setDisputeState(MuSigDisputeState disputeState) {
-        this.disputeState.set(disputeState);
+    public MuSigTradeDispute getTradeDispute() {
+        return tradeDispute;
     }
 
-    public MuSigDisputeState getDisputeState() {
-        return disputeState.get();
-    }
-
-    public ReadOnlyObservable<MuSigDisputeState> disputeStateObservable() {
-        return disputeState;
-    }
-
-    public boolean setMuSigMediationResult(MuSigMediationResult muSigMediationResult) {
-        if (this.muSigMediationResult.isPresent()) {
-            return false;
-        }
-        this.muSigMediationResult = Optional.of(muSigMediationResult);
-        return true;
-    }
-
-    public Optional<MuSigMediationResult> getMuSigMediationResult() {
-        return muSigMediationResult;
+    private void setTradeDispute(MuSigTradeDispute tradeDispute) {
+        this.tradeDispute = tradeDispute;
     }
 }

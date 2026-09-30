@@ -17,34 +17,42 @@
 
 package bisq.common.asset;
 
-
 import bisq.common.validation.Validation;
 import bisq.common.validation.crypto.CryptoAddressValidationRepository;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Set;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class CryptoAsset extends DigitalAsset {
-    private static final Set<String> SUPPORT_AUTO_CONF_CODES = Set.of("XMR");
+public final class CryptoAsset extends DigitalAsset {
 
+    @Getter
+    @EqualsAndHashCode.Exclude
+    private final int precision;
     @Getter
     private transient final Validation addressValidation;
     @Getter
     private transient final boolean supportAutoConf;
 
-    // For custom cryptoCurrencies not listed in Bisq
+    // For custom cryptoCurrencies not listed in Bisq. Their native precision is unknown, so we
+    // fall back to 8. Listed assets must state their precision explicitly (see the constructor
+    // below) so a coin with fewer than 8 decimals cannot silently use 8 and carry unsendable digits.
     public CryptoAsset(String code) {
-        this(code, code);
+        this(code, code, 8);
     }
 
-    public CryptoAsset(String code, String name) {
+    public CryptoAsset(String code, String name, int precision) {
         super(code, name);
+        // precision is the number of decimals Bisq trades the coin at; it must be <= the coin's
+        // native on-chain decimals (fewer is safe, coarser rounding). 12 (XMR) is the highest
+        // value Bisq currently uses and the ceiling that keeps amounts within a long.
+        checkArgument(precision >= 0 && precision <= 12, "precision must be within [0, 12] but was " + precision);
+        this.precision = precision;
         this.addressValidation = CryptoAddressValidationRepository.getValidation(code);
-        supportAutoConf = SUPPORT_AUTO_CONF_CODES.contains(code);
+        supportAutoConf = CryptoAssetRepository.isAutoConfSupported(code);
     }
 
     @Override
@@ -58,7 +66,11 @@ public class CryptoAsset extends DigitalAsset {
     }
 
     public static CryptoAsset fromProto(bisq.common.protobuf.Asset baseProto) {
-        return new CryptoAsset(baseProto.getCode(), baseProto.getName());
+        // Precision is not part of the Asset proto; re-derive it from the repository (custom -> 8).
+        int precision = CryptoAssetRepository.find(baseProto.getCode())
+                .map(CryptoAsset::getPrecision)
+                .orElse(8);
+        return new CryptoAsset(baseProto.getCode(), baseProto.getName(), precision);
     }
 
     @Override

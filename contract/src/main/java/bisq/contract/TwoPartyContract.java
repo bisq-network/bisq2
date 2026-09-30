@@ -31,7 +31,11 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
     protected final Party taker;
 
     public TwoPartyContract(long takeOfferDate, T offer, TradeProtocolType protocolType, Party taker) {
-        super(takeOfferDate, offer, protocolType);
+        this(takeOfferDate, offer, protocolType, new Party(Role.MAKER, offer.getMakerNetworkId()), taker);
+    }
+
+    public TwoPartyContract(long takeOfferDate, T offer, TradeProtocolType protocolType, Party maker, Party taker) {
+        super(takeOfferDate, offer, protocolType, maker);
         this.taker = taker;
     }
 

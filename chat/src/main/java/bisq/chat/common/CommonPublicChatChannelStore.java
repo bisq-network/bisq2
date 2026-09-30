@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class CommonPublicChatChannelStore implements PersistableStore<CommonPublicChatChannelStore> {
+public final class CommonPublicChatChannelStore implements PersistableStore<CommonPublicChatChannelStore> {
     private final ObservableSet<CommonPublicChatChannel> channels = new ObservableSet<>();
 
     private CommonPublicChatChannelStore(Set<CommonPublicChatChannel> privateDiscussionChannels) {

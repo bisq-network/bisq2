@@ -65,6 +65,7 @@ enum MediationPayoutDistributionType {
   MEDIATIONPAYOUTDISTRIBUTIONTYPE_SELLER_GETS_TRADE_AMOUNT = 5;
   MEDIATIONPAYOUTDISTRIBUTIONTYPE_SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION = 6;
   MEDIATIONPAYOUTDISTRIBUTIONTYPE_SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY = 7;
+  MEDIATIONPAYOUTDISTRIBUTIONTYPE_NO_PAYOUT = 8;
 }
 
 message MuSigMediationRequest {
@@ -73,46 +74,60 @@ message MuSigMediationRequest {
   user.UserProfile requester = 3;
   user.UserProfile peer = 4;
   repeated chat.ChatMessage chatMessages = 5;
-  optional network.identity.NetworkId mediatorNetworkId = 6;
-}
-
-message MuSigMediatorsResponse {
-  string tradeId = 1;
+  network.identity.NetworkId mediatorNetworkId = 6;
 }
 
 message MuSigMediationResult {
   uint64 date = 1;
-  MediationResultReason mediationResultReason = 2;
-  sint64 proposedBuyerPayoutAmount = 3;
-  sint64 proposedSellerPayoutAmount = 4;
-  optional string summaryNotes = 5;
-  MediationPayoutDistributionType mediationPayoutDistributionType = 6;
+  bytes contractHash = 2;
+  MediationResultReason mediationResultReason = 3;
+  MediationPayoutDistributionType mediationPayoutDistributionType = 4;
+  optional sint64 proposedBuyerPayoutAmount = 5;
+  optional sint64 proposedSellerPayoutAmount = 6;
   optional double payoutAdjustmentPercentage = 7;
+  optional string summaryNotes = 8;
+}
+
+message MuSigDisputeCasePaymentDetailsRequest {
+  string tradeId = 1;
+  network.identity.NetworkId senderNetworkId = 2;
+}
+
+message MuSigDisputeCasePaymentDetailsResponse {
+  string tradeId = 1;
+  network.identity.NetworkId senderNetworkId = 2;
+  account.AccountPayload takerAccountPayload = 3;
+  account.AccountPayload makerAccountPayload = 4;
 }
 
 message MuSigMediationStateChangeMessage {
   string id = 1;
   string tradeId = 2;
-  MediationCaseState mediationCaseState = 3;
-  optional MuSigMediationResult muSigMediationResult = 4;
+  network.identity.NetworkId senderNetworkId = 3;
+  MediationCaseState mediationCaseState = 4;
+  optional MuSigMediationResult muSigMediationResult = 5;
+  optional bytes mediationResultSignature = 6;
 }
 
-message MuSigMediationResultAcceptanceMessage {
+message MuSigDisputeCaseDataMessage {
   string tradeId = 1;
-  bool mediationResultAccepted = 2;
-  string senderUserProfileId = 3;
+  network.identity.NetworkId senderNetworkId = 2;
+  bytes contractHash = 3;
+  repeated chat.ChatMessage chatMessages = 4;
 }
 
-message MuSigPaymentDetailsRequest {
-  string tradeId = 1;
-  string senderUserProfileId = 2;
+enum MuSigMediationIssueType {
+  MUSIGMEDIATIONISSUETYPE_UNSPECIFIED = 0;
+  MUSIGMEDIATIONISSUETYPE_PEER_CONTRACT_HASH_MISMATCH = 1;
+  MUSIGMEDIATIONISSUETYPE_MAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH = 2;
+  MUSIGMEDIATIONISSUETYPE_TAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH = 3;
 }
 
-message MuSigPaymentDetailsResponse {
-  string tradeId = 1;
-  account.AccountPayload takerAccountPayload = 2;
-  account.AccountPayload makerAccountPayload = 3;
-  string senderUserProfileId = 4;
+message MuSigMediationIssue {
+  uint64 date = 1;
+  contract.Role causingRole = 2;
+  MuSigMediationIssueType type = 3;
+  optional string details = 4;
 }
 
 message MuSigMediationCase {
@@ -120,12 +135,101 @@ message MuSigMediationCase {
   sint64 requestDate = 2;
   MediationCaseState mediationCaseState = 3;
   optional MuSigMediationResult muSigMediationResult = 4;
-  optional account.AccountPayload takerAccountPayload = 5;
-  optional account.AccountPayload makerAccountPayload = 6;
+  optional bytes mediationResultSignature = 5;
+  optional bytes peerReportedContractHash = 6;
+  optional account.AccountPayload takerAccountPayload = 7;
+  optional account.AccountPayload makerAccountPayload = 8;
+  repeated MuSigMediationIssue issues = 9;
+  bool mediatorHasLeftChat = 10;
 }
 
 message MuSigMediatorStore {
   repeated MuSigMediationCase muSigMediationCases = 1;
+}
+
+enum ArbitrationCaseState {
+  ARBITRATIONCASESTATE_UNSPECIFIED = 0;
+  ARBITRATIONCASESTATE_OPEN = 1;
+  ARBITRATIONCASESTATE_CLOSED = 2;
+}
+
+enum ArbitrationResultReason {
+  ARBITRATIONRESULTREASON_UNSPECIFIED = 0;
+  ARBITRATIONRESULTREASON_OTHER = 1;
+  ARBITRATIONRESULTREASON_BUG = 2;
+  ARBITRATIONRESULTREASON_USABILITY = 3;
+  ARBITRATIONRESULTREASON_BANK = 4;
+  ARBITRATIONRESULTREASON_OPTION_TRADE = 5;
+  ARBITRATIONRESULTREASON_TRADER_NOT_RESPONDING = 6;
+  ARBITRATIONRESULTREASON_WRONG_SENDER_ACCOUNT = 7;
+  ARBITRATIONRESULTREASON_TRADE_ALREADY_SETTLED = 8;
+  ARBITRATIONRESULTREASON_PEER_WAS_LATE = 9;
+}
+
+enum ArbitrationPayoutDistributionType {
+  ARBITRATIONPAYOUTDISTRIBUTIONTYPE_UNSPECIFIED = 0;
+  ARBITRATIONPAYOUTDISTRIBUTIONTYPE_CUSTOM_PAYOUT = 1;
+  ARBITRATIONPAYOUTDISTRIBUTIONTYPE_BUYER_GETS_TRADE_AMOUNT = 2;
+  ARBITRATIONPAYOUTDISTRIBUTIONTYPE_SELLER_GETS_TRADE_AMOUNT = 3;
+}
+
+message MuSigArbitrationRequest {
+  string tradeId = 1;
+  contract.Contract contract = 2;
+  MuSigMediationResult muSigMediationResult = 3;
+  bytes mediationResultSignature = 4;
+  user.UserProfile requester = 5;
+  user.UserProfile peer = 6;
+  repeated chat.ChatMessage chatMessages = 7;
+  network.identity.NetworkId arbitratorNetworkId = 8;
+}
+
+message MuSigArbitrationResult {
+  uint64 date = 1;
+  bytes contractHash = 2;
+  ArbitrationResultReason arbitrationResultReason = 3;
+  ArbitrationPayoutDistributionType arbitrationPayoutDistributionType = 4;
+  sint64 buyerPayoutAmount = 5;
+  sint64 sellerPayoutAmount = 6;
+  optional string summaryNotes = 7;
+}
+
+message MuSigArbitrationStateChangeMessage {
+  string id = 1;
+  string tradeId = 2;
+  network.identity.NetworkId senderNetworkId = 3;
+  ArbitrationCaseState arbitrationCaseState = 4;
+  optional MuSigArbitrationResult muSigArbitrationResult = 5;
+  optional bytes arbitrationResultSignature = 6;
+}
+
+enum MuSigArbitrationIssueType {
+  MUSIGARBITRATIONISSUETYPE_UNSPECIFIED = 0;
+  MUSIGARBITRATIONISSUETYPE_MAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH = 1;
+  MUSIGARBITRATIONISSUETYPE_TAKER_ACCOUNT_PAYLOAD_HASH_MISMATCH = 2;
+}
+
+message MuSigArbitrationIssue {
+  uint64 date = 1;
+  contract.Role causingRole = 2;
+  MuSigArbitrationIssueType type = 3;
+  optional string details = 4;
+}
+
+message MuSigArbitrationCase {
+  MuSigArbitrationRequest muSigArbitrationRequest = 1;
+  uint64 requestDate = 2;
+  ArbitrationCaseState arbitrationCaseState = 3;
+  optional MuSigArbitrationResult muSigArbitrationResult = 4;
+  optional bytes arbitrationResultSignature = 5;
+  optional account.AccountPayload takerAccountPayload = 6;
+  optional account.AccountPayload makerAccountPayload = 7;
+  repeated MuSigArbitrationIssue issues = 8;
+  bool arbitratorHasLeftChat = 10;
+}
+
+message MuSigArbitratorStore {
+  repeated MuSigArbitrationCase muSigArbitrationCases = 1;
 }
 
 message ReportToModeratorMessage {

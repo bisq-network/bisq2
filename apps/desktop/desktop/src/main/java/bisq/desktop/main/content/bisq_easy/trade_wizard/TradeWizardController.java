@@ -351,7 +351,9 @@ public class TradeWizardController extends NavigationController implements InitW
 
     private void setMainButtonsVisibleState(boolean value) {
         model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.BISQ_EASY_TRADE_WIZARD_DIRECTION_AND_MARKET);
-        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.BISQ_EASY_TRADE_WIZARD_REVIEW_OFFER);
+        // At the review step the next button is the take-offer/create-offer action, so it must be
+        // restored as well when a failed take-offer attempt resets the buttons for a retry.
+        model.getNextButtonVisible().set(value);
         model.getCloseButtonVisible().set(value);
     }
 

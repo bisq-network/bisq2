@@ -1171,6 +1171,8 @@
 
 .amount-selection .range-value,
 .amount-selection .range-code,
+.amount-selection .range-value-secondary,
+.amount-selection .range-code-secondary,
 .bisq-easy-trade-wizard-price-step .range-value {
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-mid-grey-20;
@@ -1183,6 +1185,14 @@
 
 .amount-selection .range-code {
     -fx-font-size: 0.7em;
+}
+
+.amount-selection .range-value-secondary {
+    -fx-font-size: 1em;
+}
+
+.amount-selection .range-code-secondary {
+    -fx-font-size: 0.63em;
 }
 
 .bisq-easy-trade-wizard-amount-step,

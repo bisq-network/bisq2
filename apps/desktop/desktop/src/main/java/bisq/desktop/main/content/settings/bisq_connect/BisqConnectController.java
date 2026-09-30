@@ -20,6 +20,7 @@ package bisq.desktop.main.content.settings.bisq_connect;
 import bisq.api.ApiService;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
+import bisq.api.access.session.SessionService;
 import bisq.api.web_socket.WebSocketService;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -51,6 +52,7 @@ public class BisqConnectController implements Controller {
     private final BisqConnectModel model;
     private final Optional<WebSocketService> optionalWebSocketService;
     private final PairingService pairingService;
+    private final SessionService sessionService;
     private final Set<Pin> pins = new HashSet<>();
     private final DontShowAgainService dontShowAgainService;
     private final ApiService apiService;
@@ -61,6 +63,7 @@ public class BisqConnectController implements Controller {
         apiService = serviceProvider.getApiService();
         optionalWebSocketService = apiService.getWebSocketService();
         pairingService = apiService.getPairingService();
+        sessionService = apiService.getSessionService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
 
         ApiConfigController apiConfigController = new ApiConfigController(serviceProvider);
@@ -117,6 +120,37 @@ public class BisqConnectController implements Controller {
             model.getQrCodeImage().set(null);
             new Popup().error(e).show();
         }
+    }
+
+    void onRevokeClient(BisqConnectView.ClientListItem item) {
+        new Popup().warning(Res.get("settings.bisqConnect.clients.revoke.confirm", item.getClientName()))
+                .actionButtonText(Res.get("settings.bisqConnect.clients.revoke"))
+                .onAction(() -> {
+                    item.getClientId().ifPresent(clientId -> {
+                        boolean profileRemoved = pairingService.revokeClientProfile(clientId);
+                        // Always clean up session and WebSocket regardless of profile removal result.
+                        // The profile may have been already removed but the session/connection is still active.
+                        sessionService.removeSessionByClientId(clientId);
+                        optionalWebSocketService.ifPresent(ws -> ws.disconnectClient(clientId));
+                        if (profileRemoved) {
+                            log.info("Revoked client {} ({})", item.getClientName(), clientId);
+                        } else {
+                            log.warn("Client profile not found for {}, but session/connection cleaned up", clientId);
+                        }
+                    });
+                })
+                .secondaryActionButtonText(Res.get("settings.bisqConnect.clients.expireSession"))
+                .onSecondaryAction(() -> {
+                    item.getClientId().ifPresent(clientId -> {
+                        sessionService.removeSessionByClientId(clientId);
+                        // Close the WebSocket to force the client to reconnect.
+                        // Unlike revoke, the client profile is preserved — so the mobile app
+                        // can call requestSession() with its stored credentials and auto-recover.
+                        optionalWebSocketService.ifPresent(ws -> ws.disconnectClient(clientId));
+                        log.info("Expired session and disconnected client {} ({})", item.getClientName(), clientId);
+                    });
+                })
+                .show();
     }
 
     private void applyPairingCode(PairingCode pairingCode) {

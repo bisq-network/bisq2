@@ -9,6 +9,8 @@ on:
   workflow_run:
     workflows: [ Build Bisq 2 ]
     types: [ completed ]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -16,7 +18,15 @@ permissions:
 jobs:
   verify:
     name: Verify Transifex configuration
-    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    if: >
+      github.event_name == 'pull_request' ||
+      (
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == github.event.repository.default_branch &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      )
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout the repository
@@ -52,7 +62,12 @@ jobs:
 
   calculate_and_push_sources:
     name: Calculate pushes and push source files
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    if: >
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     needs: verify
     runs-on: ubuntu-24.04
     outputs:

@@ -32,16 +32,14 @@ import java.util.Arrays;
 
 /**
  * Server needs handler for serving files, will change in JDK 18
- * Currently this is only to serve the swagger-ui content to the client.
- * So any call to this handler must begin with api/v1. We keep v1 in case
- * we will have incompatible changes in the future.
- * This handler is limited to html,css,json and javascript files.
+ * Serves bundled static resources from the classpath.
+ * This handler is limited to html, css, json, javascript, png and svg files.
  */
 @Slf4j
 public class StaticFileHandler extends HttpHandler {
     private static final String NOT_FOUND = "404 (Not Found)\n";
 
-    public static final String[] VALID_SUFFIX = {".html", ".json", ".css", ".js"};
+    public static final String[] VALID_SUFFIX = {".html", ".json", ".css", ".js", ".png", ".svg"};
 
     public StaticFileHandler(@NonNull String rootContext) {
         this.rootContext = rootContext;
@@ -55,17 +53,33 @@ public class StaticFileHandler extends HttpHandler {
 
     public void service(Request request, Response response) throws IOException {
         String filename = request.getRequestURI();
+        String normalizedRootContext = rootContext.endsWith("/") ? rootContext : rootContext + "/";
+        String rootContextWithoutTrailingSlash = normalizedRootContext.substring(0, normalizedRootContext.length() - 1);
 
         log.debug("requesting: {}", filename);
-        if (filename == null || !filename.startsWith(rootContext) ||
-                Arrays.stream(VALID_SUFFIX).noneMatch(filename::endsWith)) {
+        if (filename == null) {
+            respond404(response);
+            return;
+        }
+        if (filename.equals(rootContextWithoutTrailingSlash)) {
+            response.sendRedirect(normalizedRootContext);
+            return;
+        }
+        if (!filename.startsWith(normalizedRootContext)) {
+            respond404(response);
+            return;
+        }
+        if (filename.endsWith("/")) {
+            filename = filename + "index.html";
+        }
+        if (Arrays.stream(VALID_SUFFIX).noneMatch(filename::endsWith)) {
             respond404(response);
             return;
         }
         // resource loading without leading slash
         String resourceName = filename.replace("..", "");
-        if (filename.charAt(0) == '/') {
-            resourceName = filename.substring(1);
+        if (resourceName.charAt(0) == '/') {
+            resourceName = resourceName.substring(1);
         }
 
         // we are using getResourceAsStream to ultimately prevent load from parent directories
@@ -81,6 +95,7 @@ public class StaticFileHandler extends HttpHandler {
             if (resourceName.endsWith(".json")) mime = "application/json";
             if (resourceName.endsWith(".css")) mime = "text/css";
             if (resourceName.endsWith(".png")) mime = "image/png";
+            if (resourceName.endsWith(".svg")) mime = "image/svg+xml";
 
             response.setHeader("Content-Type", mime);
             response.setStatus(200);

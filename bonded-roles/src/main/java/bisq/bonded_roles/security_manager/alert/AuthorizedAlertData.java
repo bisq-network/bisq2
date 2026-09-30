@@ -247,4 +247,22 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public boolean isDataInvalid() {
         return false;
     }
+
+    public boolean isTradeRestrictingAlert() {
+        if (alertType != AlertType.EMERGENCY) {
+            return false;
+        }
+        if (haltTrading) {
+            return true;
+        }
+        if (requireVersionForTrading) {
+            if (minVersion.isPresent()) {
+                return true;
+            } else {
+                log.warn("If requireVersionForTrading is set it is expected that requireMinVersion is present.\n" +
+                        "AuthorizedAlertData={}", this);
+            }
+        }
+        return false;
+    }
 }

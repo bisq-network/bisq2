@@ -22,6 +22,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
@@ -84,7 +85,7 @@ public class BuyerState2a extends BaseState {
             super.onActivate();
 
             BisqEasyTrade trade = model.getTrade();
-            String sellersAccountData = trade.getPaymentAccountData().get();
+            String sellersAccountData = trade.getPaymentAccountData().orElse(null);
 
             if (bisqEasyService.isAccountDataBanned(sellersAccountData)) {
                 model.getConfirmFiatSentButtonDisabled().set(true);
@@ -98,7 +99,7 @@ public class BuyerState2a extends BaseState {
                 moderationRequestService.reportUserProfile(peer, message);
 
                 // We reject the trade to avoid the banned user can continue
-                bisqEasyTradeService.cancelTrade(trade);
+                TradeExceptionHandler.run(() -> bisqEasyTradeService.cancelTrade(trade));
 
                 new Popup().warning(Res.get("bisqEasy.tradeState.info.buyer.phase2a.accountDataBanned.popup.warning")).show();
             } else {
@@ -113,9 +114,10 @@ public class BuyerState2a extends BaseState {
         }
 
         private void onConfirmFiatSent() {
-            sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.buyer.phase2a.tradeLogMessage",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getQuoteCode()));
-            bisqEasyTradeService.buyerConfirmFiatSent(model.getTrade());
+            if (TradeExceptionHandler.run(() -> bisqEasyTradeService.buyerConfirmFiatSent(model.getTrade()))) {
+                sendTradeLogMessage(Res.encode("bisqEasy.tradeState.info.buyer.phase2a.tradeLogMessage",
+                        model.getChannel().getMyUserIdentity().getUserName(), model.getQuoteCode()));
+            }
         }
     }
 
@@ -174,7 +176,7 @@ public class BuyerState2a extends BaseState {
             headline.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.headline", model.getFormattedQuoteAmount()));
             quoteAmount.setText(model.getFormattedQuoteAmount());
             quoteAmount.getIconButton().setOnAction(e -> ClipboardUtil.copyToClipboard(model.getQuoteAmount()));
-            account.setText(model.getTrade().getPaymentAccountData().get());
+            account.setText(model.getTrade().getPaymentAccountData().orElse(null));
             account.validate();
             confirmFiatSentButton.setText(Res.get("bisqEasy.tradeState.info.buyer.phase2a.confirmFiatSent", model.getFormattedQuoteAmount()));
             confirmFiatSentButton.setOnAction(e -> controller.onConfirmFiatSent());

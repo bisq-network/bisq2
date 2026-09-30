@@ -49,7 +49,7 @@ public class FiatCurrencyRepository {
     @Getter
     private static List<FiatCurrency> minorCurrencies;
     @Getter
-    private static FiatCurrency defaultCurrency;
+    private static FiatCurrency defaultCurrency = FiatCurrency.USD;
 
     static {
         setLocale(LocaleRepository.getDefaultLocale());

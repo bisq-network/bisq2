@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.mu_sig.offer.listing;
 
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
-import bisq.common.asset.CryptoAsset;
 import bisq.common.market.Market;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.mu_sig.offer.MuSigOfferListItem;
@@ -53,8 +52,7 @@ public class MuSigOfferbookModel implements Model {
     private final StringProperty baseCodeTitle = new SimpleStringProperty("");
     private final StringProperty quoteCodeTitle = new SimpleStringProperty("");
     private final StringProperty priceTitle = new SimpleStringProperty("");
-    private final StringProperty baseCurrencyIconId = new SimpleStringProperty("");
-    private final StringProperty quoteCurrencyIconId = new SimpleStringProperty("");
+    private final StringProperty marketsIconId = new SimpleStringProperty("");
 
     private final ObjectProperty<MuSigOfferListItem> selectedMuSigOfferListItem = new SimpleObjectProperty<>();
     private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
@@ -81,7 +79,7 @@ public class MuSigOfferbookModel implements Model {
     @Setter
     private Predicate<MuSigOfferListItem> paymentMethodFilterPredicate = item -> true;
 
-    private final ObjectProperty<CryptoAsset> selectedBaseCryptoAsset = new SimpleObjectProperty<>();
+    private final ObjectProperty<MarketType> selectedMarketType = new SimpleObjectProperty<>();
     private final ObservableList<MuSigMarketItem> marketItems = FXCollections.observableArrayList();
     private final FilteredList<MuSigMarketItem> filteredMarketItems = new FilteredList<>(marketItems);
     private final SortedList<MuSigMarketItem> sortedMarketItems = new SortedList<>(filteredMarketItems);
@@ -102,7 +100,7 @@ public class MuSigOfferbookModel implements Model {
                     && getMarketSearchTextPredicate().test(item)
                     && getMarketPricePredicate().test(item)
                     && !item.getIsFavourite().get();
-    private final Predicate<MuSigMarketItem> favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();;
+    private final Predicate<MuSigMarketItem> favouriteMarketItemsPredicate = item -> item.getIsFavourite().get();
     @Setter
     private Predicate<MuSigMarketItem> marketFilterPredicate = item -> true;
     @Setter

@@ -29,10 +29,11 @@ import java.util.Locale;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public final class FiatCurrency extends Asset {
+    public final static FiatCurrency USD = new FiatCurrency("USD");
+
     @Getter
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final Currency currency;
-    private transient String displayName;
 
     public FiatCurrency(String code) {
         this(Currency.getInstance(code));
@@ -65,10 +66,6 @@ public final class FiatCurrency extends Asset {
     // The name field is the displayName using the US locale. For display purpose we use the name based on the user's locale.
     @Override
     public String getDisplayName() {
-        if (displayName == null) {
-            Locale defaultLocale = LocaleRepository.getDefaultLocale();
-            displayName = currency.getDisplayName(defaultLocale);
-        }
-        return displayName;
+        return currency.getDisplayName(LocaleRepository.getDefaultLocale());
     }
 }

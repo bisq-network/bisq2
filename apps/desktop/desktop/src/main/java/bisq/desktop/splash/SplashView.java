@@ -22,6 +22,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
@@ -42,6 +43,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
     private final ProgressBar progressBar;
     private final Label applicationServiceState, duration;
     private final GridPane detailsGrid;
+    private final ImageView logo;
     private Button deleteTorButton;
     private Subscription isSlowStartupPin;
 
@@ -50,7 +52,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
 
         root.setAlignment(Pos.CENTER);
 
-        ImageView logo = new ImageView();
+        logo = new ImageView();
         logo.setId("logo-splash");
 
         Label version = new Label(model.getVersion());
@@ -88,6 +90,10 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         VBox.setMargin(logoAndVersion, new Insets(-52, 0, 83, 0));
         VBox.setMargin(progressBar, new Insets(16, 0, 16, 0));
         root.getChildren().addAll(logoAndVersion, hBox, progressBar, new HBox(Spacer.fillHBox(), detailsGrid, Spacer.fillHBox()));
+    }
+
+    Node logoIndicator() {
+        return logo;
     }
 
     @Override

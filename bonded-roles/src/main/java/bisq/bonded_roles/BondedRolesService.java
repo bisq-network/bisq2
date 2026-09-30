@@ -19,6 +19,7 @@ package bisq.bonded_roles;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.explorer.ExplorerService;
+import bisq.bonded_roles.market_price.DefaultMarketPriceService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
@@ -64,7 +65,7 @@ public class BondedRolesService implements Service {
 
     private final BondedRoleRegistrationService bondedRoleRegistrationService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    private final MarketPriceService marketPriceService;
+    private final DefaultMarketPriceService marketPriceService;
     private final ExplorerService explorerService;
     private final AlertService alertService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
@@ -76,7 +77,7 @@ public class BondedRolesService implements Service {
                               NetworkService networkService) {
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
-        marketPriceService = new MarketPriceService(config.getMarketPrice(), persistenceService, networkService, authorizedBondedRolesService);
+        marketPriceService = new DefaultMarketPriceService(config.getMarketPrice(), persistenceService, networkService, authorizedBondedRolesService);
         explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()), networkService);
         alertService = new AlertService(authorizedBondedRolesService);
         difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
@@ -110,5 +111,9 @@ public class BondedRolesService implements Service {
                 .thenCompose(result -> explorerService.shutdown())
                 .thenCompose(result -> mobileNotificationRelayClient.shutdown())
                 .thenCompose(result -> releaseNotificationsService.shutdown());
+    }
+
+    public MarketPriceService getMarketPriceService() {
+        return marketPriceService;
     }
 }

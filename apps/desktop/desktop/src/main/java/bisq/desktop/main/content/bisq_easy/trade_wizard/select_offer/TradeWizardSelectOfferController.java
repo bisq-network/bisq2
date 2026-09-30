@@ -163,11 +163,19 @@ public class TradeWizardSelectOfferController implements Controller {
             BisqEasyOfferbookChannel channel = optionalChannel.get();
             model.getMatchingOffers().setAll(channel.getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                    .map(chatMessage -> new TradeWizardSelectOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
-                            model,
-                            userProfileService,
-                            reputationService,
-                            marketPriceService))
+                    .flatMap(chatMessage -> {
+                        try {
+                            return java.util.stream.Stream.of(new TradeWizardSelectOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
+                                    model,
+                                    userProfileService,
+                                    reputationService,
+                                    marketPriceService));
+                        } catch (ArithmeticException e) {
+                            // The item formats the offer amounts at construction; an offer whose
+                            // amounts overflow at the current price is not listed.
+                            return java.util.stream.Stream.<TradeWizardSelectOfferView.ListItem>empty();
+                        }
+                    })
                     .collect(Collectors.toList()));
             model.getFilteredList().setPredicate(getPredicate());
         } else {

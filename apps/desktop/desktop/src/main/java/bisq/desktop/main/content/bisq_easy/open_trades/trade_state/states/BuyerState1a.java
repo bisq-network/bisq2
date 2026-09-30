@@ -27,6 +27,7 @@ import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -172,8 +173,9 @@ public class BuyerState1a extends BaseState {
             String btcRailName = getPaymentRail().name();
             String key = "bisqEasy.tradeState.info.buyer.phase1a.tradeLogMessage." + btcRailName;
             String bitcoinPaymentData = model.getBitcoinPaymentData().get();
-            sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), bitcoinPaymentData));
-            bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getTrade(), bitcoinPaymentData);
+            if (TradeExceptionHandler.run(() -> bisqEasyTradeService.buyerSendBitcoinPaymentData(model.getTrade(), bitcoinPaymentData))) {
+                sendTradeLogMessage(Res.encode(key, model.getChannel().getMyUserIdentity().getUserName(), bitcoinPaymentData));
+            }
         }
 
         void onOpenWalletGuide() {

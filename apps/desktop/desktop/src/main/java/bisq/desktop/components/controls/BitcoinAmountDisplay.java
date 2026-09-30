@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.common.locale.LocaleRepository;
+import bisq.common.util.StringUtils;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -31,12 +31,11 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import lombok.Getter;
 
-import java.text.DecimalFormatSymbols;
 import java.util.regex.Pattern;
 
 public class BitcoinAmountDisplay extends HBox {
-    @Getter
     private final StringProperty btcAmount = new SimpleStringProperty("");
+    private boolean showBtcCode = true;
     private final TextFlow valueTextFlow = new TextFlow();
     @Getter
     private final Text integerPart = new Text();
@@ -56,8 +55,10 @@ public class BitcoinAmountDisplay extends HBox {
 
     public BitcoinAmountDisplay(String amount, boolean showBtcCode) {
         this(amount);
-        btcCode.setVisible(showBtcCode);
-        btcCode.setManaged(showBtcCode);
+        this.showBtcCode = showBtcCode;
+        // Re-apply so btcCode visibility follows the numeric/non-numeric render rather than being
+        // forced on for a non-numeric value (which would show e.g. "N/A BTC").
+        updateDisplay();
     }
 
     public BitcoinAmountDisplay(String amount) {
@@ -80,6 +81,10 @@ public class BitcoinAmountDisplay extends HBox {
         getStyleClass().add("bitcoin-amount-display-text");
 
         updateDisplay();
+    }
+
+    public StringProperty btcAmountProperty() {
+        return btcAmount;
     }
 
     public void setBaselineAlignment() {
@@ -146,7 +151,50 @@ public class BitcoinAmountDisplay extends HBox {
         }
 
         valueTextFlow.setVisible(true);
-        formatBtcAmount(amount);
+        // The complete localized amount must be numeric; parsing only the integer part would let
+        // values like "1.N/A" or "1.2.3" through to the numeric formatting.
+        if (!isNumericAmount(amount)) {
+            displayNonNumeric(amount);
+            return;
+        }
+        try {
+            formatBtcAmount(amount);
+            btcCode.setVisible(showBtcCode);
+            btcCode.setManaged(showBtcCode);
+        } catch (NumberFormatException e) {
+            displayNonNumeric(amount);
+        }
+    }
+
+    private static boolean isNumericAmount(String amount) {
+        // Digits with at most one localized decimal separator and an optional leading sign; a
+        // bare separator stays accepted as the degenerate zero it always rendered as.
+        char decimalSeparator = StringUtils.getDecimalSeparator();
+        boolean seenSeparator = false;
+        for (int i = 0; i < amount.length(); i++) {
+            char c = amount.charAt(i);
+            if ((c == '-' || c == '+') && i == 0) {
+                continue;
+            }
+            if (c == decimalSeparator) {
+                if (seenSeparator) {
+                    return false;
+                }
+                seenSeparator = true;
+            } else if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void displayNonNumeric(String amount) {
+        setExclusiveStyle(integerPart, "bitcoin-amount-display-integer-part", "bitcoin-amount-display-integer-part-dimmed");
+        integerPart.setText(amount);
+        leadingZeros.setText("");
+        significantDigits.setText("");
+        btcCode.setVisible(false);
+        btcCode.setManaged(false);
     }
 
     private void setExclusiveStyle(Text textNode, String styleToAdd, String styleToRemove) {
@@ -157,7 +205,7 @@ public class BitcoinAmountDisplay extends HBox {
     }
 
     private void formatBtcAmount(String amount) {
-        char decimalSeparator = DecimalFormatSymbols.getInstance(LocaleRepository.getDefaultLocale()).getDecimalSeparator();
+        char decimalSeparator = StringUtils.getDecimalSeparator();
 
         // If the amount does not contain a decimal separator, append it with eight zeros
         if (!amount.contains(String.valueOf(decimalSeparator))) {

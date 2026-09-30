@@ -17,12 +17,14 @@
 
 package bisq.desktop.overlay.tac;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.navigation.NavigationTarget;
 import lombok.Getter;
 
 @Getter
-public class TacModel implements Model {
-    private final BooleanProperty tacConfirmed = new SimpleBooleanProperty();
+public class TacModel extends NavigationModel {
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.TAC_RISK_ACK;
+    }
 }

@@ -379,7 +379,6 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
         tableView.getColumns().add(new BisqTableColumn.Builder<OpenTradeListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.makerTakerRole"))
                 .minWidth(85)
-                .right()
                 .comparator(Comparator.comparing(OpenTradeListItem::getMyRole))
                 .valueSupplier(OpenTradeListItem::getMyRole)
                 .build());

@@ -67,7 +67,7 @@ public class FiatPaymentRailUtil {
 
     public static List<String> getSepaEuroCountries() {
         return List.of("AT", "BE", "BG", "CY", "DE", "EE", "FI", "FR", "GR", "HR", "IE",
-                "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
+                "IT", "LV", "LT", "LU", "MC", "ME", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
     }
 
     public static List<String> getSepaNonEuroCountries() {

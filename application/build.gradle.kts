@@ -20,3 +20,11 @@ dependencies {
 
     implementation(libs.typesafe.config)
 }
+
+// ResolverConfigTest parses ResolverConfig.java as text, so source-only edits such as wrapping a call across lines or
+// changing a comment have to invalidate the task even though they leave the compiled class unchanged.
+tasks.test {
+    inputs.file("src/main/java/bisq/application/ResolverConfig.java")
+        .withPropertyName("resolverConfigSource")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+}

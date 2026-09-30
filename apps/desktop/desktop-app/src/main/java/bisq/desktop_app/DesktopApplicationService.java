@@ -20,6 +20,7 @@ package bisq.desktop_app;
 import bisq.account.AccountService;
 import bisq.api.ApiConfig;
 import bisq.api.ApiService;
+import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.application.ShutDownHandler;
 import bisq.application.State;
@@ -49,7 +50,6 @@ import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
 import bisq.security.SecurityService;
 import bisq.settings.DontShowAgainService;
-import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.trade.TradeService;
@@ -103,14 +103,13 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final UpdaterService updaterService;
     private final BisqEasyService bisqEasyService;
     private final AlertNotificationsService alertNotificationsService;
-    private final FavouriteMarketsService favouriteMarketsService;
     private final DontShowAgainService dontShowAgainService;
     private final WebcamAppService webcamAppService;
     private final ApiService apiService;
     private final OpenTradeItemsService openTradeItemsService;
+    private final ClosedTradeItemsService closedTradeItemsService;
     private final MuSigService muSigService;
     private final BurningmanService burningmanService;
-
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
 
@@ -121,7 +120,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 ? Optional.of(new WalletService(walletCfg))
                 : Optional.empty();*/
         walletService = walletCfg.isEnabled()
-                ? Optional.of(new MockWalletService(walletCfg))
+                ? Optional.of(new MockWalletService(walletCfg, persistenceService))
                 : Optional.empty();
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
@@ -146,7 +145,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 securityService,
                 identityService,
                 networkService,
-                bondedRolesService);
+                bondedRolesService,
+                UserService.Config.from(getConfig("user")));
 
         accountService = new AccountService(persistenceService, networkService, userService, bondedRolesService);
 
@@ -216,12 +216,11 @@ public class DesktopApplicationService extends JavaSeApplicationService {
 
         alertNotificationsService = new AlertNotificationsService(settingsService, bondedRolesService.getAlertService(), AppType.DESKTOP);
 
-        favouriteMarketsService = new FavouriteMarketsService(settingsService);
-
         dontShowAgainService = new DontShowAgainService(settingsService);
         webcamAppService = new WebcamAppService(config);
 
         openTradeItemsService = new OpenTradeItemsService(chatService, tradeService, userService);
+        closedTradeItemsService = new ClosedTradeItemsService(tradeService, userService);
 
         ApiConfig apiConfig = ApiConfig.from(getConfig("api"));
         apiService = new ApiService(apiConfig,
@@ -237,6 +236,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 settingsService,
                 bisqEasyService,
                 openTradeItemsService,
+                closedTradeItemsService,
                 accountService,
                 userService.getReputationService(),
                 notificationService.getMobileNotificationService().getDeviceRegistrationService());
@@ -263,7 +263,6 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 bisqEasyService,
                 muSigService,
                 alertNotificationsService,
-                favouriteMarketsService,
                 dontShowAgainService,
                 webcamAppService,
                 memoryReportService,
@@ -304,10 +303,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> bisqEasyService.initialize())
                 .thenCompose(result -> muSigService.initialize())
                 .thenCompose(result -> alertNotificationsService.initialize())
-                .thenCompose(result -> favouriteMarketsService.initialize())
                 .thenCompose(result -> dontShowAgainService.initialize())
                 .thenCompose(result -> webcamAppService.initialize())
                 .thenCompose(result -> openTradeItemsService.initialize())
+                .thenCompose(result -> closedTradeItemsService.initialize())
                 .thenCompose(result -> apiService.initialize())
                 .orTimeout(STARTUP_TIMEOUT_SEC, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
@@ -338,10 +337,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         // In case a shutdown method completes exceptionally we log the error and map the result to `false` to not
         // interrupt the shutdown sequence.
         return supplyAsync(() -> apiService.shutdown().exceptionally(this::logError)
+                .thenCompose(result -> closedTradeItemsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> openTradeItemsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> webcamAppService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> dontShowAgainService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> favouriteMarketsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> alertNotificationsService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> muSigService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> bisqEasyService.shutdown().exceptionally(this::logError))

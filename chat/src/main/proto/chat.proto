@@ -54,6 +54,13 @@ enum ChatChannelDomain {
   CHATCHANNELDOMAIN_MU_SIG_OPEN_TRADES = 7;
 }
 
+enum MuSigDisputeAgentType {
+  MUSIGDISPUTEAGENTTYPE_UNSPECIFIED = 0;
+  MUSIGDISPUTEAGENTTYPE_NONE = 1;
+  MUSIGDISPUTEAGENTTYPE_MEDIATOR = 2;
+  MUSIGDISPUTEAGENTTYPE_ARBITRATOR = 3;
+}
+
 message Citation {
   string authorUserProfileId = 1;
   string text = 2;
@@ -223,16 +230,18 @@ message MuSigOpenTradeMessage {
   network.identity.NetworkId receiverNetworkId = 3;
   user.UserProfile sender = 4;
   optional user.UserProfile mediator = 5;
-  optional offer.Offer muSigOffer = 6;
-  repeated ChatMessageReaction chatMessageReactions = 7;
+  optional user.UserProfile arbitrator = 6;
+  optional offer.Offer muSigOffer = 7;
+  repeated ChatMessageReaction chatMessageReactions = 8;
 }
 message MuSigOpenTradeChannel {
   string tradeId = 1;
   user.UserIdentity myUserIdentity = 2;
   repeated user.UserProfile traders = 3;
   optional user.UserProfile mediator = 4;
-  repeated ChatMessage chatMessages = 5;
-  bool isInMediation = 6;
+  optional user.UserProfile arbitrator = 5;
+  repeated ChatMessage chatMessages = 6;
+  MuSigDisputeAgentType disputeAgentType = 7;
 }
 message MuSigOpenTradeChannelStore {
   repeated ChatChannel channels = 1;

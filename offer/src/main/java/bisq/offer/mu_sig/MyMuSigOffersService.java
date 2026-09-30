@@ -45,22 +45,22 @@ public class MyMuSigOffersService extends RateLimitedPersistenceClient<MyMuSigOf
     // API
     /* --------------------------------------------------------------------- */
 
-    public void addOffer(MuSigOffer offer) {
+    public synchronized void addOffer(MuSigOffer offer) {
         persistableStore.addOffer(offer);
         persist();
     }
 
-    public void removeOffer(MuSigOffer offer) {
+    public synchronized void removeOffer(MuSigOffer offer) {
         persistableStore.removeOffer(offer);
         persist();
     }
 
-    public void activateOffer(MuSigOffer offer) {
+    public synchronized void activateOffer(MuSigOffer offer) {
         persistableStore.activateOffer(offer);
         persist();
     }
 
-    public void deactivateOffer(MuSigOffer offer) {
+    public synchronized void deactivateOffer(MuSigOffer offer) {
         persistableStore.deactivateOffer(offer);
         persist();
     }
@@ -69,7 +69,7 @@ public class MyMuSigOffersService extends RateLimitedPersistenceClient<MyMuSigOf
         return persistableStore.getOffers();
     }
 
-    public Set<MuSigOffer> getActivatedOffers() {
+    public synchronized Set<MuSigOffer> getActivatedOffers() {
         return persistableStore.getActivatedOffers();
     }
 
@@ -79,6 +79,14 @@ public class MyMuSigOffersService extends RateLimitedPersistenceClient<MyMuSigOf
 
     public Optional<MuSigOffer> findOffer(String offerId) {
         return getOffers().stream()
+                .filter(offer -> offer.getId().equals(offerId))
+                .findAny();
+    }
+
+    // A claim authorizes one take without consuming the offer; active MuSig offers support
+    // multiple trades until the maker deactivates or removes them.
+    public synchronized Optional<MuSigOffer> claimActivatedOffer(String offerId) {
+        return getActivatedOffers().stream()
                 .filter(offer -> offer.getId().equals(offerId))
                 .findAny();
     }

@@ -69,7 +69,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     @Override
     public void onPersistedApplied(DataStore<MailboxRequest> persisted) {
-        maybeLogMapState("onPersistedApplied", persisted);
+//        maybeLogMapState("onPersistedApplied", persisted);
     }
 
     @Override

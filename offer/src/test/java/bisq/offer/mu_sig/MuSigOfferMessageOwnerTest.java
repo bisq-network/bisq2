@@ -34,6 +34,7 @@ import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.options.CollateralOption;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyGeneration;
@@ -96,7 +97,7 @@ class MuSigOfferMessageOwnerTest {
                 new BaseSideFixedAmountSpec(1_000_000),
                 new MarketPriceSpec(),
                 List.of(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
-                List.of(),
+                List.of(new CollateralOption(0.25, 0.25)),
                 "1");
     }
 

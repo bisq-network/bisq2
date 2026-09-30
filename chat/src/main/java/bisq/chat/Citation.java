@@ -52,6 +52,7 @@ public final class Citation implements NetworkProto {
     public void verify() {
         NetworkDataValidation.validateProfileId(authorUserProfileId);
         NetworkDataValidation.validateText(text, MAX_TEXT_LENGTH);
+        NetworkDataValidation.validateId(chatMessageId);
     }
 
     @Override

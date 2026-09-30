@@ -17,11 +17,14 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.accountAge.tab2;
 
-import bisq.desktop.common.view.Model;
+import bisq.desktop.main.content.reputation.build_reputation.Tab2Model;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class AccountAgeTab2Model implements Model {
+public class AccountAgeTab2Model extends Tab2Model {
+    public AccountAgeTab2Model(String info, String weight, String formula) {
+        super(info, weight, formula);
+    }
 }

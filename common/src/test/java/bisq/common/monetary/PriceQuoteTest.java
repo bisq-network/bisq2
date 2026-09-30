@@ -37,4 +37,70 @@ public class PriceQuoteTest {
         quoteSideMonetary = priceQuote.toQuoteSideMonetary(btc);
         assertEquals(1000000000, quoteSideMonetary.value);
     }
+
+    @Test
+    void toQuoteSideMonetaryTruncatesTowardZero() {
+        // 333_333_333 quote units per BTC: 1 sat converts to 3.33 quote units.
+        PriceQuote priceQuote = PriceQuote.fromFiatPrice(33333.3333, "USD");
+        assertEquals(3, priceQuote.toQuoteSideMonetary(Coin.asBtcFromValue(1)).value);
+        assertEquals(-3, priceQuote.toQuoteSideMonetary(Coin.asBtcFromValue(-1)).value);
+    }
+
+    @Test
+    void toBaseSideMonetaryRoundsHalfUp() {
+        // 3 quote units per BTC: 1 quote unit converts to 33_333_333.33 sats.
+        PriceQuote priceQuote = PriceQuote.fromFiatPrice(0.0003, "USD");
+        assertEquals(33_333_333, priceQuote.toBaseSideMonetary(Fiat.fromValue(1, "USD")).value);
+        assertEquals(66_666_667, priceQuote.toBaseSideMonetary(Fiat.fromValue(2, "USD")).value);
+    }
+
+    @Test
+    void toQuoteSideMonetaryThrowsOnOverflow() {
+        // 2^60 sats at 100k USD/BTC: the quote side is about 1.15 * 10^19, beyond long range.
+        // Wrapping produced a plausible-looking wrong amount instead of failing.
+        PriceQuote priceQuote = PriceQuote.fromFiatPrice(100_000, "USD");
+        assertThrows(ArithmeticException.class, () -> priceQuote.toQuoteSideMonetary(Coin.asBtcFromValue(1L << 60)));
+        assertThrows(ArithmeticException.class, () -> priceQuote.toQuoteSideMonetary(Coin.asBtcFromValue(-(1L << 60))));
+    }
+
+    @Test
+    void toBaseSideMonetaryThrowsOnOverflow() {
+        // Price value 1: the base side is the quote value times 10^8.
+        PriceQuote priceQuote = PriceQuote.fromFiatPrice(0.0001, "USD");
+        assertThrows(ArithmeticException.class, () ->
+                priceQuote.toBaseSideMonetary(Fiat.fromValue(Long.MAX_VALUE, "USD")));
+        assertThrows(ArithmeticException.class, () ->
+                priceQuote.toBaseSideMonetary(Fiat.fromValue(-Long.MAX_VALUE, "USD")));
+    }
+
+    @Test
+    void fromThrowsOnOverflow() {
+        // 1 sat of base against a Long.MAX_VALUE quote amount: the price value overflows.
+        assertThrows(ArithmeticException.class, () ->
+                PriceQuote.from(Coin.asBtcFromValue(1), Fiat.fromValue(Long.MAX_VALUE, "USD")));
+    }
+
+    @Test
+    void clampRejectsAQuoteFromADifferentMarket() {
+        // A BTC/EUR quote must not be silently clamped against BTC/USD limits, even when its
+        // numeric value falls inside them.
+        PriceQuote btcEur = PriceQuote.fromFiatPrice(50_000, "EUR");
+        PriceQuote usdMin = PriceQuote.fromFiatPrice(40_000, "USD");
+        PriceQuote usdMax = PriceQuote.fromFiatPrice(60_000, "USD");
+        assertThrows(IllegalArgumentException.class, () -> btcEur.clamp(usdMin, usdMax));
+    }
+
+    @Test
+    void clampWithinTheSameMarket() {
+        PriceQuote min = PriceQuote.fromFiatPrice(40_000, "USD");
+        PriceQuote max = PriceQuote.fromFiatPrice(60_000, "USD");
+
+        PriceQuote inRange = PriceQuote.fromFiatPrice(50_000, "USD");
+        assertSame(inRange, inRange.clamp(min, max));
+
+        assertEquals(min.getQuoteSideMonetary().getValue(),
+                PriceQuote.fromFiatPrice(30_000, "USD").clamp(min, max).getQuoteSideMonetary().getValue());
+        assertEquals(max.getQuoteSideMonetary().getValue(),
+                PriceQuote.fromFiatPrice(70_000, "USD").clamp(min, max).getQuoteSideMonetary().getValue());
+    }
 }

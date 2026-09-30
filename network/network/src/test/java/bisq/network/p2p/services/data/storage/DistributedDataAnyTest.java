@@ -77,8 +77,8 @@ public class DistributedDataAnyTest {
 
     @BeforeAll
     static void registerResolver() {
-        DistributedDataResolver.addResolver("common.StringLongPair", PayloadData::fromAny);
-        DistributedDataResolver.addResolver("common.Country", NestedPayloadData::fromAny);
+        DistributedDataResolver.addResolver("common.StringLongPair", PayloadData.class, PayloadData::fromAny);
+        DistributedDataResolver.addResolver("common.Country", NestedPayloadData.class, NestedPayloadData::fromAny);
     }
 
     @Test

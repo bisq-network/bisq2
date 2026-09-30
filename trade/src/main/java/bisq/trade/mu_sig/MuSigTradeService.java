@@ -21,20 +21,20 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AlertType;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.Version;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.StringUtils;
 import bisq.common.timer.Scheduler;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
@@ -43,7 +43,6 @@ import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.offer.Direction;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.AccountOption;
 import bisq.offer.options.OfferOptionUtil;
@@ -52,24 +51,34 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.settings.SettingsService;
-import bisq.support.mediation.MediationCaseState;
-import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.support.mediation.mu_sig.MuSigMediationResultAcceptanceMessage;
+import bisq.support.arbitration.mu_sig.MuSigArbitrationStateChangeMessage;
+import bisq.support.dispute.mu_sig.MuSigDisputeCasePaymentDetailsRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationStateChangeMessage;
-import bisq.support.mediation.mu_sig.MuSigMediatorsResponse;
-import bisq.support.mediation.mu_sig.MuSigPaymentDetailsRequest;
-import bisq.support.mediation.mu_sig.MuSigPaymentDetailsResponse;
-import bisq.trade.MuSigDisputeState;
 import bisq.trade.ServiceProvider;
+import bisq.trade.TradeRestrictedException;
+import bisq.trade.mu_sig.arbitration.MuSigTraderArbitrationService;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.chat.ChatService;
+import bisq.common.observable.collection.CollectionObserver;
+import bisq.common.observable.map.HashMapObserver;
 import bisq.trade.mu_sig.events.MuSigTradeEvent;
 import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.buyer.PaymentInitiatedEvent;
+import bisq.trade.mu_sig.events.mediation.CustomPayoutFinalizationEvent;
+import bisq.trade.mu_sig.events.mediation.MediationResultAcceptedEvent;
+import bisq.trade.mu_sig.events.mediation.MediationResultRejectedEvent;
 import bisq.trade.mu_sig.events.seller.PaymentReceiptConfirmedEvent;
 import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
 import bisq.trade.mu_sig.grpc.MusigGrpcClient;
+import bisq.trade.mu_sig.mediation.MuSigTraderMediationService;
 import bisq.trade.mu_sig.messages.grpc.TxConfirmationStatus;
+import bisq.trade.mu_sig.messages.network.MuSigCustomPayoutPsbtMessage;
+import bisq.trade.mu_sig.messages.network.MuSigMediationResultRejectionMessage;
+import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.MuSigTradeMessage;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
+import bisq.trade.mu_sig.messages.network.handler.maker.MuSigTakeOfferRequestValidator;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
@@ -77,6 +86,7 @@ import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest;
+import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
@@ -97,6 +107,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.offer.options.OfferOptionUtil.createSaltedAccountPayloadHash;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -129,6 +140,11 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private final ContactListService contactListService;
     private final UserProfileService userProfileService;
 
+    private final MuSigTraderMediationService muSigTraderMediationService;
+    private final MuSigTraderArbitrationService muSigTraderArbitrationService;
+    private final MuSigTradeDisputeService muSigTradeDisputeService;
+    private final MuSigMediationCustomPayoutService muSigMediationCustomPayoutService;
+
     @Getter
     private final MuSigTradeStore persistableStore = new MuSigTradeStore();
     @Getter
@@ -140,15 +156,22 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // We don't persist the protocol, only the model.
     private final Map<String, MuSigProtocol> tradeProtocolById = new ConcurrentHashMap<>();
 
-    private boolean haltTrading;
-    private boolean requireVersionForTrading;
-    private Optional<String> minRequiredVersionForTrading = Optional.empty();
+    // Written from the alert-set observer thread, read from trade calls on other threads
+    private volatile boolean haltTrading;
+    private volatile Optional<String> minRequiredVersionForTrading = Optional.empty();
 
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
+    private Pin tradeByIdPin, muSigOpenTradeChannelPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
-    private final Set<MuSigTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    private final Set<MuSigTradeMessage> pendingTradeMessages = new CopyOnWriteArraySet<>();
     private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
+    // Coordinates early-message buffering with protocol registration. Never acquire a protocol
+    // monitor or process messages while holding this lock; those operations can call blocking RPCs.
+    private final Object pendingMessagesLock = new Object();
+    // Serializes maker-side trade creation so two concurrent take requests for the same trade id
+    // cannot race a second trade or protocol into the registries.
+    private final Object tradeCreationLock = new Object();
 
     private ExecutorService executor;
 
@@ -159,13 +182,38 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         settingsService = serviceProvider.getSettingsService();
         bannedUserService = serviceProvider.getUserService().getBannedUserService();
         alertService = serviceProvider.getBondedRolesService().getAlertService();
-        muSigOpenTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
+        ChatService chatService = serviceProvider.getChatService();
+        muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
         contactListService = serviceProvider.getUserService().getContactListService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
 
-        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
-
+        UserService userService = serviceProvider.getUserService();
+        BondedRolesService bondedRolesService = serviceProvider.getBondedRolesService();
         musigGrpcClient = new MusigGrpcClient(config.getHost(), config.getPort());
+
+        muSigTraderMediationService = new MuSigTraderMediationService(
+                networkService,
+                chatService,
+                userService,
+                bondedRolesService);
+
+        muSigTraderArbitrationService = new MuSigTraderArbitrationService(
+                networkService,
+                chatService,
+                userService,
+                bondedRolesService);
+        muSigTradeDisputeService = new MuSigTradeDisputeService(
+                bannedUserService,
+                muSigOpenTradeChannelService,
+                muSigTraderMediationService,
+                muSigTraderArbitrationService,
+                this::findTrade,
+                this::persist);
+        muSigMediationCustomPayoutService = new MuSigMediationCustomPayoutService();
+
+        persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(
+                this, DbSubDirectory.PRIVATE, persistableStore);
+
         this.appType = appType;
     }
 
@@ -186,6 +234,28 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     networkService.getConfidentialMessageServices().stream()
                             .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
                             .forEach(this::onMessage);
+
+                    tradeByIdPin = getTradeById().addObserver(new HashMapObserver<>() {
+                        @Override
+                        public void put(String key, MuSigTrade value) {
+                            processPendingDisputeAndSettlementMessages(key);
+                        }
+                    });
+                    muSigOpenTradeChannelPin = muSigOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
+                        @Override
+                        public void onAdded(MuSigOpenTradeChannel element) {
+                            processPendingDisputeAndSettlementMessages(element.getTradeId());
+                        }
+
+                        @Override
+                        public void onRemoved(Object element) {
+                        }
+
+                        @Override
+                        public void onCleared() {
+                        }
+                    });
+
                     networkService.addConfidentialMessageListener(this);
 
                     // At startup we observe all unconfirmed deposit txs
@@ -193,42 +263,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                             .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
                             .forEach(this::observeDepositTxConfirmationStatus);
 
-                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
-                        @Override
-                        public void onAdded(AuthorizedAlertData authorizedAlertData) {
-                            if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
-                                if (authorizedAlertData.isHaltTrading()) {
-                                    haltTrading = true;
-                                }
-                                if (authorizedAlertData.isRequireVersionForTrading()) {
-                                    requireVersionForTrading = true;
-                                    minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onRemoved(Object element) {
-                            if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY&& authorizedAlertData.getAppType() == appType ) {
-                                    if (authorizedAlertData.isHaltTrading()) {
-                                        haltTrading = false;
-                                    }
-                                    if (authorizedAlertData.isRequireVersionForTrading()) {
-                                        requireVersionForTrading = false;
-                                        minRequiredVersionForTrading = Optional.empty();
-                                    }
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onCleared() {
-                            haltTrading = false;
-                            requireVersionForTrading = false;
-                            minRequiredVersionForTrading = Optional.empty();
-                        }
-                    });
+                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
                     numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                             .host(this)
@@ -248,6 +283,14 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             numDaysAfterRedactingTradeDataPin.unbind();
             numDaysAfterRedactingTradeDataPin = null;
         }
+        if (tradeByIdPin != null) {
+            tradeByIdPin.unbind();
+            tradeByIdPin = null;
+        }
+        if (muSigOpenTradeChannelPin != null) {
+            muSigOpenTradeChannelPin.unbind();
+            muSigOpenTradeChannelPin = null;
+        }
         if (numDaysAfterRedactingTradeDataScheduler != null) {
             numDaysAfterRedactingTradeDataScheduler.stop();
             numDaysAfterRedactingTradeDataScheduler = null;
@@ -262,12 +305,13 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         closeTradeTimeoutSchedulerByTradeId.clear();
 
         tradeProtocolById.clear();
-        pendingMessages.clear();
+        pendingTradeMessages.clear();
+        muSigMediationCustomPayoutService.clear();
 
         ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
         executor = null;
 
-        return CompletableFuture.completedFuture(true);
+        return musigGrpcClient.shutdown();
     }
 
 
@@ -278,8 +322,13 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof MuSigTradeMessage muSigTradeMessage) {
-            verifyTradingNotOnHalt();
-            verifyMinVersionForTrading();
+            try {
+                verifyTradingNotOnHalt();
+                verifyMinVersionForTrading();
+            } catch (TradeRestrictedException e) {
+                log.warn("Ignoring inbound trade message as trading is currently not allowed: {}", e.getMessage());
+                return;
+            }
 
             if (bannedUserService.isUserProfileBanned(muSigTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
@@ -291,22 +340,12 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             } else {
                 handleMuSigTradeMessage(muSigTradeMessage);
             }
-        } else if (envelopePayloadMessage instanceof MuSigMediatorsResponse muSigMediatorsResponse) {
-            maybeApplyDisputeStateFromMediationOpenSignal(muSigMediatorsResponse.getTradeId());
         } else if (envelopePayloadMessage instanceof MuSigMediationStateChangeMessage message) {
-            maybeApplyDisputeStateFromMediationStateChangeMessage(message);
-        } else if (envelopePayloadMessage instanceof MuSigMediationResultAcceptanceMessage message) {
-            if (bannedUserService.isUserProfileBanned(message.getSenderUserProfileId())) {
-                log.warn("Ignoring MuSigMediationResultAcceptanceMessage as sender is banned");
-                return;
-            }
-            maybeApplyMediationResultAcceptanceMessage(message);
-        } else if (envelopePayloadMessage instanceof MuSigPaymentDetailsRequest message) {
-            if (bannedUserService.isUserProfileBanned(message.getSenderUserProfileId())) {
-                log.warn("Ignoring MuSigPaymentDetailsRequest as sender is banned");
-                return;
-            }
-            maybeReplyWithPaymentDetails(message);
+            handleDisputeMessage(message.getTradeId(), message);
+        } else if (envelopePayloadMessage instanceof MuSigDisputeCasePaymentDetailsRequest message) {
+            handleDisputeMessage(message.getTradeId(), message);
+        } else if (envelopePayloadMessage instanceof MuSigArbitrationStateChangeMessage message) {
+            handleDisputeMessage(message.getTradeId(), message);
         }
     }
 
@@ -316,42 +355,133 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     /* --------------------------------------------------------------------- */
 
     private void handleMuSigTakeOfferMessage(SetupTradeMessage_A message) {
-        MuSigContract muSigContract = message.getContract();
-        MuSigProtocol protocol = makerCreatesProtocol(muSigContract, message.getSender(), message.getReceiver());
-        handleMuSigTradeMessage(message, protocol);
+        if (userProfileService.isChatUserIgnored(message.getSender().getId())) {
+            // Checked before anything is created or persisted: a request from an ignored taker
+            // must not leave a trade, a protocol entry or a contact-list entry behind. The
+            // handler keeps its own check as defense in depth.
+            log.warn("Dropping a take offer request from an ignored taker. tradeId={}",
+                    StringUtils.sanitizeForLog(message.getTradeId()));
+            return;
+        }
+        try {
+            MuSigOffer claimedOffer;
+            try {
+                // The request is validated before any trade is created or persisted; a rejected
+                // request must not leave a failed trade, a protocol entry or a contact-list entry.
+                MuSigTakeOfferRequestValidator.validateIdentity(serviceProvider.getContractService(), message);
+                MuSigTakeOfferRequestValidator.validateTakerProfileKnown(userProfileService, message);
+                MuSigTakeOfferRequestValidator.validateEconomics(
+                        serviceProvider.getBondedRolesService().getMarketPriceService(),
+                        settingsService,
+                        muSigTraderMediationService,
+                        muSigTraderArbitrationService,
+                        message);
+                claimedOffer = MuSigTakeOfferRequestValidator.validateOffer(
+                        serviceProvider.getOfferService().getMuSigOfferService().getMyMuSigOffersService(), message);
+            } catch (TradeProtocolException e) {
+                throw e;
+            } catch (RuntimeException e) {
+                log.warn("Unexpected failure while validating a MuSig take offer request. tradeId={}",
+                        StringUtils.sanitizeForLog(message.getTradeId()), e);
+                throw new TradeProtocolException(
+                        "The maker has rejected the take offer request because the offer is not available anymore.",
+                        TradeProtocolFailure.OFFER_NOT_AVAILABLE,
+                        e);
+            }
+            MuSigContract muSigContract = message.getContract();
+            makerCreatesProtocol(muSigContract,
+                    claimedOffer,
+                    message.getTradeId(),
+                    message.getSender(),
+                    message.getReceiver())
+                    .ifPresent(protocol -> handleMuSigTradeMessage(message, protocol));
+        } catch (TradeProtocolException e) {
+            log.warn("Dropping an invalid MuSig take offer request. tradeId={}",
+                    StringUtils.sanitizeForLog(message.getTradeId()));
+            reportTakeOfferRejection(networkService, identityService, message, e);
+            return;
+        }
+    }
+
+    static void reportTakeOfferRejection(NetworkService networkService,
+                                         IdentityService identityService,
+                                         SetupTradeMessage_A message,
+                                         TradeProtocolException exception) {
+        try {
+            Optional<Identity> receivingIdentity = identityService.findAnyIdentityByNetworkId(message.getReceiver());
+            if (receivingIdentity.isEmpty()) {
+                log.warn("Cannot report a MuSig take offer rejection because the receiving identity is unavailable. tradeId={}",
+                        StringUtils.sanitizeForLog(message.getTradeId()));
+                return;
+            }
+            Identity identity = receivingIdentity.orElseThrow();
+            String errorMessage = Optional.ofNullable(exception.getMessage())
+                    .orElse(exception.getTradeProtocolFailure().name());
+            MuSigReportErrorMessage error = new MuSigReportErrorMessage(
+                    StringUtils.createUid(),
+                    message.getTradeId(),
+                    MuSigProtocol.VERSION,
+                    identity.getNetworkId(),
+                    message.getSender(),
+                    StringUtils.truncate(errorMessage, MuSigReportErrorMessage.MAX_LENGTH_ERROR_MESSAGE),
+                    "",
+                    exception.getTradeProtocolFailure());
+            networkService.confidentialSend(error, message.getSender(), identity.getNetworkIdWithKeyPair())
+                    .exceptionally(throwable -> {
+                        log.warn("Sending a MuSig take offer rejection failed. tradeId={}",
+                                StringUtils.sanitizeForLog(message.getTradeId()), throwable);
+                        return null;
+                    });
+        } catch (RuntimeException e) {
+            log.warn("Creating or sending a MuSig take offer rejection failed. tradeId={}",
+                    StringUtils.sanitizeForLog(message.getTradeId()), e);
+        }
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message) {
         String tradeId = message.getTradeId();
+        if (isMediationSettlementMessage(message)) {
+            Optional<MuSigProtocol> protocol;
+            synchronized (pendingMessagesLock) {
+                protocol = findProtocol(tradeId);
+                if (protocol.isEmpty()) {
+                    muSigMediationCustomPayoutService.addPendingMessage(message);
+                    return;
+                }
+            }
+            handleMuSigTradeMessage(message, protocol.orElseThrow());
+            return;
+        }
         findProtocol(tradeId).ifPresentOrElse(protocol -> handleMuSigTradeMessage(message, protocol),
                 () -> {
                     log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
                             "re-processing when the next message arrives. message={}", tradeId, message);
-                    pendingMessages.add(message);
+                    pendingTradeMessages.add(message);
                 });
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {
-        try {
-            CompletableFuture.runAsync(() -> {
+        submitTradeTask(message.getTradeId(), () -> {
+            if (isMediationSettlementMessage(message)) {
+                synchronized (protocol) {
+                    processPendingDisputeAndSettlementMessages(protocol);
+                    handleMediationSettlementMessage(protocol, message);
+                }
+            } else {
                 protocol.handle(message);
+            }
 
-                if (pendingMessages.contains(message)) {
-                    log.info("We remove message {} from pendingMessages.", message);
-                    pendingMessages.remove(message);
-                }
+            if (pendingTradeMessages.contains(message)) {
+                log.info("We remove message {} from pendingMessages.", message);
+                pendingTradeMessages.remove(message);
+            }
 
-                if (!pendingMessages.isEmpty()) {
-                    log.info("We have pendingMessages. We try to re-process them now.");
-                    pendingMessages.forEach(this::handleMuSigTradeMessage);
-                }
-            }, executor);
-        } catch (RejectedExecutionException e) {
-            log.error("Executor rejected task at handleMuSigTradeMessage", e);
-            throw e;
-        }
+            if (!pendingTradeMessages.isEmpty()) {
+                log.info("We have pendingMessages. We try to re-process them now.");
+                pendingTradeMessages.forEach(this::handleMuSigTradeMessage);
+            }
+        });
     }
-
 
     /* --------------------------------------------------------------------- */
     // User events
@@ -379,35 +509,65 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         removeTrade(trade);
     }
 
-    public boolean acceptMediationResult(MuSigTrade trade, boolean mediationResultAccepted) {
-        if (trade.getMuSigMediationResult().isEmpty()) {
-            log.warn("Cannot set MuSig mediation result acceptance for trade {} because MuSigMediationResult is missing.",
-                    trade.getId());
-            return false;
-        }
-        if (!trade.getMyself().setMediationResultAccepted(mediationResultAccepted)) {
-            return false;
-        }
-
-        networkService.confidentialSend(new MuSigMediationResultAcceptanceMessage(trade.getId(),
-                        mediationResultAccepted,
-                        trade.getMyIdentity().getId()),
-                trade.getPeer().getNetworkId(),
-                trade.getMyIdentity().getNetworkIdWithKeyPair());
-        persist();
-        return true;
+    public void requestMediation(MuSigTrade trade) {
+        submitTradeTask(trade.getId(), () -> findProtocol(trade.getId()).ifPresent(protocol -> {
+            synchronized (protocol) {
+                processPendingDisputeAndSettlementMessages(protocol);
+                muSigTradeDisputeService.requestMediation(protocol.getTrade());
+            }
+        }));
     }
 
-    public void maybeApplyDisputeStateFromMediationRequest(String tradeId) {
-        findTrade(tradeId).ifPresent(trade -> {
-            MuSigDisputeState current = trade.getDisputeState();
-            if (current == MuSigDisputeState.ARBITRATION_OPEN || current == MuSigDisputeState.ARBITRATION_CLOSED) {
+    public void acceptMediationResult(MuSigTrade trade) {
+        verifyTradingNotOnHalt();
+        verifyMinVersionForTrading();
+        submitTradeTask(trade.getId(), () -> {
+            Optional<MuSigProtocol> optionalProtocol = findProtocol(trade.getId());
+            if (optionalProtocol.isEmpty()) {
+                log.info("Protocol with tradeId {} not found. This is expected if the trade has been closed already",
+                        trade.getId());
                 return;
             }
+            MuSigProtocol protocol = optionalProtocol.orElseThrow();
+            synchronized (protocol) {
+                processPendingDisputeAndSettlementMessages(protocol);
+                MuSigTrade protocolTrade = protocol.getTrade();
+                if (!muSigMediationCustomPayoutService.canSignCustomPayout(protocolTrade)) {
+                    log.info("Ignoring MediationResultAcceptedEvent for trade {} in state {} because " +
+                                    "custom-payout signing is not available.",
+                            protocolTrade.getId(), protocolTrade.getTradeState());
+                    return;
+                }
+                protocol.handle(new MediationResultAcceptedEvent());
+                maybeFinalizeCustomPayout(protocol);
+            }
+        });
+    }
 
-            if (current == MuSigDisputeState.NO_DISPUTE) {
-                trade.setDisputeState(MuSigDisputeState.MEDIATION_REQUESTED);
-                persist();
+    public void rejectMediationResult(MuSigTrade trade) {
+        rejectMediationResult(trade, false);
+    }
+
+    public void rejectMediationResultAndRequestArbitration(MuSigTrade trade) {
+        rejectMediationResult(trade, true);
+    }
+
+    private void rejectMediationResult(MuSigTrade trade, boolean requestArbitration) {
+        submitTradeTask(trade.getId(), () -> {
+            Optional<MuSigProtocol> protocol = findProtocol(trade.getId());
+            if (protocol.isEmpty()) {
+                log.info("Protocol with tradeId {} not found. This is expected if the trade has been closed already",
+                        trade.getId());
+                return;
+            }
+            MuSigProtocol muSigProtocol = protocol.orElseThrow();
+            synchronized (muSigProtocol) {
+                processPendingDisputeAndSettlementMessages(muSigProtocol);
+                muSigProtocol.handle(new MediationResultRejectedEvent());
+                // Keep rejection and the arbitration request in the same task and critical section.
+                if (requestArbitration && muSigProtocol.getTrade().getMyself().isMediationResultRejected()) {
+                    muSigTradeDisputeService.requestArbitration(muSigProtocol.getTrade());
+                }
             }
         });
     }
@@ -415,24 +575,36 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     public void removeTrade(MuSigTrade trade) {
         persistableStore.removeTrade(trade.getId());
         tradeProtocolById.remove(trade.getId());
+        muSigMediationCustomPayoutService.clearTrade(trade.getId());
         persist();
+    }
+
+    // Callers must never wait for a protocol lock held by a blocking RPC.
+    private void submitTradeTask(String tradeId, Runnable task) {
+        ExecutorService executorService = executor;
+        if (executorService == null) {
+            throw new IllegalStateException("MuSig trade service is not initialized");
+        }
+        try {
+            CompletableFuture.runAsync(task, executorService)
+                    .whenComplete((ignored, throwable) -> {
+                        if (throwable != null) {
+                            log.error("Error handling task for trade {}", tradeId, throwable);
+                        }
+                    });
+        } catch (RejectedExecutionException e) {
+            log.error("Executor rejected task for trade {}", tradeId, e);
+            throw e;
+        }
     }
 
     private void handleMuSigTradeEvent(MuSigTrade trade, MuSigTradeEvent event) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
         String tradeId = trade.getId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    try {
-                        CompletableFuture.runAsync(() -> protocol.handle(event), executor);
-                    } catch (RejectedExecutionException e) {
-                        log.error("Executor rejected task at handleMuSigTradeEvent", e);
-                        throw e;
-                    }
-                },
+        findProtocol(tradeId).ifPresentOrElse(protocol -> submitTradeTask(tradeId, () -> protocol.handle(event)),
                 () -> log.info("Protocol with tradeId {} not found. This is expected if the trade have been closed already", tradeId));
     }
-
 
     /* --------------------------------------------------------------------- */
     // Setup
@@ -445,6 +617,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                                               PaymentMethodSpec<?> paymentMethodSpec,
                                               AccountPayload<?> takersAccountPayload,
                                               Optional<UserProfile> mediator,
+                                              Optional<UserProfile> arbitrator,
                                               PriceSpec priceSpec,
                                               long marketPrice) {
         verifyTradingNotOnHalt();
@@ -458,7 +631,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 baseSideAmount.getValue(),
                 quoteSideAmount.getValue(),
                 paymentMethodSpec,
+                createSaltedAccountPayloadHash(takersAccountPayload, muSigOffer.getId()),
                 mediator,
+                arbitrator,
                 priceSpec,
                 marketPrice);
         boolean isBuyer = muSigOffer.getTakersDirection().isBuy();
@@ -537,14 +712,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         }
     }
 
-
     /* --------------------------------------------------------------------- */
     // Misc
     /* --------------------------------------------------------------------- */
-
-    public Optional<MuSigOpenTradeChannel> findMuSigOpenTradeChannel(String tradeId) {
-        return muSigOpenTradeChannelService.findChannelByTradeId(tradeId);
-    }
 
     public Optional<MuSigProtocol> findProtocol(String id) {
         return Optional.ofNullable(tradeProtocolById.get(id));
@@ -584,15 +754,20 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // The maker has added the salted account id to the AccountOptions.
     // We will use the payment method chosen by the taker to determine which account we had assigned to that offer.
     public Optional<Account<? extends PaymentMethod<?>, ?>> findMyAccount(MuSigTrade trade) {
+        return findMyAccount(trade, trade.getOffer());
+    }
+
+    private Optional<Account<? extends PaymentMethod<?>, ?>> findMyAccount(MuSigTrade trade,
+                                                                           MuSigOffer claimedOffer) {
         MuSigContract contract = trade.getContract();
-        MuSigOffer offer = contract.getOffer();
         PaymentMethod<?> selectedPaymentMethod = contract.getNonBtcSidePaymentMethodSpec().getPaymentMethod();
         Set<Account<? extends PaymentMethod<?>, ?>> matchingAccounts = serviceProvider.getAccountService().getAccounts(selectedPaymentMethod);
-        Set<AccountOption> accountOptions = OfferOptionUtil.findAccountOptions(offer.getOfferOptions());
+        Set<AccountOption> accountOptions = OfferOptionUtil.findAccountOptions(claimedOffer.getOfferOptions());
         return accountOptions.stream()
                 .filter(accountOption -> accountOption.getPaymentMethod().equals(selectedPaymentMethod))
                 .map(AccountOption::getSaltedAccountId)
-                .flatMap(saltedAccountId -> OfferOptionUtil.findAccountFromSaltedAccountId(matchingAccounts, saltedAccountId, offer.getId()).stream())
+                .flatMap(saltedAccountId -> OfferOptionUtil.findAccountFromSaltedAccountId(
+                        matchingAccounts, saltedAccountId, claimedOffer.getId()).stream())
                 .findAny();
     }
 
@@ -600,27 +775,57 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private MuSigProtocol makerCreatesProtocol(MuSigContract contract, NetworkId sender, NetworkId receiver) {
-        // We only create the data required for the protocol creation.
-        // Verification will happen in the MuSigTakeOfferRequestHandler
-        MuSigOffer offer = contract.getOffer();
-        Direction makersDirection = offer.getDirection();
-        boolean isBuyer = makersDirection.isBuy();
-        Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-        MuSigTrade trade = new MuSigTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
+    private Optional<MuSigProtocol> makerCreatesProtocol(MuSigContract contract,
+                                                         MuSigOffer claimedOffer,
+                                                         String tradeId,
+                                                         NetworkId sender,
+                                                         NetworkId receiver) {
+        // The handler performs its FSM-level verification after protocol creation. tradeId is the
+        // validated message trade id.
+        synchronized (tradeCreationLock) {
+            // Serialize creation and drop a duplicate cleanly instead of racing or throwing. The
+            // check runs before the identity/account lookups so a late removal also drops cleanly.
+            // Resuming a persisted INIT trade on a resend is a follow-up.
+            if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
+                log.warn("Dropping a duplicate MuSig take offer request for an existing trade. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                return Optional.empty();
+            }
+            boolean isBuyer = claimedOffer.getDirection().isBuy();
+            // The maker's own identity/account can be gone while the offer is still active; reject
+            // before creating partial state.
+            Optional<Identity> myIdentity = identityService.findAnyIdentityByNetworkId(claimedOffer.getMakerNetworkId());
+            if (myIdentity.isEmpty()) {
+                log.warn("Rejecting a take offer request: no local identity backs the offer's maker. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                throw new TradeProtocolException("The maker can no longer take this offer.",
+                        TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+            }
+            // findAnyIdentityByNetworkId includes retired identities, but the handler needs an
+            // active user identity, so require one here.
+            if (serviceProvider.getUserService().getUserIdentityService().findUserIdentity(myIdentity.get().getId()).isEmpty()) {
+                log.warn("Rejecting a take offer request: the offer's maker is no longer an active user identity. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                throw new TradeProtocolException("The maker can no longer take this offer.",
+                        TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+            }
+            MuSigTrade trade = new MuSigTrade(
+                    contract, isBuyer, false, myIdentity.get(), claimedOffer, sender, receiver);
 
-        AccountPayload<? extends PaymentMethod<?>> accountPayload = findMyAccount(trade).orElseThrow().getAccountPayload();
-        trade.getMyself().setAccountPayload(accountPayload);
+            Optional<Account<? extends PaymentMethod<?>, ?>> myAccount = findMyAccount(trade, claimedOffer);
+            if (myAccount.isEmpty()) {
+                log.warn("Rejecting a take offer request: no maker account backs the offer's payment method anymore. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                throw new TradeProtocolException("The maker can no longer take this offer.",
+                        TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+            }
+            trade.getMyself().setAccountPayload(myAccount.get().getAccountPayload());
 
-        String tradeId = trade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the MuSigTakeOfferRequest for an already existing protocol");
-        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
-        persistableStore.addTrade(trade);
-        persist();
-
-        maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
-
-        return createAndAddTradeProtocol(trade);
+            persistableStore.addTrade(trade);
+            persist();
+            // The contact-list add is done by the handler after it verifies and processes the request.
+            return Optional.of(createAndAddTradeProtocol(trade));
+        }
     }
 
     private MuSigProtocol createAndAddTradeProtocol(MuSigTrade trade) {
@@ -641,20 +846,97 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             }
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
-        tradeProtocolById.put(id, tradeProtocol);
+        synchronized (pendingMessagesLock) {
+            tradeProtocolById.put(id, tradeProtocol);
+        }
+        processPendingDisputeAndSettlementMessages(id);
         return tradeProtocol;
     }
 
+    private void updateTradeRestrictions() {
+        haltTrading = AuthorizedAlertDataUtils.isTradingHalted(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+        minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+    }
+
+    private void handleDisputeMessage(String tradeId, EnvelopePayloadMessage message) {
+        Optional<MuSigProtocol> optionalProtocol;
+        synchronized (pendingMessagesLock) {
+            optionalProtocol = findProtocol(tradeId);
+            if (optionalProtocol.isEmpty()) {
+                muSigTradeDisputeService.addPendingDisputeMessage(tradeId, message);
+                return;
+            }
+        }
+        MuSigProtocol protocol = optionalProtocol.orElseThrow();
+        submitTradeTask(tradeId, () -> {
+            synchronized (protocol) {
+                processPendingDisputeAndSettlementMessages(protocol);
+                muSigTradeDisputeService.onDisputeMessage(message);
+                processPendingMediationSettlementMessages(protocol);
+            }
+        });
+    }
+
+    private void processPendingDisputeAndSettlementMessages(String tradeId) {
+        findProtocol(tradeId).ifPresent(protocol -> submitTradeTask(tradeId, () -> {
+            synchronized (protocol) {
+                processPendingDisputeAndSettlementMessages(protocol);
+            }
+        }));
+    }
+
+    // Must be called while holding the protocol monitor. A live input can arrive before the
+    // registration callback runs, so process earlier buffered messages before that input too.
+    private void processPendingDisputeAndSettlementMessages(MuSigProtocol protocol) {
+        muSigTradeDisputeService.maybeProcessPendingDisputeMessages(protocol.getTrade().getId());
+        processPendingMediationSettlementMessages(protocol);
+    }
+
+    // Must be called while holding the protocol monitor, including the entire replay batch.
+    private void processPendingMediationSettlementMessages(MuSigProtocol protocol) {
+        muSigMediationCustomPayoutService.getPendingMessagesInReplayOrder(protocol.getTrade().getId())
+                .forEach(message -> handleMediationSettlementMessage(protocol, message));
+    }
+
+    private void handleMediationSettlementMessage(MuSigProtocol protocol,
+                                                   MuSigTradeMessage message) {
+        synchronized (protocol) {
+            if (!muSigMediationCustomPayoutService.hasRequiredMessageContext(protocol.getTrade())) {
+                muSigMediationCustomPayoutService.addPendingMessage(message);
+                return;
+            }
+
+            muSigMediationCustomPayoutService.removePendingMessage(message);
+            protocol.handle(message);
+            maybeFinalizeCustomPayout(protocol);
+        }
+    }
+
+    // Must be called while holding the protocol monitor so readiness and event dispatch are atomic.
+    private void maybeFinalizeCustomPayout(MuSigProtocol protocol) {
+        if (muSigMediationCustomPayoutService.canFinalizeCustomPayout(protocol.getTrade())) {
+            protocol.handle(new CustomPayoutFinalizationEvent());
+        }
+    }
+
+    private static boolean isMediationSettlementMessage(MuSigTradeMessage message) {
+        return message instanceof MuSigMediationResultRejectionMessage ||
+                message instanceof MuSigCustomPayoutPsbtMessage;
+    }
+
     private void verifyTradingNotOnHalt() {
-        checkArgument(!haltTrading, "Trading is on halt for security reasons. " +
-                "The Bisq security manager has published an emergency alert with haltTrading set to true");
+        if (haltTrading) {
+            throw TradeRestrictedException.haltTrading();
+        }
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+        Optional<String> minRequiredVersion = minRequiredVersionForTrading;
+        if (minRequiredVersion.isPresent()
+                && !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersion.get()))) {
+            throw TradeRestrictedException.minVersionRequired(minRequiredVersion.get());
         }
     }
 
@@ -688,7 +970,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // Misc
     /* --------------------------------------------------------------------- */
 
-    private void maybeAddPeerToContactList(String peersProfileId, String myProfileId) {
+    public void maybeAddPeerToContactList(String peersProfileId, String myProfileId) {
         if (settingsService.getDoAutoAddToContactList()) {
             Optional<UserProfile> peersProfile = userProfileService.findUserProfile(peersProfileId);
             Optional<UserProfile> myProfile = userProfileService.findUserProfile(myProfileId);
@@ -698,115 +980,4 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         }
     }
 
-    private void maybeApplyDisputeStateFromMediationOpenSignal(String tradeId) {
-        findTrade(tradeId).ifPresent(trade -> {
-            MuSigDisputeState current = trade.getDisputeState();
-            if (current == MuSigDisputeState.ARBITRATION_OPEN || current == MuSigDisputeState.ARBITRATION_CLOSED) {
-                return;
-            }
-
-            MuSigDisputeState next = current;
-            if (current == MuSigDisputeState.NO_DISPUTE || current == MuSigDisputeState.MEDIATION_REQUESTED) {
-                next = MuSigDisputeState.MEDIATION_OPEN;
-            } else if (current == MuSigDisputeState.MEDIATION_CLOSED) {
-                next = MuSigDisputeState.MEDIATION_RE_OPENED;
-            }
-
-            if (next != current) {
-                trade.setDisputeState(next);
-                persist();
-            }
-        });
-    }
-
-    private void maybeApplyDisputeStateFromMediationStateChangeMessage(MuSigMediationStateChangeMessage message) {
-        findTrade(message.getTradeId()).ifPresent(trade -> {
-            MuSigDisputeState current = trade.getDisputeState();
-            if (current == MuSigDisputeState.ARBITRATION_OPEN || current == MuSigDisputeState.ARBITRATION_CLOSED) {
-                return;
-            }
-
-            MediationCaseState mediationCaseState = message.getMediationCaseState();
-            boolean resultChanged = false;
-            MuSigDisputeState next = current;
-
-            if (mediationCaseState == MediationCaseState.RE_OPENED) {
-                next = MuSigDisputeState.MEDIATION_RE_OPENED;
-            } else if (mediationCaseState == MediationCaseState.CLOSED) {
-                next = MuSigDisputeState.MEDIATION_CLOSED;
-                Optional<MuSigMediationResult> incomingResult = message.getMuSigMediationResult();
-                if (incomingResult.isEmpty()) {
-                    log.warn("Ignoring CLOSED MuSigMediationStateChangeMessage without MuSigMediationResult for trade {}.",
-                            message.getTradeId());
-                    return;
-                }
-
-                Optional<MuSigMediationResult> currentResult = trade.getMuSigMediationResult();
-                if (currentResult.isEmpty()) {
-                    resultChanged = trade.setMuSigMediationResult(incomingResult.orElseThrow());
-                } else if (!currentResult.orElseThrow().equals(incomingResult.orElseThrow())) {
-                    log.warn("Ignoring changed MuSigMediationResult for trade {} because result cannot be changed once set.",
-                            message.getTradeId());
-                }
-            }
-
-            if (next != current || resultChanged) {
-                trade.setDisputeState(next);
-                persist();
-            }
-        });
-    }
-
-    private void maybeApplyMediationResultAcceptanceMessage(MuSigMediationResultAcceptanceMessage message) {
-        findTrade(message.getTradeId()).ifPresent(trade -> {
-            if (trade.getMuSigMediationResult().isEmpty()) {
-                log.warn("Ignoring MuSigMediationResultAcceptanceMessage for trade {} because MuSigMediationResult is missing.",
-                        message.getTradeId());
-                return;
-            }
-            if (!trade.getPeer().getNetworkId().getId().equals(message.getSenderUserProfileId())) {
-                log.warn("Ignoring MuSigMediationResultAcceptanceMessage with unexpected senderUserProfileId {} for trade {}.",
-                        message.getSenderUserProfileId(), message.getTradeId());
-                return;
-            }
-
-            if (trade.getPeer().setMediationResultAccepted(message.isMediationResultAccepted())) {
-                persist();
-            }
-        });
-    }
-
-    private void maybeReplyWithPaymentDetails(MuSigPaymentDetailsRequest message) {
-        findTrade(message.getTradeId()).ifPresentOrElse(trade -> {
-            Optional<UserProfile> mediator = trade.getContract().getMediator();
-            if (mediator.isEmpty()) {
-                log.warn("Ignoring MuSigPaymentDetailsRequest for trade {} because mediator is missing in contract.",
-                        message.getTradeId());
-                return;
-            }
-            UserProfile mediatorUserProfile = mediator.orElseThrow();
-            if (!mediatorUserProfile.getId().equals(message.getSenderUserProfileId())) {
-                log.warn("Ignoring MuSigPaymentDetailsRequest for trade {} with unexpected senderUserProfileId {}.",
-                        message.getTradeId(), message.getSenderUserProfileId());
-                return;
-            }
-
-            if (trade.getMyself().getAccountPayload().isEmpty() || trade.getPeer().getAccountPayload().isEmpty()) {
-                log.warn("Ignoring MuSigPaymentDetailsRequest for trade {} because account payloads are incomplete.",
-                        message.getTradeId());
-                return;
-            }
-
-            Identity myIdentity = identityService.findAnyIdentityByNetworkId(trade.getMyself().getNetworkId()).orElseThrow();
-            MuSigPaymentDetailsResponse paymentDetailsResponse = new MuSigPaymentDetailsResponse(
-                    message.getTradeId(),
-                    trade.getTaker().getAccountPayload().orElseThrow(),
-                    trade.getMaker().getAccountPayload().orElseThrow(),
-                    myIdentity.getId()
-            );
-            networkService.confidentialSend(paymentDetailsResponse,
-                    mediatorUserProfile.getNetworkId(),
-                    myIdentity.getNetworkIdWithKeyPair());
-        }, () -> log.warn("Ignoring MuSigPaymentDetailsRequest for unknown trade {}.", message.getTradeId()));
-    }
 }
