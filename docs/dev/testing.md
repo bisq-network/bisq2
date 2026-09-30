@@ -26,6 +26,35 @@ Do not use `@VisibleForTesting` when the member is part of normal production usa
 - UI code is typically not unit-tested directly.
 - If UI logic grows complex, move business logic into testable domain/service code.
 
+### JavaFX tests and input robots
+
+Ordinary `test`, `check`, `build`, and root `buildAll` runs do not run TestFX robot tests.
+`buildAll` invokes the ordinary builds of the included projects; it does not invoke `uiTest`.
+The desktop, desktop-automation, and desktop-ui-harness-app test workers use headless Monocle,
+including tests which start JavaFX directly. No display or macOS Accessibility permission is needed.
+
+Run the robot tests explicitly from the repository root:
+
+```sh
+./gradlew -p apps/desktop :desktop:uiTest
+```
+
+These tests use `@DesktopUiTest`. Ordinary desktop test tasks exclude its `ui` tag. The annotation
+also requires the `bisq.uiTest=true` JVM property set by `uiTest`, so an IntelliJ JUnit run which
+does not use Gradle's filters skips them. Its extension creates the TestFX robot only after JUnit
+has checked that condition. Do not register `ApplicationExtension` directly: JUnit constructs
+declarative extensions before checking execution conditions.
+
+Delegate IDE test runs to Gradle to also get the headless JVM configuration for non-robot tests.
+For an intentional native desktop robot run, use `-PuiTest.native=true` with `uiTest`. That opt-in
+can move the real pointer, type into the focused window, and request macOS Accessibility permission.
+The property does not change ordinary test tasks. A missing or incompatible Monocle dependency
+must fail a headless run; it must not cause a fallback to native input.
+
+Monocle isolates GUI input on a virtual screen. It is not a security sandbox for filesystem access,
+network access, or processes started by test code. See the
+[desktop test execution specification](../specifications/development/desktop-test-execution.md).
+
 ## Test Quality
 
 - Tests must be deterministic and reproducible.
