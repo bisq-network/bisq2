@@ -310,7 +310,7 @@ fun resolvableConfigurations(): List<ResolvableConfiguration> =
         }
         .sortedBy { "${it.projectPath}:${it.configuration.name}" }
 
-fun resolveConfigurations(collectComponents: Boolean): ResolvedBuildDependencies {
+fun resolveConfigurations(): ResolvedBuildDependencies {
     // Gradle skips or downgrades artifact verification in these modes, so the audit would pass on unverified artifacts.
     val verificationMode = gradle.startParameter.dependencyVerificationMode
     if (verificationMode != DependencyVerificationMode.STRICT) {
@@ -328,32 +328,28 @@ fun resolveConfigurations(collectComponents: Boolean): ResolvedBuildDependencies
     configurations.forEach { entry ->
         val configuration = entry.configuration
         try {
-            if (collectComponents) {
-                val result = configuration.incoming.resolutionResult
-                result.root.dependencies.forEach { dependency ->
-                    val selected = (dependency as? ResolvedDependencyResult)?.selected?.id
-                    if (selected is ModuleComponentIdentifier) {
-                        directComponents += "${selected.group}:${selected.module}:${selected.version}"
-                    }
-                }
-                result.allComponents.forEach { component ->
-                    val id = component.id
-                    if (id is ModuleComponentIdentifier) {
-                        resolvedComponents += "${id.group}:${id.module}:${id.version}"
-                    }
-                }
-                configuration.incoming.artifacts.artifacts.forEach { artifact ->
-                    val id = artifact.id.componentIdentifier
-                    if (id is ModuleComponentIdentifier) {
-                        artifactFiles += artifact.file
-                        artifactsByComponent
-                            .getOrPut("${id.group}:${id.module}:${id.version}") { TreeSet() }
-                            .add(artifact.file.name)
-                    }
+            val result = configuration.incoming.resolutionResult
+            result.root.dependencies.forEach { dependency ->
+                val selected = (dependency as? ResolvedDependencyResult)?.selected?.id
+                if (selected is ModuleComponentIdentifier) {
+                    directComponents += "${selected.group}:${selected.module}:${selected.version}"
                 }
             }
-
-            configuration.resolve()
+            result.allComponents.forEach { component ->
+                val id = component.id
+                if (id is ModuleComponentIdentifier) {
+                    resolvedComponents += "${id.group}:${id.module}:${id.version}"
+                }
+            }
+            configuration.incoming.artifacts.artifacts.forEach { artifact ->
+                val id = artifact.id.componentIdentifier
+                if (id is ModuleComponentIdentifier) {
+                    artifactFiles += artifact.file
+                    artifactsByComponent
+                        .getOrPut("${id.group}:${id.module}:${id.version}") { TreeSet() }
+                        .add(artifact.file.name)
+                }
+            }
         } catch (exception: Exception) {
             failures += "${entry.projectPath}:${configuration.name} - ${exception.message}"
         }
@@ -372,8 +368,9 @@ fun resolveConfigurations(collectComponents: Boolean): ResolvedBuildDependencies
     )
 }
 
+// Included builds can finish their inventories before cleanAll deletes build outputs.
 fun dependencyVerificationInventoryFile(buildDir: File = rootDir): File =
-    File(buildDir, "build/dependency-verification/inventory.tsv")
+    File(buildDir, ".gradle/dependency-verification/inventory.tsv")
 
 fun resolvedDependencyInventoryLines(resolved: ResolvedBuildDependencies): List<String> {
     val lines = mutableListOf("configurations\t${resolved.configurationCount}")
@@ -614,7 +611,7 @@ val resolveCurrentBuildTask = tasks.register("resolveAndVerifyDependenciesForCur
     description = "Resolves every resolvable configuration in this Gradle build."
 
     // Resolve before checking task history so changed graphs and verification failures cannot be hidden by it.
-    val resolved by lazy { resolveConfigurations(true) }
+    val resolved by lazy { resolveConfigurations() }
     inputs.property("resolvedDependencyInventory", providers.provider { resolvedDependencyInventoryLines(resolved) })
     inputs.files(providers.provider { resolved.artifactFiles }).withPropertyName("resolvedArtifacts")
     inputs.files(dependencyVerificationMetadata, dependencyVerificationKeyring)

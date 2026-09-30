@@ -33,9 +33,9 @@ class DependencyVerificationTest(unittest.TestCase):
         self.gradle.mkdir()
         (self.gradle / "libs.versions.toml").write_text('[versions]\nfixture = "1"\n')
         shutil.copy(REPOSITORY / "gradle/dependency-verification.gradle.kts", self.gradle)
-        self.inventory = self.root / "build/dependency-verification"
+        self.inventory = self.root / ".gradle/dependency-verification"
         self.inventory_files = {
-            build.replace("/", "_") or "root": self.root / build / "build/dependency-verification/inventory.tsv"
+            build.replace("/", "_") or "root": self.root / build / ".gradle/dependency-verification/inventory.tsv"
             for build in BUILDS
         }
         self.metadata = self.gradle / "verification-metadata.xml"
@@ -82,6 +82,9 @@ class DependencyVerificationTest(unittest.TestCase):
                     entry = ET.SubElement(component, "artifact", name=artifact.name)
                     ET.SubElement(entry, "sha256", value=hashlib.sha256(artifact.read_bytes()).hexdigest(),
                                   reason="Artifact is not signed")
+        build_dirs = ", ".join(f'"{build + "/" if build else ""}build"' for build in BUILDS)
+        with (self.root / "build.gradle").open("a") as script:
+            script.write(f'tasks.register("cleanAll", Delete) {{ delete({build_dirs}) }}\n')
         ET.ElementTree(metadata).write(self.metadata, encoding="utf-8", xml_declaration=True)
         self.write_allowlist("1")
 
@@ -114,8 +117,7 @@ class DependencyVerificationTest(unittest.TestCase):
             self.assertIn(f"direct\tfixture:{name}:1\n", inventory.read_text())
         self.assert_all_reused(self.run_gradle("check"))
 
-        self.run_gradle("clean", "build")
-        self.assert_all_reused(self.run_gradle("check"))
+        self.assert_all_reused(self.run_gradle("clean", "build"))
 
         (self.root / "Example.java").write_text("class Example {}\n")
         self.assert_all_reused(self.run_gradle("check"))
@@ -124,18 +126,23 @@ class DependencyVerificationTest(unittest.TestCase):
         self.assertEqual(self.run_gradle("check").count("Resolved and verified"), len(BUILDS))
         self.assert_all_reused(self.run_gradle("check"))
 
-        missing = self.inventory_files["apps_desktop"]
-        missing.unlink()
+        desktop_inventory = self.inventory_files["apps_desktop"]
+        desktop_inventory.unlink()
         self.run_gradle("check")
-        self.assertTrue(missing.is_file())
+        self.assertTrue(desktop_inventory.is_file())
         self.assert_all_reused(self.run_gradle("check"))
+
+        expected_inventory = desktop_inventory.read_text()
+        desktop_inventory.write_text("configurations\t0\n")
+        self.run_gradle("check")
+        self.assertEqual(desktop_inventory.read_text(), expected_inventory)
 
         # Old inventories must neither poison the graph nor conceal missing expected inventories.
         (self.inventory / "obsolete.tsv").write_text(
             "direct\tfixture:obsolete:1\nartifact\tfixture:obsolete:1\tobsolete.exe\n"
         )
         self.assert_all_reused(self.run_gradle("check"))
-        missing.unlink()
+        desktop_inventory.unlink()
         failure = self.run_gradle("check", "-x", ":apps:desktop:" + RESOLVER, success=False)
         self.assertIn("Missing dependency verification inventory", failure)
 
@@ -168,6 +175,21 @@ class DependencyVerificationTest(unittest.TestCase):
         output = self.run_gradle("check", success=False)
         self.assertIn("Dependency verification failed", output)
         self.assertIn("apps_desktop-1.jar", output)
+
+    def test_full_clean_preserves_dependency_inventories(self):
+        build_dirs = [self.root / build / "build" for build in BUILDS]
+        for repeat in (False, True):
+            with self.subTest(reused=repeat):
+                for directory in build_dirs:
+                    directory.mkdir(parents=True, exist_ok=True)
+                    (directory / "output.txt").write_text("Disposable build output\n")
+                output = self.run_gradle("cleanAll", "build")
+                for directory in build_dirs:
+                    self.assertFalse(directory.exists())
+                for name, inventory in self.inventory_files.items():
+                    self.assertIn(f"direct\tfixture:{name}:1\n", inventory.read_text())
+                if repeat:
+                    self.assert_all_reused(output)
 
     def test_relaxed_verification_modes_are_rejected(self):
         self.run_gradle("check")

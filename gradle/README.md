@@ -42,10 +42,11 @@ The root `resolveAndVerifyDependencies` task resolves every resolvable configura
 including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, and `network/tor` included builds.
 
 The audit runs in one Gradle invocation through dependencies on the included builds' tasks. Each build keeps its own
-`build/dependency-verification/inventory.tsv` relative to its build root, so cleaning one build cannot delete another
-build's inventory. Unchanged inventories are `UP-TO-DATE`; they are regenerated when resolved modules, direct dependency
-scopes, artifact names or contents, verification metadata, or keyring change, or when an inventory is removed. Java
-source changes alone do not invalidate them.
+`.gradle/dependency-verification/inventory.tsv` relative to its build root. These inventories survive `clean` and
+`cleanAll`, which can run after included builds have already generated or reused their inventories. Unchanged
+inventories are `UP-TO-DATE`; they are regenerated when resolved modules, direct dependency scopes, artifact names or
+contents, verification metadata, or keyring change, or when an inventory is removed or modified. Java source changes
+alone do not invalidate them.
 
 Gradle still resolves and verifies dependencies when evaluating the inventory inputs. This keeps graph changes from
 properties, resolution rules, dynamic versions, and local repositories visible without starting additional Gradle

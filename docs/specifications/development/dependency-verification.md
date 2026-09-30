@@ -30,4 +30,8 @@ The audit must run with strict dependency verification. Modes that skip or downg
 Each participating build owns its inventory. The policy check must read every expected inventory and fail if one is
 missing; unrelated files from previous audits must not affect the result.
 
+Dependency inventories are reusable build state, independent of compiled outputs. `clean` and `cleanAll` must preserve
+them so cleanup cannot delete an inventory between its producer and the policy check. Retained inventories remain
+subject to the resolution and verification requirements above.
+
 See [the Gradle notes](../../../gradle/README.md) for audit and metadata maintenance commands.
