@@ -57,21 +57,17 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * in the {@link HttpRequest} descriptor returned by {@link #buildRequest}.
  *
  * <h2>Retry &amp; failover semantics</h2>
- * The pipeline classifies failures into two buckets:
+ * The pipeline distinguishes failures before calling the client from failures during a call:
  * <ul>
- *   <li><b>Transport-level</b> — the request was never delivered to the server
- *       (busy client, connection refused, DNS, TLS handshake, etc.). These are
- *       <i>always</i> retried against the next provider, for both GET and POST.
- *       Retrying is safe because the server has no state to duplicate.</li>
- *   <li><b>Server-level</b> — the server received the request and either
- *       responded with 5xx / 408 / 429, or the framework timeout fired after the
- *       request was sent. For these, retry is gated on the request method:
+ *   <li>A busy client is detected before sending and can always be retried.</li>
+ *   <li>Once the client is called, the server may have applied the request even if
+ *       an I/O error, a timeout, or a response parsing error occurs. Retry then depends on the method:
  *       <ul>
  *         <li>{@code GET}: always retried (idempotent by HTTP contract).</li>
  *         <li>{@code POST}: retried only when the descriptor declares
  *             {@code retryOnServerError = true}. The default is {@code false}.
  *             Set it to {@code true} only when the server-side operation is
- *             idempotent — a 5xx response means the side effect <i>may</i>
+ *             idempotent - a failed call means the side effect <i>may</i>
  *             have been applied, and a blind retry would duplicate it.</li>
  *       </ul></li>
  * </ul>
@@ -279,22 +275,19 @@ public abstract class HttpRequestService<T, R> implements Service {
                             Throwable rootCause = ExceptionUtil.getRootCause(e);
                             log.warn("Encountered exception during HTTP request to provider {}", providerForThisRequest.getBaseUrl(), rootCause);
 
-                            // Distinguish HTTP responses from transport-level failures.
-                            // HTTP responses came back from the server (4xx/5xx) — server-level.
-                            // Anything else (IOException at connect/DNS/TLS, etc.) means the
-                            // request was never delivered — transport-level, always retriable.
                             if (rootCause instanceof HttpException httpException) {
                                 int responseCode = httpException.getResponseCode();
                                 if (responseCode < 500 && responseCode != 408 && responseCode != 429) {
                                     // 4xx (other than 408 / 429): caller error, never retry.
                                     throw new CompletionException(e);
                                 }
-                                // 5xx / 408 / 429: retry only if the method allows it.
-                                if (!isServerErrorRetryAllowed(httpRequest)) {
-                                    throw new CompletionException(e);
-                                }
                             }
-                            // else: transport-level failure → fall through to retry path.
+                            // An I/O or parsing failure can occur after the server applied a POST.
+                            // The client does not report whether delivery occurred, so the opt-in
+                            // must cover every failure once execution has started.
+                            if (!isServerErrorRetryAllowed(httpRequest)) {
+                                throw new CompletionException(e);
+                            }
 
                             boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
                             if (shouldRetry) {
