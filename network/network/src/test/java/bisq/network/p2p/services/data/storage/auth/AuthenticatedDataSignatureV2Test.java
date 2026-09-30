@@ -24,6 +24,7 @@ import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
 import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
@@ -88,6 +89,30 @@ class AuthenticatedDataSignatureV2Test {
         assertFalse(received.isSignatureV2Invalid());
         assertFalse(received.isSignatureV1Invalid());
         assertFalse(received.isSignatureInvalid());
+    }
+
+    @Test
+    void addRequestPubKeyHashMustBeTheHashOfTheOwnerPublicKey()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        bisq.network.protobuf.AddAuthenticatedDataRequest proto = request.toValueProto(false);
+        AuthenticatedSequentialData sequentialData = request.getAuthenticatedSequentialData();
+        byte[] otherPublicKeyBytes = KeyGeneration.generateDefaultEcKeyPair().getPublic().getEncoded();
+
+        // Otherwise the storage key V2 and the signature name one key, and the owner check uses another one.
+        assertThrows(IllegalArgumentException.class, () -> fromProto(proto.toBuilder()
+                .setOwnerPublicKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
+                .build(), request));
+        AuthenticatedSequentialData changedPubKeyHash = new AuthenticatedSequentialData(sequentialData.getAuthenticatedData(),
+                sequentialData.getSequenceNumber(),
+                DigestUtil.hash(otherPublicKeyBytes),
+                sequentialData.getCreated());
+        assertThrows(IllegalArgumentException.class, () -> new AddAuthenticatedDataRequest(changedPubKeyHash,
+                proto.getSignature().toByteArray(),
+                proto.getOwnerPublicKeyBytes().toByteArray(),
+                request.getSignaturePublicKey(),
+                proto.getSignatureV2().toByteArray(),
+                proto.getVersion()));
     }
 
     @Test

@@ -139,10 +139,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
             return DataStorageResult.failed().isNotAuthorized();
         }
-        if (request.isSignaturePubKeyHashInvalid(authenticatedSequentialData.getPubKeyHash())) {
-            log.warn("PublicKey is invalid at add. request={}", request);
-            return DataStorageResult.failed().publicKeyHashInvalid();
-        }
         if (request.isSignatureInvalid(now)) {
             log.warn("Signature is invalid at add. request={}", request);
             return DataStorageResult.failed().signatureInvalid();

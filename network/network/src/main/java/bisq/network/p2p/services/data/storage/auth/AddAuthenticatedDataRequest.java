@@ -43,6 +43,8 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Request for adding authenticated data to the data storage.
  * A signature of the authenticatedSequentialData is verified with the given public key.
@@ -162,6 +164,9 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     @Override
     public void verify() {
         EcPublicKeyValidation.validate(ownerPublicKeyBytes);
+        // The publisher hash must name the key which signs the request (see docs/specifications/network/storage-ownership.md).
+        checkArgument(Arrays.equals(authenticatedSequentialData.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes)),
+                "pubKeyHash must match the hash of ownerPublicKeyBytes");
         SignatureValidation.validateSignatures(signature, signatureV2);
     }
 
