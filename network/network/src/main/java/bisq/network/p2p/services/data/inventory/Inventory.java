@@ -103,13 +103,13 @@ public final class Inventory implements NetworkProto {
                     .map(dataRequest -> {
                         try {
                             return DataRequest.fromProto(dataRequest);
-                        } catch (UnresolvableProtobufException e) {
+                        } catch (UnresolvableProtobufException ignored) {
                             // Log only the type and the size of the entry, as users share their log files
-                            // (see UnresolvableProtobufMessageException).
+                            // (see UnresolvableProtobufMessageException). Exception causes can contain received values.
                             if (numErrors.incrementAndGet() <= 3) {
                                 log.error("Could not create data request from protobuf data request. " +
                                                 "messageCase={}, {} bytes",
-                                        dataRequest.getMessageCase(), dataRequest.getSerializedSize(), e);
+                                        dataRequest.getMessageCase(), dataRequest.getSerializedSize());
                             }
                             return null;
                         }
