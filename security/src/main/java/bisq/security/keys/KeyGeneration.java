@@ -18,6 +18,7 @@
 package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
+import bisq.common.validation.NetworkDataValidation;
 import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.ECPointUtil;
@@ -37,6 +38,7 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -75,7 +77,16 @@ public class KeyGeneration {
         }
     }
 
+    /**
+     * Parses the X.509 encoding of an EC public key. Received key bytes reach this method before any other check of
+     * the message which contains them, so the size is checked before the parser runs: the work of the parser grows
+     * with the size of its input, and a key with explicit curve parameters and a large order takes seconds to reject
+     * (see docs/specifications/security/ec-public-key-encoding.md).
+     */
     public static PublicKey generatePublic(byte[] encodedKey) throws GeneralSecurityException {
+        if (!NetworkDataValidation.isECPubKeySizeValid(encodedKey)) {
+            throw new InvalidKeySpecException("EC public key not of the expected size. size=" + encodedKey.length);
+        }
         return generatePublic(encodedKey, ECDH);
     }
 

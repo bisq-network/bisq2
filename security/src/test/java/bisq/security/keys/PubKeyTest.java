@@ -20,16 +20,22 @@ package bisq.security.keys;
 import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x9.ECNamedCurveTable;
+import org.bouncycastle.asn1.x9.X962Parameters;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -83,5 +89,24 @@ class PubKeyTest {
                 .build();
 
         assertArrayEquals(publicKey.getEncoded(), PubKey.fromProto(proto).getPublicKey().getEncoded());
+    }
+
+    // A key with explicit curve parameters is a valid encoding of the same key, but it exceeds the size limit of a
+    // key. The work of the key parser grows with the size of such a key, so it is rejected before the parser runs.
+    @Test
+    void receivedOversizedKeyIsRejectedBeforeTheParserRuns() throws IOException {
+        PublicKey publicKey = KeyGeneration.generateDefaultEcKeyPair().getPublic();
+        byte[] explicitParameters = new SubjectPublicKeyInfo(
+                new AlgorithmIdentifier(X9ObjectIdentifiers.id_ecPublicKey,
+                        new X962Parameters(ECNamedCurveTable.getByName("secp256k1"))),
+                ((ECPublicKey) publicKey).getQ().getEncoded(false)).getEncoded(ASN1Encoding.DER);
+        bisq.security.protobuf.PubKey proto = bisq.security.protobuf.PubKey.newBuilder()
+                .setPublicKey(ByteString.copyFrom(explicitParameters))
+                .setKeyId("keyId")
+                .build();
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> PubKey.fromProto(proto));
+
+        assertInstanceOf(InvalidKeySpecException.class, exception.getCause());
     }
 }
