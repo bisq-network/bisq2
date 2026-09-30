@@ -70,10 +70,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *       buyer-side: "peer sent BTC".</li>
  *   <li>{@code BUYER_RECEIVED_BTC_SENT_CONFIRMATION} — buyer-side: "you received BTC
  *       confirmation"; seller-side: "you sent BTC".</li>
- *   <li>{@code TAKER_SENT_TAKE_OFFER_REQUEST} — maker-side only: "your offer was
- *       taken" (the taker initiated, no push needed there).</li>
- *   <li>{@code MAKER_SENT_TAKE_OFFER_RESPONSE__*} (2 variants) — "offer taken"
- *       observed from the response side.</li>
+ *   <li>The first {@code MAKER_SENT_TAKE_OFFER_RESPONSE__*} state in each maker
+ *       protocol branch - "offer taken" after receiving and accepting the peer's request.</li>
  *   <li>{@code TAKER_RECEIVED_TAKE_OFFER_RESPONSE__*} (3 variants) — payment-info
  *       exchanged; gated by per-trade dedup so the user gets ONE "payment info
  *       sent/received" push regardless of which observer fires first.</li>
@@ -213,6 +211,13 @@ public class BisqEasyMobileTradeNotificationService implements Service {
     /* --------------------------------------------------------------------- */
 
     private void handleStateChange(BisqEasyTrade trade, BisqEasyTradeState state) {
+        // Maker protocols respond automatically to a received request. They never enter the
+        // TAKER_SENT_TAKE_OFFER_REQUEST state, which belongs to the taker's local action.
+        if (trade.isMaker() && isOfferTakenState(state)) {
+            dispatch(trade, "bisqEasy.mobileNotifications.offerTaken.title",
+                    "bisqEasy.mobileNotifications.offerTaken.message");
+        }
+
         // Self-action suppression rationale (bisq-network/bisq-mobile#1464 follow-up).
         //
         // Each "*_SENT_*" / "*_CONFIRMED_*" state below is reached via a LOCAL event
@@ -233,9 +238,6 @@ public class BisqEasyMobileTradeNotificationService implements Service {
         //   - BUYER_SENT_FIAT_SENT_CONFIRMATION                 (buyer's local "I sent fiat" event)
         //   - SELLER_CONFIRMED_FIAT_RECEIPT                     (seller's local "I received fiat" event)
         //   - SELLER_SENT_BTC_SENT_CONFIRMATION                 (seller's local "I sent BTC" event)
-        //   - MAKER_SENT_TAKE_OFFER_RESPONSE__*                 (maker's local response event;
-        //                                                        peer-side already pushed via
-        //                                                        TAKER_SENT_TAKE_OFFER_REQUEST below)
         switch (state) {
             case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION -> {
                 if (trade.isSeller()) {
@@ -261,14 +263,6 @@ public class BisqEasyMobileTradeNotificationService implements Service {
                 if (trade.isBuyer()) {
                     dispatch(trade, "bisqEasy.mobileNotifications.youReceivedBtc.title",
                             "bisqEasy.mobileNotifications.youReceivedBtc.message");
-                }
-            }
-
-            case TAKER_SENT_TAKE_OFFER_REQUEST -> {
-                // Notify the maker only — the taker initiated and already knows.
-                if (trade.isMaker()) {
-                    dispatch(trade, "bisqEasy.mobileNotifications.offerTaken.title",
-                            "bisqEasy.mobileNotifications.offerTaken.message");
                 }
             }
 
@@ -332,6 +326,16 @@ public class BisqEasyMobileTradeNotificationService implements Service {
     // Helpers
     /* --------------------------------------------------------------------- */
 
+    private static boolean isOfferTakenState(BisqEasyTradeState state) {
+        return switch (state) {
+            case MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_,
+                 MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS_ -> true;
+            default -> false;
+        };
+    }
+
     private void dispatch(BisqEasyTrade trade, String titleKey, String messageKey) {
         String shortTradeId = shortTradeId(trade);
         String peerName = peerNameFor(trade);
@@ -373,13 +377,12 @@ public class BisqEasyMobileTradeNotificationService implements Service {
     static boolean isWhitelistedState(BisqEasyTradeState state) {
         // Own-action states (BUYER_SENT_FIAT_SENT_CONFIRMATION,
         // SELLER_CONFIRMED_FIAT_RECEIPT, SELLER_SENT_BTC_SENT_CONFIRMATION,
-        // MAKER_SENT_TAKE_OFFER_RESPONSE__*) are deliberately absent — see the
+        // TAKER_SENT_TAKE_OFFER_REQUEST) are deliberately absent - see the
         // self-action suppression comment in handleStateChange.
-        return switch (state) {
+        return isOfferTakenState(state) || switch (state) {
             case SELLER_RECEIVED_FIAT_SENT_CONFIRMATION,
                  BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
                  BUYER_RECEIVED_BTC_SENT_CONFIRMATION,
-                 TAKER_SENT_TAKE_OFFER_REQUEST,
                  // Payment-info exchange (covers all 4 roles × Branch-1.x + final-converging).
                  // See the matching case block in handleStateChange for rationale.
                  TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
