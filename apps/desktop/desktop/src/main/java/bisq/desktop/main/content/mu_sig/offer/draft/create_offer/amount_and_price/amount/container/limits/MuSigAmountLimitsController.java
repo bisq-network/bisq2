@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.mu_sig.offer.draft.create_offer.amount_and_price.amount.container.limits;
 
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.MonetaryRange;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -29,8 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashSet;
 import java.util.Set;
 
-import static bisq.offer.mu_sig.use_case.create_offer.amount.limits.AbsoluteAmountLimitsProvider.MAX_TRADE_AMOUNT_IN_USD;
-import static bisq.offer.mu_sig.use_case.create_offer.amount.limits.AbsoluteAmountLimitsProvider.MIN_TRADE_AMOUNT_IN_USD;
 import static bisq.presentation.formatters.AmountFormatter.formatAmountByMonetaryType;
 
 @Slf4j
@@ -44,14 +44,15 @@ public class MuSigAmountLimitsController implements Controller {
     public MuSigAmountLimitsController(CreateOfferUseCase createOfferUseCase) {
         amountSelection = createOfferUseCase.getAmountSelection();
 
-        String minInUsd = Res.get("muSig.offer.create.amount.slider.limit.usd", formatAmountByMonetaryType(MIN_TRADE_AMOUNT_IN_USD));
-        String maxInInUsd = Res.get("muSig.offer.create.amount.slider.limit.usd", formatAmountByMonetaryType(MAX_TRADE_AMOUNT_IN_USD));
-        model = new MuSigAmountLimitsModel(minInUsd, maxInInUsd);
+        model = new MuSigAmountLimitsModel();
         view = new MuSigAmountLimitsView(model, this);
     }
 
     @Override
     public void onActivate() {
+        pins.add(amountSelection.potentialTradeAmountLimitsInUsdObservable().addObserver(limitsInUsd -> {
+            UIThread.run(() -> applyLimitsInUsd(limitsInUsd));
+        }));
         pins.add(amountSelection.inputAmountRangeObservable().addObserver(inputAmountLimits -> {
             if (inputAmountLimits != null) {
                 UIThread.run(() -> {
@@ -75,5 +76,14 @@ public class MuSigAmountLimitsController implements Controller {
     public void onDeactivate() {
         pins.forEach(Pin::unbind);
         pins.clear();
+    }
+
+    private void applyLimitsInUsd(MonetaryRange limitsInUsd) {
+        model.getMinInUsd().set(limitsInUsd == null ? "" : toUsdEquivalent(limitsInUsd.getMin()));
+        model.getMaxInUsd().set(limitsInUsd == null ? "" : toUsdEquivalent(limitsInUsd.getMax()));
+    }
+
+    private static String toUsdEquivalent(Monetary amountInUsd) {
+        return Res.get("muSig.offer.create.amount.slider.limit.usd", formatAmountByMonetaryType(amountInUsd));
     }
 }
