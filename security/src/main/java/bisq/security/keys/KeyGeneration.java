@@ -45,7 +45,7 @@ public class KeyGeneration {
     public static final String EC = "EC";
     public static final String DSA = "DSA";
 
-    private static final String CURVE = "secp256k1";
+    static final String CURVE = "secp256k1";
     private static final String ECDSA = "ECDSA";
 
     static {
@@ -59,6 +59,10 @@ public class KeyGeneration {
         return generateKeyPair(CURVE, ECDH);
     }
 
+    /**
+     * The public key of the returned key pair is in canonical encoding (see {@link EcPublicKeyValidation}) if the
+     * curve is secp256k1.
+     */
     public static KeyPair generateKeyPair(String curve, String algorithm) {
         try {
             ECGenParameterSpec ecSpec = new ECGenParameterSpec(curve);
@@ -120,6 +124,9 @@ public class KeyGeneration {
         }
     }
 
+    /**
+     * The returned public key is in canonical encoding (see {@link EcPublicKeyValidation}).
+     */
     public static PublicKey deriveEcPublicKey(PrivateKey privateKey) throws GeneralSecurityException {
         var ecPrivateKey = (ECPrivateKey) privateKey;
         ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec(CURVE);

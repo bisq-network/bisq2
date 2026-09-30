@@ -210,4 +210,8 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         return getDisplayDirection().isBuy() ? Res.get("bisqEasy.openTrades.table.direction.buyer") :
                 Res.get("bisqEasy.openTrades.table.direction.seller");
     }
+
+    public byte[] getMakerPubKeyHash() {
+        return makerNetworkId.getPubKeyHash();
+    }
 }

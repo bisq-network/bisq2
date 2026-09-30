@@ -57,7 +57,7 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(bondUserName, 1, 200);
+        NetworkDataValidation.validateRequiredBondUserName(bondUserName);
         NetworkDataValidation.validateText(roleType, 1, 200);
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);

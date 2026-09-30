@@ -56,9 +56,4 @@ public final class ReportRequest implements EnvelopePayloadMessage, Request {
     public static ReportRequest fromProto(bisq.network.protobuf.ReportRequest proto) {
         return new ReportRequest(proto.getRequestId());
     }
-
-    @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
 }

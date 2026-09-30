@@ -20,8 +20,10 @@ contains:
 - the encoded Bisq 1 owner DSA public key; and
 - the owner's domain-separated signature over the complete proof.
 
-Network-message validation applies structural and resource bounds only. The Bisq 1 bridge performs
-the ownership decision: it recomputes the witness hash from the salted account input and owner key,
+Network-message validation applies structural and resource bounds for the declared protocol version;
+it does not establish ownership. Version-2 requests must contain nonempty salted account input and
+leave their obsolete requester-supplied date fields zero. The Bisq 1 bridge performs the ownership
+decision: it recomputes the witness hash from the salted account input and owner key,
 verifies the signature, resolves the witness, derives the nullifier and returns only the fixed
 one-day UTC bucket containing the authoritative date. The oracle must not accept a requester-supplied
 date, nullifier or bucket.
@@ -121,6 +123,20 @@ protocol; network-data expiry alone is not a transfer. Until such a protocol exi
 oracle permanently rejects a second profile for a witness it has already authorized. Consumers
 still fail closed on conflicts published by different oracles, and there is no implicit
 last-writer-wins transfer.
+
+## Persisted request compatibility
+
+Earlier oracles could accept and persist version-2 account-age and signed-witness requests with
+nonzero requester-supplied dates. Those fields are outside the ownership proof and were never
+authoritative. When loading persisted requests, an upgraded oracle must normalize only these
+version-2 date fields to zero before applying current validation. It must preserve the profile id,
+witness hash, salted account input, owner key and signature, and all other records in the store.
+Discarding such a request or falling back to older or empty binding state would violate the
+permanent one-witness/one-profile rule.
+
+This migration applies only to stored version-2 requests. It must preserve dates for legacy and
+unknown protocol versions, retain all other validation, and be safe to repeat after saving and
+reloading. New network requests with nonzero version-2 dates remain invalid.
 
 ## Shared account witness identity
 

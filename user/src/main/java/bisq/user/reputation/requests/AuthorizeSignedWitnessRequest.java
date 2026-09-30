@@ -34,6 +34,7 @@ import java.util.Objects;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -42,7 +43,7 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
     public static final int LEGACY_VERSION = 1;
     public static final int CURRENT_VERSION = 2;
     public static final int MAX_ACCOUNT_INPUT_LENGTH = 4096;
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, AuthorizeSignedWitnessRequest.class.getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String hashAsHex;
     private final long accountAgeWitnessDate;
@@ -92,17 +93,25 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
     public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateHashAsHex(hashAsHex);
-        if (protocolVersion >= CURRENT_VERSION) {
-            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, 1, MAX_ACCOUNT_INPUT_LENGTH);
-        } else {
-            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, MAX_ACCOUNT_INPUT_LENGTH);
-        }
-        if (protocolVersion == LEGACY_VERSION) {
-            NetworkDataValidation.validateDate(accountAgeWitnessDate);
-            NetworkDataValidation.validateDate(witnessSignDate);
-        }
         NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
+        if (protocolVersion == CURRENT_VERSION) {
+            // The salted account input is the preimage the Bisq 1 bridge recomputes the witness hash from, so a
+            // version-2 request without it can never prove ownership.
+            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, 1, MAX_ACCOUNT_INPUT_LENGTH);
+            // Requester supplied dates are not part of the version-2 proof and are never authoritative. Requiring
+            // them to be absent keeps the request the oracle persists free of attacker chosen values.
+            checkArgument(accountAgeWitnessDate == 0 && witnessSignDate == 0,
+                    "A signed witness request of protocol version %s must not carry dates", CURRENT_VERSION);
+        } else {
+            // Legacy and unknown versions are only bounded structurally. An unknown version cannot be assumed to
+            // use the current field layout, and the oracle rejects every version other than the current one.
+            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, MAX_ACCOUNT_INPUT_LENGTH);
+            if (protocolVersion == LEGACY_VERSION) {
+                NetworkDataValidation.validateDate(accountAgeWitnessDate);
+                NetworkDataValidation.validateDate(witnessSignDate);
+            }
+        }
     }
 
     @Override
@@ -148,8 +157,8 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     public byte[] getAccountInputDataWithSalt() {

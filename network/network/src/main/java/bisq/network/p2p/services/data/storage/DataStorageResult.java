@@ -19,14 +19,24 @@ package bisq.network.p2p.services.data.storage;
 
 import lombok.Getter;
 
+// success: the store accepted the request and stored it. A request which leaves the store unchanged fails, also if it is
+// valid, for example a request which the store holds already (requestAlreadyReceived, alreadyRemoved).
 @Getter
 public class DataStorageResult {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
-            dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid;
-    private StorageData removedData;
+            dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid,
+            classNameInvalid, ownerInvalid, signatureV2Missing;
 
-    public DataStorageResult(boolean success) {
+    public static DataStorageResult success() {
+        return new DataStorageResult(true);
+    }
+
+    public static DataStorageResult failed() {
+        return new DataStorageResult(false);
+    }
+
+    private DataStorageResult(boolean success) {
         this.success = success;
     }
 
@@ -62,8 +72,23 @@ public class DataStorageResult {
         return this;
     }
 
+    // The request has no signature V2, and the node requires it (see SignedRequest.SIGNATURE_V1_CUTOFF_DATE). Nodes of
+    // earlier versions send such requests, so this is not a severe failure.
+    public DataStorageResult signatureV2Missing() {
+        signatureV2Missing = true;
+        return this;
+    }
+
     public DataStorageResult metaDataInvalid() {
         metaDataInvalid = true;
+        return this;
+    }
+
+    // The class name of the data does not match the key of the store. StorageService selects the store by the class
+    // name, so this indicates a bug, e.g. a type which returns the MetaData of another type.
+    public DataStorageResult classNameInvalid() {
+        classNameInvalid = true;
+        isSevereFailure = true;
         return this;
     }
 
@@ -74,6 +99,14 @@ public class DataStorageResult {
 
     public DataStorageResult dataInvalid() {
         dataInvalid = true;
+        isSevereFailure = true;
+        return this;
+    }
+
+    // The key which signed the add request is not the owner of the data (see
+    // docs/specifications/network/storage-ownership.md)
+    public DataStorageResult ownerInvalid() {
+        ownerInvalid = true;
         isSevereFailure = true;
         return this;
     }
@@ -89,13 +122,9 @@ public class DataStorageResult {
         return this;
     }
 
+    // The store holds a removal of the data. With success, the request replaced that removal.
     public DataStorageResult alreadyRemoved() {
         alreadyRemoved = true;
-        return this;
-    }
-
-    public DataStorageResult removedData(StorageData removedData) {
-        this.removedData = removedData;
         return this;
     }
 
@@ -116,7 +145,9 @@ public class DataStorageResult {
                 ", maxMapSizeReached=" + maxMapSizeReached +
                 ", isSevereFailure=" + isSevereFailure +
                 ", metaDataInvalid=" + metaDataInvalid +
-                ", removedData=" + removedData +
+                ", classNameInvalid=" + classNameInvalid +
+                ", ownerInvalid=" + ownerInvalid +
+                ", signatureV2Missing=" + signatureV2Missing +
                 '}';
     }
 }

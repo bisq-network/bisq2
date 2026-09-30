@@ -36,8 +36,6 @@ import bisq.common.data.Result;
 import bisq.common.encoding.Hex;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
-import bisq.identity.Identity;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -64,6 +62,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -91,7 +90,6 @@ public class Bisq1BridgeRequestService implements Service,
     private final AccountAgeWitnessGrpcService accountAgeWitnessGrpcService;
     private final SignedWitnessGrpcService signedWitnessGrpcService;
     private final AccountTimestampGrpcService accountTimestampGrpcService;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedOracleNode myAuthorizedOracleNode;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -108,7 +106,6 @@ public class Bisq1BridgeRequestService implements Service,
     private ExecutorService revalidationExecutor;
 
     public Bisq1BridgeRequestService(PersistenceService persistenceService,
-                                     IdentityService identityService,
                                      NetworkService networkService,
                                      AuthorizedBondedRolesService authorizedBondedRolesService,
                                      PrivateKey authorizedPrivateKey,
@@ -118,7 +115,6 @@ public class Bisq1BridgeRequestService implements Service,
                                      AuthorizedOracleNode myAuthorizedOracleNode,
                                      GrpcClient grpcClient) {
         this(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
@@ -132,7 +128,6 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     Bisq1BridgeRequestService(PersistenceService persistenceService,
-                              IdentityService identityService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
@@ -143,7 +138,6 @@ public class Bisq1BridgeRequestService implements Service,
                               GrpcClient grpcClient,
                               BondedRoleGrpcService bondedRoleGrpcService) {
         this(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
@@ -159,7 +153,6 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     Bisq1BridgeRequestService(PersistenceService persistenceService,
-                              IdentityService identityService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
@@ -171,7 +164,6 @@ public class Bisq1BridgeRequestService implements Service,
                               BondedRoleGrpcService bondedRoleGrpcService,
                               AccountAgeWitnessGrpcService accountAgeWitnessGrpcService,
                               SignedWitnessGrpcService signedWitnessGrpcService) {
-        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.authorizedPrivateKey = authorizedPrivateKey;
@@ -564,13 +556,24 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     void revalidateBondedRolesNow() {
-        List<BondedRoleRegistrationRequest> requests = persistableStore.getBondedRoleRegistrationRequests().stream()
+        List<BondedRoleRegistrationRequest> supportedRequests = persistableStore.getBondedRoleRegistrationRequests().stream()
                 .filter(request -> BondedRoleRegistrationProtocol.isSupported(request.getRegistrationProtocolVersion()))
                 .toList();
-        int unsupportedRequestCount = persistableStore.getBondedRoleRegistrationRequests().size() - requests.size();
+        int unsupportedRequestCount = persistableStore.getBondedRoleRegistrationRequests().size() - supportedRequests.size();
         if (unsupportedRequestCount > 0) {
             log.warn("Retaining {} bonded-role registrations with unsupported protocol versions without revalidation",
                     unsupportedRequestCount);
+        }
+        // A record which cannot be expressed as a bridge message would make the batch message constructor throw and
+        // thereby skip revalidation of every other registration, for as long as that record is persisted. Such a
+        // record can never be verified, so it is retained and reported while the remaining ones are revalidated.
+        List<BondedRoleRegistrationRequest> requests = supportedRequests.stream()
+                .filter(BondedRoleGrpcService::canBeVerifiedByBridge)
+                .toList();
+        int unusableRequestCount = supportedRequests.size() - requests.size();
+        if (unusableRequestCount > 0) {
+            log.warn("Retaining {} bonded-role registrations which cannot be verified by the Bisq 1 bridge",
+                    unusableRequestCount);
         }
         if (requests.isEmpty()) {
             return;
@@ -809,19 +812,18 @@ public class Bisq1BridgeRequestService implements Service,
         persist();
     }
 
+    // The authorized key owns the authorized data which this node publishes (see
+    // docs/specifications/network/storage-ownership.md)
     private CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData data) {
-        Identity identity = identityService.getOrCreateDefaultIdentity();
-        return networkService.publishAuthorizedData(data,
-                identity.getNetworkIdWithKeyPair().getKeyPair(),
-                authorizedPrivateKey,
-                authorizedPublicKey);
+        return networkService.publishAuthorizedData(data, getAuthorizedKeyPair());
     }
 
     private CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedBondedRole authorizedDistributedData) {
-        Identity identity = identityService.getOrCreateDefaultIdentity();
-        return networkService.removeAuthorizedData(authorizedDistributedData,
-                identity.getNetworkIdWithKeyPair().getKeyPair(),
-                authorizedPublicKey);
+        return networkService.removeAuthorizedData(authorizedDistributedData, getAuthorizedKeyPair());
+    }
+
+    private KeyPair getAuthorizedKeyPair() {
+        return new KeyPair(authorizedPublicKey, authorizedPrivateKey);
     }
 
 

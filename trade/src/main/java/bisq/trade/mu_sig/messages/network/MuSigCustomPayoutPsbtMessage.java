@@ -20,6 +20,7 @@ package bisq.trade.mu_sig.messages.network;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.MuSigCustomPayoutValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -35,6 +36,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @Getter
 public final class MuSigCustomPayoutPsbtMessage extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(MuSigCustomPayoutPsbtMessage.class);
+
     private final byte[] mediationResultHash;
     private final String txId;
     @ToString.Exclude
@@ -101,8 +104,8 @@ public final class MuSigCustomPayoutPsbtMessage extends MuSigTradeMessage {
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     public byte[] getMediationResultHash() {

@@ -51,8 +51,7 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
     public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
 
     // Metadata needs to be symmetric with MuSigOpenTradeMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;
@@ -205,8 +204,8 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

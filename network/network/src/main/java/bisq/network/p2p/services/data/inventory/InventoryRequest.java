@@ -80,11 +80,6 @@ public final class InventoryRequest implements BroadcastMessage, Request {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.25;
-    }
-
-    @Override
     public String getRequestId() {
         return String.valueOf(nonce);
     }

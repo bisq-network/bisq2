@@ -19,6 +19,7 @@ package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
+    public static final MetaData META_DATA = createMetaData(BisqEasyReportErrorMessage.class);
+
     public static final int MAX_LENGTH_ERROR_MESSAGE = 500;
     public static final int MAX_LENGTH_STACKTRACE = 2000;
 
@@ -93,7 +96,7 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.3, 0.7);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

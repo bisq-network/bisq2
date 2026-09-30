@@ -63,9 +63,4 @@ public final class ReportResponse implements EnvelopePayloadMessage, Response {
         return new ReportResponse(proto.getRequestId(),
                 Report.fromProto(proto.getReport()));
     }
-
-    @Override
-    public double getCostFactor() {
-        return 0.2;
-    }
 }

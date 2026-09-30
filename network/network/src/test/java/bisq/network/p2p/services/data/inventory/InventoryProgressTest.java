@@ -1,0 +1,142 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.network.p2p.services.data.inventory;
+
+import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
+import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterService;
+import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import bisq.network.p2p.services.data.storage.StoreType;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.TestDistributedData;
+import bisq.persistence.PersistenceService;
+import bisq.security.keys.KeyGeneration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.util.ArrayList;
+import java.util.List;
+
+import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * The filter of an inventory request lists only the requests which the requester stored. If the requester stores none
+ * of the requests of a response which reached the size limit, its next filter is the same, and so is the next response
+ * (see docs/specifications/network/inventory-hash-set-filter.md).
+ */
+class InventoryProgressTest {
+    @TempDir
+    Path tempDir;
+
+    private final KeyPair ownerKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+    private DataService requester;
+    private DataService responder;
+    private AuthenticatedDataStorageService storeOfResponder;
+    private final List<AuthenticatedData> dataOfResponder = new ArrayList<>();
+
+    @BeforeAll
+    static void registerTypes() {
+        StorableTypesRegistry.register(TestDistributedData.class, TestDistributedData.META_DATA);
+    }
+
+    @BeforeEach
+    void setUp() throws GeneralSecurityException {
+        requester = new DataService(new PersistenceService(tempDir.resolve("requester")), CLOCK_BEFORE_CUTOFF);
+        responder = new DataService(new PersistenceService(tempDir.resolve("responder")), CLOCK_BEFORE_CUTOFF);
+        storeOfResponder = responder.getStorageService()
+                .getOrCreateAuthenticatedDataStore(TestDistributedData.class.getSimpleName())
+                .join();
+        for (String content : List.of("a", "b", "c")) {
+            AuthenticatedData data = new DefaultAuthenticatedData(new TestDistributedData(content,
+                    ownerKeyPair.getPublic()));
+            AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(storeOfResponder, data, ownerKeyPair);
+            assertTrue(responder.processAddDataRequest(add, false).join().isSuccess());
+            dataOfResponder.add(data);
+        }
+    }
+
+    // The stores write asynchronously. JUnit deletes tempDir after the test, and fails if a write still creates files in
+    // it. A write queued now completes after all earlier ones.
+    @AfterEach
+    void tearDown() {
+        shutdown(requester);
+        shutdown(responder);
+    }
+
+    @Test
+    void storedEntriesOfResponseAreCounted() {
+        Inventory inventory = createInventoryOfResponder(Integer.MAX_VALUE);
+
+        assertEquals(3, InventoryService.storeEntries(requester, inventory).join());
+        // The requester holds them now
+        assertEquals(0, InventoryService.storeEntries(requester, inventory).join());
+    }
+
+    // For example, the requester got the removals of the owner, and the responder missed them. The responder sends the
+    // earlier add requests, which the requester rejects.
+    @Test
+    void fullResponseWhichTheRequesterRejectsIsSentAgain() throws GeneralSecurityException {
+        for (AuthenticatedData data : dataOfResponder) {
+            RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(storeOfResponder, data,
+                    ownerKeyPair);
+            assertTrue(requester.processRemoveDataRequest(removal, false).join().isSuccess());
+        }
+        // Space for one add request
+        int maxSize = storeOfResponder.getPersistableStore().getMap().values().iterator().next().getSerializedSize();
+
+        Inventory inventory = createInventoryOfResponder(maxSize);
+
+        assertTrue(inventory.isMaxSizeReached());
+        assertFalse(inventory.getEntries().isEmpty());
+        assertEquals(0, InventoryService.storeEntries(requester, inventory).join());
+        assertEquals(inventory.getEntries(), createInventoryOfResponder(maxSize).getEntries());
+    }
+
+    // The inventory which the responder sends for the HASH_SET_V2 filter of the requester
+    private Inventory createInventoryOfResponder(int maxSize) {
+        HashSetFilterService serviceOfRequester = new HashSetFilterService(requester.getStorageService(),
+                maxSize, InventoryFilterType.HASH_SET_V2);
+        return new HashSetFilterService(responder.getStorageService(), maxSize, InventoryFilterType.HASH_SET_V2)
+                .createInventory(serviceOfRequester.getFilter());
+    }
+
+    private static void shutdown(DataService dataService) {
+        dataService.getStorageService().getStoresByStoreType(StoreType.ALL)
+                .forEach(InventoryProgressTest::waitForPendingWrites);
+        dataService.shutdown();
+    }
+
+    private static <T extends DataRequest> void waitForPendingWrites(DataStorageService<T> store) {
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+    }
+}

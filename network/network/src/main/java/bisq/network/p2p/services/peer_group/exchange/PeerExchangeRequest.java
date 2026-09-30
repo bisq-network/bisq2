@@ -84,11 +84,6 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.1;
-    }
-
-    @Override
     public String getRequestId() {
         return String.valueOf(nonce);
     }

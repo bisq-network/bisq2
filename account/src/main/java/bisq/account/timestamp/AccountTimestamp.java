@@ -37,7 +37,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Slf4j
 @Getter
 public final class AccountTimestamp implements DistributedData {
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, AccountTimestamp.class.getSimpleName());
 
     private final byte[] hash;
 
@@ -85,12 +85,12 @@ public final class AccountTimestamp implements DistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.2;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
     }
 

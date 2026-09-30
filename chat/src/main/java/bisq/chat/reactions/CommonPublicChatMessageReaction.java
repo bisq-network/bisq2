@@ -18,9 +18,9 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,10 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class CommonPublicChatMessageReaction extends ChatMessageReaction implements DistributedData {
+public class CommonPublicChatMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
     // Metadata needs to be symmetric with CommonPublicChatMessage.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, getClass().getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, CommonPublicChatMessageReaction.class.getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
 
     public CommonPublicChatMessageReaction(String id,
                                            String userProfileId,
@@ -57,17 +56,21 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
         return unsafeToProto(serializeForHash);
     }
 
+    // The profile ID must be the ID of a public key, so that it names the reacting user (see getOwnerPubKeyHash())
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against
-        // impersonation attack.
-        return !userProfileId.equals(Hex.encode(pubKeyHash));
+    public boolean isDataInvalid() {
+        return !PubKey.isId(userProfileId);
+    }
+
+    // The reacting user owns the reaction. The profile ID is the ID of the public key of the user (PubKey.getId()).
+    @Override
+    public byte[] getOwnerPubKeyHash() {
+        return PubKey.getHashFromId(userProfileId);
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

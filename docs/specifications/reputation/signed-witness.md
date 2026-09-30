@@ -14,11 +14,24 @@ the domain-separated Bisq 1 ownership proof. Requester-supplied account-age and 
 part of version `2` and are not authoritative.
 
 The Bisq 1 bridge must first verify the account-age hash preimage and owner signature. It must then
-find at least one signed-witness leaf whose `witnessOwnerPubKey` equals the independently proven owner
-key and which individually satisfies the complete Bisq 1 trust-chain rules. This includes the
-deployed witness signature, signer-age, trusted-root, cycle, depth and ban checks. The bridge returns
-the earliest stored date among qualifying leaves only. A signature-valid leaf from an incomplete or
-untrusted chain must not supply a reputation date.
+find at least one signed-witness leaf which individually satisfies the complete Bisq 1 trust-chain
+rules. This includes the deployed witness signature, signer-age, trusted-root, cycle, depth and ban
+checks. The bridge returns the earliest stored date among qualifying leaves only. A signature-valid
+leaf from an incomplete or untrusted chain must not supply a reputation date.
+
+A trade-signed leaf qualifies only when its `witnessOwnerPubKey` equals the independently proven owner
+key. A directly arbitrator-signed leaf may carry a different owner key, because Bisq 1 versions before
+commit `09141eba92` exchanged the buyer and seller owner keys when producing those records. That
+exception is specified and regression-covered on the Bisq 1 side; see its
+`docs/specifications/account/signed-witness-reputation.md`. It does not weaken the ownership decision:
+`witnessOwnerPubKey` is not committed by the deployed `SignedWitness` signature and is therefore not
+an ownership proof in the first place, while the arbitrator signature authenticates the same
+account-age witness hash that the requester has already proven ownership of through the secret
+preimage. The proven owner key must still pass the deny-list policy.
+
+The bridge response carries only the nullifier and the date bucket, so Bisq 2 cannot re-check a leaf
+owner field and must not specify a rule it has no way to enforce. Bisq 1 is authoritative for which
+leaves qualify.
 
 The deployed Bisq 1 `SignedWitness` signature authenticates the account-age witness hash but does not
 commit to the signed-witness date. The date is authoritative for this import only within the trust

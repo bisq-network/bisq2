@@ -22,9 +22,9 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
-import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -39,7 +39,7 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
+public abstract class PublicChatMessage extends ChatMessage implements OwnershipVerifiableData {
     protected transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
 
     protected PublicChatMessage(String messageId,
@@ -62,12 +62,16 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
 
     abstract public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash);
 
+    // The profile ID must be the ID of a public key, so that it names the author (see getOwnerPubKeyHash())
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against 
-        // impersonation attack.
-        return !authorUserProfileId.equals(Hex.encode(pubKeyHash));
+    public boolean isDataInvalid() {
+        return !PubKey.isId(authorUserProfileId);
+    }
+
+    // The author owns the message. The profile ID is the ID of the public key of the author (PubKey.getId()).
+    @Override
+    public byte[] getOwnerPubKeyHash() {
+        return PubKey.getHashFromId(authorUserProfileId);
     }
 
     @Override

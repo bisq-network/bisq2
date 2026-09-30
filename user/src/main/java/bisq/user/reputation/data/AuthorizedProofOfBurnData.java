@@ -49,8 +49,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData, PublishDateAware {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, AuthorizedProofOfBurnData.class.getSimpleName());
     @ExcludeForHash
     private final int version;
     private final long blockTime;
@@ -149,13 +148,19 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
+    }
+
+    // Oracle nodes of earlier versions published it with the key of their network ID
+    @Override
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override
@@ -193,15 +198,13 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         return blockTime == that.blockTime &&
                 amount == that.amount &&
                 blockHeight == that.blockHeight &&
-                Objects.equals(metaData, that.metaData) &&
                 Arrays.equals(hash, that.hash) &&
                 Objects.equals(txId, that.txId);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(metaData);
-        result = 31 * result + Long.hashCode(blockTime);
+        int result = Long.hashCode(blockTime);
         result = 31 * result + Long.hashCode(amount);
         result = 31 * result + Arrays.hashCode(hash);
         result = 31 * result + blockHeight;

@@ -60,7 +60,7 @@ public final class MuSigArbitrationRequest implements
         return MuSigArbitrationRequest.class.getSimpleName() + "." + tradeId;
     }
 
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigArbitrationRequest.class.getSimpleName());
     private final MuSigContract contract;
     private final String tradeId;
     private final MuSigMediationResult muSigMediationResult;
@@ -169,8 +169,8 @@ public final class MuSigArbitrationRequest implements
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

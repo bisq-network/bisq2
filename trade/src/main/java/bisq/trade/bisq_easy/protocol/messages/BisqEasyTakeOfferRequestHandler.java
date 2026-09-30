@@ -32,7 +32,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandlerAsMessageSender;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
@@ -70,9 +69,12 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                     TradeProtocolFailure.OFFER_NOT_AVAILABLE);
         }
 
+        // The offer in an offerbook message is not bound to the message author by the network layer, so we
+        // require the author to be the offer's maker, which is us.
         List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                .filter(chatMessage -> chatMessage.getAuthorUserProfileId().equals(chatMessage.getBisqEasyOffer().get().getMakersUserProfileId()))
                 .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
                 .filter(offer -> offer.getMakerNetworkId().equals(trade.getMyIdentity().getNetworkId()))
                 .collect(Collectors.toList());
@@ -81,13 +83,8 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 .findAny();
         if (matchingOfferInChannel.isEmpty()) {
             // If we do not find the offer it might be that another user has taken the offer recently and the offer has
-            // been removed in the meantime. For this case we check if we find the offer in another open trade. If not
-            // found we throw an exception.
-            // We also check if there is not a trade already present with the same trade ID to avoid that we would
-            // create a duplicated trade. We check for both the version 0 and version 1 trade ID to cover all edge cases.
-            BisqEasyTradeService bisqEasyTradeService = serviceProvider.getBisqEasyTradeService();
-            boolean hasOfferInTrades = bisqEasyTradeService.getTrades().stream().anyMatch(trade ->
-                    trade.getOffer().getId().equals(takersOffer.getId()));
+            // been removed in the meantime. For this case we check if we find the offer in a trade we have signed.
+            boolean hasOfferInTrades = tradeService.hasSignedTradeWithOffer(takersOffer);
             boolean closeMyOfferWhenTaken = serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get();
             if (hasOfferInTrades) {
                 log.info("The offer has not been found in open offers, but we found another trade with the same offer.\n" +

@@ -26,6 +26,7 @@ import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterService;
 import bisq.network.p2p.services.data.storage.StorageService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -55,7 +56,9 @@ class InventoryFilterFactory {
                 .forEach(inventoryFilterType -> {
                     switch (inventoryFilterType) {
                         case HASH_SET:
-                            mySupportedFilterServices.put(inventoryFilterType, new HashSetFilterService(storageService, maxSize));
+                        case HASH_SET_V2:
+                            mySupportedFilterServices.put(inventoryFilterType,
+                                    new HashSetFilterService(storageService, maxSize, inventoryFilterType));
                             break;
                         case MINI_SKETCH:
                             //  map.put(inventoryFilterType, new MiniSketchFilterService(storageService, maxSize));
@@ -69,12 +72,22 @@ class InventoryFilterFactory {
     }
 
     InventoryFilter createInventoryFilterForRequest(Connection connection) {
-        List<Feature> peersFeatures = connection.getPeersCapability().getFeatures();
-        InventoryFilterType inventoryFilterType = getPreferredFilterType(peersFeatures).orElse(InventoryFilterType.HASH_SET);
+        return createInventoryFilterForRequest(connection.getPeersCapability().getFeatures());
+    }
+
+    @VisibleForTesting
+    InventoryFilter createInventoryFilterForRequest(List<Feature> peersFeatures) {
+        // InventoryRequestPolicy only selects peers with a preferred filter type. We do not fall back to another type:
+        // the type defines which storage key the filter contains.
+        InventoryFilterType inventoryFilterType = getPreferredFilterType(peersFeatures)
+                .orElseThrow(() -> new IllegalStateException("Peer supports none of our preferred inventory filter types. " +
+                        "peersFeatures=" + peersFeatures));
         FilterService<? extends InventoryFilter> filterService = mySupportedFilterServices.get(inventoryFilterType);
         return filterService.getFilter();
     }
 
+    // The type of the received filter selects the service, not the features of the peer: a peer which supports several
+    // types chooses one per request.
     Inventory createInventoryForResponse(InventoryRequest request) {
         InventoryFilter inventoryFilter = request.getInventoryFilter();
         InventoryFilterType inventoryFilterType = inventoryFilter.getInventoryFilterType();

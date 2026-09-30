@@ -20,7 +20,6 @@ package bisq.support.mediation.bisq_easy;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.common.util.DateUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -34,8 +33,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
@@ -49,14 +46,7 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
         SenderPublicKeyProvidingPayload {
     private static final int VERSION = 1;
 
-    // Can be removed after senderNetworkId is mandatory.
-    public static final Date SENDER_NETWORK_ID_VERIFICATION_ACTIVATION_DATE =
-            DateUtils.getUTCDate(2026, GregorianCalendar.MAY, 30);
-    public static final boolean IS_SENDER_NETWORK_ID_VERIFICATION_ACTIVATED =
-            new Date().after(SENDER_NETWORK_ID_VERIFICATION_ACTIVATION_DATE);
-
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyMediatorsResponse.class.getSimpleName());
 
     private final String tradeId;
     @ExcludeForHash(excludeOnlyInVersions = {0, 1})
@@ -118,8 +108,8 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.2);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
 
@@ -128,13 +118,10 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
         return findSenderPublicKey().orElseThrow(() -> new IllegalStateException("senderNetworkId not set"));
     }
 
+    // Responses of version 0 have no senderNetworkId. The sender public key is required for every version (see
+    // SenderPublicKeyProvidingPayload.isSenderPublicKeyRequired), so the receiver rejects them.
     @Override
     public Optional<PublicKey> findSenderPublicKey() {
         return senderNetworkId.map(networkId -> networkId.getPubKey().getPublicKey());
-    }
-
-    @Override
-    public boolean isSenderPublicKeyRequired() {
-        return version >= VERSION || IS_SENDER_NETWORK_ID_VERIFICATION_ACTIVATED;
     }
 }

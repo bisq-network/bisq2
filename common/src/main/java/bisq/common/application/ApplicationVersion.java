@@ -37,6 +37,10 @@ public class ApplicationVersion {
         return BuildVersion.TOR_VERSION;
     }
 
+    public static String getTorBinaryVersionString() {
+        return BuildVersion.TOR_BINARY_VERSION;
+    }
+
     public static String getBuildCommitShortHash() {
         return BuildVersion.COMMIT_SHORT_HASH;
     }

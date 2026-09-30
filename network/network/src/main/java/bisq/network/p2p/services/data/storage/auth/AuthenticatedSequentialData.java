@@ -18,6 +18,10 @@
 package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -29,25 +33,19 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Data which ensures that the sequence of add or remove request is maintained correctly.
  * The data gets hashed and signed and need to be deterministic.
  */
 @Slf4j
 @Getter
-public final class AuthenticatedSequentialData implements NetworkProto {
-    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
-        return from(data, sequenceNumber, data.getCreated());
-    }
-
-    public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber, long created) {
-        return new AuthenticatedSequentialData(data.getAuthenticatedData(), sequenceNumber, data.getPubKeyHash(), created);
-    }
-
+public final class AuthenticatedSequentialData implements NetworkProto, Canonical {
     private final AuthenticatedData authenticatedData;
     private final int sequenceNumber;
-    private final long created;
     private final byte[] pubKeyHash;
+    private final long created;
 
     public AuthenticatedSequentialData(AuthenticatedData authenticatedData,
                                        int sequenceNumber,
@@ -63,6 +61,8 @@ public final class AuthenticatedSequentialData implements NetworkProto {
 
     @Override
     public void verify() {
+        checkArgument(sequenceNumber > 0,
+                "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateHash(pubKeyHash);
         NetworkDataValidation.validateDate(created);
     }
@@ -88,16 +88,46 @@ public final class AuthenticatedSequentialData implements NetworkProto {
                 proto.getCreated());
     }
 
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - created) > authenticatedData.getMetaData().getTtl();
-    }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<AuthenticatedSequentialData> DEFAULT_SCHEMA =
+            CanonicalSchema.<AuthenticatedSequentialData>newBuilder()
+                    .canonical(1, AuthenticatedSequentialData::getAuthenticatedData)
+                    .sint32(2, AuthenticatedSequentialData::getSequenceNumber)
+                    .bytes(3, AuthenticatedSequentialData::getPubKeyHash)
+                    .sint64(4, AuthenticatedSequentialData::getCreated)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<AuthenticatedSequentialData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            // Only the stored data has a storage key encoding (see docs/specifications/network/storage-keys.md)
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for AuthenticatedSequentialData");
+            case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+            case TRADE_CONTRACT -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     public DistributedData getDistributedData() {
         return authenticatedData.getDistributedData();
+    }
+
+    // pubKeyHash is the hash of the key which signed the request. It must be the owner of the data (see
+    // docs/specifications/network/storage-ownership.md).
+    public boolean isOwnerInvalid() {
+        try {
+            return !authenticatedData.isOwner(pubKeyHash) && !authenticatedData.isOtherOwnerAccepted(created);
+        } catch (Exception e) {
+            log.warn("Checking the owner failed", e);
+            return true;
+        }
     }
 
     @Override

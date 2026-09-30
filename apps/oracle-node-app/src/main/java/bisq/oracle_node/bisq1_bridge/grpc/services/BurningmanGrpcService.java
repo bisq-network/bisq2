@@ -88,6 +88,11 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
         });
     }
 
+    @Override
+    protected String getSubscriptionDescription() {
+        return "the burningman block subscription (BurningmanGrpcService.Subscribe)";
+    }
+
     private AuthorizedBurningmanListByBlock toAuthorizedBurningmanListByBlock(BurningmanBlockDto burningmanBlockDto) {
         return new AuthorizedBurningmanListByBlock(
                 staticPublicKeysProvided,

@@ -45,7 +45,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 public final class MuSigArbitrationStateChangeMessage implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigArbitrationStateChangeMessage.class.getSimpleName());
     private final String id;
     private final String tradeId;
     private final NetworkId senderNetworkId;
@@ -114,8 +114,8 @@ public final class MuSigArbitrationStateChangeMessage implements MailboxMessage,
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.2);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

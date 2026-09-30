@@ -36,8 +36,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class AuthorizeTimestampRequest implements MailboxMessage, ExternalNetworkMessage {
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, AuthorizeTimestampRequest.class.getSimpleName());
     private final String profileId;
     private final long date;
 
@@ -76,7 +75,7 @@ public final class AuthorizeTimestampRequest implements MailboxMessage, External
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

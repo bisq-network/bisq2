@@ -87,11 +87,6 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.1;
-    }
-
-    @Override
     public String getRequestId() {
         return String.valueOf(nonce);
     }

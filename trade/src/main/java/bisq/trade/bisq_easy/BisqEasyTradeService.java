@@ -341,6 +341,15 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return persistableStore.tradeExists(tradeId);
     }
 
+    // Trades are created from the taker's contract before the take offer request gets verified, so a trade
+    // whose request got rejected, or is still under verification, holds an unauthenticated copy of the offer.
+    // Only a trade we have signed the contract of proves that we made the offer.
+    public boolean hasSignedTradeWithOffer(BisqEasyOffer bisqEasyOffer) {
+        return getAllTrades().stream()
+                .filter(trade -> trade.getMaker().getContractSignatureData().get() != null)
+                .anyMatch(trade -> trade.getOffer().equals(bisqEasyOffer));
+    }
+
     public boolean wasOfferAlreadyTaken(BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId) {
         return getTrades().stream().anyMatch(trade ->
                 trade.getOffer().getId().equals(bisqEasyOffer.getId()) &&

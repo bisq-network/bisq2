@@ -42,8 +42,7 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     public static final long BISQ_EASY_OFFERBOOK_MESSAGE_TTL = TTL_10_DAYS;
 
     // MetaData needs to be symmetric with BisqEasyOfferbookMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, LOW_PRIORITY, BisqEasyOfferbookMessage.class.getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyOfferbookMessage(String channelId,
@@ -127,8 +126,8 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.3;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

@@ -59,11 +59,6 @@ public final class Ping implements EnvelopePayloadMessage, Request {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.05;
-    }
-
-    @Override
     public String getRequestId() {
         return String.valueOf(nonce);
     }

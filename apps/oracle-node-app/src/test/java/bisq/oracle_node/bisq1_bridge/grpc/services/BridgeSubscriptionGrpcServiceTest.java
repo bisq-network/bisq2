@@ -116,8 +116,21 @@ class BridgeSubscriptionGrpcServiceTest {
 
         service.handleStreamObserverError(new StatusRuntimeException(Status.UNIMPLEMENTED));
 
-        assertThat(service.subscriptionAttempted.await(1, TimeUnit.SECONDS)).isFalse();
+        assertThat(service.subscriptionAttempted.await(200, TimeUnit.MILLISECONDS)).isFalse();
         assertThat(service.subscribeCount).hasValue(0);
+        assertThat(service.isBridgeVersionMismatch()).isTrue();
+    }
+
+    @Test
+    void anOrdinaryStreamErrorIsNotReportedAsAVersionMismatch() throws InterruptedException {
+        TestService service = new TestService();
+        service.subscribeRetryInterval.set(0);
+
+        service.handleStreamObserverError(new StatusRuntimeException(Status.UNAVAILABLE));
+
+        assertThat(service.subscriptionAttempted.await(1, TimeUnit.SECONDS)).isTrue();
+        assertThat(service.isBridgeVersionMismatch()).isFalse();
+        service.shutdown();
     }
 
     private static final class TestService extends BridgeSubscriptionGrpcService<Integer> {
@@ -161,8 +174,10 @@ class BridgeSubscriptionGrpcServiceTest {
             return new TestService(null, false, true);
         }
 
+        // Runs directly after the state transition which acquires the execution, so blocking here reproduces the
+        // window in which another caller queues a trigger that must survive.
         @Override
-        void onRequestExecutionAcquired() {
+        protected int prepareHistoricalRequest() {
             if (blockFirstRequestExecutionAcquisition && firstRequestExecution.compareAndSet(true, false)) {
                 firstRequestExecutionAcquired.countDown();
                 try {
@@ -172,6 +187,7 @@ class BridgeSubscriptionGrpcServiceTest {
                     throw new RuntimeException(e);
                 }
             }
+            return super.prepareHistoricalRequest();
         }
 
         @Override
@@ -216,6 +232,11 @@ class BridgeSubscriptionGrpcServiceTest {
             calls.add("subscribe");
             subscribeCount.incrementAndGet();
             subscriptionAttempted.countDown();
+        }
+
+        @Override
+        protected String getSubscriptionDescription() {
+            return "the test subscription";
         }
     }
 }

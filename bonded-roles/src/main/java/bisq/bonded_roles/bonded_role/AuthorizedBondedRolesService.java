@@ -18,7 +18,6 @@
 package bisq.bonded_roles.bonded_role;
 
 import bisq.bonded_roles.BondedRoleType;
-import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
@@ -108,24 +107,6 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             return CompletableFuture.completedFuture(true);
         }
         initializeCalled = true;
-
-        networkService.getDataService().ifPresent(dataService ->
-                dataService.getStorageService().cleanupMap("AuthorizedOracleNode", authorizedDistributedData ->
-                        authorizedDistributedData instanceof AuthorizedOracleNode
-                                ? Optional.of((AuthorizedOracleNode) authorizedDistributedData)
-                                : Optional.empty()));
-
-        networkService.getDataService().ifPresent(dataService ->
-                dataService.getStorageService().cleanupMap("AuthorizedBondedRole", authorizedDistributedData ->
-                        authorizedDistributedData instanceof AuthorizedBondedRole
-                                ? Optional.of((AuthorizedBondedRole) authorizedDistributedData)
-                                : Optional.empty()));
-
-        networkService.getDataService().ifPresent(dataService ->
-                dataService.getStorageService().cleanupMap("AuthorizedMarketPriceData", authorizedDistributedData ->
-                        authorizedDistributedData instanceof AuthorizedMarketPriceData
-                                ? Optional.of((AuthorizedMarketPriceData) authorizedDistributedData)
-                                : Optional.empty()));
 
         networkService.addDataServiceListener(initialDataServiceListener);
         // It can be that there are no new data received from the inventory request, so we apply the existing data

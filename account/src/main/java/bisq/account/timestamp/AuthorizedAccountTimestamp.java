@@ -43,8 +43,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_20_DAYS;
 public final class AuthorizedAccountTimestamp implements AuthorizedDistributedData, PublishDateAware {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_20_DAYS, DEFAULT_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_20_DAYS, DEFAULT_PRIORITY, AuthorizedAccountTimestamp.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -111,13 +110,19 @@ public final class AuthorizedAccountTimestamp implements AuthorizedDistributedDa
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.2;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
+    }
+
+    // Oracle nodes of earlier versions published it with the key of their network ID
+    @Override
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override

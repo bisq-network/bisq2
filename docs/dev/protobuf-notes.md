@@ -110,9 +110,12 @@ NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.class, Tra
 The proto type name and the class are passed separately because they can differ. The proto type name is the wire
 contract and must never change, while the class may be renamed, which is why for example the message class
 `BisqEasyMediationRequest` is still registered under the proto type name `support.MediationRequest`. The class argument
-is what registers the type in `NetworkStorageWhiteList`, which the P2P storage checks before accepting a payload, so a
-type registered with the wrong class is silently rejected by every node. If the registered class is not final, its
-subclasses must be added to `NetworkStorageWhiteList` explicitly.
+is not used at runtime. `ResolverConfigTest` uses it to check that the proto type name, the class and the resolver name
+the same type.
+
+The P2P storage accepts only the types which `ResolverConfig` registers in `StorableTypesRegistry`, each with its
+`META_DATA` constant. Every node rejects a storable type which is missing there. If a class registered for a resolver is
+not final, each of its concrete subclasses must be registered in `StorableTypesRegistry` explicitly.
 
 Keeping the proto type name fixed is not on its own enough to make a java rename safe. The simple class name is also
 the `MetaData.className` sent on the wire, the store key `StorageService` checks before accepting a payload and uses to

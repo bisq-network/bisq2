@@ -50,8 +50,7 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     public static final int LEGACY_VERSION = 1;
     public static final int VERSION = 2;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, AuthorizedBondedReputationData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {0, LEGACY_VERSION})
     private final int version;
@@ -171,13 +170,19 @@ public final class AuthorizedBondedReputationData implements AuthorizedDistribut
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
+    public boolean isDataInvalid() {
         return false;
+    }
+
+    // Oracle nodes of earlier versions published it with the key of their network ID
+    @Override
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override
