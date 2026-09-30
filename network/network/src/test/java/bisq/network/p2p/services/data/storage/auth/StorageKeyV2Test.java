@@ -95,8 +95,9 @@ class StorageKeyV2Test {
                 () -> StorageKeyV2.createPreImage(StorageKeyV2.AUTHENTICATED_DATA_TAG, new byte[32], publicKeyBytes));
     }
 
-    // For AuthorizedData, the STORAGE_KEY encoding contains the signature, but serializeForHash(), which remove and
-    // refresh requests hash, does not. Both authenticated data types must give the same key for all request types.
+    // For AuthorizedData, the default encoding contains the signature, but the STORAGE_KEY encoding and
+    // serializeForHash(), which remove and refresh requests hash, do not. Both authenticated data types must give the same
+    // key for all request types.
     @Test
     void addRemoveAndRefreshRequestsOfOneOwnerHaveTheSameStorageKey() throws GeneralSecurityException {
         for (AuthenticatedData authenticatedData : List.of(

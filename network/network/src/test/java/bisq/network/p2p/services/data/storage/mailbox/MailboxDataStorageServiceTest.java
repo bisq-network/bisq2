@@ -24,7 +24,9 @@ import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
+import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -209,6 +211,29 @@ class MailboxDataStorageServiceTest {
     private static AddMailboxRequest toLegacy(AddMailboxRequest request) throws UnresolvableProtobufException {
         return AddMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
                 .clearVersion().clearSignatureV2().build());
+    }
+
+    // A copy without signature V2, which a node of an earlier version relayed, is not equal to the stored request. The
+    // store rejects it by its sequence number before it verifies the signature, which is the most expensive check
+    // (finding F12.3 of the review 2026-09-29_16-18-18-fable-5.1). A copy with an invalid signature shows the order.
+    @Test
+    void copyWithoutSignatureV2IsRejectedBeforeItsSignatureIsVerified()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        assertTrue(store.add(add).isSuccess());
+        AddMailboxRequest copyWithInvalidSignature = AddMailboxRequest.fromProto(add.toValueProto(false).toBuilder()
+                .clearVersion()
+                .clearSignatureV2()
+                .setSignature(ByteString.copyFrom(SignatureUtil.sign(new byte[]{1}, senderKeyPair.getPrivate())))
+                .build());
+        assertTrue(copyWithInvalidSignature.isSignatureInvalid(time));
+
+        DataStorageResult result = store.add(copyWithInvalidSignature);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertFalse(result.isSignatureInvalid());
+        assertSame(add, store.getPersistableStore().getMap().get(add.getStorageKey()));
     }
 
     // From the cutoff date of signature V1 on, a node accepts only requests with signature V2 (see

@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class Broadcaster {
     // Timeout for the broadcast to all the target connections. We don't expect that parallel send on multiple connections
@@ -49,9 +47,21 @@ public class Broadcaster {
         return doBroadcast(broadcastMessage, 1);
     }
 
+    public boolean hasConnections() {
+        return node.isInitialized() && node.getAllActiveConnections().findAny().isPresent();
+    }
+
     private CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage,
                                                            double distributionFactor) {
-        checkArgument(node.isInitialized(), "Node is expected to be initialized before broadcast is called.");
+        // NetworkService completes its initialization when the node of the first transport is ready. The node of
+        // another transport can still be starting. It has no connections yet, so the broadcast reaches no peer on this
+        // transport. It must not throw: the callers broadcast on all transports in one loop, and an exception would
+        // stop the broadcast on the other transports.
+        if (!node.isInitialized()) {
+            log.info("Node {} is not initialized yet. We do not broadcast {}.",
+                    node.getTransportType(), broadcastMessage.getClass().getSimpleName());
+            return CompletableFuture.completedFuture(new BroadcastResult(0, 0, 0));
+        }
         List<Connection> connections = getConnection(distributionFactor);
         if (connections.isEmpty()) {
             log.info("No connections available for broadcast from node {}.", node.getNodeInfo());

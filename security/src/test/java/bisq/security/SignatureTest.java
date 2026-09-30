@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.KeyGeneration;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.ASN1Integer;
@@ -34,8 +35,11 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.interfaces.ECPublicKey;
+import java.util.Iterator;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -69,6 +73,32 @@ public class SignatureTest {
 
             assertTrue(decode(signature)[1].compareTo(halfOrder) <= 0);
             assertTrue(SignatureUtil.verify(message, signature, keyPair.getPublic()));
+        }
+    }
+
+    // Nodes of all versions reject an ECDSA signature with fewer than 68 bytes (NetworkDataValidation). The provider
+    // creates one for about 1 of 8 million low-S signatures, so the test gives the lengths.
+    @Test
+    public void signsAgainIfTheSignatureIsTooShort() throws GeneralSecurityException {
+        byte[] tooShort = new byte[NetworkDataValidation.MIN_EC_SIGNATURE_LENGTH - 1];
+        byte[] accepted = new byte[NetworkDataValidation.MIN_EC_SIGNATURE_LENGTH];
+        Iterator<byte[]> signatures = List.of(tooShort, tooShort, accepted).iterator();
+
+        assertSame(accepted, SignatureUtil.signWithAcceptedLength(signatures::next));
+    }
+
+    @Test
+    public void failsIfNoSignatureHasTheRequiredLength() {
+        byte[] tooShort = new byte[NetworkDataValidation.MIN_EC_SIGNATURE_LENGTH - 1];
+
+        assertThrows(SignatureException.class, () -> SignatureUtil.signWithAcceptedLength(() -> tooShort));
+    }
+
+    @Test
+    public void createdSignaturesHaveAnAcceptedLength() throws GeneralSecurityException {
+        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+        for (int i = 0; i < 64; i++) {
+            NetworkDataValidation.validateECSignature(SignatureUtil.sign(("message " + i).getBytes(), keyPair.getPrivate()));
         }
     }
 

@@ -177,6 +177,9 @@ Bridge verification and Bisq 2 security-manager bans are independent. Revalidati
 republish or otherwise reactivate a role after a successful result; it only retains existing data or
 removes invalid data.
 
+A node applies a ban to the role which the ban names, also if the role arrives after the ban, for
+example with an inventory response, or when an oracle node publishes it again.
+
 The currently deployed ban payload names one exact `AuthorizedBondedRole` record. Consequently, a
 new authorization created with another lockup/signature is a different record and is not
 automatically covered by the old ban. Treating a ban as permanent revocation of the underlying DAO

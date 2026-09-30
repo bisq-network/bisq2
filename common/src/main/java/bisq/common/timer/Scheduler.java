@@ -113,7 +113,7 @@ public class Scheduler implements TaskScheduler {
                     return;
                 }
                 try {
-                    task.run();
+                    runTask(false);
                 } finally {
                     stop();
                 }
@@ -125,7 +125,7 @@ public class Scheduler implements TaskScheduler {
                     return;
                 }
                 try {
-                    task.run();
+                    runTask(true);
                 } finally {
                     counter++;
                     if (counter >= cycles) {
@@ -135,6 +135,17 @@ public class Scheduler implements TaskScheduler {
             }, initialDelay, delay, timeUnit);
         }
         return this;
+    }
+
+    // The executor keeps an exception of the task in the future of the task, which nobody reads. For a repeated task,
+    // it also suppresses all later runs. So a task which failed once would stop without a log. We log the exception and
+    // keep a repeated task scheduled.
+    private void runTask(boolean isPeriodic) {
+        try {
+            task.run();
+        } catch (Exception e) {
+            log.error("Task {} failed", getThreadName(isPeriodic), e);
+        }
     }
 
     private String getThreadName(boolean isPeriodic) {

@@ -93,11 +93,16 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         }
 
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
-        // Detect them before the signature verification, which is the most expensive check. The check is
-        // repeated inside the lock because the map can change in between.
+        // Detect them before the signature verification, which is the most expensive check. A copy without signature
+        // V2, which a node of an earlier version relayed, is not equal to the stored request, but its sequence number is
+        // not higher. The checks are repeated inside the lock because the map can change in between.
         ByteArray storageKey = request.getStorageKey();
-        if (request.equals(persistableStore.getMap().get(storageKey))) {
+        MailboxRequest storedRequest = persistableStore.getMap().get(storageKey);
+        if (request.equals(storedRequest)) {
             return DataStorageResult.failed().requestAlreadyReceived();
+        }
+        if (storedRequest != null && request.isSequenceNrInvalid(storedRequest.getSequenceNumber())) {
+            return DataStorageResult.failed().sequenceNrInvalid();
         }
 
         if (request.isExpired()) {
@@ -260,21 +265,20 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     // Removes the entries which have expired, and the add requests without signature V2 when the node requires it (see
     // isToPrune)
+    // A request can replace an entry after it was selected, so an entry is removed only if the map still holds it
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
-                .filter(entry -> {
-                    MailboxRequest dataRequest = entry.getValue();
-                    boolean isToPrune = isToPrune(dataRequest);
-                    if (isToPrune) {
-                        prunedAndExpiredDataRequests.add(dataRequest);
-                    }
-                    return isToPrune;
-                })
+                .filter(entry -> isToPrune(entry.getValue()))
+                .map(entry -> Map.entry(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
             log.info("We remove {} entries from our {} map which have expired or have no signature V2",
                     expiredEntries.size(), getStoreKey());
-            expiredEntries.forEach(entry -> persistableStore.getMap().remove(entry.getKey()));
+            expiredEntries.forEach(entry -> {
+                if (persistableStore.getMap().remove(entry.getKey(), entry.getValue())) {
+                    prunedAndExpiredDataRequests.add(entry.getValue());
+                }
+            });
         }
     }
 
