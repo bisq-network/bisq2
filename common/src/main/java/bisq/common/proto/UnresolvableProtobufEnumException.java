@@ -20,7 +20,7 @@ package bisq.common.proto;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UnresolvableProtobufEnumException extends Exception {
+public class UnresolvableProtobufEnumException extends UnresolvableProtobufException {
     public UnresolvableProtobufEnumException(Throwable cause) {
         super(cause);
     }
