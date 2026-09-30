@@ -260,13 +260,19 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public boolean hasAuthorizedPubKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        // Signature check is done in AuthorizedData
+        String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
         if (data.staticPublicKeysProvided()) {
-            log.debug("The verification was already done at the p2p network layer. data={};authorizingBondedRoleType={}",
-                    data.getClass().getSimpleName(), authorizingBondedRoleType);
-            return true;
+            // The network layer checks the static keys only when it adds data, not when it loads stored data. A later
+            // version can remove a key from the static keys, and a node which updates still holds the data of that key.
+            // So we check the key against the static keys of this version.
+            boolean isStaticKey = data.getAuthorizedPublicKeys().contains(authorizedDataPubKey);
+            if (!isStaticKey) {
+                log.warn("The authorizedPublicKey is not one of the static keys of {}. authorizingBondedRoleType={}",
+                        data.getClass().getSimpleName(), authorizingBondedRoleType);
+            }
+            return isStaticKey;
         } else {
-            // Signature check is done in AuthorizedData
-            String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
             boolean matchFound = getAuthorizedBondedRoleStream()
                     .filter(bondedRole -> bondedRole.getBondedRoleType() == authorizingBondedRoleType)
                     .anyMatch(bondedRole -> {
