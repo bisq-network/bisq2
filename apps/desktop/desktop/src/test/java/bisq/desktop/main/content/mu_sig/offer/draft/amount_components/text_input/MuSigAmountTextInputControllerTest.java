@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.content.mu_sig.offer.draft.amount_components.text_input;
 
+import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.testutil.TestFxHeadlessSupport;
@@ -41,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(ApplicationExtension.class)
 class MuSigAmountTextInputControllerTest extends TestFxHeadlessSupport {
     private final List<Optional<Monetary>> userEdits = new ArrayList<>();
+    private final List<Monetary> userCommits = new ArrayList<>();
+    private final List<String> textAtCommit = new ArrayList<>();
     private MuSigAmountTextInputController controller;
     private TextField textField;
     private Button otherFocusTarget;
@@ -54,7 +57,6 @@ class MuSigAmountTextInputControllerTest extends TestFxHeadlessSupport {
         stage.setScene(new Scene(root, 640, 480));
         stage.show();
         stage.toFront();
-        controller.onActivate();
         textField = (TextField) controller.getView().getRoot().lookup(".text-field");
     }
 
@@ -130,5 +132,148 @@ class MuSigAmountTextInputControllerTest extends TestFxHeadlessSupport {
         assertThat(textField.getText()).as("editing finished: show the amount used downstream").isEqualTo("500.00");
         assertThat(controller.amountProperty().get()).isEqualTo(Fiat.fromFaceValue(500, "USD"));
         assertThat(userEdits).as("rendering the authoritative amount is not a user edit").isEmpty();
+    }
+
+    @Test
+    void blurCommitsTheLastTypedAmountOnceBeforeRendering(FxRobot robot) {
+        installCommitHandler();
+        robot.interact(() -> controller.setAmount(Fiat.fromFaceValue(500, "USD")));
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> {
+            textField.requestFocus();
+            textField.selectAll();
+        });
+        robot.write("80");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(userCommits).as("typing is an edit in progress, not a completed edit").isEmpty();
+
+        robot.interact(() -> otherFocusTarget.requestFocus());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(userCommits).containsExactly(Fiat.fromFaceValue(80, "USD"));
+        assertThat(textAtCommit).as("the commit runs before the authoritative amount is rendered").containsExactly("80");
+        assertThat(textField.getText()).isEqualTo("80.00");
+    }
+
+    @Test
+    void aCommittedEditIsNotCommittedAgainOnALaterBlur(FxRobot robot) {
+        installCommitHandler();
+        robot.interact(() -> controller.setAmount(Fiat.fromFaceValue(500, "USD")));
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> {
+            textField.requestFocus();
+            textField.selectAll();
+        });
+        robot.write("80");
+        robot.interact(() -> otherFocusTarget.requestFocus());
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(userCommits).containsExactly(Fiat.fromFaceValue(80, "USD"));
+
+        // The domain moves on (e.g. a slider drag), then the field is focused and left untouched.
+        robot.interact(() -> controller.setAmount(Fiat.fromFaceValue(300, "USD")));
+        robot.interact(() -> textField.requestFocus());
+        robot.interact(() -> otherFocusTarget.requestFocus());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(userCommits).as("a consumed edit is not replayed").containsExactly(Fiat.fromFaceValue(80, "USD"));
+        assertThat(textField.getText()).isEqualTo("300.00");
+    }
+
+    @Test
+    void anEmptiedFieldCommitsNothingAndRendersTheAuthoritativeAmount(FxRobot robot) {
+        installCommitHandler();
+        Monetary amount = Fiat.fromFaceValue(500, "USD");
+        robot.interact(() -> controller.setAmount(amount));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(textField.getText()).isEqualTo("500.00");
+        robot.interact(() -> {
+            textField.requestFocus();
+            textField.selectAll();
+        });
+        // A deletion through the control's own edit path (same TextFormatter filter as a key press).
+        robot.interact(() -> textField.deleteText(0, textField.getLength()));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(textField.getText()).isEmpty();
+
+        robot.interact(() -> otherFocusTarget.requestFocus());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(userCommits).as("an emptied field has no value to commit").isEmpty();
+        assertThat(textField.getText()).as("the unchanged authoritative amount is rendered again").isEqualTo("500.00");
+        assertThat(controller.amountProperty().get()).isSameAs(amount);
+    }
+
+    @Test
+    void aPendingEditInAnotherCurrencyIsDroppedAtCommit(FxRobot robot) {
+        installCommitHandler();
+        robot.interact(() -> controller.setAmount(Fiat.fromFaceValue(500, "USD")));
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> {
+            textField.requestFocus();
+            textField.selectAll();
+        });
+        robot.write("80");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // The input side switches under the edit: the field now projects Bitcoin.
+        Monetary btcAmount = Coin.asBtcFromFaceValue(0.01);
+        robot.interact(() -> controller.setAmount(btcAmount));
+        robot.interact(() -> otherFocusTarget.requestFocus());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(userCommits).as("a USD edit must not be committed as a Bitcoin amount").isEmpty();
+        assertThat(controller.amountProperty().get()).isSameAs(btcAmount);
+        assertThat(textField.getText()).isNotEqualTo("80");
+    }
+
+    @Test
+    void aPendingEditDoesNotSurviveDeactivation(FxRobot robot) {
+        installCommitHandler();
+        robot.interact(() -> controller.setAmount(Fiat.fromFaceValue(500, "USD")));
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> {
+            textField.requestFocus();
+            textField.selectAll();
+        });
+        robot.write("80");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.interact(() -> {
+            controller.onDeactivate();
+            controller.onActivate();
+            otherFocusTarget.requestFocus();
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(userCommits).as("an edit from before the deactivation is not committed").isEmpty();
+    }
+
+    @Test
+    void aProgrammaticAmountIsRenderedInAFocusedFieldUntilTheUserTypes(FxRobot robot) {
+        robot.interact(() -> controller.setAmount(Fiat.fromFaceValue(500, "USD")));
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> textField.requestFocus());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // The other endpoint's commit drags this one while it already has the focus.
+        robot.interact(() -> controller.setAmount(Fiat.fromFaceValue(600, "USD")));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(textField.getText()).as("no edit in progress: the field follows the domain").isEqualTo("600.00");
+
+        robot.interact(() -> textField.selectAll());
+        robot.write("7");
+        robot.interact(() -> controller.setAmount(Fiat.fromFaceValue(650, "USD")));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(textField.getText()).as("an edit in progress is not overwritten").isEqualTo("7");
+    }
+
+    // The range consumer: the commit hands the completed edit to the domain, which answers with
+    // the authoritative amount through setAmount. The fixed-amount consumer installs no commit handler.
+    private void installCommitHandler() {
+        controller.setUserCommitHandler(amount -> {
+            userCommits.add(amount);
+            textAtCommit.add(textField.getText());
+            controller.setAmount(amount);
+        });
     }
 }

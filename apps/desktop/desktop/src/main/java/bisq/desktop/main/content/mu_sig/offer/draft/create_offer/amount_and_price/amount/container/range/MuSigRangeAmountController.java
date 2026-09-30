@@ -89,15 +89,22 @@ public class MuSigRangeAmountController implements Controller {
                 UIThread.run(this::applyAllAmounts)));
 
         // Origin separation: only user-typed edits feed the domain, never the programmatic
-        // setAmount() from applyAllAmounts (e.g. on an input-side switch).
+        // setAmount() from applyAllAmounts (e.g. on an input-side switch). Keystrokes are edits in
+        // progress; the edit completes when the focus leaves the field.
         minAmountInputController.setUserEditHandler(userAmount -> {
-            userAmount.ifPresent(amountSelection::onSetMinTradeAmountFromInputAmount);
+            userAmount.ifPresent(amountSelection::onEditMinTradeAmountFromInputAmount);
             applyMinInputAmount();
         });
-
-
         maxAmountInputController.setUserEditHandler(userAmount -> {
-            userAmount.ifPresent(amountSelection::onSetMaxTradeAmountFromInputAmount);
+            userAmount.ifPresent(amountSelection::onEditMaxTradeAmountFromInputAmount);
+            applyMaxInputAmount();
+        });
+        minAmountInputController.setUserCommitHandler(userAmount -> {
+            amountSelection.onSetMinTradeAmountFromInputAmount(userAmount);
+            applyMinInputAmount();
+        });
+        maxAmountInputController.setUserCommitHandler(userAmount -> {
+            amountSelection.onSetMaxTradeAmountFromInputAmount(userAmount);
             applyMaxInputAmount();
         });
 
@@ -157,6 +164,8 @@ public class MuSigRangeAmountController implements Controller {
         pins.clear();
         minAmountInputController.setUserEditHandler(null);
         maxAmountInputController.setUserEditHandler(null);
+        minAmountInputController.setUserCommitHandler(null);
+        maxAmountInputController.setUserCommitHandler(null);
     }
 
 
