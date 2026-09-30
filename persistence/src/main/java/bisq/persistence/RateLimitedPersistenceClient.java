@@ -72,7 +72,11 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     private void persistOnShutdown() {
         if (dropped) {
             dropped = false;
-            getPersistence().persist(getPersistableStore().getClone());
+            try {
+                getPersistence().persist(getPersistableStore().getClone());
+            } catch (CouldNotWritePersistableStore ignore) {
+                // Already logged where it happened; nothing left to do at shutdown.
+            }
         }
     }
 }

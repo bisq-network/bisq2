@@ -21,12 +21,17 @@ import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.PermissionSet;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceService;
 import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
+import bisq.persistence.backup.BackupFileInfo;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class ApiAccessStoreService implements PersistenceClient<ApiAccessStore> {
@@ -34,6 +39,9 @@ public class ApiAccessStoreService implements PersistenceClient<ApiAccessStore> 
     private final ApiAccessStore persistableStore = new ApiAccessStore();
     @Getter(onMethod_ = {@Override})
     private final Persistence<ApiAccessStore> persistence;
+    /** See {@link ApiAccessStore#getClientIdsDroppedDuringLoad()}. Empty before the store is read. */
+    @Getter
+    private volatile Set<String> clientIdsDroppedDuringLoad = Set.of();
 
     public ApiAccessStoreService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
@@ -48,17 +56,78 @@ public class ApiAccessStoreService implements PersistenceClient<ApiAccessStore> 
     }
 
     /**
-     * Write grantAll promotions back to disk on the boot that computed them. Without this, a
-     * node that never pairs a new client keeps the old explicit permission list on disk, and a
-     * later version with additional permissions no longer recognises it as a full standard
+     * Write what the load rewrote back to disk on the same boot. For grantAll promotions: without
+     * this, a node that never pairs a new client keeps the old explicit permission list on disk,
+     * and a later version with additional permissions no longer recognises it as a full standard
      * grant — the client would silently fall back to a restricted set (see
-     * {@code ApiAccessStore#promoteIfFullStandardGrant}).
+     * {@code ApiAccessStore#promoteIfFullStandardGrant}). For hashed secrets: the plaintext would
+     * otherwise stay on disk until the next pairing or revocation, and its backups have to go too;
+     * see {@link #persistWithoutPlaintextSecrets()}.
+     * <p>
+     * Relies on the transport starting only after all stores are read: the load replaces the live
+     * maps without the monitor the write paths take, so a pairing landing during it could be lost.
      */
     @Override
     public void onPersistedApplied(ApiAccessStore persisted) {
-        if (persisted.hadPromotedEntriesDuringLoad()) {
-            log.info("Persisting grantAll promotions computed while loading the store");
+        clientIdsDroppedDuringLoad = persisted.getClientIdsDroppedDuringLoad();
+        if (!persisted.needsWriteBackAfterLoad()) {
+            return;
+        }
+        log.info("Persisting store rewrites computed while loading (promotions: {}, plaintext secrets: {}, dropped clients: {})",
+                persisted.hadPromotedEntriesDuringLoad(),
+                persisted.hadPlaintextSecretsDuringLoad(),
+                persisted.getClientIdsDroppedDuringLoad().size());
+        if (persisted.hadPlaintextSecretsDuringLoad()) {
+            persistWithoutPlaintextSecrets();
+        } else {
             persist();
+        }
+    }
+
+    /**
+     * Hashing the secrets is only complete once the backups are gone too: every write moves the
+     * previous store file into the backups, which are kept for up to a year, so the plaintext would
+     * outlive the migration there. The order is load-bearing: the backups are deleted only once
+     * the hashed store has been written, they are the recovery copies until then, and one more
+     * write then seeds a hashed backup. A failed write keeps them and the plaintext is found again
+     * next boot. Awaited, because the transport starts after this and a pairing written in between
+     * would be backed up and deleted with the rest.
+     */
+    private void persistWithoutPlaintextSecrets() {
+        persist()
+                .thenCompose(this::deletePlaintextBackupsIfWritten)
+                .exceptionally(throwable -> {
+                    log.error("Rewriting the store without plaintext client secrets did not complete", throwable);
+                    return false;
+                })
+                .join();
+    }
+
+    private CompletableFuture<Boolean> deletePlaintextBackupsIfWritten(boolean written) {
+        if (!written) {
+            // The backups are the only recovery copies while the store on disk is not yet
+            // rewritten, so they are kept; the plaintext is retried next boot.
+            log.error("Writing the store without plaintext client secrets failed, keeping the backups");
+            return CompletableFuture.completedFuture(false);
+        }
+        log.info("Deleting backups of the store, they still hold plaintext client secrets");
+        return persistence.deleteBackups()
+                .thenCompose(nil -> {
+                    logBackupsThatSurvivedDeletion();
+                    // Seeds a backup of the hashed store.
+                    return persist();
+                });
+    }
+
+    /**
+     * Loud rather than silent: the store no longer holds a plaintext after this boot, so nothing
+     * would try the deletion again.
+     */
+    private void logBackupsThatSurvivedDeletion() {
+        List<Path> remaining = persistence.getBackups().stream().map(BackupFileInfo::getPath).toList();
+        if (!remaining.isEmpty()) {
+            log.error("Backups still holding plaintext client secrets could not be deleted, " +
+                    "remove them manually: {}", remaining);
         }
     }
 
