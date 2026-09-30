@@ -41,9 +41,13 @@ public record BisqEasyClosedTrade(BisqEasyTrade trade, UserProfile myUserProfile
 
     public static BisqEasyClosedTrade fromProto(bisq.trade.protobuf.BisqEasyClosedTrade proto)
             throws UnresolvableProtobufException {
-        return new BisqEasyClosedTrade(
-                BisqEasyTrade.fromProto(proto.getTrade()),
-                UserProfile.fromProto(proto.getMyUserProfile()),
-                UserProfile.fromProto(proto.getPeerUserProfile()));
+        try {
+            return new BisqEasyClosedTrade(
+                    BisqEasyTrade.fromProto(proto.getTrade()),
+                    UserProfile.fromProto(proto.getMyUserProfile()),
+                    UserProfile.fromProto(proto.getPeerUserProfile()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

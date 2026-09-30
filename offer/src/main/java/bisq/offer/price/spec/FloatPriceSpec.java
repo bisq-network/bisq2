@@ -69,6 +69,10 @@ public final class FloatPriceSpec implements PriceSpec {
     }
 
     public static FloatPriceSpec fromProto(bisq.offer.protobuf.FloatPrice proto) throws UnresolvableProtobufException {
-        return new FloatPriceSpec(proto.getPercentage());
+        try {
+            return new FloatPriceSpec(proto.getPercentage());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

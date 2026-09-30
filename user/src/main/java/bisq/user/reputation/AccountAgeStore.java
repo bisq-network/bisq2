@@ -59,7 +59,11 @@ final class AccountAgeStore implements PersistableStore<AccountAgeStore> {
 
     public static AccountAgeStore fromProto(bisq.user.protobuf.AccountAgeStore proto)
             throws UnresolvableProtobufException {
-        return new AccountAgeStore(new HashSet<>(proto.getJsonRequestsList()), proto.getLastRequested());
+        try {
+            return new AccountAgeStore(new HashSet<>(proto.getJsonRequestsList()), proto.getLastRequested());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

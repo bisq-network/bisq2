@@ -35,12 +35,16 @@ public final class Utxo {
     private final int numConfirmations;
 
     public static Utxo fromProto(bisq.wallet.protobuf.Utxo utxo) throws UnresolvableProtobufException {
-        return new Utxo(
-                utxo.getTxId(),
-                utxo.getVout(),
-                utxo.getAmount(),
-                utxo.getAddress(),
-                utxo.getNumConfirmations()
-        );
+        try {
+            return new Utxo(
+                    utxo.getTxId(),
+                    utxo.getVout(),
+                    utxo.getAmount(),
+                    utxo.getAddress(),
+                    utxo.getNumConfirmations()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -60,9 +60,13 @@ public final class Identity implements PersistableProto {
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) throws UnresolvableProtobufException {
-        return new Identity(proto.getTag(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                KeyBundle.fromProto(proto.getKeyBundle()));
+        try {
+            return new Identity(proto.getTag(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    KeyBundle.fromProto(proto.getKeyBundle()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getId() {

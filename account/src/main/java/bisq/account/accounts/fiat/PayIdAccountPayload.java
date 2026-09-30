@@ -70,12 +70,16 @@ public final class PayIdAccountPayload extends CountryBasedAccountPayload implem
 
     public static PayIdAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getCountryBasedAccountPayload().getPayIdAccountPayload();
-        return new PayIdAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getPayId());
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getPayIdAccountPayload();
+            return new PayIdAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getPayId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

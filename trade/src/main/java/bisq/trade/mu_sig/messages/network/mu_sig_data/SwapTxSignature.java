@@ -61,7 +61,11 @@ public final class SwapTxSignature implements NetworkProto {
 
     public static SwapTxSignature fromProto(bisq.trade.protobuf.SwapTxSignature proto)
             throws UnresolvableProtobufException {
-        return new SwapTxSignature(proto.getSwapTx().toByteArray(), proto.getPeerOutputPrvKeyShare().toByteArray());
+        try {
+            return new SwapTxSignature(proto.getSwapTx().toByteArray(), proto.getPeerOutputPrvKeyShare().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -95,19 +95,23 @@ public abstract class PaymentMethodSpec<T extends PaymentMethod<? extends Paymen
 
     public static <T extends PaymentMethodSpec<?>> T fromProto(bisq.account.protobuf.PaymentMethodSpec proto, Class<T> clazz)
             throws UnresolvableProtobufException {
-        Object result = switch (proto.getMessageCase()) {
-            case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
-            case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
-            case STABLECOINPAYMENTMETHODSPEC -> StableCoinPaymentMethodSpec.fromProto(proto);
-            case CRYPTOPAYMENTMETHODSPEC -> CryptoPaymentMethodSpec.fromProto(proto);
-            case CBDCPAYMENTMETHODSPEC -> CbdcPaymentMethodSpec.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
-        if (clazz.isInstance(result)) {
-            return clazz.cast(result);
-        } else {
-            throw new UnresolvableProtobufMessageException(
-                "Proto message does not match expected type: " + clazz.getSimpleName(), proto);
+        try {
+            Object result = switch (proto.getMessageCase()) {
+                case BITCOINPAYMENTMETHODSPEC -> BitcoinPaymentMethodSpec.fromProto(proto);
+                case FIATPAYMENTMETHODSPEC -> FiatPaymentMethodSpec.fromProto(proto);
+                case STABLECOINPAYMENTMETHODSPEC -> StableCoinPaymentMethodSpec.fromProto(proto);
+                case CRYPTOPAYMENTMETHODSPEC -> CryptoPaymentMethodSpec.fromProto(proto);
+                case CBDCPAYMENTMETHODSPEC -> CbdcPaymentMethodSpec.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+            if (clazz.isInstance(result)) {
+                return clazz.cast(result);
+            } else {
+                throw new UnresolvableProtobufMessageException(
+                    "Proto message does not match expected type: " + clazz.getSimpleName(), proto);
+            }
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

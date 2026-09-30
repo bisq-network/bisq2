@@ -92,11 +92,15 @@ public final class RevolutAccountPayload extends AccountPayload<FiatPaymentMetho
 
     public static RevolutAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
-        return new RevolutAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                revolutAccountPayload.getUserName(),
-                revolutAccountPayload.getSelectedCurrencyCodesList());
+        try {
+            bisq.account.protobuf.RevolutAccountPayload revolutAccountPayload = proto.getRevolutAccountPayload();
+            return new RevolutAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    revolutAccountPayload.getUserName(),
+                    revolutAccountPayload.getSelectedCurrencyCodesList());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -68,8 +68,12 @@ public final class UserProfileStore implements PersistableStore<UserProfileStore
 
     public static UserProfileStore fromProto(bisq.user.protobuf.UserProfileStore proto)
             throws UnresolvableProtobufException {
-        Set<String> ignoredUserProfileIds = new HashSet<>(proto.getIgnoredUserProfileIdsList());
-        return new UserProfileStore(ignoredUserProfileIds);
+        try {
+            Set<String> ignoredUserProfileIds = new HashSet<>(proto.getIgnoredUserProfileIdsList());
+            return new UserProfileStore(ignoredUserProfileIds);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

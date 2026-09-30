@@ -62,20 +62,24 @@ public abstract class MuSigTradeMessage extends TradeMessage {
 
     public static MuSigTradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        return switch (proto.getMuSigTradeMessage().getMessageCase()) {
-            case SETUPTRADEMESSAGE_A -> SetupTradeMessage_A.fromProto(proto);
-            case SETUPTRADEMESSAGE_B -> SetupTradeMessage_B.fromProto(proto);
-            case SETUPTRADEMESSAGE_C -> SetupTradeMessage_C.fromProto(proto);
-            case SETUPTRADEMESSAGE_D -> SetupTradeMessage_D.fromProto(proto);
-            case SENDACCOUNTPAYLOADANDDEPOSITTXMESSAGE -> SendAccountPayloadAndDepositTxMessage.fromProto(proto);
-            case SENDACCOUNTPAYLOADMESSAGE -> SendAccountPayloadMessage.fromProto(proto);
-            case PAYMENTINITIATEDMESSAGE_E -> PaymentInitiatedMessage_E.fromProto(proto);
-            case PAYMENTRECEIVEDMESSAGE_F -> PaymentReceivedMessage_F.fromProto(proto);
-            case COOPERATIVECLOSUREMESSAGE_G -> CooperativeClosureMessage_G.fromProto(proto);
-            case MUSIGREPORTERRORMESSAGE -> MuSigReportErrorMessage.fromProto(proto);
-            case MUSIGCUSTOMPAYOUTPSBTMESSAGE -> MuSigCustomPayoutPsbtMessage.fromProto(proto);
-            case MUSIGMEDIATIONRESULTREJECTIONMESSAGE -> MuSigMediationResultRejectionMessage.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+        try {
+            return switch (proto.getMuSigTradeMessage().getMessageCase()) {
+                case SETUPTRADEMESSAGE_A -> SetupTradeMessage_A.fromProto(proto);
+                case SETUPTRADEMESSAGE_B -> SetupTradeMessage_B.fromProto(proto);
+                case SETUPTRADEMESSAGE_C -> SetupTradeMessage_C.fromProto(proto);
+                case SETUPTRADEMESSAGE_D -> SetupTradeMessage_D.fromProto(proto);
+                case SENDACCOUNTPAYLOADANDDEPOSITTXMESSAGE -> SendAccountPayloadAndDepositTxMessage.fromProto(proto);
+                case SENDACCOUNTPAYLOADMESSAGE -> SendAccountPayloadMessage.fromProto(proto);
+                case PAYMENTINITIATEDMESSAGE_E -> PaymentInitiatedMessage_E.fromProto(proto);
+                case PAYMENTRECEIVEDMESSAGE_F -> PaymentReceivedMessage_F.fromProto(proto);
+                case COOPERATIVECLOSUREMESSAGE_G -> CooperativeClosureMessage_G.fromProto(proto);
+                case MUSIGREPORTERRORMESSAGE -> MuSigReportErrorMessage.fromProto(proto);
+                case MUSIGCUSTOMPAYOUTPSBTMESSAGE -> MuSigCustomPayoutPsbtMessage.fromProto(proto);
+                case MUSIGMEDIATIONRESULTREJECTIONMESSAGE -> MuSigMediationResultRejectionMessage.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

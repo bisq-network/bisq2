@@ -45,7 +45,11 @@ public final class CloseTradeResponse implements Proto {
 
     public static CloseTradeResponse fromProto(bisq.trade.protobuf.CloseTradeResponse proto)
             throws UnresolvableProtobufException {
-        return new CloseTradeResponse(proto.getPeerOutputPrvKeyShare().toByteArray());
+        try {
+            return new CloseTradeResponse(proto.getPeerOutputPrvKeyShare().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

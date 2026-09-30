@@ -69,7 +69,8 @@ class CitationTest {
                 .build();
 
         assertThatThrownBy(() -> Citation.fromProto(proto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     /**

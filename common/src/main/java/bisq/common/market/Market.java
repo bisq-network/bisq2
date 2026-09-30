@@ -82,10 +82,14 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
     }
 
     public static Market fromProto(bisq.common.protobuf.Market proto) throws UnresolvableProtobufException {
-        return new Market(proto.getBaseCurrencyCode(),
-                proto.getQuoteCurrencyCode(),
-                proto.getBaseCurrencyName(),
-                proto.getQuoteCurrencyName());
+        try {
+            return new Market(proto.getBaseCurrencyCode(),
+                    proto.getQuoteCurrencyCode(),
+                    proto.getBaseCurrencyName(),
+                    proto.getQuoteCurrencyName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getQuoteCurrencyDisplayName() {

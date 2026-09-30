@@ -73,10 +73,14 @@ public class BisqEasyMediationCase implements PersistableProto {
 
     public static BisqEasyMediationCase fromProto(bisq.support.protobuf.MediationCase proto)
             throws UnresolvableProtobufException {
-        return new BisqEasyMediationCase(BisqEasyMediationRequest.fromProto(proto.getMediationRequest()),
-                proto.getRequestDate(),
-                proto.getIsClosed(),
-                proto.hasCloseCaseDate() ? Optional.of(proto.getCloseCaseDate()) : Optional.empty());
+        try {
+            return new BisqEasyMediationCase(BisqEasyMediationRequest.fromProto(proto.getMediationRequest()),
+                    proto.getRequestDate(),
+                    proto.getIsClosed(),
+                    proto.hasCloseCaseDate() ? Optional.of(proto.getCloseCaseDate()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public boolean isClosed() {

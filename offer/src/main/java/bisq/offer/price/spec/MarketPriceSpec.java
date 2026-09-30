@@ -56,6 +56,10 @@ public final class MarketPriceSpec implements PriceSpec {
 
     public static MarketPriceSpec fromProto(bisq.offer.protobuf.MarketPrice proto)
             throws UnresolvableProtobufException {
-        return new MarketPriceSpec();
+        try {
+            return new MarketPriceSpec();
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

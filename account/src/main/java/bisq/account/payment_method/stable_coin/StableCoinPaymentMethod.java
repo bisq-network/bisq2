@@ -64,10 +64,14 @@ public class StableCoinPaymentMethod extends PaymentMethod<StableCoinPaymentRail
 
     public static StableCoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
             throws UnresolvableProtobufException {
-        return Optional.ofNullable(
-                        StableCoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Unknown stable-coin payment method: " + proto.getPaymentRailName()));
+        try {
+            return Optional.ofNullable(
+                            StableCoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unknown stable-coin payment method: " + proto.getPaymentRailName()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

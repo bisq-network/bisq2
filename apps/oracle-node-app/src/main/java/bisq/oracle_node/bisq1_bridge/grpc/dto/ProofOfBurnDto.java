@@ -56,8 +56,12 @@ public final class ProofOfBurnDto implements NetworkProto {
 
     public static ProofOfBurnDto fromProto(bisq.bridge.protobuf.ProofOfBurnDto proto)
             throws UnresolvableProtobufException {
-        return new ProofOfBurnDto(proto.getAmount(),
-                proto.getProofOfBurnHash().toByteArray()
-        );
+        try {
+            return new ProofOfBurnDto(proto.getAmount(),
+                    proto.getProofOfBurnHash().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

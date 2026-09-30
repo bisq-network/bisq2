@@ -81,10 +81,14 @@ public final class MuSigArbitrationIssue implements PersistableProto {
 
     public static MuSigArbitrationIssue fromProto(bisq.support.protobuf.MuSigArbitrationIssue proto)
             throws UnresolvableProtobufException {
-        return new MuSigArbitrationIssue(
-                proto.getDate(),
-                Role.fromProto(proto.getCausingRole()),
-                MuSigArbitrationIssueType.fromProto(proto.getType()),
-                proto.hasDetails() ? Optional.of(proto.getDetails()) : Optional.empty());
+        try {
+            return new MuSigArbitrationIssue(
+                    proto.getDate(),
+                    Role.fromProto(proto.getCausingRole()),
+                    MuSigArbitrationIssueType.fromProto(proto.getType()),
+                    proto.hasDetails() ? Optional.of(proto.getDetails()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

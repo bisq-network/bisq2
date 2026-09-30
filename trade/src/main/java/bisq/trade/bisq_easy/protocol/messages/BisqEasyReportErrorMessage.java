@@ -85,16 +85,20 @@ public final class BisqEasyReportErrorMessage extends BisqEasyTradeMessage {
 
     public static BisqEasyReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        var bisqEasyReportErrorMessage = proto.getBisqEasyTradeMessage().getBisqEasyReportErrorMessage();
-        return new BisqEasyReportErrorMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyReportErrorMessage.getErrorMessage(),
-                bisqEasyReportErrorMessage.getStackTrace(),
-                TradeProtocolFailure.fromProto(bisqEasyReportErrorMessage.getTradeProtocolFailure()));
+        try {
+            var bisqEasyReportErrorMessage = proto.getBisqEasyTradeMessage().getBisqEasyReportErrorMessage();
+            return new BisqEasyReportErrorMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    bisqEasyReportErrorMessage.getErrorMessage(),
+                    bisqEasyReportErrorMessage.getStackTrace(),
+                    TradeProtocolFailure.fromProto(bisqEasyReportErrorMessage.getTradeProtocolFailure()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

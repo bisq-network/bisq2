@@ -57,19 +57,23 @@ public final class MoneroAccount extends CryptoAssetAccount<MoneroAccountPayload
     }
 
     public static MoneroAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
-        var cryptoAssetAccount = proto.getCryptoAssetAccount();
-        var monero = cryptoAssetAccount.getMoneroAccount();
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
-        return new MoneroAccount(
-                proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                MoneroAccountPayload.fromProto(proto.getAccountPayload()),
-                keyPair,
-                keyType,
-                accountOrigin
-        );
+        try {
+            var cryptoAssetAccount = proto.getCryptoAssetAccount();
+            var monero = cryptoAssetAccount.getMoneroAccount();
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
+            return new MoneroAccount(
+                    proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    MoneroAccountPayload.fromProto(proto.getAccountPayload()),
+                    keyPair,
+                    keyType,
+                    accountOrigin
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

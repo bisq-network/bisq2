@@ -84,14 +84,18 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
 
     public static BisqEasyOfferbookMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
             throws UnresolvableProtobufException {
-        return new BisqEasyOfferbookMessageReaction(
-                baseProto.getId(),
-                baseProto.getUserProfileId(),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate());
+        try {
+            return new BisqEasyOfferbookMessageReaction(
+                    baseProto.getId(),
+                    baseProto.getUserProfileId(),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private bisq.chat.protobuf.BisqEasyOfferbookMessageReaction toBisqEasyOfferbookMessageReactionProto(boolean serializeForHash) {

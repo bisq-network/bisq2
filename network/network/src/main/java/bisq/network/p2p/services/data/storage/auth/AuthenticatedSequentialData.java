@@ -84,10 +84,14 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
 
     public static AuthenticatedSequentialData fromProto(bisq.network.protobuf.AuthenticatedSequentialData proto)
             throws UnresolvableProtobufException {
-        return new AuthenticatedSequentialData(AuthenticatedData.fromProto(proto.getAuthenticatedData()),
-                proto.getSequenceNumber(),
-                proto.getPubKeyHash().toByteArray(),
-                proto.getCreated());
+        try {
+            return new AuthenticatedSequentialData(AuthenticatedData.fromProto(proto.getAuthenticatedData()),
+                    proto.getSequenceNumber(),
+                    proto.getPubKeyHash().toByteArray(),
+                    proto.getCreated());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

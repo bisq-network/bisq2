@@ -105,26 +105,30 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
 
     public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
             throws UnresolvableProtobufException {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
-        Optional<String> text = baseProto.hasText() ?
-                Optional.of(baseProto.getText()) :
-                Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOfferbookMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOfferbookMessage().getBisqEasyOffer())) :
-                Optional.empty();
-        return new BisqEasyOfferbookMessage(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                baseProto.getAuthorUserProfileId(),
-                bisqEasyOffer,
-                text,
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()));
+        try {
+            Optional<Citation> citation = baseProto.hasCitation() ?
+                    Optional.of(Citation.fromProto(baseProto.getCitation())) :
+                    Optional.empty();
+            Optional<String> text = baseProto.hasText() ?
+                    Optional.of(baseProto.getText()) :
+                    Optional.empty();
+            Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOfferbookMessage().hasBisqEasyOffer() ?
+                    Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOfferbookMessage().getBisqEasyOffer())) :
+                    Optional.empty();
+            return new BisqEasyOfferbookMessage(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    baseProto.getAuthorUserProfileId(),
+                    bisqEasyOffer,
+                    text,
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

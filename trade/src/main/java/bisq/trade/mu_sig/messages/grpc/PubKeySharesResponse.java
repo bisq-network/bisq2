@@ -57,10 +57,14 @@ public final class PubKeySharesResponse implements Proto {
 
     public static PubKeySharesResponse fromProto(bisq.trade.protobuf.PubKeySharesResponse proto)
             throws UnresolvableProtobufException {
-        return new PubKeySharesResponse(proto.getBuyerOutputPubKeyShare().toByteArray(),
-                proto.getSellerOutputPubKeyShare().toByteArray(),
-                proto.getMultisigScriptKey().toByteArray(),
-                proto.getCurrentBlockHeight());
+        try {
+            return new PubKeySharesResponse(proto.getBuyerOutputPubKeyShare().toByteArray(),
+                    proto.getSellerOutputPubKeyShare().toByteArray(),
+                    proto.getMultisigScriptKey().toByteArray(),
+                    proto.getCurrentBlockHeight());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -72,10 +72,14 @@ public final class AuthorizeAccountTimestampV2Request implements MailboxMessage,
 
     public static AuthorizeAccountTimestampV2Request fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV2Request proto)
             throws UnresolvableProtobufException {
-        return new AuthorizeAccountTimestampV2Request(
-                AuthorizeAccountTimestampV2Payload.fromProto(proto.getPayload()),
-                proto.getSignature().toByteArray()
-        );
+        try {
+            return new AuthorizeAccountTimestampV2Request(
+                    AuthorizeAccountTimestampV2Payload.fromProto(proto.getPayload()),
+                    proto.getSignature().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

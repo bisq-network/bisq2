@@ -129,15 +129,19 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
 
     public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto)
             throws UnresolvableProtobufException {
-        return new AuthorizeAccountAgeRequest(proto.hasProtocolVersion()
-                ? proto.getProtocolVersion()
-                : LEGACY_VERSION,
-                proto.getProfileId(),
-                proto.getHashAsHex(),
-                proto.getDate(),
-                proto.getAccountInputDataWithSalt().toByteArray(),
-                proto.getPubKeyBase64(),
-                proto.getSignatureBase64());
+        try {
+            return new AuthorizeAccountAgeRequest(proto.hasProtocolVersion()
+                    ? proto.getProtocolVersion()
+                    : LEGACY_VERSION,
+                    proto.getProfileId(),
+                    proto.getHashAsHex(),
+                    proto.getDate(),
+                    proto.getAccountInputDataWithSalt().toByteArray(),
+                    proto.getPubKeyBase64(),
+                    proto.getSignatureBase64());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

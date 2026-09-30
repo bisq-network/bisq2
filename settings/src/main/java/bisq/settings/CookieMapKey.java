@@ -53,7 +53,11 @@ class CookieMapKey {
     }
 
     static CookieMapKey fromProto(String key, Optional<String> subKey) throws UnresolvableProtobufException {
-        CookieKey cookieKey = CookieKey.valueOf(CookieKey.class, key);
-        return new CookieMapKey(cookieKey, subKey);
+        try {
+            CookieKey cookieKey = CookieKey.valueOf(CookieKey.class, key);
+            return new CookieMapKey(cookieKey, subKey);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -55,10 +55,14 @@ public final class CloseTradeRequest implements Proto {
 
     public static CloseTradeRequest fromProto(bisq.trade.protobuf.CloseTradeRequest proto)
             throws UnresolvableProtobufException {
-        return new CloseTradeRequest(
-                proto.getTradeId(),
-                proto.getMyOutputPeersPrvKeyShare().toByteArray(),
-                proto.getSwapTx().toByteArray());
+        try {
+            return new CloseTradeRequest(
+                    proto.getTradeId(),
+                    proto.getMyOutputPeersPrvKeyShare().toByteArray(),
+                    proto.getSwapTx().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

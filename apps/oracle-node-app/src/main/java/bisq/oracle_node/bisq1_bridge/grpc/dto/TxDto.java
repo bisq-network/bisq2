@@ -64,13 +64,17 @@ public final class TxDto implements NetworkProto {
     }
 
     public static TxDto fromProto(bisq.bridge.protobuf.TxDto proto) throws UnresolvableProtobufException {
-        return new TxDto(proto.getTxId(),
-                proto.hasProofOfBurnDto()
-                        ? Optional.of(ProofOfBurnDto.fromProto(proto.getProofOfBurnDto()))
-                        : Optional.empty(),
-                proto.hasBondedReputationDto()
-                        ? Optional.of(BondedReputationDto.fromProto(proto.getBondedReputationDto()))
-                        : Optional.empty()
-        );
+        try {
+            return new TxDto(proto.getTxId(),
+                    proto.hasProofOfBurnDto()
+                            ? Optional.of(ProofOfBurnDto.fromProto(proto.getProofOfBurnDto()))
+                            : Optional.empty(),
+                    proto.hasBondedReputationDto()
+                            ? Optional.of(BondedReputationDto.fromProto(proto.getBondedReputationDto()))
+                            : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

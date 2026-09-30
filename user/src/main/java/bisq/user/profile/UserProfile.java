@@ -176,14 +176,18 @@ public final class UserProfile implements OwnershipVerifiableData, PublishDateAw
     }
 
     public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) throws UnresolvableProtobufException {
-        return new UserProfile(proto.getVersion(),
-                proto.getNickName(),
-                ProofOfWork.fromProto(proto.getProofOfWork()),
-                proto.getAvatarVersion(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.getTerms(),
-                proto.getStatement(),
-                proto.getApplicationVersion());
+        try {
+            return new UserProfile(proto.getVersion(),
+                    proto.getNickName(),
+                    ProofOfWork.fromProto(proto.getProofOfWork()),
+                    proto.getAvatarVersion(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.getTerms(),
+                    proto.getStatement(),
+                    proto.getApplicationVersion());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

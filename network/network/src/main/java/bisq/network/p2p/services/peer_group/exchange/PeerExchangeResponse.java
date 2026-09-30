@@ -85,8 +85,12 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
 
     public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto)
             throws UnresolvableProtobufException {
-        return new PeerExchangeResponse(proto.getNonce(),
-                ProtobufUtils.fromProtoStream(proto.getPeersList(), Peer::fromProto).collect(Collectors.toList()));
+        try {
+            return new PeerExchangeResponse(proto.getNonce(),
+                    ProtobufUtils.fromProtoStream(proto.getPeersList(), Peer::fromProto).collect(Collectors.toList()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -60,8 +60,12 @@ public final class BurningmanBlockDto implements NetworkProto {
 
     public static BurningmanBlockDto fromProto(bisq.bridge.protobuf.BurningmanBlockDto proto)
             throws UnresolvableProtobufException {
-        return new BurningmanBlockDto(proto.getHeight(),
-                ProtobufUtils.fromProtoStream(proto.getItemsList(), BurningmanDto::fromProto).toList()
-        );
+        try {
+            return new BurningmanBlockDto(proto.getHeight(),
+                    ProtobufUtils.fromProtoStream(proto.getItemsList(), BurningmanDto::fromProto).toList()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

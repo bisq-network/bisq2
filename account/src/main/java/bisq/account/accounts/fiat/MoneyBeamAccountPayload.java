@@ -92,13 +92,17 @@ public final class MoneyBeamAccountPayload extends CountryBasedAccountPayload im
 
     public static MoneyBeamAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getCountryBasedAccountPayload().getMoneyBeamAccountPayload();
-        return new MoneyBeamAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                proto.getCountryBasedAccountPayload().getCountryCode(),
-                payload.getHolderName(),
-                payload.getEmailOrMobileNr());
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getMoneyBeamAccountPayload();
+            return new MoneyBeamAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    proto.getCountryBasedAccountPayload().getCountryCode(),
+                    payload.getHolderName(),
+                    payload.getEmailOrMobileNr());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

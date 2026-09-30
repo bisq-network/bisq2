@@ -170,33 +170,37 @@ public class MuSigContract extends TwoPartyContract<MuSigOffer> {
     }
 
     public static MuSigContract fromProto(bisq.contract.protobuf.Contract proto) throws UnresolvableProtobufException {
-        bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
-        bisq.contract.protobuf.MuSigContract muSigContractProto = twoPartyContractProto.getMuSigContract();
-        MuSigOffer muSigOffer = MuSigOffer.fromProto(proto.getOffer());
-        Market market = muSigOffer.getMarket();
-        PaymentMethodSpec<?> baseSidePaymentMethodSpec = PaymentMethodSpec.fromProto(
-                muSigContractProto.getBaseSidePaymentMethodSpec(),
-                PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market));
-        PaymentMethodSpec<?> quoteSidePaymentMethodSpec = PaymentMethodSpec.fromProto(
-                muSigContractProto.getQuoteSidePaymentMethodSpec(),
-                PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market));
-        return new MuSigContract(proto.getTakeOfferDate(),
-                muSigOffer,
-                TradeProtocolType.fromProto(proto.getTradeProtocolType()),
-                resolveMakerParty(muSigOffer, baseSidePaymentMethodSpec, quoteSidePaymentMethodSpec),
-                Party.fromProto(twoPartyContractProto.getTaker()),
-                muSigContractProto.getBaseSideAmount(),
-                muSigContractProto.getQuoteSideAmount(),
-                baseSidePaymentMethodSpec,
-                quoteSidePaymentMethodSpec,
-                muSigContractProto.hasMediator() ?
-                        Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
-                        Optional.empty(),
-                muSigContractProto.hasArbitrator() ?
-                        Optional.of(UserProfile.fromProto(muSigContractProto.getArbitrator())) :
-                        Optional.empty(),
-                PriceSpec.fromProto(muSigContractProto.getPriceSpec()),
-                muSigContractProto.getMarketPrice());
+        try {
+            bisq.contract.protobuf.TwoPartyContract twoPartyContractProto = proto.getTwoPartyContract();
+            bisq.contract.protobuf.MuSigContract muSigContractProto = twoPartyContractProto.getMuSigContract();
+            MuSigOffer muSigOffer = MuSigOffer.fromProto(proto.getOffer());
+            Market market = muSigOffer.getMarket();
+            PaymentMethodSpec<?> baseSidePaymentMethodSpec = PaymentMethodSpec.fromProto(
+                    muSigContractProto.getBaseSidePaymentMethodSpec(),
+                    PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market));
+            PaymentMethodSpec<?> quoteSidePaymentMethodSpec = PaymentMethodSpec.fromProto(
+                    muSigContractProto.getQuoteSidePaymentMethodSpec(),
+                    PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market));
+            return new MuSigContract(proto.getTakeOfferDate(),
+                    muSigOffer,
+                    TradeProtocolType.fromProto(proto.getTradeProtocolType()),
+                    resolveMakerParty(muSigOffer, baseSidePaymentMethodSpec, quoteSidePaymentMethodSpec),
+                    Party.fromProto(twoPartyContractProto.getTaker()),
+                    muSigContractProto.getBaseSideAmount(),
+                    muSigContractProto.getQuoteSideAmount(),
+                    baseSidePaymentMethodSpec,
+                    quoteSidePaymentMethodSpec,
+                    muSigContractProto.hasMediator() ?
+                            Optional.of(UserProfile.fromProto(muSigContractProto.getMediator())) :
+                            Optional.empty(),
+                    muSigContractProto.hasArbitrator() ?
+                            Optional.of(UserProfile.fromProto(muSigContractProto.getArbitrator())) :
+                            Optional.empty(),
+                    PriceSpec.fromProto(muSigContractProto.getPriceSpec()),
+                    muSigContractProto.getMarketPrice());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private static PaymentMethodSpec<?> getBaseSidePaymentMethodSpec(MuSigOffer offer,

@@ -74,15 +74,19 @@ public final class MobileDeviceProfile implements PersistableProto {
 
     public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.MobileDeviceProfile proto)
             throws UnresolvableProtobufException {
-        Optional<String> symmetricKey = proto.hasSymmetricKeyBase64()
-                ? Optional.of(proto.getSymmetricKeyBase64())
-                : Optional.empty();
-        return new MobileDeviceProfile(proto.getDeviceId(),
-                proto.getDeviceToken(),
-                proto.getPublicKeyBase64(),
-                proto.getDeviceDescriptor(),
-                MobileDevicePlatform.fromProto(proto.getPlatform()),
-                symmetricKey);
+        try {
+            Optional<String> symmetricKey = proto.hasSymmetricKeyBase64()
+                    ? Optional.of(proto.getSymmetricKeyBase64())
+                    : Optional.empty();
+            return new MobileDeviceProfile(proto.getDeviceId(),
+                    proto.getDeviceToken(),
+                    proto.getPublicKeyBase64(),
+                    proto.getDeviceDescriptor(),
+                    MobileDevicePlatform.fromProto(proto.getPlatform()),
+                    symmetricKey);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }
 

@@ -54,7 +54,11 @@ final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> {
 
     public static ProfileAgeStore fromProto(bisq.user.protobuf.ProfileAgeStore proto)
             throws UnresolvableProtobufException {
-        return new ProfileAgeStore(proto.getLastRequested());
+        try {
+            return new ProfileAgeStore(proto.getLastRequested());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

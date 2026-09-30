@@ -70,10 +70,14 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
 
     public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto)
             throws UnresolvableProtobufException {
-        return new IdentityStore(Optional.of(Identity.fromProto(proto.getDefaultIdentity())),
-                ProtobufUtils.fromProtoEntryStream(proto.getActiveIdentityByDomainIdMap(), Identity::fromProto)
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
-                ProtobufUtils.fromProtoStream(proto.getRetiredList(), Identity::fromProto).collect(Collectors.toSet()));
+        try {
+            return new IdentityStore(Optional.of(Identity.fromProto(proto.getDefaultIdentity())),
+                    ProtobufUtils.fromProtoEntryStream(proto.getActiveIdentityByDomainIdMap(), Identity::fromProto)
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+                    ProtobufUtils.fromProtoStream(proto.getRetiredList(), Identity::fromProto).collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

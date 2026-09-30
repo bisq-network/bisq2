@@ -74,7 +74,11 @@ public final class NetworkLoad implements NetworkProto {
     }
 
     public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) throws UnresolvableProtobufException {
-        double difficultyAdjustmentFactor = proto.getDifficultyAdjustmentFactor();
-        return new NetworkLoad(proto.getLoad(), difficultyAdjustmentFactor);
+        try {
+            double difficultyAdjustmentFactor = proto.getDifficultyAdjustmentFactor();
+            return new NetworkLoad(proto.getLoad(), difficultyAdjustmentFactor);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

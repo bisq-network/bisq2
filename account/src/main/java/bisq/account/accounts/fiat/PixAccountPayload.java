@@ -83,14 +83,18 @@ public final class PixAccountPayload extends CountryBasedAccountPayload implemen
 
     public static PixAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.PixAccountPayload payload = countryBasedAccountPayload.getPixAccountPayload();
-        return new PixAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getHolderName(),
-                payload.getPixKey()
-        );
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.PixAccountPayload payload = countryBasedAccountPayload.getPixAccountPayload();
+            return new PixAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getHolderName(),
+                    payload.getPixKey()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

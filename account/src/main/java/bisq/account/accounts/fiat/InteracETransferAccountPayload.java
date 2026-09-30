@@ -97,15 +97,19 @@ public final class InteracETransferAccountPayload extends CountryBasedAccountPay
 
     public static InteracETransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var interactETransferAccountPayload = proto.getCountryBasedAccountPayload().getInteracETransferAccountPayload();
-        return new InteracETransferAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                interactETransferAccountPayload.getHolderName(),
-                interactETransferAccountPayload.getEmail(),
-                interactETransferAccountPayload.getQuestion(),
-                interactETransferAccountPayload.getAnswer()
-        );
+        try {
+            var interactETransferAccountPayload = proto.getCountryBasedAccountPayload().getInteracETransferAccountPayload();
+            return new InteracETransferAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    interactETransferAccountPayload.getHolderName(),
+                    interactETransferAccountPayload.getEmail(),
+                    interactETransferAccountPayload.getQuestion(),
+                    interactETransferAccountPayload.getAnswer()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

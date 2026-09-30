@@ -72,18 +72,22 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
 
     public static TwoPartyPrivateChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
             throws UnresolvableProtobufException {
-        bisq.chat.protobuf.TwoPartyPrivateChatMessageReaction privateChatMessageReaction = baseProto.getTwoPartyPrivateChatMessageReaction();
-        return new TwoPartyPrivateChatMessageReaction(
-                baseProto.getId(),
-                UserProfile.fromProto(privateChatMessageReaction.getSender()),
-                privateChatMessageReaction.getReceiverUserProfileId(),
-                NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate(),
-                privateChatMessageReaction.getIsRemoved());
+        try {
+            bisq.chat.protobuf.TwoPartyPrivateChatMessageReaction privateChatMessageReaction = baseProto.getTwoPartyPrivateChatMessageReaction();
+            return new TwoPartyPrivateChatMessageReaction(
+                    baseProto.getId(),
+                    UserProfile.fromProto(privateChatMessageReaction.getSender()),
+                    privateChatMessageReaction.getReceiverUserProfileId(),
+                    NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate(),
+                    privateChatMessageReaction.getIsRemoved());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

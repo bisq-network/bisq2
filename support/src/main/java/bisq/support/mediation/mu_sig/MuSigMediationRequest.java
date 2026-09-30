@@ -124,13 +124,17 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
 
     public static MuSigMediationRequest fromProto(bisq.support.protobuf.MuSigMediationRequest proto)
             throws UnresolvableProtobufException {
-        return new MuSigMediationRequest(proto.getTradeId(),
-                MuSigContract.fromProto(proto.getContract()),
-                UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()),
-                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()),
-                NetworkId.fromProto(proto.getMediatorNetworkId()));
+        try {
+            return new MuSigMediationRequest(proto.getTradeId(),
+                    MuSigContract.fromProto(proto.getContract()),
+                    UserProfile.fromProto(proto.getRequester()),
+                    UserProfile.fromProto(proto.getPeer()),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList()),
+                    NetworkId.fromProto(proto.getMediatorNetworkId()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

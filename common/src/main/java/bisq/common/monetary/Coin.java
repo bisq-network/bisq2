@@ -168,11 +168,15 @@ public final class Coin extends Monetary {
     }
 
     public static Coin fromProto(bisq.common.protobuf.Monetary baseProto) throws UnresolvableProtobufException {
-        return new Coin(baseProto.getId(),
-                baseProto.getValue(),
-                baseProto.getCode(),
-                baseProto.getPrecision(),
-                baseProto.getLowPrecision());
+        try {
+            return new Coin(baseProto.getId(),
+                    baseProto.getValue(),
+                    baseProto.getCode(),
+                    baseProto.getPrecision(),
+                    baseProto.getLowPrecision());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public Coin add(Coin value) {

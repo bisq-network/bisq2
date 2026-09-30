@@ -171,39 +171,43 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
 
     public static MuSigOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
             throws UnresolvableProtobufException {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
-        bisq.chat.protobuf.MuSigOpenTradeMessage protoMessage = baseProto.getMuSigOpenTradeMessage();
-        Optional<UserProfile> mediator = protoMessage.hasMediator() ?
-                Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
-                Optional.empty();
-        Optional<UserProfile> arbitrator = protoMessage.hasArbitrator() ?
-                Optional.of(UserProfile.fromProto(protoMessage.getArbitrator())) :
-                Optional.empty();
-        Optional<MuSigOffer> muSigOffer = protoMessage.hasMuSigOffer() ?
-                Optional.of(MuSigOffer.fromProto(protoMessage.getMuSigOffer())) :
-                Optional.empty();
-        return new MuSigOpenTradeMessage(
-                protoMessage.getTradeId(),
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                UserProfile.fromProto(protoMessage.getSender()),
-                protoMessage.getReceiverUserProfileId(),
-                NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
-                baseProto.getText(),
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                mediator,
-                arbitrator,
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                muSigOffer,
-                ProtobufUtils.fromProtoStream(protoMessage.getChatMessageReactionsList(),
-                                MuSigOpenTradeMessageReaction::fromProto)
-                        .collect(Collectors.toSet())
-        );
+        try {
+            Optional<Citation> citation = baseProto.hasCitation() ?
+                    Optional.of(Citation.fromProto(baseProto.getCitation())) :
+                    Optional.empty();
+            bisq.chat.protobuf.MuSigOpenTradeMessage protoMessage = baseProto.getMuSigOpenTradeMessage();
+            Optional<UserProfile> mediator = protoMessage.hasMediator() ?
+                    Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
+                    Optional.empty();
+            Optional<UserProfile> arbitrator = protoMessage.hasArbitrator() ?
+                    Optional.of(UserProfile.fromProto(protoMessage.getArbitrator())) :
+                    Optional.empty();
+            Optional<MuSigOffer> muSigOffer = protoMessage.hasMuSigOffer() ?
+                    Optional.of(MuSigOffer.fromProto(protoMessage.getMuSigOffer())) :
+                    Optional.empty();
+            return new MuSigOpenTradeMessage(
+                    protoMessage.getTradeId(),
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    UserProfile.fromProto(protoMessage.getSender()),
+                    protoMessage.getReceiverUserProfileId(),
+                    NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
+                    baseProto.getText(),
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    mediator,
+                    arbitrator,
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                    muSigOffer,
+                    ProtobufUtils.fromProtoStream(protoMessage.getChatMessageReactionsList(),
+                                    MuSigOpenTradeMessageReaction::fromProto)
+                            .collect(Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

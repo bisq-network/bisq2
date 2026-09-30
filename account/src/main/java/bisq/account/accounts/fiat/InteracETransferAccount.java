@@ -59,15 +59,19 @@ public final class InteracETransferAccount extends CountryBasedAccount<InteracET
 
     public static InteracETransferAccount fromProto(bisq.account.protobuf.Account proto)
             throws UnresolvableProtobufException {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new InteracETransferAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                InteracETransferAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin
-        );
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new InteracETransferAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    InteracETransferAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

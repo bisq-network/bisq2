@@ -76,10 +76,14 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Owners
 
     public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto)
             throws UnresolvableProtobufException {
-        return new ConfidentialMessage(
-                ConfidentialData.fromProto(proto.getConfidentialData()),
-                proto.getReceiverKeyId()
-        );
+        try {
+            return new ConfidentialMessage(
+                    ConfidentialData.fromProto(proto.getConfidentialData()),
+                    proto.getReceiverKeyId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

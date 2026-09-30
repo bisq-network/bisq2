@@ -86,13 +86,17 @@ public final class SatispayAccountPayload extends AccountPayload<FiatPaymentMeth
 
     public static SatispayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getSatispayAccountPayload();
-        return new SatispayAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getMobileNr()
-        );
+        try {
+            var payload = proto.getSatispayAccountPayload();
+            return new SatispayAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -83,9 +83,13 @@ public final class PermissionSet implements PersistableProto {
     }
 
     public static PermissionSet fromProto(bisq.api.protobuf.PermissionSet proto) throws UnresolvableProtobufException {
-        if (proto.getGrantAll()) {
-            return grantAll();
+        try {
+            if (proto.getGrantAll()) {
+                return grantAll();
+            }
+            return new PermissionSet(ProtobufUtils.fromProtoEnumSet(Permission.class, proto.getPermissionsList()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        return new PermissionSet(ProtobufUtils.fromProtoEnumSet(Permission.class, proto.getPermissionsList()));
     }
 }

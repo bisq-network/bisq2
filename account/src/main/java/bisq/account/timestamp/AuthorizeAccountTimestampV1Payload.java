@@ -80,13 +80,17 @@ public final class AuthorizeAccountTimestampV1Payload implements NetworkProto {
 
     public static AuthorizeAccountTimestampV1Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV1Payload proto)
             throws UnresolvableProtobufException {
-        return new AuthorizeAccountTimestampV1Payload(
-                proto.getDate(),
-                proto.getHash().toByteArray(),
-                proto.getFingerprint().toByteArray(),
-                proto.getSaltedFingerprint().toByteArray(),
-                proto.getPublicKey().toByteArray()
-        );
+        try {
+            return new AuthorizeAccountTimestampV1Payload(
+                    proto.getDate(),
+                    proto.getHash().toByteArray(),
+                    proto.getFingerprint().toByteArray(),
+                    proto.getSaltedFingerprint().toByteArray(),
+                    proto.getPublicKey().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

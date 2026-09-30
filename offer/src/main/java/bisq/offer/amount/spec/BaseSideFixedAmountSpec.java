@@ -54,6 +54,10 @@ public final class BaseSideFixedAmountSpec extends FixedAmountSpec implements Ba
 
     public static BaseSideFixedAmountSpec fromProto(bisq.offer.protobuf.FixedAmountSpec proto)
             throws UnresolvableProtobufException {
-        return new BaseSideFixedAmountSpec(proto.getAmount());
+        try {
+            return new BaseSideFixedAmountSpec(proto.getAmount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

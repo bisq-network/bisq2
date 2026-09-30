@@ -108,18 +108,22 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
 
     public static DomesticWireTransferAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
-        var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        var domesticWireAccountPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
-        checkArgument(bankAccountPayload.hasBankName(), "Bank name for DomesticWireTransfer must be present");
-        checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for DomesticWireTransfer must be present");
-        return new DomesticWireTransferAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                bankAccountPayload.getHolderName(),
-                domesticWireAccountPayload.getHolderAddress(),
-                bankAccountPayload.getBankName(),
-                bankAccountPayload.getBankId(),
-                bankAccountPayload.getAccountNr());
+        try {
+            var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
+            var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+            var domesticWireAccountPayload = bankAccountPayload.getDomesticWireTransferAccountPayload();
+            checkArgument(bankAccountPayload.hasBankName(), "Bank name for DomesticWireTransfer must be present");
+            checkArgument(bankAccountPayload.hasBankId(), "BankId (Routing number) for DomesticWireTransfer must be present");
+            return new DomesticWireTransferAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    bankAccountPayload.getHolderName(),
+                    domesticWireAccountPayload.getHolderAddress(),
+                    bankAccountPayload.getBankName(),
+                    bankAccountPayload.getBankId(),
+                    bankAccountPayload.getAccountNr());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

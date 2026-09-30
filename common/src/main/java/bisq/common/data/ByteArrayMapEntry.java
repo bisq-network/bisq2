@@ -49,7 +49,11 @@ public final class ByteArrayMapEntry implements PersistableProto {
 
     public static ByteArrayMapEntry fromProto(bisq.common.protobuf.ByteArrayMapEntry proto)
             throws UnresolvableProtobufException {
-        return new ByteArrayMapEntry(ByteArray.fromProto(proto.getKey()),
-                ByteArray.fromProto(proto.getValue()));
+        try {
+            return new ByteArrayMapEntry(ByteArray.fromProto(proto.getKey()),
+                    ByteArray.fromProto(proto.getValue()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

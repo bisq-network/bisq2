@@ -55,9 +55,13 @@ public final class TxConfirmationStatus implements Proto {
 
     public static TxConfirmationStatus fromProto(bisq.trade.protobuf.TxConfirmationStatus proto)
             throws UnresolvableProtobufException {
-        return new TxConfirmationStatus(proto.getTx().toByteArray(),
-                proto.getCurrentBlockHeight(),
-                proto.getNumConfirmations());
+        try {
+            return new TxConfirmationStatus(proto.getTx().toByteArray(),
+                    proto.getCurrentBlockHeight(),
+                    proto.getNumConfirmations());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

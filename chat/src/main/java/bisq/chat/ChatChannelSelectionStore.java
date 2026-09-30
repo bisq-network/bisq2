@@ -57,7 +57,11 @@ public final class ChatChannelSelectionStore implements PersistableStore<ChatCha
 
     public static ChatChannelSelectionStore fromProto(bisq.chat.protobuf.ChatChannelSelectionStore proto)
             throws UnresolvableProtobufException {
-        return new ChatChannelSelectionStore(proto.hasSelectedChannelId() ? proto.getSelectedChannelId() : null);
+        try {
+            return new ChatChannelSelectionStore(proto.hasSelectedChannelId() ? proto.getSelectedChannelId() : null);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

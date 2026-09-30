@@ -76,15 +76,19 @@ public final class SetupTradeMessage_D extends MuSigTradeMessage {
 
     public static SetupTradeMessage_D fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.SetupTradeMessage_D muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageD();
-        return new SetupTradeMessage_D(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()),
-                muSigMessageProto.getDepositPsbt().toByteArray());
+        try {
+            bisq.trade.protobuf.SetupTradeMessage_D muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageD();
+            return new SetupTradeMessage_D(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()),
+                    muSigMessageProto.getDepositPsbt().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

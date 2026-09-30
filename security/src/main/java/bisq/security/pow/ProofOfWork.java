@@ -96,14 +96,18 @@ public final class ProofOfWork implements NetworkProto {
     }
 
     public static ProofOfWork fromProto(bisq.security.protobuf.ProofOfWork proto) throws UnresolvableProtobufException {
-        return new ProofOfWork(
-                proto.getPayload().toByteArray(),
-                proto.getCounter(),
-                proto.getChallenge().isEmpty() ? null : proto.getChallenge().toByteArray(),
-                proto.getDifficulty(),
-                proto.getSolution().toByteArray(),
-                proto.getDuration()
-        );
+        try {
+            return new ProofOfWork(
+                    proto.getPayload().toByteArray(),
+                    proto.getCounter(),
+                    proto.getChallenge().isEmpty() ? null : proto.getChallenge().toByteArray(),
+                    proto.getDifficulty(),
+                    proto.getSolution().toByteArray(),
+                    proto.getDuration()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public double getLog2Difficulty() {

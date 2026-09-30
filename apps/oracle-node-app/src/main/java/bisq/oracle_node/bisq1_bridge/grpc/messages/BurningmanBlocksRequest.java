@@ -55,6 +55,10 @@ public final class BurningmanBlocksRequest implements NetworkProto {
 
     public static BurningmanBlocksRequest fromProto(bisq.bridge.protobuf.BurningmanBlocksRequest proto)
             throws UnresolvableProtobufException {
-        return new BurningmanBlocksRequest(proto.getStartBlockHeight());
+        try {
+            return new BurningmanBlocksRequest(proto.getStartBlockHeight());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

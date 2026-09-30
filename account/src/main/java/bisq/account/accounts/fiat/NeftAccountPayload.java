@@ -92,14 +92,18 @@ public final class NeftAccountPayload extends CountryBasedAccountPayload impleme
 
     public static NeftAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getCountryBasedAccountPayload().getNeftAccountPayload();
-        return new NeftAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getAccountNr(),
-                payload.getIfsc()
-        );
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getNeftAccountPayload();
+            return new NeftAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getAccountNr(),
+                    payload.getIfsc()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -76,15 +76,19 @@ public final class BisqEasyTakeOfferRequest extends BisqEasyTradeMessage {
 
     public static BisqEasyTakeOfferRequest fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = proto.getBisqEasyTradeMessage().getBisqEasyTakeOfferRequest();
-        return new BisqEasyTakeOfferRequest(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                BisqEasyContract.fromProto(bisqEasyTakeOfferRequest.getBisqEasyContract()),
-                ContractSignatureData.fromProto(bisqEasyTakeOfferRequest.getContractSignatureData()));
+        try {
+            bisq.trade.protobuf.BisqEasyTakeOfferRequest bisqEasyTakeOfferRequest = proto.getBisqEasyTradeMessage().getBisqEasyTakeOfferRequest();
+            return new BisqEasyTakeOfferRequest(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    BisqEasyContract.fromProto(bisqEasyTakeOfferRequest.getBisqEasyContract()),
+                    ContractSignatureData.fromProto(bisqEasyTakeOfferRequest.getContractSignatureData()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

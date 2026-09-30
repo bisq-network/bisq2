@@ -117,13 +117,17 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
 
     public static AuthorizedSignedWitnessData fromProto(bisq.user.protobuf.AuthorizedSignedWitnessData proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedSignedWitnessData(
-                proto.getVersion(),
-                proto.getProfileId(),
-                proto.getDateBucket(),
-                proto.getWitnessNullifier().toByteArray(),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            return new AuthorizedSignedWitnessData(
+                    proto.getVersion(),
+                    proto.getProfileId(),
+                    proto.getDateBucket(),
+                    proto.getWitnessNullifier().toByteArray(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

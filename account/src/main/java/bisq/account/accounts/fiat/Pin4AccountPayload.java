@@ -77,12 +77,16 @@ public final class Pin4AccountPayload extends CountryBasedAccountPayload impleme
 
     public static Pin4AccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.Pin4AccountPayload payload =
-                proto.getCountryBasedAccountPayload().getPin4AccountPayload();
-        return new Pin4AccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getMobileNr()
-        );
+        try {
+            bisq.account.protobuf.Pin4AccountPayload payload =
+                    proto.getCountryBasedAccountPayload().getPin4AccountPayload();
+            return new Pin4AccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -82,9 +82,13 @@ public final class NetworkEnvelope implements NetworkProto {
 
     public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto)
             throws UnresolvableProtobufException {
-        return new NetworkEnvelope(proto.getVersion(),
-                AuthorizationToken.fromProto(proto.getAuthorizationToken()),
-                EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()));
+        try {
+            return new NetworkEnvelope(proto.getVersion(),
+                    AuthorizationToken.fromProto(proto.getAuthorizationToken()),
+                    EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public void verifyVersion() throws ConnectionException {

@@ -57,7 +57,11 @@ public final class CbdcPaymentMethodSpec extends PaymentMethodSpec<CbdcPaymentMe
 
     public static CbdcPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto)
             throws UnresolvableProtobufException {
-        return new CbdcPaymentMethodSpec(CbdcPaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        try {
+            return new CbdcPaymentMethodSpec(CbdcPaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

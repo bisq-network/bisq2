@@ -113,13 +113,17 @@ public final class ResendMessageData implements NetworkProto {
 
     public static ResendMessageData fromProto(bisq.network.protobuf.ResendMessageData proto)
             throws UnresolvableProtobufException {
-        return new ResendMessageData(EnvelopePayloadMessage.fromProto(proto.getEnvelopePayloadMessage()),
-                NetworkId.fromProto(proto.getReceiverNetworkId()),
-                KeyPairProtoUtil.fromProto(proto.getSenderKeyPair()),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                MessageDeliveryStatus.fromProto(proto.getMessageDeliveryStatus()),
-                proto.getDate()
-        );
+        try {
+            return new ResendMessageData(EnvelopePayloadMessage.fromProto(proto.getEnvelopePayloadMessage()),
+                    NetworkId.fromProto(proto.getReceiverNetworkId()),
+                    KeyPairProtoUtil.fromProto(proto.getSenderKeyPair()),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    MessageDeliveryStatus.fromProto(proto.getMessageDeliveryStatus()),
+                    proto.getDate()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getId() {

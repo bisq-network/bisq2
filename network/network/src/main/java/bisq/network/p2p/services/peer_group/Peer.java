@@ -81,10 +81,14 @@ public final class Peer implements NetworkProto, Comparable<Peer> {
     }
 
     public static Peer fromProto(bisq.network.protobuf.Peer proto) throws UnresolvableProtobufException {
-        return new Peer(Capability.fromProto(proto.getCapability()),
-                NetworkLoad.fromProto(proto.getNetworkLoad()),
-                proto.getIsOutboundConnection(),
-                proto.getCreated());
+        try {
+            return new Peer(Capability.fromProto(proto.getCapability()),
+                    NetworkLoad.fromProto(proto.getNetworkLoad()),
+                    proto.getIsOutboundConnection(),
+                    proto.getCreated());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public Date getDate() {

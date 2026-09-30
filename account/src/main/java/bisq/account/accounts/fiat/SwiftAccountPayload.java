@@ -204,51 +204,55 @@ public final class SwiftAccountPayload extends CountryBasedAccountPayload implem
 
     public static SwiftAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.SwiftAccountPayload payload = countryBasedAccountPayload.getSwiftAccountPayload();
-        Optional<String> beneficiaryPhone = payload.hasBeneficiaryPhone()
-                ? Optional.of(payload.getBeneficiaryPhone())
-                : Optional.empty();
-        Optional<String> bankBranch = payload.hasBankBranch()
-                ? Optional.of(payload.getBankBranch())
-                : Optional.empty();
-        Optional<String> intermediaryBankCountryCode = payload.hasIntermediaryBankCountryCode()
-                ? Optional.of(payload.getIntermediaryBankCountryCode())
-                : Optional.empty();
-        Optional<String> intermediaryBankSwiftCode = payload.hasIntermediaryBankSwiftCode()
-                ? Optional.of(payload.getIntermediaryBankSwiftCode())
-                : Optional.empty();
-        Optional<String> intermediaryBankName = payload.hasIntermediaryBankName()
-                ? Optional.of(payload.getIntermediaryBankName())
-                : Optional.empty();
-        Optional<String> intermediaryBankBranch = payload.hasIntermediaryBankBranch()
-                ? Optional.of(payload.getIntermediaryBankBranch())
-                : Optional.empty();
-        Optional<String> intermediaryBankAddress = payload.hasIntermediaryBankAddress()
-                ? Optional.of(payload.getIntermediaryBankAddress())
-                : Optional.empty();
-        Optional<String> additionalInstructions = payload.hasAdditionalInstructions()
-                ? Optional.of(payload.getAdditionalInstructions())
-                : Optional.empty();
-        return new SwiftAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getBeneficiaryName(),
-                payload.getBeneficiaryAccountNr(),
-                beneficiaryPhone,
-                payload.getBeneficiaryAddress(),
-                payload.getSelectedCurrencyCode(),
-                payload.getBankSwiftCode(),
-                payload.getBankName(),
-                bankBranch,
-                payload.getBankAddress(),
-                intermediaryBankCountryCode,
-                intermediaryBankSwiftCode,
-                intermediaryBankName,
-                intermediaryBankBranch,
-                intermediaryBankAddress,
-                additionalInstructions
-        );
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.SwiftAccountPayload payload = countryBasedAccountPayload.getSwiftAccountPayload();
+            Optional<String> beneficiaryPhone = payload.hasBeneficiaryPhone()
+                    ? Optional.of(payload.getBeneficiaryPhone())
+                    : Optional.empty();
+            Optional<String> bankBranch = payload.hasBankBranch()
+                    ? Optional.of(payload.getBankBranch())
+                    : Optional.empty();
+            Optional<String> intermediaryBankCountryCode = payload.hasIntermediaryBankCountryCode()
+                    ? Optional.of(payload.getIntermediaryBankCountryCode())
+                    : Optional.empty();
+            Optional<String> intermediaryBankSwiftCode = payload.hasIntermediaryBankSwiftCode()
+                    ? Optional.of(payload.getIntermediaryBankSwiftCode())
+                    : Optional.empty();
+            Optional<String> intermediaryBankName = payload.hasIntermediaryBankName()
+                    ? Optional.of(payload.getIntermediaryBankName())
+                    : Optional.empty();
+            Optional<String> intermediaryBankBranch = payload.hasIntermediaryBankBranch()
+                    ? Optional.of(payload.getIntermediaryBankBranch())
+                    : Optional.empty();
+            Optional<String> intermediaryBankAddress = payload.hasIntermediaryBankAddress()
+                    ? Optional.of(payload.getIntermediaryBankAddress())
+                    : Optional.empty();
+            Optional<String> additionalInstructions = payload.hasAdditionalInstructions()
+                    ? Optional.of(payload.getAdditionalInstructions())
+                    : Optional.empty();
+            return new SwiftAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getBeneficiaryName(),
+                    payload.getBeneficiaryAccountNr(),
+                    beneficiaryPhone,
+                    payload.getBeneficiaryAddress(),
+                    payload.getSelectedCurrencyCode(),
+                    payload.getBankSwiftCode(),
+                    payload.getBankName(),
+                    bankBranch,
+                    payload.getBankAddress(),
+                    intermediaryBankCountryCode,
+                    intermediaryBankSwiftCode,
+                    intermediaryBankName,
+                    intermediaryBankBranch,
+                    intermediaryBankAddress,
+                    additionalInstructions
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

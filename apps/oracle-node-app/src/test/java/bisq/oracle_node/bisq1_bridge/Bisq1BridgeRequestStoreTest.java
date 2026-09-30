@@ -115,10 +115,12 @@ class Bisq1BridgeRequestStoreTest {
 
         assertThatThrownBy(() -> Bisq1BridgeRequestStore.fromProto(
                 bisq.oracle_node.protobuf.Bisq1BridgeRequestStore.newBuilder().addAccountAgeRequests(account).build()))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> Bisq1BridgeRequestStore.fromProto(
                 bisq.oracle_node.protobuf.Bisq1BridgeRequestStore.newBuilder().addSignedWitnessRequests(signed).build()))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

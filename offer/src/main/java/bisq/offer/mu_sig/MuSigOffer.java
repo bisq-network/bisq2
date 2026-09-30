@@ -153,36 +153,40 @@ public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodS
     }
 
     public static MuSigOffer fromProto(bisq.offer.protobuf.Offer proto) throws UnresolvableProtobufException {
-        List<TradeProtocolType> protocolTypes = ProtobufUtils.fromProtoStream(proto.getProtocolTypesList(),
-                        TradeProtocolType::fromProto)
-                .collect(Collectors.toList());
-        Market market = Market.fromProto(proto.getMarket());
-        Class<? extends PaymentMethodSpec<?>> clazzForBaseSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market);
-        List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
-                        proto.getBaseSidePaymentSpecsList(), 
-                        pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForBaseSide))
-                .collect(Collectors.toList());
-        Class<? extends PaymentMethodSpec<?>> clazzForQuoteSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market);
-        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
-                        proto.getQuoteSidePaymentSpecsList(), 
-                        pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForQuoteSide))
-                .collect(Collectors.toList());
-        List<OfferOption> offerOptions = ProtobufUtils.fromProtoStream(proto.getOfferOptionsList(),
-                        OfferOption::fromProto)
-                .collect(Collectors.toList());
-        return new MuSigOffer(proto.getId(),
-                proto.getDate(),
-                NetworkId.fromProto(proto.getMakerNetworkId()),
-                Direction.fromProto(proto.getDirection()),
-                market,
-                AmountSpec.fromProto(proto.getAmountSpec()),
-                PriceSpec.fromProto(proto.getPriceSpec()),
-                protocolTypes,
-                baseSidePaymentMethodSpecs,
-                quoteSidePaymentMethodSpecs,
-                offerOptions,
-                proto.getVersion(),
-                proto.getTradeProtocolVersion(),
-                proto.getAppVersion());
+        try {
+            List<TradeProtocolType> protocolTypes = ProtobufUtils.fromProtoStream(proto.getProtocolTypesList(),
+                            TradeProtocolType::fromProto)
+                    .collect(Collectors.toList());
+            Market market = Market.fromProto(proto.getMarket());
+            Class<? extends PaymentMethodSpec<?>> clazzForBaseSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market);
+            List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                            proto.getBaseSidePaymentSpecsList(), 
+                            pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForBaseSide))
+                    .collect(Collectors.toList());
+            Class<? extends PaymentMethodSpec<?>> clazzForQuoteSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market);
+            List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                            proto.getQuoteSidePaymentSpecsList(), 
+                            pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForQuoteSide))
+                    .collect(Collectors.toList());
+            List<OfferOption> offerOptions = ProtobufUtils.fromProtoStream(proto.getOfferOptionsList(),
+                            OfferOption::fromProto)
+                    .collect(Collectors.toList());
+            return new MuSigOffer(proto.getId(),
+                    proto.getDate(),
+                    NetworkId.fromProto(proto.getMakerNetworkId()),
+                    Direction.fromProto(proto.getDirection()),
+                    market,
+                    AmountSpec.fromProto(proto.getAmountSpec()),
+                    PriceSpec.fromProto(proto.getPriceSpec()),
+                    protocolTypes,
+                    baseSidePaymentMethodSpecs,
+                    quoteSidePaymentMethodSpecs,
+                    offerOptions,
+                    proto.getVersion(),
+                    proto.getTradeProtocolVersion(),
+                    proto.getAppVersion());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -80,13 +80,17 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     public static CommonPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                     bisq.chat.protobuf.CommonPublicChatChannel proto)
             throws UnresolvableProtobufException {
-        return new CommonPublicChatChannel(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                proto.getChannelTitle(),
-                proto.hasChannelAdminId() ? Optional.of(proto.getChannelAdminId()) : Optional.empty(),
-                new ArrayList<>(proto.getChannelModeratorIdsList()),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        try {
+            return new CommonPublicChatChannel(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    proto.getChannelTitle(),
+                    proto.hasChannelAdminId() ? Optional.of(proto.getChannelAdminId()) : Optional.empty(),
+                    new ArrayList<>(proto.getChannelModeratorIdsList()),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -43,6 +43,7 @@ import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFO
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -234,7 +235,9 @@ class AuthenticatedDataSignatureV2Test {
                 .setOwnerPublicKeyBytes(EcPublicKeyVariants.toCompressed(ownerKeyPair.getPublic()))
                 .build();
 
-        assertThrows(IllegalArgumentException.class, () -> RemoveAuthenticatedDataRequest.fromProto(proto));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> RemoveAuthenticatedDataRequest.fromProto(proto)).getCause());
     }
 
     // Nodes of this version sign in low-S form. A relay can create the high-S form of a signature without the private

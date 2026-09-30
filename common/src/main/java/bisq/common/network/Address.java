@@ -118,7 +118,11 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
     abstract public TransportType getTransportType();
 
     public static Address fromProto(bisq.common.protobuf.Address proto) throws UnresolvableProtobufException {
-        return Address.from(proto.getHost(), proto.getPort());
+        try {
+            return Address.from(proto.getHost(), proto.getPort());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public boolean isClearNetAddress() {

@@ -126,13 +126,17 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
 
     public static BisqEasyMediationRequest fromProto(bisq.support.protobuf.MediationRequest proto)
             throws UnresolvableProtobufException {
-        return new BisqEasyMediationRequest(proto.getTradeId(),
-                BisqEasyContract.fromProto(proto.getContract()),
-                UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()),
-                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), BisqEasyOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()),
-                NetworkId.fromProto(proto.getMediatorNetworkId()));
+        try {
+            return new BisqEasyMediationRequest(proto.getTradeId(),
+                    BisqEasyContract.fromProto(proto.getContract()),
+                    UserProfile.fromProto(proto.getRequester()),
+                    UserProfile.fromProto(proto.getPeer()),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), BisqEasyOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList()),
+                    NetworkId.fromProto(proto.getMediatorNetworkId()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

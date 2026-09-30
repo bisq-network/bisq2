@@ -61,7 +61,11 @@ public final class FiatCurrency extends Asset {
     }
 
     public static FiatCurrency fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
-        return new FiatCurrency(baseProto.getCode(), baseProto.getName());
+        try {
+            return new FiatCurrency(baseProto.getCode(), baseProto.getName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // The name field is the displayName using the US locale. For display purpose we use the name based on the user's locale.

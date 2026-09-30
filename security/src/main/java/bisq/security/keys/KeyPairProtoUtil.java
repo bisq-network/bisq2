@@ -40,7 +40,11 @@ public class KeyPairProtoUtil {
 
     public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair)
             throws UnresolvableProtobufException {
-        return fromProto(keyPair, KeyGeneration.ECDH);
+        try {
+            return fromProto(keyPair, KeyGeneration.ECDH);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static java.security.KeyPair fromProto(bisq.security.protobuf.KeyPair keyPair, String keyAlgorithm)
@@ -49,9 +53,8 @@ public class KeyPairProtoUtil {
             PrivateKey privateKey = KeyGeneration.generatePrivate(keyPair.getPrivateKey().toByteArray(), keyAlgorithm);
             PublicKey publicKey = KeyGeneration.generatePublic(keyPair.getPublicKey().toByteArray(), keyAlgorithm);
             return new java.security.KeyPair(publicKey, privateKey);
-        } catch (GeneralSecurityException e) {
-            log.error("fromProto failed", e);
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 }

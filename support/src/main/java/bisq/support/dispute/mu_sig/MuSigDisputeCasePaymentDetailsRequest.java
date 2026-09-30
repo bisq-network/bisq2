@@ -67,10 +67,14 @@ public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessa
 
     public static MuSigDisputeCasePaymentDetailsRequest fromProto(bisq.support.protobuf.MuSigDisputeCasePaymentDetailsRequest proto)
             throws UnresolvableProtobufException {
-        return new MuSigDisputeCasePaymentDetailsRequest(
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId())
-        );
+        try {
+            return new MuSigDisputeCasePaymentDetailsRequest(
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

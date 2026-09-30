@@ -77,14 +77,18 @@ public final class BisqEasyConfirmBtcSentMessage extends BisqEasyTradeMessage {
 
     public static BisqEasyConfirmBtcSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = proto.getBisqEasyTradeMessage().getBisqEasyConfirmBtcSentMessage();
-        return new BisqEasyConfirmBtcSentMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                bisqEasyConfirmBtcSentMessage.hasPaymentProof() ? Optional.of(bisqEasyConfirmBtcSentMessage.getPaymentProof()) : Optional.empty());
+        try {
+            bisq.trade.protobuf.BisqEasyConfirmBtcSentMessage bisqEasyConfirmBtcSentMessage = proto.getBisqEasyTradeMessage().getBisqEasyConfirmBtcSentMessage();
+            return new BisqEasyConfirmBtcSentMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    bisqEasyConfirmBtcSentMessage.hasPaymentProof() ? Optional.of(bisqEasyConfirmBtcSentMessage.getPaymentProof()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -84,13 +84,17 @@ public final class ZelleAccountPayload extends CountryBasedAccountPayload implem
 
     public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var zelleProto = proto.getCountryBasedAccountPayload().getZelleAccountPayload();
-        return new ZelleAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                zelleProto.getHolderName(),
-                zelleProto.getEmailOrMobileNr()
-        );
+        try {
+            var zelleProto = proto.getCountryBasedAccountPayload().getZelleAccountPayload();
+            return new ZelleAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    zelleProto.getHolderName(),
+                    zelleProto.getEmailOrMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

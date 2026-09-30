@@ -126,21 +126,25 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
 
     public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto)
             throws UnresolvableProtobufException {
-        Map<String, ClientProfile> clientProfileByIdMap = ProtobufUtils.fromProtoEntryStream(
-                        proto.getClientProfileByIdMapMap(), ClientProfile::fromProto)
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue));
-        Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
-        boolean anyPromoted = false;
-        for (Map.Entry<String, bisq.api.protobuf.PermissionSet> e : proto.getPermissionsByClientIdMap().entrySet()) {
-            PermissionSet loaded = PermissionSet.fromProto(e.getValue());
-            PermissionSet effective = promoteIfFullStandardGrant(e.getKey(), loaded);
-            anyPromoted |= effective != loaded;
-            permissionsByClientId.put(e.getKey(), effective);
+        try {
+            Map<String, ClientProfile> clientProfileByIdMap = ProtobufUtils.fromProtoEntryStream(
+                            proto.getClientProfileByIdMapMap(), ClientProfile::fromProto)
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            Map.Entry::getValue));
+            Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
+            boolean anyPromoted = false;
+            for (Map.Entry<String, bisq.api.protobuf.PermissionSet> e : proto.getPermissionsByClientIdMap().entrySet()) {
+                PermissionSet loaded = PermissionSet.fromProto(e.getValue());
+                PermissionSet effective = promoteIfFullStandardGrant(e.getKey(), loaded);
+                anyPromoted |= effective != loaded;
+                permissionsByClientId.put(e.getKey(), effective);
+            }
+            ApiAccessStore store = new ApiAccessStore(clientProfileByIdMap, permissionsByClientId);
+            store.promotedEntriesDuringLoad = anyPromoted;
+            return store;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        ApiAccessStore store = new ApiAccessStore(clientProfileByIdMap, permissionsByClientId);
-        store.promotedEntriesDuringLoad = anyPromoted;
-        return store;
     }
 
     /**

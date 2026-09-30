@@ -59,7 +59,11 @@ public final class BurningmanBlocksResponse implements NetworkProto {
 
     public static BurningmanBlocksResponse fromProto(bisq.bridge.protobuf.BurningmanBlocksResponse proto)
             throws UnresolvableProtobufException {
-        return new BurningmanBlocksResponse(ProtobufUtils.fromProtoStream(proto.getBlocksList(),
-                        BurningmanBlockDto::fromProto).collect(Collectors.toList()));
+        try {
+            return new BurningmanBlocksResponse(ProtobufUtils.fromProtoStream(proto.getBlocksList(),
+                            BurningmanBlockDto::fromProto).collect(Collectors.toList()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

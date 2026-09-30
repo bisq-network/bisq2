@@ -66,6 +66,10 @@ public final class CollateralOption implements OfferOption {
 
     public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto)
             throws UnresolvableProtobufException {
-        return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
+        try {
+            return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

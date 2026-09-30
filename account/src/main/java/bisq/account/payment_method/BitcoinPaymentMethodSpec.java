@@ -56,7 +56,11 @@ public final class BitcoinPaymentMethodSpec extends PaymentMethodSpec<BitcoinPay
 
     public static BitcoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto)
             throws UnresolvableProtobufException {
-        return new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        try {
+            return new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

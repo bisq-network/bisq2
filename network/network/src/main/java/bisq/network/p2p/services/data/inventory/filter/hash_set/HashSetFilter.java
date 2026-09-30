@@ -83,11 +83,15 @@ public final class HashSetFilter extends InventoryFilter {
 
     public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto)
             throws UnresolvableProtobufException {
-        List<HashSetFilterEntry> entries = ProtobufUtils.fromProtoStream(
-                        proto.getHashSetFilter().getFilterEntriesList(), 
-                        HashSetFilterEntry::fromProto)
-                .collect(Collectors.toList());
-        return new HashSetFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()), entries);
+        try {
+            List<HashSetFilterEntry> entries = ProtobufUtils.fromProtoStream(
+                            proto.getHashSetFilter().getFilterEntriesList(), 
+                            HashSetFilterEntry::fromProto)
+                    .collect(Collectors.toList());
+            return new HashSetFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()), entries);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

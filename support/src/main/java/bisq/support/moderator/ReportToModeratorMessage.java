@@ -87,11 +87,15 @@ public final class ReportToModeratorMessage implements MailboxMessage, ExternalN
 
     public static ReportToModeratorMessage fromProto(bisq.support.protobuf.ReportToModeratorMessage proto)
             throws UnresolvableProtobufException {
-        return new ReportToModeratorMessage(proto.getDate(),
-                proto.getReporterUserProfileId(),
-                UserProfile.fromProto(proto.getAccusedUserProfile()),
-                proto.getMessage(),
-                ChatChannelDomain.fromProto(proto.getChatChannelDomain()));
+        try {
+            return new ReportToModeratorMessage(proto.getDate(),
+                    proto.getReporterUserProfileId(),
+                    UserProfile.fromProto(proto.getAccusedUserProfile()),
+                    proto.getMessage(),
+                    ChatChannelDomain.fromProto(proto.getChatChannelDomain()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

@@ -103,12 +103,16 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
 
     public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedTimestampData(
-                proto.getVersion(),
-                proto.getProfileId(),
-                proto.getDate(),
-                proto.getStaticPublicKeysProvided()
-        );
+        try {
+            return new AuthorizedTimestampData(
+                    proto.getVersion(),
+                    proto.getProfileId(),
+                    proto.getDate(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

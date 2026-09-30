@@ -61,9 +61,13 @@ public final class TunnelInfo implements Proto {
 
 
     public static TunnelInfo fromProto(bisq.bi2p.protobuf.TunnelInfo proto) throws UnresolvableProtobufException {
-        return new TunnelInfo(proto.getInboundClientTunnelCount(),
-                proto.getOutboundTunnelCount(),
-                proto.getOutboundClientTunnelCount());
+        try {
+            return new TunnelInfo(proto.getInboundClientTunnelCount(),
+                    proto.getOutboundTunnelCount(),
+                    proto.getOutboundClientTunnelCount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

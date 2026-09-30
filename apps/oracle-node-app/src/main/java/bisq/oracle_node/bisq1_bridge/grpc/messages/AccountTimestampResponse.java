@@ -48,6 +48,10 @@ public final class AccountTimestampResponse implements NetworkProto {
 
     public static AccountTimestampResponse fromProto(bisq.bridge.protobuf.AccountTimestampDateResponse proto)
             throws UnresolvableProtobufException {
-        return new AccountTimestampResponse(proto.getDate());
+        try {
+            return new AccountTimestampResponse(proto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

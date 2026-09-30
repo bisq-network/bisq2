@@ -129,15 +129,19 @@ public final class MuSigArbitrationRequest implements
 
     public static MuSigArbitrationRequest fromProto(bisq.support.protobuf.MuSigArbitrationRequest proto)
             throws UnresolvableProtobufException {
-        return new MuSigArbitrationRequest(proto.getTradeId(),
-                MuSigContract.fromProto(proto.getContract()),
-                MuSigMediationResult.fromProto(proto.getMuSigMediationResult()),
-                proto.getMediationResultSignature().toByteArray(),
-                UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()),
-                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()),
-                NetworkId.fromProto(proto.getArbitratorNetworkId()));
+        try {
+            return new MuSigArbitrationRequest(proto.getTradeId(),
+                    MuSigContract.fromProto(proto.getContract()),
+                    MuSigMediationResult.fromProto(proto.getMuSigMediationResult()),
+                    proto.getMediationResultSignature().toByteArray(),
+                    UserProfile.fromProto(proto.getRequester()),
+                    UserProfile.fromProto(proto.getPeer()),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList()),
+                    NetworkId.fromProto(proto.getArbitratorNetworkId()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

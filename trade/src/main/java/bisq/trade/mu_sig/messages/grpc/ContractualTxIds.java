@@ -57,11 +57,15 @@ public final class ContractualTxIds implements Proto {
 
     public static ContractualTxIds fromProto(bisq.trade.protobuf.ContractualTxIds proto)
             throws UnresolvableProtobufException {
-        return new ContractualTxIds(proto.getDepositTxId(),
-                proto.getBuyersWarningTxId(),
-                proto.getSellersWarningTxId(),
-                proto.getBuyersRedirectTxId(),
-                proto.getSellersRedirectTxId());
+        try {
+            return new ContractualTxIds(proto.getDepositTxId(),
+                    proto.getBuyersWarningTxId(),
+                    proto.getSellersWarningTxId(),
+                    proto.getBuyersRedirectTxId(),
+                    proto.getSellersRedirectTxId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

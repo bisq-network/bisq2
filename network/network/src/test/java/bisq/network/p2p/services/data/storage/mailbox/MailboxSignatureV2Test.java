@@ -41,6 +41,7 @@ import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMes
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -86,12 +87,16 @@ class MailboxSignatureV2Test {
 
         // Otherwise the receiver's removal finds the entry but fails the hash check, while a removal
         // signed by the key of the supplied hash looks up another storage key. Neither can remove it.
-        assertThrows(IllegalArgumentException.class, () -> MailboxSequentialData.fromProto(proto.toBuilder()
-                .setReceiversPubKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)))
-                .build()));
-        assertThrows(IllegalArgumentException.class, () -> MailboxSequentialData.fromProto(proto.toBuilder()
-                .setReceiversPubKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
-                .build()));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> MailboxSequentialData.fromProto(proto.toBuilder()
+                                .setReceiversPubKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)))
+                                .build())).getCause());
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> MailboxSequentialData.fromProto(proto.toBuilder()
+                                .setReceiversPubKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
+                                .build())).getCause());
     }
 
     @Test
@@ -219,7 +224,9 @@ class MailboxSignatureV2Test {
                 .setReceiverPublicKeyBytes(EcPublicKeyVariants.toCompressed(receiverKeyPair.getPublic()))
                 .build();
 
-        assertThrows(IllegalArgumentException.class, () -> RemoveMailboxRequest.fromProto(proto));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> RemoveMailboxRequest.fromProto(proto)).getCause());
     }
 
     @Test

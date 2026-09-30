@@ -62,7 +62,11 @@ public final class AuthorizeTimestampRequest implements MailboxMessage, External
 
     public static AuthorizeTimestampRequest fromProto(bisq.user.protobuf.AuthorizeTimestampRequest proto)
             throws UnresolvableProtobufException {
-        return new AuthorizeTimestampRequest(proto.getProfileId(), proto.getDate());
+        try {
+            return new AuthorizeTimestampRequest(proto.getProfileId(), proto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

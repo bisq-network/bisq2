@@ -84,18 +84,22 @@ public final class NonceSharesRequest implements Proto {
 
     public static NonceSharesRequest fromProto(bisq.trade.protobuf.NonceSharesRequest proto)
             throws UnresolvableProtobufException {
-        return new NonceSharesRequest(proto.getTradeId(),
-                proto.getBuyerOutputPeersPubKeyShare().toByteArray(),
-                proto.getSellerOutputPeersPubKeyShare().toByteArray(),
-                proto.getPeersMultisigScriptKey().toByteArray(),
-                proto.getDepositTxFeeRate(),
-                proto.getPreparedTxFeeRate(),
-                proto.getTradeAmount(),
-                proto.getBuyersSecurityDeposit(),
-                proto.getSellersSecurityDeposit(),
-                proto.hasTradeFeeReceiver()
-                        ? Optional.of(ReceiverAddressAndAmount.fromProto(proto.getTradeFeeReceiver()))
-                        : Optional.empty());
+        try {
+            return new NonceSharesRequest(proto.getTradeId(),
+                    proto.getBuyerOutputPeersPubKeyShare().toByteArray(),
+                    proto.getSellerOutputPeersPubKeyShare().toByteArray(),
+                    proto.getPeersMultisigScriptKey().toByteArray(),
+                    proto.getDepositTxFeeRate(),
+                    proto.getPreparedTxFeeRate(),
+                    proto.getTradeAmount(),
+                    proto.getBuyersSecurityDeposit(),
+                    proto.getSellersSecurityDeposit(),
+                    proto.hasTradeFeeReceiver()
+                            ? Optional.of(ReceiverAddressAndAmount.fromProto(proto.getTradeFeeReceiver()))
+                            : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

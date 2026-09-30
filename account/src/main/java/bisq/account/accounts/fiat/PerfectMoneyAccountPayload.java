@@ -88,13 +88,17 @@ public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPayment
 
     public static PerfectMoneyAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getPerfectMoneyAccountPayload();
-        return new PerfectMoneyAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCode(),
-                payload.getAccountNr()
-        );
+        try {
+            var payload = proto.getPerfectMoneyAccountPayload();
+            return new PerfectMoneyAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCode(),
+                    payload.getAccountNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

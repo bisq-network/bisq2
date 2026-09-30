@@ -63,9 +63,13 @@ public final class BsqBlockDto implements NetworkProto {
     }
 
     public static BsqBlockDto fromProto(bisq.bridge.protobuf.BsqBlockDto proto) throws UnresolvableProtobufException {
-        return new BsqBlockDto(proto.getHeight(),
-                proto.getTime(),
-                ProtobufUtils.fromProtoStream(proto.getTxDtoList(), TxDto::fromProto).toList()
-        );
+        try {
+            return new BsqBlockDto(proto.getHeight(),
+                    proto.getTime(),
+                    ProtobufUtils.fromProtoStream(proto.getTxDtoList(), TxDto::fromProto).toList()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

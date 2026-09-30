@@ -57,11 +57,15 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
 
     public static DeviceRegistrationStore fromProto(bisq.notifications.protobuf.DeviceRegistrationStore proto)
             throws UnresolvableProtobufException {
-        return new DeviceRegistrationStore(
-                ProtobufUtils.fromProtoEntryStream(proto.getDeviceByDeviceIdMap(), MobileDeviceProfile::fromProto)
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                Map.Entry::getValue
-                        )));
+        try {
+            return new DeviceRegistrationStore(
+                    ProtobufUtils.fromProtoEntryStream(proto.getDeviceByDeviceIdMap(), MobileDeviceProfile::fromProto)
+                            .collect(Collectors.toMap(Map.Entry::getKey,
+                                    Map.Entry::getValue
+                            )));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -63,11 +63,15 @@ public final class BannedUserModeratorData implements PersistableProto {
 
     public static BannedUserModeratorData fromProto(bisq.support.protobuf.BannedUserModeratorData proto)
             throws UnresolvableProtobufException {
-        return new BannedUserModeratorData(
-                proto.getReporterUserProfileId(),
-                proto.getAccusedUserProfileId(),
-                proto.getReportersMessage(),
-                proto.getBanReason());
+        try {
+            return new BannedUserModeratorData(
+                    proto.getReporterUserProfileId(),
+                    proto.getAccusedUserProfileId(),
+                    proto.getReportersMessage(),
+                    proto.getBanReason());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<PersistableProto> getResolver() {

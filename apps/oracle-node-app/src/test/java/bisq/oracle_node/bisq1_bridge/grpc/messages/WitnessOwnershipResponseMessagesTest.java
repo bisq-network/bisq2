@@ -96,9 +96,11 @@ class WitnessOwnershipResponseMessagesTest {
         var signedWitnessProto = bisq.bridge.protobuf.SignedWitnessOwnershipResponse.parseFrom(legacyResponse);
 
         assertThatThrownBy(() -> AccountAgeWitnessOwnershipResponse.fromProto(accountAgeProto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> SignedWitnessOwnershipResponse.fromProto(signedWitnessProto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     private static long dateBucket() {

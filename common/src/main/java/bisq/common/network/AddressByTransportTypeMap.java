@@ -79,11 +79,15 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
 
     public static AddressByTransportTypeMap fromProto(bisq.common.protobuf.AddressByTransportTypeMap proto)
             throws UnresolvableProtobufException {
-        Map<TransportType, Address> map = ProtobufUtils.fromProtoEntryStream(proto.getAddressByTransportTypeMap(),
-                        Address::fromProto)
-                .collect(Collectors.toMap(e -> Enum.valueOf(TransportType.class, e.getKey()),
-                        Map.Entry::getValue));
-        return new AddressByTransportTypeMap(map);
+        try {
+            Map<TransportType, Address> map = ProtobufUtils.fromProtoEntryStream(proto.getAddressByTransportTypeMap(),
+                            Address::fromProto)
+                    .collect(Collectors.toMap(e -> Enum.valueOf(TransportType.class, e.getKey()),
+                            Map.Entry::getValue));
+            return new AddressByTransportTypeMap(map);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // Delegates

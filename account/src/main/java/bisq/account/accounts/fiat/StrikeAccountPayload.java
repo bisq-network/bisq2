@@ -65,11 +65,15 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
 
     public static StrikeAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        return new StrikeAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                proto.getCountryBasedAccountPayload().getCountryCode(),
-                proto.getCountryBasedAccountPayload().getStrikeAccountPayload().getHolderName());
+        try {
+            return new StrikeAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    proto.getCountryBasedAccountPayload().getCountryCode(),
+                    proto.getCountryBasedAccountPayload().getStrikeAccountPayload().getHolderName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

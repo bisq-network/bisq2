@@ -71,13 +71,17 @@ public final class USPostalMoneyOrderAccountPayload extends CountryBasedAccountP
 
     public static USPostalMoneyOrderAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getCountryBasedAccountPayload().getUsPostalMoneyOrderAccountPayload();
-        return new USPostalMoneyOrderAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getPostalAddress()
-        );
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getUsPostalMoneyOrderAccountPayload();
+            return new USPostalMoneyOrderAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getPostalAddress()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

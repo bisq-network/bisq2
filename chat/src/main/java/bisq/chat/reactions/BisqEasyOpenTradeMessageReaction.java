@@ -71,18 +71,22 @@ public class BisqEasyOpenTradeMessageReaction extends PrivateChatMessageReaction
 
     public static BisqEasyOpenTradeMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
             throws UnresolvableProtobufException {
-        bisq.chat.protobuf.BisqEasyOpenTradeMessageReaction privateChatMessageReaction = baseProto.getBisqEasyOpenTradeMessageReaction();
-        return new BisqEasyOpenTradeMessageReaction(
-                baseProto.getId(),
-                UserProfile.fromProto(privateChatMessageReaction.getSender()),
-                privateChatMessageReaction.getReceiverUserProfileId(),
-                NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate(),
-                privateChatMessageReaction.getIsRemoved());
+        try {
+            bisq.chat.protobuf.BisqEasyOpenTradeMessageReaction privateChatMessageReaction = baseProto.getBisqEasyOpenTradeMessageReaction();
+            return new BisqEasyOpenTradeMessageReaction(
+                    baseProto.getId(),
+                    UserProfile.fromProto(privateChatMessageReaction.getSender()),
+                    privateChatMessageReaction.getReceiverUserProfileId(),
+                    NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate(),
+                    privateChatMessageReaction.getIsRemoved());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

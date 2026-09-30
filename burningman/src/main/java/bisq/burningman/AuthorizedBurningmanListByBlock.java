@@ -102,11 +102,15 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
 
     public static AuthorizedBurningmanListByBlock fromProto(bisq.burningman.protobuf.AuthorizedBurningmanListByBlock proto)
             throws UnresolvableProtobufException {
-        return new AuthorizedBurningmanListByBlock(
-                proto.getVersion(),
-                proto.getStaticPublicKeysProvided(),
-                proto.getBlockHeight(),
-                ProtobufUtils.fromProtoStream(proto.getBurningmanDataList(), BurningmanData::fromProto).toList());
+        try {
+            return new AuthorizedBurningmanListByBlock(
+                    proto.getVersion(),
+                    proto.getStaticPublicKeysProvided(),
+                    proto.getBlockHeight(),
+                    ProtobufUtils.fromProtoStream(proto.getBurningmanDataList(), BurningmanData::fromProto).toList());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

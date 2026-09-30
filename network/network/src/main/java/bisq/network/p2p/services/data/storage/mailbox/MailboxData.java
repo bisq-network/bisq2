@@ -102,23 +102,27 @@ public final class MailboxData implements StorageData, Canonical {
     }
 
     public static MailboxData fromProto(bisq.network.protobuf.MailboxData proto) throws UnresolvableProtobufException {
-        //noinspection deprecation
-        MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
-        // Nodes of earlier versions do not send className.
-        String className = proto.getClassName().isEmpty() ?
-                receivedMetaData.getClassName() :
-                proto.getClassName();
-        // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or relay
-        // chose. In these versions serializeForHash() does not contain metaData, so the signature and the storage key
-        // of the AddMailboxRequest and the proof of work payload do not change.
-        MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
-                StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
-                receivedMetaData;
-        return new MailboxData(
-                proto.getVersion(),
-                metaData,
-                ConfidentialMessage.fromProto(proto.getConfidentialMessage()),
-                className);
+        try {
+            //noinspection deprecation
+            MetaData receivedMetaData = MetaData.fromProto(proto.getMetaData());
+            // Nodes of earlier versions do not send className.
+            String className = proto.getClassName().isEmpty() ?
+                    receivedMetaData.getClassName() :
+                    proto.getClassName();
+            // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or relay
+            // chose. In these versions serializeForHash() does not contain metaData, so the signature and the storage key
+            // of the AddMailboxRequest and the proof of work payload do not change.
+            MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
+                    StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
+                    receivedMetaData;
+            return new MailboxData(
+                    proto.getVersion(),
+                    metaData,
+                    ConfidentialMessage.fromProto(proto.getConfidentialMessage()),
+                    className);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

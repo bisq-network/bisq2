@@ -55,6 +55,10 @@ public final class ProcessStateUpdate implements Proto {
 
     public static ProcessStateUpdate fromProto(bisq.bi2p.protobuf.ProcessStateUpdate proto)
             throws UnresolvableProtobufException {
-        return new ProcessStateUpdate(ProcessState.fromProto(proto.getValue()));
+        try {
+            return new ProcessStateUpdate(ProcessState.fromProto(proto.getValue()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

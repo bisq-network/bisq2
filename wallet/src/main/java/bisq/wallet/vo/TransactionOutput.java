@@ -34,10 +34,14 @@ public final class TransactionOutput {
 
     public static TransactionOutput fromProto(bisq.wallet.protobuf.TransactionOutput output)
             throws UnresolvableProtobufException {
-        return new TransactionOutput(
-                output.getValue(),
-                output.getAddress(),
-                output.getScriptPubKey().toByteArray()
-        );
+        try {
+            return new TransactionOutput(
+                    output.getValue(),
+                    output.getAddress(),
+                    output.getScriptPubKey().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

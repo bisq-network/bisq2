@@ -89,9 +89,8 @@ public final class ContractSignatureData implements NetworkProto {
             return new ContractSignatureData(proto.getContractHash().toByteArray(),
                     proto.getSignature().toByteArray(),
                     publicKey);
-        } catch (GeneralSecurityException e) {
-            log.error("Could not generate key from protobuf ContractSignatureData.publicKeyBytes", e);
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

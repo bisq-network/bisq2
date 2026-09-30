@@ -69,11 +69,15 @@ public final class Party implements NetworkProto {
     }
 
     public static Party fromProto(bisq.contract.protobuf.Party proto) throws UnresolvableProtobufException {
-        return new Party(Role.fromProto(proto.getRole()),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.hasSaltedAccountPayloadHash()
-                        ? Optional.of(proto.getSaltedAccountPayloadHash().toByteArray())
-                        : Optional.empty());
+        try {
+            return new Party(Role.fromProto(proto.getRole()),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.hasSaltedAccountPayloadHash()
+                            ? Optional.of(proto.getSaltedAccountPayloadHash().toByteArray())
+                            : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public Optional<byte[]> getSaltedAccountPayloadHash() {

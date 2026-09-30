@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -75,7 +76,9 @@ class BisqEasyMediatorsResponseTest {
                 .setTradeId(TRADE_ID)
                 .build();
 
-        assertThrows(IllegalArgumentException.class, () -> BisqEasyMediatorsResponse.fromProto(proto));
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> BisqEasyMediatorsResponse.fromProto(proto)).getCause());
     }
 
     private static NetworkId createNetworkId(PublicKey publicKey) {

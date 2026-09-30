@@ -70,8 +70,12 @@ public final class BsqBlocksResponse implements NetworkProto {
 
     public static BsqBlocksResponse fromProto(bisq.bridge.protobuf.BsqBlocksResponse proto)
             throws UnresolvableProtobufException {
-        return new BsqBlocksResponse(ProtobufUtils.fromProtoStream(proto.getBsqBlocksList(),
-                        BsqBlockDto::fromProto).collect(Collectors.toList()),
-                proto.getSnapshotHeight());
+        try {
+            return new BsqBlocksResponse(ProtobufUtils.fromProtoStream(proto.getBsqBlocksList(),
+                            BsqBlockDto::fromProto).collect(Collectors.toList()),
+                    proto.getSnapshotHeight());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

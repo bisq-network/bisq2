@@ -109,14 +109,18 @@ public class MuSigArbitrationResult implements NetworkProto, PersistableProto {
 
     public static MuSigArbitrationResult fromProto(bisq.support.protobuf.MuSigArbitrationResult proto)
             throws UnresolvableProtobufException {
-        return new MuSigArbitrationResult(
-                proto.getDate(),
-                proto.getContractHash().toByteArray(),
-                ArbitrationResultReason.fromProto(proto.getArbitrationResultReason()),
-                ArbitrationPayoutDistributionType.fromProto(proto.getArbitrationPayoutDistributionType()),
-                proto.getBuyerPayoutAmount(),
-                proto.getSellerPayoutAmount(),
-                proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+        try {
+            return new MuSigArbitrationResult(
+                    proto.getDate(),
+                    proto.getContractHash().toByteArray(),
+                    ArbitrationResultReason.fromProto(proto.getArbitrationResultReason()),
+                    ArbitrationPayoutDistributionType.fromProto(proto.getArbitrationPayoutDistributionType()),
+                    proto.getBuyerPayoutAmount(),
+                    proto.getSellerPayoutAmount(),
+                    proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getContractHash() {

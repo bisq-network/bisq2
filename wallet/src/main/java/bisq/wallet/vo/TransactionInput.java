@@ -36,12 +36,16 @@ public final class TransactionInput {
 
     public static TransactionInput fromProto(bisq.wallet.protobuf.TransactionInput input)
             throws UnresolvableProtobufException {
-        return new TransactionInput(
-                input.getPrevOutTxId(),
-                input.getPrevOutIndex(),
-                input.getSequenceNumber(),
-                input.getScriptSig().toByteArray(),
-                input.getWitness()
-        );
+        try {
+            return new TransactionInput(
+                    input.getPrevOutTxId(),
+                    input.getPrevOutIndex(),
+                    input.getSequenceNumber(),
+                    input.getScriptSig().toByteArray(),
+                    input.getWitness()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

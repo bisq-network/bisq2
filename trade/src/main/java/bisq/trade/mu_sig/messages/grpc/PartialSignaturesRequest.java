@@ -64,12 +64,16 @@ public final class PartialSignaturesRequest implements Proto {
 
     public static PartialSignaturesRequest fromProto(bisq.trade.protobuf.PartialSignaturesRequest proto)
             throws UnresolvableProtobufException {
-        return new PartialSignaturesRequest(proto.getTradeId(),
-                proto.hasPeersNonceShares()
-                        ? Optional.of(NonceSharesMessage.fromProto(proto.getPeersNonceShares()))
-                        : Optional.empty(),
-                ProtobufUtils.fromProtoStream(proto.getRedirectionReceiversList(), ReceiverAddressAndAmount::fromProto)
-                        .collect(Collectors.toList()),
-                proto.getBuyerReadyToRelease());
+        try {
+            return new PartialSignaturesRequest(proto.getTradeId(),
+                    proto.hasPeersNonceShares()
+                            ? Optional.of(NonceSharesMessage.fromProto(proto.getPeersNonceShares()))
+                            : Optional.empty(),
+                    ProtobufUtils.fromProtoStream(proto.getRedirectionReceiversList(), ReceiverAddressAndAmount::fromProto)
+                            .collect(Collectors.toList()),
+                    proto.getBuyerReadyToRelease());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -69,9 +69,13 @@ public final class HashCashV2Token extends AuthorizationToken {
 
     public static HashCashV2Token fromProto(bisq.network.protobuf.AuthorizationToken proto)
             throws UnresolvableProtobufException {
-        bisq.network.protobuf.HashCashV2Token hashCashV2TokenProto = proto.getHashCashV2Token();
-        return new HashCashV2Token(AuthorizationTokenType.fromProto(proto.getAuthorizationTokenType()),
-                ProofOfWork.fromProto(hashCashV2TokenProto.getProofOfWork()),
-                hashCashV2TokenProto.getMessageCounter());
+        try {
+            bisq.network.protobuf.HashCashV2Token hashCashV2TokenProto = proto.getHashCashV2Token();
+            return new HashCashV2Token(AuthorizationTokenType.fromProto(proto.getAuthorizationTokenType()),
+                    ProofOfWork.fromProto(hashCashV2TokenProto.getProofOfWork()),
+                    hashCashV2TokenProto.getMessageCounter());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

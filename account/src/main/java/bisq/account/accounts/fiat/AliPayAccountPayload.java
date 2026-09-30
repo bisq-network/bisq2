@@ -79,12 +79,16 @@ public final class AliPayAccountPayload extends CountryBasedAccountPayload imple
 
     public static AliPayAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var payload = proto.getCountryBasedAccountPayload().getAliPayAccountPayload();
-        return new AliPayAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getAccountNr()
-        );
+        try {
+            var payload = proto.getCountryBasedAccountPayload().getAliPayAccountPayload();
+            return new AliPayAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getAccountNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

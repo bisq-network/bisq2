@@ -95,26 +95,30 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
 
     public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
             throws UnresolvableProtobufException {
-        Optional<Citation> citation = baseProto.hasCitation()
-                ? Optional.of(Citation.fromProto(baseProto.getCitation()))
-                : Optional.empty();
-        bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
-        return new TwoPartyPrivateChatMessage(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                UserProfile.fromProto(privateChatMessage.getSender()),
-                privateChatMessage.getReceiverUserProfileId(),
-                NetworkId.fromProto(privateChatMessage.getReceiverNetworkId()),
-                baseProto.getText(),
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                ProtobufUtils.fromProtoStream(privateChatMessage.getChatMessageReactionsList(),
-                                TwoPartyPrivateChatMessageReaction::fromProto)
-                        .collect(Collectors.toSet())
-        );
+        try {
+            Optional<Citation> citation = baseProto.hasCitation()
+                    ? Optional.of(Citation.fromProto(baseProto.getCitation()))
+                    : Optional.empty();
+            bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
+            return new TwoPartyPrivateChatMessage(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    UserProfile.fromProto(privateChatMessage.getSender()),
+                    privateChatMessage.getReceiverUserProfileId(),
+                    NetworkId.fromProto(privateChatMessage.getReceiverNetworkId()),
+                    baseProto.getText(),
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                    ProtobufUtils.fromProtoStream(privateChatMessage.getChatMessageReactionsList(),
+                                    TwoPartyPrivateChatMessageReaction::fromProto)
+                            .collect(Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

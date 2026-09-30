@@ -54,6 +54,10 @@ public final class BondedRoleVerificationResponse implements NetworkProto {
 
     public static BondedRoleVerificationResponse fromProto(bisq.bridge.protobuf.BondedRoleVerificationResponse proto)
             throws UnresolvableProtobufException {
-        return new BondedRoleVerificationResponse(OptionalUtils.optionalIf(proto.hasErrorMessage(), proto::getErrorMessage));
+        try {
+            return new BondedRoleVerificationResponse(OptionalUtils.optionalIf(proto.hasErrorMessage(), proto::getErrorMessage));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -93,15 +93,19 @@ public final class CashByMailAccountPayload extends AccountPayload<FiatPaymentMe
 
     public static CashByMailAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
             throws UnresolvableProtobufException {
-        var cashByMailPayload = proto.getCashByMailAccountPayload();
-        return new CashByMailAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                cashByMailPayload.getSelectedCurrencyCode(),
-                cashByMailPayload.getPostalAddress(),
-                cashByMailPayload.getContact(),
-                cashByMailPayload.getExtraInfo()
-        );
+        try {
+            var cashByMailPayload = proto.getCashByMailAccountPayload();
+            return new CashByMailAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    cashByMailPayload.getSelectedCurrencyCode(),
+                    cashByMailPayload.getPostalAddress(),
+                    cashByMailPayload.getContact(),
+                    cashByMailPayload.getExtraInfo()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

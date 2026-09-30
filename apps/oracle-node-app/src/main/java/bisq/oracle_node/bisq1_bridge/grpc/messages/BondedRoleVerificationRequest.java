@@ -94,13 +94,17 @@ public final class BondedRoleVerificationRequest implements NetworkProto {
 
     public static BondedRoleVerificationRequest fromProto(bisq.bridge.protobuf.BondedRoleVerificationRequest proto)
             throws UnresolvableProtobufException {
-        return new BondedRoleVerificationRequest(proto.getBondUserName(),
-                proto.getRoleType(),
-                proto.getProfileId(),
-                proto.getSignatureBase64(),
-                proto.getProposalTxId(),
-                proto.getLockupTxId(),
-                BondedRoleRegistrationProtocol.versionFromProto(proto.hasProtocolVersion(), proto.getProtocolVersion())
-        );
+        try {
+            return new BondedRoleVerificationRequest(proto.getBondUserName(),
+                    proto.getRoleType(),
+                    proto.getProfileId(),
+                    proto.getSignatureBase64(),
+                    proto.getProposalTxId(),
+                    proto.getLockupTxId(),
+                    BondedRoleRegistrationProtocol.versionFromProto(proto.hasProtocolVersion(), proto.getProtocolVersion())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -62,8 +62,12 @@ public final class ClientProfile implements PersistableProto {
     }
 
     public static ClientProfile fromProto(bisq.api.protobuf.ClientProfile proto) throws UnresolvableProtobufException {
-        return new ClientProfile(proto.getClientId(),
-                proto.getClientSecret(),
-                proto.getClientName());
+        try {
+            return new ClientProfile(proto.getClientId(),
+                    proto.getClientSecret(),
+                    proto.getClientName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

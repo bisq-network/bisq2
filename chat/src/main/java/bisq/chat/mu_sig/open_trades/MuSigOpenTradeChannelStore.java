@@ -56,10 +56,14 @@ public final class MuSigOpenTradeChannelStore implements PersistableStore<MuSigO
 
     public static MuSigOpenTradeChannelStore fromProto(bisq.chat.protobuf.MuSigOpenTradeChannelStore proto)
             throws UnresolvableProtobufException {
-        Set<MuSigOpenTradeChannel> privateTradeChannels = ProtobufUtils.fromProtoStream(proto.getChannelsList(),
-                        e -> (MuSigOpenTradeChannel) MuSigOpenTradeChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new MuSigOpenTradeChannelStore(privateTradeChannels);
+        try {
+            Set<MuSigOpenTradeChannel> privateTradeChannels = ProtobufUtils.fromProtoStream(proto.getChannelsList(),
+                            e -> (MuSigOpenTradeChannel) MuSigOpenTradeChannel.fromProto(e))
+                    .collect(Collectors.toSet());
+            return new MuSigOpenTradeChannelStore(privateTradeChannels);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

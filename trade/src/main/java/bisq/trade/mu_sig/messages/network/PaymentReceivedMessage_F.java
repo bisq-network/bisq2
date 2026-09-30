@@ -70,14 +70,18 @@ public final class PaymentReceivedMessage_F extends MuSigTradeMessage {
 
     public static PaymentReceivedMessage_F fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.PaymentReceivedMessage_F muSigMessageProto = proto.getMuSigTradeMessage().getPaymentReceivedMessageF();
-        return new PaymentReceivedMessage_F(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                SwapTxSignature.fromProto(muSigMessageProto.getSwapTxSignature()));
+        try {
+            bisq.trade.protobuf.PaymentReceivedMessage_F muSigMessageProto = proto.getMuSigTradeMessage().getPaymentReceivedMessageF();
+            return new PaymentReceivedMessage_F(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    SwapTxSignature.fromProto(muSigMessageProto.getSwapTxSignature()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

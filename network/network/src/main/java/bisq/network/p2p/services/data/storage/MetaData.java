@@ -120,7 +120,11 @@ public final class MetaData implements NetworkProto, Canonical {
     }
 
     public static MetaData fromProto(bisq.network.protobuf.MetaData proto) throws UnresolvableProtobufException {
-        return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
+        try {
+            return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

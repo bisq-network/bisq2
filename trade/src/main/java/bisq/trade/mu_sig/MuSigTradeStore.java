@@ -70,18 +70,22 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
 
     public static MuSigTradeStore fromProto(bisq.trade.protobuf.MuSigTradeStore proto)
             throws UnresolvableProtobufException {
-        var tradeById = proto.getTradeByIdMap().entrySet().stream()
-                .map(entry -> {
-                    try {
-                        return Map.entry(entry.getKey(), MuSigTrade.fromProto(entry.getValue()));
-                    } catch (Exception e) {
-                        log.error("Could not create MuSigTrade from proto {}", entry.getValue(), e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        return new MuSigTradeStore(tradeById);
+        try {
+            var tradeById = proto.getTradeByIdMap().entrySet().stream()
+                    .map(entry -> {
+                        try {
+                            return Map.entry(entry.getKey(), MuSigTrade.fromProto(entry.getValue()));
+                        } catch (Exception e) {
+                            log.error("Could not create MuSigTrade from proto {}", entry.getValue(), e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            return new MuSigTradeStore(tradeById);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

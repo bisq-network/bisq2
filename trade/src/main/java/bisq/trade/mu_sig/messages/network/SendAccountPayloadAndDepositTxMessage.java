@@ -78,15 +78,19 @@ public final class SendAccountPayloadAndDepositTxMessage extends MuSigTradeMessa
 
     public static SendAccountPayloadAndDepositTxMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
             throws UnresolvableProtobufException {
-        bisq.trade.protobuf.SendAccountPayloadAndDepositTxMessage muSigMessageProto = proto.getMuSigTradeMessage().getSendAccountPayloadAndDepositTxMessage();
-        return new SendAccountPayloadAndDepositTxMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                ByteArray.fromProto(muSigMessageProto.getDepositTx()),
-                AccountPayload.fromProto(muSigMessageProto.getAccountPayload()));
+        try {
+            bisq.trade.protobuf.SendAccountPayloadAndDepositTxMessage muSigMessageProto = proto.getMuSigTradeMessage().getSendAccountPayloadAndDepositTxMessage();
+            return new SendAccountPayloadAndDepositTxMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    ByteArray.fromProto(muSigMessageProto.getDepositTx()),
+                    AccountPayload.fromProto(muSigMessageProto.getAccountPayload()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -60,8 +60,12 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
 
     public static DefaultAuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto)
             throws UnresolvableProtobufException {
-        Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
-        return new DefaultAuthenticatedData(DistributedData.fromAny(proto.getDistributedData()), distributedDataAny);
+        try {
+            Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
+            return new DefaultAuthenticatedData(DistributedData.fromAny(proto.getDistributedData()), distributedDataAny);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

@@ -136,53 +136,57 @@ public final class MuSigTradeParty extends TradeParty {
     }
 
     public static MuSigTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) throws UnresolvableProtobufException {
-        bisq.trade.protobuf.MuSigTradeParty muSigTradePartyProto = proto.getMuSigTradeParty();
-        return new MuSigTradeParty(
-                NetworkId.fromProto(proto.getNetworkId()),
-                muSigTradePartyProto.hasMyPubKeySharesResponse()
-                        ? Optional.of(PubKeySharesResponse.fromProto(muSigTradePartyProto.getMyPubKeySharesResponse()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasPeersPubKeyShares()
-                        ? Optional.of(PubKeyShares.fromProto(muSigTradePartyProto.getPeersPubKeyShares()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasMyNonceSharesMessage()
-                        ? Optional.of(NonceSharesMessage.fromProto(muSigTradePartyProto.getMyNonceSharesMessage()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasPeersNonceShares()
-                        ? Optional.of(NonceShares.fromProto(muSigTradePartyProto.getPeersNonceShares()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasMyPartialSignaturesMessage()
-                        ? Optional.of(PartialSignaturesMessage.fromProto(muSigTradePartyProto.getMyPartialSignaturesMessage()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasPeersPartialSignatures()
-                        ? Optional.of(PartialSignatures.fromProto(muSigTradePartyProto.getPeersPartialSignatures()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasMyDepositPsbt()
-                        ? Optional.of(DepositPsbt.fromProto(muSigTradePartyProto.getMyDepositPsbt()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasDepositTx()
-                        ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getDepositTx()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasMySwapTxSignatureResponse()
-                        ? Optional.of(SwapTxSignatureResponse.fromProto(muSigTradePartyProto.getMySwapTxSignatureResponse()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasPeersSwapTxSignature()
-                        ? Optional.of(SwapTxSignature.fromProto(muSigTradePartyProto.getPeersSwapTxSignature()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasMyCloseTradeResponse()
-                        ? Optional.of(CloseTradeResponse.fromProto(muSigTradePartyProto.getMyCloseTradeResponse()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasPeersOutputPrvKeyShare()
-                        ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getPeersOutputPrvKeyShare()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasAccountPayload()
-                        ? Optional.of(AccountPayload.fromProto(muSigTradePartyProto.getAccountPayload()))
-                        : Optional.empty(),
-                muSigTradePartyProto.hasCustomPayoutData()
-                        ? Optional.of(MuSigCustomPayoutPartyData.fromProto(muSigTradePartyProto.getCustomPayoutData()))
-                        : Optional.empty(),
-                muSigTradePartyProto.getMediationResultRejected()
-        );
+        try {
+            bisq.trade.protobuf.MuSigTradeParty muSigTradePartyProto = proto.getMuSigTradeParty();
+            return new MuSigTradeParty(
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    muSigTradePartyProto.hasMyPubKeySharesResponse()
+                            ? Optional.of(PubKeySharesResponse.fromProto(muSigTradePartyProto.getMyPubKeySharesResponse()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasPeersPubKeyShares()
+                            ? Optional.of(PubKeyShares.fromProto(muSigTradePartyProto.getPeersPubKeyShares()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasMyNonceSharesMessage()
+                            ? Optional.of(NonceSharesMessage.fromProto(muSigTradePartyProto.getMyNonceSharesMessage()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasPeersNonceShares()
+                            ? Optional.of(NonceShares.fromProto(muSigTradePartyProto.getPeersNonceShares()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasMyPartialSignaturesMessage()
+                            ? Optional.of(PartialSignaturesMessage.fromProto(muSigTradePartyProto.getMyPartialSignaturesMessage()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasPeersPartialSignatures()
+                            ? Optional.of(PartialSignatures.fromProto(muSigTradePartyProto.getPeersPartialSignatures()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasMyDepositPsbt()
+                            ? Optional.of(DepositPsbt.fromProto(muSigTradePartyProto.getMyDepositPsbt()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasDepositTx()
+                            ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getDepositTx()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasMySwapTxSignatureResponse()
+                            ? Optional.of(SwapTxSignatureResponse.fromProto(muSigTradePartyProto.getMySwapTxSignatureResponse()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasPeersSwapTxSignature()
+                            ? Optional.of(SwapTxSignature.fromProto(muSigTradePartyProto.getPeersSwapTxSignature()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasMyCloseTradeResponse()
+                            ? Optional.of(CloseTradeResponse.fromProto(muSigTradePartyProto.getMyCloseTradeResponse()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasPeersOutputPrvKeyShare()
+                            ? Optional.of(ByteArray.fromProto(muSigTradePartyProto.getPeersOutputPrvKeyShare()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasAccountPayload()
+                            ? Optional.of(AccountPayload.fromProto(muSigTradePartyProto.getAccountPayload()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.hasCustomPayoutData()
+                            ? Optional.of(MuSigCustomPayoutPartyData.fromProto(muSigTradePartyProto.getCustomPayoutData()))
+                            : Optional.empty(),
+                    muSigTradePartyProto.getMediationResultRejected()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public void setMyPubKeySharesResponse(PubKeySharesResponse myPubKeySharesResponse) {

@@ -93,13 +93,17 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
 
     public static MuSigDisputeCaseDataMessage fromProto(bisq.support.protobuf.MuSigDisputeCaseDataMessage proto)
             throws UnresolvableProtobufException {
-        return new MuSigDisputeCaseDataMessage(
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                proto.getContractHash().toByteArray(),
-                ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList())
-        );
+        try {
+            return new MuSigDisputeCaseDataMessage(
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    proto.getContractHash().toByteArray(),
+                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

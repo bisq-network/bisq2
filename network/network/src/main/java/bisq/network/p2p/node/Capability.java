@@ -122,27 +122,31 @@ public final class Capability implements NetworkProto {
     }
 
     public static Capability fromProto(bisq.network.protobuf.Capability proto) throws UnresolvableProtobufException {
-        List<TransportType> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
-                .map(transportTypeProto -> {
-                    try {
-                        return ProtobufUtils.enumFromProto(TransportType.class, transportTypeProto);
-                    } catch (Exception e) {
-                        log.error("Could not create TransportType enum from proto {}", transportTypeProto, e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        List<bisq.network.protobuf.Feature> featuresListProto = proto.getFeaturesList();
-        List<Feature> features = ProtobufUtils.fromProtoEnumList(Feature.class, featuresListProto);
-        if (featuresListProto.size() != features.size()) {
-            log.warn("The size of the resolved feature list is not same as the protobuf list's size. " +
-                    "This can happen if new, unrecognized protobuf elements have been received. Old clients ignore such new fields.");
+        try {
+            List<TransportType> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
+                    .map(transportTypeProto -> {
+                        try {
+                            return ProtobufUtils.enumFromProto(TransportType.class, transportTypeProto);
+                        } catch (Exception e) {
+                            log.error("Could not create TransportType enum from proto {}", transportTypeProto, e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            List<bisq.network.protobuf.Feature> featuresListProto = proto.getFeaturesList();
+            List<Feature> features = ProtobufUtils.fromProtoEnumList(Feature.class, featuresListProto);
+            if (featuresListProto.size() != features.size()) {
+                log.warn("The size of the resolved feature list is not same as the protobuf list's size. " +
+                        "This can happen if new, unrecognized protobuf elements have been received. Old clients ignore such new fields.");
+            }
+            return new Capability(proto.getVersion(),
+                    Address.fromProto(proto.getAddress()),
+                    supportedTransportTypes,
+                    features,
+                    proto.getApplicationVersion());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        return new Capability(proto.getVersion(),
-                Address.fromProto(proto.getAddress()),
-                supportedTransportTypes,
-                features,
-                proto.getApplicationVersion());
     }
 }

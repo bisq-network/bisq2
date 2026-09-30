@@ -65,8 +65,12 @@ public final class BondedRolesVerificationResponse implements NetworkProto {
 
     public static BondedRolesVerificationResponse fromProto(bisq.bridge.protobuf.BondedRolesVerificationResponse proto)
             throws UnresolvableProtobufException {
-        return new BondedRolesVerificationResponse(proto.getDaoStateBlockHeight(),
-                ProtobufUtils.fromProtoStream(proto.getVerificationsList(), BondedRoleVerificationResponse::fromProto)
-                        .toList());
+        try {
+            return new BondedRolesVerificationResponse(proto.getDaoStateBlockHeight(),
+                    ProtobufUtils.fromProtoStream(proto.getVerificationsList(), BondedRoleVerificationResponse::fromProto)
+                            .toList());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

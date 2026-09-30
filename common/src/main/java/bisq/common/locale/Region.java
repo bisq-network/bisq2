@@ -48,6 +48,10 @@ public final class Region implements PersistableProto {
     }
 
     public static Region fromProto(bisq.common.protobuf.Region proto) throws UnresolvableProtobufException {
-        return new Region(proto.getCode(), proto.getName());
+        try {
+            return new Region(proto.getCode(), proto.getName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

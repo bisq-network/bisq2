@@ -92,10 +92,14 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
 
     public static BisqEasyMediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto)
             throws UnresolvableProtobufException {
-        Optional<NetworkId> senderNetworkId = proto.hasSenderNetworkId()
-                ? Optional.of(NetworkId.fromProto(proto.getSenderNetworkId()))
-                : Optional.empty();
-        return new BisqEasyMediatorsResponse(proto.getVersion(), proto.getTradeId(), senderNetworkId);
+        try {
+            Optional<NetworkId> senderNetworkId = proto.hasSenderNetworkId()
+                    ? Optional.of(NetworkId.fromProto(proto.getSenderNetworkId()))
+                    : Optional.empty();
+            return new BisqEasyMediatorsResponse(proto.getVersion(), proto.getTradeId(), senderNetworkId);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {

@@ -57,9 +57,13 @@ public final class AccountAgeWitnessOwnershipResponse implements NetworkProto {
 
     public static AccountAgeWitnessOwnershipResponse fromProto(
             bisq.bridge.protobuf.AccountAgeWitnessOwnershipResponse proto) throws UnresolvableProtobufException {
-        return new AccountAgeWitnessOwnershipResponse(
-                proto.getDateBucket(),
-                proto.getWitnessNullifier().toByteArray());
+        try {
+            return new AccountAgeWitnessOwnershipResponse(
+                    proto.getDateBucket(),
+                    proto.getWitnessNullifier().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getWitnessNullifier() {
