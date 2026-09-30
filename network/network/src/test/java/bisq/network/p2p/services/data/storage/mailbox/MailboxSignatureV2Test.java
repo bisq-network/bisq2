@@ -100,6 +100,26 @@ class MailboxSignatureV2Test {
     }
 
     @Test
+    void addMailboxRequestSenderHashMustBeTheHashOfTheSenderPublicKey()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        bisq.network.protobuf.AddMailboxRequest proto = createAddMailboxRequest().toValueProto(false);
+        byte[] otherPublicKeyBytes = KeyGeneration.generateDefaultEcKeyPair().getPublic().getEncoded();
+
+        // Otherwise the signature names one key, and the sender check uses another one.
+        UnresolvableProtobufException changedKey = assertThrows(UnresolvableProtobufException.class,
+                () -> AddMailboxRequest.fromProto(proto.toBuilder()
+                        .setSenderPublicKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
+                        .build()));
+        assertInstanceOf(IllegalArgumentException.class, changedKey.getCause());
+        bisq.network.protobuf.AddMailboxRequest.Builder changedSenderHash = proto.toBuilder();
+        changedSenderHash.getMailboxSequentialDataBuilder()
+                .setSenderPublicKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)));
+        UnresolvableProtobufException changedHash = assertThrows(UnresolvableProtobufException.class,
+                () -> AddMailboxRequest.fromProto(changedSenderHash.build()));
+        assertInstanceOf(IllegalArgumentException.class, changedHash.getCause());
+    }
+
+    @Test
     void addMailboxRequestWithChangedFieldIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         bisq.network.protobuf.AddMailboxRequest proto = createAddMailboxRequest().toValueProto(false);
 

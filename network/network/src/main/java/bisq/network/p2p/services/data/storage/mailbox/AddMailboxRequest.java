@@ -41,6 +41,8 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     private final static int VERSION = 2;
@@ -130,6 +132,9 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
     @Override
     public void verify() {
         EcPublicKeyValidation.validate(senderPublicKeyBytes);
+        // The sender hash must name the key which signs the request (see docs/specifications/network/storage-ownership.md).
+        checkArgument(Arrays.equals(mailboxSequentialData.getSenderPublicKeyHash(), DigestUtil.hash(senderPublicKeyBytes)),
+                "senderPublicKeyHash must match the hash of senderPublicKeyBytes");
         SignatureValidation.validateSignatures(signature, signatureV2);
     }
 

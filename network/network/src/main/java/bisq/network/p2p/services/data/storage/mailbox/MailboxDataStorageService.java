@@ -118,9 +118,6 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         if (mailboxSequentialData.isSenderInvalid()) {
             return DataStorageResult.failed().ownerInvalid();
         }
-        if (request.isSignaturePubKeyHashInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
-            return DataStorageResult.failed().publicKeyHashInvalid();
-        }
         if (request.isSignatureInvalid(now)) {
             return DataStorageResult.failed().signatureInvalid();
         }
