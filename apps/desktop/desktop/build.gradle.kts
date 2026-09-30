@@ -61,3 +61,26 @@ dependencies {
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.hamcrest)
 }
+
+// Test classes annotated with @DesktopUiTest drive mouse and keyboard input with a TestFX robot. On a real
+// desktop the robot controls the developer's pointer and keyboard focus, and on macOS it needs the
+// Accessibility permission. They are excluded from the default test run and run only with uiTest.
+val desktopUiTestTag = "ui"
+
+tasks.named<Test>("test") {
+    useJUnitPlatform {
+        excludeTags(desktopUiTestTag)
+    }
+}
+
+tasks.register<Test>("uiTest") {
+    group = "verification"
+    description = "Runs the JavaFX UI tests which drive input with a TestFX robot."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    shouldRunAfter("test")
+    useJUnitPlatform {
+        includeTags(desktopUiTestTag)
+    }
+    systemProperty("testfx.robot", "glass")
+}

@@ -24,5 +24,4 @@ dependencies {
     implementation(libs.google.gson)
     implementation(libs.typesafe.config)
 
-    testImplementation(libs.testfx.junit5)
 }
