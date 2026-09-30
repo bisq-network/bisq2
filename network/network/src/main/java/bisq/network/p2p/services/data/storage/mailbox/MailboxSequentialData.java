@@ -24,6 +24,7 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.DigestUtil;
 import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -76,6 +77,9 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
         NetworkDataValidation.validateHash(senderPublicKeyHash);
         NetworkDataValidation.validateHash(receiversPublicKeyHash);
         EcPublicKeyValidation.validate(receiversPubKeyBytes);
+        // Storage key V2 and removal authorization must identify the same receiver.
+        checkArgument(Arrays.equals(receiversPublicKeyHash, DigestUtil.hash(receiversPubKeyBytes)),
+                "Receiver public key hash must match receiver public key bytes");
         NetworkDataValidation.validateDate(created);
     }
 
