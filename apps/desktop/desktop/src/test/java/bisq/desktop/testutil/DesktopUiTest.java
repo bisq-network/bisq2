@@ -19,8 +19,8 @@
 package bisq.desktop.testutil;
 
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testfx.framework.junit5.ApplicationExtension;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,14 +32,16 @@ import java.lang.annotation.Target;
  * <p>
  * A robot on a real desktop moves the real pointer and types into whichever window has focus, and on macOS
  * it needs the Accessibility permission for the application which runs the tests. The {@code test} task
- * therefore excludes the {@code ui} tag. The {@code uiTest} task runs these classes, headless with Monocle
- * by default (see {@code apps/desktop/desktop/build.gradle.kts}).
+ * therefore excludes the {@code ui} tag. These tests also require {@code bisq.uiTest=true}, so a runner
+ * which ignores Gradle's tag filter cannot start a robot. The {@code uiTest} task enables them and uses
+ * Monocle by default (see {@code apps/desktop/desktop/build.gradle.kts}).
  * <p>
  * Tests which only need the JavaFX application thread use {@link JavaFxToolkitExtension} instead.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Tag("ui")
-@ExtendWith({JavaFxToolkitExtension.class, ApplicationExtension.class})
+@EnabledIfSystemProperty(named = "bisq.uiTest", matches = "true")
+@ExtendWith({JavaFxToolkitExtension.class, DesktopUiTestExtension.class})
 public @interface DesktopUiTest {
 }
