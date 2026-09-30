@@ -22,6 +22,7 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.network.http.utils.HttpException;
+import bisq.network.http.utils.HttpLogSanitizer;
 import bisq.network.http.utils.HttpMethod;
 import lombok.extern.slf4j.Slf4j;
 
@@ -129,7 +130,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
                         safeParam,
                         System.currentTimeMillis() - ts,
                         StringUtils.fromBytes(response.getBytes().length),
-                        StringUtils.truncate(response, 100));
+                        HttpLogSanitizer.loggableBody(response));
                 return response;
             }
 
@@ -138,7 +139,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
                 String error = inputStreamToString(errorStream);
                 errorStream.close();
                 log.info("Received errorMsg '{}' with responseCode {} from {}. Response took: {} ms. param: {}",
-                        error,
+                        HttpLogSanitizer.loggableBody(error),
                         responseCode,
                         logBaseUrl,
                         System.currentTimeMillis() - ts,
