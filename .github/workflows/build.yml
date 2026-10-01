@@ -15,7 +15,8 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_OS_MATRIX, for example to ["ubuntu-24.04"], to build on fewer runners.
+        os: ${{ fromJSON(vars.BUILD_OS_MATRIX || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -28,7 +29,8 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_OS_MATRIX, for example to ["ubuntu-24.04"], to build on fewer runners.
+        os: ${{ fromJSON(vars.BUILD_OS_MATRIX || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -41,7 +43,8 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_OS_MATRIX, for example to ["ubuntu-24.04"], to build on fewer runners.
+        os: ${{ fromJSON(vars.BUILD_OS_MATRIX || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -54,7 +57,8 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_OS_MATRIX, for example to ["ubuntu-24.04"], to build on fewer runners.
+        os: ${{ fromJSON(vars.BUILD_OS_MATRIX || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
