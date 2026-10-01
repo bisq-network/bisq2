@@ -101,7 +101,9 @@ or by broadcast. A requester of an earlier version does not follow rule 6.
 ## Entries which a node cannot parse
 
 7. A requester skips an entry of an inventory response which it cannot parse, and processes the other entries of the
-   response. A skipped entry counts as a request which the stores did not accept (rule 6).
+   response. A skipped entry is not in the filter of the requester, so for rule 6 it counts as a request which the
+   filter does not list. A full response of which the requester can parse no entry therefore stops the requests to
+   that peer.
 
 Reason: the entries are requests of other nodes, which the responder only stores. A responder of another version can
 hold a request which the requester cannot parse, and the responder cannot know which requests the requester can parse.
