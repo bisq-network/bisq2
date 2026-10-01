@@ -73,7 +73,8 @@ compare both before it accepts the data.
 
 The publisher hash of an add request must equal the hash of the public key bytes which sign the request
 (`ownerPublicKeyBytes` of `AddAuthenticatedDataRequest`, `senderPublicKeyBytes` of `AddMailboxRequest`). An add request
-with another hash is invalid when it is constructed or decoded, including persisted entries.
+with another hash is invalid when it is constructed or decoded, including persisted entries (see
+[`validation-at-parsing.md`](validation-at-parsing.md)).
 
 Reason: storage key V2 and the signature use the public key bytes, but the owner checks (rules 5 and 6) use the
 publisher hash. If both could differ, the owner check would not check the key which signs the request. Nodes of all
