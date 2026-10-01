@@ -34,6 +34,9 @@ publish and remove the data in the network storage is defined in
    the static keys of the version of the node. It does not rely on the check of the network storage.
 7. If no bonded role matches (rule 3), the application keeps the data and checks it again when a bonded role or an
    oracle node is added. Bonded roles can arrive after the data which they authorize.
+8. A node lists an oracle node (`AuthorizedOracleNode`) only if rule 2 or rule 3 holds for it, with the oracle node as
+   authorizing role type. It keeps the oracle node while the network storage holds at least one publication of it for
+   which rule 2 or rule 3 holds. The removal of another publication does not remove it.
 
 ## Reasons
 
@@ -43,6 +46,8 @@ publish and remove the data in the network storage is defined in
   the static flag. With the root role of a removed key, that key could authorize bonded roles of every type on this
   node, because rule 3 would find its role.
 - Rule 6 needs no signature verification. It is a lookup in a set of a few keys.
+- Rule 8: users send their registration requests and account timestamp requests to the listed oracle nodes. Without
+  the check, any key could publish an oracle node without the static flag, and users would send it these requests.
 - Rule 5: checking the authorization of every stored entry verifies one signature per entry. This check was disabled
   at startup to reduce the startup cost. Rule 8 of [`../network/storage-ownership.md`](../network/storage-ownership.md)
   still removes stored entries whose publisher is not the owner.
@@ -51,11 +56,10 @@ publish and remove the data in the network storage is defined in
 
 The following weakness can be removed by a change of other code. The developers have not decided this change yet.
 
-- **Types without the check of rule 6.** `AuthorizedBondedRolesService` adds every `AuthorizedOracleNode` to its list
-  of oracle nodes, and `AccountTimestampService` applies every `AuthorizedAccountTimestamp`, without
-  `hasAuthorizedPubKey`. For data without the static flag, the network storage checks only the signature (rule 4), so
-  any key can publish such data.
-  - What removes it: the check of rule 6 for these two types.
+- **A type without the check of rule 6.** `AccountTimestampService` applies every `AuthorizedAccountTimestamp`
+  without `hasAuthorizedPubKey`. For data without the static flag, the network storage checks only the signature
+  (rule 4), so any key can publish such data.
+  - What removes it: the check of rule 6 for this type.
 
 ## Verification
 
@@ -63,6 +67,9 @@ The following weakness can be removed by a change of other code. The developers 
   whose key is not a static key. The application does not accept the role, and it does not accept a role which that
   key authorizes.
 - A root role whose key is a static key passes the check of the application.
+- An oracle node of a known oracle node role is listed. An oracle node of an unknown key, or with the static flag and a
+  key which is no static key, is not listed. The removal of a publication of another key does not remove a listed
+  oracle node.
 
 ## Related code
 

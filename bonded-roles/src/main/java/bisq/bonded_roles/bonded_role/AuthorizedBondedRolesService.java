@@ -186,9 +186,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         log.debug("onAuthorizedDataAdded {}", data.getClass().getSimpleName());
-        if (data instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.add((AuthorizedOracleNode) data);
-            reProcessFailedAuthorizedData();
+        if (data instanceof AuthorizedOracleNode authorizedOracleNode) {
+            // The network layer checks only the signature of data without staticPublicKeysProvided, so any key can
+            // publish an oracle node. Users send registration and account timestamp requests to the oracle nodes.
+            if (hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE)) {
+                authorizedOracleNodes.add(authorizedOracleNode);
+                reProcessFailedAuthorizedData();
+            }
         } else if (data instanceof AuthorizedBondedRole authorizedBondedRole) {
             log.debug("BondedRoleType {}", authorizedBondedRole.getBondedRoleType());
             validateBondedRole(authorizedData, authorizedBondedRole).ifPresent(role -> {
@@ -211,11 +215,15 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.remove((AuthorizedOracleNode) data);
+        if (data instanceof AuthorizedOracleNode authorizedOracleNode) {
+            // Anyone can publish and remove a copy of an oracle node under another key. The oracle node stays while an
+            // authorized publication of it is stored.
+            if (!isPublishedByAnOracleNode(AuthorizedOracleNode.class, authorizedOracleNode)) {
+                authorizedOracleNodes.remove(authorizedOracleNode);
+            }
         } else if (data instanceof AuthorizedBondedRole) {
             validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
-                if (isPublishedByAnOracleNode(authorizedBondedRole)) {
+                if (isPublishedByAnOracleNode(AuthorizedBondedRole.class, authorizedBondedRole)) {
                     log.info("A publication of the bonded role {} of {} was removed, but an oracle node still " +
                                     "publishes it. We keep the role.",
                             authorizedBondedRole.getBondedRoleType(), authorizedBondedRole.getProfileId());
@@ -344,19 +352,21 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         }
     }
 
+    // Whether the store of the type holds a publication of equal data which an oracle node authorized.
     // Several oracle nodes can publish the same role, each with its own authorized key. The store holds one entry per
     // publication, but bondedRoles holds one item per role: the equality of a role leaves out the oracle node which
     // authorized it. The removal or expiry of one publication, for example of a copy without signature V2 at the cutoff
     // date of signature V1, must not remove a role which another publication still authorizes. Otherwise
     // OracleNodeService would also remove its own publication, and the removal would spread to all oracle nodes (see
-    // docs/specifications/bonded-roles/registration.md).
-    private boolean isPublishedByAnOracleNode(AuthorizedBondedRole authorizedBondedRole) {
+    // docs/specifications/bonded-roles/registration.md). For an oracle node, the removal of a publication of another key
+    // must not remove it either (see docs/specifications/bonded-roles/authorized-data.md).
+    private boolean isPublishedByAnOracleNode(Class<? extends AuthorizedDistributedData> type,
+                                              AuthorizedDistributedData data) {
         return networkService.getDataService()
-                .map(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(
-                                AuthorizedBondedRole.class.getSimpleName())
+                .map(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(type.getSimpleName())
                         .filter(AuthorizedData.class::isInstance)
                         .map(AuthorizedData.class::cast)
-                        .filter(publication -> authorizedBondedRole.equals(publication.getAuthorizedDistributedData()))
+                        .filter(publication -> data.equals(publication.getAuthorizedDistributedData()))
                         .anyMatch(publication -> isAuthorizedKey(publication, BondedRoleType.ORACLE_NODE)))
                 .orElse(false);
     }
