@@ -76,7 +76,8 @@ identities, and a third party can choose between them.
 - The canonical check parses the key, decodes the curve point, and encodes the key again. It is not a cheap check. A
   node runs the size check of the key first, so that it never parses oversized input.
 - Rule 3 has no compatibility cost for messages which nodes create, because of rule 2.
-  Nodes of earlier versions accept other encodings and relay them; nodes of this version reject them.
+  Nodes of earlier versions accept other encodings and relay them; nodes of this version reject them when they parse
+  the message (see [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md#compatibility)).
 - A persisted entry with another encoding is dropped when the store is loaded, because the store skips entries which
   fail validation. Only messages which were created with a modified client can have such an entry.
 
