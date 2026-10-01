@@ -357,19 +357,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                         .filter(AuthorizedData.class::isInstance)
                         .map(AuthorizedData.class::cast)
                         .filter(publication -> authorizedBondedRole.equals(publication.getAuthorizedDistributedData()))
-                        .anyMatch(this::isAuthorizedByAnOracleNode))
+                        .anyMatch(publication -> isAuthorizedKey(publication, BondedRoleType.ORACLE_NODE)))
                 .orElse(false);
-    }
-
-    // As hasAuthorizedPubKey for BondedRoleType.ORACLE_NODE, but without its queue of data to reprocess
-    private boolean isAuthorizedByAnOracleNode(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData().staticPublicKeysProvided()) {
-            return true;
-        }
-        String authorizedPublicKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
-        return getAuthorizedBondedRoleStream()
-                .filter(bondedRole -> bondedRole.getBondedRoleType() == BondedRoleType.ORACLE_NODE)
-                .anyMatch(bondedRole -> bondedRole.getAuthorizedPublicKey().equals(authorizedPublicKey));
     }
 
     private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData,
