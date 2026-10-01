@@ -180,6 +180,10 @@ Every `fromProto` and `fromAny` method declares the checked `UnresolvableProtobu
 a node receives from the network or reads from disk can describe an invalid object, so each caller has to decide how
 to handle this case.
 
+An object checks all its integrity rules in the `verify` method of its constructor, so parsing fails early for an
+invalid object. A new rule goes there also if earlier versions accept objects which break it. The rule is specified in
+[`../specifications/network/validation-at-parsing.md`](../specifications/network/validation-at-parsing.md).
+
 - `UnresolvableProtobufMessageException` (unknown message type or `Any` type) and `UnresolvableProtobufEnumException`
   (unknown enum value without a fallback) are subclasses of `UnresolvableProtobufException`.
 - A `fromProto` method converts every `RuntimeException` of its own code into `UnresolvableProtobufException`, for

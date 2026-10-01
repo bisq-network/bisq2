@@ -107,12 +107,19 @@ The rules by which nodes apply and relay refresh requests are defined in
 2. If `signatureV2` is empty, the receiver verifies signature V1, but only before the cutoff date of signature V1
    (rule 5). This accepts add and remove requests from nodes of earlier versions. It does not apply to refresh
    requests, which need signature V2 (see [Refresh requests](#refresh-requests)).
-3. A request must contain at least one non-empty signature. Each non-empty signature must have a valid EC signature
-   encoding.
+3. Before the cutoff date of signature V1, a request must contain signature V1. Signature V2 is optional. From the
+   cutoff date on, a request must contain signature V2. Signature V1 is optional. Each non-empty signature must have
+   a valid EC signature encoding. The node checks this rule when it parses the request, with its own time (see
+   [`validation-at-parsing.md`](validation-at-parsing.md)).
 4. Signature V2 must be in low-S form. Signature V1 may be in either form. The rules are defined in
    [`../security/ecdsa-signature-encoding.md`](../security/ecdsa-signature-encoding.md).
 
 Reason for rule 1: signature V2 covers signature V1. A second verification would not protect more fields.
+
+Reason for rule 3: nodes of earlier versions cannot parse a request without signature V1. Before the cutoff date, a
+request without signature V1 would therefore reach only nodes of this version, and nodes of earlier versions would
+drop each inventory response which contains it. Nodes of this version create both signatures (rule 7), so only a
+modified client creates such a request. From the cutoff date on, the node does not use signature V1 (rule 5).
 
 Reason for rule 4: a relay can change the S value of a signature without the private key. If signature V2 accepted
 both forms, a request would have two valid encodings of signature V2. Signature V1 accepts both forms because nodes of
@@ -130,7 +137,8 @@ requests without signature V2, so that nodes of earlier versions can take part i
    the cutoff date (see [Refresh requests](#refresh-requests)).
 6. The node compares the cutoff date with its own time. The creation date of the request is not used.
 7. A node of this version creates both signatures also after the cutoff date.
-8. A node parses a request without signature V2 as before. Only the stores reject it.
+8. From the cutoff date on, a node cannot parse a request without signature V2 (verification rule 3). The stores also
+   reject it when they verify the signatures (rule 5), with the clock of the store.
 9. From the cutoff date on, a store removes the add requests without signature V2 which it holds. The store of
    authenticated data also removes the remove requests without signature V2. The mailbox store keeps them until they
    expire. A node does this when it loads a store, and with the task which removes expired entries. Applications get
@@ -146,8 +154,9 @@ Reasons:
   creation date only for add requests would accept the add requests of a node of an earlier version and reject its
   remove requests. Then data which its owner removed would stay in the stores.
 - Rule 7: nodes of earlier versions verify only signature V1, and the preimage of signature V2 contains signature V1.
-- Rule 8: the rule depends on the time of the node, not only on the format of the request. The stores apply it when
-  they receive a request, and to the requests which they hold (rule 9).
+- Rule 8: the presence of the required signatures is an integrity rule, so the node checks it at parsing (see
+  [`validation-at-parsing.md`](validation-at-parsing.md)). A request which the node parsed before the cutoff date is
+  still in the stores. The stores therefore check the rule again, and remove such requests (rule 9).
 - Rule 9: a store would otherwise hold requests which it does not accept, and which other nodes do not accept from its
   inventory responses. A request which a relay changed before the cutoff date would also stay until it expires. A
   remove request contains no data. In the mailbox store it rejects the add request of the removed message until it
@@ -218,6 +227,17 @@ reject a request without signature V1.
 - **Signature V1 is not verified when signature V2 is present.** The owner can create a request with a valid signature
   V2 and an invalid signature V1. Nodes of this version accept it; nodes of earlier versions reject it. Only the owner
   can do this, and it affects only the owner's own data.
+- **From the cutoff date on, a request without signature V1 is valid for nodes of this version.** A modified client
+  can create such a request. Nodes of this version accept, store and serve it. Nodes of earlier versions cannot parse
+  it. A node of an earlier version which requests inventory with `HASH_SET` from a node of this version which holds
+  it drops the whole response (see
+  [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#entries-which-a-node-cannot-parse)).
+  - Why it is accepted: from the cutoff date on, nodes of this version accept no request of nodes of earlier versions
+    (rule 5). Signature V1 can only become optional at this date, so that a later version can stop creating it.
+  - What removes it: the end of the support of `HASH_SET` (see
+    [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#limitations)), or a rule which requires signature V1
+    as long as nodes of this version answer requests with `HASH_SET`.
+  - Who decides: the developers.
 - **The cutoff date depends on the time of the node.** A node whose clock shows a time before the cutoff date still
   accepts requests without signature V2. A node whose clock is ahead requires signature V2 earlier.
   - Why it cannot be removed: a request contains no time which a node can trust more than its own clock. Signature V1
