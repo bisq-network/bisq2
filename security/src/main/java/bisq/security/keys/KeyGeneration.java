@@ -77,22 +77,27 @@ public class KeyGeneration {
         }
     }
 
-    /**
-     * Parses the X.509 encoding of an EC public key. Received key bytes reach this method before any other check of
-     * the message which contains them, so the size is checked before the parser runs: the work of the parser grows
-     * with the size of its input, and a key with explicit curve parameters and a large order takes seconds to reject
-     * (see docs/specifications/security/ec-public-key-encoding.md).
-     */
     public static PublicKey generatePublic(byte[] encodedKey) throws GeneralSecurityException {
-        if (!NetworkDataValidation.isECPubKeySizeValid(encodedKey)) {
-            throw new InvalidKeySpecException("EC public key not of the expected size. size=" + encodedKey.length);
-        }
         return generatePublic(encodedKey, ECDH);
     }
 
+    /**
+     * Parses the X.509 encoding of a public key. Received key bytes can reach this method before any other check of
+     * the message which contains them. For EC keys the size is therefore checked before the parser runs: the work of
+     * the parser grows with the size of its input, and a key with explicit curve parameters and a large order takes
+     * seconds to reject (see docs/specifications/security/ec-public-key-encoding.md). Keys of other algorithms, for
+     * example DSA keys of Bisq 1 accounts, have other sizes; their callers check the size.
+     */
     public static PublicKey generatePublic(byte[] encodedKey, String algorithm) throws GeneralSecurityException {
+        if (isEcAlgorithm(algorithm) && !NetworkDataValidation.isECPubKeySizeValid(encodedKey)) {
+            throw new InvalidKeySpecException("EC public key not of the expected size. size=" + encodedKey.length);
+        }
         EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
         return KeyFactory.getInstance(algorithm).generatePublic(keySpec);
+    }
+
+    private static boolean isEcAlgorithm(String algorithm) {
+        return algorithm.equals(EC) || algorithm.equals(ECDH) || algorithm.equals(ECDSA);
     }
 
     public static PublicKey generatePublicFromCompressed(byte[] compressedKey) throws GeneralSecurityException {
