@@ -21,6 +21,7 @@ import bisq.common.network.Address;
 import bisq.common.network.DefaultPeerSocket;
 import bisq.common.network.PeerSocket;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.threading.AbortPolicyWithLogging;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.MaxSizeAwareDeque;
@@ -37,6 +38,7 @@ import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,6 +50,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -78,6 +81,7 @@ public abstract class Connection {
 
     @Setter
     private static int executorMaxPoolSize = 5;
+    private static final int MAX_LOGGED_UNRESOLVABLE_MESSAGES = 3;
 
     protected interface Handler {
         boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
@@ -118,6 +122,8 @@ public abstract class Connection {
     // We use counter value 0 in the handshake, thus we start here with 1 as it's not the first message
     @Getter(AccessLevel.PACKAGE)
     private final AtomicInteger sentMessageCounter = new AtomicInteger(1);
+    @Getter(AccessLevel.PACKAGE)
+    private final AtomicInteger numUnresolvableMessages = new AtomicInteger();
     private final Object writeLock = new Object();
     private volatile boolean shutdownStarted;
     private volatile boolean listeningStopped;
@@ -176,11 +182,11 @@ public abstract class Connection {
                         }
 
                         // The parsed protobuf objects are not referenced after the parser returns, so the budget
-                        // covers their whole life. The parser does not wait for other connections. A message which
-                        // cannot be parsed fails here, before the throttle.
+                        // covers their whole life. The parser does not wait for other connections. Bytes which are
+                        // not a valid protobuf message fail here, before the throttle. A message which fromProto
+                        // cannot parse is empty, and we drop it after the throttle.
                         long ts = System.currentTimeMillis();
-                        NetworkEnvelope networkEnvelope = parseMemoryBudget.parse(message,
-                                bytes -> NetworkEnvelope.fromProto(NetworkEnvelopeSocket.parse(bytes)));
+                        Optional<NetworkEnvelope> parsedEnvelope = parseMemoryBudget.parse(message, this::parseEnvelope);
                         long deserializeTime = System.currentTimeMillis() - ts;
 
                         // receiveNextMessage and the parse might need some time so we check again if connection is
@@ -194,6 +200,10 @@ public abstract class Connection {
                         if (!isInputStreamActive()) {
                             return;
                         }
+                        if (parsedEnvelope.isEmpty()) {
+                            continue;
+                        }
+                        NetworkEnvelope networkEnvelope = parsedEnvelope.get();
                         networkEnvelope.verifyVersion();
                         connectionMetrics.onReceived(networkEnvelope, deserializeTime);
 
@@ -230,6 +240,32 @@ public abstract class Connection {
             errorHandler.accept(this, e);
             inputHandlerFuture = CompletableFuture.failedFuture(e);
             shutdown(CloseReason.EXCEPTION.exception(e));
+        }
+    }
+
+    private Optional<NetworkEnvelope> parseEnvelope(byte[] message) throws InvalidProtocolBufferException {
+        bisq.network.protobuf.NetworkEnvelope proto = NetworkEnvelopeSocket.parse(message);
+        try {
+            return Optional.of(NetworkEnvelope.fromProto(proto));
+        } catch (UnresolvableProtobufException exception) {
+            onUnresolvableMessage(proto);
+            return Optional.empty();
+        }
+    }
+
+    // The bytes of the message were a valid protobuf message, so the next message can be read. The peer is often only
+    // a relay of the message, for example a node of an earlier version which accepts a request that breaks a rule of
+    // this version. Closing the connection would let the creator of such a message disconnect honest relays (see
+    // docs/specifications/network/validation-at-parsing.md). The log contains only the message type and the size, not
+    // received values.
+    private void onUnresolvableMessage(bisq.network.protobuf.NetworkEnvelope proto) {
+        int numUnresolvable = numUnresolvableMessages.incrementAndGet();
+        if (numUnresolvable <= MAX_LOGGED_UNRESOLVABLE_MESSAGES) {
+            log.warn("We drop a message which we cannot parse. Type={}; size={} bytes; peer={}",
+                    proto.getNetworkMessage().getMessageCase(), proto.getSerializedSize(), getPeerAddress());
+        } else {
+            log.debug("We drop a message which we cannot parse. Type={}; size={} bytes; peer={}",
+                    proto.getNetworkMessage().getMessageCase(), proto.getSerializedSize(), getPeerAddress());
         }
     }
 
