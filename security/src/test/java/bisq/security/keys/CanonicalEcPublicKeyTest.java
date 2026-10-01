@@ -41,6 +41,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -129,6 +130,12 @@ class CanonicalEcPublicKeyTest {
 
         // The parser reports a key which it rejects with another message
         assertEquals("EC public key not of the expected size. size=" + keyWithLargeOrder.length, exception.getMessage());
+        // The overload with an algorithm is another entry point, for example for the keys of account timestamps
+        for (String algorithm : List.of(KeyGeneration.EC, KeyGeneration.ECDH)) {
+            InvalidKeySpecException exceptionWithAlgorithm = assertThrows(InvalidKeySpecException.class,
+                    () -> KeyGeneration.generatePublic(keyWithLargeOrder, algorithm));
+            assertEquals(exception.getMessage(), exceptionWithAlgorithm.getMessage());
+        }
         assertThrows(InvalidKeySpecException.class, () -> KeyGeneration.generatePublic(new byte[0]));
         assertFalse(EcPublicKeyValidation.isCanonical(keyWithLargeOrder));
     }
