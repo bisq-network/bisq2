@@ -209,8 +209,10 @@ a node with more than 100 000 stored requests.
   a need.
 - **Requesters with more requests than the filter limit.** The filter of such a requester does not list all of its
   requests ([rule 10](#size-of-the-filter)). The responder therefore also sends requests which the requester already
-  holds. If a full response contains only such requests, the stores of the requester accept none of them, and the
-  requester stops requesting inventory from that peer ([rule 6](#repeated-requests)).
+  holds, and the requester receives them again. Each filter is a new random sample of the requests which the requester
+  holds. The check of [rule 6](#repeated-requests) therefore uses all requests which the requester holds, not only the
+  sample, because each of them can be in the next filter. A full response which contains only such requests does not
+  stop the requests to that peer: the next filter is another sample, so the next response usually differs.
   - Why it is accepted now: it affects only nodes with more than 100 000 stored requests. Before rule 10, such a node
     could not request inventory at all.
   - What removes it: a filter whose size does not grow with the number of requests. The filter type `MINI_SKETCH` is

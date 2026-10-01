@@ -68,6 +68,9 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
         return new HashSetFilter(inventoryFilterType, filterEntries);
     }
 
+    // Uses all requests which we hold, not the sample of getFilter(). If we hold more requests than a filter can list,
+    // each filter is a new random sample, so a request which we hold can be listed in the next filter. The next response
+    // of the peer then differs (see docs/specifications/network/inventory-hash-set-filter.md).
     @Override
     public boolean isAnyRequestInFilter(Collection<? extends DataRequest> dataRequests) {
         Set<HashSetFilterEntry> filterEntries = storageService.getAllDataRequestMapEntries()
