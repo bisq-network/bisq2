@@ -106,9 +106,16 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   bytes. The preimage of signature V2 contains it; nodes of earlier versions do not verify signature V2.
 - If `className` is empty, the class name of `metaData` is used. This covers messages from nodes of earlier versions,
   messages relayed by such nodes, and data persisted by them.
-- `className` is not validated when a message is parsed. The store accepts only registered class names. The check
-  depends on the types which the node registers, not only on the format of the message, so the store applies it (rule
-  5 of [`validation-at-parsing.md`](validation-at-parsing.md)).
+- `className` must have the format of the class name of MetaData: at most 50 characters, starting with an upper-case
+  letter, followed by letters, digits, `_` or `$`. A node checks the format when it parses a message (rule 1 of
+  [`validation-at-parsing.md`](validation-at-parsing.md)). Nodes of this version take `className` from registered
+  MetaData, so they create only valid values. Nodes of earlier versions do not send `className` (see the rule for an
+  empty `className`).
+
+  Reason: the sender chooses the value, and the node uses it to select a store and writes it to its log. With the check
+  at parsing, no later component handles a value of any length or with line breaks.
+- The store accepts only registered class names. The check depends on the types which the node registers, not only on
+  the format of the message, so the store applies it (rule 5 of [`validation-at-parsing.md`](validation-at-parsing.md)).
 - Each node applies its own MetaData. If two versions have different MetaData for a type, their entries can expire at
   different times. The cost factor of messages does not depend on MetaData. Nodes of earlier versions compute it
   from the MetaData in the message (see [Message cost](message-cost.md#compatibility)).

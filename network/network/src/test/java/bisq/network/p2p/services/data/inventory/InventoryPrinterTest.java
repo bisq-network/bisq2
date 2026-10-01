@@ -89,11 +89,11 @@ class InventoryPrinterTest {
         assertEquals("   1 item(s) of RemoveAuthenticatedDataRequest.TestDistributedData", report);
     }
 
-    // A peer can set a class name of any length and with any characters, for example with line breaks, which would add
-    // lines to the log
+    // A peer can set any class name of a valid format. Parsing rejects other formats (see
+    // AuthenticatedDataSignatureV2Test). The report has one line per name, so it writes only registered names.
     @Test
     void classNameWhichIsNotRegisteredIsNotWrittenToTheReport() throws UnresolvableProtobufException {
-        String className = "Name\n2027-01-01 00:00:00 ERROR forged log line " + "x".repeat(10_000);
+        String className = "UnregisteredTypeOfPeer";
         RemoveAuthenticatedDataRequest withOtherClassName = RemoveAuthenticatedDataRequest.fromProto(
                 removal.toValueProto(false).toBuilder()
                         .setClassName(className)
@@ -102,7 +102,7 @@ class InventoryPrinterTest {
 
         String report = InventoryPrinter.createReport(new Inventory(List.of(removal, withOtherClassName), false));
 
-        assertFalse(report.contains("forged log line"));
+        assertFalse(report.contains(className));
         assertEquals(2, report.lines().count());
         assertTrue(report.contains("RemoveAuthenticatedDataRequest.TestDistributedData"));
         assertTrue(report.contains("RemoveAuthenticatedDataRequest." + InventoryPrinter.UNREGISTERED_TYPE));

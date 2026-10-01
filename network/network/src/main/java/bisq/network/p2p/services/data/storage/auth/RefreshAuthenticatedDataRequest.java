@@ -117,6 +117,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         EcPublicKeyValidation.validate(ownerPublicKeyBytes);
         NetworkDataValidation.validateDate(created);
         SignatureValidation.validateSignatures(signature, signatureV2);
+        MetaData.validateClassName(className);
     }
 
 
