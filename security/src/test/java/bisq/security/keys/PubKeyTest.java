@@ -105,8 +105,7 @@ class PubKeyTest {
                 .setKeyId("keyId")
                 .build();
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> PubKey.fromProto(proto));
-
-        assertInstanceOf(InvalidKeySpecException.class, exception.getCause());
+        assertInstanceOf(InvalidKeySpecException.class,
+                assertThrows(UnresolvableProtobufException.class, () -> PubKey.fromProto(proto)).getCause());
     }
 }
