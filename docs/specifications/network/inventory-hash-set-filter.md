@@ -154,10 +154,11 @@ Reasons:
 - Rule 10: before rule 10, a requester with more requests than the limit created a filter which its own validation
   rejected, so it could not request inventory at all.
 
-Compatibility: nodes of earlier versions accept and send filters with fewer than 200 000 entries. Their filters with
-more than 100 000 entries are rejected by nodes of this version, which then close the connection (see
-[`message-framing.md`](message-framing.md#compatibility)). Such a filter needs a node with more than 100 000 stored
-requests.
+Compatibility: nodes of earlier versions accept and send filters with fewer than 200 000 entries. Nodes of this
+version reject their filters with more than 100 000 entries. They drop such a request and keep the connection (rule 6
+of [`validation-at-parsing.md`](validation-at-parsing.md#rules)). If the request also exceeds the size limit of a
+message, they close the connection (see [`message-framing.md`](message-framing.md#compatibility)). Such a filter needs
+a node with more than 100 000 stored requests.
 
 ## Limitations
 

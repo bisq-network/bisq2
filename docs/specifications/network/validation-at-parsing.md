@@ -30,8 +30,8 @@ message, so they cannot limit the memory which these steps need.
 3. A new integrity rule goes into `verify()`, also if nodes of earlier versions accept objects which break the rule.
    Parsing does not have to stay as lenient as in earlier versions. The only exception is a rule which unmodified
    nodes of a supported earlier version break with the objects which they create. Such a rule stays at the later
-   step until these versions are no longer supported, because a parse failure of a message closes the connection to
-   the node which sends it (rule 4). Example: a refresh request needs signature V2 also before the cutoff date of
+   step until these versions are no longer supported, because a node of this version drops a message which it cannot
+   parse (rule 6). Example: a refresh request needs signature V2 also before the cutoff date of
    signature V1, but nodes up to version 2.1.13 send refresh requests with signature V1 only (see
    [`storage-request-signatures.md`](storage-request-signatures.md#refresh-requests)). The store rejects them. From
    the cutoff date on, parsing rejects every request without signature V2 (rule 1).
@@ -41,7 +41,7 @@ message, so they cannot limit the memory which these steps need.
    - A store skips a persisted entry which it cannot parse when it loads, and keeps the other entries. The exception
      is the store of witness bindings of the oracle node, which must not lose a binding (see
      [`../reputation/account-age.md`](../reputation/account-age.md#persisted-request-compatibility)).
-   - A connection closes when the node cannot parse a message which it receives.
+   - A connection drops a message which the node cannot parse, and keeps the connection open (rule 6).
 5. Checks which need the state of the node, not only the object, stay in the component which owns that state. For
    storage requests these are the stores. Examples: the admission of registered class names and MetaData (see
    [`storage-metadata.md`](storage-metadata.md)), the owner of a stored entry after a refresh, which replaces the
@@ -51,6 +51,12 @@ message, so they cannot limit the memory which these steps need.
    at the later step: the verification of signatures against the public key, which the store runs after it rejected
    copies of stored requests, and the verification of a proof of work.
 
+6. A connection closes if a message breaks a rule of [`message-framing.md`](message-framing.md), if the bytes of a
+   message are not a valid protobuf `NetworkEnvelope`, if the network version differs, or if the input stream ends. A
+   message which protobuf can parse, but which `fromProto` cannot parse, does not close the connection. The connection
+   throttles such a message like every other message, and then drops it. The node logs at most three such messages per
+   connection with their type and size, and no received values.
+
 ## Reasons
 
 - Rule 1 and 2: the node rejects an invalid object at the first step which creates it. No later component has to
@@ -59,30 +65,43 @@ message, so they cannot limit the memory which these steps need.
   object has to expect an object which breaks the rules.
 - Rule 3: a lenient parser in this version does not make nodes of earlier versions accept or reject anything
   differently. It only moves the check to later steps of this version. The callers already handle objects which they
-  cannot parse (rule 4), for example entries of types which a newer version added. The exception keeps the
-  connections to unmodified nodes of supported earlier versions: they would otherwise lose them at each message which
+  cannot parse (rule 4), for example entries of types which a newer version added. The exception keeps the messages
+  of unmodified nodes of supported earlier versions: a node of this version would otherwise drop each message which
   they create as their version defines it.
 - Rule 5: a rule which depends on the state of the node can have another result on another node, or later on the same
   node. It is not a property of the object, so it does not belong into `verify()`.
+- Rule 6: the peer is often only a relay of the message, for example a node of an earlier version which accepts a
+  request that breaks a rule of this version. If the node closed the connection, a modified client could publish one
+  such request and disconnect every honest relay of an earlier version from the nodes of this version, until the
+  request expires. A message type which a newer version adds would have the same effect between versions. A relay
+  cannot send bytes which are not a valid protobuf message: it parses each message before it relays it, and it sends
+  the serialization of the parsed objects. Only the peer itself creates such bytes, so the connection closes.
+- Rule 6 and the cost of such messages: the connection throttles every received message after it parses it, also a
+  message which it drops. It reads the next message only after the throttle, so a peer can send such messages only at
+  the throttled rate. The node parses every message before it checks the proof of
+  work, so a message which fails parsing costs the node the same parse work as a message with an invalid proof of
+  work. Checks before expensive parse steps limit this work (for example rule 5 of
+  [`../security/ec-public-key-encoding.md`](../security/ec-public-key-encoding.md)). The difference is that the peer
+  keeps the connection (see [Known limitations](#known-limitations)).
 
 ## Compatibility
 
 - Nodes of earlier versions accept, store and relay objects which break a rule of this version. When such a node
   serves one in an inventory response, a requester of this version skips the entry. When such a node relays one as a
-  broadcast, a node of this version cannot parse the message and closes the connection (rule 4). Nodes of this version
+  broadcast, a node of this version drops the message and keeps the connection (rule 6). Nodes of this version
   create only objects which follow the rules. Apart from the exception of rule 3, unmodified nodes of earlier versions
   do so as well, so only a modified client can create such an object.
 - A node of an earlier version which cannot parse one entry of an inventory response drops the whole response (see
   [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#entries-which-a-node-cannot-parse)). A rule of this
   version cannot change this.
 
-## Open points
+## Known limitations
 
-- **A relayed invalid broadcast closes the connection to the relay.** The relay is usually not the creator of the
-  message. A modified client can publish one request which nodes of earlier versions accept and which breaks a rule
-  of this version, for example a public key in another encoding. Each node of an earlier version which relays it then
-  loses its connections to nodes of this version, until the request expires or the relay stops sending it.
-  - What removes it: a connection which drops a broadcast that it cannot parse instead of closing the connection. A
-    node would then need another rule for a peer which sends many messages that it cannot parse.
-  - Who decides: the developers. The change affects the handling of all messages of a connection, not only storage
-    requests.
+- **A peer can send messages which the node cannot parse, without proof of work, and keep the connection.** The rate
+  is limited by the receive throttle of the connection. A peer which sends only valid messages with an invalid proof of
+  work loses the connection, but it can connect again.
+  - Why it is accepted: a limit for such messages per connection would close connections to honest relays again, which
+    rule 6 prevents.
+  - What would remove it: a proof of work check before the payload is parsed. The proof of work covers the hash
+    serialization of the parsed message, so this needs another design of the proof of work payload.
+  - Who decides: the developers.
