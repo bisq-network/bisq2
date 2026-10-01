@@ -260,61 +260,52 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public boolean hasAuthorizedPubKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        // Signature check is done in AuthorizedData
+        boolean isAuthorized = isAuthorizedKey(authorizedData, authorizingBondedRoleType);
+        if (data.staticPublicKeysProvided()) {
+            if (!isAuthorized) {
+                log.warn("The authorizedPublicKey is not one of the static keys of {}. authorizingBondedRoleType={}",
+                        data.getClass().getSimpleName(), authorizingBondedRoleType);
+            }
+            return isAuthorized;
+        }
+
+        if (isAuthorized) {
+            log.debug("authorizedPublicKey provided by a bonded role. data={}", data.getClass().getSimpleName());
+            // In case we are reprocessing previous failed authorizedData we clear it from the queue.
+            if (failedAuthorizedData.remove(authorizedData)) {
+                log.debug("We successfully reprocessed authorizedData.\n" +
+                                "AuthorizedDistributedData={}, {}",
+                        data.getClass().getSimpleName(), data.toString().substring(0, 100));
+            }
+        } else {
+            failedAuthorizedData.add(authorizedData);
+            // TODO Set log level for to debug for now, as too many logs are printed.
+            //  Once the TTL has cleared the old data we can change back to warn level.
+            log.debug("hasAuthorizedPubKey failed for AuthorizedDistributedData={}, {}",
+                    data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
+            log.debug("AuthorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does " +
+                            "not provide a matching static key.\n" +
+                            "We add the authorizedData to a retry queue for later reprocessing.\n" +
+                            "AuthorizedDistributedData={}, {}",
+                    data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
+        }
+        return isAuthorized;
+    }
+
+    // Rules 2 and 3 of docs/specifications/bonded-roles/authorized-data.md, without side effects. The signature check is
+    // done in AuthorizedData.
+    private boolean isAuthorizedKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
         if (data.staticPublicKeysProvided()) {
             // The network layer checks the static keys only when it adds data, not when it loads stored data. A later
             // version can remove a key from the static keys, and a node which updates still holds the data of that key.
             // So we check the key against the static keys of this version.
-            boolean isStaticKey = data.getAuthorizedPublicKeys().contains(authorizedDataPubKey);
-            if (!isStaticKey) {
-                log.warn("The authorizedPublicKey is not one of the static keys of {}. authorizingBondedRoleType={}",
-                        data.getClass().getSimpleName(), authorizingBondedRoleType);
-            }
-            return isStaticKey;
-        } else {
-            boolean matchFound = getAuthorizedBondedRoleStream()
-                    .filter(bondedRole -> bondedRole.getBondedRoleType() == authorizingBondedRoleType)
-                    .anyMatch(bondedRole -> {
-                        boolean match = bondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey);
-                        if (match) {
-                            log.debug("Found a matching authorizedPublicKey from bondedRole: {}. data={}",
-                                    bondedRole.getBondedRoleType(),
-                                    data.getClass().getSimpleName());
-                        } else {
-                            log.debug("No authorizedPublicKey found in our list of bonded roles.\n" +
-                                            "bondedRole.getAuthorizedPublicKey()={}\n" +
-                                            "authorizedDataPubKey={}\n" +
-                                            "data={}",
-                                    bondedRole.getAuthorizedPublicKey(),
-                                    authorizedDataPubKey,
-                                    data.getClass().getSimpleName());
-
-                        }
-                        return match;
-                    });
-            if (matchFound) {
-                log.debug("authorizedPublicKey provided by a bonded role. data={}", data.getClass().getSimpleName());
-                // In case we are reprocessing previous failed authorizedData we clear it from the queue.
-                if (failedAuthorizedData.remove(authorizedData)) {
-                    log.debug("We successfully reprocessed authorizedData.\n" +
-                                    "AuthorizedDistributedData={}, {}",
-                            data.getClass().getSimpleName(), data.toString().substring(0, 100));
-                }
-            } else {
-                failedAuthorizedData.add(authorizedData);
-                // TODO Set log level for to debug for now, as too many logs are printed.
-                //  Once the TTL has cleared the old data we can change back to warn level.
-                log.debug("hasAuthorizedPubKey failed for AuthorizedDistributedData={}, {}",
-                        data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
-                log.debug("AuthorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does " +
-                                "not provide a matching static key.\n" +
-                                "We add the authorizedData to a retry queue for later reprocessing.\n" +
-                                "AuthorizedDistributedData={}, {}",
-                        data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
-            }
-            return matchFound;
+            return data.getAuthorizedPublicKeys().contains(authorizedDataPubKey);
         }
+        return getAuthorizedBondedRoleStream()
+                .filter(bondedRole -> bondedRole.getBondedRoleType() == authorizingBondedRoleType)
+                .anyMatch(bondedRole -> bondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey));
     }
 
     public void addListener(Listener listener) {
