@@ -99,6 +99,10 @@ public final class MetaData implements NetworkProto, Canonical {
 
     @Override
     public void verify() {
+        validateClassName(className);
+    }
+
+    public static void validateClassName(String className) {
         NetworkDataValidation.validateText(className, 50);
         if (!CLASS_NAME_PATTERN.matcher(className).matches()) {
             throw new IllegalArgumentException("Invalid className");
