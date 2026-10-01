@@ -86,10 +86,9 @@ public class InventoryPrinter {
         return report.isEmpty() ? "No items received" : report;
     }
 
-    // Remove requests, refresh requests and mailbox data carry the class name as a field which the peer sets. It is not
-    // validated when the request is parsed and can have any length and any characters (see
-    // docs/specifications/network/storage-metadata.md). The stores accept only registered class names, so only those
-    // are written to the log.
+    // Remove requests, refresh requests and mailbox data carry the class name as a field which the peer sets. Parsing
+    // checks its format, but a peer can still send many distinct names, and the report has one line per name. The
+    // stores accept only registered class names, so only those are written to the log.
     private static String getPayloadName(DataRequest dataRequest) {
         String className = dataRequest.getClassName();
         return StorableTypesRegistry.findMetaData(className).isPresent() ? className : UNREGISTERED_TYPE;
