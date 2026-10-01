@@ -20,8 +20,6 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.proto.NetworkProto;
 
 // Interface covering data for storage. Implemented by AppendOnlyData, AuthenticatedData
-public interface StorageData extends NetworkProto {
-    MetaData getMetaData();
-
+public interface StorageData extends NetworkProto, StoragePolicyAware {
     boolean isDataInvalid(byte[] ownerPubKeyHash);
 }

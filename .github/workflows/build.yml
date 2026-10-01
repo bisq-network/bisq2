@@ -62,13 +62,16 @@ jobs:
       name: tor module
       build-root-dir: network/tor
 
-  # Both checks guard a silent failure. A non-final PersistableStore makes its persistence key follow the runtime class
-  # instead of the class declaring the resolver, so the store reads back as corrupted and the user loses its content.
-  # A resolver registered with the wrong class or a mistyped proto type name drops the type from the storage whitelist
-  # or files its resolver under a key nothing looks up. The module builds above run with `-x test`, so these checks
-  # would otherwise not run anywhere.
-  check_resolver_registrations:
-    name: Check resolver registrations
+  # Every check here guards a silent failure. A non-final PersistableStore makes its persistence key follow the runtime
+  # class instead of the class declaring the resolver, so the store reads back as corrupted and the user loses its
+  # content. A resolver registered with the wrong class or a mistyped proto type name drops the type from the storage
+  # whitelist or files its resolver under a key nothing looks up. A payload type with no storage policy, or one missing
+  # from the whitelist, cannot be stored at all. The annotation processor that rejects the first of those at compile
+  # time has the same property itself: its only output is a diagnostic, so losing its service registration would leave
+  # every build green while it silently stops running. The module builds above use `-x test`, so none of this would run
+  # anywhere otherwise.
+  check_payload_contracts:
+    name: Check payload registrations and storage policy
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -93,7 +96,7 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Run resolver registration checks
+      - name: Run payload contract checks
         shell: bash
         run: |
           ./gradlew \
@@ -101,4 +104,7 @@ jobs:
             :persistence:test --tests 'bisq.persistence.PersistableStoreContractTest' \
                               --tests 'bisq.persistence.PersistableStoreReaderWriterTests' \
             :application:test --tests 'bisq.application.ResolverConfigTest' \
-                              --tests 'bisq.application.StorageWhiteListTest'
+                              --tests 'bisq.application.StorageWhiteListTest' \
+                              --tests 'bisq.application.StoragePolicyCoverageTest' \
+                              --tests 'bisq.application.StoragePolicyValuesTest' \
+            :network:storage-policy-processor:test

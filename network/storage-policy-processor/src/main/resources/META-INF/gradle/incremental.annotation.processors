@@ -1,0 +1,9 @@
+# Declared ISOLATING so Gradle keeps incremental compilation on in every module this is applied to. Without this
+# line Gradle reports "Full recompilation is required because StoragePolicyProcessor is not incremental" and
+# recompiles the whole source set on any change.
+#
+# ISOLATING is the correct category here because the processor generates nothing: it only reports diagnostics, so
+# there are no generated outputs to invalidate. It reads the supertypes of the type it checks, which is sound
+# because Gradle already recompiles a class when its supertypes change, so a base losing its policy re-checks its
+# subclasses.
+bisq.network.storage_policy.StoragePolicyProcessor,ISOLATING

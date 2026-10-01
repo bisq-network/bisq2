@@ -24,7 +24,9 @@ import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.network.identity.NetworkId;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,17 +37,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.*;
-
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+// Metadata needs to be symmetric with TwoPartyPrivateChatMessageReaction.
+@StoragePolicy(ttl = Ttl.DAYS_15, maxMapSize = MaxMapSize.SIZE_100)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPartyPrivateChatMessageReaction> {
-    // Metadata needs to be symmetric with TwoPartyPrivateChatMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_15_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
-
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
                                       String channelId,

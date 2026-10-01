@@ -22,7 +22,9 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.network.p2p.services.data.storage.MaxMapSize;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Priority;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -85,7 +87,11 @@ class ChatMessagePruningTest {
     }
 
     private static final class TestChatMessage extends ChatMessage {
-        private static final MetaData META_DATA = new MetaData(1_000, 1, TestChatMessage.class.getSimpleName());
+        // A short lived ttl which the Ttl enum deliberately does not offer, so MetaData is built directly.
+        private static final MetaData META_DATA = new MetaData(1_000,
+                Priority.HIGH.getValue(),
+                TestChatMessage.class.getSimpleName(),
+                MaxMapSize.SIZE_1000.getValue());
 
         private TestChatMessage(String id, String text, long date) {
             super(id,
@@ -110,7 +116,7 @@ class ChatMessagePruningTest {
         }
 
         @Override
-        protected MetaData getMetaData() {
+        public MetaData getMetaData() {
             return META_DATA;
         }
 

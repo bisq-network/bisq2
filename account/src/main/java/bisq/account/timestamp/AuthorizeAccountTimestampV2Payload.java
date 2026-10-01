@@ -19,7 +19,6 @@ package bisq.account.timestamp;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,15 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
-
 @Slf4j
 @Getter
 @ToString
 public final class AuthorizeAccountTimestampV2Payload implements NetworkProto {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
-
     private final long date;
     private final byte[] hash;
     private final byte[] fingerprintHash; // 20 byte hash

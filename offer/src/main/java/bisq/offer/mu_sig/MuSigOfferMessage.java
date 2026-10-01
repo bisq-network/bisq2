@@ -20,21 +20,20 @@ package bisq.offer.mu_sig;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
-
 @Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode
+@StoragePolicy(ttl = Ttl.DAYS_2)
 public final class MuSigOfferMessage implements DistributedData {
-    private transient final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
     private final MuSigOffer offer;
 
     public MuSigOfferMessage(MuSigOffer offer) {
