@@ -1465,6 +1465,10 @@ tasks.register("verifyGithubActionsSecurity") {
         val violations = mutableListOf<String>()
         val usesRegex = Regex("""^\s*-?\s*uses:\s*([^#\s]+)(?:\s+#\s*(.+))?\s*$""")
         val floatingRunnerRegex = Regex("""\b(ubuntu|macos|windows)-latest\b""", RegexOption.IGNORE_CASE)
+        val fromJsonVariableRegex = Regex("""fromJson\(\s*vars\.""", RegexOption.IGNORE_CASE)
+        val runnerSelectionRegex = Regex("""^\s*-?\s*(runs-on|os):""")
+        val variableReferenceRegex = Regex("""\bvars\.""")
+        val variableComparisonRegex = Regex("""\bvars\.[A-Za-z0-9_]+\s*==\s*'[^']*'""")
         val javaVersionRegex = Regex("""^\s*java-version:\s*([^#]+?)(?:\s+#.*)?$""")
         val javaMatrixRegex = Regex("""^\s*java:\s*\[([^]]+)]\s*(?:#.*)?$""")
         val exactJavaVersionRegex = Regex("""\d+\.\d+\.\d+""")
@@ -1535,6 +1539,17 @@ tasks.register("verifyGithubActionsSecurity") {
 
                 if (floatingRunnerRegex.containsMatchIn(line)) {
                     violations += "$workflowPath:$lineNumber uses a floating GitHub runner label: ${line.trim()}"
+                }
+
+                // Repository variables are not reviewed and not visible to this check. They may select between
+                // checked-in runner labels, but must never provide a label themselves.
+                val lineWithoutVariableComparisons = line.replace(variableComparisonRegex, "")
+                if (fromJsonVariableRegex.containsMatchIn(lineWithoutVariableComparisons)) {
+                    violations += "$workflowPath:$lineNumber parses a repository variable as JSON: ${line.trim()}"
+                }
+                if (runnerSelectionRegex.containsMatchIn(line) &&
+                    variableReferenceRegex.containsMatchIn(lineWithoutVariableComparisons)) {
+                    violations += "$workflowPath:$lineNumber takes a runner label from a repository variable: ${line.trim()}"
                 }
 
                 val javaVersionMatch = javaVersionRegex.find(line)
