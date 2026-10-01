@@ -98,7 +98,7 @@ class InventoryProgressTest {
 
     @Test
     void storedEntriesOfResponseAreCounted() {
-        Inventory inventory = createInventoryOfResponder(Integer.MAX_VALUE);
+        Inventory inventory = createInventoryOfResponder(InventoryFilterType.HASH_SET_V2, Integer.MAX_VALUE);
 
         assertEquals(3, InventoryService.storeEntries(requester, inventory).join());
         // The requester holds them now
@@ -117,14 +117,15 @@ class InventoryProgressTest {
         // Space for one add request
         int maxSize = storeOfResponder.getPersistableStore().getMap().values().iterator().next().getSerializedSize();
 
-        Inventory inventory = createInventoryOfResponder(maxSize);
+        Inventory inventory = createInventoryOfResponder(InventoryFilterType.HASH_SET_V2, maxSize);
 
         assertTrue(inventory.isMaxSizeReached());
         assertFalse(inventory.getEntries().isEmpty());
         assertEquals(0, InventoryService.storeEntries(requester, inventory).join());
         assertFalse(createFilterServiceOfRequester(InventoryFilterType.HASH_SET_V2)
                 .isAnyRequestInFilter(inventory.getEntries()));
-        assertEquals(inventory.getEntries(), createInventoryOfResponder(maxSize).getEntries());
+        assertEquals(inventory.getEntries(),
+                createInventoryOfResponder(InventoryFilterType.HASH_SET_V2, maxSize).getEntries());
     }
 
     // Several initial requests use the same filter, so two peers with the same data send the same response. The
@@ -135,7 +136,7 @@ class InventoryProgressTest {
     void filterListsTheEntriesOfAResponseWhichAnotherPeerDeliveredFirst(InventoryFilterType inventoryFilterType) {
         // Space for one add request
         int maxSize = storeOfResponder.getPersistableStore().getMap().values().iterator().next().getSerializedSize();
-        Inventory inventory = createInventoryOfResponder(maxSize);
+        Inventory inventory = createInventoryOfResponder(inventoryFilterType, maxSize);
         HashSetFilterService filterServiceOfRequester = createFilterServiceOfRequester(inventoryFilterType);
         assertTrue(inventory.isMaxSizeReached());
         assertEquals(1, inventory.getEntries().size());
@@ -146,13 +147,14 @@ class InventoryProgressTest {
         assertEquals(0, InventoryService.storeEntries(requester, inventory).join());
 
         assertTrue(filterServiceOfRequester.isAnyRequestInFilter(inventory.getEntries()));
-        assertNotEquals(inventory.getEntries(), createInventoryOfResponder(maxSize).getEntries());
+        assertNotEquals(inventory.getEntries(), createInventoryOfResponder(inventoryFilterType, maxSize).getEntries());
     }
 
-    // The inventory which the responder sends for the HASH_SET_V2 filter of the requester
-    private Inventory createInventoryOfResponder(int maxSize) {
-        return new HashSetFilterService(responder.getStorageService(), maxSize, InventoryFilterType.HASH_SET_V2)
-                .createInventory(createFilterServiceOfRequester(InventoryFilterType.HASH_SET_V2).getFilter());
+    // The inventory which the responder sends for the filter of the requester. Both use the same filter type, so the
+    // filter entries and the inventory use the same storage key version.
+    private Inventory createInventoryOfResponder(InventoryFilterType inventoryFilterType, int maxSize) {
+        return new HashSetFilterService(responder.getStorageService(), maxSize, inventoryFilterType)
+                .createInventory(createFilterServiceOfRequester(inventoryFilterType).getFilter());
     }
 
     private HashSetFilterService createFilterServiceOfRequester(InventoryFilterType inventoryFilterType) {
