@@ -326,6 +326,50 @@ class MailboxDataStorageServiceTest {
         assertEquals(entriesFromTheCutoffDateOn, map);
     }
 
+    // The prune task selects the entries to remove and removes them afterwards. The removal of the receiver can replace
+    // a selected add request in between. The removal must stay: without it, the store would accept the add request
+    // again, and the receiver would get the message again.
+    @Test
+    void pruneTaskKeepsARemovalWhichReplacedASelectedAddRequest()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AtomicReference<Runnable> pruneTask = new AtomicReference<>();
+        AtomicReference<RemoveMailboxRequest> removal = new AtomicReference<>();
+        MailboxDataStorageService store = new MailboxDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService() {
+                    @Override
+                    public void addTask(Runnable task) {
+                        pruneTask.set(task);
+                    }
+                },
+                "pruneAndReplace",
+                STORE_KEY,
+                () -> time) {
+            // Replaces the entry after the task has selected it, as a request of another thread can do
+            @Override
+            protected boolean isToPrune(MailboxRequest request) {
+                boolean isToPrune = super.isToPrune(request);
+                if (isToPrune) {
+                    getPersistableStore().getMap().put(request.getStorageKey(), removal.get());
+                }
+                return isToPrune;
+            }
+        };
+        AddMailboxRequest legacyAdd = toLegacy(AddMailboxRequest.from(mailboxData, senderKeyPair,
+                receiverKeyPair.getPublic()));
+        assertTrue(store.add(legacyAdd).isSuccess());
+        removal.set(RemoveMailboxRequest.from(mailboxData, receiverKeyPair));
+        assertEquals(legacyAdd.getStorageKey(), removal.get().getStorageKey());
+
+        // From the cutoff date on, the task selects the add request without signature V2
+        time = AT_CUTOFF;
+        pruneTask.get().run();
+
+        assertSame(removal.get(), store.getPersistableStore().getMap().get(legacyAdd.getStorageKey()));
+        assertTrue(store.getPrunedAndExpiredDataRequests().isEmpty());
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+    }
+
     // The receiver removed the message with a node of an earlier version. The remove request still rejects the add
     // request from the cutoff date on. Otherwise the receiver would get the message again.
     @Test
