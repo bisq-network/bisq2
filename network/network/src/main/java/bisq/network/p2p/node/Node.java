@@ -149,8 +149,10 @@ public class Node implements Connection.Handler {
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
-    // Shared by all connections of this node (see rule 11 of docs/specifications/network/message-framing.md)
+    // Separate budgets keep large established-connection messages from delaying handshakes. Both are shared by all
+    // inbound and outbound connections of this node (see rule 11 of docs/specifications/network/message-framing.md).
     private final ParseMemoryBudget parseMemoryBudget = new ParseMemoryBudget();
+    private final ParseMemoryBudget handshakeParseMemoryBudget = ParseMemoryBudget.forHandshakes();
     private final int socketTimeout; // in ms
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
@@ -289,7 +291,8 @@ public class Node implements Connection.Handler {
                             banList,
                             myCapability,
                             authorizationService,
-                            keyBundle);
+                            keyBundle,
+                            handshakeParseMemoryBudget);
                     connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
                     log.debug("Inbound handshake request at: {}", myCapability.getAddress());
                     ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
@@ -547,7 +550,8 @@ public class Node implements Connection.Handler {
                     banList,
                     myCapability,
                     authorizationService,
-                    keyBundle);
+                    keyBundle,
+                    handshakeParseMemoryBudget);
 
             connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
             log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);

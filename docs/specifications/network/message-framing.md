@@ -59,12 +59,18 @@ of a message. The framing is the format which marks where a message starts and w
     connection. The node checks the time after each read, including the read which completes the message. A message
     completed after the deadline is rejected. The connection closes at the latest one socket timeout after these
     4 minutes.
-11. The connections of a node parse messages of at least 64 KiB only within a common budget of 8 MiB, twice the size
-    limit of an established connection. The budget counts the bytes of the messages which are being parsed and
-    converted into objects of the node. A message waits until the budget has room for it. Smaller messages do not
-    take part. A failed parse or conversion must discard partial protobuf messages before releasing the budget.
-    Failure diagnostics must not retain these messages through exceptions or their causes. This also applies to
-    handshake messages and smaller messages, which do not use the budget.
+11. A node uses two independent parse budgets, each shared by all inbound and outbound connections of its phase:
+
+    | Phase | Shared budget | Messages counted |
+    |---|---|---|
+    | Handshake | 128 KiB (131 072 bytes) | every message |
+    | Established connection | 8 MiB (8 388 608 bytes) | messages of at least 64 KiB |
+
+    Each budget counts the serialized bytes of messages being parsed and converted into objects of the node. A
+    message waits until its budget has room for it. Reading the message, authorization and message handling do not
+    hold this budget. A failed parse or conversion must discard partial protobuf messages before releasing the
+    budget. Failure diagnostics must not retain these messages through exceptions or their causes. The same
+    requirement applies to smaller established-connection messages, which do not use a budget.
 
 ## Reasons
 
@@ -120,17 +126,23 @@ of a message. The framing is the format which marks where a message starts and w
   does not close honest connections. A read which waits cannot be interrupted without closing the socket from another
   thread. The check after each read needs no further thread.
 - Rule 11: the size limit bounds the parse memory of one message, not of several connections which parse large
-  messages at the same time. The budget bounds the parse memory of all connections together, at about 2 times 93 MB
-  (estimate, see the reasons for rule 4). A slow sender does not hold the budget, because the node reads all bytes of
-  a message before it parses them (rule 4). The budget covers the parse and the conversion into the objects of the
+  messages at the same time. The established-connection budget bounds simultaneous large-message parsing at about
+  2 times 93 MB (estimate, see the reasons for rule 4). A slow sender does not hold a budget, because the node reads
+  all bytes of a message before it parses them (rule 4). The budget covers the parse and the conversion into the objects of the
   node, because only then are the parsed protobuf objects no longer used. It does not cover the handling of the
   message: the handling can wait for a response on another connection, whose read thread can wait for the budget.
-  Messages below 64 KiB, among them all handshake messages, need little memory, and they do not wait for large ones.
+  Established-connection messages below 64 KiB need little memory and do not wait for large ones.
+  The separate handshake budget allows two messages at the handshake size limit to be parsed together, or more
+  smaller messages. It counts every handshake message: otherwise an unauthenticated peer could bypass the budget
+  by sending just below the accounting threshold. Its estimated parse memory is about 2.8 MB, using the same
+  amplification estimate as rule 4. A separate budget prevents large established-connection messages from delaying
+  handshakes. Under handshake load, completed messages may wait briefly before parsing.
 - Rule 2, limit of the handshake: the node parses the first message of a peer before it checks anything of the peer:
   the type of the message, the address ownership proof and the proof of work. Any peer can send this message, without
   a key and without a proof of work. A node runs several handshakes at the same time, up to 16 with the default
   configuration of the desktop application. With the limit of an established connection, these handshakes could need
-  16 times about 93 MB (see the reasons for rule 4). With 64 KiB, a parse needs at most about 1.4 MB.
+  16 times about 93 MB (see the reasons for rule 4). With 64 KiB, one parse needs about 1.4 MB by the same estimate.
+  The separate budget of rule 11 also bounds their combined parsing, independently of the handshake thread count.
 - The values of the limits: the largest handshake message of rule 6 has about 1.8 KB. The largest other message is an
   inventory response with the token type `HASH_CASH`, with about 4.1 MB. The limit of an established connection is
   small, because the memory of a parse grows with the size of a message (see the reasons for rule 4), and because the
