@@ -46,6 +46,10 @@ public class WebSocketFilterAddOn implements AddOn {
 
         // To intercept Websocket handshake we must place our filter before WebSocketFilter
 
+        // Installed for every configuration and before our other filters: an upgrade request which is not a
+        // valid handshake must reach neither them nor the WebSocketFilter.
+        builder.add(index, new WebSocketHandshakeValidationFilter());
+        index++;
         if (apiConfig.isSupportSessionHandling()) {
             builder.add(index, new WebSocketSessionAuthenticationFilter(sessionAuthenticationService));
             index++;

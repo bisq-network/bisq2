@@ -35,9 +35,10 @@ import java.net.SocketAddress;
  *
  * <p>
  * This filter inspects incoming messages and applies metadata only when the
- * message represents a valid WebSocket HTTP handshake request. The metadata
- * is stored on the connection attributes and is intended to be reused for
- * the lifetime of the WebSocket connection.
+ * message is a WebSocket upgrade request, which is every request for which
+ * Grizzly starts the handshake. The metadata is stored on the connection
+ * attributes and is intended to be reused for the lifetime of the WebSocket
+ * connection.
  * </p>
  *
  * <p>
@@ -65,9 +66,9 @@ public class WebSocketHandshakeMetaDataEnrichment extends BaseFilter {
         Object message = context.getMessage();
 
         HttpRequestFilterUtils.resolveAsHttpRequest(message)
-                .filter(HttpRequestFilterUtils::isWebsocketHandshakeRequest)
+                .filter(HttpRequestFilterUtils::isWebSocketUpgradeRequest)
                 .ifPresent(request -> {
-                    // We apply the attributes only at the Websocket handshake request
+                    // We apply the attributes only at the Websocket upgrade request
                     Connection<?> connection = context.getConnection();
                     AttributeHolder connectionAttributes = connection.getAttributes();
                     if (connectionAttributes != null) {
