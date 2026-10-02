@@ -19,16 +19,21 @@ package bisq.network.p2p.node.envelope;
 
 import bisq.common.network.PeerSocket;
 import bisq.network.p2p.message.NetworkEnvelope;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.SocketTimeoutException;
+import java.time.Duration;
+import java.util.function.LongSupplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -40,17 +45,29 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class NetworkEnvelopeSocket implements Closeable {
     // Protobuf writes the length as a varint of 32 bits, which has at most 5 bytes.
     private static final int MAX_LENGTH_PREFIX_SIZE = 5;
+    // The bytes of a message must arrive within this time after its length prefix. 4 MiB over a slow Tor circuit of
+    // 20 KB per second need about 210 seconds (see rule 10 of docs/specifications/network/message-framing.md).
+    public static final Duration MAX_MESSAGE_READ_DURATION = Duration.ofMinutes(4);
+    // The size of a single read of the bytes of a message. The deadline is checked after each read.
+    private static final int READ_CHUNK_SIZE = 64 * 1024;
 
     private final PeerSocket socket;
     private final InputStream inputStream;
     private final OutputStream outputStream;
     private final int maxSerializedSize;
+    private final LongSupplier nanoTime;
 
     public NetworkEnvelopeSocket(PeerSocket socket, int maxSerializedSize) {
+        this(socket, maxSerializedSize, System::nanoTime);
+    }
+
+    @VisibleForTesting
+    NetworkEnvelopeSocket(PeerSocket socket, int maxSerializedSize, LongSupplier nanoTime) {
         this.socket = socket;
         this.inputStream = socket.getInputStream();
         this.outputStream = socket.getOutputStream();
         this.maxSerializedSize = maxSerializedSize;
+        this.nanoTime = nanoTime;
     }
 
     public void send(NetworkEnvelope networkEnvelope) throws IOException {
@@ -89,6 +106,8 @@ public class NetworkEnvelopeSocket implements Closeable {
      *                                        limit (before any byte of the message is read), or if the stream ends
      *                                        inside the length prefix.
      * @throws EOFException                   if the stream ends inside the message.
+     * @throws SocketTimeoutException         if the bytes of the message do not arrive within
+     *                                        {@link #MAX_MESSAGE_READ_DURATION}.
      */
     @Nullable
     public byte[] receiveNextMessage() throws IOException {
@@ -135,17 +154,32 @@ public class NetworkEnvelopeSocket implements Closeable {
     // We read all bytes of the message before we parse it. The parsed objects of a message can need many times more
     // memory than its bytes, up to about 22 times for many empty sub-messages. While a peer sends a message slowly, we
     // hold only its bytes. Only the length marks the end of a message, protobuf has no end marker.
-    // readNBytes blocks until all bytes have arrived or the stream ends, and it reads no byte of the next message. Its
-    // buffer grows while the bytes arrive, so a length prefix alone does not allocate the announced size. The socket
-    // timeout applies to each single read.
+    // The buffer grows while the bytes arrive, so a length prefix alone does not allocate the announced size. We read
+    // exactly the bytes of the message, never a byte of the next one.
+    // The socket timeout applies to each single read only. A peer which sends a byte shortly before each timeout would
+    // keep the read thread and the connection without limit, so a deadline applies to the whole message. A read which
+    // blocks cannot be interrupted, so the deadline is checked after each read, and the connection closes at the latest
+    // one socket timeout after the deadline.
     private byte[] readMessage(int size) throws IOException {
-        byte[] message = inputStream.readNBytes(size);
-        // The received part can be a valid message, for example if the stream ended at a field boundary
-        if (message.length < size) {
-            throw new EOFException("The input stream ended after " + message.length + " of " + size +
-                    " bytes of a message.");
+        long deadline = nanoTime.getAsLong() + MAX_MESSAGE_READ_DURATION.toNanos();
+        ByteArrayOutputStream message = new ByteArrayOutputStream(Math.min(size, READ_CHUNK_SIZE));
+        byte[] chunk = new byte[Math.min(size, READ_CHUNK_SIZE)];
+        int remaining = size;
+        while (remaining > 0) {
+            int numRead = inputStream.read(chunk, 0, Math.min(chunk.length, remaining));
+            // The received part can be a valid message, for example if the stream ended at a field boundary
+            if (numRead == -1) {
+                throw new EOFException("The input stream ended after " + (size - remaining) + " of " + size +
+                        " bytes of a message.");
+            }
+            message.write(chunk, 0, numRead);
+            remaining -= numRead;
+            if (remaining > 0 && nanoTime.getAsLong() - deadline > 0) {
+                throw new SocketTimeoutException("Received only " + (size - remaining) + " of " + size +
+                        " bytes of a message within " + MAX_MESSAGE_READ_DURATION.toSeconds() + " seconds.");
+            }
         }
-        return message;
+        return message.toByteArray();
     }
 
     @Override

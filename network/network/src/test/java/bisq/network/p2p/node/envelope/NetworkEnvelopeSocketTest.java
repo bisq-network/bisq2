@@ -43,8 +43,11 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static bisq.network.p2p.message.NetworkEnvelope.MAX_SERIALIZED_SIZE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -252,6 +255,28 @@ class NetworkEnvelopeSocketTest {
         }
     }
 
+    // A peer which sends a byte shortly before each socket timeout must not keep the connection without limit (rule 10
+    // of docs/specifications/network/message-framing.md). Each read here returns 1 byte and takes 61 seconds.
+    @Test
+    void failsIfTheBytesOfAMessageDoNotArriveWithinTheDeadline() throws IOException {
+        bisq.network.protobuf.NetworkEnvelope proto = createProtoOfSize(10);
+        AtomicLong nanoTime = new AtomicLong();
+        NetworkEnvelopeSocket receiver = createReceiver(slowInput(writeDelimited(proto), nanoTime, 61), nanoTime);
+
+        assertThatThrownBy(receiver::receiveNextMessage)
+                .isInstanceOf(SocketTimeoutException.class);
+    }
+
+    @Test
+    void readsAMessageWhoseBytesArriveWithinTheDeadline() throws IOException {
+        bisq.network.protobuf.NetworkEnvelope proto = createProtoOfSize(10);
+        AtomicLong nanoTime = new AtomicLong();
+        // 10 reads of 20 seconds after the length prefix
+        NetworkEnvelopeSocket receiver = createReceiver(slowInput(writeDelimited(proto), nanoTime, 20), nanoTime);
+
+        assertThat(receiver.receiveNextEnvelope()).isEqualTo(proto);
+    }
+
     @Test
     void returnsNullIfTheStreamEndsBeforeTheNextMessage() throws IOException {
         assertThat(createReceiver(new byte[0]).receiveNextEnvelope()).isNull();
@@ -341,6 +366,23 @@ class NetworkEnvelopeSocketTest {
     private static NetworkEnvelopeSocket createReceiver(InputStream inputStream) {
         return new NetworkEnvelopeSocket(new StreamPeerSocket(inputStream, OutputStream.nullOutputStream()),
                 MAX_SERIALIZED_SIZE);
+    }
+
+    // Returns at most 1 byte per read and advances the time by the given seconds with each read
+    private static InputStream slowInput(byte[] bytes, AtomicLong nanoTime, long secondsPerRead) {
+        return new ByteArrayInputStream(bytes) {
+            @Override
+            public synchronized int read(byte[] buffer, int offset, int length) {
+                nanoTime.addAndGet(TimeUnit.SECONDS.toNanos(secondsPerRead));
+                return super.read(buffer, offset, Math.min(length, 1));
+            }
+        };
+    }
+
+    private static NetworkEnvelopeSocket createReceiver(InputStream inputStream, AtomicLong nanoTime) {
+        return new NetworkEnvelopeSocket(new StreamPeerSocket(inputStream, OutputStream.nullOutputStream()),
+                MAX_SERIALIZED_SIZE,
+                nanoTime::get);
     }
 
     private record StreamPeerSocket(InputStream inputStream, OutputStream outputStream) implements PeerSocket {
