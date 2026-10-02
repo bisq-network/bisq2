@@ -50,6 +50,9 @@ public class MuSigOfferUtil {
 
                 if (item != null && !empty) {
                     userProfileDisplay = new UserProfileDisplay(item.getMakerUserProfile(), true, true);
+                    if (!item.isMyOffer()) {
+                        userProfileDisplay.setPastTrades(item.getPastTradeCount());
+                    }
                     userProfileDisplay.setReputationScore(item.getReputationScore());
                     if (item.isMakerIgnored()) {
                         userProfileDisplay.setOpacity(0.4);

@@ -99,6 +99,16 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
+.mu-sig-past-trades-count {
+    -fx-min-width: 16;
+    -fx-min-height: 16;
+    -fx-alignment: center;
+    -fx-font-size: 8px;
+    -fx-background-radius: 16;
+    -fx-background-color: -bisq2-green-dim-20;
+    -fx-text-fill: white;
+}
+
 
 /*******************************************************************************
  *                                                                             *

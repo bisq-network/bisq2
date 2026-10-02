@@ -27,6 +27,7 @@ import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.main.content.mu_sig.MusigTradesUtils;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.offer.Direction;
@@ -42,6 +43,7 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PercentageFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -85,12 +87,34 @@ public class MuSigOfferListItem {
     private final Pair<String, String> minAndMaxBaseAmountPair;
 
     private final Optional<String> noAccountReason;
+    private int pastTradeCount = 0;
     private double priceSpecAsPercent = 0;
     private String formattedPercentagePrice = Res.get("data.na"),
             priceWithCodeString = Res.get("data.na"),
             priceTooltip = Res.get("data.na"),
             offerPriceWithSpec = Res.get("data.na");
     private long priceAsLong = 0;
+
+    public MuSigOfferListItem(MuSigOffer offer,
+                              MarketPriceService marketPriceService,
+                              UserProfileService userProfileService,
+                              IdentityService identityService,
+                              ReputationService reputationService,
+                              AccountService accountService,
+                              MuSigTradeService musigTradeService){
+        this(offer,
+                marketPriceService,
+                userProfileService,
+                identityService,
+                reputationService,
+                accountService);
+
+        String peerUserProfile = offer.getMakerNetworkId().getId();
+        pastTradeCount = MusigTradesUtils.getPreviousMusigTradesWithPeer(
+                peerUserProfile,
+                musigTradeService
+        );
+    }
 
     public MuSigOfferListItem(MuSigOffer offer,
                               MarketPriceService marketPriceService,

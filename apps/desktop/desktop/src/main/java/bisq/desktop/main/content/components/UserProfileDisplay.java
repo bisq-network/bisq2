@@ -157,6 +157,11 @@ public class UserProfileDisplay extends HBox {
         applyTooltip();
     }
 
+    public void setPastTrades(int pastTrades) {
+        userProfileIcon.setNumPastTrades(pastTrades);
+        userProfileIcon.updatePastTradesBadge();
+    }
+
     public Tooltip getTooltip() {
         return userProfileIcon.getTooltip();
     }
