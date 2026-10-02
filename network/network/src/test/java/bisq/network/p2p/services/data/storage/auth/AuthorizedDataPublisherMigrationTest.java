@@ -41,7 +41,6 @@ import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.CLOCK_BEFORE_CUTOFF;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -117,7 +116,8 @@ class AuthorizedDataPublisherMigrationTest {
         RemoveAuthenticatedDataRequest removeRequest = assertInstanceOf(RemoveAuthenticatedDataRequest.class,
                 requests.get(1));
         assertEquals(authorizedData, addRequest.getAuthenticatedSequentialData().getAuthenticatedData());
-        assertFalse(addRequest.getAuthenticatedSequentialData().isOwnerInvalid());
+        // The publisher is the owner itself, not another owner which the transition rule accepts
+        assertTrue(authorizedData.isOwner(addRequest.getAuthenticatedSequentialData().getPubKeyHash()));
         assertEquals(6, removeRequest.getSequenceNumber());
         assertEquals(7, addRequest.getSequenceNumber());
         assertEquals(addRequest, store.getPersistableStore().getMap().get(addRequest.getStorageKey()));

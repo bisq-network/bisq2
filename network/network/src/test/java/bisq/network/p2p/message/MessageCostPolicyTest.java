@@ -35,6 +35,7 @@ import bisq.network.p2p.services.data.inventory.InventoryResponse;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilter;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
@@ -324,7 +325,8 @@ class MessageCostPolicyTest {
     private AddAuthenticatedDataRequest createAddRequest(MetaData metaData) throws GeneralSecurityException {
         byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
         AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(
-                new DefaultAuthenticatedData(new PayloadOfType(metaData)), 1, pubKeyHash, System.currentTimeMillis());
+                new DefaultAuthenticatedData(new PayloadOfType(metaData, pubKeyHash)), 1, pubKeyHash,
+                System.currentTimeMillis());
         byte[] signature = SignatureUtil.sign(DigestUtil.hash(sequentialData.serializeForHash()), keyPair.getPrivate());
         // Without signature V2 and with version 0, as nodes of earlier versions send it
         return new AddAuthenticatedDataRequest(sequentialData, signature, keyPair.getPublic().getEncoded(),
@@ -390,10 +392,21 @@ class MessageCostPolicyTest {
                 .build());
     }
 
-    // Synthetic data whose class name selects the cost of a real type, without depending on higher-level modules.
-    private record PayloadOfType(MetaData metaData) implements AppendOnlyData {
+    // Synthetic data whose class name selects the cost of a real type, without depending on higher-level modules. It
+    // names the key which publishes it as its owner, as valid data of the real types does.
+    private record PayloadOfType(MetaData metaData, byte[] ownerPubKeyHash)
+            implements AppendOnlyData, OwnershipVerifiableData {
+        private PayloadOfType(MetaData metaData) {
+            this(metaData, new byte[20]);
+        }
+
         @Override
         public void verify() {
+        }
+
+        @Override
+        public byte[] getOwnerPubKeyHash() {
+            return ownerPubKeyHash;
         }
 
         @Override

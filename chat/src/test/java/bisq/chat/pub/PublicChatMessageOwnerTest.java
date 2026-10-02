@@ -21,7 +21,6 @@ package bisq.chat.pub;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
-import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
@@ -35,13 +34,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // The author of a public chat message and of a reaction owns it (see docs/specifications/network/storage-ownership.md)
@@ -63,9 +62,9 @@ class PublicChatMessageOwnerTest {
     }
 
     // Earlier versions accept only the profile ID which PubKey.getId() creates. The same hash in upper-case letters is
-    // invalid data, and the store rejects it before it reads the owner.
+    // invalid data. An add request of it cannot be created, because its owner cannot be read.
     @Test
-    void profileIdWhichIsNotTheIdOfAPublicKeyIsInvalidData() throws GeneralSecurityException {
+    void profileIdWhichIsNotTheIdOfAPublicKeyIsInvalidData() {
         String upperCaseProfileId = authorProfileId.toUpperCase(Locale.ROOT);
         CommonPublicChatMessage message = message(upperCaseProfileId);
         assertTrue(message.isDataInvalid());
@@ -74,11 +73,9 @@ class PublicChatMessageOwnerTest {
         StorableTypesRegistry.register(CommonPublicChatMessage.class, CommonPublicChatMessage.META_DATA);
         AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
                 new PruneExpiredEntriesService(), "store", CommonPublicChatMessage.class.getSimpleName());
-        DataStorageResult result = store.add(AddAuthenticatedDataRequest.from(store,
-                new DefaultAuthenticatedData(message), authorKeyPair));
 
-        assertFalse(result.isSuccess());
-        assertTrue(result.isDataInvalid(), result.toString());
+        assertThrows(IllegalArgumentException.class, () -> AddAuthenticatedDataRequest.from(store,
+                new DefaultAuthenticatedData(message), authorKeyPair));
     }
 
     private static CommonPublicChatMessage message(String authorUserProfileId) {

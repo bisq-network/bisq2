@@ -97,13 +97,16 @@ class AuthenticatedDataSignatureV2Test {
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
         bisq.network.protobuf.AddAuthenticatedDataRequest proto = request.toValueProto(false);
         AuthenticatedSequentialData sequentialData = request.getAuthenticatedSequentialData();
-        byte[] otherPublicKeyBytes = KeyGeneration.generateDefaultEcKeyPair().getPublic().getEncoded();
+        KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        byte[] otherPublicKeyBytes = otherKeyPair.getPublic().getEncoded();
 
         // Otherwise the storage key V2 and the signature name one key, and the owner check uses another one.
         assertThrows(IllegalArgumentException.class, () -> fromProto(proto.toBuilder()
                 .setOwnerPublicKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
                 .build(), request));
-        AuthenticatedSequentialData changedPubKeyHash = new AuthenticatedSequentialData(sequentialData.getAuthenticatedData(),
+        // Data of the other key, so that the sequential data is valid and only the request names another key
+        AuthenticatedSequentialData changedPubKeyHash = new AuthenticatedSequentialData(
+                new DefaultAuthenticatedData(new TestDistributedData("content", otherKeyPair.getPublic())),
                 sequentialData.getSequenceNumber(),
                 DigestUtil.hash(otherPublicKeyBytes),
                 sequentialData.getCreated());
