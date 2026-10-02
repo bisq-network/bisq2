@@ -417,6 +417,75 @@ class Bisq1BridgeRequestServiceTest {
         assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).isEmpty();
     }
 
+    // While only static oracle nodes are allowed, only the static oracle node keys may act as an oracle node (see
+    // docs/specifications/bonded-roles/authorized-data.md)
+    @Test
+    void oracleNodeRegistrationOfAKeyWhichIsNoStaticOracleNodeKeyIsRejectedBeforeBridgeVerification() {
+        BondedRoleRegistrationRequest request = oracleNodeRequest(false);
+        BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
+        AuthorizedBondedRolesService authorizedBondedRolesService = mock(AuthorizedBondedRolesService.class);
+        when(authorizedBondedRolesService.isOracleNodeKeyAllowed(request.getAuthorizedPublicKey())).thenReturn(false);
+        Bisq1BridgeRequestService service = createService(KeyGeneration.generateDefaultEcKeyPair(),
+                mock(NetworkService.class),
+                authorizedBondedRolesService,
+                bondedRoleGrpcService,
+                mock(GrpcClient.class),
+                true);
+        useDirectExecutor(service);
+
+        service.onConfidentialMessage(request, KeyGeneration.generateDefaultEcKeyPair().getPublic());
+
+        verify(bondedRoleGrpcService, never()).requestBondedRoleVerification(any(), any());
+        assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).isEmpty();
+    }
+
+    @Test
+    void oracleNodeRegistrationOfAStaticOracleNodeKeyIsVerified() {
+        BondedRoleRegistrationRequest request = oracleNodeRequest(false);
+        BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
+        when(bondedRoleGrpcService.requestBondedRoleVerification(any(), any()))
+                .thenReturn(new BondedRoleVerificationResponse(Optional.of("stop after the key check")));
+        AuthorizedBondedRolesService authorizedBondedRolesService = mock(AuthorizedBondedRolesService.class);
+        when(authorizedBondedRolesService.isOracleNodeKeyAllowed(request.getAuthorizedPublicKey())).thenReturn(true);
+        Bisq1BridgeRequestService service = createService(KeyGeneration.generateDefaultEcKeyPair(),
+                mock(NetworkService.class),
+                authorizedBondedRolesService,
+                bondedRoleGrpcService,
+                mock(GrpcClient.class),
+                true);
+        useDirectExecutor(service);
+
+        service.onConfidentialMessage(request, KeyGeneration.generateDefaultEcKeyPair().getPublic());
+
+        verify(bondedRoleGrpcService).requestBondedRoleVerification(any(), any());
+    }
+
+    // The registration of an oracle node role of a non-static key can still be cancelled
+    @Test
+    void knownOracleNodeRegistrationOfAKeyWhichIsNoStaticOracleNodeKeyCanBeCancelled() {
+        BondedRoleRegistrationRequest registration = oracleNodeRequest(false);
+        BondedRoleRegistrationRequest cancellation = oracleNodeRequest(true);
+        BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
+        when(bondedRoleGrpcService.requestBondedRoleVerification(any(), any()))
+                .thenReturn(new BondedRoleVerificationResponse(Optional.empty()));
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.removeAuthorizedData(any(), any()))
+                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
+        Bisq1BridgeRequestService service = createService(KeyGeneration.generateDefaultEcKeyPair(),
+                networkService,
+                mock(AuthorizedBondedRolesService.class),
+                bondedRoleGrpcService,
+                mock(GrpcClient.class),
+                true);
+        service.getPersistableStore().getBondedRoleRegistrationRequests().add(registration);
+        useDirectExecutor(service);
+
+        service.onConfidentialMessage(cancellation, KeyGeneration.generateDefaultEcKeyPair().getPublic());
+
+        verify(bondedRoleGrpcService).requestBondedRoleVerification(any(), any());
+        assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).isEmpty();
+    }
+
     @Test
     void disabledAdmissionRejectsRegistrationBeforeBridgeVerification() {
         BondedRoleRegistrationRequest request = createCurrentRequest();
@@ -639,6 +708,21 @@ class Bisq1BridgeRequestServiceTest {
         service.revalidateBondedRoles();
 
         verify(bondedRoleGrpcService).requestBondedRoleBatchVerification(any());
+    }
+
+    private static BondedRoleRegistrationRequest oracleNodeRequest(boolean cancellation) {
+        BondedRoleRegistrationRequest current = createCurrentRequest();
+        return new BondedRoleRegistrationRequest(current.getProfileId(),
+                current.getAuthorizedPublicKey(),
+                BondedRoleType.ORACLE_NODE,
+                current.getBondUserName(),
+                current.getSignatureBase64(),
+                current.getAddressByTransportTypeMap(),
+                current.getNetworkId(),
+                cancellation,
+                current.getRegistrationProtocolVersion(),
+                current.getProposalTxId(),
+                current.getLockupTxId());
     }
 
     private static BondedRoleRegistrationRequest legacyRequest(boolean cancellation) {

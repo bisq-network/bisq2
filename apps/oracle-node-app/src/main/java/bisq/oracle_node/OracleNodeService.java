@@ -150,6 +150,12 @@ public class OracleNodeService implements Service {
         authorizedPrivateKey = KeyGeneration.getPrivateKeyFromHex(privateKey);
         authorizedPublicKey = KeyGeneration.getPublicKeyFromHex(publicKey);
         authorizedKeyPair = new KeyPair(authorizedPublicKey, authorizedPrivateKey);
+        // While only static oracle nodes are allowed, other nodes accept only the data of an oracle node with a static
+        // oracle node key (see docs/specifications/bonded-roles/authorized-data.md)
+        checkArgument(authorizedBondedRolesService.isOracleNodeKeyAllowed(Hex.encode(authorizedPublicKey.getEncoded())),
+                "The public key of the oracle node is not a static oracle node key, and only static oracle nodes " +
+                        "are allowed. Add the key to AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS, or use one of the " +
+                        "DEV_PUB_KEYS in dev mode.");
 
         timestampService = new TimestampService(persistenceService,
                 networkService,
