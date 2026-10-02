@@ -18,7 +18,7 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
-import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.timer.Clock;
 import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.DataRequest;
@@ -42,6 +42,8 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     // is not used as limit, because its values are at most 10 000 and enforcing them could remove entries from
     // existing stores. Nodes of earlier versions use MetaData.maxMapSize as an input of the cost factor of messages.
     public static final int MAX_MAP_SIZE = 100_000;
+    // Maximum number of pruned requests which a store keeps for its observers (see prunedAndExpiredDataRequests)
+    public static final int MAX_PRUNED_REQUESTS = 1000;
 
     @Getter
     protected final Persistence<DataStore<T>> persistence;
@@ -51,8 +53,12 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     protected final String storeKey;
     @Getter
     protected final Path subDirPath;
+    // The requests which the store removed most recently because they expired or have no signature V2, in the order
+    // in which the store removed them. Observers get each request when it is added. The list keeps at most
+    // MAX_PRUNED_REQUESTS: a node which runs for a long time, for example a seed node, would otherwise hold every
+    // expired request in memory until it shuts down, and a peer could grow the list with requests which expire soon.
     @Getter
-    protected final ObservableSet<DataRequest> prunedAndExpiredDataRequests = new ObservableSet<>();
+    protected final ObservableArray<DataRequest> prunedAndExpiredDataRequests = new ObservableArray<>();
     // The time of the node. It decides whether the node requires signature V2 (see
     // SignedRequest.SIGNATURE_V1_CUTOFF_DATE).
     protected final Clock clock;
@@ -139,6 +145,11 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
 
     protected void addPrunedRequest(T dataRequest) {
         prunedAndExpiredDataRequests.add(dataRequest);
+        // Two threads which prune at the same time can both remove an entry, so the list can hold slightly fewer
+        // requests than MAX_PRUNED_REQUESTS. It never keeps more after this loop.
+        while (prunedAndExpiredDataRequests.size() > MAX_PRUNED_REQUESTS) {
+            prunedAndExpiredDataRequests.remove(0);
+        }
     }
 
     // A store keeps an entry until it expires. From SignedRequest.SIGNATURE_V1_CUTOFF_DATE on, a store also removes the
