@@ -16,6 +16,12 @@ the [protobuf documentation on default values](https://protobuf.dev/programming-
 Existing fields can be renamed, and certain other limited changes are allowed. For more information, refer to
 the [protobuf programming guide](https://protobuf.dev/programming-guides/proto3/).
 
+A field number which a released version has written must never get another type or another meaning. Persisted files
+and network messages of older versions contain the number, and the new code reads their bytes as the new field. If a
+field is no longer needed, remove it and mark its number and its name as `reserved` in the message. Give a new field a
+number which is higher than every number which a released version of the message has used, including the reserved
+numbers. The `SettingsStore` message in `settings.proto` is an example: it reserves the number 30.
+
 Since we use the serialized bytes of protobuf messages for several use cases, we need to ensure that changes in protobuf
 definitions do not break these use cases. We are aware that protobuf does not guarantee deterministic encoding and
 explicitly does not recommend it. Although developing our own serialization format was not feasible, we have never
