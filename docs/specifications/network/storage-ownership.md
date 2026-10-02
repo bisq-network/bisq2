@@ -210,9 +210,9 @@ earlier creation date, which are the copies described in [Known limitations](#kn
 
 - The rule adds no field and changes no signature. Nodes of earlier versions do not check the owner. They accept and
   relay data of any publisher, also copies which updated nodes reject. An updated node skips such a copy in an
-  inventory response. When a node of an earlier version relays such a copy as a broadcast, an updated node cannot
-  parse the message and closes the connection to the relay (see the open point in
-  [`validation-at-parsing.md`](validation-at-parsing.md#open-points)). Honest nodes publish only data which they own,
+  inventory response. When a node of an earlier version relays such a copy as a broadcast, an updated node drops the
+  message and keeps the connection to the relay (see rule 6 of
+  [`validation-at-parsing.md`](validation-at-parsing.md#rules)). Honest nodes publish only data which they own,
   so only a modified client creates such a copy.
 - The storage key V2 of data of oracle and seed nodes changes, because the publisher changes. During the transition,
   an updated node can store two entries of the same data: the one of the earlier version and the one of the authorized
