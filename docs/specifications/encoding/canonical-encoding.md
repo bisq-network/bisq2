@@ -332,15 +332,15 @@ which must be an explicit change of the holder.
 message, without the `google.protobuf.Any` in which `AddAppendOnlyDataRequest` carries it:
 
 - `DEFAULT` and `SIGNATURE`: all non-transient fields. The bytes equal `serialize()`.
-- `STORAGE_KEY` and `PROOF_OF_WORK`: without the fields annotated with `@ExcludeForHash`. The bytes
-  equal `serializeForHash()`.
+- `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT`: without the fields annotated with
+  `@ExcludeForHash`. The bytes equal `serializeForHash()`.
 
 `AddAppendOnlyDataRequest` uses it as follows:
 
 - `DEFAULT` and `SIGNATURE`: the kept `Any`, as for all data of higher-level modules.
-- `PROOF_OF_WORK`: an `Any` with the kept type URL and the `PROOF_OF_WORK` encoding of the data as
-  value. The kept type URL is the one that `Any.pack` creates, so the bytes equal the `Any` of
-  `toAny(true)`, and nodes of all versions compute the same proof of work payload.
+- `PROOF_OF_WORK` and `TRADE_CONTRACT`: an `Any` with the kept type URL and the encoding of the data
+  for the same purpose as value. The kept type URL is the one that `Any.pack` creates, so the bytes
+  equal the `Any` of `toAny(true)`, and nodes of all versions compute the same proof of work payload.
 - Storage key V2 hashes the `STORAGE_KEY` encoding of the data (see
   [`../network/storage-keys.md`](../network/storage-keys.md)). The request itself has no
   `STORAGE_KEY` encoding.
