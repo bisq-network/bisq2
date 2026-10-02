@@ -87,8 +87,11 @@ failure therefore affects only a peer which sends a request that no released nod
    result is `ownerInvalid`. The only exception is the transition rule below. The store checks the content of the data
    (`isDataInvalid()`, result `dataInvalid`) before the owner, because the owner can only be read from valid data, for
    example from a valid profile ID.
-6. The mailbox store accepts an add request only if the sender is the owner of the confidential message. Otherwise the
-   result is `ownerInvalid`. The receiver removes mailbox data; storage key V2 of mailbox data contains the key of the
+6. A mailbox add request is valid only if the sender is the owner of the confidential message. A node rejects mailbox
+   sequential data of another sender when it constructs or decodes it, including persisted entries (see
+   [`validation-at-parsing.md`](validation-at-parsing.md)). Released nodes since 2.0.0 sign the add request with the
+   key pair which encrypts the confidential message, so they create only valid requests. The receiver removes mailbox
+   data; storage key V2 of mailbox data contains the key of the
    receiver (see [`storage-keys.md`](storage-keys.md)). The receiver hash in the sequential data must equal the hash of
    its receiver public key bytes. Reject inconsistent sequential data when it is constructed or decoded, including
    persisted entries. Otherwise the key which finds the entry cannot pass its removal authorization check, and the
@@ -262,5 +265,5 @@ earlier creation date, which are the copies described in [Known limitations](#kn
 - [`storage-keys.md`](storage-keys.md): the storage keys, which contain the key of the publisher.
 - [`storage-request-signatures.md`](storage-request-signatures.md): the signatures of the requests.
 - `OwnershipVerifiableData.getOwnerPubKeyHash()`, `AuthenticatedData.isOwner()`,
-  `AuthenticatedSequentialData.isOwnerInvalid()`, `MailboxSequentialData.isSenderInvalid()`.
+  `AuthenticatedSequentialData.isOwnerInvalid()`, `MailboxSequentialData.verify()`.
 - `StorageService` (rule 11), `AuthorizedDataPublisherMigration` (rule 14).

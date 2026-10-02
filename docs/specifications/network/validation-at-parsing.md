@@ -35,7 +35,7 @@ message, so they cannot limit the memory which these steps need.
    - A connection closes when the node cannot parse a message which it receives.
 5. Checks which need the state of the node, not only the object, stay in the component which owns that state. For
    storage requests these are the stores. Examples: the admission of registered class names and MetaData (see
-   [`storage-metadata.md`](storage-metadata.md)), the owner of the data (see
+   [`storage-metadata.md`](storage-metadata.md)), the owner of authenticated data (see
    [`storage-ownership.md`](storage-ownership.md)), the order of sequence numbers (see
    [`storage-request-ordering.md`](storage-request-ordering.md)), and the verification of the signatures against the
    public key, which the store runs after it rejected copies of stored requests.
