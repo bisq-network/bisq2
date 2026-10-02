@@ -24,7 +24,6 @@ import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -45,7 +44,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -1001,10 +999,10 @@ class AuthenticatedDataStorageServiceTest {
     // For example AuthorizedOracleNode, which the key of its network ID owns
     @Test
     void authorizedDataWhichNamesItsOwnerIsOwnedByThatOwner() throws GeneralSecurityException {
-        StorableTypesRegistry.register(AuthorizedDataWithOwner.class, AuthorizedDataWithOwner.META_DATA);
+        StorableTypesRegistry.register(TestAuthorizedDataWithOwner.class, TestAuthorizedDataWithOwner.META_DATA);
         AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
-                new PruneExpiredEntriesService(), "authorizedWithOwner", AuthorizedDataWithOwner.class.getSimpleName());
-        AuthorizedData authorizedData = authorize(new AuthorizedDataWithOwner(ownerKeyPair.getPublic()));
+                new PruneExpiredEntriesService(), "authorizedWithOwner", TestAuthorizedDataWithOwner.class.getSimpleName());
+        AuthorizedData authorizedData = authorize(new TestAuthorizedDataWithOwner(ownerKeyPair.getPublic()));
 
         DataStorageResult resultOfOwner = store.add(AddAuthenticatedDataRequest.from(store, authorizedData,
                 ownerKeyPair));
@@ -1171,41 +1169,5 @@ class AuthenticatedDataStorageServiceTest {
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(ownerStore.add(addRequest).isSuccess());
         assertTrue(peerStore.add(addRequest).isSuccess());
-    }
-
-    // Authorized data which names its owner, like AuthorizedOracleNode
-    private static final class AuthorizedDataWithOwner implements AuthorizedDistributedData, OwnershipVerifiableData {
-        private static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS,
-                AuthorizedDataWithOwner.class.getSimpleName());
-
-        private final byte[] ownerPubKeyHash;
-
-        private AuthorizedDataWithOwner(PublicKey owner) {
-            ownerPubKeyHash = DigestUtil.hash(owner.getEncoded());
-        }
-
-        @Override
-        public void verify() {
-        }
-
-        @Override
-        public bisq.network.protobuf.MetaData.Builder getBuilder(boolean serializeForHash) {
-            return bisq.network.protobuf.MetaData.newBuilder().setClassName(Hex.encode(ownerPubKeyHash));
-        }
-
-        @Override
-        public bisq.network.protobuf.MetaData toProto(boolean serializeForHash) {
-            return unsafeToProto(serializeForHash);
-        }
-
-        @Override
-        public MetaData getMetaData() {
-            return META_DATA;
-        }
-
-        @Override
-        public byte[] getOwnerPubKeyHash() {
-            return ownerPubKeyHash;
-        }
     }
 }
