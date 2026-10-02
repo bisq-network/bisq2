@@ -48,6 +48,10 @@ public final class NetworkEnvelope implements NetworkProto {
     // size with the legacy HASH_CASH token, which copies the message, about 4.1 MB (see
     // docs/specifications/network/message-framing.md).
     public static final int MAX_SERIALIZED_SIZE = 4 * 1024 * 1024;
+    // Size limit of the envelopes of the handshake. The node parses the first message of a peer before it checks
+    // anything of the peer, and the parsed objects of a message can need about 20 times its size. The largest valid
+    // handshake message has about 1.8 KB (see docs/specifications/network/message-framing.md).
+    public static final int MAX_HANDSHAKE_SERIALIZED_SIZE = 64 * 1024;
 
     private final int version;
     private final AuthorizationToken authorizationToken;

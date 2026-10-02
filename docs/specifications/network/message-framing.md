@@ -1,6 +1,6 @@
 # Message framing
 
-This specification defines how a node separates the messages in the byte stream of a connection, and the size limit
+This specification defines how a node separates the messages in the byte stream of a connection, and the size limits
 of a message. The framing is the format which marks where a message starts and where it ends.
 
 ## Format
@@ -9,10 +9,16 @@ of a message. The framing is the format which marks where a message starts and w
    the size of the serialized envelope in bytes, encoded as a protobuf varint of at most 5 bytes. This is the format of
    the protobuf methods `writeDelimitedTo` and `parseDelimitedFrom`.
 
-## Size limit
+## Size limits
 
-2. The size limit of a message is 4 MiB (4 194 304 bytes). It applies to the serialized envelope, without the length
-   prefix. It is a protocol constant.
+2. The size limit of a message depends on the phase of the connection. It applies to the serialized envelope, without
+   the length prefix. Both values are protocol constants. In the following rules, "the size limit" is the limit of the
+   current phase.
+
+   | Phase | Messages | Size limit |
+   |---|---|---|
+   | Handshake | `ConnectionHandshake.Request` and `ConnectionHandshake.Response` | 64 KiB (65 536 bytes) |
+   | Established connection | all other messages | 4 MiB (4 194 304 bytes) |
 
 3. A node reads the length prefix of a message before the message. If the length prefix has more than 5 bytes, or if
    the length is larger than the size limit, the node closes the connection. It does not read the message. The node
@@ -25,10 +31,14 @@ of a message. The framing is the format which marks where a message starts and w
 
    | Message | Largest envelope | Limit of the message type |
    |---|---|---|
+   | `ConnectionHandshake.Request` | 1 771 bytes | an I2P address of at most 700 characters, at most all transport types and features, an address ownership proof of 64 bytes |
    | `InventoryRequest` with a hash set filter | 3 000 130 bytes | at most 100 000 filter entries of at most 30 bytes each (see [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#size-of-the-filter)) |
    | `InventoryResponse` | about 2 MB, about 4.1 MB with the token type `HASH_CASH` | the inventory size limit of the responder, 2 000 000 bytes by default; the requester accepts up to twice its own inventory size limit |
 
-   Nodes use the token type `HASH_CASH_V2` since version 2.1.3 for the messages of an established connection. Its proof of work contains a 20 byte hash of the message. For a peer before version 2.1.3, a node still
+   A node creates the authorization token of each handshake request with the token type `HASH_CASH`, because it does
+   not know the features of the peer yet. The proof of work of this type contains a copy of the request. A handshake
+   response is smaller than the request. Nodes use the token type `HASH_CASH_V2` since version 2.1.3 for all other
+   messages. Its proof of work contains a 20 byte hash of the message. For a peer before version 2.1.3, a node still
    uses `HASH_CASH`, and the envelope is about twice as large as the message. An inventory response of the default
    size then has 4 080 153 bytes, measured with entries of 100 bytes. Smaller entries need more bytes for the repeated
    field. Signed storage requests have more than 100 bytes.
@@ -67,15 +77,23 @@ of a message. The framing is the format which marks where a message starts and w
 - Rule 5: a node of this version which receives a larger message closes the connection. A failure at the sender shows
   the cause and the type of the message in the log of the sender, and the sender does not waste bandwidth. Only a
   defect or the configuration of the sender can create such a message, for example a high inventory size limit.
-- The value of the limit: the largest message is an inventory response with the token type `HASH_CASH`, with about
-  4.1 MB. The limit is small, because the memory of a parse grows with the size of a message (see the reasons for rule
-  4), and because the largest message types are known. The limit of the filter entries keeps the largest inventory
-  request at 3.0 MB. An increase of the limit needs all nodes to update first (see [Compatibility](#compatibility)).
+- Rule 2, limit of the handshake: the node parses the first message of a peer before it checks anything of the peer:
+  the type of the message, the address ownership proof and the proof of work. Any peer can send this message, without
+  a key and without a proof of work. A node runs several handshakes at the same time, up to 16 with the default
+  configuration of the desktop application. With the limit of an established connection, these handshakes could need
+  16 times about 93 MB (see the reasons for rule 4). With 64 KiB, a parse needs at most about 1.4 MB.
+- The values of the limits: the largest handshake message of rule 6 has about 1.8 KB. The largest other message is an
+  inventory response with the token type `HASH_CASH`, with about 4.1 MB. The limit of an established connection is
+  small, because the memory of a parse grows with the size of a message (see the reasons for rule 4), and because the
+  largest message types are known. The limit of the filter entries keeps the largest inventory request at 3.0 MB. An
+  increase of a limit needs all nodes to update first (see [Compatibility](#compatibility)).
 
 ## Compatibility
 
 - Nodes of earlier versions read messages of any size. A node of this version sends them no message above the size
-  limit (rule 5), so the limit changes nothing for them.
+  limit (rule 5), so the limits change nothing for them.
+- The handshake messages of nodes of earlier versions have the limits of rule 6, so they are below the limit of the
+  handshake.
 - Nodes of earlier versions accept hash set filters with fewer than 200 000 entries. A node of this version rejects a
   filter with more than 100 000 entries (see
   [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#size-of-the-filter)), and the request of such a filter
@@ -94,10 +112,12 @@ of a message. The framing is the format which marks where a message starts and w
 ## Known limitations
 
 - **Memory of several parses at the same time.** The size limit bounds the bytes of one message, not the memory of
-  its parse. A message at the size limit with many empty sub-messages needs about 93 MB (estimate, see the reasons
-  for rule 4). A peer can open several connections and complete such messages at the same time. A node with a small heap, for example 2 GB, can then run out of memory.
-  - Why it is not removed now: the size limit removes the unbounded case, in which one message could exhaust the
-    memory. A lower size limit only reduces the factor, because the largest legal message has about 4.1 MB.
+  its parse. A message at the limit of an established connection with many empty sub-messages needs about 93 MB
+  (estimate, see the reasons for rule 4). A peer which completed the handshake can open several connections
+  and complete such messages at the same time. A node with a small heap, for example 2 GB, can then run out of memory.
+  - Why it is not removed now: the size limits remove the unbounded case, in which one message could exhaust the
+    memory, and the limit of the handshake removes the case without a handshake. A lower limit of an established
+    connection only reduces the factor, because the largest legal message has about 4.1 MB.
   - What would remove it: a limit of the number of large messages which a node parses at the same time. Because the
     node reads all bytes of a message before it parses them (rule 4), a slow sender does not hold such a limit while
     it sends. Another option is a format of the hash set filter without one sub-message per entry, which needs a new
