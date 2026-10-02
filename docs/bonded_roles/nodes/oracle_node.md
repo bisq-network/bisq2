@@ -8,6 +8,10 @@
   voting they need to lock up the BSQ bond (10 000 BSQ)
 - After the bond is locked up, register your oracle node in the Bisq2 `User Options/Nodes` screen. Follow the
   instructions in the UI.
+- Currently only oracle nodes with a hard coded public key are accepted (see [Root oracle nodes](#root-oracle-nodes)).
+  The oracle nodes reject the registration of another oracle node key, and an oracle node with another key does not
+  start. The flag `AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES` controls this temporary restriction (see
+  `docs/specifications/bonded-roles/authorized-data.md`).
 - Currently, we only support Tor. Once I2P is supported all oracle node operators need to run both networks.
 
 For running a local oracle node you do not need the above described process. You can find the technical details below

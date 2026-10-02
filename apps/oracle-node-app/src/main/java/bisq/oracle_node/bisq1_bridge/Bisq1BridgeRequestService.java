@@ -511,6 +511,16 @@ public class Bisq1BridgeRequestService implements Service,
                 }
                 BondedRoleRegistrationProtocol.verifyProof(protocolVersion,
                         request.getProposalTxId(), request.getLockupTxId());
+                // While only static oracle node keys may act as an oracle node, a role of type ORACLE_NODE of another
+                // key gives no authority (see docs/specifications/bonded-roles/authorized-data.md). A cancellation of
+                // such a role stays possible.
+                if (request.getBondedRoleType() == BondedRoleType.ORACLE_NODE &&
+                        !request.isCancellationRequest() &&
+                        !authorizedBondedRolesService.isOracleNodeKeyAllowed(request.getAuthorizedPublicKey())) {
+                    log.warn("Rejecting the registration of an oracle node whose key is not a static oracle node key: {}",
+                            request);
+                    return;
+                }
                 boolean knownRegistration = hasMatchingRegistrationRequest(request);
                 if (protocolVersion == BondedRoleRegistrationProtocol.LEGACY_VERSION &&
                         !knownRegistration) {
