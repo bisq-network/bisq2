@@ -71,11 +71,6 @@ public abstract class PublicChatMessage extends ChatMessage implements Ownership
         checkArgument(PubKey.isId(authorUserProfileId), "authorUserProfileId is not the ID of a public key");
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     // The author owns the message. The profile ID is the ID of the public key of the author (PubKey.getId()).
     @Override
     public byte[] getOwnerPubKeyHash() {

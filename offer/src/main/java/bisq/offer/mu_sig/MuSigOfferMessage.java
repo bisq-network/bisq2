@@ -84,11 +84,6 @@ public final class MuSigOfferMessage implements OwnershipVerifiableData {
         return META_DATA;
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     // The maker owns the offer. Otherwise another user could publish a copy of the offer and remove it, and the
     // offerbook would remove the offer of the maker (see docs/specifications/network/storage-ownership.md).
     @Override

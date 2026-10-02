@@ -32,7 +32,6 @@ import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 // The author of a public chat message and of a reaction owns it (see docs/specifications/network/storage-ownership.md)
@@ -44,9 +43,7 @@ class PublicChatMessageOwnerTest {
     void authorOwnsMessageAndReaction() {
         byte[] authorPubKeyHash = DigestUtil.hash(authorKeyPair.getPublic().getEncoded());
 
-        assertFalse(message(authorProfileId).isDataInvalid());
         assertArrayEquals(authorPubKeyHash, message(authorProfileId).getOwnerPubKeyHash());
-        assertFalse(reaction(authorProfileId).isDataInvalid());
         assertArrayEquals(authorPubKeyHash, reaction(authorProfileId).getOwnerPubKeyHash());
     }
 

@@ -106,9 +106,4 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
-
-    @Override
-    public boolean isDataInvalid() {
-        return distributedData.isDataInvalid();
-    }
 }

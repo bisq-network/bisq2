@@ -570,11 +570,6 @@ public class DistributedDataAnyTest {
             return new MetaData(MetaData.TTL_10_DAYS, "NestedPayloadData");
         }
 
-        @Override
-        public boolean isDataInvalid() {
-            return false;
-        }
-
         // common.proto: message Region { string code = 1; string name = 2; }
         private static final CanonicalSchema<Region> REGION_SCHEMA = CanonicalSchema.<Region>newBuilder()
                 .string(1, Region::getCode)
@@ -655,11 +650,6 @@ public class DistributedDataAnyTest {
         @Override
         public MetaData getMetaData() {
             return metaData;
-        }
-
-        @Override
-        public boolean isDataInvalid() {
-            return false;
         }
 
         private static final CanonicalSchema<PayloadData> DEFAULT_SCHEMA = CanonicalSchema.<PayloadData>newBuilder()

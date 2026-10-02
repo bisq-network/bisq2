@@ -119,11 +119,6 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
-    @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
             return AuthorizedPubKeys.DEV_PUB_KEYS;

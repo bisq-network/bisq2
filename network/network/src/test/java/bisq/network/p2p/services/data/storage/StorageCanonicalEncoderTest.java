@@ -571,11 +571,6 @@ public class StorageCanonicalEncoderTest {
             return metaData;
         }
 
-        @Override
-        public boolean isDataInvalid() {
-            return false;
-        }
-
 
         private static final CanonicalSchema<ExternalData> DEFAULT_SCHEMA = CanonicalSchema.<ExternalData>newBuilder()
                 .sint32(2, data -> data.priority)
@@ -642,11 +637,6 @@ public class StorageCanonicalEncoderTest {
         public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
             encodingPurposes.add(encodingPurpose);
             return new byte[0];
-        }
-
-        @Override
-        public boolean isDataInvalid() {
-            return false;
         }
     }
 }

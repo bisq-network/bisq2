@@ -24,7 +24,6 @@ import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -39,7 +38,6 @@ class ConfidentialMessageTest {
     void validMessageIsCreated() throws UnresolvableProtobufException {
         ConfidentialMessage message = ConfidentialMessage.fromProto(createProto());
 
-        assertFalse(message.isDataInvalid());
         assertEquals(RECEIVER_KEY_ID, message.getReceiverKeyId());
         assertEquals(message, new ConfidentialMessage(message.getConfidentialData(), RECEIVER_KEY_ID));
     }

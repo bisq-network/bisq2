@@ -64,11 +64,6 @@ public final class TestDistributedData implements OwnershipVerifiableData {
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
-    @Override
     public byte[] getOwnerPubKeyHash() {
         return ownerPubKeyHash;
     }

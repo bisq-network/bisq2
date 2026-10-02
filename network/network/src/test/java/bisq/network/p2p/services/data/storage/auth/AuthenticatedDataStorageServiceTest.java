@@ -1148,11 +1148,6 @@ class AuthenticatedDataStorageServiceTest {
         }
 
         @Override
-        public boolean isDataInvalid() {
-            return false;
-        }
-
-        @Override
         public byte[] getOwnerPubKeyHash() {
             return ownerPubKeyHash;
         }
