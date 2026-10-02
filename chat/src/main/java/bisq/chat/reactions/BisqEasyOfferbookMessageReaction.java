@@ -34,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
+public final class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
     // Metadata needs to be symmetric with BisqEasyOfferbookMessage.
     public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, LOW_PRIORITY, BisqEasyOfferbookMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 

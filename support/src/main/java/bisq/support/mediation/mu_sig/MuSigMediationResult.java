@@ -34,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.System.currentTimeMillis;
 
 @Getter
-public class MuSigMediationResult implements NetworkProto, PersistableProto {
+public final class MuSigMediationResult implements NetworkProto, PersistableProto {
     public static final int MAX_SUMMARY_NOTES_LENGTH = 1_000;
 
     private final long date;

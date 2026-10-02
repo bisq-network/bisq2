@@ -33,7 +33,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class CommonPublicChatMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
+public final class CommonPublicChatMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
     // Metadata needs to be symmetric with CommonPublicChatMessage.
     public static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, CommonPublicChatMessageReaction.class.getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
 
