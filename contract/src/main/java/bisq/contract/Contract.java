@@ -29,6 +29,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Defines the terms of the financial interaction with the counterparty/parties.
  */
@@ -49,9 +51,22 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
         this.maker = maker;
     }
 
+    // The final subclass calls verify() in its constructor after it set the amounts (see rule 1 of
+    // docs/specifications/network/validation-at-parsing.md)
     @Override
     public void verify() {
         NetworkDataValidation.validateDate(takeOfferDate);
+
+        // A contract is an agreement about an amount on each side, and its price is derived from the two amounts
+        // (getPriceQuote()). Without a positive amount on each side, or with amounts whose price does not fit into a
+        // long, the contract has no price, and getPriceQuote() throws for every component which uses the contract.
+        checkArgument(getBaseSideAmount() > 0, "The base side amount of a contract must be positive");
+        checkArgument(getQuoteSideAmount() > 0, "The quote side amount of a contract must be positive");
+        try {
+            getPriceQuote();
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("The price of the amounts of a contract must be computable", e);
+        }
     }
 
     @Override
