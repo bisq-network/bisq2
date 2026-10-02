@@ -39,9 +39,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
 public final class HashSetFilter extends InventoryFilter {
-    // FilterEntry has about 26 bytes (hash of 20 bytes + integer + some overhead). 200_000 items are about 4.8 MB)
-    // We should aim to be much below that limit.
-    public final static int MAX_ENTRIES = 200_000;
+    // The maximum number of entries which a receiver accepts and a requester sends. An entry needs 24 to 30 bytes, so
+    // the largest filter needs at most 3.0 MB (see docs/specifications/network/inventory-hash-set-filter.md).
+    // Nodes of earlier versions accept fewer than 200 000 entries.
+    public final static int MAX_ENTRIES = 100_000;
 
     @Getter
     private final List<HashSetFilterEntry> filterEntries;
@@ -64,7 +65,7 @@ public final class HashSetFilter extends InventoryFilter {
     @Override
     public void verify() {
         checkArgument(inventoryFilterType.isHashSet(), "Invalid inventoryFilterType %s", inventoryFilterType);
-        checkArgument(filterEntries.size() < MAX_ENTRIES);
+        checkArgument(filterEntries.size() <= MAX_ENTRIES, "Too many filter entries: %s", filterEntries.size());
     }
 
     @Override

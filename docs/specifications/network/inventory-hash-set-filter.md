@@ -139,6 +139,24 @@ which they serve lack it, and from the cutoff date on a node of this version rej
 peer then only costs traffic, and a response below the size limit would count as a completed inventory request. A node
 which stays on this version keeps this rule after the cutoff date, so it must be part of this version.
 
+## Size of the filter
+
+9. A filter contains at most 100 000 entries. A node rejects a filter with more entries.
+10. A requester which holds more requests puts a random selection of 100 000 of its entries into the filter.
+
+Reasons:
+
+- Rule 9 bounds the size of an inventory request. An entry needs 24 to 30 bytes: 22 bytes for the hash field, 0 to 6
+  bytes for the sequence number, and 2 bytes for the repeated field. A full filter needs at most 3.0 MB. The filter of
+  a node had 38 280 entries when the limit was set (measured on 2026-10-02), so the limit leaves room for more than
+  twice as many.
+- Rule 10: before rule 10, a requester with more requests than the limit created a filter which its own validation
+  rejected, so it could not request inventory at all.
+
+Compatibility: nodes of earlier versions accept and send filters with fewer than 200 000 entries. Their filters with
+more than 100 000 entries are rejected by nodes of this version, which cannot parse such a request and close the
+connection. Such a filter needs a node with more than 100 000 stored requests.
+
 ## Limitations
 
 - **Requests of this version with `HASH_SET`.** Against a responder of an earlier version, a node of this version
@@ -176,3 +194,12 @@ which stays on this version keeps this rule after the cutoff date, so it must be
 - **Cost of `HASH_SET` responses.** The stores hold the requests under storage key V2. For a `HASH_SET` filter the
   responder computes storage key V1 of every request for every such response. A cache is possible if measurements show
   a need.
+- **Requesters with more requests than the filter limit.** The filter of such a requester does not list all of its
+  requests ([rule 10](#size-of-the-filter)). The responder therefore also sends requests which the requester already
+  holds. If a full response contains only such requests, the stores of the requester accept none of them, and the
+  requester stops requesting inventory from that peer ([rule 6](#repeated-requests)).
+  - Why it is accepted now: it affects only nodes with more than 100 000 stored requests. Before rule 10, such a node
+    could not request inventory at all.
+  - What removes it: a filter whose size does not grow with the number of requests. The filter type `MINI_SKETCH` is
+    defined for this purpose, but it is not implemented.
+  - Who decides: the developers.
