@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
+import static bisq.support.dispute.ChatMessageTestFixtures.withTooLongCitationId;
 import static bisq.support.mu_sig.MuSigRequestSizeTestFixtures.TRADE_ID;
 import static bisq.support.mu_sig.MuSigRequestSizeTestFixtures.assertCanBeEncrypted;
 import static bisq.support.mu_sig.MuSigRequestSizeTestFixtures.createBoundaryChatMessages;
@@ -70,6 +71,25 @@ class MuSigMediationRequestTest {
                         mediator.getNetworkId()));
         assertEquals("Serialized mediation request size must not exceed " + MAX_SERIALIZED_SIZE + " bytes",
                 exception.getMessage());
+    }
+
+    @Test
+    void requestWithOneInvalidChatMessageKeepsTheValidChatMessage() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        List<MuSigOpenTradeMessage> chatMessages = createBoundaryChatMessages(requester, peer, 10);
+        bisq.support.protobuf.MuSigMediationRequest.Builder builder = new MuSigMediationRequest(TRADE_ID,
+                createMediationContract(requester, peer, mediator),
+                requester,
+                peer,
+                chatMessages,
+                mediator.getNetworkId()).getValueBuilder(false);
+        builder.setChatMessages(1, withTooLongCitationId(builder.getChatMessages(1)));
+
+        MuSigMediationRequest request = MuSigMediationRequest.fromProto(builder.build());
+
+        assertEquals(List.of(chatMessages.get(0)), request.getChatMessages());
     }
 
     @Test

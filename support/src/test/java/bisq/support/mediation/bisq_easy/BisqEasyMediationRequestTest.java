@@ -28,6 +28,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.market.Market;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -52,6 +53,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
+import static bisq.support.dispute.ChatMessageTestFixtures.withTooLongCitationId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -102,6 +104,47 @@ class BisqEasyMediationRequestTest {
                 mediator.getNetworkId().getPubKey().getPublicKey(),
                 KeyGeneration.generateDefaultEcKeyPair());
         assertTrue(confidentialData.getCipherText().length <= 20_000);
+    }
+
+    // A trade peer can send a user of version 2.1.13 a chat message which only this version rejects. The node of
+    // that user puts all chat messages of the trade into its mediation request.
+    @Test
+    void requestWithOneInvalidChatMessageKeepsTheValidChatMessage() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        List<BisqEasyOpenTradeMessage> chatMessages = createBoundaryChatMessages(requester, peer, 10);
+        bisq.support.protobuf.MediationRequest valid = createMediationRequestProto(
+                createContract(requester, peer, mediator), requester, peer, chatMessages, mediator.getNetworkId());
+        bisq.chat.protobuf.ChatMessage invalidChatMessage = withTooLongCitationId(valid.getChatMessages(1));
+        bisq.support.protobuf.MediationRequest received = valid.toBuilder()
+                .setChatMessages(1, invalidChatMessage)
+                .build();
+
+        assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOpenTradeMessage.fromProto(invalidChatMessage));
+        assertEquals(chatMessages, BisqEasyMediationRequest.fromProto(valid).getChatMessages());
+        assertEquals(List.of(chatMessages.get(0)), BisqEasyMediationRequest.fromProto(received).getChatMessages());
+    }
+
+    @Test
+    void requestWithOnlyInvalidChatMessagesIsParsedWithoutChatMessages() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        bisq.support.protobuf.MediationRequest valid = createMediationRequestProto(
+                createContract(requester, peer, mediator), requester, peer,
+                createBoundaryChatMessages(requester, peer, 10), mediator.getNetworkId());
+        bisq.support.protobuf.MediationRequest received = valid.toBuilder()
+                .setChatMessages(0, withTooLongCitationId(valid.getChatMessages(0)))
+                .setChatMessages(1, withTooLongCitationId(valid.getChatMessages(1)))
+                .build();
+
+        BisqEasyMediationRequest request = BisqEasyMediationRequest.fromProto(received);
+
+        assertTrue(request.getChatMessages().isEmpty());
+        assertEquals(BisqEasyMediationRequest.fromProto(valid), request);
+        assertEquals(BisqEasyMediationRequest.fromProto(valid).getAckRequestingMessageId(),
+                request.getAckRequestingMessageId());
     }
 
     private int findBoundaryTextLength(BisqEasyContract contract,
