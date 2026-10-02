@@ -21,34 +21,21 @@ package bisq.chat.pub;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
-import bisq.network.p2p.services.data.storage.DataStorageResult;
-import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
-import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
-import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
-import bisq.persistence.PersistenceService;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.nio.file.Path;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Locale;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 // The author of a public chat message and of a reaction owns it (see docs/specifications/network/storage-ownership.md)
 class PublicChatMessageOwnerTest {
-    @TempDir
-    Path tempDir;
-
     private final KeyPair authorKeyPair = KeyGeneration.generateDefaultEcKeyPair();
     private final String authorProfileId = new PubKey(authorKeyPair.getPublic(), "keyId").getId();
 
@@ -56,29 +43,22 @@ class PublicChatMessageOwnerTest {
     void authorOwnsMessageAndReaction() {
         byte[] authorPubKeyHash = DigestUtil.hash(authorKeyPair.getPublic().getEncoded());
 
-        assertFalse(message(authorProfileId).isDataInvalid());
         assertArrayEquals(authorPubKeyHash, message(authorProfileId).getOwnerPubKeyHash());
-        assertFalse(reaction(authorProfileId).isDataInvalid());
         assertArrayEquals(authorPubKeyHash, reaction(authorProfileId).getOwnerPubKeyHash());
     }
 
     // Earlier versions accept only the profile ID which PubKey.getId() creates. The same hash in upper-case letters is
-    // invalid data, and the store rejects it before it reads the owner.
+    // invalid data, so a message or reaction with it cannot be created, and a received one fails at parsing.
     @Test
-    void profileIdWhichIsNotTheIdOfAPublicKeyIsInvalidData() throws GeneralSecurityException {
+    void profileIdWhichIsNotTheIdOfAPublicKeyIsInvalidData() {
         String upperCaseProfileId = authorProfileId.toUpperCase(Locale.ROOT);
-        CommonPublicChatMessage message = message(upperCaseProfileId);
-        assertTrue(message.isDataInvalid());
-        assertTrue(reaction(upperCaseProfileId).isDataInvalid());
+        bisq.chat.protobuf.ChatMessage proto = message(authorProfileId).toProto(false).toBuilder()
+                .setAuthorUserProfileId(upperCaseProfileId)
+                .build();
 
-        StorableTypesRegistry.register(CommonPublicChatMessage.class, CommonPublicChatMessage.META_DATA);
-        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
-                new PruneExpiredEntriesService(), "store", CommonPublicChatMessage.class.getSimpleName());
-        DataStorageResult result = store.add(AddAuthenticatedDataRequest.from(store,
-                new DefaultAuthenticatedData(message), authorKeyPair));
-
-        assertFalse(result.isSuccess());
-        assertTrue(result.isDataInvalid(), result.toString());
+        assertThrows(IllegalArgumentException.class, () -> message(upperCaseProfileId));
+        assertThrows(IllegalArgumentException.class, () -> reaction(upperCaseProfileId));
+        assertThrows(UnresolvableProtobufException.class, () -> CommonPublicChatMessage.fromProto(proto));
     }
 
     private static CommonPublicChatMessage message(String authorUserProfileId) {

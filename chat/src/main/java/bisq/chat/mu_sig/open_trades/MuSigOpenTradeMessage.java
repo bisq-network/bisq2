@@ -26,6 +26,7 @@ import bisq.chat.reactions.MuSigOpenTradeMessageReaction;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.mu_sig.MuSigOffer;
@@ -115,6 +116,8 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
         this.mediator = mediator;
         this.arbitrator = arbitrator;
         this.muSigOffer = muSigOffer;
+
+        verify();
     }
 
     private MuSigOpenTradeMessage(String tradeId,
@@ -142,6 +145,8 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
         this.mediator = mediator;
         this.arbitrator = arbitrator;
         this.muSigOffer = Optional.of(muSigOffer);
+
+        verify();
     }
 
     @Override
@@ -201,8 +206,11 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
                     arbitrator,
                     ChatMessageType.fromProto(baseProto.getChatMessageType()),
                     muSigOffer,
-                    ProtobufUtils.fromProtoStream(protoMessage.getChatMessageReactionsList(),
-                                    MuSigOpenTradeMessageReaction::fromProto)
+                    // An invalid reaction must not remove its message
+                    ProtobufUtils.fromProtoStreamSkippingFailures(protoMessage.getChatMessageReactionsList(),
+                                    MuSigOpenTradeMessageReaction::fromProto,
+                                    e -> log.warn("Skipped a chat message reaction which cannot be parsed: {}",
+                                            ExceptionUtil.getRootCause(e).getClass().getSimpleName()))
                             .collect(Collectors.toSet())
             );
         } catch (RuntimeException e) {

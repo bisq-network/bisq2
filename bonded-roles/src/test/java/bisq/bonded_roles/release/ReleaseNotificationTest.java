@@ -21,12 +21,12 @@ import bisq.common.platform.InvalidVersionException;
 import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * A release notification with an invalid version or with too long release notes cannot be created. The network storage
- * therefore never holds one, and isDataInvalid() has nothing to check.
+ * therefore never holds one.
  */
 class ReleaseNotificationTest {
     private static final String RELEASE_NOTES = "Release notes";
@@ -36,8 +36,7 @@ class ReleaseNotificationTest {
     void validReleaseNotificationIsCreated() throws UnresolvableProtobufException {
         ReleaseNotification releaseNotification = create(RELEASE_NOTES, VERSION);
 
-        assertFalse(releaseNotification.isDataInvalid());
-        assertFalse(ReleaseNotification.fromProto(releaseNotification.toProto(false)).isDataInvalid());
+        assertEquals(releaseNotification, ReleaseNotification.fromProto(releaseNotification.toProto(false)));
     }
 
     @Test

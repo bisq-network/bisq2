@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -85,6 +86,17 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 wasEdited,
                 chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+        // The network layer does not bind the offer to the author. Only the maker publishes its offer, so that nobody
+        // can show the offer of another user in the offerbook.
+        bisqEasyOffer.ifPresent(offer -> checkArgument(offer.getMakersUserProfileId().equals(authorUserProfileId),
+                "The author of an offerbook message must be the maker of its offer"));
     }
 
     @Override

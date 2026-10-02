@@ -120,11 +120,6 @@ public final class AuthorizedAccountTimestamp implements AuthorizedDistributedDa
         return META_DATA;
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     // Oracle nodes of earlier versions published it with the key of their network ID
     @Override
     public boolean isLegacyOwnerAccepted() {

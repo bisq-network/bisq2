@@ -249,11 +249,6 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         return staticPublicKeysProvided;
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     public boolean isTradeRestrictingAlert() {
         if (alertType != AlertType.EMERGENCY) {
             return false;

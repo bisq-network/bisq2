@@ -60,7 +60,11 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
         this.senderUserProfile = senderUserProfile;
         this.receiverNetworkId = receiverNetworkId;
         this.isRemoved = isRemoved;
+    }
 
+    @Override
+    public void verify() {
+        super.verify();
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
     }
 

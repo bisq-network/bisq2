@@ -24,6 +24,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @EqualsAndHashCode
 @ToString
@@ -59,6 +61,10 @@ public final class NetworkLoad implements NetworkProto {
 
     @Override
     public void verify() {
+        // The constructor limits the range of both values, but NaN passes MathUtils.bounded unchanged. A peer which
+        // reported NaN would make the difficulty of the proofs of work which this node creates for it NaN.
+        checkArgument(!Double.isNaN(load) && !Double.isNaN(difficultyAdjustmentFactor),
+                "Network load values must be numbers");
     }
 
     @Override

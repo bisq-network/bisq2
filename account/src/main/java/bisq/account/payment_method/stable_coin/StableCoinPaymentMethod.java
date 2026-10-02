@@ -35,7 +35,7 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class StableCoinPaymentMethod extends PaymentMethod<StableCoinPaymentRail> implements DigitalAssetPaymentMethod {
+public final class StableCoinPaymentMethod extends PaymentMethod<StableCoinPaymentRail> implements DigitalAssetPaymentMethod {
     public static StableCoinPaymentMethod fromPaymentRail(StableCoinPaymentRail paymentRail) {
         return new StableCoinPaymentMethod(paymentRail);
     }

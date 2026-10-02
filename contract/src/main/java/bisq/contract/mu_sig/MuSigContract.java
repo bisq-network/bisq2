@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class MuSigContract extends TwoPartyContract<MuSigOffer> {
+public final class MuSigContract extends TwoPartyContract<MuSigOffer> {
 
     private final long baseSideAmount;
     private final long quoteSideAmount;

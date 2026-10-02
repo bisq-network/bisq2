@@ -110,7 +110,11 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
         this.receiverNetworkId = receiverNetworkId;
 
         this.chatMessageReactions.addAll(chatMessageReactions);
+    }
 
+    @Override
+    public void verify() {
+        super.verify();
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
     }
 

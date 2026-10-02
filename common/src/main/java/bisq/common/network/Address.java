@@ -92,7 +92,7 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
         checkArgument(NetworkPortValidation.isValid(port), "Invalid port: " + port);
         this.host = host;
         this.port = port;
-        verify();
+        // The final subclasses call verify() after they set their fields
     }
 
 

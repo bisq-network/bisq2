@@ -33,7 +33,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyOpenTradeMessageReaction extends PrivateChatMessageReaction {
+public final class BisqEasyOpenTradeMessageReaction extends PrivateChatMessageReaction {
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessage.
     public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyOpenTradeMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_100);
 
@@ -49,6 +49,8 @@ public class BisqEasyOpenTradeMessageReaction extends PrivateChatMessageReaction
                                             boolean isRemoved) {
         super(id, senderUserProfile, receiverUserProfileId, receiverNetworkId, chatChannelId, chatChannelDomain,
                 chatMessageId, reactionId, date, isRemoved);
+
+        verify();
     }
 
     @Override

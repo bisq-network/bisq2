@@ -154,11 +154,6 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData, Ow
         return META_DATA;
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     // The oracle node publishes its own data with the key of its network ID, not with its authorized key
     @Override
     public byte[] getOwnerPubKeyHash() {

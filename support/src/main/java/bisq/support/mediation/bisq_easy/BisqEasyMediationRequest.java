@@ -170,11 +170,6 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return mediatorNetworkId;
     }
 
-    @Override
-    public boolean allFieldsValid() {
-        return true;
-    }
-
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {

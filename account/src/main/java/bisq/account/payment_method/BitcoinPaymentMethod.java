@@ -30,7 +30,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
+public final class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     public static BitcoinPaymentMethod fromPaymentRail(BitcoinPaymentRail bitcoinPaymentRail) {
         return new BitcoinPaymentMethod(bitcoinPaymentRail);
     }

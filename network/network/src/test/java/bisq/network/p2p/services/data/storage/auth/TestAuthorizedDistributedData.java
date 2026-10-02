@@ -74,11 +74,6 @@ public final class TestAuthorizedDistributedData implements AuthorizedDistribute
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
-    @Override
     public boolean isLegacyOwnerAccepted() {
         return legacyOwnerAccepted;
     }

@@ -35,7 +35,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
+public final class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessage.
     public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigOpenTradeMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_100);
 
@@ -51,6 +51,8 @@ public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
                                          boolean isRemoved) {
         super(id, senderUserProfile, receiverUserProfileId, receiverNetworkId, chatChannelId, chatChannelDomain,
                 chatMessageId, reactionId, date, isRemoved);
+
+        verify();
     }
 
     @Override

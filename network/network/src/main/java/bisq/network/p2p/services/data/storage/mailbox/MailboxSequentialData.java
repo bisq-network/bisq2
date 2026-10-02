@@ -81,6 +81,9 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
         // Storage key V2 and removal authorization must identify the same receiver.
         checkArgument(Arrays.equals(receiversPublicKeyHash, DigestUtil.hash(receiversPubKeyBytes)),
                 "Receiver public key hash must match receiver public key bytes");
+        // The sender must be the owner of the confidential message (see docs/specifications/network/storage-ownership.md)
+        checkArgument(Arrays.equals(senderPublicKeyHash, mailboxData.getConfidentialMessage().getOwnerPubKeyHash()),
+                "Sender public key hash must match the sender of the confidential message");
         NetworkDataValidation.validateDate(created);
     }
 
@@ -146,16 +149,6 @@ public final class MailboxSequentialData implements NetworkProto, Canonical {
             case TRADE_CONTRACT -> DEFAULT_SCHEMA;
         };
         return canonicalEncoder.encode(this, schema, encodingPurpose);
-    }
-
-    // The sender must be the owner of the confidential message (see docs/specifications/network/storage-ownership.md)
-    public boolean isSenderInvalid() {
-        try {
-            return !Arrays.equals(mailboxData.getConfidentialMessage().getOwnerPubKeyHash(), senderPublicKeyHash);
-        } catch (Exception e) {
-            log.warn("Checking the sender failed", e);
-            return true;
-        }
     }
 
     @Override

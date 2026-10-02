@@ -24,6 +24,7 @@ import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * A mailbox store holds the messages of one MailboxMessage type. The message is encrypted, so the store checks the
@@ -345,18 +347,27 @@ class MailboxDataStorageServiceTest {
     }
 
     // The sender of the confidential message must sign the add request (see
-    // docs/specifications/network/storage-ownership.md)
+    // docs/specifications/network/storage-ownership.md). The request is invalid, so it cannot be created.
     @Test
-    void addRequestOfAnotherSenderIsRejected() throws GeneralSecurityException {
-        AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, KeyGeneration.generateDefaultEcKeyPair(),
-                receiverKeyPair.getPublic());
-        assertFalse(addRequest.isSignatureInvalid());
+    void addRequestOfAnotherSenderCannotBeCreated() {
+        KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
 
-        DataStorageResult result = store.add(addRequest);
+        assertThrows(IllegalArgumentException.class,
+                () -> AddMailboxRequest.from(mailboxData, otherKeyPair, receiverKeyPair.getPublic()));
+    }
 
-        assertFalse(result.isSuccess());
-        assertTrue(result.isOwnerInvalid(), result.toString());
-        assertTrue(store.getPersistableStore().getMap().isEmpty());
+    // A received add request of another sender fails at parsing, so it never reaches the store
+    @Test
+    void addRequestOfAnotherSenderIsRejectedAtParsing() throws GeneralSecurityException {
+        AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        // The publisher hash still names the key of the request, so only the sender rule is broken
+        byte[] otherPublicKeyBytes = KeyGeneration.generateDefaultEcKeyPair().getPublic().getEncoded();
+        bisq.network.protobuf.AddMailboxRequest.Builder builder = addRequest.toValueProto(false).toBuilder()
+                .setSenderPublicKeyBytes(ByteString.copyFrom(otherPublicKeyBytes));
+        builder.getMailboxSequentialDataBuilder()
+                .setSenderPublicKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)));
+
+        assertThrows(UnresolvableProtobufException.class, () -> AddMailboxRequest.fromProto(builder.build()));
     }
 
     @Test
