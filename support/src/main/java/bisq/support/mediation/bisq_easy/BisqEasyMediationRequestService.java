@@ -235,13 +235,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         }
 
         UserProfile mediator = expectedMediator.orElseThrow();
-        Optional<NetworkId> senderNetworkId = bisqEasyMediatorsResponse.getSenderNetworkId();
-        if (senderNetworkId.isEmpty()) {
-            log.warn("Ignoring BisqEasyMediatorsResponse for trade {} because senderNetworkId is missing.", tradeId);
-            return false;
-        }
-
-        NetworkId sender = senderNetworkId.orElseThrow();
+        NetworkId sender = bisqEasyMediatorsResponse.getSenderNetworkId();
         if (!mediator.getId().equals(sender.getId())) {
             log.warn("Ignoring BisqEasyMediatorsResponse for trade {} from unexpected mediator {}. Expected mediator {}.",
                     tradeId, sender.getId(), mediator.getId());

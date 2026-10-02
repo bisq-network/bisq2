@@ -30,12 +30,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The receiver of a confidential message compares the sender public key of the message with the key which encrypted
@@ -51,8 +49,7 @@ class BisqEasyMediatorsResponseTest {
 
         BisqEasyMediatorsResponse received = BisqEasyMediatorsResponse.fromProto(response.getValueBuilder(false).build());
 
-        assertTrue(received.isSenderPublicKeyRequired());
-        assertEquals(Optional.of(keyPair.getPublic()), received.findSenderPublicKey());
+        assertEquals(response.getSenderNetworkId(), received.getSenderNetworkId());
         assertEquals(keyPair.getPublic(), received.getSenderPublicKey());
     }
 

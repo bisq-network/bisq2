@@ -540,14 +540,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     static void verifySenderPublicKeyBinding(SenderPublicKeyProvidingPayload pubKeyProvidingMessage,
                                              byte[] encodedSenderPublicKey) {
-        Optional<PublicKey> senderPublicKey = pubKeyProvidingMessage.findSenderPublicKey();
-        if (senderPublicKey.isPresent()) {
-            checkArgument(Arrays.equals(senderPublicKey.get().getEncoded(), encodedSenderPublicKey),
-                    "Public key of decrypted pubKeyProvidingMessage and senderPublicKey do not match.");
-        } else {
-            checkArgument(!pubKeyProvidingMessage.isSenderPublicKeyRequired(),
-                    "Public key of decrypted pubKeyProvidingMessage is required but not present.");
-        }
+        checkArgument(Arrays.equals(pubKeyProvidingMessage.getSenderPublicKey().getEncoded(), encodedSenderPublicKey),
+                "Public key of decrypted pubKeyProvidingMessage and senderPublicKey do not match.");
     }
 
     static void verifyReceiverPublicKeyBinding(ReceiverPublicKeyProvidingPayload pubKeyProvidingMessage,

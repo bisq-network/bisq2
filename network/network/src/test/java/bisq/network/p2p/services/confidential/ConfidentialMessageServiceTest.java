@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -46,24 +45,6 @@ class ConfidentialMessageServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> ConfidentialMessageService.verifySenderPublicKeyBinding(
                 new SenderPublicKeyPayload(claimedSenderKeyPair.getPublic()),
-                senderKeyPair.getPublic().getEncoded()));
-    }
-
-    @Test
-    void acceptsMissingSenderPublicKeyWhenNotRequired() {
-        KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-
-        assertDoesNotThrow(() -> ConfidentialMessageService.verifySenderPublicKeyBinding(
-                new OptionalSenderPublicKeyPayload(Optional.empty(), false),
-                senderKeyPair.getPublic().getEncoded()));
-    }
-
-    @Test
-    void rejectsMissingSenderPublicKeyWhenRequired() {
-        KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-
-        assertThrows(IllegalArgumentException.class, () -> ConfidentialMessageService.verifySenderPublicKeyBinding(
-                new OptionalSenderPublicKeyPayload(Optional.empty(), true),
                 senderKeyPair.getPublic().getEncoded()));
     }
 
@@ -90,24 +71,6 @@ class ConfidentialMessageServiceTest {
         @Override
         public PublicKey getSenderPublicKey() {
             return senderPublicKey;
-        }
-    }
-
-    private record OptionalSenderPublicKeyPayload(Optional<PublicKey> senderPublicKey,
-                                                  boolean senderPublicKeyRequired) implements SenderPublicKeyProvidingPayload {
-        @Override
-        public PublicKey getSenderPublicKey() {
-            return senderPublicKey.orElseThrow();
-        }
-
-        @Override
-        public Optional<PublicKey> findSenderPublicKey() {
-            return senderPublicKey;
-        }
-
-        @Override
-        public boolean isSenderPublicKeyRequired() {
-            return senderPublicKeyRequired;
         }
     }
 
