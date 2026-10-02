@@ -70,11 +70,12 @@ jobs:
       name: tor module
       build-root-dir: network/tor
 
-  # Both checks guard a silent failure. A non-final PersistableStore makes its persistence key follow the runtime class
+  # These checks guard silent failures. A non-final PersistableStore makes its persistence key follow the runtime class
   # instead of the class declaring the resolver, so the store reads back as corrupted and the user loses its content.
-  # A resolver registered with the wrong class or a mistyped proto type name drops the type from the storage whitelist
-  # or files its resolver under a key nothing looks up. The module builds above run with `-x test`, so these checks
-  # would otherwise not run anywhere.
+  # A resolver registered with the wrong class or a mistyped proto type name drops the type from the registry of
+  # storable types or files its resolver under a key nothing looks up. A storable type which is missing in that
+  # registry cannot be stored, and a storable type without values in the message cost policy gets a lower cost factor
+  # than intended. The module builds above run with `-x test`, so these checks would otherwise not run anywhere.
   check_resolver_registrations:
     name: Check resolver registrations
     runs-on: ubuntu-24.04
@@ -109,4 +110,21 @@ jobs:
             :persistence:test --tests 'bisq.persistence.PersistableStoreContractTest' \
                               --tests 'bisq.persistence.PersistableStoreReaderWriterTests' \
             :application:test --tests 'bisq.application.ResolverConfigTest' \
-                              --tests 'bisq.application.StorageWhiteListTest'
+                              --tests 'bisq.application.StorableTypeMetaDataTest' \
+                              --tests 'bisq.application.StorableTypeMessageCostTest'
+
+          # Gradle does not report a `--tests` filter which matches no class if another filter of the same task
+          # matches. The job then passes and checks less, for example after a test was renamed or deleted. So each
+          # test class named above must have written a result. Keep this list in line with the filters above.
+          for result in \
+            common/build/test-results/test/TEST-bisq.common.proto.ProtoResolverTest.xml \
+            persistence/build/test-results/test/TEST-bisq.persistence.PersistableStoreContractTest.xml \
+            persistence/build/test-results/test/TEST-bisq.persistence.PersistableStoreReaderWriterTests.xml \
+            application/build/test-results/test/TEST-bisq.application.ResolverConfigTest.xml \
+            application/build/test-results/test/TEST-bisq.application.StorableTypeMetaDataTest.xml \
+            application/build/test-results/test/TEST-bisq.application.StorableTypeMessageCostTest.xml; do
+            if [ ! -f "$result" ]; then
+              echo "::error::Missing test result $result. The test class did not run."
+              exit 1
+            fi
+          done
