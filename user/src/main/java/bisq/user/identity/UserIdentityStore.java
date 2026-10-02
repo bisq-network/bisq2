@@ -358,10 +358,9 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
         if (optionalUserIdentity.isPresent()) {
             selectedUserIdentityObservable.set(optionalUserIdentity.get());
         } else {
-            log.warn("Could not find user identity in userIdentities.\n" +
-                            "selectedUserIdentityId={}\n" +
-                            "userIdentities={}",
-                    selectedUserIdentityId, userIdentities);
+            // UserIdentity.toString() contains the nickname, the terms, the statement and the network ID of each
+            // profile. Users share their log files, so we log only the number of user identities.
+            log.warn("Could not find the selected user identity among the {} user identities.", userIdentities.size());
             if (selectedUserIdentityObservable.get() == null) {
                 log.warn("As selectedUserIdentity is null we select the fist found userIdentity from userIdentities.");
                 selectedUserIdentityObservable.set(userIdentities.stream().findFirst().orElseThrow());
