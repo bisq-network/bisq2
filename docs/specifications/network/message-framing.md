@@ -46,6 +46,16 @@ of a message. The framing is the format which marks where a message starts and w
    A change which makes a message type larger must keep its largest message below the size limit. Examples are a new
    field of a filter entry, a higher number of filter entries, and a higher default inventory size limit.
 
+## Reading a message
+
+7. A node reads exactly the bytes of the length prefix and of the message. It reads no byte of the next message.
+8. Only the length prefix marks the end of a message. The protobuf format has no end marker for a message. If the
+   stream ends before the first byte of a length prefix, the connection ends normally. If it ends inside a length
+   prefix or inside a message, the read fails, also if the received bytes form a valid message.
+9. The bytes of a message must be a valid protobuf message: a field must not be longer than the rest of the message,
+   and each end-group tag needs a matching start-group tag. The node uses the nesting limit of protobuf-java, 100
+   levels. It does not set a lower limit.
+
 ## Reasons
 
 - Rule 3: the node creates the message from the received bytes before it checks the proof of work and the other rules
@@ -73,10 +83,29 @@ of a message. The framing is the format which marks where a message starts and w
 
   A parser which reads from the stream creates the objects while the bytes arrive. A peer which sends a message slowly
   would make the node hold the parsed objects for that time. With rule 4, the node holds only the bytes while it
-  receives the message. It creates the parsed objects when all bytes have arrived.
+  receives the message. It creates the parsed objects when all bytes have arrived. The buffer for the bytes grows
+  while they arrive, so a length prefix alone does not make the node allocate the announced size.
+
+  While a message arrives, the read thread of its connection waits. The socket timeout of the transport applies to each
+  single read, not to the whole message: 120 seconds in the default configuration. A peer which sends slowly therefore
+  keeps the read thread of its own connection waiting. It holds only the bytes which it has sent, so this costs the
+  node no more than a peer which sends the same bytes fast or keeps an idle connection open.
 - Rule 5: a node of this version which receives a larger message closes the connection. A failure at the sender shows
   the cause and the type of the message in the log of the sender, and the sender does not waste bandwidth. Only a
   defect or the configuration of the sender can create such a message, for example a high inventory size limit.
+- Rule 7: the handshake and the connection read the same input stream of the socket, each with its own reader. A byte
+  of the next message which the reader of the handshake took in advance would be missing for the connection, and the
+  connection would read the following bytes at the wrong position. A node therefore reads the length prefix one byte
+  at a time.
+- Rule 8: a stream which ends inside a message can still contain a valid protobuf message, for example when it ends at
+  a field boundary. The node would then accept a message which the peer did not complete.
+- Rule 9, nesting limit: the deepest valid message has 9 levels below `NetworkEnvelope`: `EnvelopePayloadMessage`,
+  `InventoryResponse`, `Inventory`, `DataRequest`, `AddMailboxRequest`, `MailboxSequentialData`, `MailboxData`,
+  `ConfidentialMessage`, `ConfidentialData`. The schema has no cycles. Data of other modules is inside `Any` or inside
+  encrypted bytes, which this parse does not decode. A lower limit would not reduce the memory of a parse: the memory
+  grows with the number of sub-messages, and the worst case uses many entries of a repeated field at 5 levels
+  (`HashSetFilterEntry`), not a deep nesting. 100 levels need only a small part of the stack of the read thread. A
+  lower limit would be a new protocol rule, and a later message type with more levels would close connections.
 - Rule 2, limit of the handshake: the node parses the first message of a peer before it checks anything of the peer:
   the type of the message, the address ownership proof and the proof of work. Any peer can send this message, without
   a key and without a proof of work. A node runs several handshakes at the same time, up to 16 with the default
@@ -115,6 +144,8 @@ of a message. The framing is the format which marks where a message starts and w
   its parse. A message at the limit of an established connection with many empty sub-messages needs about 93 MB
   (estimate, see the reasons for rule 4). A peer which completed the handshake can open several connections
   and complete such messages at the same time. A node with a small heap, for example 2 GB, can then run out of memory.
+  The parsed objects are a temporary peak: the bytes of a message are garbage after the parse, and the parsed objects
+  after the node has handled the message. Only the objects of accepted data stay, because the node stores the data.
   - Why it is not removed now: the size limits remove the unbounded case, in which one message could exhaust the
     memory, and the limit of the handshake removes the case without a handshake. A lower limit of an established
     connection only reduces the factor, because the largest legal message has about 4.1 MB.
