@@ -23,7 +23,6 @@ import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -147,10 +146,8 @@ public final class MuSigOpenTradeChannel extends PrivateGroupChatChannel<MuSigOp
                     proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
                     proto.hasArbitrator() ? Optional.of(UserProfile.fromProto(proto.getArbitrator())) : Optional.empty(),
                     // A persisted message which this version cannot parse must not remove the other messages
-                    ProtobufUtils.fromProtoStreamSkippingFailures(proto.getChatMessagesList(),
-                                    MuSigOpenTradeMessage::fromProto,
-                                    e -> log.warn("Skipped a persisted chat message which cannot be parsed: {}",
-                                            ExceptionUtil.getRootCause(e).getClass().getSimpleName()))
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    MuSigOpenTradeMessage::fromProto)
                             .collect(Collectors.toSet()),
                     MuSigDisputeAgentType.fromProto(proto.getDisputeAgentType()),
                     ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));

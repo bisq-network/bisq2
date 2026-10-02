@@ -23,7 +23,6 @@ import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.identity.UserIdentity;
@@ -146,10 +145,8 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                             .collect(Collectors.toSet()),
                     proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
                     // A persisted message which this version cannot parse must not remove the other messages
-                    ProtobufUtils.fromProtoStreamSkippingFailures(proto.getChatMessagesList(),
-                                    BisqEasyOpenTradeMessage::fromProto,
-                                    e -> log.warn("Skipped a persisted chat message which cannot be parsed: {}",
-                                            ExceptionUtil.getRootCause(e).getClass().getSimpleName()))
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    BisqEasyOpenTradeMessage::fromProto)
                             .collect(Collectors.toSet()),
                     proto.getIsInMediation(),
                     ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));

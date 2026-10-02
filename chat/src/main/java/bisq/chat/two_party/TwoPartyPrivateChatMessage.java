@@ -25,7 +25,6 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.common.util.ExceptionUtil;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -116,10 +115,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
                     baseProto.getWasEdited(),
                     ChatMessageType.fromProto(baseProto.getChatMessageType()),
                     // An invalid reaction must not remove its message
-                    ProtobufUtils.fromProtoStreamSkippingFailures(privateChatMessage.getChatMessageReactionsList(),
-                                    TwoPartyPrivateChatMessageReaction::fromProto,
-                                    e -> log.warn("Skipped a chat message reaction which cannot be parsed: {}",
-                                            ExceptionUtil.getRootCause(e).getClass().getSimpleName()))
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(privateChatMessage.getChatMessageReactionsList(),
+                                    TwoPartyPrivateChatMessageReaction::fromProto)
                             .collect(Collectors.toSet())
             );
         } catch (RuntimeException e) {

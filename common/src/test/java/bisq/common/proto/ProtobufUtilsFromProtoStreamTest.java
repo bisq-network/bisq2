@@ -19,11 +19,8 @@ package bisq.common.proto;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ProtobufUtilsFromProtoStreamTest {
@@ -39,17 +36,5 @@ class ProtobufUtilsFromProtoStreamTest {
     void fromProtoStreamFailsAtTheFirstInvalidProto() {
         assertThrows(UnresolvableProtobufException.class,
                 () -> ProtobufUtils.fromProtoStream(List.of("1", "x", "3"), CONVERTER));
-    }
-
-    @Test
-    void fromProtoStreamSkippingFailuresKeepsTheOtherProtosInTheirOrder() {
-        List<UnresolvableProtobufException> failures = new ArrayList<>();
-
-        List<Integer> results = ProtobufUtils.fromProtoStreamSkippingFailures(List.of("1", "x", "3", "y"), CONVERTER,
-                        failures::add)
-                .collect(Collectors.toList());
-
-        assertEquals(List.of(1, 3), results);
-        assertEquals(2, failures.size());
     }
 }

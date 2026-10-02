@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -123,25 +122,6 @@ public class ProtobufUtils {
     }
 
     /**
-     * Converts the protos with the converter and skips each proto which it cannot convert. Use it for a collection in
-     * which one invalid entry must not fail the others, for example the persisted messages of a chat channel. The
-     * results keep the order of the protos. The caller receives each failure, so that it can report it.
-     */
-    public static <P, T> Stream<T> fromProtoStreamSkippingFailures(Collection<P> protos,
-                                                                   ProtoConverter<P, T> converter,
-                                                                   Consumer<UnresolvableProtobufException> onFailure) {
-        List<T> results = new ArrayList<>(protos.size());
-        for (P proto : protos) {
-            try {
-                results.add(converter.fromProto(proto));
-            } catch (UnresolvableProtobufException e) {
-                onFailure.accept(e);
-            }
-        }
-        return results.stream();
-    }
-
-    /**
      * Converts the values of a protobuf map with the converter and keeps the keys, in the order of the map. Use it
      * instead of a lambda like {@code e -> Foo.fromProto(e.getValue())} in a collector.
      */
@@ -156,9 +136,11 @@ public class ProtobufUtils {
     }
 
     /**
-     * Converts all protos with the converter and skips each proto which it cannot convert. A store uses it for its
-     * persisted entries, so that one invalid entry does not prevent it from loading the others (see
-     * docs/specifications/network/validation-at-parsing.md).
+     * Converts all protos with the converter and skips each proto which it cannot convert, in the order of the protos.
+     * Use it for a collection in which one invalid entry must not fail the others: the persisted entries of a store, so
+     * that it loads the others (see docs/specifications/network/validation-at-parsing.md), or the reactions of a
+     * received chat message. It logs at most three skipped entries, so that a peer which sends many invalid entries in
+     * one message cannot flood the log.
      */
     public static <P, T> Stream<T> fromProtoStreamSkippingInvalid(Collection<P> protos,
                                                                 ProtoConverter<P, T> converter) {
