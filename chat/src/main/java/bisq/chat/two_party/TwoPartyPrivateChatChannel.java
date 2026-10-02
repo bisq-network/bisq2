@@ -22,7 +22,6 @@ import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateChatChannel;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.common.util.ExceptionUtil;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -94,10 +93,8 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                     UserProfile.fromProto(proto.getPeer()),
                     UserIdentity.fromProto(proto.getMyUserIdentity()),
                     // A persisted message which this version cannot parse must not remove the other messages
-                    ProtobufUtils.fromProtoStreamSkippingFailures(proto.getChatMessagesList(),
-                                    TwoPartyPrivateChatMessage::fromProto,
-                                    e -> log.warn("Skipped a persisted chat message which cannot be parsed: {}",
-                                            ExceptionUtil.getRootCause(e).getClass().getSimpleName()))
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    TwoPartyPrivateChatMessage::fromProto)
                             .collect(Collectors.toSet()),
                     ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType())
             );

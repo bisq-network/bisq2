@@ -183,8 +183,9 @@ public abstract class Connection {
 
                         // The parsed protobuf objects are not referenced after the parser returns, so the budget
                         // covers their whole life. The parser does not wait for other connections. Bytes which are
-                        // not a valid protobuf message fail here, before the throttle. A message which fromProto
-                        // cannot parse is empty, and we drop it after the throttle.
+                        // not a valid protobuf message, and a message of another network version, fail here, before
+                        // the throttle. A message which fromProto cannot parse is empty, and we drop it after the
+                        // throttle.
                         long ts = System.currentTimeMillis();
                         Optional<NetworkEnvelope> parsedEnvelope = parseMemoryBudget.parse(message, this::parseEnvelope);
                         long deserializeTime = System.currentTimeMillis() - ts;
@@ -204,7 +205,6 @@ public abstract class Connection {
                             continue;
                         }
                         NetworkEnvelope networkEnvelope = parsedEnvelope.get();
-                        networkEnvelope.verifyVersion();
                         connectionMetrics.onReceived(networkEnvelope, deserializeTime);
 
                         EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
@@ -245,6 +245,9 @@ public abstract class Connection {
 
     private Optional<NetworkEnvelope> parseEnvelope(byte[] message) throws InvalidProtocolBufferException {
         bisq.network.protobuf.NetworkEnvelope proto = NetworkEnvelopeSocket.parse(message);
+        // Before the conversion, so that a message of another network version closes the connection also if we cannot
+        // convert its payload
+        NetworkEnvelope.verifyVersion(proto);
         try {
             return Optional.of(NetworkEnvelope.fromProto(proto));
         } catch (UnresolvableProtobufException exception) {
