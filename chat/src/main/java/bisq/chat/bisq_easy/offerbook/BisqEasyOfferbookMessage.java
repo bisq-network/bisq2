@@ -85,6 +85,8 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 wasEdited,
                 chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
+
+        verify();
     }
 
     @Override
