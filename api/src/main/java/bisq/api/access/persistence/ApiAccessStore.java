@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -127,14 +128,17 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
     public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto)
             throws UnresolvableProtobufException {
         try {
-            Map<String, ClientProfile> clientProfileByIdMap = ProtobufUtils.fromProtoEntryStream(
+            Map<String, ClientProfile> clientProfileByIdMap = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(
                             proto.getClientProfileByIdMapMap(), ClientProfile::fromProto)
                     .collect(Collectors.toMap(Map.Entry::getKey,
                             Map.Entry::getValue));
             Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
             boolean anyPromoted = false;
-            for (Map.Entry<String, bisq.api.protobuf.PermissionSet> e : proto.getPermissionsByClientIdMap().entrySet()) {
-                PermissionSet loaded = PermissionSet.fromProto(e.getValue());
+            List<Map.Entry<String, PermissionSet>> loadedPermissions =
+                    ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getPermissionsByClientIdMap(),
+                            PermissionSet::fromProto).toList();
+            for (Map.Entry<String, PermissionSet> e : loadedPermissions) {
+                PermissionSet loaded = e.getValue();
                 PermissionSet effective = promoteIfFullStandardGrant(e.getKey(), loaded);
                 anyPromoted |= effective != loaded;
                 permissionsByClientId.put(e.getKey(), effective);

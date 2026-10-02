@@ -58,7 +58,7 @@ final class MediatorStore implements PersistableStore<MediatorStore> {
     public static MediatorStore fromProto(bisq.support.protobuf.MediatorStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new MediatorStore(ProtobufUtils.fromProtoStream(proto.getMediationCasesList(),
+            return new MediatorStore(ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getMediationCasesList(),
                             BisqEasyMediationCase::fromProto)
                     .collect(Collectors.toSet()));
         } catch (RuntimeException e) {

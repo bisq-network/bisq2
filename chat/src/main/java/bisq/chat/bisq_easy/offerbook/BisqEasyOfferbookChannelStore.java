@@ -56,7 +56,8 @@ public final class BisqEasyOfferbookChannelStore implements PersistableStore<Bis
     public static BisqEasyOfferbookChannelStore fromProto(bisq.chat.protobuf.BisqEasyOfferbookChannelStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new BisqEasyOfferbookChannelStore(ProtobufUtils.fromProtoStream(proto.getChannelsList(),
+            return new BisqEasyOfferbookChannelStore(ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getChannelsList(),
                             e -> (BisqEasyOfferbookChannel) BisqEasyOfferbookChannel.fromProto(e))
                     .collect(Collectors.toList()));
         } catch (RuntimeException e) {

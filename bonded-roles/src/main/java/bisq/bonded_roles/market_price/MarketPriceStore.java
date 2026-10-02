@@ -32,7 +32,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -65,14 +64,15 @@ final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
     public static MarketPriceStore fromProto(bisq.bonded_roles.protobuf.MarketPriceStore proto)
             throws UnresolvableProtobufException {
         try {
-            List<Map.Entry<String, bisq.bonded_roles.protobuf.MarketPrice>> entriesOfKnownMarkets =
+            Map<String, bisq.bonded_roles.protobuf.MarketPrice> protosOfKnownMarkets =
                     proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
                             .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
-                            .toList();
-            Map<Market, MarketPrice> map = ProtobufUtils.fromProtoStream(entriesOfKnownMarkets,
-                            e -> Map.entry(MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
-                                    MarketPrice.fromProto(e.getValue())))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Market, MarketPrice> map = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(protosOfKnownMarkets,
+                            MarketPrice::fromProto)
+                    .collect(Collectors.toMap(
+                            e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
+                            Map.Entry::getValue));
             return new MarketPriceStore(map, Market.fromProto(proto.getSelectedMarket()));
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);

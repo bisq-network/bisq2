@@ -59,7 +59,8 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
             throws UnresolvableProtobufException {
         try {
             return new DeviceRegistrationStore(
-                    ProtobufUtils.fromProtoEntryStream(proto.getDeviceByDeviceIdMap(), MobileDeviceProfile::fromProto)
+                    ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getDeviceByDeviceIdMap(),
+                                    MobileDeviceProfile::fromProto)
                             .collect(Collectors.toMap(Map.Entry::getKey,
                                     Map.Entry::getValue
                             )));

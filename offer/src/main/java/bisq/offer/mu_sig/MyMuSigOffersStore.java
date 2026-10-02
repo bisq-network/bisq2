@@ -83,7 +83,7 @@ final class MyMuSigOffersStore implements PersistableStore<MyMuSigOffersStore> {
     public static MyMuSigOffersStore fromProto(bisq.offer.protobuf.MyMuSigOffersStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new MyMuSigOffersStore(ProtobufUtils.fromProtoStream(proto.getOffersList(),
+            return new MyMuSigOffersStore(ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getOffersList(),
                             MuSigOffer::fromProto).collect(Collectors.toSet()),
                     new HashSet<>(proto.getDeactivatedOfferIdsList()));
         } catch (RuntimeException e) {

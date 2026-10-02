@@ -58,7 +58,8 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
             throws UnresolvableProtobufException {
         try {
             return new ChatNotificationsStore(
-                    ProtobufUtils.fromProtoStream(proto.getChatNotificationsList(), ChatNotification::fromProto)
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatNotificationsList(),
+                                    ChatNotification::fromProto)
                             .collect(Collectors.toSet()));
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);

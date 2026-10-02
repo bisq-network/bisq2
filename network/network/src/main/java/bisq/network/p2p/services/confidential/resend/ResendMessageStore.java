@@ -65,7 +65,8 @@ final class ResendMessageStore implements PersistableStore<ResendMessageStore> {
     public static PersistableStore<?> fromProto(bisq.network.protobuf.ResendMessageStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new ResendMessageStore(ProtobufUtils.fromProtoEntryStream(proto.getResendMessageDataByMessageIdMap(),
+            return new ResendMessageStore(ProtobufUtils.fromProtoEntryStreamSkippingInvalid(
+                            proto.getResendMessageDataByMessageIdMap(),
                             ResendMessageData::fromProto)
                     .collect(Collectors.toMap(Map.Entry::getKey,
                             Map.Entry::getValue)),
