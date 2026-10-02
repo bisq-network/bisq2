@@ -69,12 +69,9 @@ class NetworkEnvelopeSizeLimitTest {
                 .isLessThan(NetworkEnvelope.MAX_SERIALIZED_SIZE);
     }
 
-    // The legacy HASH_CASH token contains a copy of the message, so the envelope is about twice as large as the
-    // message. Nodes use it for peers before version 2.1.3. The responder accepts requests of up to the default
-    // inventory size of 2 000 000 bytes. Small entries need more bytes for the repeated field, so the test uses entries
-    // of 100 bytes, below the size of a signed storage request.
+    // Small entries need more bytes for the repeated field, so use entries of 100 bytes.
     @Test
-    void inventoryResponseOfTheDefaultSizeWithTheLegacyTokenIsBelowTheSizeLimit() {
+    void inventoryResponseOfTheDefaultSizeWithV2TokenIsBelowTheSizeLimit() {
         int entrySize = 100;
         bisq.network.protobuf.Inventory.Builder inventory = bisq.network.protobuf.Inventory.newBuilder()
                 .setMaxSizeReached(true);
@@ -88,7 +85,7 @@ class NetworkEnvelopeSizeLimitTest {
                         .setVersion(Integer.MIN_VALUE))
                 .build();
         bisq.security.protobuf.ProofOfWork proofOfWork = bisq.security.protobuf.ProofOfWork.newBuilder()
-                .setPayload(message.toByteString())
+                .setPayload(ByteString.copyFrom(new byte[20]))
                 .setCounter(Long.MIN_VALUE)
                 .setChallenge(ByteString.copyFrom(new byte[32]))
                 .setDifficulty(Double.MAX_VALUE)
@@ -99,8 +96,8 @@ class NetworkEnvelopeSizeLimitTest {
                 .setVersion(Integer.MIN_VALUE)
                 .setAuthorizationToken(bisq.network.protobuf.AuthorizationToken.newBuilder()
                         .setAuthorizationTokenType(
-                                bisq.network.protobuf.AuthorizationTokenType.AUTHORIZATIONTOKENTYPE_HASH_CASH)
-                        .setHashCashToken(bisq.network.protobuf.HashCashToken.newBuilder()
+                                bisq.network.protobuf.AuthorizationTokenType.AUTHORIZATIONTOKENTYPE_HASH_CASH_V2)
+                        .setHashCashV2Token(bisq.network.protobuf.HashCashV2Token.newBuilder()
                                 .setProofOfWork(proofOfWork)
                                 .setMessageCounter(Integer.MIN_VALUE)))
                 .setNetworkMessage(message)
