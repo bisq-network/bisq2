@@ -258,6 +258,32 @@ class AuthorizedDataPublisherMigrationTest {
         assertEquals(2, store.getPersistableStore().getMap().size());
     }
 
+    // AuthorizedOracleNode names the key of the network identity as its owner. Nodes of earlier versions accept it only
+    // from that key, so the migration must not remove its entry.
+    @Test
+    void dataOfOtherTypesThanTheTransitionTypesIsNotMigrated() throws GeneralSecurityException {
+        StorableTypesRegistry.register(TestAuthorizedDataWithOwner.class, TestAuthorizedDataWithOwner.META_DATA);
+        AuthenticatedDataStorageService storeOfDataWithOwner = new AuthenticatedDataStorageService(
+                new PersistenceService(tempDir),
+                new PruneExpiredEntriesService(),
+                "migrationOfDataWithOwner",
+                TestAuthorizedDataWithOwner.class.getSimpleName(),
+                CLOCK_BEFORE_CUTOFF);
+        TestAuthorizedDataWithOwner data = new TestAuthorizedDataWithOwner(identityKeyPair.getPublic());
+        AuthorizedData dataWithOwner = new AuthorizedData(data,
+                Optional.of(SignatureUtil.sign(data.serializeForHash(), authorizedKeyPair.getPrivate())),
+                authorizedKeyPair.getPublic());
+        AddAuthenticatedDataRequest entryOfOwner = createRequest(dataWithOwner, identityKeyPair, 1,
+                System.currentTimeMillis());
+        assertTrue(storeOfDataWithOwner.add(entryOfOwner).isSuccess());
+
+        assertTrue(AuthorizedDataPublisherMigration.migrate(storeOfDataWithOwner, identityKeyPair, authorizedKeyPair)
+                .isEmpty());
+        assertEquals(Map.of(entryOfOwner.getStorageKey(), entryOfOwner),
+                storeOfDataWithOwner.getPersistableStore().getMap());
+        storeOfDataWithOwner.getPersistence().persistAsync(storeOfDataWithOwner.getPersistableStore().getClone()).join();
+    }
+
     // An expired entry which the store did not prune yet must not get a new time to live
     @Test
     void expiredEntryIsNotPublishedAgain() throws GeneralSecurityException {

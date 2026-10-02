@@ -19,7 +19,6 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -32,10 +31,11 @@ import java.util.Map;
 
 /**
  * Oracle and seed nodes of earlier versions published their authorized data with the key pair of their network
- * identity instead of their authorized key pair, which owns the data. For the entries of a store which the earlier key
- * pair published and the authorized key pair authorized, this publishes the data again with the authorized key pair
- * and removes the entries of the earlier key pair (see docs/specifications/network/storage-ownership.md). It removes an
- * entry only if the store accepted the new entry, or if the owner removed the data.
+ * identity instead of their authorized key pair, which owns the data. For the entries of the transition types
+ * (AuthorizedDistributedData.isLegacyOwnerAccepted) which the earlier key pair published and the authorized key pair
+ * authorized, this publishes the data again with the authorized key pair and removes the entries of the earlier key
+ * pair (see docs/specifications/network/storage-ownership.md). It removes an entry only if the store accepted the new
+ * entry, or if the owner removed the data.
  * <p>
  * Only oracle and seed nodes use it. It can be removed when no entry of an earlier publisher is valid anymore:
  * AuthorizedData.LEGACY_OWNER_CUTOFF_DATE plus the time to live of the transition types.
@@ -52,7 +52,8 @@ public final class AuthorizedDataPublisherMigration {
                                                          KeyPair authorizedKeyPair) {
         byte[] earlierPublicKeyBytes = earlierPublisherKeyPair.getPublic().getEncoded();
         byte[] authorizedPublicKeyBytes = authorizedKeyPair.getPublic().getEncoded();
-        byte[] authorizedPubKeyHash = DigestUtil.hash(authorizedPublicKeyBytes);
+        // Only the transition types. AuthorizedOracleNode names the key of the network identity as its owner, and
+        // nodes of earlier versions accept it only from that key, so its entry must stay.
         List<AddAuthenticatedDataRequest> entriesOfEarlierPublisher = store.getPersistableStore().getMap().values()
                 .stream()
                 .filter(AddAuthenticatedDataRequest.class::isInstance)
@@ -62,7 +63,7 @@ public final class AuthorizedDataPublisherMigration {
                 .filter(request -> request.getAuthenticatedSequentialData().getAuthenticatedData()
                         instanceof AuthorizedData authorizedData &&
                         Arrays.equals(authorizedData.getAuthorizedPublicKeyBytes(), authorizedPublicKeyBytes) &&
-                        authorizedData.isOwner(authorizedPubKeyHash))
+                        authorizedData.getAuthorizedDistributedData().isLegacyOwnerAccepted())
                 .toList();
 
         List<AuthenticatedDataRequest> acceptedRequests = new ArrayList<>();
