@@ -61,7 +61,8 @@ public final class ReceiveAddressStore implements PersistableStore<ReceiveAddres
     public static ReceiveAddressStore fromProto(bisq.wallet.protobuf.ReceiveAddressStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new ReceiveAddressStore(new HashSet<>(ProtobufUtils.fromProtoStream(proto.getReceiveAddressEntriesList(),
+            return new ReceiveAddressStore(new HashSet<>(ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getReceiveAddressEntriesList(),
                             ReceiveAddressEntry::fromProto)
                     .collect(Collectors.toSet())));
         } catch (RuntimeException e) {

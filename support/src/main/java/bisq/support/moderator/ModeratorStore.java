@@ -71,13 +71,14 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
     public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto)
             throws UnresolvableProtobufException {
         try {
-            Set<ReportToModeratorMessage> messages = ProtobufUtils.fromProtoStream(proto.getReportToModeratorMessagesList(),
+            Set<ReportToModeratorMessage> messages = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getReportToModeratorMessagesList(),
                             ReportToModeratorMessage::fromProto)
                     .collect(Collectors.toSet());
 
             Map<String, BannedUserModeratorData> bannedDataMap = new TreeMap<>();
             if (proto.getBannedUserModeratorDataCount() > 0) {
-                bannedDataMap = ProtobufUtils.fromProtoStream(proto.getBannedUserModeratorDataList(),
+                bannedDataMap = ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getBannedUserModeratorDataList(),
                                 BannedUserModeratorData::fromProto)
                         .collect(Collectors.toMap(
                                 BannedUserModeratorData::getAccusedUserProfileId,

@@ -17,8 +17,11 @@
 
 package bisq.common.proto;
 
+import bisq.common.util.ExceptionUtil;
 import com.google.common.base.Enums;
 import com.google.protobuf.Any;
+import com.google.protobuf.Message;
+import com.google.protobuf.ProtocolMessageEnum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
@@ -37,6 +40,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProtobufUtils {
+    private static final int MAX_LOGGED_SKIPPED_ENTRIES = 3;
+    private static final int MAX_LOGGED_STACK_TRACE_LINES = 10;
+
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType,
                                                       String name) throws UnresolvableProtobufEnumException {
         try {
@@ -113,6 +119,75 @@ public class ProtobufUtils {
             results.add(Map.entry(entry.getKey(), converter.fromProto(entry.getValue())));
         }
         return results.stream();
+    }
+
+    /**
+     * Converts all protos with the converter and skips each proto which it cannot convert. A store uses it for its
+     * persisted entries, so that one invalid entry does not prevent it from loading the others (see
+     * docs/specifications/network/validation-at-parsing.md).
+     */
+    public static <P, T> Stream<T> fromProtoStreamSkippingInvalid(Collection<P> protos,
+                                                                ProtoConverter<P, T> converter) {
+        List<T> results = new ArrayList<>(protos.size());
+        int numSkipped = 0;
+        for (P proto : protos) {
+            try {
+                results.add(converter.fromProto(proto));
+            } catch (UnresolvableProtobufException | RuntimeException e) {
+                logSkippedEntry(proto, e, ++numSkipped);
+            }
+        }
+        logNumSkippedEntries(numSkipped, protos.size());
+        return results.stream();
+    }
+
+    /**
+     * Converts the values of a protobuf map with the converter, keeps the keys, and skips each entry whose value it
+     * cannot convert. See {@link #fromProtoStreamSkippingInvalid}.
+     */
+    public static <K, P, T> Stream<Map.Entry<K, T>> fromProtoEntryStreamSkippingInvalid(
+            Map<K, P> protos,
+            ProtoConverter<P, T> converter) {
+        List<Map.Entry<K, T>> results = new ArrayList<>(protos.size());
+        int numSkipped = 0;
+        for (Map.Entry<K, P> entry : protos.entrySet()) {
+            try {
+                results.add(Map.entry(entry.getKey(), converter.fromProto(entry.getValue())));
+            } catch (UnresolvableProtobufException | RuntimeException e) {
+                logSkippedEntry(entry.getValue(), e, ++numSkipped);
+            }
+        }
+        logNumSkippedEntries(numSkipped, protos.size());
+        return results.stream();
+    }
+
+    // Protos can hold private keys, payment account details or trade data, and exception messages can contain values
+    // of them. Users share their log files, so we log only the type and the size of the proto, and the beginning of the
+    // stack trace without messages (see UnresolvableProtobufMessageException).
+    private static void logSkippedEntry(Object proto, Exception exception, int numSkipped) {
+        if (numSkipped <= MAX_LOGGED_SKIPPED_ENTRIES) {
+            String stackTrace = ExceptionUtil.getSafeStackTraceAsString(exception).lines()
+                    .limit(MAX_LOGGED_STACK_TRACE_LINES)
+                    .collect(Collectors.joining("\n"));
+            log.error("We skip an entry which we cannot parse. {}, cause:\n{}", describe(proto), stackTrace);
+        }
+    }
+
+    private static String describe(Object proto) {
+        if (proto instanceof Message message) {
+            return "type=" + message.getDescriptorForType().getFullName() + ", " + message.getSerializedSize() + " bytes";
+        } else if (proto instanceof ProtocolMessageEnum && proto instanceof Enum<?> protoEnum) {
+            // The name of an enum value is no private data. The number of an unknown value is not available.
+            return "enum=" + protoEnum.getDeclaringClass().getSimpleName() + "." + protoEnum.name();
+        } else {
+            return "type=" + (proto == null ? "null" : proto.getClass().getSimpleName());
+        }
+    }
+
+    private static void logNumSkippedEntries(int numSkipped, int numEntries) {
+        if (numSkipped > MAX_LOGGED_SKIPPED_ENTRIES) {
+            log.error("We skipped {} of {} entries which we cannot parse.", numSkipped, numEntries);
+        }
     }
 
     // Convert list of proto enums to a stream of Enums. If the enumFromProto fails we skip the enum.

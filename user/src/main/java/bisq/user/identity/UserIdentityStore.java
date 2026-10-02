@@ -136,7 +136,8 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
                 checkArgument(!proto.hasEncryptedData());
                 checkArgument(!proto.hasScryptParameters());
                 String selectedUserIdentityId = proto.hasSelectedUserIdentityId() ? proto.getSelectedUserIdentityId() : null;
-                Set<UserIdentity> userIdentitySet = ProtobufUtils.fromProtoStream(proto.getUserIdentitiesList(),
+                Set<UserIdentity> userIdentitySet = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                                proto.getUserIdentitiesList(),
                                 UserIdentity::fromProto)
                         .collect(Collectors.toSet());
                 return new UserIdentityStore(selectedUserIdentityId, userIdentitySet);

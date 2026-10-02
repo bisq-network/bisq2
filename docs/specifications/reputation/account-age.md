@@ -138,6 +138,11 @@ This migration applies only to stored version-2 requests. It must preserve dates
 unknown protocol versions, retain all other validation, and be safe to repeat after saving and
 reloading. New network requests with nonzero version-2 dates remain invalid.
 
+The oracle does not skip a persisted request which it cannot parse. Other stores skip such an entry
+(rule 4 of [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md)), but here a
+skipped request would remove its binding from the conflict check, and the oracle could bind the
+witness to another profile. If one request cannot be parsed, the whole store fails to load.
+
 ## Shared account witness identity
 
 Account-age and signed-witness reputation are two claims on the same Bisq 1 account-age witness.
@@ -187,3 +192,13 @@ is therefore part of the activation boundary. The ownership-response tag formerl
 exact date is reserved, while the bucket and nullifier use new tags. Thus an old bridge omits fields
 required by a new oracle, and an old oracle sees its exact-date field omitted by a new bridge; both
 mismatch directions fail closed.
+
+## Open points
+
+- **A binding store which fails to load.** When the store fails to load, the persistence layer moves
+  the file to `corruptedFilesAtRead` and tries the backups. If they fail too, the oracle starts with
+  an empty binding state and keeps issuing authorizations. This breaks the rule that a persistence
+  failure fails closed for new issuance, and the rule that a binding is permanent.
+  - What would remove it: the oracle issues no new authorizations while its binding store is not
+    loaded completely, until an operator restores the store.
+  - Who decides: the developers.

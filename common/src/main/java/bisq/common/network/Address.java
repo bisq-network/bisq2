@@ -84,18 +84,15 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
     @Getter
     protected final int port;
 
+    // The caller reports an invalid address. Address.fromProto runs for received data, where only the caller can
+    // limit the diagnostics and keep received values out of the log (see docs/dev/protobuf-notes.md).
     protected Address(String host, int port) {
-        try {
-            checkArgument(StringUtils.isNotEmpty(host), "Host must not be null/blank");
-            host = host.trim();
-            checkArgument(NetworkPortValidation.isValid(port), "Invalid port: " + port);
-            this.host = host;
-            this.port = port;
-            verify();
-        } catch (Exception e) {
-            log.error("Could not resolve address from {}:{}", host, port, e);
-            throw e;
-        }
+        checkArgument(StringUtils.isNotEmpty(host), "Host must not be null/blank");
+        host = host.trim();
+        checkArgument(NetworkPortValidation.isValid(port), "Invalid port: " + port);
+        this.host = host;
+        this.port = port;
+        verify();
     }
 
 
