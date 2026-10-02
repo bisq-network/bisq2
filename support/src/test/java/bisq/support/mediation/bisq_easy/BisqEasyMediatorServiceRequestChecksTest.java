@@ -384,7 +384,7 @@ class BisqEasyMediatorServiceRequestChecksTest {
                 mediator.getNetworkId(),
                 text,
                 Optional.empty(),
-                1L,
+                1_700_000_000_000L,
                 false,
                 Optional.empty(),
                 type,

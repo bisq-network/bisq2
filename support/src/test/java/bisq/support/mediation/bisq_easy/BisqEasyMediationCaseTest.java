@@ -91,7 +91,7 @@ class BisqEasyMediationCaseTest {
                 peer.getNetworkId(),
                 text,
                 Optional.empty(),
-                1L,
+                1_700_000_000_000L,
                 false,
                 Optional.of(mediator),
                 ChatMessageType.TEXT,
