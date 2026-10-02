@@ -65,38 +65,61 @@ public class NetworkEnvelopeSocket implements Closeable {
     }
 
     /**
-     * Reads the next message. If its length prefix is longer than 5 bytes or exceeds the size limit, it throws
-     * InvalidProtocolBufferException before it reads the message.
+     * Reads the next message (see docs/specifications/network/message-framing.md). The method runs before any other
+     * check of the peer, also before the proof of work and, in the handshake, before anything is known of the peer.
+     * <p>
+     * The read loops of Connection and ConnectionHandshake close the connection after any exception: the start of the
+     * next message is then unknown.
      *
-     * @return The next message, or null if the input stream ends before the next message.
+     * @return The next message, or null if the input stream ends before the first byte of a length prefix.
+     * @throws InvalidProtocolBufferException if the length prefix has more than 5 bytes, if the length exceeds the size
+     *                                        limit (before any byte of the message is read), if the stream ends inside
+     *                                        the length prefix, or if the message is not valid protobuf.
+     * @throws EOFException                   if the stream ends inside the message.
      */
     public bisq.network.protobuf.NetworkEnvelope receiveNextEnvelope() throws IOException {
-        // A buffer of 1 byte keeps the decoder from reading bytes after the length prefix. With a larger buffer, these
-        // bytes would be missing from the message, which we read from the input stream.
+        // The handshake and the connection read the same input stream, each with its own NetworkEnvelopeSocket. The
+        // decoder must therefore not take bytes after the length prefix: they would be missing for the next reader.
+        // With a buffer of 1 byte it reads the prefix one byte at a time.
         CodedInputStream lengthPrefixInput = CodedInputStream.newInstance(inputStream, 1);
+        // Reads the first byte of the prefix into the buffer of the decoder, where readRawVarint64 uses it
         if (lengthPrefixInput.isAtEnd()) {
             return null;
         }
         // readRawVarint32, which parseDelimitedFrom uses, keeps only the lower 32 bits, so a length of 2^32 would
-        // become 0. readRawVarint64 keeps 64 bits, but it drops higher bits of a prefix of 10 bytes. A prefix of at most
-        // 5 bytes has at most 35 bits, so the check of its size makes the decoded length exact.
+        // become 0. readRawVarint64 keeps 64 bits, but it reads up to 10 bytes and drops higher bits of a prefix of 10
+        // bytes. A prefix of at most 5 bytes has at most 35 bits, so the check of its size after the call makes the
+        // decoded length exact. An invalid prefix of 6 to 10 bytes has been read then, but no byte of the message.
         long size = lengthPrefixInput.readRawVarint64();
         if (lengthPrefixInput.getTotalBytesRead() > MAX_LENGTH_PREFIX_SIZE) {
             throw new InvalidProtocolBufferException("The length prefix of the received message has more than " +
                     MAX_LENGTH_PREFIX_SIZE + " bytes.");
         }
+        // Before we read or allocate anything for the message. We do not read past a larger message to reach the next
+        // one: a node which follows the specification never sends it.
         if (size > maxSerializedSize) {
             throw new InvalidProtocolBufferException("The length prefix of the received message is " + size +
                     " bytes. The size limit is " + maxSerializedSize + " bytes.");
         }
 
         // We read all bytes of the message before we parse it. The parsed objects of a message can need many times
-        // more memory than its bytes. While a peer sends a message slowly, we hold only its bytes.
+        // more memory than its bytes, up to about 22 times for many empty sub-messages. While a peer sends a message
+        // slowly, we hold only its bytes. Only the length marks the end of a message, protobuf has no end marker.
+        // readNBytes blocks until all bytes have arrived or the stream ends, and it reads no byte of the next message.
+        // Its buffer grows while the bytes arrive, so a length prefix alone does not allocate the announced size. The
+        // socket timeout applies to each single read.
         byte[] message = inputStream.readNBytes((int) size);
+        // The received part can be a valid message, for example if the stream ended at a field boundary
         if (message.length < size) {
             throw new EOFException("The input stream ended after " + message.length + " of " + size +
                     " bytes of a message.");
         }
+        // parseFrom(byte[]) reads only the bytes of the array: a field which is longer than the rest of the message
+        // fails. It also rejects an end-group tag without a start-group tag. The parsed objects do not reference the
+        // array, so it is garbage after the parse.
+        // The nesting limit stays at the protobuf default of 100 levels. The deepest valid message has 9 levels, and the
+        // memory of a parse grows with the number of sub-messages, not with their depth, so a lower limit would not
+        // reduce it. A lower limit would only be a new protocol rule which a later message type could break.
         return bisq.network.protobuf.NetworkEnvelope.parseFrom(message);
     }
 
