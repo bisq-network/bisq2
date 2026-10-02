@@ -7,10 +7,10 @@ plugins {
 version = rootProject.version
 
 dependencies {
-    implementation("bisq:common")
-    implementation("bisq:security")
-    implementation("bisq:persistence")
-    implementation("bisq:i18n")
+    implementation("bisq:common:$version")
+    implementation("bisq:security:$version")
+    implementation("bisq:persistence:$version")
+    implementation("bisq:i18n:$version")
 
     implementation(project(":network-identity"))
     implementation(project(":i2p"))

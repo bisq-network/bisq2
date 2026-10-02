@@ -1,10 +1,12 @@
 package bisq.gradle.maven_publisher
 
 import groovy.util.Node
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.*
 import java.io.File
@@ -80,26 +82,15 @@ class LocalMavenPublishPlugin : Plugin<Project> {
                 project.extensions.configure<PublishingExtension>("publishing") {
                     publications {
 //                        val publicationName = if (group == DEFAULT_GROUP) "mavenJava" else "mavenJava_${group}"
-                        var publicationName = "mavenJava"
-                        var existingPublication = findByName(publicationName) ?: create(publicationName, MavenPublication::class)
+                        val publicationName = "mavenJava"
+                        val existingPublication = findByName(publicationName) ?: create(publicationName, MavenPublication::class)
                         (existingPublication as MavenPublication).apply {
                             from(project.components["java"])  // Adjust if publishing other types (like Kotlin)
                             artifactId = project.name
                             groupId = group
                             version = rootVersion
 
-                            setupPublication(project, group, protoSourcesJar)
-                        }
-                        if (group != DEFAULT_GROUP) {
-                            publicationName = "mavenJava_bisqAlias"
-                            existingPublication = findByName(publicationName) ?: create(publicationName, MavenPublication::class)
-                            (existingPublication as MavenPublication).apply {
-                                groupId = "bisq"
-                                artifactId = project.name
-                                version = rootVersion
-
-                                setupPublication(project, group, protoSourcesJar, true)
-                            }
+                            setupPublication(protoSourcesJar)
                         }
                     }
                     repositories {
@@ -109,49 +100,69 @@ class LocalMavenPublishPlugin : Plugin<Project> {
                         }
                     }
                 }
+
+                // Runs the POM checks, like requireVersionsOnOwnDependencies, in every build and in CI, which never
+                // publishes
+                project.tasks.named("check") {
+                    dependsOn(project.tasks.withType(GenerateMavenPom::class.java))
+                }
             } else {
                 println("${project.name} does not have a Java component, skipping")
             }
         }
     }
 
-    private fun MavenPublication.setupPublication(project: Project, group: String, protoSourcesJar: Any, isAlias: Boolean = false) {
+    private fun MavenPublication.setupPublication(protoSourcesJar: Any) {
         // Include the Protobuf sources JAR
         artifact(protoSourcesJar)
-        // Reference the primary artifact and files
-        if (isAlias) {
-            artifact(project.tasks.named("jar"))
-        }
 
-        // hack to make sure the pom generated is compliant (without this it generates dependencies without the version)
         pom.withXml {
             val rootNode = asNode()
-            if (isAlias) {
-                rootNode.appendNode("description", "Alias of $group:${project.name}")
-            }
-
-            // Get all nodes with a name ending in "dependencies"
-            val dependenciesNodes = rootNode.children().filter {
-                (it as? Node)?.name().toString().endsWith("dependencies")
-            }.map { it as Node }
-
-            // fixes corrupted pom not resolving dependencies when not explicitly specified in gradle configuration
-            val dependenciesNode = dependenciesNodes.firstOrNull() ?: rootNode.appendNode("dependencies")
-            dependenciesNode.children().forEach { dependencyNode ->
-                if (dependencyNode is Node) {
-                    val versionNodes = dependencyNode.children().filter {
-                        (it as? Node)?.name().toString().endsWith("version")
-                    }.map { it as Node }
-                    if (versionNodes.isEmpty()) {
-                        dependencyNode.appendNode("version", rootVersion)
-                    }
-//                    else if (versionNodes[0].value() == null || versionNodes[0].value().toString() == "unspecified") {
-//                        throw Error("${versionNodes[0]}")
-//                    }
-                }
-            }
+            removeOwnBomImports(rootNode)
+            requireVersionsOnOwnDependencies(rootNode)
         }
     }
+
+    // Gradle consumers get bisq:platform from the Gradle module metadata. The POM import of it cannot be resolved on
+    // JitPack, which moves our dependencies to its own coordinates but not BOM imports, and Gradle resolves the import
+    // while it reads the POM, before it switches to the module metadata.
+    private fun removeOwnBomImports(rootNode: Node) {
+        val dependencyManagementNode = rootNode.childNode("dependencyManagement") ?: return
+        val dependenciesNode = dependencyManagementNode.childNode("dependencies") ?: return
+        dependenciesNode.childNodes()
+            .filter { it.isOwnDependency() && it.childNode("scope")?.text() == "import" }
+            .forEach { dependenciesNode.remove(it) }
+        if (dependenciesNode.childNodes().isEmpty()) {
+            rootNode.remove(dependencyManagementNode)
+        }
+    }
+
+    // A dependency like implementation("bisq:common") still builds, because the composite build substitutes the
+    // project, but it is published without a version, and projects using the published jars cannot resolve it. The same
+    // goes for "bisq:common:$version" in a project whose own version is not set, which is published as "unspecified".
+    private fun MavenPublication.requireVersionsOnOwnDependencies(rootNode: Node) {
+        val withoutVersion = rootNode.childNode("dependencies")?.childNodes().orEmpty()
+            .filter { it.isOwnDependency() && it.childNode("version")?.text() in listOf(null, "unspecified") }
+            .map { dependency ->
+                listOf("groupId", "artifactId", "version")
+                    .mapNotNull { dependency.childNode(it)?.text() }
+                    .joinToString(":")
+            }
+        if (withoutVersion.isNotEmpty()) {
+            throw GradleException("$groupId:$artifactId declares $withoutVersion without a version. " +
+                    "Add one, for example implementation(\"bisq:common:\$version\"), in a project that sets its version.")
+        }
+    }
+
+    private fun Node.isOwnDependency(): Boolean {
+        val groupId = childNode("groupId")?.text() ?: return false
+        return groupId == DEFAULT_GROUP || groupId in COMPOSITE_PROJECTS_TO_INCLUDE
+    }
+
+    private fun Node.childNodes(): List<Node> = children().filterIsInstance<Node>()
+
+    // Names carry the POM namespace, hence the suffix match
+    private fun Node.childNode(name: String): Node? = childNodes().firstOrNull { it.name().toString().endsWith(name) }
 
     private fun loadRootVersion(project: Project) {        val rootPropertiesFile = File(getRootGradlePropertiesFile(project), "gradle.properties")
         if (project.version != "unspecified") {

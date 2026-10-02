@@ -5,8 +5,8 @@ plugins {
 }
 
 dependencies {
-    implementation 'tor:tor-common'
-    implementation 'tor:tor'
+    implementation "tor:tor-common:$version"
+    implementation "tor:tor:$version"
 }
 
 protobuf {

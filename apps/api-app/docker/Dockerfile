@@ -26,6 +26,9 @@
 FROM azul/zulu-openjdk:21@sha256:fa2396e3484ca23385063ad05d5bccdf6408a0736f196e3891b9917c8f37eeb2 AS build
 WORKDIR /src
 COPY . .
+# The commit this image is built from, e.g. --build-arg BUILD_COMMIT=$(git rev-parse HEAD). .dockerignore leaves out
+# .git, so the build cannot ask git itself; without it the node reports its commit hash as "unknown".
+ARG BUILD_COMMIT=""
 # installDist builds the api-app launcher plus every sibling module it depends on.
 # We deliberately do NOT run the full `build` task — packaging the daemon does not
 # need the whole repository's test suite.
@@ -36,6 +39,7 @@ COPY . .
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon \
     -Dorg.gradle.java.installations.auto-download=false \
+    -PbuildCommit="$BUILD_COMMIT" \
     :apps:api-app:installDist
 
 # ── Runtime stage: minimal JRE + system Tor + the built distribution ───────────

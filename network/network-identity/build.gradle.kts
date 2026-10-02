@@ -3,9 +3,11 @@ plugins {
     id ("bisq.protobuf")
 }
 
+version = rootProject.version
+
 dependencies {
-    implementation("bisq:common")
-    implementation("bisq:security")
+    implementation("bisq:common:$version")
+    implementation("bisq:security:$version")
 
     implementation(libs.bouncycastle)
     implementation(libs.bundles.jackson)
