@@ -191,10 +191,6 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
     }
 
     private void processAckRequestingMessage(AckRequestingMessage message) {
-        if (!message.allFieldsValid()) {
-            return;
-        }
-
         if (ackedMessageIds.contains(message.getAckRequestingMessageId())) {
             log.warn("We received already that AckRequestingMessage and sent the AckMessage");
             return;
