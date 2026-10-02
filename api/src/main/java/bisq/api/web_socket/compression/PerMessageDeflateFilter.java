@@ -110,8 +110,10 @@ public class PerMessageDeflateFilter extends BaseFilter {
         Connection<?> connection = ctx.getConnection();
         Optional<ConnectionState> state = findState(connection);
         if (state.filter(ConnectionState::isEnabled).isEmpty()) {
+            // The same condition as Grizzly uses, so that the filter sees the offer of every request
+            // which Grizzly upgrades
             HttpRequestFilterUtils.resolveAsHttpRequest(message)
-                    .filter(HttpRequestFilterUtils::isWebsocketHandshakeRequest)
+                    .filter(HttpRequestFilterUtils::isWebSocketUpgradeRequest)
                     .ifPresent(request -> onHandshakeRequest(connection, request));
             return ctx.getInvokeAction();
         }
