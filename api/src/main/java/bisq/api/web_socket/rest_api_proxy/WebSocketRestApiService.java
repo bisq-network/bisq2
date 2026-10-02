@@ -102,16 +102,17 @@ public class WebSocketRestApiService implements Service {
         webSocketRestApiRequest
                 .map(request -> sendToRestApiServer(request, webSocket))
                 .ifPresent(future -> {
+                    // Logged as an object and not as the JSON which the client sent: the JSON contains the
+                    // body, and toString() of the request does not print the body.
+                    WebSocketRestApiRequest request = webSocketRestApiRequest.get();
                     future.whenComplete((response, throwable) -> {
                         if (throwable == null) {
                             response.toJson()
                                     .ifPresentOrElse(webSocket::send,
-                                            () -> log.warn("Message was not sent to websocket." +
-                                                    "\nJson={}", JsonUtil.redactCredentials(json)));
+                                            () -> log.warn("Message was not sent to websocket. Request: {}", request));
                         } else {
-                            log.warn("REST API call failed for request: {}", JsonUtil.redactCredentials(json), throwable);
-                            String requestId = webSocketRestApiRequest.get().getRequestId();
-                            new WebSocketRestApiResponse(requestId, 500, throwable.getMessage()).toJson()
+                            log.warn("REST API call failed for request: {}", request, throwable);
+                            new WebSocketRestApiResponse(request.getRequestId(), 500, throwable.getMessage()).toJson()
                                     .ifPresent(webSocket::send);
                         }
                     });
