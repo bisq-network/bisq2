@@ -120,6 +120,22 @@ class WebSocketRestApiServiceLoggingTest {
         assertThat(logLines).anyMatch(line -> line.contains("Message length=" + json.length()));
     }
 
+    @Test
+    void failedCallIsLoggedWithoutTheBodyOfTheRequest() throws Exception {
+        DefaultWebSocket webSocket = webSocket();
+
+        // The HTTP client of the proxy does not support the method CONNECT, so the call fails
+        service.onMessage(requestNode("CONNECT", REQUEST_BODY).toString(), webSocket);
+
+        assertThat(sentMessage(webSocket).get("statusCode").asInt()).isEqualTo(500);
+        List<String> logLines = logLines();
+        assertThat(logLines).noneMatch(line -> line.contains(PRIVATE_VALUE));
+        // The failed request is still logged, with its ID and the length of its body
+        assertThat(logLines).anyMatch(line -> line.contains("REST API call failed")
+                && line.contains("requestId=request-id")
+                && line.contains("bodyLength=" + REQUEST_BODY.length()));
+    }
+
     private JsonNode sentMessage(DefaultWebSocket webSocket) throws Exception {
         ArgumentCaptor<String> sentMessage = ArgumentCaptor.forClass(String.class);
         // The proxy writes its log lines before it sends the response
