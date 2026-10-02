@@ -125,7 +125,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                     T dataRequest = entry.getValue();
                     boolean isToPrune = isToPrune(dataRequest);
                     if (isToPrune) {
-                        prunedAndExpiredDataRequests.add(dataRequest);
+                        addPrunedRequest(dataRequest);
                     }
                     return !isToPrune;
                 })
@@ -135,6 +135,10 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         map.clear();
         map.putAll(pruned);
         return persisted;
+    }
+
+    protected void addPrunedRequest(T dataRequest) {
+        prunedAndExpiredDataRequests.add(dataRequest);
     }
 
     // A store keeps an entry until it expires. From SignedRequest.SIGNATURE_V1_CUTOFF_DATE on, a store also removes the
