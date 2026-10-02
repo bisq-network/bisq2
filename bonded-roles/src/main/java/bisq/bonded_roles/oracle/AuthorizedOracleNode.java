@@ -154,7 +154,8 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData, Ow
         return META_DATA;
     }
 
-    // The oracle node publishes its own data with the key of its network ID, not with its authorized key
+    // Nodes of v2.1.13 and earlier accept the oracle node only from the key of its network ID. Its authorized key owns
+    // it as well (see AuthorizedData.isOwner and docs/specifications/network/storage-ownership.md).
     @Override
     public byte[] getOwnerPubKeyHash() {
         return networkId.getPubKeyHash();
