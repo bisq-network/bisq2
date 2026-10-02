@@ -37,6 +37,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.data.AuthorizedTimestampData;
 import bisq.user.reputation.requests.AuthorizeTimestampRequest;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -244,10 +245,12 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         return System.currentTimeMillis() - lastRequested > AuthorizedTimestampData.TTL / 2;
     }
 
-    private Set<String> getTimeStampedProfileIds() {
+    @VisibleForTesting
+    Set<String> getTimeStampedProfileIds() {
         return networkService.getDataService()
                 .map(service -> service.getAuthorizedData()
                         .filter(authorizedData -> authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData)
+                        .filter(this::isAuthorized)
                         .map(authorizedData -> (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData())
                         .map(AuthorizedTimestampData::getProfileId)
                         .collect(Collectors.toSet()))
