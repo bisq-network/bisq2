@@ -69,12 +69,10 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                     TradeProtocolFailure.OFFER_NOT_AVAILABLE);
         }
 
-        // The offer in an offerbook message is not bound to the message author by the network layer, so we
-        // require the author to be the offer's maker, which is us.
+        // The author of an offerbook message is the maker of its offer (BisqEasyOfferbookMessage.verify())
         List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                .filter(chatMessage -> chatMessage.getAuthorUserProfileId().equals(chatMessage.getBisqEasyOffer().get().getMakersUserProfileId()))
                 .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
                 .filter(offer -> offer.getMakerNetworkId().equals(trade.getMyIdentity().getNetworkId()))
                 .collect(Collectors.toList());

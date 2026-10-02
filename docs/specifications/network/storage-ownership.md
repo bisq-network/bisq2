@@ -55,6 +55,10 @@ compare both before it accepts the data.
    Reason: one hash must have only one ID. Earlier versions compared the ID with the hex encoding of the publisher's
    hash as strings, so they also accept only this encoding.
 
+   A `BisqEasyOfferbookMessage` which contains an offer is valid only if its author is the maker of the offer. A node
+   rejects another message when it constructs or decodes it. So only the maker publishes its offer, and nobody can
+   show the offer of another user in the offerbook. Released nodes publish only their own offers.
+
 ### The owner of authenticated data
 
 3. The owner of default authenticated data is the owner which the data names. The store rejects default authenticated
