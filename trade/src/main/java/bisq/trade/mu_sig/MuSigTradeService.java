@@ -88,6 +88,7 @@ import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
@@ -454,12 +455,32 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             handleMuSigTradeMessage(message, protocol.orElseThrow());
             return;
         }
-        findProtocol(tradeId).ifPresentOrElse(protocol -> handleMuSigTradeMessage(message, protocol),
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    if (isMessageOfTradePeer(message, protocol)) {
+                        handleMuSigTradeMessage(message, protocol);
+                    } else {
+                        pendingTradeMessages.remove(message);
+                    }
+                },
                 () -> {
                     log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
                             "re-processing when the next message arrives. message={}", tradeId, message);
                     pendingTradeMessages.add(message);
                 });
+    }
+
+    // The state machine turns an exception of a message handler into a failure of the trade (Fsm.handle), and the
+    // handlers throw for a message which is not from the trade peer. So such a message must not reach the protocol:
+    // anybody who knows a trade ID could end the trade otherwise. The check runs when a message is processed, also for
+    // a message which was queued before the protocol existed. The take offer request creates the trade and keeps its
+    // own checks.
+    private static boolean isMessageOfTradePeer(MuSigTradeMessage message, MuSigProtocol protocol) {
+        boolean isMessageOfTradePeer = TradeMessageHandler.isMessageOfTradePeer(message, protocol.getTrade());
+        if (!isMessageOfTradePeer) {
+            log.warn("We drop a trade message of type {} which the trade peer did not send.",
+                    message.getClass().getSimpleName());
+        }
+        return isMessageOfTradePeer;
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {
@@ -909,6 +930,11 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private void handleMediationSettlementMessage(MuSigProtocol protocol,
                                                    MuSigTradeMessage message) {
         synchronized (protocol) {
+            if (!isMessageOfTradePeer(message, protocol)) {
+                muSigMediationCustomPayoutService.removePendingMessage(message);
+                return;
+            }
+
             if (!muSigMediationCustomPayoutService.hasRequiredMessageContext(protocol.getTrade())) {
                 muSigMediationCustomPayoutService.addPendingMessage(message);
                 return;
