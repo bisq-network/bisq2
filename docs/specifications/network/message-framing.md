@@ -55,6 +55,9 @@ of a message. The framing is the format which marks where a message starts and w
 9. The bytes of a message must be a valid protobuf message: a field must not be longer than the rest of the message,
    and each end-group tag needs a matching start-group tag. The node uses the nesting limit of protobuf-java, 100
    levels. It does not set a lower limit.
+10. All bytes of a message must arrive within 4 minutes after its length prefix. Otherwise the node closes the
+    connection. The node checks the time after each read, so it closes the connection at the latest one socket timeout
+    after these 4 minutes.
 
 ## Reasons
 
@@ -87,9 +90,8 @@ of a message. The framing is the format which marks where a message starts and w
   while they arrive, so a length prefix alone does not make the node allocate the announced size.
 
   While a message arrives, the read thread of its connection waits. The socket timeout of the transport applies to each
-  single read, not to the whole message: 120 seconds in the default configuration. A peer which sends slowly therefore
-  keeps the read thread of its own connection waiting. It holds only the bytes which it has sent, so this costs the
-  node no more than a peer which sends the same bytes fast or keeps an idle connection open.
+  single read, not to the whole message: 120 seconds in the default configuration. A peer which sends slowly holds
+  only the bytes which it has sent. Rule 10 limits how long it can keep the read thread and the connection.
 - Rule 5: a node of this version which receives a larger message closes the connection. A failure at the sender shows
   the cause and the type of the message in the log of the sender, and the sender does not waste bandwidth. Only a
   defect or the configuration of the sender can create such a message, for example a high inventory size limit.
@@ -106,6 +108,10 @@ of a message. The framing is the format which marks where a message starts and w
   grows with the number of sub-messages, and the worst case uses many entries of a repeated field at 5 levels
   (`HashSetFilterEntry`), not a deep nesting. 100 levels need only a small part of the stack of the read thread. A
   lower limit would be a new protocol rule, and a later message type with more levels would close connections.
+- Rule 10: a peer which sends one byte shortly before each socket timeout would otherwise keep the read thread and the
+  connection without limit. 4 MiB over a slow Tor circuit of 20 KB per second need about 210 seconds, so the deadline
+  does not close honest connections. A read which waits cannot be interrupted without closing the socket from another
+  thread. The check after each read needs no further thread.
 - Rule 2, limit of the handshake: the node parses the first message of a peer before it checks anything of the peer:
   the type of the message, the address ownership proof and the proof of work. Any peer can send this message, without
   a key and without a proof of work. A node runs several handshakes at the same time, up to 16 with the default
