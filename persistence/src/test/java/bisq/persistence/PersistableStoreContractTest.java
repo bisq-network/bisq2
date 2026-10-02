@@ -63,12 +63,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Sources are used rather than the classpath because the stores are spread over 16 modules and no module depends on all
  * of them. They are the same files the test task declares as inputs, so a store in another module cannot change without
  * rerunning this.
+ * <p>
+ * The temp directory at the repository root is skipped. It holds files for local work which are not part of the build,
+ * such as git worktrees of older commits, and their stores would be reported as if they were in this checkout.
  */
 class PersistableStoreContractTest {
     private static final String STORE_INTERFACE = "PersistableStore";
     private static final String MAIN_JAVA = File.separator + "src" + File.separator + "main" + File.separator
             + "java" + File.separator;
     private static final String BUILD_DIR = File.separator + "build" + File.separator;
+    private static final String TEMP_DIR = "temp";
     private static final Pattern PROTO_PACKAGE = Pattern.compile("^\\s*package\\s+([\\w.]+)\\s*;", Pattern.MULTILINE);
     private static final Pattern PROTO_JAVA_PACKAGE =
             Pattern.compile("^\\s*option\\s+java_package\\s*=\\s*\"([\\w.]+)\"\\s*;", Pattern.MULTILINE);
@@ -130,7 +134,7 @@ class PersistableStoreContractTest {
         try (Stream<Path> paths = Files.walk(repoRoot)) {
             candidates = paths.filter(path -> path.toString().endsWith(".java"))
                     .filter(path -> path.toString().contains(MAIN_JAVA))
-                    .filter(path -> !path.toString().contains(BUILD_DIR))
+                    .filter(path -> isBuildSource(repoRoot, path))
                     .filter(PersistableStoreContractTest::mentionsStoreInterface)
                     .toList();
         }
@@ -153,6 +157,10 @@ class PersistableStoreContractTest {
             }.scan(unit, 0);
         }
         return stores;
+    }
+
+    private static boolean isBuildSource(Path repoRoot, Path path) {
+        return !path.toString().contains(BUILD_DIR) && !path.startsWith(repoRoot.resolve(TEMP_DIR));
     }
 
     private static boolean mentionsStoreInterface(Path path) {
@@ -217,7 +225,7 @@ class PersistableStoreContractTest {
         Map<String, String> protoTypeByJavaClass = new LinkedHashMap<>();
         try (Stream<Path> paths = Files.walk(repoRoot)) {
             for (Path path : paths.filter(p -> p.toString().endsWith(".proto"))
-                    .filter(p -> !p.toString().contains(BUILD_DIR))
+                    .filter(p -> isBuildSource(repoRoot, p))
                     .toList()) {
                 String source = Files.readString(path);
                 Matcher protoPackage = PROTO_PACKAGE.matcher(source);
