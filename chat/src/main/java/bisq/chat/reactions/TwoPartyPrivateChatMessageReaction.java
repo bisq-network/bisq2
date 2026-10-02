@@ -50,6 +50,8 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
                                               boolean isRemoved) {
         super(id, senderUserProfile, receiverUserProfileId, receiverNetworkId, chatChannelId, chatChannelDomain,
                 chatMessageId, reactionId, date, isRemoved);
+
+        verify();
     }
 
     @Override

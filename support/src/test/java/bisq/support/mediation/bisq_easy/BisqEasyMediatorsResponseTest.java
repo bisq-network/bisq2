@@ -24,16 +24,16 @@ import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The receiver of a confidential message compares the sender public key of the message with the key which encrypted
@@ -49,30 +49,17 @@ class BisqEasyMediatorsResponseTest {
 
         BisqEasyMediatorsResponse received = BisqEasyMediatorsResponse.fromProto(response.getValueBuilder(false).build());
 
-        assertTrue(received.isSenderPublicKeyRequired());
-        assertEquals(Optional.of(keyPair.getPublic()), received.findSenderPublicKey());
+        assertEquals(response.getSenderNetworkId(), received.getSenderNetworkId());
         assertEquals(keyPair.getPublic(), received.getSenderPublicKey());
     }
 
-    // Versions before the sender network ID was added sent version 0 without it. The sender public key is required for
-    // these responses as well, so the receiver does not accept them.
-    @Test
-    void responseOfVersion0RequiresTheSenderPublicKeyWhichItDoesNotContain() throws UnresolvableProtobufException {
-        BisqEasyMediatorsResponse received = BisqEasyMediatorsResponse.fromProto(
-                bisq.support.protobuf.MediatorsResponse.newBuilder()
-                        .setVersion(0)
-                        .setTradeId(TRADE_ID)
-                        .build());
-
-        assertTrue(received.isSenderPublicKeyRequired());
-        assertEquals(Optional.empty(), received.findSenderPublicKey());
-        assertThrows(IllegalStateException.class, received::getSenderPublicKey);
-    }
-
-    @Test
-    void responseOfThisVersionWithoutSenderNetworkIdIsRejected() {
+    // Versions before the sender network ID was added sent version 0 without it. The receiver requires the sender
+    // public key of every response, so a response without senderNetworkId fails at parsing in every version.
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    void responseWithoutSenderNetworkIdIsRejectedAtParsing(int version) {
         bisq.support.protobuf.MediatorsResponse proto = bisq.support.protobuf.MediatorsResponse.newBuilder()
-                .setVersion(1)
+                .setVersion(version)
                 .setTradeId(TRADE_ID)
                 .build();
 

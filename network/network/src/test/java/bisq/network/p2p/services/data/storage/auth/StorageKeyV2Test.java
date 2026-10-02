@@ -119,10 +119,12 @@ class StorageKeyV2Test {
     void storageKeyContainsTheOwnerPublicKey() throws GeneralSecurityException {
         AuthenticatedData authenticatedData = new DefaultAuthenticatedData(new TestDistributedData("content",
                 ownerKeyPair.getPublic()));
+        // The same data of another owner: the owner is not serialized, so both have the same data hash
+        KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        AuthenticatedData dataOfOtherOwner = new DefaultAuthenticatedData(new TestDistributedData("content",
+                otherKeyPair.getPublic()));
         AddAuthenticatedDataRequest ownerRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
-        AddAuthenticatedDataRequest otherRequest = AddAuthenticatedDataRequest.from(store,
-                authenticatedData,
-                KeyGeneration.generateDefaultEcKeyPair());
+        AddAuthenticatedDataRequest otherRequest = AddAuthenticatedDataRequest.from(store, dataOfOtherOwner, otherKeyPair);
 
         assertEquals(ownerRequest.getStorageKeyV1(), otherRequest.getStorageKeyV1());
         assertNotEquals(ownerRequest.getStorageKey(), otherRequest.getStorageKey());

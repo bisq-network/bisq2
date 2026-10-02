@@ -51,6 +51,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -116,14 +117,14 @@ class MuSigOfferMessageOwnerTest {
         assertTrue(store.add(makerRequest).isSuccess());
         assertTrue(offerbook.findOffer(offer).isPresent());
 
-        AddAuthenticatedDataRequest copy = AddAuthenticatedDataRequest.from(store, authenticatedData, otherKeyPair);
-        assertFalse(copy.isSignatureInvalid());
-        DataStorageResult addResult = store.add(copy);
+        // A copy which another user signs is invalid, so it cannot be created (see
+        // docs/specifications/network/storage-ownership.md)
+        assertThrows(IllegalArgumentException.class,
+                () -> AddAuthenticatedDataRequest.from(store, authenticatedData, otherKeyPair));
         // The other user has no entry, so its remove request cannot remove the offer of the maker
         DataStorageResult removeResult = store.remove(RemoveAuthenticatedDataRequest.from(store, authenticatedData,
                 otherKeyPair));
 
-        assertTrue(addResult.isOwnerInvalid(), addResult.toString());
         assertTrue(removeResult.isNoEntry(), removeResult.toString());
         assertEquals(makerRequest, store.getPersistableStore().getMap().get(makerRequest.getStorageKey()));
         assertTrue(offerbook.findOffer(offer).isPresent());

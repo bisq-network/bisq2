@@ -34,10 +34,10 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
-import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -52,16 +52,16 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
     private final String tradeId;
     @ExcludeForHash(excludeOnlyInVersions = {0, 1})
     @EqualsAndHashCode.Exclude
-    private final Optional<NetworkId> senderNetworkId;
+    private final NetworkId senderNetworkId;
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final int version;
 
     public BisqEasyMediatorsResponse(String tradeId, NetworkId senderNetworkId) {
-        this(VERSION, tradeId, Optional.of(senderNetworkId));
+        this(VERSION, tradeId, senderNetworkId);
     }
 
-    private BisqEasyMediatorsResponse(int version, String tradeId, Optional<NetworkId> senderNetworkId) {
+    private BisqEasyMediatorsResponse(int version, String tradeId, NetworkId senderNetworkId) {
         this.version = version;
         this.tradeId = tradeId;
         this.senderNetworkId = senderNetworkId;
@@ -72,9 +72,6 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
     @Override
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
-        if (version >= VERSION) {
-            senderNetworkId.orElseThrow(() -> new IllegalArgumentException("senderNetworkId must be present"));
-        }
     }
 
     /**
@@ -86,17 +83,19 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
         bisq.support.protobuf.MediatorsResponse.Builder builder = bisq.support.protobuf.MediatorsResponse.newBuilder()
                 .setVersion(version)
                 .setTradeId(tradeId);
-        senderNetworkId.ifPresent(networkId -> builder.setSenderNetworkId(networkId.toProto(serializeForHash)));
+        builder.setSenderNetworkId(senderNetworkId.toProto(serializeForHash));
         return builder;
     }
 
     public static BisqEasyMediatorsResponse fromProto(bisq.support.protobuf.MediatorsResponse proto)
             throws UnresolvableProtobufException {
         try {
-            Optional<NetworkId> senderNetworkId = proto.hasSenderNetworkId()
-                    ? Optional.of(NetworkId.fromProto(proto.getSenderNetworkId()))
-                    : Optional.empty();
-            return new BisqEasyMediatorsResponse(proto.getVersion(), proto.getTradeId(), senderNetworkId);
+            // Responses of version 0 have no senderNetworkId. The receiver requires the sender public key of every
+            // response, so such a response is invalid.
+            checkArgument(proto.hasSenderNetworkId(), "senderNetworkId must be present");
+            return new BisqEasyMediatorsResponse(proto.getVersion(),
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()));
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }
@@ -121,13 +120,6 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
 
     @Override
     public PublicKey getSenderPublicKey() {
-        return findSenderPublicKey().orElseThrow(() -> new IllegalStateException("senderNetworkId not set"));
-    }
-
-    // Responses of version 0 have no senderNetworkId. The sender public key is required for every version (see
-    // SenderPublicKeyProvidingPayload.isSenderPublicKeyRequired), so the receiver rejects them.
-    @Override
-    public Optional<PublicKey> findSenderPublicKey() {
-        return senderNetworkId.map(networkId -> networkId.getPubKey().getPublicKey());
+        return senderNetworkId.getPubKey().getPublicKey();
     }
 }

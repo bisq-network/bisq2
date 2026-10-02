@@ -25,7 +25,7 @@ import lombok.Getter;
 public class DataStorageResult {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
-            dataInvalid, isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid,
+            isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid,
             classNameInvalid, ownerInvalid, signatureV2Missing;
 
     public static DataStorageResult success() {
@@ -97,12 +97,6 @@ public class DataStorageResult {
         return this;
     }
 
-    public DataStorageResult dataInvalid() {
-        dataInvalid = true;
-        isSevereFailure = true;
-        return this;
-    }
-
     // The key which signed the add request is not the owner of the data (see
     // docs/specifications/network/storage-ownership.md)
     public DataStorageResult ownerInvalid() {
@@ -137,7 +131,6 @@ public class DataStorageResult {
                 ", publicKeyHashInvalid=" + publicKeyHashInvalid +
                 ", sequenceNrInvalid=" + sequenceNrInvalid +
                 ", signatureInvalid=" + signatureInvalid +
-                ", dataInvalid=" + dataInvalid +
                 ", isNotAuthorized=" + isNotAuthorized +
                 ", expired=" + expired +
                 ", noEntry=" + noEntry +

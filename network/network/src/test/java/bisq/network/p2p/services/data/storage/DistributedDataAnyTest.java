@@ -25,6 +25,7 @@ import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.locale.Region;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.Inventory;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
@@ -362,6 +363,43 @@ public class DistributedDataAnyTest {
         assertArrayEquals(received.serialize(), restored.getMap().get(received.getStorageKey()).serialize());
     }
 
+    // The publisher of an add request must be the owner of the data (see
+    // docs/specifications/network/storage-ownership.md). A received copy of another publisher fails at parsing, and a
+    // persisted one is skipped when the store loads. Earlier versions did not check the owner, so their stores can
+    // contain such entries.
+    @Test
+    public void addRequestOfAnotherPublisherFailsAtParsingAndIsSkippedOnRestore() throws Exception {
+        bisq.network.protobuf.DataRequest original = getAddAuthenticatedDataRequestProto(getHashSerializationAny());
+        AddAuthenticatedDataRequest received = (AddAuthenticatedDataRequest) DataRequest.fromProto(original);
+        // The publisher hash still names the key of the request, so only the owner rule is broken
+        byte[] otherPublicKeyBytes = KeyGeneration.generateDefaultEcKeyPair().getPublic().getEncoded();
+        bisq.network.protobuf.AddAuthenticatedDataRequest addRequest = original.getAddAuthenticatedDataRequest();
+        bisq.network.protobuf.DataRequest copy = original.toBuilder()
+                .setAddAuthenticatedDataRequest(addRequest.toBuilder()
+                        .setOwnerPublicKeyBytes(ByteString.copyFrom(otherPublicKeyBytes))
+                        .setAuthenticatedSequentialData(addRequest.getAuthenticatedSequentialData().toBuilder()
+                                .setPubKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)))))
+                .build();
+
+        UnresolvableProtobufException exception = assertThrows(UnresolvableProtobufException.class,
+                () -> DataRequest.fromProto(copy));
+        assertTrue(ExceptionUtil.getRootCauseMessage(exception).contains("not the owner"),
+                ExceptionUtil.getRootCauseMessage(exception));
+
+        ByteArray copyKey = new ByteArray(filledBytes(20, 0x66));
+        bisq.network.protobuf.DataStore store = bisq.network.protobuf.DataStore.newBuilder()
+                .addMapEntries(bisq.network.protobuf.DataStore.MapEntry.newBuilder()
+                        .setKey(received.getStorageKey().toProto(false)).setValue(original))
+                .addMapEntries(bisq.network.protobuf.DataStore.MapEntry.newBuilder()
+                        .setKey(copyKey.toProto(false)).setValue(copy))
+                .build();
+        DataStore<?> restored = (DataStore<?>) DataStore.fromProto(
+                bisq.network.protobuf.DataStore.parseFrom(store.toByteArray()));
+        assertEquals(1, restored.getMap().size());
+        assertFalse(restored.getMap().containsKey(copyKey));
+        assertArrayEquals(received.serialize(), restored.getMap().get(received.getStorageKey()).serialize());
+    }
+
     private static void assertAllHoldersKeep(Any any) throws UnresolvableProtobufException {
         for (bisq.network.protobuf.AuthenticatedData proto : List.of(getDefaultAuthenticatedDataProto(any),
                 getAuthorizedDataProto(any))) {
@@ -490,7 +528,9 @@ public class DistributedDataAnyTest {
     }
 
     // Uses a nested model whose decoder drops unknown fields, as production payload models do.
-    private static final class NestedPayloadData implements AuthorizedDistributedData, AppendOnlyData {
+    // Names the test key as its owner, so that requests which this key publishes are valid
+    private static final class NestedPayloadData implements AuthorizedDistributedData, AppendOnlyData,
+            OwnershipVerifiableData {
         private final String code;
         @ExcludeForHash
         private final String name;
@@ -515,6 +555,11 @@ public class DistributedDataAnyTest {
         }
 
         @Override
+        public byte[] getOwnerPubKeyHash() {
+            return DigestUtil.hash(PUBLIC_KEY_BYTES);
+        }
+
+        @Override
         public bisq.common.protobuf.Country.Builder getBuilder(boolean serializeForHash) {
             return bisq.common.protobuf.Country.newBuilder().setCode(code).setName(name)
                     .setRegion(region.toProto(serializeForHash));
@@ -523,11 +568,6 @@ public class DistributedDataAnyTest {
         @Override
         public MetaData getMetaData() {
             return new MetaData(MetaData.TTL_10_DAYS, "NestedPayloadData");
-        }
-
-        @Override
-        public boolean isDataInvalid() {
-            return false;
         }
 
         // common.proto: message Region { string code = 1; string name = 2; }
@@ -564,7 +604,9 @@ public class DistributedDataAnyTest {
     // DistributedData of a higher-level module as this node knows it. It serializes as common.StringLongPair. value is
     // annotated with @ExcludeForHash, like a field which was added under the rules for new fields.
     @EqualsAndHashCode
-    private static final class PayloadData implements AuthorizedDistributedData, AppendOnlyData {
+    // Names the test key as its owner, so that requests which this key publishes are valid
+    private static final class PayloadData implements AuthorizedDistributedData, AppendOnlyData,
+            OwnershipVerifiableData {
         private final String key;
         @ExcludeForHash
         private final long value;
@@ -589,6 +631,11 @@ public class DistributedDataAnyTest {
         }
 
         @Override
+        public byte[] getOwnerPubKeyHash() {
+            return DigestUtil.hash(PUBLIC_KEY_BYTES);
+        }
+
+        @Override
         public bisq.common.protobuf.StringLongPair.Builder getBuilder(boolean serializeForHash) {
             return bisq.common.protobuf.StringLongPair.newBuilder()
                     .setKey(key)
@@ -603,11 +650,6 @@ public class DistributedDataAnyTest {
         @Override
         public MetaData getMetaData() {
             return metaData;
-        }
-
-        @Override
-        public boolean isDataInvalid() {
-            return false;
         }
 
         private static final CanonicalSchema<PayloadData> DEFAULT_SCHEMA = CanonicalSchema.<PayloadData>newBuilder()

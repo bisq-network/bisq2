@@ -61,6 +61,7 @@ public final class FasterPaymentsAccountPayload extends CountryBasedAccountPaylo
 
     @Override
     public void verify() {
+        super.verify();
         PaymentAccountValidation.validateHolderName(holderName);
         PaymentAccountValidation.validateFasterPaymentsSortCode(sortCode);
         PaymentAccountValidation.validateFasterPaymentsAccountNr(accountNr);

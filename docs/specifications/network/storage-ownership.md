@@ -49,10 +49,15 @@ compare both before it accepts the data.
    | append-only data | none: it is not signed and cannot be removed |
 
 2. A profile ID names the owner hash only if it is the lower-case hex encoding of the hash, as `PubKey.getId()` creates
-   it: 40 characters for the 20 bytes of the hash. Data with another profile ID is invalid (`isDataInvalid()`).
+   it: 40 characters for the 20 bytes of the hash. Data with another profile ID is invalid. A node rejects it when it
+   constructs or decodes it (see [`validation-at-parsing.md`](validation-at-parsing.md)).
 
    Reason: one hash must have only one ID. Earlier versions compared the ID with the hex encoding of the publisher's
    hash as strings, so they also accept only this encoding.
+
+   A `BisqEasyOfferbookMessage` which contains an offer is valid only if its author is the maker of the offer. A node
+   rejects another message when it constructs or decodes it. So only the maker publishes its offer, and nobody can
+   show the offer of another user in the offerbook. Released nodes publish only their own offers.
 
 ### The owner of authenticated data
 
@@ -83,12 +88,16 @@ failure therefore affects only a peer which sends a request that no released nod
 
 ### Admission
 
-5. The authenticated data store accepts an add request only if the publisher is the owner of the data. Otherwise the
-   result is `ownerInvalid`. The only exception is the transition rule below. The store checks the content of the data
-   (`isDataInvalid()`, result `dataInvalid`) before the owner, because the owner can only be read from valid data, for
-   example from a valid profile ID.
-6. The mailbox store accepts an add request only if the sender is the owner of the confidential message. Otherwise the
-   result is `ownerInvalid`. The receiver removes mailbox data; storage key V2 of mailbox data contains the key of the
+5. An add request of authenticated data is valid only if the publisher is the owner of the data. The only exception is
+   the transition rule below. The rule compares fields of the request, so a node rejects other add requests when it
+   constructs or decodes them, including persisted entries (see [`validation-at-parsing.md`](validation-at-parsing.md)).
+   The owner can only be read from valid data, for example from a valid profile ID, so the data checks its own content
+   when it is created, before the add request reads the owner.
+6. A mailbox add request is valid only if the sender is the owner of the confidential message. A node rejects mailbox
+   sequential data of another sender when it constructs or decodes it, including persisted entries (see
+   [`validation-at-parsing.md`](validation-at-parsing.md)). Released nodes since 2.0.0 sign the add request with the
+   key pair which encrypts the confidential message, so they create only valid requests. The receiver removes mailbox
+   data; storage key V2 of mailbox data contains the key of the
    receiver (see [`storage-keys.md`](storage-keys.md)). The receiver hash in the sequential data must equal the hash of
    its receiver public key bytes. Reject inconsistent sequential data when it is constructed or decoded, including
    persisted entries. Otherwise the key which finds the entry cannot pass its removal authorization check, and the
@@ -98,8 +107,8 @@ failure therefore affects only a peer which sends a request that no released nod
    entry which the same key added (see [`storage-keys.md`](storage-keys.md)). The same holds for refresh requests, but
    a refresh replaces the creation date of the entry, on which the transition rule depends. So the store checks the
    owner of the refreshed entry again.
-8. When a node loads an authenticated data store, it removes the add requests whose publisher is not the owner of the
-   data.
+8. When a node loads an authenticated data store, it does not load the add requests whose publisher is not the owner of
+   the data. They fail at parsing (rule 5), and the store skips entries which it cannot parse.
 
    Reason: earlier versions did not check the owner. An entry which an attacker added before the update could
    otherwise be removed after the update, with the effect described in [Problem](#problem).
@@ -200,7 +209,11 @@ earlier creation date, which are the copies described in [Known limitations](#kn
 ## Compatibility
 
 - The rule adds no field and changes no signature. Nodes of earlier versions do not check the owner. They accept and
-  relay data of any publisher, also copies which updated nodes reject.
+  relay data of any publisher, also copies which updated nodes reject. An updated node skips such a copy in an
+  inventory response. When a node of an earlier version relays such a copy as a broadcast, an updated node cannot
+  parse the message and closes the connection to the relay (see the open point in
+  [`validation-at-parsing.md`](validation-at-parsing.md#open-points)). Honest nodes publish only data which they own,
+  so only a modified client creates such a copy.
 - The storage key V2 of data of oracle and seed nodes changes, because the publisher changes. During the transition,
   an updated node can store two entries of the same data: the one of the earlier version and the one of the authorized
   key. Applications use only the one of the authorized key (rule 11).
@@ -262,5 +275,5 @@ earlier creation date, which are the copies described in [Known limitations](#kn
 - [`storage-keys.md`](storage-keys.md): the storage keys, which contain the key of the publisher.
 - [`storage-request-signatures.md`](storage-request-signatures.md): the signatures of the requests.
 - `OwnershipVerifiableData.getOwnerPubKeyHash()`, `AuthenticatedData.isOwner()`,
-  `AuthenticatedSequentialData.isOwnerInvalid()`, `MailboxSequentialData.isSenderInvalid()`.
+  `AuthenticatedSequentialData.verify()`, `MailboxSequentialData.verify()`.
 - `StorageService` (rule 11), `AuthorizedDataPublisherMigration` (rule 14).

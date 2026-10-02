@@ -96,11 +96,6 @@ public final class AccountTimestamp implements DistributedData {
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
-    @Override
     public String toString() {
         return "AccountTimestamp{" +
                 "hash=" + Hex.encode(hash) +

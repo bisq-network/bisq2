@@ -206,11 +206,6 @@ public final class MailboxData implements StorageData, Canonical {
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return confidentialMessage.isDataInvalid();
-    }
-
-    @Override
     public String toString() {
         return "MailboxData{" +
                 "version=" + version +

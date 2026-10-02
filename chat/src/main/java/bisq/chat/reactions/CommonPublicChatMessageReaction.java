@@ -27,11 +27,13 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class CommonPublicChatMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
+public final class CommonPublicChatMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
     // Metadata needs to be symmetric with CommonPublicChatMessage.
     public static final MetaData META_DATA = new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, CommonPublicChatMessageReaction.class.getSimpleName(), MetaData.MAX_MAP_SIZE_10_000);
 
@@ -50,17 +52,13 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
     @Override
     public void verify() {
         super.verify();
+        // The profile ID must be the ID of a public key, so that it names the reacting user (see getOwnerPubKeyHash())
+        checkArgument(PubKey.isId(userProfileId), "userProfileId is not the ID of a public key");
     }
 
     @Override
     public bisq.chat.protobuf.ChatMessageReaction toProto(boolean serializeForHash) {
         return unsafeToProto(serializeForHash);
-    }
-
-    // The profile ID must be the ID of a public key, so that it names the reacting user (see getOwnerPubKeyHash())
-    @Override
-    public boolean isDataInvalid() {
-        return !PubKey.isId(userProfileId);
     }
 
     // The reacting user owns the reaction. The profile ID is the ID of the public key of the user (PubKey.getId()).
