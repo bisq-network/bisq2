@@ -147,6 +147,36 @@ class BisqEasyMediationRequestTest {
                 request.getAckRequestingMessageId());
     }
 
+    // The mediator shows the price of the contract in its case list. A contract without a price must not reach
+    // the mediator, because its case list builds all items in one step.
+    @Test
+    void requestWhoseContractHasNoPriceFailsAtParsing() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        bisq.support.protobuf.MediationRequest valid = createMediationRequestProto(
+                createContract(requester, peer, mediator), requester, peer, List.of(), mediator.getNetworkId());
+
+        assertEquals(3_500_000_000L, BisqEasyMediationRequest.fromProto(valid).getContract().getPriceQuote().getValue());
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyMediationRequest.fromProto(withContractAmounts(valid, 0, 3_500_000)));
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyMediationRequest.fromProto(withContractAmounts(valid, 100_000, 0)));
+        // The price does not fit into a long
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyMediationRequest.fromProto(withContractAmounts(valid, 1, Long.MAX_VALUE)));
+    }
+
+    private static bisq.support.protobuf.MediationRequest withContractAmounts(bisq.support.protobuf.MediationRequest request,
+                                                                              long baseSideAmount,
+                                                                              long quoteSideAmount) {
+        bisq.support.protobuf.MediationRequest.Builder builder = request.toBuilder();
+        builder.getContractBuilder().getTwoPartyContractBuilder().getBisqEasyContractBuilder()
+                .setBaseSideAmount(baseSideAmount)
+                .setQuoteSideAmount(quoteSideAmount);
+        return builder.build();
+    }
+
     private int findBoundaryTextLength(BisqEasyContract contract,
                                        UserProfile requester,
                                        UserProfile peer,
