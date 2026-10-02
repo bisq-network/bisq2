@@ -17,6 +17,7 @@
 
 package bisq.bonded_roles.bonded_role;
 
+import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.encoding.Hex;
@@ -53,9 +54,10 @@ import static org.mockito.Mockito.when;
 /**
  * Users send registration requests and account timestamp requests to the oracle nodes which
  * AuthorizedBondedRolesService lists. The network layer checks only the signature of data without
- * staticPublicKeysProvided, so any key can publish an oracle node. The service lists an oracle node only if its key is
- * a static key of this version or the key of a known oracle node role (see
- * docs/specifications/bonded-roles/authorized-data.md).
+ * staticPublicKeysProvided, so any key can publish an oracle node. While oracle nodes with a non-static key are allowed, the
+ * service lists an oracle node only if its key is a static key of this version or the key of a known oracle node role
+ * (see docs/specifications/bonded-roles/authorized-data.md). StaticOracleNodeKeysOnlyTest covers the temporary
+ * restriction to the static keys.
  */
 class AuthorizedOracleNodeAuthorizationTest {
     @TempDir
@@ -77,7 +79,10 @@ class AuthorizedOracleNodeAuthorizationTest {
                 .join();
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getDataService()).thenReturn(Optional.of(dataService));
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, false);
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService,
+                false,
+                AuthorizedPubKeys.getOracleNodePubKeys(),
+                false);
 
         // The role of the oracle node, which another oracle node registered
         oracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();

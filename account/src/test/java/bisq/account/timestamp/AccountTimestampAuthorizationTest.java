@@ -17,18 +17,11 @@
 
 package bisq.account.timestamp;
 
-import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
-import bisq.bonded_roles.bonded_role.BondedRole;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
-import bisq.common.network.AddressByTransportTypeMap;
-import bisq.common.network.TransportType;
-import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.NetworkService;
-import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
@@ -38,7 +31,6 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
-import bisq.security.keys.PubKey;
 import bisq.user.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,8 +41,8 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -69,6 +61,7 @@ class AccountTimestampAuthorizationTest {
     private AuthorizedBondedRolesService authorizedBondedRolesService;
     private AccountTimestampService accountTimestampService;
     private KeyPair oracleKeyPair;
+    private KeyPair otherOracleKeyPair;
     private AuthorizedAccountTimestamp authorizedAccountTimestamp;
 
     @BeforeEach
@@ -76,13 +69,17 @@ class AccountTimestampAuthorizationTest {
         dataService = new DataService(new PersistenceService(tempDir));
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getDataService()).thenReturn(Optional.of(dataService));
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, false);
+        // The static oracle node key of this version
+        oracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        otherOracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, false,
+                Set.of(Hex.encode(oracleKeyPair.getPublic().getEncoded()),
+                        Hex.encode(otherOracleKeyPair.getPublic().getEncoded())), true);
         BondedRolesService bondedRolesService = mock(BondedRolesService.class);
         when(bondedRolesService.getAuthorizedBondedRolesService()).thenReturn(authorizedBondedRolesService);
         accountTimestampService = new AccountTimestampService(networkService, mock(UserService.class),
                 bondedRolesService);
 
-        oracleKeyPair = addOracleNode("a".repeat(40), 1234);
         byte[] hash = new byte[20];
         Arrays.fill(hash, (byte) 1);
         authorizedAccountTimestamp = new AuthorizedAccountTimestamp(new AccountTimestamp(hash, 1_700_000_000_000L),
@@ -134,7 +131,6 @@ class AccountTimestampAuthorizationTest {
         AuthenticatedDataStorageService store = dataService.getStorageService()
                 .getOrCreateAuthenticatedDataStore(AuthorizedAccountTimestamp.class.getSimpleName())
                 .join();
-        KeyPair otherOracleKeyPair = addOracleNode("b".repeat(40), 1235);
         AuthorizedData publication = authorize(authorizedAccountTimestamp, oracleKeyPair);
         AuthorizedData publicationOfOtherOracle = authorize(authorizedAccountTimestamp, otherOracleKeyPair);
         ByteArray hash = new ByteArray(authorizedAccountTimestamp.getAccountTimestamp().getHash());
@@ -157,22 +153,6 @@ class AccountTimestampAuthorizationTest {
             // deletes tempDir.
             store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
         }
-    }
-
-    private KeyPair addOracleNode(String profileId, int port) {
-        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-        authorizedBondedRolesService.getBondedRoles().add(new BondedRole(new AuthorizedBondedRole(profileId,
-                Hex.encode(keyPair.getPublic().getEncoded()),
-                BondedRoleType.ORACLE_NODE,
-                "oracle",
-                "signature",
-                Optional.empty(),
-                new NetworkId(new AddressByTransportTypeMap(Map.of(TransportType.CLEAR,
-                        LocalHostAddressTypeFacade.toLocalHostAddress(port))),
-                        new PubKey(KeyGeneration.generateDefaultEcKeyPair().getPublic(), "identity")),
-                Optional.empty(),
-                false)));
-        return keyPair;
     }
 
     private static AuthorizedData authorize(AuthorizedAccountTimestamp data, KeyPair keyPair)

@@ -41,6 +41,7 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Optional;
+import java.util.Set;
 
 import static bisq.bonded_roles.registration.BondedRoleRegistrationRequestTest.createNetworkId;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,18 +61,23 @@ class AuthorizedBondedRolePublisherTest {
     Path tempDir;
 
     private KeyPair authorizedKeyPair;
+    private KeyPair otherOracleKeyPair;
+    private Set<String> oracleNodePubKeys;
     private KeyPair identityKeyPair;
     private DataService dataService;
     private AuthenticatedDataStorageService store;
     private AuthorizedBondedRolesService authorizedBondedRolesService;
-    private AuthorizedBondedRole oracleRole;
     private AuthorizedBondedRole mediatorRole;
     private AuthorizedData authorizedMediatorRole;
 
     @BeforeEach
     void setUp() throws GeneralSecurityException {
         StorableTypesRegistry.register(AuthorizedBondedRole.class, AuthorizedBondedRole.META_DATA);
+        // The static oracle node keys of this version
         authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        otherOracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        oracleNodePubKeys = Set.of(Hex.encode(authorizedKeyPair.getPublic().getEncoded()),
+                Hex.encode(otherOracleKeyPair.getPublic().getEncoded()));
         identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
 
         // Entries of earlier versions have no signature V2. A node accepts them only before the cutoff date of
@@ -83,18 +89,8 @@ class AuthorizedBondedRolePublisherTest {
                 .join();
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getDataService()).thenReturn(Optional.of(dataService));
-        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, false);
-        // The oracle node whose authorized key authorizes the mediator role
-        oracleRole = new AuthorizedBondedRole("a".repeat(40),
-                Hex.encode(authorizedKeyPair.getPublic().getEncoded()),
-                BondedRoleType.ORACLE_NODE,
-                "oracle",
-                "signature",
-                Optional.empty(),
-                createNetworkId(),
-                Optional.empty(),
-                false);
-        authorizedBondedRolesService.getBondedRoles().add(new BondedRole(oracleRole));
+        authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, false, oracleNodePubKeys,
+                true);
         // As NetworkService.addDataServiceListener does
         dataService.addListener(authorizedBondedRolesService);
 
@@ -171,7 +167,6 @@ class AuthorizedBondedRolePublisherTest {
     // of the review 2026-09-29_16-18-18-fable-5.1).
     @Test
     void roleStaysWhileAnotherOracleNodePublishesIt() throws GeneralSecurityException {
-        KeyPair otherOracleKeyPair = addOracleNode("c".repeat(40));
         AuthorizedData publicationOfOtherOracle = authorize(mediatorRole, otherOracleKeyPair);
         assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
                 .isSuccess()).isTrue();
@@ -194,7 +189,6 @@ class AuthorizedBondedRolePublisherTest {
     // holds the publication of its own oracle node.
     @Test
     void removalOfACopyWithoutSignatureV2AtTheCutoffDateKeepsTheRole() throws GeneralSecurityException {
-        KeyPair otherOracleKeyPair = addOracleNode("c".repeat(40));
         AuthorizedData publicationOfOtherOracle = authorize(mediatorRole, otherOracleKeyPair);
         assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
                 .isSuccess()).isTrue();
@@ -279,8 +273,8 @@ class AuthorizedBondedRolePublisherTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getDataService()).thenReturn(Optional.of(dataServiceAfterRestart));
         AuthorizedBondedRolesService authorizedBondedRolesServiceAfterRestart =
-                new AuthorizedBondedRolesService(networkService, false);
-        authorizedBondedRolesServiceAfterRestart.getBondedRoles().add(new BondedRole(oracleRole));
+                new AuthorizedBondedRolesService(networkService, false, oracleNodePubKeys,
+                true);
         authorizedBondedRolesServiceAfterRestart.initialize().join();
         dataServiceAfterRestart.addListener(authorizedBondedRolesServiceAfterRestart);
 
@@ -293,21 +287,6 @@ class AuthorizedBondedRolePublisherTest {
             storeAfterRestart.getPersistence().persistAsync(storeAfterRestart.getPersistableStore().getClone()).join();
             dataServiceAfterRestart.shutdown();
         }
-    }
-
-    // An oracle node whose role the node knows. Its key authorizes roles.
-    private KeyPair addOracleNode(String profileId) {
-        KeyPair oracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        authorizedBondedRolesService.getBondedRoles().add(new BondedRole(new AuthorizedBondedRole(profileId,
-                Hex.encode(oracleKeyPair.getPublic().getEncoded()),
-                BondedRoleType.ORACLE_NODE,
-                "oracle " + profileId.charAt(0),
-                "signature",
-                Optional.empty(),
-                createNetworkId(),
-                Optional.empty(),
-                false)));
-        return oracleKeyPair;
     }
 
     private static AuthorizedData authorize(AuthorizedBondedRole role, KeyPair keyPair) throws GeneralSecurityException {
