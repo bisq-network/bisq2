@@ -21,6 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.accounts.AccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
@@ -31,8 +32,6 @@ import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -53,7 +52,7 @@ import java.util.stream.Stream;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class AccountTimestampService implements Service, DataService.Listener {
+public class AccountTimestampService implements Service, AuthorizedBondedRolesService.Listener {
     private final NetworkService networkService;
     private final UserIdentityService userIdentityService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -75,43 +74,35 @@ public class AccountTimestampService implements Service, DataService.Listener {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addDataServiceListener(this);
-
-        String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
-        networkService.getDataService()
-                .stream()
-                .flatMap(dataService ->
-                        dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
-                                .map(AuthenticatedData::getDistributedData)
-                                .filter(AuthorizedAccountTimestamp.class::isInstance)
-                                .map(AuthorizedAccountTimestamp.class::cast)
-                )
-                .forEach(this::handleAuthorizedAccountTimestampAdded);
-
+        // AuthorizedBondedRolesService passes us the stored data, and checks data again which a bonded role authorizes
+        // that arrives later
+        authorizedBondedRolesService.addListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        networkService.removeDataServiceListener(this);
+        authorizedBondedRolesService.removeListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
 
     /* --------------------------------------------------------------------- */
-    // DataService.Listener
+    // AuthorizedBondedRolesService.Listener
     /* --------------------------------------------------------------------- */
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+        if (authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp &&
+                isAuthorized(authorizedData)) {
             handleAuthorizedAccountTimestampAdded(authorizedAccountTimestamp);
         }
     }
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp) {
+        if (authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp &&
+                isAuthorized(authorizedData)) {
             handleAuthorizedAccountTimestampRemoved(authorizedAccountTimestamp);
         }
     }
@@ -238,15 +229,24 @@ public class AccountTimestampService implements Service, DataService.Listener {
                                 selectedUserIdentity.getNetworkIdWithKeyPair()));
     }
 
+    // The network layer checks only the signature of data without staticPublicKeysProvided, so any key can publish an
+    // account timestamp. Only an oracle node may authorize it (see docs/specifications/bonded-roles/authorized-data.md).
+    private boolean isAuthorized(AuthorizedData authorizedData) {
+        return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
+    }
+
     private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountTimestamp(byte[] hash) {
         String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
         return networkService.getDataService()
                 .stream()
                 .flatMap(dataService ->
                         dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
-                                .map(AuthenticatedData::getDistributedData)
-                                .filter(AuthorizedAccountTimestamp.class::isInstance)
-                                .map(AuthorizedAccountTimestamp.class::cast)
+                                .filter(AuthorizedData.class::isInstance)
+                                .map(AuthorizedData.class::cast)
+                                .filter(authorizedData ->
+                                        authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp)
+                                .filter(this::isAuthorized)
+                                .map(authorizedData -> (AuthorizedAccountTimestamp) authorizedData.getDistributedData())
                 )
                 .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
     }
