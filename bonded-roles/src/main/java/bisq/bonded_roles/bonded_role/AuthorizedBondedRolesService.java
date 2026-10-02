@@ -186,9 +186,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         log.debug("onAuthorizedDataAdded {}", data.getClass().getSimpleName());
-        if (data instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.add((AuthorizedOracleNode) data);
-            reProcessFailedAuthorizedData();
+        if (data instanceof AuthorizedOracleNode authorizedOracleNode) {
+            // The network layer checks only the signature of data without staticPublicKeysProvided, so any key can
+            // publish an oracle node. Users send registration and account timestamp requests to the oracle nodes.
+            if (hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE)) {
+                authorizedOracleNodes.add(authorizedOracleNode);
+                reProcessFailedAuthorizedData();
+            }
         } else if (data instanceof AuthorizedBondedRole authorizedBondedRole) {
             log.debug("BondedRoleType {}", authorizedBondedRole.getBondedRoleType());
             validateBondedRole(authorizedData, authorizedBondedRole).ifPresent(role -> {
@@ -211,11 +215,15 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedOracleNode) {
-            authorizedOracleNodes.remove((AuthorizedOracleNode) data);
+        if (data instanceof AuthorizedOracleNode authorizedOracleNode) {
+            // Anyone can publish and remove a copy of an oracle node under another key. The oracle node stays while an
+            // authorized publication of it is stored.
+            if (!isPublishedByAnOracleNode(AuthorizedOracleNode.class, authorizedOracleNode)) {
+                authorizedOracleNodes.remove(authorizedOracleNode);
+            }
         } else if (data instanceof AuthorizedBondedRole) {
             validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
-                if (isPublishedByAnOracleNode(authorizedBondedRole)) {
+                if (isPublishedByAnOracleNode(AuthorizedBondedRole.class, authorizedBondedRole)) {
                     log.info("A publication of the bonded role {} of {} was removed, but an oracle node still " +
                                     "publishes it. We keep the role.",
                             authorizedBondedRole.getBondedRoleType(), authorizedBondedRole.getProfileId());
@@ -260,55 +268,52 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public boolean hasAuthorizedPubKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        boolean isAuthorized = isAuthorizedKey(authorizedData, authorizingBondedRoleType);
         if (data.staticPublicKeysProvided()) {
-            log.debug("The verification was already done at the p2p network layer. data={};authorizingBondedRoleType={}",
-                    data.getClass().getSimpleName(), authorizingBondedRoleType);
-            return true;
-        } else {
-            // Signature check is done in AuthorizedData
-            String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
-            boolean matchFound = getAuthorizedBondedRoleStream()
-                    .filter(bondedRole -> bondedRole.getBondedRoleType() == authorizingBondedRoleType)
-                    .anyMatch(bondedRole -> {
-                        boolean match = bondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey);
-                        if (match) {
-                            log.debug("Found a matching authorizedPublicKey from bondedRole: {}. data={}",
-                                    bondedRole.getBondedRoleType(),
-                                    data.getClass().getSimpleName());
-                        } else {
-                            log.debug("No authorizedPublicKey found in our list of bonded roles.\n" +
-                                            "bondedRole.getAuthorizedPublicKey()={}\n" +
-                                            "authorizedDataPubKey={}\n" +
-                                            "data={}",
-                                    bondedRole.getAuthorizedPublicKey(),
-                                    authorizedDataPubKey,
-                                    data.getClass().getSimpleName());
-
-                        }
-                        return match;
-                    });
-            if (matchFound) {
-                log.debug("authorizedPublicKey provided by a bonded role. data={}", data.getClass().getSimpleName());
-                // In case we are reprocessing previous failed authorizedData we clear it from the queue.
-                if (failedAuthorizedData.remove(authorizedData)) {
-                    log.debug("We successfully reprocessed authorizedData.\n" +
-                                    "AuthorizedDistributedData={}, {}",
-                            data.getClass().getSimpleName(), data.toString().substring(0, 100));
-                }
-            } else {
-                failedAuthorizedData.add(authorizedData);
-                // TODO Set log level for to debug for now, as too many logs are printed.
-                //  Once the TTL has cleared the old data we can change back to warn level.
-                log.debug("hasAuthorizedPubKey failed for AuthorizedDistributedData={}, {}",
-                        data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
-                log.debug("AuthorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does " +
-                                "not provide a matching static key.\n" +
-                                "We add the authorizedData to a retry queue for later reprocessing.\n" +
-                                "AuthorizedDistributedData={}, {}",
-                        data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
+            if (!isAuthorized) {
+                log.warn("The authorizedPublicKey is not one of the static keys of {}. authorizingBondedRoleType={}",
+                        data.getClass().getSimpleName(), authorizingBondedRoleType);
             }
-            return matchFound;
+            return isAuthorized;
         }
+
+        if (isAuthorized) {
+            log.debug("authorizedPublicKey provided by a bonded role. data={}", data.getClass().getSimpleName());
+            // In case we are reprocessing previous failed authorizedData we clear it from the queue.
+            if (failedAuthorizedData.remove(authorizedData)) {
+                log.debug("We successfully reprocessed authorizedData.\n" +
+                                "AuthorizedDistributedData={}, {}",
+                        data.getClass().getSimpleName(), data.toString().substring(0, 100));
+            }
+        } else {
+            failedAuthorizedData.add(authorizedData);
+            // TODO Set log level for to debug for now, as too many logs are printed.
+            //  Once the TTL has cleared the old data we can change back to warn level.
+            log.debug("hasAuthorizedPubKey failed for AuthorizedDistributedData={}, {}",
+                    data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
+            log.debug("AuthorizedPublicKey is not matching any key from our authorizedBondedRolesPubKeys and does " +
+                            "not provide a matching static key.\n" +
+                            "We add the authorizedData to a retry queue for later reprocessing.\n" +
+                            "AuthorizedDistributedData={}, {}",
+                    data.getClass().getSimpleName(), StringUtils.truncate(data.toString(), 200));
+        }
+        return isAuthorized;
+    }
+
+    // Rules 2 and 3 of docs/specifications/bonded-roles/authorized-data.md, without side effects. The signature check is
+    // done in AuthorizedData.
+    private boolean isAuthorizedKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
+        AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
+        String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
+        if (data.staticPublicKeysProvided()) {
+            // The network layer checks the static keys only when it adds data, not when it loads stored data. A later
+            // version can remove a key from the static keys, and a node which updates still holds the data of that key.
+            // So we check the key against the static keys of this version.
+            return data.getAuthorizedPublicKeys().contains(authorizedDataPubKey);
+        }
+        return getAuthorizedBondedRoleStream()
+                .filter(bondedRole -> bondedRole.getBondedRoleType() == authorizingBondedRoleType)
+                .anyMatch(bondedRole -> bondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey));
     }
 
     public void addListener(Listener listener) {
@@ -347,32 +352,23 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         }
     }
 
+    // Whether the store of the type holds a publication of equal data which an oracle node authorized.
     // Several oracle nodes can publish the same role, each with its own authorized key. The store holds one entry per
     // publication, but bondedRoles holds one item per role: the equality of a role leaves out the oracle node which
     // authorized it. The removal or expiry of one publication, for example of a copy without signature V2 at the cutoff
     // date of signature V1, must not remove a role which another publication still authorizes. Otherwise
     // OracleNodeService would also remove its own publication, and the removal would spread to all oracle nodes (see
-    // docs/specifications/bonded-roles/registration.md).
-    private boolean isPublishedByAnOracleNode(AuthorizedBondedRole authorizedBondedRole) {
+    // docs/specifications/bonded-roles/registration.md). For an oracle node, the removal of a publication of another key
+    // must not remove it either (see docs/specifications/bonded-roles/authorized-data.md).
+    private boolean isPublishedByAnOracleNode(Class<? extends AuthorizedDistributedData> type,
+                                              AuthorizedDistributedData data) {
         return networkService.getDataService()
-                .map(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(
-                                AuthorizedBondedRole.class.getSimpleName())
+                .map(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(type.getSimpleName())
                         .filter(AuthorizedData.class::isInstance)
                         .map(AuthorizedData.class::cast)
-                        .filter(publication -> authorizedBondedRole.equals(publication.getAuthorizedDistributedData()))
-                        .anyMatch(this::isAuthorizedByAnOracleNode))
+                        .filter(publication -> data.equals(publication.getAuthorizedDistributedData()))
+                        .anyMatch(publication -> isAuthorizedKey(publication, BondedRoleType.ORACLE_NODE)))
                 .orElse(false);
-    }
-
-    // As hasAuthorizedPubKey for BondedRoleType.ORACLE_NODE, but without its queue of data to reprocess
-    private boolean isAuthorizedByAnOracleNode(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData().staticPublicKeysProvided()) {
-            return true;
-        }
-        String authorizedPublicKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
-        return getAuthorizedBondedRoleStream()
-                .filter(bondedRole -> bondedRole.getBondedRoleType() == BondedRoleType.ORACLE_NODE)
-                .anyMatch(bondedRole -> bondedRole.getAuthorizedPublicKey().equals(authorizedPublicKey));
     }
 
     private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData,

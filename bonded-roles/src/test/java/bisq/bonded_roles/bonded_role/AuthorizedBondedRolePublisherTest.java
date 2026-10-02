@@ -225,6 +225,37 @@ class AuthorizedBondedRolePublisherTest {
         assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).doesNotContain(mediatorRole);
     }
 
+    // A publication with staticPublicKeysProvided counts only if its key is a static key of this version. A later
+    // version can remove a static key, and the store still holds the publications of that key from an earlier version
+    // (see docs/specifications/bonded-roles/authorized-data.md).
+    @Test
+    void storedPublicationOfARemovedStaticKeyDoesNotKeepTheRole() throws GeneralSecurityException {
+        KeyPair removedStaticKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        AuthorizedBondedRole roleWithStaticFlag = new AuthorizedBondedRole(mediatorRole.getProfileId(),
+                mediatorRole.getAuthorizedPublicKey(),
+                mediatorRole.getBondedRoleType(),
+                mediatorRole.getBondUserName(),
+                mediatorRole.getSignatureBase64(),
+                mediatorRole.getAddressByTransportTypeMap(),
+                mediatorRole.getNetworkId(),
+                mediatorRole.getAuthorizingOracleNode(),
+                true);
+        assertThat(roleWithStaticFlag).isEqualTo(mediatorRole);
+        AddAuthenticatedDataRequest publicationOfRemovedKey = AddAuthenticatedDataRequest.from(store,
+                authorize(roleWithStaticFlag, removedStaticKeyPair), removedStaticKeyPair);
+        // The store does not accept it now. A store which holds it from an earlier version loads it unchecked.
+        assertThat(store.add(publicationOfRemovedKey).isSuccess()).isFalse();
+        store.getPersistableStore().getMap().put(publicationOfRemovedKey.getStorageKey(), publicationOfRemovedKey);
+        assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
+                .isSuccess()).isTrue();
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).contains(mediatorRole);
+
+        assertThat(store.remove(RemoveAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
+                .isSuccess()).isTrue();
+
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).doesNotContain(mediatorRole);
+    }
+
     // After a restart, with the startup of the bonded role service, the node still holds the remove request of the
     // oracle node. It rejects a replay of the removed entry, which a node which missed the removal can send.
     @Test
