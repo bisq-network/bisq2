@@ -30,6 +30,11 @@ import java.nio.channels.SocketChannel;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Java NIO variant of {@link NetworkEnvelopeSocket}. Production code does not use it. It does not apply the size limit
+ * of docs/specifications/network/message-framing.md, and NetworkEnvelopeDeserializer allocates the announced length at
+ * once. Add the rules of the specification before this class reads data from peers.
+ */
 @Slf4j
 public class NetworkEnvelopeSocketChannel implements Closeable {
     public static final int BYTE_BUFFER_SIZE = 1024;

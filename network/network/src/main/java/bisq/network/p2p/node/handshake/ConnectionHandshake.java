@@ -31,6 +31,7 @@ import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peer_group.BanList;
@@ -70,6 +71,7 @@ public final class ConnectionHandshake {
     private final AuthorizationService authorizationService;
     private final KeyBundle myKeyBundle;
     private final NetworkEnvelopeSocket networkEnvelopeSocket;
+    private final ParseMemoryBudget parseMemoryBudget;
 
     @Getter
     @ToString
@@ -204,14 +206,17 @@ public final class ConnectionHandshake {
                                BanList banList,
                                Capability capability,
                                AuthorizationService authorizationService,
-                               KeyBundle myKeyBundle) throws IOException {
+                               KeyBundle myKeyBundle,
+                               ParseMemoryBudget parseMemoryBudget) throws IOException {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
         this.myKeyBundle = myKeyBundle;
+        this.parseMemoryBudget = parseMemoryBudget;
 
         PeerSocket peerSocket = new DefaultPeerSocket(socket);
-        this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
+        this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket,
+                NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE);
     }
 
     // Client side protocol
@@ -241,14 +246,15 @@ public final class ConnectionHandshake {
             networkEnvelopeSocket.send(requestNetworkEnvelope);
             connectionMetrics.onSent(requestNetworkEnvelope, System.currentTimeMillis() - ts);
 
-            bisq.network.protobuf.NetworkEnvelope responseProto = networkEnvelopeSocket.receiveNextEnvelope();
-            if (responseProto == null) {
+            byte[] responseMessage = networkEnvelopeSocket.receiveNextMessage();
+            if (responseMessage == null) {
                 throw new ConnectionException(PROTOBUF_IS_NULL,
                         "Response NetworkEnvelope protobuf is null. peerAddress=" + peerAddress);
             }
 
             long startDeserializeTs = System.currentTimeMillis();
-            NetworkEnvelope responseNetworkEnvelope = NetworkEnvelope.fromProto(responseProto);
+            NetworkEnvelope responseNetworkEnvelope = parseMemoryBudget.parse(responseMessage,
+                    bytes -> NetworkEnvelope.fromProto(NetworkEnvelopeSocket.parse(bytes)));
             long deserializeTime = System.currentTimeMillis() - startDeserializeTs;
 
             responseNetworkEnvelope.verifyVersion();
@@ -298,13 +304,14 @@ public final class ConnectionHandshake {
         try {
             // We get called from the Server's socketHandler callback on the NetworkRead thread
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
-            bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope(); // Blocking
-            if (requestProto == null) {
+            byte[] requestMessage = networkEnvelopeSocket.receiveNextMessage(); // Blocking
+            if (requestMessage == null) {
                 throw new ConnectionException(PROTOBUF_IS_NULL,
                         "Request NetworkEnvelope protobuf is null");
             }
             long ts = System.currentTimeMillis();
-            NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
+            NetworkEnvelope requestNetworkEnvelope = parseMemoryBudget.parse(requestMessage,
+                    bytes -> NetworkEnvelope.fromProto(NetworkEnvelopeSocket.parse(bytes)));
             long deserializeTime = System.currentTimeMillis() - ts;
 
             requestNetworkEnvelope.verifyVersion();

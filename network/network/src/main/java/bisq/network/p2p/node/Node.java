@@ -34,6 +34,7 @@ import bisq.network.p2p.message.CloseConnectionMessage;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.ServerSocketResult;
@@ -148,6 +149,10 @@ public class Node implements Connection.Handler {
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
+    // Separate budgets keep large established-connection messages from delaying handshakes. Both are shared by all
+    // inbound and outbound connections of this node (see rule 11 of docs/specifications/network/message-framing.md).
+    private final ParseMemoryBudget parseMemoryBudget = new ParseMemoryBudget();
+    private final ParseMemoryBudget handshakeParseMemoryBudget = ParseMemoryBudget.forHandshakes();
     private final int socketTimeout; // in ms
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
@@ -286,7 +291,8 @@ public class Node implements Connection.Handler {
                             banList,
                             myCapability,
                             authorizationService,
-                            keyBundle);
+                            keyBundle,
+                            handshakeParseMemoryBudget);
                     connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
                     log.debug("Inbound handshake request at: {}", myCapability.getAddress());
                     ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
@@ -335,6 +341,7 @@ public class Node implements Connection.Handler {
                 peersNetworkLoadSnapshot,
                 result.getConnectionMetrics(),
                 connectionThrottle,
+                parseMemoryBudget,
                 this,
                 this::handleException);
     }
@@ -511,6 +518,7 @@ public class Node implements Connection.Handler {
                     peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
                     connectionThrottle,
+                    parseMemoryBudget,
                     this,
                     this::handleException);
             outboundConnectionsByAddress.put(address, connection);
@@ -542,7 +550,8 @@ public class Node implements Connection.Handler {
                     banList,
                     myCapability,
                     authorizationService,
-                    keyBundle);
+                    keyBundle,
+                    handshakeParseMemoryBudget);
 
             connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
             log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
