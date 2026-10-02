@@ -210,11 +210,6 @@ public final class UserProfile implements OwnershipVerifiableData, PublishDateAw
         return META_DATA;
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     // The profile is owned by the key of its network ID
     @Override
     public byte[] getOwnerPubKeyHash() {

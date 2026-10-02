@@ -22,18 +22,17 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * An alert with a too long message cannot be created. The network storage therefore never holds one, and
- * isDataInvalid() has nothing to check.
+ * An alert with a too long message cannot be created. The network storage therefore never holds one.
  */
 class AuthorizedAlertDataTest {
     @Test
     void validAlertIsCreated() {
-        assertFalse(create(Optional.of("message")).isDataInvalid());
-        assertFalse(create(Optional.empty()).isDataInvalid());
+        assertDoesNotThrow(() -> create(Optional.of("message")));
+        assertDoesNotThrow(() -> create(Optional.empty()));
     }
 
     @Test

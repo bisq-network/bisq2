@@ -123,11 +123,6 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Owners
                 "The MailBoxData class must provide instead the meta data");
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     // The sender owns the message. In the mailbox store, the sender signs the add request.
     @Override
     public byte[] getOwnerPubKeyHash() {

@@ -124,10 +124,6 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
-        if (authenticatedData.isDataInvalid()) {
-            log.warn("AuthenticatedData is invalid at add. request={}", request);
-            return DataStorageResult.failed().dataInvalid();
-        }
         if (authenticatedData instanceof AuthorizedData authorizedData && authorizedData.isNotAuthorized()) {
             log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
             return DataStorageResult.failed().isNotAuthorized();

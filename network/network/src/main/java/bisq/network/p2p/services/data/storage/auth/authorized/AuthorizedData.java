@@ -234,11 +234,6 @@ public final class AuthorizedData extends AuthenticatedData {
         }
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return distributedData.isDataInvalid();
-    }
-
     // The owner which the distributed data names, else the authorized key. The authorization signature does not cover
     // the owner of the add request, so the authorized key must own the data: otherwise anyone could publish and remove
     // a copy of it.

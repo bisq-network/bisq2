@@ -61,11 +61,6 @@ public class CommonPublicChatMessageReaction extends ChatMessageReaction impleme
         return unsafeToProto(serializeForHash);
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     // The reacting user owns the reaction. The profile ID is the ID of the public key of the user (PubKey.getId()).
     @Override
     public byte[] getOwnerPubKeyHash() {

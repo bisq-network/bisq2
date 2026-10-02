@@ -278,11 +278,6 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         return META_DATA;
     }
 
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
-
     // Oracle and seed nodes of earlier versions published it with the key of their network ID
     @Override
     public boolean isLegacyOwnerAccepted() {

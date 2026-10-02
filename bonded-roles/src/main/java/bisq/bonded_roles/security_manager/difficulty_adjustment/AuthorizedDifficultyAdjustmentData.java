@@ -150,9 +150,4 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     public boolean staticPublicKeysProvided() {
         return staticPublicKeysProvided;
     }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
-    }
 }

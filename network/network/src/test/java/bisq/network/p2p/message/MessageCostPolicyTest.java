@@ -429,11 +429,6 @@ class MessageCostPolicyTest {
             return metaData.getClassName();
         }
 
-        @Override
-        public boolean isDataInvalid() {
-            return false;
-        }
-
         // network.proto: message MetaData { ...; string className = 4; }
         private static final CanonicalSchema<PayloadOfType> DEFAULT_SCHEMA = CanonicalSchema.<PayloadOfType>newBuilder()
                 .string(4, PayloadOfType::getClassName)
