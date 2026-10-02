@@ -34,7 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Verification rule 3 of docs/specifications/network/storage-request-signatures.md, which the node checks when it
  * parses a request. Before the cutoff date, a request must contain signature V1, also if it contains signature V2:
- * nodes of earlier versions cannot parse a request without signature V1.
+ * nodes of earlier versions cannot parse a request without signature V1. The rule does not require signature V2: the
+ * stores reject a received request without signature V2 from the cutoff date on (rule 5).
  */
 class SignatureValidationTest {
     private static final byte[] NO_SIGNATURE = new byte[0];
@@ -59,11 +60,25 @@ class SignatureValidationTest {
     }
 
     @Test
-    void fromTheCutoffDateOnSignatureV2IsRequiredAndSignatureV1IsOptional() {
-        assertThrows(IllegalArgumentException.class,
-                () -> SignatureValidation.validateSignatures(signatureV1, NO_SIGNATURE, AT_CUTOFF));
+    void fromTheCutoffDateOnSignatureV1IsOptional() {
         assertDoesNotThrow(() -> SignatureValidation.validateSignatures(NO_SIGNATURE, signatureV2, AT_CUTOFF));
         assertDoesNotThrow(() -> SignatureValidation.validateSignatures(signatureV1, signatureV2, AT_CUTOFF));
+    }
+
+    // The constructors of the requests apply the rule. A request without signature V2 is also built by its creator,
+    // to compute the preimage of signature V2, and by a store which loads the removals without signature V2 which it
+    // keeps. Both must work from the cutoff date on.
+    @Test
+    void aRequestWithoutSignatureV2CanBeBuiltAlsoFromTheCutoffDateOn() {
+        assertDoesNotThrow(() -> SignatureValidation.validateSignatures(signatureV1, NO_SIGNATURE, AT_CUTOFF));
+    }
+
+    @Test
+    void aRequestNeedsAtLeastOneSignature() {
+        assertThrows(IllegalArgumentException.class,
+                () -> SignatureValidation.validateSignatures(NO_SIGNATURE, NO_SIGNATURE, BEFORE_CUTOFF));
+        assertThrows(IllegalArgumentException.class,
+                () -> SignatureValidation.validateSignatures(NO_SIGNATURE, NO_SIGNATURE, AT_CUTOFF));
     }
 
     @Test
@@ -72,5 +87,7 @@ class SignatureValidationTest {
                 () -> SignatureValidation.validateSignatures(signatureV1, INVALID_ENCODING, BEFORE_CUTOFF));
         assertThrows(IllegalArgumentException.class,
                 () -> SignatureValidation.validateSignatures(INVALID_ENCODING, signatureV2, AT_CUTOFF));
+        assertThrows(IllegalArgumentException.class,
+                () -> SignatureValidation.validateSignatures(signatureV1, INVALID_ENCODING, AT_CUTOFF));
     }
 }

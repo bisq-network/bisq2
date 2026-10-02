@@ -21,8 +21,10 @@ import bisq.common.data.ByteArray;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
+import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
@@ -35,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.MockedStatic;
 
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -50,6 +53,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * A mailbox store holds the messages of one MailboxMessage type. The message is encrypted, so the store checks the
@@ -324,6 +330,34 @@ class MailboxDataStorageServiceTest {
         map.putAll(entries);
         store.prunePersisted(store.getPersistableStore());
         assertEquals(entriesFromTheCutoffDateOn, map);
+    }
+
+    // A node parses the persisted requests when it loads a store. From the cutoff date on, the store still keeps the
+    // removals without signature V2 (rule 9 of docs/specifications/network/storage-request-signatures.md), so they
+    // must pass this step. The constructors of the requests read the system time, so the test replaces the cutoff
+    // rule for its thread with "signature V2 is required".
+    @Test
+    void removalWithoutSignatureV2IsKeptWhenTheStoreIsLoadedFromTheCutoffDateOn()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        // The storage key contains the key of the receiver, so each receiver has an entry of its own
+        AddMailboxRequest legacyAdd = toLegacy(AddMailboxRequest.from(mailboxData, senderKeyPair,
+                receiverKeyPair.getPublic()));
+        RemoveMailboxRequest legacyRemoval = toLegacy(RemoveMailboxRequest.from(mailboxData,
+                KeyGeneration.generateDefaultEcKeyPair()));
+        assertTrue(store.add(legacyAdd).isSuccess());
+        assertTrue(store.remove(legacyRemoval).isSuccess());
+        bisq.network.protobuf.DataStore persisted = store.getPersistableStore().toProto(false);
+
+        time = AT_CUTOFF;
+        try (MockedStatic<SignedRequest> signedRequest = mockStatic(SignedRequest.class, CALLS_REAL_METHODS)) {
+            signedRequest.when(() -> SignedRequest.isSignatureV2Required(anyLong())).thenReturn(true);
+            @SuppressWarnings("unchecked")
+            DataStore<MailboxRequest> loaded = (DataStore<MailboxRequest>) DataStore.fromProto(persisted);
+            store.prunePersisted(loaded);
+
+            assertEquals(Map.of(legacyRemoval.getStorageKey(), legacyRemoval), loaded.getMap());
+        }
     }
 
     // The prune task selects the entries to remove and removes them afterwards. The removal of the receiver can replace

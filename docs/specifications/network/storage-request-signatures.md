@@ -107,10 +107,12 @@ The rules by which nodes apply and relay refresh requests are defined in
 2. If `signatureV2` is empty, the receiver verifies signature V1, but only before the cutoff date of signature V1
    (rule 5). This accepts add and remove requests from nodes of earlier versions. It does not apply to refresh
    requests, which need signature V2 (see [Refresh requests](#refresh-requests)).
-3. Before the cutoff date of signature V1, a request must contain signature V1. Signature V2 is optional. From the
-   cutoff date on, a request must contain signature V2. Signature V1 is optional. Each non-empty signature must have
-   a valid EC signature encoding. The node checks this rule when it parses the request, with its own time (see
-   [`validation-at-parsing.md`](validation-at-parsing.md)).
+3. A request must contain at least one signature. Before the cutoff date of signature V1, it must contain signature
+   V1, also if it contains signature V2. From the cutoff date on, signature V1 is optional. Each non-empty signature
+   must have a valid EC signature encoding. The node checks this rule whenever it builds a request, with its own
+   time: when it parses a received request, when it loads a persisted request, and when it creates a request (see
+   [`validation-at-parsing.md`](validation-at-parsing.md)). Rule 3 does not require signature V2. The stores require
+   it from the cutoff date on (rule 5).
 4. Signature V2 must be in low-S form. Signature V1 may be in either form. The rules are defined in
    [`../security/ecdsa-signature-encoding.md`](../security/ecdsa-signature-encoding.md).
 
@@ -120,6 +122,18 @@ Reason for rule 3: nodes of earlier versions cannot parse a request without sign
 request without signature V1 would therefore reach only nodes of this version, and nodes of earlier versions would
 drop each inventory response which contains it. Nodes of this version create both signatures (rule 7), so only a
 modified client creates such a request. From the cutoff date on, the node does not use signature V1 (rule 5).
+
+Reason why rule 3 does not require signature V2: the rule applies to every request which a node builds, not only to a
+received request.
+
+- The creator of a request builds the request without signature V2 first, because the preimage of signature V2 is the
+  canonical encoding of that request. If rule 3 required signature V2 from the cutoff date on, no node could create a
+  request from that date on.
+- The mailbox store keeps remove requests without signature V2 after the cutoff date (rule 9). A node parses the
+  persisted requests when it loads a store. If rule 3 required signature V2, a restart would drop these remove
+  requests.
+- The rule "signature V2 is required from the cutoff date on" then has one owner: the stores (rule 5). They use their
+  clock, which a test can set.
 
 Reason for rule 4: a relay can change the S value of a signature without the private key. If signature V2 accepted
 both forms, a request would have two valid encodings of signature V2. Signature V1 accepts both forms because nodes of
@@ -137,8 +151,9 @@ requests without signature V2, so that nodes of earlier versions can take part i
    the cutoff date (see [Refresh requests](#refresh-requests)).
 6. The node compares the cutoff date with its own time. The creation date of the request is not used.
 7. A node of this version creates both signatures also after the cutoff date.
-8. From the cutoff date on, a node cannot parse a request without signature V2 (verification rule 3). The stores also
-   reject it when they verify the signatures (rule 5), with the clock of the store.
+8. The stores apply rule 5 with the clock of the store. A node can still parse a request without signature V2 from
+   the cutoff date on (verification rule 3), but no store accepts it. So the node does not store it, does not relay
+   it and does not give its data to the applications.
 9. From the cutoff date on, a store removes the add requests without signature V2 which it holds. The store of
    authenticated data also removes the remove requests without signature V2. The mailbox store keeps them until they
    expire. A node does this when it loads a store, and with the task which removes expired entries. Applications get
@@ -154,9 +169,10 @@ Reasons:
   creation date only for add requests would accept the add requests of a node of an earlier version and reject its
   remove requests. Then data which its owner removed would stay in the stores.
 - Rule 7: nodes of earlier versions verify only signature V1, and the preimage of signature V2 contains signature V1.
-- Rule 8: the presence of the required signatures is an integrity rule, so the node checks it at parsing (see
-  [`validation-at-parsing.md`](validation-at-parsing.md)). A request which the node parsed before the cutoff date is
-  still in the stores. The stores therefore check the rule again, and remove such requests (rule 9).
+- Rule 8: whether signature V2 is required depends on the time of the node, not only on the request. Such a rule
+  belongs to the component which owns the state (rule 5 of [`validation-at-parsing.md`](validation-at-parsing.md)).
+  A request which a store accepted before the cutoff date is still in the store. The stores remove such requests
+  (rule 9). See also the reason why verification rule 3 does not require signature V2.
 - Rule 9: a store would otherwise hold requests which it does not accept, and which other nodes do not accept from its
   inventory responses. A request which a relay changed before the cutoff date would also stay until it expires. A
   remove request contains no data. In the mailbox store it rejects the add request of the removed message until it
