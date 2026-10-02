@@ -93,6 +93,10 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
         return unsafeToProto(serializeForHash);
     }
 
+    // Unlike other stores, this store does not skip a persisted request which it cannot parse (rule 4 of
+    // docs/specifications/network/validation-at-parsing.md). The requests are permanent witness bindings. A skipped
+    // request would be missing from the conflict check of Bisq1BridgeRequestService, so the oracle could bind its
+    // witness to another profile (see docs/specifications/reputation/account-age.md).
     public static Bisq1BridgeRequestStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeRequestStore proto)
             throws UnresolvableProtobufException {
         try {
