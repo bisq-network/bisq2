@@ -56,8 +56,9 @@ of a message. The framing is the format which marks where a message starts and w
    and each end-group tag needs a matching start-group tag. The node uses the nesting limit of protobuf-java, 100
    levels. It does not set a lower limit.
 10. All bytes of a message must arrive within 4 minutes after its length prefix. Otherwise the node closes the
-    connection. The node checks the time after each read, so it closes the connection at the latest one socket timeout
-    after these 4 minutes.
+    connection. The node checks the time after each read, including the read which completes the message. A message
+    completed after the deadline is rejected. The connection closes at the latest one socket timeout after these
+    4 minutes.
 11. The connections of a node parse messages of at least 64 KiB only within a common budget of 8 MiB, twice the size
     limit of an established connection. The budget counts the bytes of the messages which are being parsed and
     converted into objects of the node. A message waits until the budget has room for it. Smaller messages do not

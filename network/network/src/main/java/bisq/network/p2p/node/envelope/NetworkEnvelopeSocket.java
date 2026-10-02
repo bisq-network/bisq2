@@ -175,9 +175,10 @@ public class NetworkEnvelopeSocket implements Closeable {
             }
             message.write(chunk, 0, numRead);
             remaining -= numRead;
-            if (remaining > 0 && nanoTime.getAsLong() - deadline > 0) {
-                throw new SocketTimeoutException("Received only " + (size - remaining) + " of " + size +
-                        " bytes of a message within " + MAX_MESSAGE_READ_DURATION.toSeconds() + " seconds.");
+            if (nanoTime.getAsLong() - deadline > 0) {
+                throw new SocketTimeoutException("Received " + (size - remaining) + " of " + size +
+                        " bytes of a message after the deadline of " + MAX_MESSAGE_READ_DURATION.toSeconds() +
+                        " seconds.");
             }
         }
         return message.toByteArray();
