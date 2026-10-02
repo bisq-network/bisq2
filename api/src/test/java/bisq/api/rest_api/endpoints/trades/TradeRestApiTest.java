@@ -17,14 +17,110 @@
 
 package bisq.api.rest_api.endpoints.trades;
 
+import bisq.api.web_socket.domain.ClosedTradeItemsService;
+import bisq.bisq_easy.BisqEasyService;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.ChatService;
+import bisq.common.observable.Observable;
+import bisq.support.SupportService;
 import bisq.trade.TradeRestrictedException;
+import bisq.trade.TradeService;
+import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.user.UserService;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class TradeRestApiTest {
+    private static final String TRADE_ID = "trade-1";
+    private static final String ACCOUNT_DATA = "Peter Tosh, 123456789";
+
+    private final BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
+    private final BisqEasyService bisqEasyService = mock(BisqEasyService.class);
+
+    @Test
+    void accountDataBannedReturnsTrueWhenTheSellersAccountDataIsBanned() {
+        givenTrade(ACCOUNT_DATA);
+        when(bisqEasyService.isAccountDataBanned(ACCOUNT_DATA)).thenReturn(true);
+
+        Response response = restApi().isAccountDataBanned(TRADE_ID);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        assertThat(response.getEntity()).isEqualTo(new AccountDataBannedResponse(true));
+        verify(bisqEasyTradeService, never()).cancelTrade(any());
+    }
+
+    @Test
+    void accountDataBannedReturnsFalseWhenTheSellersAccountDataIsNotBanned() {
+        givenTrade(ACCOUNT_DATA);
+        when(bisqEasyService.isAccountDataBanned(ACCOUNT_DATA)).thenReturn(false);
+
+        Response response = restApi().isAccountDataBanned(TRADE_ID);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        assertThat(response.getEntity()).isEqualTo(new AccountDataBannedResponse(false));
+        verify(bisqEasyService).isAccountDataBanned(ACCOUNT_DATA);
+    }
+
+    @Test
+    void accountDataBannedReturnsFalseWithoutCheckingWhenTheTradeHasNoAccountDataYet() {
+        givenTrade(null);
+
+        Response response = restApi().isAccountDataBanned(TRADE_ID);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        assertThat(response.getEntity()).isEqualTo(new AccountDataBannedResponse(false));
+        verify(bisqEasyService, never()).isAccountDataBanned(any());
+    }
+
+    @Test
+    void accountDataBannedReturnsInternalErrorWhenTheLookupFails() {
+        when(bisqEasyTradeService.findTrade(TRADE_ID)).thenThrow(new RuntimeException("boom"));
+
+        Response response = restApi().isAccountDataBanned(TRADE_ID);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+        assertThat(response.getEntity()).isEqualTo(Map.of("error", "An unexpected error occurred"));
+    }
+
+    @Test
+    void accountDataBannedReturnsNotFoundForAnUnknownTrade() {
+        when(bisqEasyTradeService.findTrade(TRADE_ID)).thenReturn(Optional.empty());
+
+        Response response = restApi().isAccountDataBanned(TRADE_ID);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
+        assertThat(response.getEntity()).isEqualTo("Trade not found for ID " + TRADE_ID);
+    }
+
+    private void givenTrade(String paymentAccountData) {
+        BisqEasyTrade trade = mock(BisqEasyTrade.class);
+        when(trade.getPaymentAccountData()).thenReturn(new Observable<>(paymentAccountData));
+        when(bisqEasyTradeService.findTrade(TRADE_ID)).thenReturn(Optional.of(trade));
+    }
+
+    private TradeRestApi restApi() {
+        TradeService tradeService = mock(TradeService.class);
+        when(tradeService.getBisqEasyTradeService()).thenReturn(bisqEasyTradeService);
+        return new TradeRestApi(mock(ChatService.class, RETURNS_DEEP_STUBS),
+                mock(MarketPriceService.class),
+                mock(UserService.class, RETURNS_DEEP_STUBS),
+                mock(SupportService.class, RETURNS_DEEP_STUBS),
+                tradeService,
+                mock(ClosedTradeItemsService.class),
+                bisqEasyService);
+    }
 
     @Test
     void haltTradingErrorEntityKeepsLegacyErrorTextAndAddsErrorCode() {
