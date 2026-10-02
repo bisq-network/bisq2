@@ -453,8 +453,9 @@ call with this purpose fails. `DefaultAuthenticatedData` and `AuthorizedData` us
 `TRADE_CONTRACT_SCHEMA` with the hash serialization of the data of the higher-level module.
 `AddAppendOnlyDataRequest` uses `DEFAULT_SCHEMA` for `DEFAULT` and `SIGNATURE`, and a
 `PROOF_OF_WORK_SCHEMA` and a `TRADE_CONTRACT_SCHEMA` with the canonical encoding of the
-`AppendOnlyData` for the same purpose. All other implementations use `DEFAULT_SCHEMA` for all purposes.
-Every implementation passes the purpose on.
+`AppendOnlyData` for the same purpose. All other implementations use `DEFAULT_SCHEMA` for all purposes,
+except that `AuthenticatedSequentialData` and `MailboxSequentialData` have no `STORAGE_KEY` encoding; a
+call with this purpose fails. Every implementation passes the purpose on.
 
 ## Schema metadata without effect on the bytes
 
