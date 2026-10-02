@@ -210,7 +210,8 @@ instead.
 - Never rebuild the written `Any` from the decoded object (`toAny(false)`) outside the creation of local
   data.
 - `AppendOnlyData` extends `Canonical`, and its implementations define a real canonical encoding.
-  `AddAppendOnlyDataRequest` uses it for `PROOF_OF_WORK` and for storage key V2 instead of the fallback.
+  `AddAppendOnlyDataRequest` uses it for `PROOF_OF_WORK`, for `TRADE_CONTRACT`, and for storage key V2
+  instead of the fallback.
 - Do not add a fallback `encodeCanonical` to the external classes or to their interfaces
   (`DistributedData`, `MailboxMessage`). They would appear to have a canonical
   encoding while they return protobuf bytes, and a later real encoding would silently change the bytes

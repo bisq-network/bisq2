@@ -125,12 +125,18 @@ network class encodes it with a `canonical` field: `ConfidentialMessage.confiden
 A network class that contains data of a higher-level module in a `google.protobuf.Any` keeps the
 received `Any` and encodes it per purpose. The `DEFAULT` and `SIGNATURE` purposes contain the kept
 `Any` in a `compose` field with `DistributedDataAny.SCHEMA`: the type URL and the exact value bytes.
-The `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` purposes contain the protobuf serialization
-for hashes in an `encodedMessage` field, until canonical encoding is supported for the data: the `Any`
-that `toAny(true)` returns, with the type URL and the `serializeForHash()` bytes. Both are implemented
-once where the data is held: in the base class `AuthenticatedData` for `DistributedData`, and in
-`AddAppendOnlyDataRequest` for `AppendOnlyData`. The rules and the rationale are in
-[`canonical-encoding.md`](canonical-encoding.md#data-of-other-modules) and in
+For the other purposes, the two kinds of data differ:
+
+- `DistributedData` has no canonical encoding yet. The `STORAGE_KEY`, `PROOF_OF_WORK`, and
+  `TRADE_CONTRACT` purposes contain the protobuf serialization for hashes in an `encodedMessage` field:
+  the `Any` that `toAny(true)` returns, with the type URL and the `serializeForHash()` bytes.
+- `AppendOnlyData` extends `Canonical`. The `PROOF_OF_WORK` and `TRADE_CONTRACT` purposes contain an
+  `Any` with the kept type URL and the encoding of the data for the same purpose. The holder has no
+  `STORAGE_KEY` encoding: storage key V2 hashes the `STORAGE_KEY` encoding of the data itself.
+
+The encodings are implemented once where the data is held: in the base class `AuthenticatedData` for
+`DistributedData`, and in `AddAppendOnlyDataRequest` for `AppendOnlyData`. The rules and the rationale
+are in [`canonical-encoding.md`](canonical-encoding.md#data-of-other-modules) and in
 [`../network/distributed-data-payload-bytes.md`](../network/distributed-data-payload-bytes.md).
 
 ## Delegation

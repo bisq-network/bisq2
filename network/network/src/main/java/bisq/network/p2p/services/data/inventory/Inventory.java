@@ -63,10 +63,10 @@ public final class Inventory implements NetworkProto {
         this.cachedSerializedSize = cachedSerializedSize;
 
         // We need to sort deterministically as the data is used in the proof of work check
-        // TODO (optimize, low prio) dataRequest.serialize() is expensive. We have the hash of the data in most DataRequest implementations.
+        // TODO (optimize, low prio) dataRequest.serializeForHash() is expensive. We have the hash of the data in most DataRequest implementations.
         //  This could be used and combined with the other remaining data, like signature and pubkey
-        // We set serializeForHash to false to ensure that we get the same order in case the peer has different data in the
-        // annotated fields
+        // We sort by serializeForHash(), which leaves out the fields annotated with @ExcludeForHash, to ensure that we
+        // get the same order in case the peer has different data in the annotated fields
         this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serializeForHash())));
 
         verify();
