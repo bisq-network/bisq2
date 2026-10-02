@@ -26,6 +26,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxyUtil;
 import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.net.httpserver.HttpServer;
 import jakarta.servlet.http.HttpServletRequest;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
@@ -56,6 +57,7 @@ import static org.mockito.Mockito.when;
 class WebSocketRestApiServiceLoggingTest {
     private static final String PRIVATE_VALUE = "private-sentinel-value";
     private static final String PATH = "/api/v1/user-identities/key-material";
+    private static final String REQUEST_BODY = "{\"accountData\":\"" + PRIVATE_VALUE + "\"}";
     private static final String RESPONSE_BODY = "{\"keyPair\":{\"privateKey\":{\"encoded\":\"" + PRIVATE_VALUE + "\"}}}";
 
     // The parent of all loggers of the api module, so that no class of the module can log the body unnoticed
@@ -93,7 +95,7 @@ class WebSocketRestApiServiceLoggingTest {
     void responseBodyIsSentToTheClientAndNotWrittenToTheLog() throws Exception {
         DefaultWebSocket webSocket = webSocket();
 
-        service.onMessage(requestJson("GET", ""), webSocket);
+        service.onMessage(requestNode("GET", "").toString(), webSocket);
 
         JsonNode response = sentMessage(webSocket);
         assertThat(response.get("statusCode").asInt()).isEqualTo(200);
@@ -103,6 +105,19 @@ class WebSocketRestApiServiceLoggingTest {
         // The response is still logged, with its status code and the length of its body
         assertThat(logLines).anyMatch(line -> line.contains("statusCode=200")
                 && line.contains("bodyLength=" + RESPONSE_BODY.length()));
+    }
+
+    // A client of a newer version can send a property which this node does not know. The node then cannot parse
+    // the message and logs that. The message contains the body, so the log must not contain the message.
+    @Test
+    void requestWhichCannotBeParsedIsLoggedWithoutItsBody() {
+        String json = requestNode("POST", REQUEST_BODY).put("aPropertyThisNodeDoesNotKnow", 1).toString();
+
+        service.onMessage(json, webSocket());
+
+        List<String> logLines = logLines();
+        assertThat(logLines).noneMatch(line -> line.contains(PRIVATE_VALUE));
+        assertThat(logLines).anyMatch(line -> line.contains("Message length=" + json.length()));
     }
 
     private JsonNode sentMessage(DefaultWebSocket webSocket) throws Exception {
@@ -121,10 +136,13 @@ class WebSocketRestApiServiceLoggingTest {
                 .toList();
     }
 
-    private static String requestJson(String method, String body) {
-        return "{\"type\":\"WebSocketRestApiRequest\","
-                + "\"requestId\":\"request-id\",\"method\":\"" + method + "\",\"path\":\"" + PATH + "\","
-                + "\"body\":\"" + body + "\"}";
+    private static ObjectNode requestNode(String method, String body) {
+        return JsonMapperProvider.get().createObjectNode()
+                .put("type", "WebSocketRestApiRequest")
+                .put("requestId", "request-id")
+                .put("method", method)
+                .put("path", PATH)
+                .put("body", body);
     }
 
     // The identity of the connection is on the upgrade request, which only a DefaultWebSocket exposes
