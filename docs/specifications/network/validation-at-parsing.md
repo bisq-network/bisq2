@@ -11,9 +11,10 @@ message, so they cannot limit the memory which these steps need.
 
 ## Rules
 
-1. An object checks all its integrity rules in `verify()`. The constructor calls `verify()`, so `fromProto` applies
-   the rules when it parses the object. An integrity rule is a rule which the node can decide from the object itself,
-   for example:
+1. An object checks all its integrity rules in `verify()`. Each constructor which completes an object calls `verify()`
+   after it set all fields, so `fromProto` applies the rules when it parses the object. A subclass which overrides
+   `verify()` calls `verify()` of its super class. An integrity rule is a rule which the node can decide from the
+   object itself and cheaply, for example:
    - the size and the range of a field, for example the size of a public key or a sequence number of at least 1;
    - the encoding of a field, for example the canonical encoding of an EC public key (see
      [`../security/ec-public-key-encoding.md`](../security/ec-public-key-encoding.md)) or the encoding of a signature;
@@ -26,7 +27,13 @@ message, so they cannot limit the memory which these steps need.
 2. An object which breaks an integrity rule fails at parsing: `fromProto` throws `UnresolvableProtobufException`. The
    node does not create the object, so no later component stores, relays, serves or uses it.
 3. A new integrity rule goes into `verify()`, also if nodes of earlier versions accept objects which break the rule.
-   Parsing does not have to stay as lenient as in earlier versions.
+   Parsing does not have to stay as lenient as in earlier versions. The only exception is a rule which unmodified
+   nodes of a supported earlier version break with the objects which they create. Such a rule stays at the later
+   step until these versions are no longer supported, because a parse failure of a message closes the connection to
+   the node which sends it (rule 4). Example: a refresh request needs signature V2 also before the cutoff date of
+   signature V1, but nodes up to version 2.1.13 send refresh requests with signature V1 only (see
+   [`storage-request-signatures.md`](storage-request-signatures.md#refresh-requests)). The store rejects them. From
+   the cutoff date on, parsing rejects every request without signature V2 (rule 1).
 4. The caller of `fromProto` decides what fails with the object. The caller must know that an entry can be invalid:
    - A requester skips an inventory entry which it cannot parse, and processes the other entries (rule 7 of
      [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#entries-which-a-node-cannot-parse)).
@@ -38,8 +45,10 @@ message, so they cannot limit the memory which these steps need.
    storage requests these are the stores. Examples: the admission of registered class names and MetaData (see
    [`storage-metadata.md`](storage-metadata.md)), the owner of a stored entry after a refresh, which replaces the
    creation date of the entry (see [`storage-ownership.md`](storage-ownership.md)), the order of sequence numbers (see
-   [`storage-request-ordering.md`](storage-request-ordering.md)), and the verification of the signatures against the
-   public key, which the store runs after it rejected copies of stored requests.
+   [`storage-request-ordering.md`](storage-request-ordering.md)), the expiry of a request, which depends on the time of
+   the node, and the authorization of authorized data with the keys of the configuration. Expensive checks also stay
+   at the later step: the verification of signatures against the public key, which the store runs after it rejected
+   copies of stored requests, and the verification of a proof of work.
 
 ## Reasons
 
@@ -49,7 +58,9 @@ message, so they cannot limit the memory which these steps need.
   object has to expect an object which breaks the rules.
 - Rule 3: a lenient parser in this version does not make nodes of earlier versions accept or reject anything
   differently. It only moves the check to later steps of this version. The callers already handle objects which they
-  cannot parse (rule 4), for example entries of types which a newer version added.
+  cannot parse (rule 4), for example entries of types which a newer version added. The exception keeps the
+  connections to unmodified nodes of supported earlier versions: they would otherwise lose them at each message which
+  they create as their version defines it.
 - Rule 5: a rule which depends on the state of the node can have another result on another node, or later on the same
   node. It is not a property of the object, so it does not belong into `verify()`.
 
@@ -58,7 +69,8 @@ message, so they cannot limit the memory which these steps need.
 - Nodes of earlier versions accept, store and relay objects which break a rule of this version. When such a node
   serves one in an inventory response, a requester of this version skips the entry. When such a node relays one as a
   broadcast, a node of this version cannot parse the message and closes the connection (rule 4). Nodes of this version
-  create only objects which follow the rules, so only a modified client can create such an object.
+  create only objects which follow the rules. Apart from the exception of rule 3, unmodified nodes of earlier versions
+  do so as well, so only a modified client can create such an object.
 - A node of an earlier version which cannot parse one entry of an inventory response drops the whole response (see
   [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#entries-which-a-node-cannot-parse)). A rule of this
   version cannot change this.
