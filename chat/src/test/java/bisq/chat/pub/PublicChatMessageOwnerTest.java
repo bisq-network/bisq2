@@ -21,19 +21,12 @@ package bisq.chat.pub;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.common.CommonPublicChatMessage;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
-import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
-import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
-import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
-import bisq.persistence.PersistenceService;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.Locale;
 import java.util.Optional;
@@ -41,13 +34,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // The author of a public chat message and of a reaction owns it (see docs/specifications/network/storage-ownership.md)
 class PublicChatMessageOwnerTest {
-    @TempDir
-    Path tempDir;
-
     private final KeyPair authorKeyPair = KeyGeneration.generateDefaultEcKeyPair();
     private final String authorProfileId = new PubKey(authorKeyPair.getPublic(), "keyId").getId();
 
@@ -62,20 +51,17 @@ class PublicChatMessageOwnerTest {
     }
 
     // Earlier versions accept only the profile ID which PubKey.getId() creates. The same hash in upper-case letters is
-    // invalid data. An add request of it cannot be created, because its owner cannot be read.
+    // invalid data, so a message or reaction with it cannot be created, and a received one fails at parsing.
     @Test
     void profileIdWhichIsNotTheIdOfAPublicKeyIsInvalidData() {
         String upperCaseProfileId = authorProfileId.toUpperCase(Locale.ROOT);
-        CommonPublicChatMessage message = message(upperCaseProfileId);
-        assertTrue(message.isDataInvalid());
-        assertTrue(reaction(upperCaseProfileId).isDataInvalid());
+        bisq.chat.protobuf.ChatMessage proto = message(authorProfileId).toProto(false).toBuilder()
+                .setAuthorUserProfileId(upperCaseProfileId)
+                .build();
 
-        StorableTypesRegistry.register(CommonPublicChatMessage.class, CommonPublicChatMessage.META_DATA);
-        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
-                new PruneExpiredEntriesService(), "store", CommonPublicChatMessage.class.getSimpleName());
-
-        assertThrows(IllegalArgumentException.class, () -> AddAuthenticatedDataRequest.from(store,
-                new DefaultAuthenticatedData(message), authorKeyPair));
+        assertThrows(IllegalArgumentException.class, () -> message(upperCaseProfileId));
+        assertThrows(IllegalArgumentException.class, () -> reaction(upperCaseProfileId));
+        assertThrows(UnresolvableProtobufException.class, () -> CommonPublicChatMessage.fromProto(proto));
     }
 
     private static CommonPublicChatMessage message(String authorUserProfileId) {

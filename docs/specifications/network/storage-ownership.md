@@ -49,7 +49,8 @@ compare both before it accepts the data.
    | append-only data | none: it is not signed and cannot be removed |
 
 2. A profile ID names the owner hash only if it is the lower-case hex encoding of the hash, as `PubKey.getId()` creates
-   it: 40 characters for the 20 bytes of the hash. Data with another profile ID is invalid (`isDataInvalid()`).
+   it: 40 characters for the 20 bytes of the hash. Data with another profile ID is invalid. A node rejects it when it
+   constructs or decodes it (see [`validation-at-parsing.md`](validation-at-parsing.md)).
 
    Reason: one hash must have only one ID. Earlier versions compared the ID with the hex encoding of the publisher's
    hash as strings, so they also accept only this encoding.
