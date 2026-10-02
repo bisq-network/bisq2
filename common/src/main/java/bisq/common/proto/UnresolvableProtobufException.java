@@ -35,9 +35,11 @@ public class UnresolvableProtobufException extends Exception {
 
     public UnresolvableProtobufException(Throwable cause) {
         super(cause);
+        ProtobufUtils.clearUnfinishedMessages(cause);
     }
 
     public UnresolvableProtobufException(String message, Throwable cause) {
         super(message, cause);
+        ProtobufUtils.clearUnfinishedMessages(cause);
     }
 }

@@ -5,6 +5,10 @@ message: a message which it receives from the network, an entry of an inventory 
 from disk. The object is created by `fromProto`. The rules for the exception of `fromProto` and its callers are
 described in [`../../dev/protobuf-notes.md`](../../dev/protobuf-notes.md#errors-in-fromproto).
 
+A message which a node receives from the network must first pass the size limit of
+[`message-framing.md`](message-framing.md). The rules of this specification run after the node has read and parsed the
+message, so they cannot limit the memory which these steps need.
+
 ## Rules
 
 1. An object checks all its integrity rules in `verify()`. The constructor calls `verify()`, so `fromProto` applies
