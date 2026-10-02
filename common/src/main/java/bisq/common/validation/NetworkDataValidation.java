@@ -67,8 +67,13 @@ public class NetworkDataValidation {
 
     // ECPubKey is usually 88–91 bytes
     public static void validateECPubKey(byte[] pubKey) {
-        checkArgument(pubKey.length > 50 && pubKey.length < 100,
+        checkArgument(isECPubKeySizeValid(pubKey),
                 "Public key not of the expected size. pubKey=" + Arrays.toString(pubKey));
+    }
+
+    // For a caller which must reject key bytes of another size before it parses them
+    public static boolean isECPubKeySizeValid(byte[] pubKey) {
+        return pubKey.length > 50 && pubKey.length < 100;
     }
 
 

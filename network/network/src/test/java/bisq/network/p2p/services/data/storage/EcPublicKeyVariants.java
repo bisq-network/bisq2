@@ -18,7 +18,11 @@ package bisq.network.p2p.services.data.storage;
 
 import com.google.protobuf.ByteString;
 import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.asn1.x9.ECNamedCurveTable;
+import org.bouncycastle.asn1.x9.X962Parameters;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 
 import java.io.IOException;
@@ -39,6 +43,19 @@ public final class EcPublicKeyVariants {
             byte[] compressedPoint = ((ECPublicKey) publicKey).getQ().getEncoded(true);
             return ByteString.copyFrom(new SubjectPublicKeyInfo(keyInfo.getAlgorithm(), compressedPoint)
                     .getEncoded(ASN1Encoding.DER));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    // The same key with explicit curve parameters instead of the name of the curve. It exceeds the size limit of a key.
+    public static ByteString toExplicitParameters(PublicKey publicKey) {
+        try {
+            byte[] point = ((ECPublicKey) publicKey).getQ().getEncoded(false);
+            return ByteString.copyFrom(new SubjectPublicKeyInfo(
+                    new AlgorithmIdentifier(X9ObjectIdentifiers.id_ecPublicKey,
+                            new X962Parameters(ECNamedCurveTable.getByName("secp256k1"))),
+                    point).getEncoded(ASN1Encoding.DER));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
