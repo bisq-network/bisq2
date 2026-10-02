@@ -155,7 +155,8 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData, Ow
     }
 
     // Nodes of v2.1.13 and earlier accept the oracle node only from the key of its network ID. Its authorized key owns
-    // it as well (see AuthorizedData.isOwner and docs/specifications/network/storage-ownership.md).
+    // it as well if it is one of the static keys (see AuthorizedData.isOwner and
+    // docs/specifications/network/storage-ownership.md).
     @Override
     public byte[] getOwnerPubKeyHash() {
         return networkId.getPubKeyHash();
