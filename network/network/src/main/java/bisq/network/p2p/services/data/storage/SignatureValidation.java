@@ -18,11 +18,18 @@
 package bisq.network.p2p.services.data.storage;
 
 import bisq.common.validation.NetworkDataValidation;
+import com.google.common.annotations.VisibleForTesting;
 
 public class SignatureValidation {
 
     public static void validateSignatures(byte[] signatureV1, byte[] signatureV2) {
-        if (SignedRequest.isSignatureV2Required(System.currentTimeMillis())) {
+        validateSignatures(signatureV1, signatureV2, System.currentTimeMillis());
+    }
+
+    // now: the time of the node which parses the request
+    @VisibleForTesting
+    static void validateSignatures(byte[] signatureV1, byte[] signatureV2, long now) {
+        if (SignedRequest.isSignatureV2Required(now)) {
             // After cutoff date we might omit the v1 signature.
             if (signatureV1.length > 0) {
                 NetworkDataValidation.validateECSignature(signatureV1);
