@@ -25,8 +25,6 @@ import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
 import org.glassfish.grizzly.http.HttpRequestPacket;
-import org.glassfish.grizzly.http.HttpResponsePacket;
-import org.glassfish.grizzly.http.Protocol;
 import org.glassfish.grizzly.http.util.HttpStatus;
 
 import java.util.Optional;
@@ -43,12 +41,14 @@ public class WebSocketSessionAuthenticationFilter extends BaseFilter {
     public NextAction handleRead(FilterChainContext context) {
         Object message = context.getMessage();
 
+        // Every request which Grizzly upgrades to a WebSocket must be authenticated, whatever its method and
+        // its other headers are. So the filter uses the same condition as Grizzly.
         Optional<HttpRequestPacket> requestOpt =
                 HttpRequestFilterUtils.resolveAsHttpRequest(message)
-                        .filter(HttpRequestFilterUtils::isWebsocketHandshakeRequest);
+                        .filter(HttpRequestFilterUtils::isWebSocketUpgradeRequest);
 
         if (requestOpt.isEmpty()) {
-            // Ignore filter if not a WebSocket handshake request
+            // Ignore filter if not a WebSocket upgrade request
             return context.getInvokeAction();
         }
 
@@ -63,18 +63,11 @@ public class WebSocketSessionAuthenticationFilter extends BaseFilter {
             return context.getInvokeAction();
         }
 
+        HttpRequestPacket request = requestOpt.get();
         if (context.getConnection().getAttributes() == null) {
             log.error("WebSocket auth rejected: missing connection attributes");
-            HttpResponsePacket response = HttpResponsePacket.builder(requestOpt.get())
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR_500.getStatusCode())
-                    .protocol(Protocol.HTTP_1_1)
-                    .contentLength(0)
-                    .build();
-            context.write(response);
-            context.getConnection().closeSilently();
-            return context.getStopAction();
+            return HttpRequestFilterUtils.rejectAndClose(context, request, HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
-        HttpRequestPacket request = requestOpt.get();
         try {
             AuthenticatedSession session = sessionAuthenticationService.authenticate(
                     request.getHeader(Headers.CLIENT_ID),
@@ -88,16 +81,7 @@ public class WebSocketSessionAuthenticationFilter extends BaseFilter {
             return context.getInvokeAction();
         } catch (AuthenticationException e) {
             log.warn("WebSocket auth rejected: {}", e.getMessage());
-
-            HttpResponsePacket response = HttpResponsePacket.builder(request)
-                    .status(HttpStatus.UNAUTHORIZED_401.getStatusCode())
-                    .protocol(Protocol.HTTP_1_1)
-                    .contentLength(0)
-                    .build();
-            context.write(response);
-            context.getConnection().closeSilently();
-
-            return context.getStopAction();
+            return HttpRequestFilterUtils.rejectAndClose(context, request, HttpStatus.UNAUTHORIZED_401);
         }
     }
 }
