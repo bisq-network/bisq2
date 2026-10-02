@@ -52,8 +52,6 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
-import bisq.common.util.StringUtils;
-import bisq.common.validation.NetworkDataValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -92,7 +90,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -136,9 +133,6 @@ public class ChatMessagesListController implements Controller {
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
     private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
-    // Date of the messages which only the UI creates, such as the chat rules warning. Their constructors apply
-    // the date rule of chat messages, and the date must sort them before every valid message.
-    private static final long PSEUDO_DATE_FOR_LOCAL_MESSAGED = NetworkDataValidation.BISQ_1_LAUNCH_DATE + 1;
     private int channelBindingGeneration;
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
@@ -946,95 +940,48 @@ public class ChatMessagesListController implements Controller {
     }
 
     private TwoPartyPrivateChatMessage createChatRulesWarningMessage(TwoPartyPrivateChatChannel channel) {
-        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
-        UserProfile senderUserProfile = channel.getPeer();
-        String text = Res.get("chat.private.chatRulesWarningMessage.text");
-        return new TwoPartyPrivateChatMessage(StringUtils.createUid(),
-                channel.getChatChannelDomain(),
+        return ChatMessagePlaceholders.createTwoPartyChatRulesWarning(channel.getChatChannelDomain(),
                 channel.getId(),
-                senderUserProfile,
-                receiverUserProfile.getId(),
-                receiverUserProfile.getNetworkId(),
-                text,
-                Optional.empty(),
-                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
-                false,
-                ChatMessageType.CHAT_RULES_WARNING,
-                new HashSet<>());
+                channel.getPeer(),
+                channel.getMyUserIdentity().getUserProfile(),
+                Res.get("chat.private.chatRulesWarningMessage.text"));
     }
 
     private BisqEasyOpenTradeMessage createChatRulesWarningMessage(BisqEasyOpenTradeChannel channel) {
-        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
-        UserProfile senderUserProfile = channel.getPeer();
-        String text = Res.get("chat.private.chatRulesWarningMessage.text");
-        return new BisqEasyOpenTradeMessage(channel.getTradeId(),
-                StringUtils.createUid(),
+        return ChatMessagePlaceholders.createBisqEasyTradeChatRulesWarning(channel.getTradeId(),
                 channel.getId(),
-                senderUserProfile,
-                receiverUserProfile.getId(),
-                receiverUserProfile.getNetworkId(),
-                text,
-                Optional.empty(),
-                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
-                false,
+                channel.getPeer(),
+                channel.getMyUserIdentity().getUserProfile(),
                 channel.getMediator(),
-                ChatMessageType.CHAT_RULES_WARNING,
-                Optional.empty(),
-                new HashSet<>());
+                Res.get("chat.private.chatRulesWarningMessage.text"));
     }
 
     private MuSigOpenTradeMessage createChatRulesWarningMessage(MuSigOpenTradeChannel channel) {
-        UserProfile receiverUserProfile = channel.getMyUserIdentity().getUserProfile();
-        UserProfile senderUserProfile = channel.getPeer();
-        String text = Res.get("chat.private.chatRulesWarningMessage.text");
-        return new MuSigOpenTradeMessage(channel.getTradeId(),
-                StringUtils.createUid(),
+        return ChatMessagePlaceholders.createMuSigTradeChatRulesWarning(channel.getTradeId(),
                 channel.getId(),
-                senderUserProfile,
-                receiverUserProfile.getId(),
-                receiverUserProfile.getNetworkId(),
-                text,
-                Optional.empty(),
-                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
-                false,
+                channel.getPeer(),
+                channel.getMyUserIdentity().getUserProfile(),
                 channel.getMediator(),
                 channel.getArbitrator(),
-                ChatMessageType.CHAT_RULES_WARNING,
-                Optional.empty(),
-                new HashSet<>());
+                Res.get("chat.private.chatRulesWarningMessage.text"));
     }
 
     private CommonPublicChatMessage createExpiredMessagesIndicator(CommonPublicChatChannel channel) {
         UserProfile senderUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
         long ttl_days = TimeUnit.MILLISECONDS.toDays(CommonPublicChatMessage.COMMON_PUBLIC_CHAT_MESSAGE_TTL);
-        return new CommonPublicChatMessage(
-                StringUtils.createUid(),
-                channel.getChatChannelDomain(),
+        return ChatMessagePlaceholders.createCommonPublicExpiredMessagesIndicator(channel.getChatChannelDomain(),
                 channel.getId(),
                 senderUserProfile.getId(),
-                Optional.of(Res.get("chat.public.expiredMessagesIndicator.text", ttl_days)),
-                Optional.empty(),
-                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
-                false,
-                ChatMessageType.EXPIRED_MESSAGES_INDICATOR
-        );
+                Res.get("chat.public.expiredMessagesIndicator.text", ttl_days));
     }
 
     private BisqEasyOfferbookMessage createExpiredMessagesIndicator(BisqEasyOfferbookChannel channel) {
         UserProfile senderUserProfile = userIdentityService.getSelectedUserIdentity().getUserProfile();
         long ttl_days = TimeUnit.MILLISECONDS.toDays(BisqEasyOfferbookMessage.BISQ_EASY_OFFERBOOK_MESSAGE_TTL);
-        return new BisqEasyOfferbookMessage(
-                StringUtils.createUid(),
-                channel.getChatChannelDomain(),
+        return ChatMessagePlaceholders.createBisqEasyOfferbookExpiredMessagesIndicator(channel.getChatChannelDomain(),
                 channel.getId(),
                 senderUserProfile.getId(),
-                Optional.empty(),
-                Optional.of(Res.get("bisqEasy.offerbook.expiredMessagesIndicator.text", ttl_days)),
-                Optional.empty(),
-                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
-                false,
-                ChatMessageType.EXPIRED_MESSAGES_INDICATOR
-        );
+                Res.get("bisqEasy.offerbook.expiredMessagesIndicator.text", ttl_days));
     }
 
     private <M extends ChatMessage, C extends ChatChannel<M>> ChatMessageListItem<M, C> createChatMessageListItem(M message,
