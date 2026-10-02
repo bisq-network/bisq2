@@ -111,8 +111,10 @@ public class WebSocketRestApiService implements Service {
                                     .ifPresentOrElse(webSocket::send,
                                             () -> log.warn("Message was not sent to websocket. Request: {}", request));
                         } else {
+                            // The message of the exception can name internal classes, hosts and ports. It
+                            // stays in the log of the node, and the client gets a generic message.
                             log.warn("REST API call failed for request: {}", request, throwable);
-                            new WebSocketRestApiResponse(request.getRequestId(), 500, throwable.getMessage()).toJson()
+                            new WebSocketRestApiResponse(request.getRequestId(), 500, "Request failed").toJson()
                                     .ifPresent(webSocket::send);
                         }
                     });
