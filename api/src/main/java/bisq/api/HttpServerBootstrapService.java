@@ -28,8 +28,10 @@ import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
+import com.google.common.annotations.VisibleForTesting;
 import jakarta.ws.rs.core.UriBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpHandlerRegistration;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -45,6 +47,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -133,12 +137,7 @@ public class HttpServerBootstrapService implements Service {
                     boolean websocketEnabled = apiConfig.isWebsocketEnabled();
                     if (websocketEnabled) {
                         checkArgument(webSocketService.isPresent(), "If websocketEnabled is true we expect that webSocketService is present");
-                        networkListener.registerAddOn(new WebSocketAddOn());
-                        networkListener.registerAddOn(new WebSocketFilterAddOn(apiConfig, sessionAuthenticationService));
-                        if (apiConfig.isWebsocketCompressionEnabled()) {
-                            // Registered last so the filter ends up directly below the WebSocketFilter
-                            networkListener.registerAddOn(new PerMessageDeflateAddOn());
-                        }
+                        webSocketAddOns(apiConfig, sessionAuthenticationService).forEach(networkListener::registerAddOn);
                         WebSocketEngine.getEngine().register("", "/websocket", webSocketService.get().getWebSocketConnectionHandler());
                     }
 
@@ -212,6 +211,25 @@ public class HttpServerBootstrapService implements Service {
                         errorMessage.set(existingErrorMessage + "Initialization completed without success state");
                     }
                 });
+    }
+
+    /**
+     * The add-ons which build the WebSocket part of the filter chain of the listener, in the order of registration.
+     * Each add-on inserts its filters directly before the {@code WebSocketFilter}, so the order of registration
+     * decides the order of the filters. The tests of the listener register the same list, so that they run the
+     * filter chain which ships.
+     */
+    @VisibleForTesting
+    public static List<AddOn> webSocketAddOns(ApiConfig apiConfig,
+                                              SessionAuthenticationService sessionAuthenticationService) {
+        List<AddOn> addOns = new ArrayList<>();
+        addOns.add(new WebSocketAddOn());
+        addOns.add(new WebSocketFilterAddOn(apiConfig, sessionAuthenticationService));
+        if (apiConfig.isWebsocketCompressionEnabled()) {
+            // Registered last so the filter ends up directly below the WebSocketFilter
+            addOns.add(new PerMessageDeflateAddOn());
+        }
+        return addOns;
     }
 
     @Override
