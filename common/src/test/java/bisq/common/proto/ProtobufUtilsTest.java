@@ -17,6 +17,7 @@
 
 package bisq.common.proto;
 
+import com.google.protobuf.NullValue;
 import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Test;
 
@@ -68,6 +69,24 @@ class ProtobufUtilsTest {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         assertThat(results).containsExactlyInAnyOrderEntriesOf(Map.of("1", "A", "4", "B"));
+    }
+
+    @Test
+    void fromProtoEntryStreamSkippingInvalidSkipsAnEnumWhichCannotBeConverted() {
+        Map<String, NullValue> protos = new LinkedHashMap<>();
+        protos.put("1", NullValue.NULL_VALUE);
+        protos.put("2", NullValue.UNRECOGNIZED);
+        ProtoConverter<NullValue, String> converter = proto -> {
+            if (proto == NullValue.UNRECOGNIZED) {
+                throw new UnresolvableProtobufEnumException(new IllegalArgumentException("unknown enum value"));
+            }
+            return proto.name();
+        };
+
+        Map<String, String> results = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(protos, converter)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        assertThat(results).containsExactlyInAnyOrderEntriesOf(Map.of("1", "NULL_VALUE"));
     }
 
     private static StringValue of(String value) {
