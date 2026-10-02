@@ -86,27 +86,13 @@ public final class SupportMarkdownRenderer {
     private static Node createNode(SupportMarkdownDocument.Segment segment,
                                    SupportMarkdownDocument.LineType lineType) {
         if (segment.type() == SupportMarkdownDocument.SegmentType.LINK) {
-            Hyperlink hyperlink = new Hyperlink(segment.text());
-            hyperlink.getStyleClass().add("chat-markdown-link");
-            if (lineType == SupportMarkdownDocument.LineType.HEADING_3) {
-                hyperlink.getStyleClass().add("chat-markdown-heading-3");
-            }
-            hyperlink.setOnAction(e -> {
-                if (MarkdownSecurityUtils.isSafeOpenUrl(segment.url())) {
-                    Browser.open(segment.url());
-                }
-            });
-            return hyperlink;
+            return createLinkNode(segment, lineType);
         }
         if (segment.type() == SupportMarkdownDocument.SegmentType.IMAGE) {
             return createImageNode(segment, lineType);
         }
 
-        Text text = new Text(segment.text());
-        text.getStyleClass().add("chat-markdown-text");
-        if (lineType == SupportMarkdownDocument.LineType.HEADING_3) {
-            text.getStyleClass().add("chat-markdown-heading-3");
-        }
+        Text text = createTextNode(segment.text(), lineType);
         switch (segment.type()) {
             case BOLD -> text.getStyleClass().add("chat-markdown-bold");
             case ITALIC -> text.getStyleClass().add("chat-markdown-italic");
@@ -118,16 +104,35 @@ public final class SupportMarkdownRenderer {
         return text;
     }
 
+    private static Hyperlink createLinkNode(SupportMarkdownDocument.Segment segment,
+                                            SupportMarkdownDocument.LineType lineType) {
+        Hyperlink hyperlink = new Hyperlink(segment.text());
+        hyperlink.getStyleClass().add("chat-markdown-link");
+        if (lineType == SupportMarkdownDocument.LineType.HEADING_3) {
+            hyperlink.getStyleClass().add("chat-markdown-heading-3");
+        }
+        hyperlink.setOnAction(e -> {
+            if (MarkdownSecurityUtils.isSafeOpenUrl(segment.url())) {
+                Browser.open(segment.url());
+            }
+        });
+        return hyperlink;
+    }
+
+    private static Text createTextNode(String value, SupportMarkdownDocument.LineType lineType) {
+        Text text = new Text(value);
+        text.getStyleClass().add("chat-markdown-text");
+        if (lineType == SupportMarkdownDocument.LineType.HEADING_3) {
+            text.getStyleClass().add("chat-markdown-heading-3");
+        }
+        return text;
+    }
+
     private static Node createImageNode(SupportMarkdownDocument.Segment segment,
                                         SupportMarkdownDocument.LineType lineType) {
         String iconId = getIconIdForSourceUrl(segment.url());
         if (iconId == null) {
-            Text text = new Text(segment.text());
-            text.getStyleClass().add("chat-markdown-text");
-            if (lineType == SupportMarkdownDocument.LineType.HEADING_3) {
-                text.getStyleClass().add("chat-markdown-heading-3");
-            }
-            return text;
+            return createTextNode(segment.text(), lineType);
         }
 
         ImageView imageView = ImageUtil.getImageViewById(iconId);
