@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.envelope;
 
 import bisq.common.network.PeerSocket;
+import bisq.common.proto.ProtobufUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.CodedInputStream;
@@ -149,7 +150,12 @@ public class NetworkEnvelopeSocket implements Closeable {
      * it. A lower limit would only be a new protocol rule which a later message type could break.
      */
     public static bisq.network.protobuf.NetworkEnvelope parse(byte[] message) throws InvalidProtocolBufferException {
-        return bisq.network.protobuf.NetworkEnvelope.parseFrom(message);
+        try {
+            return bisq.network.protobuf.NetworkEnvelope.parseFrom(message);
+        } catch (InvalidProtocolBufferException exception) {
+            ProtobufUtils.clearUnfinishedMessages(exception);
+            throw exception;
+        }
     }
 
     // We read all bytes of the message before we parse it. The parsed objects of a message can need many times more

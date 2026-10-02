@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static bisq.network.p2p.message.NetworkEnvelope.MAX_SERIALIZED_SIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -253,6 +254,22 @@ class NetworkEnvelopeSocketTest {
             assertThatThrownBy(receiver::receiveNextEnvelope)
                     .isInstanceOf(InvalidProtocolBufferException.class);
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0x00, 0x0C})
+    void parseFailureDoesNotRetainThePartialMessage(int invalidTag) {
+        // Protobuf attaches the parsed fields to failures, including failures after the complete envelope.
+        byte[] message = ByteArrayUtils.concat(createProtoOfSize(ParseMemoryBudget.MIN_ACCOUNTED_SIZE).toByteArray(),
+                new byte[]{(byte) invalidTag});
+        ParseMemoryBudget budget = new ParseMemoryBudget();
+
+        InvalidProtocolBufferException exception = assertThrows(InvalidProtocolBufferException.class,
+                () -> budget.parse(message, NetworkEnvelopeSocket::parse));
+
+        assertThat(exception.getUnfinishedMessage()).isNull();
+        assertThat(exception.getMessage()).isNotBlank();
+        assertThat(budget.getAvailableBytes()).isEqualTo(budget.getBudget());
     }
 
     // A peer which sends a byte shortly before each socket timeout must not keep the connection without limit (rule 10
