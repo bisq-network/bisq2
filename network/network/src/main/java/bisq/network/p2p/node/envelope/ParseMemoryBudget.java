@@ -32,9 +32,9 @@ import static com.google.common.base.Preconditions.checkArgument;
  * docs/specifications/network/message-framing.md). The parsed objects of a message can need about 22 times its bytes.
  * The size limit bounds one message, but several connections can parse large messages at the same time.
  * <p>
- * The budget counts the bytes of the messages which are being parsed. A message of at least
- * {@link #MIN_ACCOUNTED_SIZE} bytes waits until the budget has room for it. Smaller messages do not take part: they
- * are the handshake messages and almost all other messages, and their parse needs little memory.
+ * The budget counts the bytes of the messages which are being parsed. Established connections account for messages
+ * of at least {@link #MIN_ACCOUNTED_SIZE} bytes. Handshakes use a separate, smaller budget and account for every
+ * message, so that unauthenticated peers cannot bypass their budget with messages below the threshold.
  * <p>
  * The permits are held while the caller parses and converts the message. The caller must not keep a reference to the
  * parsed protobuf objects after it returns, so the budget covers their whole life. The caller must not wait for other
@@ -44,6 +44,7 @@ public class ParseMemoryBudget {
     public static final int MIN_ACCOUNTED_SIZE = 64 * 1024;
     // Two messages at the size limit. Their parse needs about 2 * 93 MB in the worst case (estimate).
     public static final int DEFAULT_BUDGET = 2 * NetworkEnvelope.MAX_SERIALIZED_SIZE;
+    public static final int HANDSHAKE_BUDGET = 2 * NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE;
 
     @FunctionalInterface
     public interface Parser<T> {
@@ -52,23 +53,33 @@ public class ParseMemoryBudget {
 
     @Getter
     private final int budget;
+    private final int minAccountedSize;
     private final Semaphore semaphore;
+
+    public static ParseMemoryBudget forHandshakes() {
+        return new ParseMemoryBudget(HANDSHAKE_BUDGET, NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE, 0);
+    }
 
     public ParseMemoryBudget() {
         this(DEFAULT_BUDGET);
     }
 
     public ParseMemoryBudget(int budget) {
+        this(budget, NetworkEnvelope.MAX_SERIALIZED_SIZE, MIN_ACCOUNTED_SIZE);
+    }
+
+    private ParseMemoryBudget(int budget, int maxMessageSize, int minAccountedSize) {
         // A smaller budget would make a message at the size limit wait forever
-        checkArgument(budget >= NetworkEnvelope.MAX_SERIALIZED_SIZE,
+        checkArgument(budget >= maxMessageSize,
                 "The budget of %s bytes is smaller than the size limit of a message", budget);
         this.budget = budget;
+        this.minAccountedSize = minAccountedSize;
         // Fair, so that a large message is not overtaken by smaller ones without end
         this.semaphore = new Semaphore(budget, true);
     }
 
     public <T> T parse(byte[] message, Parser<T> parser) throws IOException, UnresolvableProtobufException {
-        if (message.length < MIN_ACCOUNTED_SIZE) {
+        if (message.length < minAccountedSize) {
             return parser.parse(message);
         }
         checkArgument(message.length <= budget, "The message of %s bytes exceeds the budget", message.length);

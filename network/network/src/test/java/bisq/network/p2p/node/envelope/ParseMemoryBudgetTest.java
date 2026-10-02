@@ -20,6 +20,8 @@ package bisq.network.p2p.node.envelope;
 import bisq.network.p2p.message.NetworkEnvelope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -94,6 +96,34 @@ class ParseMemoryBudgetTest {
     void rejectsABudgetBelowTheSizeLimitOfAMessage() {
         assertThatThrownBy(() -> new ParseMemoryBudget(NetworkEnvelope.MAX_SERIALIZED_SIZE - 1))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2048, NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE - 1,
+            NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE})
+    void handshakeBudgetAccountsForEveryMessage(int size) throws Exception {
+        ParseMemoryBudget handshakeBudget = ParseMemoryBudget.forHandshakes();
+        assertThat(handshakeBudget.getBudget()).isEqualTo(128 * 1024);
+
+        handshakeBudget.parse(new byte[size], message -> {
+            assertThat(handshakeBudget.getAvailableBytes()).isEqualTo(handshakeBudget.getBudget() - size);
+            return message.length;
+        });
+
+        assertThat(handshakeBudget.getAvailableBytes()).isEqualTo(handshakeBudget.getBudget());
+    }
+
+    @Test
+    void handshakeBudgetIsIndependentOfTheConnectionBudget() throws Exception {
+        ParseMemoryBudget handshakeBudget = ParseMemoryBudget.forHandshakes();
+        budget.parse(new byte[budget.getBudget()], message -> {
+            assertThat(budget.getAvailableBytes()).isZero();
+            return handshakeBudget.parse(new byte[NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE], handshake -> {
+                assertThat(handshakeBudget.getAvailableBytes())
+                        .isEqualTo(handshakeBudget.getBudget() - handshake.length);
+                return handshake.length;
+            });
+        });
     }
 
     private interface BlockingParser {
