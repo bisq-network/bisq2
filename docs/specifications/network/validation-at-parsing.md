@@ -13,8 +13,9 @@ message, so they cannot limit the memory which these steps need.
 
 1. An object checks all its integrity rules in `verify()`. Each constructor which completes an object calls `verify()`
    after it set all fields, so `fromProto` applies the rules when it parses the object. A subclass which overrides
-   `verify()` calls `verify()` of its super class. An integrity rule is a rule which the node can decide from the
-   object itself and cheaply, for example:
+   `verify()` calls `verify()` of its super class. A class whose constructor calls `verify()` is final. Otherwise the
+   constructor would run the `verify()` of a subclass before the subclass set its fields. An integrity rule is a rule
+   which the node can decide from the object itself and cheaply, for example:
    - the size and the range of a field, for example the size of a public key or a sequence number of at least 1;
    - the encoding of a field, for example the canonical encoding of an EC public key (see
      [`../security/ec-public-key-encoding.md`](../security/ec-public-key-encoding.md)) or the encoding of a signature;
