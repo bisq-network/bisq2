@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -48,6 +49,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class PairingService {
     public static final byte VERSION = 1;
+
+    /**
+     * The client name is free text supplied by the pairing client and is rendered in the host UI,
+     * so it is capped. Truncating instead of rejecting keeps pairing working for clients that
+     * derive the name from a long device model string.
+     */
+    public static final int MAX_CLIENT_NAME_LENGTH = 100;
 
     private final ApiConfig apiConfig;
     private final Path appDataDirPath;
@@ -86,12 +94,21 @@ public class PairingService {
         return pairingCode;
     }
 
-    public ClientProfile requestPairing(byte version,
-                                        String pairingCodeId,
-                                        String clientName) throws InvalidPairingRequestException {
+    public NewPairing requestPairing(byte version,
+                                     String pairingCodeId,
+                                     String clientName) throws InvalidPairingRequestException {
         if (version != VERSION) {
             throw new InvalidPairingRequestException("Unsupported pairing protocol version: " + version);
         }
+
+        // Validated before the pairing code is consumed so a rejected request does not burn it.
+        // Stripped first: the cap would otherwise be spent on leading whitespace and store a blank
+        // name for an input that passed the check.
+        String strippedClientName = clientName == null ? "" : clientName.strip();
+        if (strippedClientName.isEmpty()) {
+            throw new InvalidPairingRequestException("Client name must not be blank");
+        }
+        String cappedClientName = capClientName(strippedClientName);
 
         // Atomic remove to prevent race conditions - ensures only one request can use the code
         PairingCode pairingCode = pairingCodeByIdMap.remove(pairingCodeId);
@@ -110,14 +127,15 @@ public class PairingService {
         String clientId = UUID.randomUUID().toString();
         byte[] secret = ByteArrayUtils.getRandomBytes(32);
         String clientSecret = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
-        ClientProfile clientProfile = new ClientProfile(clientId,
-                clientSecret,
-                clientName);
-        apiAccessStoreService.putClientProfile(clientId, clientProfile);
+        // Only the hash is stored; the plaintext goes to the client once, in the pairing response.
+        ClientProfile clientProfile = ClientProfile.fromSecret(clientId, clientSecret, cappedClientName);
+        // Profile and grant in one step: written separately, a revocation could land between them
+        // and leave a grant behind that authorizes the client it had just revoked.
+        apiAccessStoreService.putClientProfileAndPermissions(clientId,
+                clientProfile,
+                permissionService.toPermissionSet(pairingCode.getGrantedPermissions()));
 
-        permissionService.putPermissions(clientId, pairingCode.getGrantedPermissions());
-
-        return clientProfile;
+        return new NewPairing(clientProfile, clientSecret);
     }
 
     public Optional<PairingCode> findPairingCode(String id) {
@@ -128,6 +146,10 @@ public class PairingService {
         return Optional.ofNullable(apiAccessStoreService.getClientProfileByIdMap().get(id));
     }
 
+    public List<ClientProfile> getClientProfiles() {
+        return List.copyOf(apiAccessStoreService.getClientProfileByIdMap().values());
+    }
+
     /**
      * Removes the client profile and associated permissions for the given client ID.
      *
@@ -136,6 +158,34 @@ public class PairingService {
      */
     public boolean revokeClientProfile(String clientId) {
         return apiAccessStoreService.removeClientProfile(clientId);
+    }
+
+    /** See {@link ApiAccessStoreService#getClientIdsDroppedDuringLoad()}. */
+    public Set<String> getClientIdsDroppedDuringLoad() {
+        return apiAccessStoreService.getClientIdsDroppedDuringLoad();
+    }
+
+    /** Ends a client's access without forgetting it, so a revocation can still address it. */
+    public void revokePermissions(String clientId) {
+        apiAccessStoreService.removePermissions(clientId);
+    }
+
+    public boolean hasPermissions(String clientId) {
+        return permissionService.findPermissions(clientId).isPresent();
+    }
+
+    /**
+     * Caps the name at {@link #MAX_CLIENT_NAME_LENGTH} chars without splitting a surrogate pair,
+     * so a name ending in an emoji is shortened rather than corrupted into a lone surrogate.
+     */
+    private static String capClientName(String clientName) {
+        if (clientName.length() <= MAX_CLIENT_NAME_LENGTH) {
+            return clientName;
+        }
+        int end = Character.isHighSurrogate(clientName.charAt(MAX_CLIENT_NAME_LENGTH - 1))
+                ? MAX_CLIENT_NAME_LENGTH - 1
+                : MAX_CLIENT_NAME_LENGTH;
+        return clientName.substring(0, end);
     }
 
     private boolean isExpired(PairingCode pairingCode) {
