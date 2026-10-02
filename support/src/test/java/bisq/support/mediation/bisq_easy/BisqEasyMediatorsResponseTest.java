@@ -68,6 +68,13 @@ class BisqEasyMediatorsResponseTest {
                         () -> BisqEasyMediatorsResponse.fromProto(proto)).getCause());
     }
 
+    // The constructor applies the same rule as the parser, so a response without sender cannot be created and fail
+    // later when it is serialized or when the receiver reads the sender public key.
+    @Test
+    void responseWithoutSenderNetworkIdCannotBeCreated() {
+        assertThrows(IllegalArgumentException.class, () -> new BisqEasyMediatorsResponse(TRADE_ID, null));
+    }
+
     private static NetworkId createNetworkId(PublicKey publicKey) {
         Address address = Address.from("127.0.0.1", 1000);
         return new NetworkId(new AddressByTransportTypeMap(Map.of(address.getTransportType(), address)),

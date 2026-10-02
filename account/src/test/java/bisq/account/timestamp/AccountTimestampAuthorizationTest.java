@@ -30,6 +30,10 @@ import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
@@ -78,18 +82,7 @@ class AccountTimestampAuthorizationTest {
         accountTimestampService = new AccountTimestampService(networkService, mock(UserService.class),
                 bondedRolesService);
 
-        oracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        authorizedBondedRolesService.getBondedRoles().add(new BondedRole(new AuthorizedBondedRole("a".repeat(40),
-                Hex.encode(oracleKeyPair.getPublic().getEncoded()),
-                BondedRoleType.ORACLE_NODE,
-                "oracle",
-                "signature",
-                Optional.empty(),
-                new NetworkId(new AddressByTransportTypeMap(Map.of(TransportType.CLEAR,
-                        LocalHostAddressTypeFacade.toLocalHostAddress(1234))),
-                        new PubKey(KeyGeneration.generateDefaultEcKeyPair().getPublic(), "identity")),
-                Optional.empty(),
-                false)));
+        oracleKeyPair = addOracleNode("a".repeat(40), 1234);
         byte[] hash = new byte[20];
         Arrays.fill(hash, (byte) 1);
         authorizedAccountTimestamp = new AuthorizedAccountTimestamp(new AccountTimestamp(hash, 1_700_000_000_000L),
@@ -129,6 +122,57 @@ class AccountTimestampAuthorizationTest {
 
         assertThat(accountTimestampService.getAccountTimestampByHash())
                 .containsKey(new ByteArray(authorizedAccountTimestamp.getAccountTimestamp().getHash()));
+    }
+
+    // Two oracle nodes publish the same account timestamp, each with its own key. The removal of one publication keeps
+    // the account timestamp; it is removed with the last publication.
+    @Test
+    void accountTimestampStaysWhileAnotherOracleNodePublishesIt() throws GeneralSecurityException {
+        StorableTypesRegistry.register(AuthorizedAccountTimestamp.class, AuthorizedAccountTimestamp.META_DATA);
+        // As NetworkService.addDataServiceListener does
+        dataService.addListener(authorizedBondedRolesService);
+        AuthenticatedDataStorageService store = dataService.getStorageService()
+                .getOrCreateAuthenticatedDataStore(AuthorizedAccountTimestamp.class.getSimpleName())
+                .join();
+        KeyPair otherOracleKeyPair = addOracleNode("b".repeat(40), 1235);
+        AuthorizedData publication = authorize(authorizedAccountTimestamp, oracleKeyPair);
+        AuthorizedData publicationOfOtherOracle = authorize(authorizedAccountTimestamp, otherOracleKeyPair);
+        ByteArray hash = new ByteArray(authorizedAccountTimestamp.getAccountTimestamp().getHash());
+        try {
+            assertThat(store.add(AddAuthenticatedDataRequest.from(store, publication, oracleKeyPair))
+                    .isSuccess()).isTrue();
+            assertThat(store.add(AddAuthenticatedDataRequest.from(store, publicationOfOtherOracle, otherOracleKeyPair))
+                    .isSuccess()).isTrue();
+            assertThat(accountTimestampService.getAccountTimestampByHash()).containsKey(hash);
+
+            assertThat(store.remove(RemoveAuthenticatedDataRequest.from(store, publication, oracleKeyPair))
+                    .isSuccess()).isTrue();
+            assertThat(accountTimestampService.getAccountTimestampByHash()).containsKey(hash);
+
+            assertThat(store.remove(RemoveAuthenticatedDataRequest.from(store, publicationOfOtherOracle,
+                    otherOracleKeyPair)).isSuccess()).isTrue();
+            assertThat(accountTimestampService.getAccountTimestampByHash()).doesNotContainKey(hash);
+        } finally {
+            // The store writes asynchronously. A write queued now completes after all earlier ones, before JUnit
+            // deletes tempDir.
+            store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+        }
+    }
+
+    private KeyPair addOracleNode(String profileId, int port) {
+        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
+        authorizedBondedRolesService.getBondedRoles().add(new BondedRole(new AuthorizedBondedRole(profileId,
+                Hex.encode(keyPair.getPublic().getEncoded()),
+                BondedRoleType.ORACLE_NODE,
+                "oracle",
+                "signature",
+                Optional.empty(),
+                new NetworkId(new AddressByTransportTypeMap(Map.of(TransportType.CLEAR,
+                        LocalHostAddressTypeFacade.toLocalHostAddress(port))),
+                        new PubKey(KeyGeneration.generateDefaultEcKeyPair().getPublic(), "identity")),
+                Optional.empty(),
+                false)));
+        return keyPair;
     }
 
     private static AuthorizedData authorize(AuthorizedAccountTimestamp data, KeyPair keyPair)

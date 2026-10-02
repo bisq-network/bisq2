@@ -46,7 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The report of an inventory response is written to the log. Remove requests carry the class name of the removed data
- * as a field which the peer sets, and which is not validated when the request is parsed (see
+ * as a field which the peer sets. Parsing checks the format of the class name (MetaData.validateClassName), but a peer
+ * can still send any class name of that format, also one which no node registered (see
  * docs/specifications/network/storage-metadata.md).
  */
 class InventoryPrinterTest {

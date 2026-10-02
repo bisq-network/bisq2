@@ -40,6 +40,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +48,8 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -58,7 +61,9 @@ import static org.mockito.Mockito.verify;
  */
 class ConnectionUnresolvableMessageTest {
     private final BlockingQueue<EnvelopePayloadMessage> handledMessages = new LinkedBlockingQueue<>();
-    private final List<CloseReason> closeReasons = new ArrayList<>();
+    // The exception of a CloseReason is a field of the enum constant, so we keep it at the time of the close
+    private final BlockingQueue<CloseReason> closeReasons = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Optional<Throwable>> closeExceptions = new LinkedBlockingQueue<>();
     private ServerSocket serverSocket;
     private Socket peerSocket;
     private final ConnectionThrottle connectionThrottle = mock(ConnectionThrottle.class);
@@ -98,6 +103,7 @@ class ConnectionUnresolvableMessageTest {
 
                     @Override
                     public void handleConnectionClosed(Connection connection, CloseReason closeReason) {
+                        closeExceptions.add(closeReason.getException());
                         closeReasons.add(closeReason);
                     }
                 },
@@ -130,9 +136,31 @@ class ConnectionUnresolvableMessageTest {
         assertEquals(2, ((Ping) handled).getNonce());
         assertEquals(1, connection.getNumUnresolvableMessages().get());
         assertFalse(connection.isStopped());
-        assertEquals(List.of(), closeReasons);
+        assertTrue(closeReasons.isEmpty());
         // The dropped message is throttled like the Ping, so a peer can send such messages only at the throttled rate
         verify(connectionThrottle, times(2)).throttleReceiveMessage();
+    }
+
+    // The version is checked before the payload is converted, so a message of another network version closes the
+    // connection also if its payload cannot be converted (rule 6 of validation-at-parsing.md)
+    @Test
+    void messageOfAnotherNetworkVersionClosesTheConnectionAlsoIfItCannotBeParsed()
+            throws IOException, InterruptedException {
+        bisq.network.protobuf.NetworkEnvelope envelopeOfAnotherVersion = createEnvelope(1).toProto(false).toBuilder()
+                .setVersion(NetworkEnvelope.networkVersion + 1)
+                .setNetworkMessage(bisq.network.protobuf.EnvelopePayloadMessage.newBuilder())
+                .build();
+
+        OutputStream outputStream = peerSocket.getOutputStream();
+        envelopeOfAnotherVersion.writeDelimitedTo(outputStream);
+        outputStream.flush();
+
+        assertEquals(CloseReason.EXCEPTION, closeReasons.poll(10, TimeUnit.SECONDS));
+        Optional<Throwable> exception = closeExceptions.poll(10, TimeUnit.SECONDS);
+        assertNotNull(exception);
+        ConnectionException connectionException = assertInstanceOf(ConnectionException.class, exception.orElseThrow());
+        assertEquals(ConnectionException.Reason.INVALID_NETWORK_VERSION, connectionException.getReason());
+        assertEquals(0, connection.getNumUnresolvableMessages().get());
     }
 
     private static NetworkEnvelope createEnvelope(int nonce) {
