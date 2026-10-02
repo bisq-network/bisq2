@@ -72,14 +72,14 @@ requests which the requester does not have. During the initial requests, the req
 Its next filter also lists the requests which it stored from the response, so the next response contains other
 requests.
 
-6. If the stores of the requester accepted none of the requests of a response which reached the size limit, the
-   requester does not request inventory from that peer anymore. During the initial requests it asks another peer, and
-   periodic requests do not select that peer.
+6. After the requester processed a response which reached the size limit, it checks its filter. If the filter which it
+   would send to that peer now lists none of the requests of the response, the requester does not request inventory
+   from that peer anymore. During the initial requests it asks another peer, and periodic requests do not select that
+   peer.
 
-Reason: the filter lists only the requests which the requester stored. If the requester rejects all requests of a full
-response, its next filter is the same, and the peer sends the same response again. Without rule 6, the requester would
-repeat the request without end, and the requests after that response would never arrive from that peer. This happens
-in ordinary cases, for example:
+Reason: the filter lists only the requests which the requester holds. If it lists none of the requests of a full
+response, the peer sends the same response again. Without rule 6, the requester would repeat the request without end,
+and the requests after that response would never arrive from that peer. This happens in ordinary cases, for example:
 
 - The requester holds a removal, and the responder missed it and still holds the earlier add request. The requester
   rejects the add request.
@@ -87,13 +87,23 @@ in ordinary cases, for example:
   shortly before the cutoff date of signature V1 and gets the response after it. It rejects every request without
   signature V2. From the cutoff date on, rule 8 prevents such requests.
 
+Reason for the check of the filter: the requester can hold a request of a response although its stores accepted
+nothing from that response. Several initial requests run at the same time with the same filter, so peers with the same
+data send the same response. The requester stores the requests of the first response. The stores report the requests
+of the later responses as already received. A broadcast can also deliver a request before the response arrives. In
+these cases the next filter lists the requests, and the next response of the peer differs. A rule which counts only
+the requests which the stores accepted from a response would stop the requests to honest peers, often to the seed
+nodes.
+
 Limitation: the requester does not get the requests after that response from that peer. It gets them from other peers,
 or by broadcast. A requester of an earlier version does not follow rule 6.
 
 ## Entries which a node cannot parse
 
 7. A requester skips an entry of an inventory response which it cannot parse, and processes the other entries of the
-   response. A skipped entry counts as a request which the stores did not accept (rule 6).
+   response. A skipped entry is not in the filter of the requester, so for rule 6 it counts as a request which the
+   filter does not list. A full response of which the requester can parse no entry therefore stops the requests to
+   that peer.
 
 Reason: the entries are requests of other nodes, which the responder only stores. A responder of another version can
 hold a request which the requester cannot parse, and the responder cannot know which requests the requester can parse.
@@ -199,8 +209,10 @@ a node with more than 100 000 stored requests.
   a need.
 - **Requesters with more requests than the filter limit.** The filter of such a requester does not list all of its
   requests ([rule 10](#size-of-the-filter)). The responder therefore also sends requests which the requester already
-  holds. If a full response contains only such requests, the stores of the requester accept none of them, and the
-  requester stops requesting inventory from that peer ([rule 6](#repeated-requests)).
+  holds, and the requester receives them again. Each filter is a new random sample of the requests which the requester
+  holds. The check of [rule 6](#repeated-requests) therefore uses all requests which the requester holds, not only the
+  sample, because each of them can be in the next filter. A full response which contains only such requests does not
+  stop the requests to that peer: the next filter is another sample, so the next response usually differs.
   - Why it is accepted now: it affects only nodes with more than 100 000 stored requests. Before rule 10, such a node
     could not request inventory at all.
   - What removes it: a filter whose size does not grow with the number of requests. The filter type `MINI_SKETCH` is
