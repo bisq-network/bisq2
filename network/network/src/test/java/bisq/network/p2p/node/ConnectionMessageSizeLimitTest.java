@@ -23,10 +23,15 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2Token;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
+import bisq.network.p2p.services.peer_group.keep_alive.Ping;
+import bisq.security.pow.ProofOfWork;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.UnknownFieldSet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -114,5 +119,26 @@ class ConnectionMessageSizeLimitTest {
         assertThat(closeReason.getException()).containsInstanceOf(InvalidProtocolBufferException.class);
         assertThat(connection.isStopped()).isTrue();
         assertThat(handledMessages).isEmpty();
+    }
+
+    @Test
+    void readsAMessageAboveTheHandshakeLimit() throws IOException, InterruptedException {
+        // The limit of the handshake applies only to the handshake. Here a Ping is padded with an unknown field.
+        ProofOfWork proofOfWork = new ProofOfWork(new byte[20], 0, null, 0, new byte[72], 0);
+        NetworkEnvelope networkEnvelope = new NetworkEnvelope(new HashCashV2Token(proofOfWork, 0), new Ping(1));
+        byte[] paddingBytes = new byte[NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE];
+        UnknownFieldSet padding = UnknownFieldSet.newBuilder()
+                .addField(1000, UnknownFieldSet.Field.newBuilder()
+                        .addLengthDelimited(ByteString.copyFrom(paddingBytes))
+                        .build())
+                .build();
+        networkEnvelope.completeProto().toBuilder()
+                .setUnknownFields(padding)
+                .build()
+                .writeDelimitedTo(peerSocket.getOutputStream());
+
+        EnvelopePayloadMessage handledMessage = handledMessages.poll(10, TimeUnit.SECONDS);
+        assertThat(handledMessage).isEqualTo(new Ping(1));
+        assertThat(closeReasons).isEmpty();
     }
 }
