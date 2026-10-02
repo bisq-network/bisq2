@@ -33,6 +33,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.testutil.JavaFxToolkitExtension;
@@ -73,6 +74,8 @@ class ChatMessagesListControllerTest {
     private static final long BASE_SIDE_AMOUNT = 5_000_000_000_000_000_000L;
     private static final double FITTING_PRICE = 1;
     private static final double OVERFLOWING_PRICE = 50_000;
+    // The controller creates a real expired messages indicator message with this ID, which requires a valid profile ID.
+    private static final String SELECTED_USER_PROFILE_ID = "a".repeat(NetworkDataValidation.PROFILE_ID_LENGTH);
 
     private final ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
@@ -94,7 +97,12 @@ class ChatMessagesListControllerTest {
         UserService userService = mock(UserService.class, RETURNS_DEEP_STUBS);
         when(userService.getUserProfileService().findUserProfile("author-id")).thenReturn(Optional.of(authorUserProfile));
         when(userService.getUserProfileService().getIgnoredUserProfileIds()).thenReturn(new ObservableSet<>());
-        when(userService.getUserIdentityService().getSelectedUserIdentityObservable()).thenReturn(new Observable<>(mock(UserIdentity.class)));
+        UserProfile selectedUserProfile = mock(UserProfile.class);
+        when(selectedUserProfile.getId()).thenReturn(SELECTED_USER_PROFILE_ID);
+        UserIdentity selectedUserIdentity = mock(UserIdentity.class);
+        when(selectedUserIdentity.getUserProfile()).thenReturn(selectedUserProfile);
+        when(userService.getUserIdentityService().getSelectedUserIdentity()).thenReturn(selectedUserIdentity);
+        when(userService.getUserIdentityService().getSelectedUserIdentityObservable()).thenReturn(new Observable<>(selectedUserIdentity));
         ReputationService reputationService = mock(ReputationService.class);
         when(reputationService.findReputationScore(any(UserProfile.class))).thenReturn(Optional.empty());
         when(reputationService.getUserProfileIdWithScoreChange()).thenReturn(new Observable<>());
