@@ -72,9 +72,9 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
     @Override
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
-        if (version >= VERSION) {
-            senderNetworkId.orElseThrow(() -> new IllegalArgumentException("senderNetworkId must be present"));
-        }
+        // Responses of version 0 have no senderNetworkId. The receiver requires the sender public key of every
+        // response, so such a response is invalid.
+        senderNetworkId.orElseThrow(() -> new IllegalArgumentException("senderNetworkId must be present"));
     }
 
     /**
@@ -124,8 +124,6 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
         return findSenderPublicKey().orElseThrow(() -> new IllegalStateException("senderNetworkId not set"));
     }
 
-    // Responses of version 0 have no senderNetworkId. The sender public key is required for every version (see
-    // SenderPublicKeyProvidingPayload.isSenderPublicKeyRequired), so the receiver rejects them.
     @Override
     public Optional<PublicKey> findSenderPublicKey() {
         return senderNetworkId.map(networkId -> networkId.getPubKey().getPublicKey());
