@@ -80,7 +80,7 @@ public final class KeyBundleStore implements PersistableStore<KeyBundleStore> {
             throws UnresolvableProtobufException {
         try {
             return new KeyBundleStore(proto.getSecretUid(),
-                    ProtobufUtils.fromProtoEntryStream(proto.getKeyBundleByIdMap(), KeyBundle::fromProto)
+                    ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getKeyBundleByIdMap(), KeyBundle::fromProto)
                             .collect(Collectors.toMap(Map.Entry::getKey,
                                     Map.Entry::getValue)));
         } catch (RuntimeException e) {

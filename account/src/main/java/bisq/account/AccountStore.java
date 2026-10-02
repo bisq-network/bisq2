@@ -71,7 +71,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
             throws UnresolvableProtobufException {
         try {
             return new AccountStore(
-                    ProtobufUtils.fromProtoEntryStream(proto.getAccountByNameMap(), Account::fromProto)
+                    ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getAccountByNameMap(), Account::fromProto)
                             .collect(Collectors.toMap(Map.Entry::getKey,
                                     Map.Entry::getValue)),
                     proto.hasSelectedAccount() ?
