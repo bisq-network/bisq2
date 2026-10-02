@@ -111,9 +111,21 @@ class AuthorizedOracleNodeAuthorizationTest {
 
     @Test
     void oracleNodeOfAKnownOracleRoleIsListed() throws GeneralSecurityException {
-        authorizedBondedRolesService.onAuthorizedDataAdded(authorize(oracleNode, oracleKeyPair));
+        storeAndNotify(authorize(oracleNode, oracleKeyPair));
 
         assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).containsExactly(oracleNode);
+    }
+
+    // A security manager can ban the role which authorizes the key of an oracle node after the oracle node was added.
+    // The list is derived from the stored publications, so the oracle node is no longer listed.
+    @Test
+    void oracleNodeWhoseRoleIsBannedLaterIsNotListed() throws GeneralSecurityException {
+        storeAndNotify(authorize(oracleNode, oracleKeyPair));
+        assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).containsExactly(oracleNode);
+
+        authorizedBondedRolesService.getBondedRoles().forEach(bondedRole -> bondedRole.setIsBanned(true));
+
+        assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).isEmpty();
     }
 
     @Test
@@ -121,7 +133,7 @@ class AuthorizedOracleNodeAuthorizationTest {
         KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         AuthorizedOracleNode otherOracleNode = createOracleNode(Hex.encode(otherKeyPair.getPublic().getEncoded()), false);
 
-        authorizedBondedRolesService.onAuthorizedDataAdded(authorize(otherOracleNode, otherKeyPair));
+        storeAndNotify(authorize(otherOracleNode, otherKeyPair));
 
         assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).isEmpty();
     }
@@ -133,7 +145,7 @@ class AuthorizedOracleNodeAuthorizationTest {
         AuthorizedOracleNode oracleNodeWithStaticFlag = createOracleNode(
                 Hex.encode(removedStaticKeyPair.getPublic().getEncoded()), true);
 
-        authorizedBondedRolesService.onAuthorizedDataAdded(authorize(oracleNodeWithStaticFlag, removedStaticKeyPair));
+        storeAndNotify(authorize(oracleNodeWithStaticFlag, removedStaticKeyPair));
 
         assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).isEmpty();
     }
@@ -157,8 +169,16 @@ class AuthorizedOracleNodeAuthorizationTest {
         assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).isEmpty();
     }
 
-    private static AuthorizedOracleNode createOracleNode(String authorizedPublicKey, boolean staticPublicKeysProvided) {
-        return new AuthorizedOracleNode(createNetworkId(),
+    // As the DataService does: the store holds the publication when the listener is called
+    private void storeAndNotify(AuthorizedData publication) throws GeneralSecurityException {
+        AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, publication, identityKeyPair);
+        store.getPersistableStore().getMap().put(request.getStorageKey(), request);
+        authorizedBondedRolesService.onAuthorizedDataAdded(publication);
+    }
+
+    // The network identity of the oracle node owns the data and publishes it
+    private AuthorizedOracleNode createOracleNode(String authorizedPublicKey, boolean staticPublicKeysProvided) {
+        return new AuthorizedOracleNode(oracleNode.getNetworkId(),
                 "a".repeat(40),
                 authorizedPublicKey,
                 "oracle",

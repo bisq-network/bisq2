@@ -23,7 +23,6 @@ import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.network.AddressByTransportTypeMap;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
@@ -32,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -67,7 +67,7 @@ public class BondedRoleRegistrationService implements Service {
                 canonicalProposalTxId,
                 canonicalLockupTxId);
 
-        ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();
+        Set<AuthorizedOracleNode> authorizedOracleNodes = authorizedBondedRolesService.getAuthorizedOracleNodes();
         if (authorizedOracleNodes.isEmpty()) {
             log.warn("authorizedOracleNodes is empty");
             return false;

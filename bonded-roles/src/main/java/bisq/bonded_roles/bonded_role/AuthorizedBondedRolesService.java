@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -65,8 +66,6 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private final boolean ignoreSecurityManager;
     @Getter
     private final ObservableSet<BondedRole> bondedRoles = new ObservableSet<>();
-    @Getter
-    private final ObservableSet<AuthorizedOracleNode> authorizedOracleNodes = new ObservableSet<>();
     @Getter
     private final DataService.Listener initialDataServiceListener;
     private final Set<AuthorizedData> failedAuthorizedData = new CopyOnWriteArraySet<>();
@@ -131,7 +130,6 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             reprocessScheduler = null;
         }
         bondedRoles.clear();
-        authorizedOracleNodes.clear();
         failedAuthorizedData.clear();
         listeners.clear();
         return CompletableFuture.completedFuture(true);
@@ -186,11 +184,9 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         log.debug("onAuthorizedDataAdded {}", data.getClass().getSimpleName());
-        if (data instanceof AuthorizedOracleNode authorizedOracleNode) {
-            // The network layer checks only the signature of data without staticPublicKeysProvided, so any key can
-            // publish an oracle node. Users send registration and account timestamp requests to the oracle nodes.
+        if (data instanceof AuthorizedOracleNode) {
+            // getAuthorizedOracleNodes derives the oracle nodes from the stored publications
             if (hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE)) {
-                authorizedOracleNodes.add(authorizedOracleNode);
                 reProcessFailedAuthorizedData();
             }
         } else if (data instanceof AuthorizedBondedRole authorizedBondedRole) {
@@ -215,13 +211,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
-        if (data instanceof AuthorizedOracleNode authorizedOracleNode) {
-            // Anyone can publish and remove a copy of an oracle node under another key. The oracle node stays while an
-            // authorized publication of it is stored.
-            if (!isPublishedByAnOracleNode(AuthorizedOracleNode.class, authorizedOracleNode)) {
-                authorizedOracleNodes.remove(authorizedOracleNode);
-            }
-        } else if (data instanceof AuthorizedBondedRole) {
+        if (data instanceof AuthorizedBondedRole) {
             validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
                 if (isPublishedByAnOracleNode(AuthorizedBondedRole.class, authorizedBondedRole)) {
                     log.info("A publication of the bonded role {} of {} was removed, but an oracle node still " +
@@ -252,6 +242,29 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream() {
         return getAuthorizedBondedRoleStream(false);
+    }
+
+    /**
+     * The oracle nodes to which users send registration and account timestamp requests. The network layer checks only
+     * the signature of data without staticPublicKeysProvided, so any key can publish an oracle node. An oracle node is
+     * listed while the store holds a publication of it whose key is a static key of this version or the key of a
+     * current oracle node role which is not banned (rule 8 of docs/specifications/bonded-roles/authorized-data.md).
+     * <p>
+     * The set is derived from the stored publications at each call, not kept as a copy. A ban, the removal of the
+     * authorizing role, or the removal of one of several publications of an oracle node change the result without an
+     * event for the oracle node data.
+     */
+    public Set<AuthorizedOracleNode> getAuthorizedOracleNodes() {
+        return networkService.getDataService()
+                .map(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(
+                                AuthorizedOracleNode.class.getSimpleName())
+                        .filter(AuthorizedData.class::isInstance)
+                        .map(AuthorizedData.class::cast)
+                        .filter(publication -> publication.getAuthorizedDistributedData() instanceof AuthorizedOracleNode)
+                        .filter(publication -> isAuthorizedKey(publication, BondedRoleType.ORACLE_NODE))
+                        .map(publication -> (AuthorizedOracleNode) publication.getAuthorizedDistributedData())
+                        .collect(Collectors.toUnmodifiableSet()))
+                .orElse(Set.of());
     }
 
     public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream(boolean ignoreBannedState) {
@@ -359,8 +372,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     // authorized it. The removal or expiry of one publication, for example of a copy without signature V2 at the cutoff
     // date of signature V1, must not remove a role which another publication still authorizes. Otherwise
     // OracleNodeService would also remove its own publication, and the removal would spread to all oracle nodes (see
-    // docs/specifications/bonded-roles/registration.md). For an oracle node, the removal of a publication of another key
-    // must not remove it either (see docs/specifications/bonded-roles/authorized-data.md).
+    // docs/specifications/bonded-roles/registration.md).
     private boolean isPublishedByAnOracleNode(Class<? extends AuthorizedDistributedData> type,
                                               AuthorizedDistributedData data) {
         return networkService.getDataService()
