@@ -287,6 +287,38 @@ class MailboxSignatureV2Test {
     // The preimages of signature V2 are new messages. Their layout is written here independently with protobuf's
     // CodedOutputStream.
     @Test
+    void addMailboxRequestSignatureV2PreimageHasFixedLayout()
+            throws GeneralSecurityException, IOException, UnresolvableProtobufException {
+        AddMailboxRequest request = createAddMailboxRequest();
+        MailboxSequentialData sequentialData = request.getMailboxSequentialData();
+        bisq.network.protobuf.AddMailboxRequest proto = request.toValueProto(false);
+
+        // The sequential data has the field numbers of its protobuf message. The MailboxData in it has its own layout
+        // (see mailboxDataSignatureEncodingHasFixedLayout).
+        ByteArrayOutputStream sequentialDataLayout = new ByteArrayOutputStream();
+        CodedOutputStream sequentialDataOutput = CodedOutputStream.newInstance(sequentialDataLayout);
+        sequentialDataOutput.writeBytes(1,
+                ByteString.copyFrom(getMailboxDataSignatureLayout(sequentialData.getMailboxData())));
+        sequentialDataOutput.writeSInt32(2, sequentialData.getSequenceNumber());
+        sequentialDataOutput.writeBytes(3, ByteString.copyFrom(sequentialData.getSenderPublicKeyHash()));
+        sequentialDataOutput.writeSInt64(4, sequentialData.getCreated());
+        sequentialDataOutput.writeBytes(5, ByteString.copyFrom(sequentialData.getReceiversPubKeyBytes()));
+        sequentialDataOutput.writeBytes(6, ByteString.copyFrom(sequentialData.getReceiversPublicKeyHash()));
+        sequentialDataOutput.flush();
+
+        ByteArrayOutputStream expected = new ByteArrayOutputStream();
+        CodedOutputStream output = CodedOutputStream.newInstance(expected);
+        output.writeString(1, "bisq.AddMailboxRequest.signatureV2");
+        output.writeSInt32(2, 2);
+        output.writeBytes(3, ByteString.copyFrom(sequentialDataLayout.toByteArray()));
+        output.writeBytes(4, proto.getSenderPublicKeyBytes());
+        output.writeBytes(5, proto.getSignature());
+        output.flush();
+
+        assertArrayEquals(expected.toByteArray(), request.getPreImageV2());
+    }
+
+    @Test
     void removeMailboxRequestSignatureV2PreimageHasFixedLayout()
             throws GeneralSecurityException, IOException, UnresolvableProtobufException {
         RemoveMailboxRequest request = createRemoveMailboxRequest();
@@ -312,14 +344,18 @@ class MailboxSignatureV2Test {
     void mailboxDataSignatureEncodingHasFixedLayout() throws IOException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
 
-        ByteArrayOutputStream expected = new ByteArrayOutputStream();
-        CodedOutputStream output = CodedOutputStream.newInstance(expected);
+        assertArrayEquals(getMailboxDataSignatureLayout(mailboxData),
+                mailboxData.encodeCanonical(EncodingPurpose.SIGNATURE));
+    }
+
+    private static byte[] getMailboxDataSignatureLayout(MailboxData mailboxData) throws IOException {
+        ByteArrayOutputStream layout = new ByteArrayOutputStream();
+        CodedOutputStream output = CodedOutputStream.newInstance(layout);
         output.writeSInt32(1, mailboxData.getVersion());
         output.writeString(2, CLASS_NAME);
         output.writeBytes(3, mailboxData.getConfidentialMessage().toValueProto(false).toByteString());
         output.flush();
-
-        assertArrayEquals(expected.toByteArray(), mailboxData.encodeCanonical(EncodingPurpose.SIGNATURE));
+        return layout.toByteArray();
     }
 
     private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException, UnresolvableProtobufException {
