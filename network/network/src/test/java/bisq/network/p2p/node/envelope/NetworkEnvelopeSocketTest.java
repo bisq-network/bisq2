@@ -268,11 +268,23 @@ class NetworkEnvelopeSocketTest {
     }
 
     @Test
-    void readsAMessageWhoseBytesArriveWithinTheDeadline() throws IOException {
+    void failsIfTheFinalBytesArriveAfterTheDeadline() throws IOException {
         bisq.network.protobuf.NetworkEnvelope proto = createProtoOfSize(10);
         AtomicLong nanoTime = new AtomicLong();
-        // 10 reads of 20 seconds after the length prefix
-        NetworkEnvelopeSocket receiver = createReceiver(slowInput(writeDelimited(proto), nanoTime, 20), nanoTime);
+        // The first nine body bytes arrive in 225 seconds; only the final read crosses the deadline.
+        NetworkEnvelopeSocket receiver = createReceiver(slowInput(writeDelimited(proto), nanoTime, 25), nanoTime);
+
+        assertThatThrownBy(receiver::receiveNextMessage)
+                .isInstanceOf(SocketTimeoutException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {20, 24})
+    void readsAMessageWhoseBytesArriveWithinTheDeadline(int secondsPerRead) throws IOException {
+        bisq.network.protobuf.NetworkEnvelope proto = createProtoOfSize(10);
+        AtomicLong nanoTime = new AtomicLong();
+        // Ten body reads, completing before or exactly at the deadline.
+        NetworkEnvelopeSocket receiver = createReceiver(slowInput(writeDelimited(proto), nanoTime, secondsPerRead), nanoTime);
 
         assertThat(receiver.receiveNextEnvelope()).isEqualTo(proto);
     }
