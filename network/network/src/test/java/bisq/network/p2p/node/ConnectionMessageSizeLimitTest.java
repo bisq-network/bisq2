@@ -23,6 +23,7 @@ import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2Token;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
@@ -77,6 +78,7 @@ class ConnectionMessageSizeLimitTest {
                 new NetworkLoadSnapshot(),
                 new ConnectionMetrics(),
                 mock(ConnectionThrottle.class),
+                new ParseMemoryBudget(),
                 new Connection.Handler() {
                     @Override
                     public boolean isMessageAuthorized(EnvelopePayloadMessage envelopePayloadMessage,
