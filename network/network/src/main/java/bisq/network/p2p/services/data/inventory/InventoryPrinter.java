@@ -20,6 +20,9 @@ package bisq.network.p2p.services.data.inventory;
 import bisq.common.data.ByteUnit;
 import bisq.common.util.MathUtils;
 import bisq.network.p2p.node.Connection;
+import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -29,6 +32,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class InventoryPrinter {
+    @VisibleForTesting
+    static final String UNREGISTERED_TYPE = "[unregistered type]";
+
     static void print(InventoryResponse response,
                       Connection connection,
                       Map<String, Long> requestTimestampByConnectionId) {
@@ -38,12 +44,29 @@ public class InventoryPrinter {
             return;
         }
         long requestTs = requestTsValue;
-        Map<String, Map<String, AtomicInteger>> dataRequestMap = new HashMap<>();
         Inventory inventory = response.getInventory();
+        String report = createReport(inventory);
+        int numEntries = inventory.getEntries().size();
+        String maxSizeReached = inventory.isMaxSizeReached()
+                ? "Still missing data. Response got truncated because max size was reached"
+                : numEntries == 0 ? "No data received from peer." : "All data received from peer. Num entries: " + numEntries;
+        String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
+        String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
+        log.info("\n##########################################################################################\n" +
+                        "Received {} of inventory data from: {} after {}; \n{}" +
+                        "\n##########################################################################################\n{}" +
+                        "\n##########################################################################################",
+                size, connection.getPeerAddress(), passed, maxSizeReached, report);
+    }
+
+    // The number of requests per request type and class name of the data
+    @VisibleForTesting
+    static String createReport(Inventory inventory) {
+        Map<String, Map<String, AtomicInteger>> dataRequestMap = new HashMap<>();
         inventory.getEntries()
                 .forEach(dataRequest -> {
                     String dataRequestName = dataRequest.getClass().getSimpleName();
-                    String payloadName = dataRequest.getClassName();
+                    String payloadName = getPayloadName(dataRequest);
                     dataRequestMap.putIfAbsent(dataRequestName, new HashMap<>());
                     Map<String, AtomicInteger> payloadMap = dataRequestMap.get(dataRequestName);
                     dataRequestMap.put(dataRequestName, payloadMap);
@@ -60,20 +83,14 @@ public class InventoryPrinter {
                         .map(entry -> String.format("%4d item(s) of %s", entry.getValue().get(), entry.getKey()))
                         .collect(Collectors.joining("\n")))
                 .collect(Collectors.joining("\n"));
+        return report.isEmpty() ? "No items received" : report;
+    }
 
-        if (report.isEmpty()) {
-            report = "No items received";
-        }
-        int numEntries = inventory.getEntries().size();
-        String maxSizeReached = inventory.isMaxSizeReached()
-                ? "Still missing data. Response got truncated because max size was reached"
-                : numEntries == 0 ? "No data received from peer." : "All data received from peer. Num entries: " + numEntries;
-        String size = ByteUnit.BYTE.toKB((double) inventory.getCachedSerializedSize().orElse(0)) + " KB";
-        String passed = MathUtils.roundDouble((System.currentTimeMillis() - requestTs) / 1000d, 2) + " sec.";
-        log.info("\n##########################################################################################\n" +
-                        "Received {} of inventory data from: {} after {}; \n{}" +
-                        "\n##########################################################################################\n{}" +
-                        "\n##########################################################################################",
-                size, connection.getPeerAddress(), passed, maxSizeReached, report);
+    // Remove requests, refresh requests and mailbox data carry the class name as a field which the peer sets. Parsing
+    // checks its format, but a peer can still send many distinct names, and the report has one line per name. The
+    // stores accept only registered class names, so only those are written to the log.
+    private static String getPayloadName(DataRequest dataRequest) {
+        String className = dataRequest.getClassName();
+        return StorableTypesRegistry.findMetaData(className).isPresent() ? className : UNREGISTERED_TYPE;
     }
 }

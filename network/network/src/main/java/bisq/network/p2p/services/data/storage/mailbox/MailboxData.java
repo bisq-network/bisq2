@@ -84,6 +84,7 @@ public final class MailboxData implements StorageData, Canonical {
 
     @Override
     public void verify() {
+        MetaData.validateClassName(className);
     }
 
     @Override

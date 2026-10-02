@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.time.Instant;
+import java.util.List;
 
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.AT_CUTOFF;
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
@@ -57,6 +58,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * requests pass the time of the node, so they do not depend on the date at which they run.
  */
 class AuthenticatedDataSignatureV2Test {
+    private static final List<String> INVALID_CLASS_NAMES = List.of(
+            "Name\nforged log line",
+            "A".repeat(51),
+            "lowerCaseName");
+
     private static final String STORE_KEY = TestDistributedData.class.getSimpleName();
 
     @TempDir
@@ -314,6 +320,34 @@ class AuthenticatedDataSignatureV2Test {
                 request.toValueProto(false).toBuilder().clearSignatureV2().build());
 
         assertArrayEquals(request.serializeForHash(), withoutSignatureV2.serializeForHash());
+    }
+
+    // className is a field which the sender sets. It must have the format of the class name of MetaData, so a value
+    // of any length or with line breaks fails at parsing (see docs/specifications/network/storage-metadata.md).
+    @Test
+    void removeRequestWithInvalidClassNameIsRejectedAtParsing() throws GeneralSecurityException {
+        bisq.network.protobuf.RemoveAuthenticatedDataRequest proto =
+                RemoveAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair).toValueProto(false);
+
+        for (String className : INVALID_CLASS_NAMES) {
+            assertInstanceOf(IllegalArgumentException.class,
+                    assertThrows(UnresolvableProtobufException.class,
+                            () -> RemoveAuthenticatedDataRequest.fromProto(
+                                    proto.toBuilder().setClassName(className).build())).getCause());
+        }
+    }
+
+    @Test
+    void refreshRequestWithInvalidClassNameIsRejectedAtParsing() throws GeneralSecurityException {
+        bisq.network.protobuf.RefreshAuthenticatedDataRequest proto =
+                RefreshAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair).toValueProto(false);
+
+        for (String className : INVALID_CLASS_NAMES) {
+            assertInstanceOf(IllegalArgumentException.class,
+                    assertThrows(UnresolvableProtobufException.class,
+                            () -> RefreshAuthenticatedDataRequest.fromProto(
+                                    proto.toBuilder().setClassName(className).build())).getCause());
+        }
     }
 
     // The preimage of signature V2 is a new message. Its layout is written here independently with protobuf's
