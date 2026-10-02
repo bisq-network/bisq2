@@ -44,6 +44,27 @@ publish and remove the data in the network storage is defined in
    timestamp while the network storage holds at least one publication of it for which rule 2 or rule 3 holds, for
    example of another oracle node.
 
+### Temporary restriction to static oracle node keys
+
+An **oracle node key** is one of the static keys of the oracle node role type. A **non-static oracle node** is an
+oracle node whose key is not an oracle node key, and whose authority comes from a bonded role of the oracle node role
+type (rule 3). Oracle nodes with an oracle node key can register a role of the oracle node role type as well, but they
+do not need it. The application has a flag in the code, `AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES`. It is
+currently `true`. While it is `true`, these rules apply:
+
+10. If the authorizing role type is the oracle node, the authorized public key must be an oracle node key. This applies
+    to data with and without the static flag, and it replaces rule 3 for this authorizing role type. Rules 8 and 9 and
+    the counting of publications in [`registration.md`](registration.md) use this rule.
+11. A node lists a bonded role of the oracle node role type only if the authorized public key of the role is an oracle
+    node key.
+12. An oracle node does not accept a new registration of a role of the oracle node role type whose authorized public key
+    is not an oracle node key. It still accepts the cancellation of such a role.
+13. An oracle node does not start if its own authorized public key is not an oracle node key.
+14. Data which fails rule 10 is not checked again when a bonded role is added (rule 7), because the static keys do not
+    change while the node runs.
+
+When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply unchanged.
+
 ## Reasons
 
 - Rule 6: a later version can remove a static key, for example after the key was compromised. A node which updates
@@ -62,6 +83,19 @@ publish and remove the data in the network storage is defined in
   before the timestamp of the oracle node expires. Several oracle nodes can publish the same account timestamp, each
   with its own key. The node holds one account timestamp per hash, so the removal or expiry of one publication must
   not remove it while another publication remains.
+- Rules 10 to 13: for now, only the oracle node keys in the released code may act as oracle nodes. Otherwise an oracle
+  node could register further oracle nodes with non-static keys, and the authority over all data which oracle nodes authorize (bonded roles,
+  reputation, account timestamps, market prices, burningman data) would depend on a chain of registrations. The code
+  for non-static oracle nodes stays, so that a later release can allow them again by changing the flag.
+- Rule 10 does not depend on the static flag, because the publisher sets the flag.
+- Rule 11: the role list shows the oracle nodes to the users, and monitoring tools use it to find the oracle nodes. A role
+  of another key would show an oracle node which no node accepts.
+- Rules 12 and 13 stop an oracle node from publishing data which no node with the restriction accepts. Rules 10 and 11
+  do not depend on them, because oracle nodes of earlier versions still accept such registrations.
+- The flag is a constant in the code, not a configuration option. All nodes of a release must apply the same rule.
+  Otherwise nodes disagree about which bonded roles and which reputation data are valid.
+- Compatibility: nodes of earlier versions still accept non-static oracle nodes. Oracle nodes with an oracle node key
+  publish their data with the static flag, which all versions accept.
 - Rule 5: checking the authorization of every stored entry verifies one signature per entry. This check was disabled
   at startup to reduce the startup cost. Rule 8 of [`../network/storage-ownership.md`](../network/storage-ownership.md)
   still removes stored entries whose publisher is not the owner.
@@ -78,10 +112,17 @@ publish and remove the data in the network storage is defined in
 - An account timestamp of an oracle node is applied. An account timestamp of another key is not applied, and its
   removal does not remove the applied one. If two oracle nodes publish the same account timestamp, the removal of one
   publication keeps it, and the removal of the last publication removes it.
+- With the restriction (rules 10 and 11): an oracle node of an oracle node key is listed, with and without the static
+  flag. An oracle node of a key with a role of the oracle node role type is not listed. A role of the oracle node role
+  type of another key is not listed, and its key does not authorize other roles.
+- With the restriction (rule 12): an oracle node does not accept a new registration of an oracle node role of another
+  key, and it accepts its cancellation.
 
 ## Related code
 
 - `AuthorizedData.isNotAuthorized()` (rules 1 and 2 at add), `AuthenticatedDataStorageService.add()`.
 - `AuthorizedBondedRolesService.hasAuthorizedPubKey()` (rules 2 and 3 before use).
 - `AuthorizedBondedRolesService.getAuthorizedOracleNodes()` (rule 8), `AccountTimestampService` (rule 9).
-- `AuthorizedPubKeys` (the static keys).
+- `AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES` and `isOracleNodeKeyAllowed()` (rules 10 and 11),
+  `Bisq1BridgeRequestService.processBondedRoleRegistrationRequest()` (rule 12), `OracleNodeService` (rule 13).
+- `AuthorizedPubKeys` (the static keys, `getOracleNodePubKeys()` for the oracle node keys).

@@ -17,6 +17,7 @@
 
 package bisq.bonded_roles.bonded_role;
 
+import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.application.Service;
@@ -28,6 +29,7 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,6 +57,11 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class AuthorizedBondedRolesService implements Service, DataService.Listener {
+    // Temporary restriction: while true, only the static oracle node keys may act as an oracle node. A bonded role of
+    // type ORACLE_NODE of a non-static key does not give this authority. Set it to false to allow oracle nodes with a
+    // non-static key again (see docs/specifications/bonded-roles/authorized-data.md).
+    public static final boolean ONLY_STATIC_ORACLE_NODES = true;
+
     public interface Listener {
         void onAuthorizedDataAdded(AuthorizedData authorizedData);
 
@@ -64,6 +71,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     private final NetworkService networkService;
     private final boolean ignoreSecurityManager;
+    private final Set<String> oracleNodePubKeys;
+    private final boolean onlyStaticOracleNodes;
     @Getter
     private final ObservableSet<BondedRole> bondedRoles = new ObservableSet<>();
     @Getter
@@ -76,8 +85,21 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
 
     public AuthorizedBondedRolesService(NetworkService networkService,
                                         boolean ignoreSecurityManager) {
+        this(networkService,
+                ignoreSecurityManager,
+                AuthorizedPubKeys.getOracleNodePubKeys(),
+                ONLY_STATIC_ORACLE_NODES);
+    }
+
+    @VisibleForTesting
+    public AuthorizedBondedRolesService(NetworkService networkService,
+                                        boolean ignoreSecurityManager,
+                                        Set<String> oracleNodePubKeys,
+                                        boolean onlyStaticOracleNodes) {
         this.networkService = networkService;
         this.ignoreSecurityManager = ignoreSecurityManager;
+        this.oracleNodePubKeys = Set.copyOf(oracleNodePubKeys);
+        this.onlyStaticOracleNodes = onlyStaticOracleNodes;
 
         initialDataServiceListener = new DataService.Listener() {
             @Override
@@ -289,6 +311,14 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             }
             return isAuthorized;
         }
+        if (requiresStaticOracleNodeKey(authorizingBondedRoleType)) {
+            // The decision does not depend on the bonded roles, so we do not reprocess the data when a role arrives
+            if (!isAuthorized) {
+                log.debug("The authorizedPublicKey is not one of the static oracle node keys. data={}",
+                        data.getClass().getSimpleName());
+            }
+            return isAuthorized;
+        }
 
         if (isAuthorized) {
             log.debug("authorizedPublicKey provided by a bonded role. data={}", data.getClass().getSimpleName());
@@ -313,12 +343,16 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         return isAuthorized;
     }
 
-    // Rules 2 and 3 of docs/specifications/bonded-roles/authorized-data.md, without side effects. The signature check is
+    // Rules 2, 3 and 10 of docs/specifications/bonded-roles/authorized-data.md, without side effects. The signature check is
     // done in AuthorizedData. Unlike hasAuthorizedPubKey, it does not queue the data for reprocessing, so it suits a
     // lookup of stored publications.
     public boolean isAuthorizedKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
+        if (requiresStaticOracleNodeKey(authorizingBondedRoleType)) {
+            // Independent of staticPublicKeysProvided, which the publisher sets
+            return oracleNodePubKeys.contains(authorizedDataPubKey);
+        }
         if (data.staticPublicKeysProvided()) {
             // The network layer checks the static keys only when it adds data, not when it loads stored data. A later
             // version can remove a key from the static keys, and a node which updates still holds the data of that key.
@@ -328,6 +362,16 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         return getAuthorizedBondedRoleStream()
                 .filter(bondedRole -> bondedRole.getBondedRoleType() == authorizingBondedRoleType)
                 .anyMatch(bondedRole -> bondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey));
+    }
+
+    // Whether the key may act as an oracle node: while only static oracle nodes are allowed, only a static oracle node
+    // key, otherwise any key (rules 10 and 11 of docs/specifications/bonded-roles/authorized-data.md).
+    public boolean isOracleNodeKeyAllowed(String pubKeyAsHex) {
+        return !onlyStaticOracleNodes || oracleNodePubKeys.contains(pubKeyAsHex);
+    }
+
+    private boolean requiresStaticOracleNodeKey(BondedRoleType authorizingBondedRoleType) {
+        return onlyStaticOracleNodes && authorizingBondedRoleType == BondedRoleType.ORACLE_NODE;
     }
 
     public void addListener(Listener listener) {
@@ -396,10 +440,18 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         // AuthorizedBondedRoles are published only by an oracle node. The oracle node use either a hard coded pubKey
         // or has been authorized by another already authorized oracle node. There need to be at least one root node 
         // with a hard coded pubKey.
-        if (hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE)) {
-            return Optional.of(authorizedBondedRole);
-        } else {
+        if (!hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE)) {
             return Optional.empty();
         }
+
+        // While only static oracle node keys may act as an oracle node, a role of type ORACLE_NODE of another key gives
+        // no authority. We do not list it, as users would take its holder for an oracle node.
+        if (authorizedBondedRole.getBondedRoleType() == BondedRoleType.ORACLE_NODE &&
+                !isOracleNodeKeyAllowed(authorizedBondedRole.getAuthorizedPublicKey())) {
+            log.info("Ignoring the bonded role of type ORACLE_NODE of {}, because its key is not a static oracle " +
+                    "node key", authorizedBondedRole.getProfileId());
+            return Optional.empty();
+        }
+        return Optional.of(authorizedBondedRole);
     }
 }
