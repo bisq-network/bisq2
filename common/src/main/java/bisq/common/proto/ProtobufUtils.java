@@ -21,6 +21,7 @@ import bisq.common.util.ExceptionUtil;
 import com.google.common.base.Enums;
 import com.google.protobuf.Any;
 import com.google.protobuf.Message;
+import com.google.protobuf.ProtocolMessageEnum;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
@@ -125,8 +126,8 @@ public class ProtobufUtils {
      * persisted entries, so that one invalid entry does not prevent it from loading the others (see
      * docs/specifications/network/validation-at-parsing.md).
      */
-    public static <P extends Message, T> Stream<T> fromProtoStreamSkippingInvalid(Collection<P> protos,
-                                                                                ProtoConverter<P, T> converter) {
+    public static <P, T> Stream<T> fromProtoStreamSkippingInvalid(Collection<P> protos,
+                                                                ProtoConverter<P, T> converter) {
         List<T> results = new ArrayList<>(protos.size());
         int numSkipped = 0;
         for (P proto : protos) {
@@ -144,7 +145,7 @@ public class ProtobufUtils {
      * Converts the values of a protobuf map with the converter, keeps the keys, and skips each entry whose value it
      * cannot convert. See {@link #fromProtoStreamSkippingInvalid}.
      */
-    public static <K, P extends Message, T> Stream<Map.Entry<K, T>> fromProtoEntryStreamSkippingInvalid(
+    public static <K, P, T> Stream<Map.Entry<K, T>> fromProtoEntryStreamSkippingInvalid(
             Map<K, P> protos,
             ProtoConverter<P, T> converter) {
         List<Map.Entry<K, T>> results = new ArrayList<>(protos.size());
@@ -163,15 +164,23 @@ public class ProtobufUtils {
     // Protos can hold private keys, payment account details or trade data, and exception messages can contain values
     // of them. Users share their log files, so we log only the type and the size of the proto, and the beginning of the
     // stack trace without messages (see UnresolvableProtobufMessageException).
-    private static void logSkippedEntry(Message proto, Exception exception, int numSkipped) {
+    private static void logSkippedEntry(Object proto, Exception exception, int numSkipped) {
         if (numSkipped <= MAX_LOGGED_SKIPPED_ENTRIES) {
             String stackTrace = ExceptionUtil.getSafeStackTraceAsString(exception).lines()
                     .limit(MAX_LOGGED_STACK_TRACE_LINES)
                     .collect(Collectors.joining("\n"));
-            log.error("We skip an entry which we cannot parse. type={}, {} bytes, cause:\n{}",
-                    proto.getDescriptorForType().getFullName(),
-                    proto.getSerializedSize(),
-                    stackTrace);
+            log.error("We skip an entry which we cannot parse. {}, cause:\n{}", describe(proto), stackTrace);
+        }
+    }
+
+    private static String describe(Object proto) {
+        if (proto instanceof Message message) {
+            return "type=" + message.getDescriptorForType().getFullName() + ", " + message.getSerializedSize() + " bytes";
+        } else if (proto instanceof ProtocolMessageEnum && proto instanceof Enum<?> protoEnum) {
+            // The name of an enum value is no private data. The number of an unknown value is not available.
+            return "enum=" + protoEnum.getDeclaringClass().getSimpleName() + "." + protoEnum.name();
+        } else {
+            return "type=" + (proto == null ? "null" : proto.getClass().getSimpleName());
         }
     }
 
