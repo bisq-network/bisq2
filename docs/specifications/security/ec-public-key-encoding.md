@@ -48,6 +48,9 @@ identities, and a third party can choose between them.
 4. **Keys which are stored as key objects** (`PubKey`, `ContractSignatureData`) are encoded again with `getEncoded()`
    when they are serialized or hashed. The encoding of the key object must be canonical. A node rejects a message
    whose key object has another encoding.
+5. **Size before parsing.** A node checks the size of received key bytes before it passes them to the key parser. The
+   size limit of a key is more than 50 and less than 100 bytes; the canonical encoding has 88 bytes. A node rejects key
+   bytes outside this limit without parsing them. This applies to the fields of rule 3 and to the keys of rule 4.
 
 ## Reasons
 
@@ -73,8 +76,15 @@ identities, and a third party can choose between them.
   of the salted fingerprint hash and these key bytes. The hash identifies the account timestamp. Other nodes compute
   the hash from the canonical encoding of the account key. The sender signs the payload, so only the sender can choose
   the encoding. Rule 3 applies, so that one account key has exactly one account timestamp hash.
-- The canonical check parses the key, decodes the curve point, and encodes the key again. It is not a cheap check. A
-  node runs the size check of the key first, so that it never parses oversized input.
+- Rule 5: a node parses a message before it checks the proof of work of the message, and the key parser runs while
+  the message is parsed. The work of the parser grows with the size of the key. For a key with explicit curve
+  parameters and a cofactor other than 1, the parser multiplies the point with the order of the curve, and the order
+  can have any size. With BouncyCastle 1.84, the parser needs about 3 microseconds for a canonical key, about 2.6
+  seconds for a key of 100 000 bytes, and about 30 seconds for a key of 1 000 000 bytes. Without rule 5, a peer could
+  keep a node busy with a few messages, also before the handshake. Explicit curve parameters do not fit into the size
+  limit of a key.
+- The canonical check parses the key, decodes the curve point, and encodes the key again. It is not a cheap check. It
+  also runs after the size check.
 - Rule 3 has no compatibility cost for messages which nodes create, because of rule 2.
   Nodes of earlier versions accept other encodings and relay them; nodes of this version reject them when they parse
   the message (see [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md#compatibility)).
