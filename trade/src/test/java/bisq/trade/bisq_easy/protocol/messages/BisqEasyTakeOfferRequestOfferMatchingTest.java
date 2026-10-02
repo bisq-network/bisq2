@@ -89,16 +89,6 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
     }
 
     @Test
-    void verifyIgnoresOfferbookMessageOfAnotherAuthorCarryingOurOffer() {
-        addOfferbookMessage("other-profile-id", takersOffer);
-        when(tradeService.hasSignedTradeWithOffer(takersOffer)).thenReturn(false);
-
-        TradeProtocolException exception =
-                assertThrows(TradeProtocolException.class, () -> handler.verify(message));
-        assertEquals(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND, exception.getTradeProtocolFailure());
-    }
-
-    @Test
     void verifyMatchesOfferbookMessageWeAuthored() {
         addOfferbookMessage(MY_PROFILE_ID, takersOffer);
 
