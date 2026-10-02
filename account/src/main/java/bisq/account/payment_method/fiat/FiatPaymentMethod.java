@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
+public final class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
     public static FiatPaymentMethod fromPaymentRail(FiatPaymentRail fiatPaymentRail) {
         return new FiatPaymentMethod(fiatPaymentRail);
     }
