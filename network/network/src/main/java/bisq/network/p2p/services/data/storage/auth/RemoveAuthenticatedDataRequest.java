@@ -163,6 +163,7 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateDate(created);
         SignatureValidation.validateSignatures(signature, signatureV2);
+        MetaData.validateClassName(className);
     }
 
 

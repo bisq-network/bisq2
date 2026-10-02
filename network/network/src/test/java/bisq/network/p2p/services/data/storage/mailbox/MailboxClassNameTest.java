@@ -27,11 +27,14 @@ import org.junit.jupiter.api.Test;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.List;
 
 import static bisq.network.p2p.services.data.storage.mailbox.TestConfidentialMessages.createConfidentialMessage;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * MailboxData and RemoveMailboxRequest carry the class name of the MailboxMessage in the field className. Nodes of
@@ -43,6 +46,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 class MailboxClassNameTest {
     private static final String CLASS_NAME = AckMessage.class.getSimpleName();
     private static final MetaData META_DATA = AckMessage.META_DATA;
+
+    private static final List<String> INVALID_CLASS_NAMES = List.of(
+            "Name\nforged log line",
+            "A".repeat(51),
+            "lowerCaseName");
 
     private final KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
     private final KeyPair receiverKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -129,5 +137,34 @@ class MailboxClassNameTest {
         assertEquals(CLASS_NAME, requestWithoutClassName.getClassName());
         assertFalse(requestWithoutClassName.isSignatureInvalid());
         assertArrayEquals(request.serializeForHash(), requestWithoutClassName.serializeForHash());
+    }
+
+    // className is a field which the sender sets. It must have the format of the class name of MetaData, so a value
+    // of any length or with line breaks fails at parsing (see docs/specifications/network/storage-metadata.md).
+    @Test
+    void mailboxDataWithInvalidClassNameIsRejectedAtParsing() throws UnresolvableProtobufException {
+        bisq.network.protobuf.MailboxData proto = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair))
+                .toProto(false);
+
+        for (String className : INVALID_CLASS_NAMES) {
+            assertInstanceOf(IllegalArgumentException.class,
+                    assertThrows(UnresolvableProtobufException.class,
+                            () -> MailboxData.fromProto(proto.toBuilder().setClassName(className).build())).getCause());
+        }
+    }
+
+    @Test
+    void removeMailboxRequestWithInvalidClassNameIsRejectedAtParsing()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        MailboxData mailboxData = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair));
+        bisq.network.protobuf.RemoveMailboxRequest proto = RemoveMailboxRequest.from(mailboxData, receiverKeyPair)
+                .toValueProto(false);
+
+        for (String className : INVALID_CLASS_NAMES) {
+            assertInstanceOf(IllegalArgumentException.class,
+                    assertThrows(UnresolvableProtobufException.class,
+                            () -> RemoveMailboxRequest.fromProto(proto.toBuilder().setClassName(className).build()))
+                            .getCause());
+        }
     }
 }

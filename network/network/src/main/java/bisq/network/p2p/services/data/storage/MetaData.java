@@ -23,7 +23,6 @@ import bisq.common.encoding.canonical.CanonicalSchema;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -60,6 +59,7 @@ public final class MetaData implements NetworkProto, Canonical {
     public static final int HIGH_PRIORITY = 1;
     public static final int HIGHEST_PRIORITY = 2;
 
+    private static final int MAX_CLASS_NAME_LENGTH = 50;
     private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("^[A-Z][A-Za-z0-9_$]*$");
 
     // How long data are kept in the storage map
@@ -99,9 +99,15 @@ public final class MetaData implements NetworkProto, Canonical {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(className, 50);
-        if (!CLASS_NAME_PATTERN.matcher(className).matches()) {
-            throw new IllegalArgumentException("Invalid className");
+        validateClassName(className);
+    }
+
+    // Remove requests, refresh requests and mailbox data carry the class name also as a field of their own, which the
+    // sender sets. They apply the same rule at parsing (see docs/specifications/network/storage-metadata.md). The
+    // message of the exception does not contain the received value.
+    public static void validateClassName(String className) {
+        if (className.length() > MAX_CLASS_NAME_LENGTH || !CLASS_NAME_PATTERN.matcher(className).matches()) {
+            throw new IllegalArgumentException("Invalid className. length=" + className.length());
         }
     }
 
