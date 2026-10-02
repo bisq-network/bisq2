@@ -103,10 +103,10 @@ public class ProtoBufMessageLengthTests {
 
     private AuthorizationService createAuthorizationService() {
         //noinspection deprecation
-        return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
+        return new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH_V2)),
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),
-                Set.of(Feature.AUTHORIZATION_HASH_CASH));
+                Set.of(Feature.AUTHORIZATION_HASH_CASH_V2));
     }
 
     private bisq.network.protobuf.NetworkEnvelope createValidRequest() {

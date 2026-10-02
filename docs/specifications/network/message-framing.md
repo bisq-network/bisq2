@@ -31,17 +31,13 @@ of a message. The framing is the format which marks where a message starts and w
 
    | Message | Largest envelope | Limit of the message type |
    |---|---|---|
-   | `ConnectionHandshake.Request` | 1 771 bytes | an I2P address of at most 700 characters, at most all transport types and features, an address ownership proof of 64 bytes |
+   | `ConnectionHandshake.Request` | below 1.8 KB | an I2P address of at most 700 characters, at most all transport types and features, an address ownership proof of 64 bytes |
    | `InventoryRequest` with a hash set filter | 3 000 130 bytes | at most 100 000 filter entries of at most 30 bytes each (see [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#size-of-the-filter)) |
-   | `InventoryResponse` | about 2 MB, about 4.1 MB with the token type `HASH_CASH` | the inventory size limit of the responder, 2 000 000 bytes by default; the requester accepts up to twice its own inventory size limit |
+   | `InventoryResponse` | about 2 MB with `HASH_CASH_V2` | the inventory size limit of the responder, 2 000 000 bytes by default; the requester accepts up to twice its own inventory size limit |
 
-   A node creates the authorization token of each handshake request with the token type `HASH_CASH`, because it does
-   not know the features of the peer yet. The proof of work of this type contains a copy of the request. A handshake
-   response is smaller than the request. Nodes use the token type `HASH_CASH_V2` since version 2.1.3 for all other
-   messages. Its proof of work contains a 20 byte hash of the message. For a peer before version 2.1.3, a node still
-   uses `HASH_CASH`, and the envelope is about twice as large as the message. An inventory response of the default
-   size then has 4 080 153 bytes, measured with entries of 100 bytes. Smaller entries need more bytes for the repeated
-   field. Signed storage requests have more than 100 bytes.
+   A node uses `HASH_CASH_V2` for initial handshake requests. Its proof of work contains a
+   20 byte hash of the message. Legacy `HASH_CASH` tokens are rejected; see
+   [Authorization tokens](authorization-tokens.md).
 
    A change which makes a message type larger must keep its largest message below the size limit. Examples are a new
    field of a filter entry, a higher number of filter entries, and a higher default inventory size limit.
@@ -143,8 +139,8 @@ of a message. The framing is the format which marks where a message starts and w
   configuration of the desktop application. With the limit of an established connection, these handshakes could need
   16 times about 93 MB (see the reasons for rule 4). With 64 KiB, one parse needs about 1.4 MB by the same estimate.
   The separate budget of rule 11 also bounds their combined parsing, independently of the handshake thread count.
-- The values of the limits: the largest handshake message of rule 6 has about 1.8 KB. The largest other message is an
-  inventory response with the token type `HASH_CASH`, with about 4.1 MB. The limit of an established connection is
+- The values of the limits: the largest handshake message of rule 6 is below 1.8 KB. The largest other message is an
+  inventory request with a full hash set filter, with about 3.0 MB. The limit of an established connection is
   small, because the memory of a parse grows with the size of a message (see the reasons for rule 4), and because the
   largest message types are known. The limit of the filter entries keeps the largest inventory request at 3.0 MB. An
   increase of a limit needs all nodes to update first (see [Compatibility](#compatibility)).
@@ -161,14 +157,10 @@ of a message. The framing is the format which marks where a message starts and w
   can also exceed the size limit. Both need a node of an earlier version with more than 100 000 stored requests. A
   filter of a node had 38 280 entries on 2026-10-02.
 - Nodes of earlier versions accept an inventory response of up to twice their own inventory size limit. A responder of
-  an earlier version with an inventory size limit above about 4 100 KB, or above about 2 050 KB for a peer before
-  version 2.1.3, sends a full response above the size limit. A node of this version then closes the connection. The
-  default limit is 2 000 KB.
-- Nodes up to version 2.1.2 use the token type `HASH_CASH`. Its proof of work contains the whole message, so their
-  envelopes have about twice the size of the message. An inventory request of such a node, or of a node of this
-  version to such a node, is larger than the size limit if its hash set filter has more than about 69 900 entries of
-  30 bytes, or about 80 600 entries of 26 bytes. A node of this version then closes the connection, and a sender of
-  this version fails before it sends the request (rule 5).
+  an earlier version with an inventory size limit above about 4 100 KB sends a full response above the size limit.
+  A node of this version then closes the connection. The default limit is 2 000 KB.
+- Legacy `HASH_CASH` authorization is rejected, including legacy handshake tokens. See
+  [Authorization tokens](authorization-tokens.md#compatibility).
 
 ## Known limitations
 

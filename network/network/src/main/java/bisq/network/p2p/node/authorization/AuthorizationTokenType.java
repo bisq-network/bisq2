@@ -3,20 +3,18 @@ package bisq.network.p2p.node.authorization;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.common.proto.UnresolvableProtobufEnumException;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.Feature;
 
 import java.util.Optional;
 
 public enum AuthorizationTokenType implements ProtoEnum {
-    @Deprecated(since = "2.1.2")
-    HASH_CASH,
     EQUI_HASH,
     HASH_CASH_V2;
 
     public static Optional<AuthorizationTokenType> fromFeature(Feature feature) {
         switch (feature) {
-            case AUTHORIZATION_HASH_CASH:
-                return Optional.of(AuthorizationTokenType.HASH_CASH);
             case AUTHORIZATION_EQUI_HASH:
                 return Optional.of(AuthorizationTokenType.EQUI_HASH);
             case AUTHORIZATION_HASH_CASH_V2:
@@ -33,6 +31,10 @@ public enum AuthorizationTokenType implements ProtoEnum {
 
     public static AuthorizationTokenType fromProto(bisq.network.protobuf.AuthorizationTokenType proto)
             throws UnresolvableProtobufException {
-        return ProtobufUtils.enumFromProto(AuthorizationTokenType.class, proto.name(), HASH_CASH);
+        try {
+            return ProtobufUtils.enumFromProto(AuthorizationTokenType.class, proto.name());
+        } catch (UnresolvableProtobufEnumException e) {
+            throw new UnresolvableProtobufMessageException(e);
+        }
     }
 }

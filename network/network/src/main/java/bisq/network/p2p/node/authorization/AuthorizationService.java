@@ -20,7 +20,6 @@ package bisq.network.p2p.node.authorization;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashTokenService;
-import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
 import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2TokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
@@ -63,10 +62,6 @@ public class AuthorizationService {
                 .flatMap(feature -> AuthorizationTokenType.fromFeature(feature).stream())
                 .forEach(supportedFilterType -> {
                     switch (supportedFilterType) {
-                        case HASH_CASH:
-                            //noinspection deprecation
-                            supportedServices.put(supportedFilterType, new HashCashTokenService(hashCashProofOfWorkService));
-                            break;
                         case EQUI_HASH:
                             supportedServices.put(supportedFilterType, new EquiHashTokenService(equihashProofOfWorkService));
                             break;
@@ -85,6 +80,8 @@ public class AuthorizationService {
                                           int messageCounter,
                                           Collection<Feature> peersFeatures) {
         AuthorizationTokenType preferredAuthorizationTokenType = selectAuthorizationTokenType(peersFeatures);
+        checkArgument(supportedServices.containsKey(preferredAuthorizationTokenType),
+                "No locally supported authorization service for %s", preferredAuthorizationTokenType);
         return supportedServices.get(preferredAuthorizationTokenType).createToken(message,
                 networkLoad,
                 peerAddress,
@@ -136,6 +133,7 @@ public class AuthorizationService {
             return myPreferredAuthorizationTokenTypes.get(0);
         }
         List<AuthorizationTokenType> peersAuthorizationTokenTypes = toAuthorizationTypes(peersFeatures);
+        checkArgument(!peersAuthorizationTokenTypes.isEmpty(), "Peer has no supported authorization token type");
         return myPreferredAuthorizationTokenTypes.stream()
                 .filter(peersAuthorizationTokenTypes::contains)
                 .findFirst()

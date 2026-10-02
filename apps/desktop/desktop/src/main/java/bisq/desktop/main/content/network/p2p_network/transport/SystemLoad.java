@@ -23,7 +23,7 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.common.network.TransportType;
 import bisq.network.p2p.ServiceNode;
-import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
+import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2TokenService;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.node.network_load.NetworkLoadService;
 import bisq.network.p2p.services.data.DataService;
@@ -67,7 +67,7 @@ public class SystemLoad {
         private final Optional<TransportController> i2pController = Optional.empty();
         private final Optional<StorageService> storageService;
         private final Optional<NetworkLoadService> networkLoadService;
-        private final Optional<HashCashTokenService.Metrics> metrics;
+        private final Optional<HashCashV2TokenService.Metrics> metrics;
 
         private Controller(ServiceProvider serviceProvider, TransportType transportType) {
             NetworkService networkService = serviceProvider.getNetworkService();
@@ -75,9 +75,9 @@ public class SystemLoad {
             networkLoadService = networkService.findServiceNode(transportType)
                     .flatMap(ServiceNode::getNetworkLoadService);
             metrics = networkService.getServiceNodesByTransport().getAuthorizationService().getSupportedServices().values().stream()
-                    .filter(authorizationTokenService -> authorizationTokenService instanceof HashCashTokenService)
-                    .map(authorizationTokenService -> (HashCashTokenService) authorizationTokenService)
-                    .map(HashCashTokenService::getMetrics)
+                    .filter(authorizationTokenService -> authorizationTokenService instanceof HashCashV2TokenService)
+                    .map(authorizationTokenService -> (HashCashV2TokenService) authorizationTokenService)
+                    .map(HashCashV2TokenService::getMetrics)
                     .findAny();
 
             model = new Model();
