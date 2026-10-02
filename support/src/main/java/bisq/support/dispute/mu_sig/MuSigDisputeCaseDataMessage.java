@@ -98,7 +98,11 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
                     proto.getTradeId(),
                     NetworkId.fromProto(proto.getSenderNetworkId()),
                     proto.getContractHash().toByteArray(),
-                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                    // The trade peers created the chat messages, and a node of an earlier version accepts a message which
+                    // breaks a rule of this version. Such a message is skipped, so that it does not make the whole
+                    // message unreadable.
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    MuSigOpenTradeMessage::fromProto)
                             .collect(Collectors.toList())
             );
         } catch (RuntimeException e) {
