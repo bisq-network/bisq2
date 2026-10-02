@@ -29,6 +29,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
+import java.util.List;
 import java.util.Locale;
 
 public final class SupportMarkdownRenderer {
@@ -58,7 +59,7 @@ public final class SupportMarkdownRenderer {
             textFlow.maxWidthProperty().bind(root.maxWidthProperty());
 
             for (SupportMarkdownDocument.Segment segment : line.segments()) {
-                textFlow.getChildren().add(createNode(segment, line.type()));
+                textFlow.getChildren().addAll(createNodes(segment, line.type()));
             }
 
             root.getChildren().add(textFlow);
@@ -83,13 +84,13 @@ public final class SupportMarkdownRenderer {
         }
     }
 
-    private static Node createNode(SupportMarkdownDocument.Segment segment,
-                                   SupportMarkdownDocument.LineType lineType) {
+    private static List<Node> createNodes(SupportMarkdownDocument.Segment segment,
+                                          SupportMarkdownDocument.LineType lineType) {
         if (segment.type() == SupportMarkdownDocument.SegmentType.LINK) {
-            return createLinkNode(segment, lineType);
+            return createLinkNodes(segment, lineType);
         }
         if (segment.type() == SupportMarkdownDocument.SegmentType.IMAGE) {
-            return createImageNode(segment, lineType);
+            return List.of(createImageNode(segment, lineType));
         }
 
         Text text = createTextNode(segment.text(), lineType);
@@ -101,19 +102,40 @@ public final class SupportMarkdownRenderer {
             default -> {
             }
         }
-        return text;
+        return List.of(text);
     }
 
-    private static Hyperlink createLinkNode(SupportMarkdownDocument.Segment segment,
-                                            SupportMarkdownDocument.LineType lineType) {
-        Hyperlink hyperlink = new Hyperlink(segment.text());
+    /**
+     * The label of a link comes from the sender of the message. It must not decide what the reader takes for the
+     * target of the link. So the hyperlink always shows the URL which it opens. A label which differs from the URL
+     * is shown as plain text in front of the hyperlink: {@code label (URL)}.
+     * <p>
+     * The label is not part of the hyperlink. A TextFlow does not wrap a hyperlink, so a long label inside the
+     * hyperlink would move the URL out of the visible part of the line. As plain text the label wraps.
+     */
+    private static List<Node> createLinkNodes(SupportMarkdownDocument.Segment segment,
+                                              SupportMarkdownDocument.LineType lineType) {
+        String url = segment.url();
+        if (url == null) {
+            return List.of(createTextNode(segment.text(), lineType));
+        }
+
+        Hyperlink hyperlink = createHyperlink(url, lineType);
+        if (url.equals(segment.text())) {
+            return List.of(hyperlink);
+        }
+        return List.of(createTextNode(segment.text() + " (", lineType), hyperlink, createTextNode(")", lineType));
+    }
+
+    private static Hyperlink createHyperlink(String url, SupportMarkdownDocument.LineType lineType) {
+        Hyperlink hyperlink = new Hyperlink(url);
         hyperlink.getStyleClass().add("chat-markdown-link");
         if (lineType == SupportMarkdownDocument.LineType.HEADING_3) {
             hyperlink.getStyleClass().add("chat-markdown-heading-3");
         }
         hyperlink.setOnAction(e -> {
-            if (MarkdownSecurityUtils.isSafeOpenUrl(segment.url())) {
-                Browser.open(segment.url());
+            if (MarkdownSecurityUtils.isSafeOpenUrl(url)) {
+                Browser.open(url);
             }
         });
         return hyperlink;
