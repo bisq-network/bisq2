@@ -239,18 +239,30 @@ public final class AuthorizedData extends AuthenticatedData {
         return getAuthorizedDistributedData().getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes));
     }
 
-    // The authorized key, and also the owner which the distributed data names. The authorization signature does not
-    // cover the owner of the add request, so the authorized key must own the data: otherwise anyone could publish and
-    // remove a copy of it. Only AuthorizedOracleNode names an owner: the key of its network ID, which nodes of v2.1.13
-    // and earlier require as its publisher. Accepting the authorized key as well lets a later version publish it with
-    // the authorized key pair (see docs/specifications/network/storage-ownership.md).
+    // The authorized key owns authorized data which names no owner. The authorization signature does not cover the
+    // owner of the add request, so the authorized key must own the data: otherwise anyone could publish and remove a
+    // copy of it.
+    //
+    // Only AuthorizedOracleNode names an owner: the key of its network ID, which nodes of v2.1.13 and earlier require
+    // as its publisher. Its authorized key owns it as well, but only if it is a static key of the type. So a later
+    // version can publish it with the authorized key pair of a root oracle node.
+    //
+    // Another authorized key is not an owner of data which names its owner. The store checks only the signature of
+    // authorized data without the static flag, so for the store any key can be the authorized key. If each authorized
+    // key were an owner, any node could publish an AuthorizedOracleNode with its own key. Nodes of v2.1.13 and earlier
+    // reject such an entry each time they receive it, so updated nodes would send it to them again with every
+    // inventory response (see docs/specifications/network/storage-ownership.md).
     @Override
     public boolean isOwner(byte[] pubKeyHash) {
-        if (Arrays.equals(DigestUtil.hash(authorizedPublicKeyBytes), pubKeyHash)) {
-            return true;
+        if (distributedData instanceof OwnershipVerifiableData ownershipVerifiableData) {
+            return Arrays.equals(ownershipVerifiableData.getOwnerPubKeyHash(), pubKeyHash) ||
+                    (isAuthorizedKey(pubKeyHash) && isStaticAuthorizedKey());
         }
-        return distributedData instanceof OwnershipVerifiableData ownershipVerifiableData &&
-                Arrays.equals(ownershipVerifiableData.getOwnerPubKeyHash(), pubKeyHash);
+        return isAuthorizedKey(pubKeyHash);
+    }
+
+    private boolean isAuthorizedKey(byte[] pubKeyHash) {
+        return Arrays.equals(DigestUtil.hash(authorizedPublicKeyBytes), pubKeyHash);
     }
 
     @Override

@@ -20,7 +20,11 @@ package bisq.bonded_roles.bonded_role;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.encoding.Hex;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
@@ -30,6 +34,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
+import bisq.security.keys.PubKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +43,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -59,6 +65,8 @@ class StaticOracleNodeKeysOnlyTest {
     private AuthenticatedDataStorageService store;
     private AuthorizedBondedRolesService authorizedBondedRolesService;
     private KeyPair oracleKeyPair;
+    // The key pair of the network ID of the oracle nodes of the test
+    private KeyPair identityKeyPair;
 
     @BeforeEach
     void setUp() {
@@ -69,6 +77,7 @@ class StaticOracleNodeKeysOnlyTest {
                 .join();
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getDataService()).thenReturn(Optional.of(dataService));
+        identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         // The static oracle node key of this version
         oracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService,
@@ -141,15 +150,22 @@ class StaticOracleNodeKeysOnlyTest {
     }
 
     // Oracle discovery reads stored publications. Insert directly because the test supplies its own static key set.
-    private void storeAndNotify(AuthorizedOracleNode oracleNode, KeyPair keyPair) throws GeneralSecurityException {
-        AuthorizedData publication = authorize(oracleNode, keyPair);
-        AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, publication, keyPair);
+    // The key pair of the network ID publishes the oracle node, as oracle nodes do. The network storage accepts the
+    // authorized key as publisher only if it is a static key of the code (see
+    // docs/specifications/network/storage-ownership.md), which the generated keys of this test are not.
+    private void storeAndNotify(AuthorizedOracleNode oracleNode, KeyPair authorizedKeyPair)
+            throws GeneralSecurityException {
+        AuthorizedData publication = authorize(oracleNode, authorizedKeyPair);
+        AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, publication, identityKeyPair);
         store.getPersistableStore().getMap().put(request.getStorageKey(), request);
         authorizedBondedRolesService.onAuthorizedDataAdded(publication);
     }
 
-    private static AuthorizedOracleNode createOracleNode(String authorizedPublicKey, boolean staticPublicKeysProvided) {
-        return new AuthorizedOracleNode(createNetworkId(),
+    private AuthorizedOracleNode createOracleNode(String authorizedPublicKey, boolean staticPublicKeysProvided) {
+        NetworkId networkId = new NetworkId(new AddressByTransportTypeMap(Map.of(TransportType.CLEAR,
+                LocalHostAddressTypeFacade.toLocalHostAddress(1234))),
+                new PubKey(identityKeyPair.getPublic(), "identity"));
+        return new AuthorizedOracleNode(networkId,
                 "a".repeat(40),
                 authorizedPublicKey,
                 "oracle",
