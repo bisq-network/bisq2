@@ -145,7 +145,7 @@ public abstract class Connection {
 
         try {
             PeerSocket peerSocket = new DefaultPeerSocket(socket);
-            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
+            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket, NetworkEnvelope.MAX_SERIALIZED_SIZE);
         } catch (IOException exception) {
             log.error("Could not create objectOutputStream/objectInputStream for socket {}", socket, exception);
             errorHandler.accept(this, exception);

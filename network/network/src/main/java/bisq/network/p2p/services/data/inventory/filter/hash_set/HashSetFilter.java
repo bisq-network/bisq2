@@ -40,7 +40,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true)
 public final class HashSetFilter extends InventoryFilter {
     // The maximum number of entries which a receiver accepts and a requester sends. An entry needs 24 to 30 bytes, so
-    // the largest filter needs at most 3.0 MB (see docs/specifications/network/inventory-hash-set-filter.md).
+    // the largest filter needs at most 3.0 MB and fits the size limit of a message (see
+    // docs/specifications/network/inventory-hash-set-filter.md and docs/specifications/network/message-framing.md).
     // Nodes of earlier versions accept fewer than 200 000 entries.
     public final static int MAX_ENTRIES = 100_000;
 
