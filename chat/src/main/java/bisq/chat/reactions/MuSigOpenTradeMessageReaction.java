@@ -51,6 +51,8 @@ public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
                                          boolean isRemoved) {
         super(id, senderUserProfile, receiverUserProfileId, receiverNetworkId, chatChannelId, chatChannelDomain,
                 chatMessageId, reactionId, date, isRemoved);
+
+        verify();
     }
 
     @Override
