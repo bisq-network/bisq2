@@ -37,7 +37,9 @@ publish and remove the data in the network storage is defined in
    using the same authorization check as applying profile age. The renewal interval for authorized timestamps is
    unchanged.
 7. If no bonded role matches (rule 3), the application keeps the data and checks it again when a bonded role or an
-   oracle node is added. Bonded roles can arrive after the data which they authorize.
+   oracle node is added. Bonded roles can arrive after the data which they authorize. The application keeps the data
+   only while the network storage holds it: when the data is removed or expires, the application does not check it
+   again.
 8. A node lists an oracle node (`AuthorizedOracleNode`) only while the network storage holds at least one publication
    of it for which rule 2 or rule 3 holds at that time, with the oracle node as authorizing role type. The node derives
    the list from the stored publications each time it uses it. So the removal of another publication does not remove
@@ -80,6 +82,10 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
 - Rule 6 also protects the profile timestamp request lookup. A signed timestamp from another key can be stored
   without oracle authority when it has no static flag. Counting it as an existing timestamp would suppress a
   missing-timestamp request while renewal is not due, even though the node rejects it when applying profile age.
+- Rule 7, removed data: data which is checked again after its removal would reach the services although no store
+  holds it, for example an alert which its publisher removed, and it would stay until the node shuts down. Any key
+  can publish data without the static flag (rule 4), so the kept data would also grow without limit. With rule 7, the
+  limits of the stores bound it.
 - Rule 8: users send their registration requests and account timestamp requests to the listed oracle nodes. Without
   the check, any key could publish an oracle node without the static flag, and users would send it these requests.
   A list which the node updates only when oracle node data is added or removed would keep an oracle node whose role a
