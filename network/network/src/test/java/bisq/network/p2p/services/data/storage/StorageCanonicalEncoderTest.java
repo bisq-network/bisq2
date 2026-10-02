@@ -533,7 +533,8 @@ public class StorageCanonicalEncoderTest {
 
     // Data of a higher-level module, held in an Any. It serializes as network.MetaData so that no resolver is needed.
     // priority is excluded from the hash, as the name matches the protobuf field.
-    private static class ExternalData implements AuthorizedDistributedData, AppendOnlyData {
+    // Names the test key as its owner, so that requests which this key publishes are valid
+    private static class ExternalData implements AuthorizedDistributedData, AppendOnlyData, OwnershipVerifiableData {
         private final String content;
         @ExcludeForHash
         private final int priority;
@@ -546,6 +547,11 @@ public class StorageCanonicalEncoderTest {
 
         @Override
         public void verify() {
+        }
+
+        @Override
+        public byte[] getOwnerPubKeyHash() {
+            return PUBLIC_KEY_HASH;
         }
 
         @Override

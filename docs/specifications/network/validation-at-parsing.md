@@ -18,7 +18,8 @@ message, so they cannot limit the memory which these steps need.
    - the encoding of a field, for example the canonical encoding of an EC public key (see
      [`../security/ec-public-key-encoding.md`](../security/ec-public-key-encoding.md)) or the encoding of a signature;
    - the consistency of two fields, for example the publisher hash and the public key of an add request (see
-     [`storage-ownership.md`](storage-ownership.md#the-publisher-hash));
+     [`storage-ownership.md`](storage-ownership.md#the-publisher-hash)), or the publisher of an add request and the
+     owner which its data names (see [`storage-ownership.md`](storage-ownership.md#admission));
    - the presence of the signatures which the node requires (see
      [`storage-request-signatures.md`](storage-request-signatures.md#verification)). `verify()` can use the clock of
      the node for this rule, because the required signatures depend on the cutoff date of signature V1.
@@ -35,8 +36,8 @@ message, so they cannot limit the memory which these steps need.
    - A connection closes when the node cannot parse a message which it receives.
 5. Checks which need the state of the node, not only the object, stay in the component which owns that state. For
    storage requests these are the stores. Examples: the admission of registered class names and MetaData (see
-   [`storage-metadata.md`](storage-metadata.md)), the owner of authenticated data (see
-   [`storage-ownership.md`](storage-ownership.md)), the order of sequence numbers (see
+   [`storage-metadata.md`](storage-metadata.md)), the owner of a stored entry after a refresh, which replaces the
+   creation date of the entry (see [`storage-ownership.md`](storage-ownership.md)), the order of sequence numbers (see
    [`storage-request-ordering.md`](storage-request-ordering.md)), and the verification of the signatures against the
    public key, which the store runs after it rejected copies of stored requests.
 
