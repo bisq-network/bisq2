@@ -6,7 +6,7 @@ data and mailbox data. Append-only data has no owner.
 ## Terms
 
 - **Owner**: the key which may publish the data. In the authenticated data store, only the owner can also refresh and
-  remove it. The data names its owner, or, for authorized data, the authorized key is the owner.
+  remove it. The data names its owner. For authorized data, the authorized key is an owner as well.
 - **Publisher**: the key which signs an add request. The add request contains the hash of this key
   (`pubKeyHash` of `AuthenticatedSequentialData`, `senderPublicKeyHash` of `MailboxSequentialData`). This hash must be
   the owner hash of the signing key (see [The publisher hash](#the-publisher-hash)).
@@ -43,7 +43,7 @@ compare both before it accepts the data.
    | `CommonPublicChatMessageReaction`, `BisqEasyOfferbookMessageReaction` | the reacting user: `userProfileId` |
    | `MuSigOfferMessage` | the maker: the key of the maker's network ID in the offer |
    | `ConfidentialMessage` (in mailbox data) | the sender: `senderPublicKey` of the confidential data |
-   | `AuthorizedOracleNode` | the key of its network ID |
+   | `AuthorizedOracleNode` | the key of its network ID; its authorized key owns it as well (rule 4) |
    | other authorized data | none: the authorized key is the owner (rule 4) |
    | `AccountTimestamp` | none: it is published only inside `AuthorizedAccountTimestamp` |
    | append-only data | none: it is not signed and cannot be removed |
@@ -67,12 +67,20 @@ compare both before it accepts the data.
    Reason: authorized data names no owner. Wrapped as default authenticated data, it would otherwise skip the check of
    its authorization.
 
-4. The owner of authorized data is the owner which the data names. If the data names no owner, its authorized key
-   (`authorizedPublicKeyBytes`) is the owner.
+4. The authorized key (`authorizedPublicKeyBytes`) is an owner of authorized data. If the data names an owner, that
+   owner is an owner as well.
 
    Reason: the authorization signature covers the data, but not the publisher. Anyone can copy authorized data with a
    valid authorization signature into their own add request. Only the authority can decide who publishes and removes
    its data.
+
+   Only `AuthorizedOracleNode` names an owner: the key of the network ID of the oracle node. Nodes of v2.1.13 and
+   earlier accept an `AuthorizedOracleNode` only from this key, so oracle nodes still publish it with that key pair
+   (rule 9). Updated nodes also accept the authorized key as its owner, so that a later version can publish it with
+   the authorized key pair, like all other authorized data (see
+   [Owner of `AuthorizedOracleNode`](#owner-of-authorizedoraclenode)). Both owners belong to the operator of the
+   oracle node. The authorization signature covers the network ID, so no third party can publish or remove an
+   `AuthorizedOracleNode`.
 
 ### The publisher hash
 
@@ -116,8 +124,8 @@ failure therefore affects only a peer which sends a request that no released nod
 ### Publishers of authorized data
 
 9. Oracle and seed nodes publish and remove authorized data with their authorized key pair: the key pair whose public
-   key is `authorizedPublicKeyBytes`. `AuthorizedOracleNode` is the exception: it names the key of the network ID of the
-   oracle node as its owner, so the oracle node publishes it with that key pair.
+   key is `authorizedPublicKeyBytes`. `AuthorizedOracleNode` is the exception: the oracle node publishes it with the key
+   pair of its network ID, because nodes of v2.1.13 and earlier accept it only from that key.
 10. Security managers, moderators and release managers use the key pair of their user identity both as authorized key
     pair and as publisher. They need no change.
 
@@ -208,10 +216,34 @@ reject the entries of earlier versions and remove the stored ones, also if rule 
 migration of rule 14 must run before that date. Rule 12 then still accepts only entries with signature V2 and an
 earlier creation date, which are the copies described in [Known limitations](#known-limitations).
 
+## Owner of `AuthorizedOracleNode`
+
+The exception of `AuthorizedOracleNode` (rules 4 and 9) is not a security problem. It only makes the oracle node use
+two key pairs for its authorized data. Its cause is a check of nodes of v2.1.13 and earlier: they reject an
+`AuthorizedOracleNode` whose publisher is not the key of its network ID. A node can accept a new owner only if it runs
+a version which accepts it. So the exception is removed in three steps, each in a later release than the one before:
+
+1. Nodes accept both keys as owner (rule 4). Oracle nodes publish with the key of the network ID. This is the current
+   version.
+2. When most nodes accept both keys, root oracle nodes also publish their `AuthorizedOracleNode` with the authorized
+   key pair. They keep the entry of the network ID for nodes of v2.1.13 and earlier. Applications keep the oracle node
+   while one authorized publication of it is stored (rule 8 of
+   [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md#rules)).
+3. When nodes of v2.1.13 and earlier are no longer supported, oracle nodes publish only with the authorized key pair
+   and remove the entry of the network ID. `AuthorizedOracleNode` then names no owner, and rules 1, 4 and 9 lose the
+   exception. This step removes the oracle nodes from nodes of v2.1.13 and earlier, so it must come with a minimum
+   required version.
+
+The data publisher migration (rule 14) does not apply to `AuthorizedOracleNode`. It would remove the entry of the
+network ID, which nodes of v2.1.13 and earlier need.
+
+Who decides on steps 2 and 3: the developers, together with the operators of the oracle nodes.
+
 ## Compatibility
 
-- The rule adds no field and changes no signature. Nodes of earlier versions do not check the owner. They accept and
-  relay data of any publisher, also copies which updated nodes reject. An updated node skips such a copy in an
+- The rule adds no field and changes no signature. Nodes of earlier versions do not check the owner, except for
+  `AuthorizedOracleNode`, which they accept only from the key of its network ID. They accept and relay data of any
+  publisher, also copies which updated nodes reject. An updated node skips such a copy in an
   inventory response. When a node of an earlier version relays such a copy as a broadcast, an updated node drops the
   message and keeps the connection to the relay (see rule 6 of
   [`validation-at-parsing.md`](validation-at-parsing.md#rules)). Honest nodes publish only data which they own,
@@ -246,7 +278,8 @@ earlier creation date, which are the copies described in [Known limitations](#kn
 
 - A copy of default authenticated data which another key signs is rejected, and the entry of the owner stays.
   Default authenticated data which names no owner is rejected, also when its data is authorized data.
-- Authorized data is accepted only from its authorized key, or from the owner which the data names.
+- Authorized data is accepted only from its authorized key, or from the owner which the data names. Authorized data
+  which names an owner is accepted from both keys.
 - The transition rule accepts another owner only for the transition types, and only before the cutoff date.
 - Applications get neither entries of other publishers nor their removal. With the real
   `AuthorizedBondedRolesService`: the removal of the entry of the earlier version keeps a bonded role which the
