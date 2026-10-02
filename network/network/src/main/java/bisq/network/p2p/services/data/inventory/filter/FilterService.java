@@ -33,6 +33,7 @@ import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,6 +51,10 @@ public abstract class FilterService<T extends InventoryFilter> {
     }
 
     abstract public T getFilter();
+
+    // Whether the filter which this node would create now lists at least one of the requests. A responder does not
+    // send a request which the filter of the requester lists.
+    abstract public boolean isAnyRequestInFilter(Collection<? extends DataRequest> dataRequests);
 
     abstract protected boolean isAuthenticatedDataRequestMissing(T filter,
                                                                  Map.Entry<ByteArray, AuthenticatedDataRequest> mapEntry);
