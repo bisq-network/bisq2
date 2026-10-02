@@ -51,7 +51,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * A REST call through the WebSocket carries a body in both directions. A body can contain a private key, payment
- * account data or chat messages. Users share their log files, so the proxy must not write a body to the log.
+ * account data or chat messages. Users share their log files, so the proxy must not write a body to the log. The
+ * reason of a failed call belongs in the log and not in the response.
  */
 @Isolated("Captures the log of the api module")
 class WebSocketRestApiServiceLoggingTest {
@@ -134,6 +135,21 @@ class WebSocketRestApiServiceLoggingTest {
         assertThat(logLines).anyMatch(line -> line.contains("REST API call failed")
                 && line.contains("requestId=request-id")
                 && line.contains("bodyLength=" + REQUEST_BODY.length()));
+    }
+
+    // The message of the exception can name internal classes, hosts and ports
+    @Test
+    void failedCallAnswersWithAGenericMessageAndKeepsTheReasonInTheLog() throws Exception {
+        DefaultWebSocket webSocket = webSocket();
+
+        // The HTTP client of the proxy does not support the method CONNECT, so the call fails
+        service.onMessage(requestNode("CONNECT", "").toString(), webSocket);
+
+        JsonNode response = sentMessage(webSocket);
+        assertThat(response.get("statusCode").asInt()).isEqualTo(500);
+        assertThat(response.get("body").asText()).isEqualTo("Request failed");
+        assertThat(logLines()).anyMatch(line -> line.contains("REST API call failed")
+                && line.contains(IllegalArgumentException.class.getName()));
     }
 
     private JsonNode sentMessage(DefaultWebSocket webSocket) throws Exception {
