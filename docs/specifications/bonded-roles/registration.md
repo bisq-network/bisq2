@@ -102,7 +102,8 @@ equality of a role leaves out the oracle node which authorized it, so a node sho
 - Each oracle node removes only its own publication, after its own DAO revalidation or cancellation (see below).
 - A publication counts only if an oracle node authorized it: its authorized key is a hard-coded oracle key of the
   version of the node, or the key of a known oracle node role. This is the same check as for every use of authorized
-  data (rules 2 and 3 of [`authorized-data.md`](authorized-data.md)). A publication of a key which a later version
+  data (rules 2 and 3 of [`authorized-data.md`](authorized-data.md)). While only static oracle nodes are allowed,
+  only the hard-coded oracle keys count (rule 10 of [`authorized-data.md`](authorized-data.md)). A publication of a key which a later version
   removed from the hard-coded keys does not count, also if the store holds it from an earlier version.
 
 Reasons:
