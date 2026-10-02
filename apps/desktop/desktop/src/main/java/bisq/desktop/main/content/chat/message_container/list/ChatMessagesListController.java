@@ -53,6 +53,7 @@ import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -135,6 +136,9 @@ public class ChatMessagesListController implements Controller {
     private Subscription selectedChannelSubscription, focusSubscription, scrollValuePin, scrollBarVisiblePin,
             layoutChildrenDonePin;
     private static final String DONT_SHOW_CHAT_RULES_WARNING_KEY = "privateChatRulesWarning";
+    // Date of the messages which only the UI creates, such as the chat rules warning. Their constructors apply
+    // the date rule of chat messages, and the date must sort them before every valid message.
+    private static final long PSEUDO_DATE_FOR_LOCAL_MESSAGED = NetworkDataValidation.BISQ_1_LAUNCH_DATE + 1;
     private int channelBindingGeneration;
 
     public ChatMessagesListController(ServiceProvider serviceProvider,
@@ -953,7 +957,7 @@ public class ChatMessagesListController implements Controller {
                 receiverUserProfile.getNetworkId(),
                 text,
                 Optional.empty(),
-                0L,
+                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
                 false,
                 ChatMessageType.CHAT_RULES_WARNING,
                 new HashSet<>());
@@ -971,7 +975,7 @@ public class ChatMessagesListController implements Controller {
                 receiverUserProfile.getNetworkId(),
                 text,
                 Optional.empty(),
-                0L,
+                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
                 false,
                 channel.getMediator(),
                 ChatMessageType.CHAT_RULES_WARNING,
@@ -991,7 +995,7 @@ public class ChatMessagesListController implements Controller {
                 receiverUserProfile.getNetworkId(),
                 text,
                 Optional.empty(),
-                0L,
+                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
                 false,
                 channel.getMediator(),
                 channel.getArbitrator(),
@@ -1010,7 +1014,7 @@ public class ChatMessagesListController implements Controller {
                 senderUserProfile.getId(),
                 Optional.of(Res.get("chat.public.expiredMessagesIndicator.text", ttl_days)),
                 Optional.empty(),
-                System.currentTimeMillis() - TimeUnit.DAYS.toMillis(365), // Initialize date as 1y ago to always show as 1st message
+                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
                 false,
                 ChatMessageType.EXPIRED_MESSAGES_INDICATOR
         );
@@ -1027,7 +1031,7 @@ public class ChatMessagesListController implements Controller {
                 Optional.empty(),
                 Optional.of(Res.get("bisqEasy.offerbook.expiredMessagesIndicator.text", ttl_days)),
                 Optional.empty(),
-                0L,
+                PSEUDO_DATE_FOR_LOCAL_MESSAGED,
                 false,
                 ChatMessageType.EXPIRED_MESSAGES_INDICATOR
         );
