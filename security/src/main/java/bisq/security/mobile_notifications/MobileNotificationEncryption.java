@@ -21,6 +21,7 @@ package bisq.security.mobile_notifications;
 import bisq.common.encoding.Base64;
 import bisq.common.util.ByteArrayUtils;
 import bisq.security.AesGcm;
+import bisq.security.keys.KeyGeneration;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.IESParameterSpec;
@@ -29,9 +30,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 
 @Slf4j
 public class MobileNotificationEncryption {
@@ -48,9 +47,10 @@ public class MobileNotificationEncryption {
     public static String encrypt(String publicKeyBase64, String message) throws GeneralSecurityException {
         try {
             byte[] publicKeyBytes = Base64.decode(publicKeyBase64);
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
-            KeyFactory keyFactory = KeyFactory.getInstance("ECDH", BouncyCastleProvider.PROVIDER_NAME);
-            PublicKey publicKey = keyFactory.generatePublic(keySpec);
+            // The key comes from the device registration and is stored without a check. KeyGeneration checks its size
+            // before the key parser runs, whose work grows with the size of the key (see
+            // docs/specifications/security/ec-public-key-encoding.md).
+            PublicKey publicKey = KeyGeneration.generatePublic(publicKeyBytes, KeyGeneration.ECDH);
 
             // Encrypt with ECIES (Elliptic Curve Integrated Encryption Scheme)
             // Using AES-128-CBC with HMAC-SHA1 for MAC (default BouncyCastle ECIES parameters)
