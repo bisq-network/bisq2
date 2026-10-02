@@ -256,7 +256,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     // Removes the entries which have expired, and the add requests without signature V2 when the node requires it (see
     // isToPrune)
-    // A request can replace an entry after it was selected, so an entry is removed only if the map still holds it
+    // A request can replace an entry after it was selected, so an entry is removed only if the map still holds it.
+    // The removal holds the lock which add and remove hold.
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
                 .filter(entry -> isToPrune(entry.getValue()))
@@ -266,7 +267,11 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             log.info("We remove {} entries from our {} map which have expired or have no signature V2",
                     expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> {
-                if (persistableStore.getMap().remove(entry.getKey(), entry.getValue())) {
+                boolean wasRemoved;
+                synchronized (mapAccessLock) {
+                    wasRemoved = persistableStore.getMap().remove(entry.getKey(), entry.getValue());
+                }
+                if (wasRemoved) {
                     prunedAndExpiredDataRequests.add(entry.getValue());
                 }
             });

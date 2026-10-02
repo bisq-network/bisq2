@@ -22,6 +22,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -291,6 +293,60 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(peerStore.add(addRequest).isSuccess());
 
         DataStorageResult result = peerStore.add(addRequest);
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.isRequestAlreadyReceived(), result.toString());
+    }
+
+    // A store accepts at most DataStorageService.MAX_MAP_SIZE entries (see
+    // docs/specifications/network/storage-metadata.md)
+    @Test
+    void storeWithTheMaximumNumberOfEntriesAcceptsNoNewEntry() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(peerStore, authenticatedData, ownerKeyPair);
+        Map<ByteArray, AuthenticatedDataRequest> map = peerStore.getPersistableStore().getMap();
+        // The limit counts entries, so the same request under other keys fills the map
+        for (int i = 0; i < DataStorageService.MAX_MAP_SIZE; i++) {
+            map.put(new ByteArray(ByteBuffer.allocate(Integer.BYTES).putInt(i).array()), addRequest);
+        }
+
+        DataStorageResult resultOfAdd = peerStore.add(addRequest);
+        DataStorageResult resultOfRemovalWithoutEntry = peerStore.remove(RemoveAuthenticatedDataRequest.from(peerStore,
+                createData("other content"), ownerKeyPair));
+
+        assertTrue(resultOfAdd.isMaxMapSizeReached(), resultOfAdd.toString());
+        assertTrue(resultOfRemovalWithoutEntry.isMaxMapSizeReached(), resultOfRemovalWithoutEntry.toString());
+        assertEquals(DataStorageService.MAX_MAP_SIZE, map.size());
+        // The pending write of the other tests would have to serialize all entries
+        map.clear();
+    }
+
+    // A node parses each copy of a request which it receives, so the copies are different objects with equal values.
+    // The store must detect the copy before it verifies the signatures, also for authorized data, whose authorization
+    // signature is an Optional of a byte array.
+    @Test
+    void duplicateAddRequestOfAuthorizedDataIsReportedAsAlreadyReceived() throws GeneralSecurityException {
+        AuthorizedData authorizedData = authorize(new TestAuthorizedDistributedData("content"));
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(authorizedDataStore, authorizedData,
+                authorizedKeyPair);
+        assertTrue(authorizedDataStore.add(addRequest).isSuccess());
+        AuthenticatedSequentialData sequentialData = addRequest.getAuthenticatedSequentialData();
+        AuthorizedData copyOfAuthorizedData = new AuthorizedData(authorizedData.getAuthorizedDistributedData(),
+                authorizedData.getSignature().map(byte[]::clone),
+                authorizedKeyPair.getPublic());
+        AddAuthenticatedDataRequest copy = new AddAuthenticatedDataRequest(
+                new AuthenticatedSequentialData(copyOfAuthorizedData,
+                        sequentialData.getSequenceNumber(),
+                        sequentialData.getPubKeyHash().clone(),
+                        sequentialData.getCreated()),
+                addRequest.getSignatureV1().clone(),
+                addRequest.getSignaturePubKeyEncoded().clone(),
+                addRequest.getSignaturePublicKey(),
+                addRequest.getSignatureV2().clone(),
+                addRequest.getVersion());
+
+        assertEquals(addRequest, copy);
+        assertEquals(addRequest.hashCode(), copy.hashCode());
+        DataStorageResult result = authorizedDataStore.add(copy);
 
         assertFalse(result.isSuccess());
         assertTrue(result.isRequestAlreadyReceived(), result.toString());

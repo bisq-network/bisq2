@@ -19,6 +19,9 @@ dependencies {
     implementation("network:network:$version")
 
     implementation(libs.typesafe.config)
+
+    // StorageRequestsOfEarlierVersionTest parses serialized network messages
+    testImplementation(libs.protobuf.java)
 }
 
 // ResolverConfigTest parses ResolverConfig.java as text, so source-only edits such as wrapping a call across lines or
