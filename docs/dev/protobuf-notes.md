@@ -196,8 +196,11 @@ invalid object. A new rule goes there also if earlier versions accept objects wh
 
 A caller handles the exception or declares it:
 
-- A caller which converts a collection decides what fails: one entry or the whole collection. For example
-  `DataStore` skips a persisted entry which it cannot convert and keeps the other entries.
+- A caller which converts a collection decides what fails: one entry or the whole collection. A store skips a
+  persisted entry which it cannot convert and keeps the other entries (rule 4 of
+  [`validation-at-parsing.md`](../specifications/network/validation-at-parsing.md)). It uses
+  `ProtobufUtils.fromProtoStreamSkippingInvalid` or `fromProtoEntryStreamSkippingInvalid`, which log only the type and
+  the size of a skipped proto and the stack trace without messages, as protos can hold private data.
 - `ProtoResolverMap` propagates conversion failures without logging them. The caller owns recovery and reporting,
   including any limit on diagnostics for a collection. Logging inside the resolver would bypass that limit.
 - A caller which cannot throw a checked exception, for example a gRPC `StreamObserver` or a `CompletableFuture`
