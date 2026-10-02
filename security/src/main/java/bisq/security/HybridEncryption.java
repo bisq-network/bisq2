@@ -47,7 +47,14 @@ public class HybridEncryption {
         byte[] signature = SignatureUtil.sign(cipherText, senderKeyPair.getPrivate());
 
         byte[] senderPublicKeyAsBytes = senderKeyPair.getPublic().getEncoded();
-        return new ConfidentialData(senderPublicKeyAsBytes, iv, cipherText, signature);
+        try {
+            return new ConfidentialData(senderPublicKeyAsBytes, iv, cipherText, signature);
+        } catch (RuntimeException e) {
+            // A local failure, for example a message which is too large. The caller may retry with another route and
+            // not report it.
+            log.error("The ConfidentialData which we created is invalid", e);
+            throw e;
+        }
     }
 
     public static byte[] decryptAndVerify(ConfidentialData confidentialData, KeyPair receiversKeyPair) throws GeneralSecurityException {
