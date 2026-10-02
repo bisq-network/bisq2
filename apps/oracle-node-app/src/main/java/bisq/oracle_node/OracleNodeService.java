@@ -302,7 +302,7 @@ public class OracleNodeService implements Service {
                                          AuthorizedBondedRole authorizedBondedRole,
                                          KeyPair keyPair) {
         networkService.publishAuthorizedData(authorizedBondedRole, authorizedKeyPair);
-        // AuthorizedOracleNode names the key of our network ID as its owner
+        // Nodes of v2.1.13 and earlier accept AuthorizedOracleNode only from the key of our network ID
         networkService.publishAuthorizedData(authorizedOracleNode,
                 keyPair,
                 authorizedPrivateKey,

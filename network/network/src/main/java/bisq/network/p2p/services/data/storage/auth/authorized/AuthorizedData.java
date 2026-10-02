@@ -235,15 +235,18 @@ public final class AuthorizedData extends AuthenticatedData {
         }
     }
 
-    // The owner which the distributed data names, else the authorized key. The authorization signature does not cover
-    // the owner of the add request, so the authorized key must own the data: otherwise anyone could publish and remove
-    // a copy of it.
+    // The authorized key, and also the owner which the distributed data names. The authorization signature does not
+    // cover the owner of the add request, so the authorized key must own the data: otherwise anyone could publish and
+    // remove a copy of it. Only AuthorizedOracleNode names an owner: the key of its network ID, which nodes of v2.1.13
+    // and earlier require as its publisher. Accepting the authorized key as well lets a later version publish it with
+    // the authorized key pair (see docs/specifications/network/storage-ownership.md).
     @Override
     public boolean isOwner(byte[] pubKeyHash) {
-        byte[] ownerPubKeyHash = distributedData instanceof OwnershipVerifiableData ownershipVerifiableData
-                ? ownershipVerifiableData.getOwnerPubKeyHash()
-                : DigestUtil.hash(authorizedPublicKeyBytes);
-        return Arrays.equals(ownerPubKeyHash, pubKeyHash);
+        if (Arrays.equals(DigestUtil.hash(authorizedPublicKeyBytes), pubKeyHash)) {
+            return true;
+        }
+        return distributedData instanceof OwnershipVerifiableData ownershipVerifiableData &&
+                Arrays.equals(ownershipVerifiableData.getOwnerPubKeyHash(), pubKeyHash);
     }
 
     @Override

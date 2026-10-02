@@ -996,20 +996,27 @@ class AuthenticatedDataStorageServiceTest {
                 () -> AddAuthenticatedDataRequest.from(authorizedDataStore, authorizedData, ownerKeyPair));
     }
 
-    // For example AuthorizedOracleNode, which the key of its network ID owns
+    // For example AuthorizedOracleNode, which names the key of its network ID. Nodes of earlier versions accept it only
+    // from that key. The authorized key owns it as well, so that a later version can publish it with that key.
     @Test
-    void authorizedDataWhichNamesItsOwnerIsOwnedByThatOwner() throws GeneralSecurityException {
+    void authorizedDataWhichNamesItsOwnerIsOwnedByThatOwnerAndTheAuthorizedKey() throws GeneralSecurityException {
         StorableTypesRegistry.register(TestAuthorizedDataWithOwner.class, TestAuthorizedDataWithOwner.META_DATA);
         AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
                 new PruneExpiredEntriesService(), "authorizedWithOwner", TestAuthorizedDataWithOwner.class.getSimpleName());
         AuthorizedData authorizedData = authorize(new TestAuthorizedDataWithOwner(ownerKeyPair.getPublic()));
+        KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
 
         DataStorageResult resultOfOwner = store.add(AddAuthenticatedDataRequest.from(store, authorizedData,
                 ownerKeyPair));
+        DataStorageResult resultOfAuthorizedKey = store.add(AddAuthenticatedDataRequest.from(store, authorizedData,
+                authorizedKeyPair));
 
         assertTrue(resultOfOwner.isSuccess(), resultOfOwner.toString());
+        assertTrue(resultOfAuthorizedKey.isSuccess(), resultOfAuthorizedKey.toString());
+        assertEquals(2, store.getPersistableStore().getMap().size());
         assertThrows(IllegalArgumentException.class,
-                () -> AddAuthenticatedDataRequest.from(store, authorizedData, authorizedKeyPair));
+                () -> AddAuthenticatedDataRequest.from(store, authorizedData, otherKeyPair));
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
     }
 
     // Oracle nodes of earlier versions published some types with the key of their network identity. Data of these
