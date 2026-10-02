@@ -34,6 +34,7 @@ import bisq.network.p2p.message.CloseConnectionMessage;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.ServerSocketResult;
@@ -148,6 +149,8 @@ public class Node implements Connection.Handler {
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
+    // Shared by all connections of this node (see rule 11 of docs/specifications/network/message-framing.md)
+    private final ParseMemoryBudget parseMemoryBudget = new ParseMemoryBudget();
     private final int socketTimeout; // in ms
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
@@ -335,6 +338,7 @@ public class Node implements Connection.Handler {
                 peersNetworkLoadSnapshot,
                 result.getConnectionMetrics(),
                 connectionThrottle,
+                parseMemoryBudget,
                 this,
                 this::handleException);
     }
@@ -511,6 +515,7 @@ public class Node implements Connection.Handler {
                     peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
                     connectionThrottle,
+                    parseMemoryBudget,
                     this,
                     this::handleException);
             outboundConnectionsByAddress.put(address, connection);

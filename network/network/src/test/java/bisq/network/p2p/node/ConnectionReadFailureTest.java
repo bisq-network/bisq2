@@ -20,6 +20,7 @@ package bisq.network.p2p.node;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.protobuf.NetworkEnvelope;
@@ -152,6 +153,7 @@ class ConnectionReadFailureTest {
                 new NetworkLoadSnapshot(),
                 new ConnectionMetrics(),
                 connectionThrottle,
+                new ParseMemoryBudget(),
                 handler,
                 (failedConnection, exception) -> readFailure.complete(exception)) {
         };

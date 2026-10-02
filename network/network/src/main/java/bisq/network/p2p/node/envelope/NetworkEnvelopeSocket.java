@@ -83,7 +83,8 @@ public class NetworkEnvelopeSocket implements Closeable {
     }
 
     /**
-     * Reads and parses the next message.
+     * Reads and parses the next message. Connection uses {@link #receiveNextMessage()} and {@link #parse(byte[])}
+     * instead, so that it can parse within its share of the {@link ParseMemoryBudget}.
      *
      * @return The next message, or null if the input stream ends before the first byte of a length prefix.
      */

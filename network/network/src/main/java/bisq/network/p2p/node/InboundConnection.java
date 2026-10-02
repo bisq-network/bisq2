@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class InboundConnection extends Connection {
                       NetworkLoadSnapshot peersNetworkLoadSnapshot,
                       ConnectionMetrics connectionMetrics,
                       ConnectionThrottle connectionThrottle,
+                      ParseMemoryBudget parseMemoryBudget,
                       Handler handler,
                       BiConsumer<Connection, Exception> errorHandler) {
         super(authorizationService,
@@ -43,6 +45,7 @@ public class InboundConnection extends Connection {
                 peersNetworkLoadSnapshot,
                 connectionMetrics,
                 connectionThrottle,
+                parseMemoryBudget,
                 handler,
                 errorHandler);
     }

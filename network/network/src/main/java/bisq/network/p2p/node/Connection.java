@@ -34,6 +34,7 @@ import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.AccessLevel;
@@ -109,6 +110,7 @@ public abstract class Connection {
 
     private NetworkEnvelopeSocket networkEnvelopeSocket;
     private final ConnectionThrottle connectionThrottle;
+    private final ParseMemoryBudget parseMemoryBudget;
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     @Nullable
@@ -129,9 +131,11 @@ public abstract class Connection {
                          NetworkLoadSnapshot peersNetworkLoadSnapshot,
                          ConnectionMetrics connectionMetrics,
                          ConnectionThrottle connectionThrottle,
+                         ParseMemoryBudget parseMemoryBudget,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
         this.authorizationService = authorizationService;
+        this.parseMemoryBudget = parseMemoryBudget;
         this.id = connectionId;
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
@@ -162,16 +166,25 @@ public abstract class Connection {
                         } else {
                             log.debug("Wait for new message from {}", getPeerAddress());
                         }
-                        var proto = networkEnvelopeSocket.receiveNextEnvelope();
+                        byte[] message = networkEnvelopeSocket.receiveNextMessage();
                         readTs = System.currentTimeMillis();
-                        if (proto == null) {
-                            log.info("Proto from networkEnvelopeSocket.receiveNextEnvelope() is null. " +
+                        if (message == null) {
+                            log.info("Message from networkEnvelopeSocket.receiveNextMessage() is null. " +
                                     "This is expected if the input stream has reached EOF. We shut down the connection.");
                             shutdown(CloseReason.EXCEPTION.exception(new EOFException("Input stream reached EOF")));
                             return;
                         }
 
-                        // receiveNextEnvelope might need some time wo we check again if connection is still active
+                        // The parsed protobuf objects are not referenced after the parser returns, so the budget
+                        // covers their whole life. The parser does not wait for other connections. A message which
+                        // cannot be parsed fails here, before the throttle.
+                        long ts = System.currentTimeMillis();
+                        NetworkEnvelope networkEnvelope = parseMemoryBudget.parse(message,
+                                bytes -> NetworkEnvelope.fromProto(NetworkEnvelopeSocket.parse(bytes)));
+                        long deserializeTime = System.currentTimeMillis() - ts;
+
+                        // receiveNextMessage and the parse might need some time so we check again if connection is
+                        // still active
                         if (!isInputStreamActive()) {
                             return;
                         }
@@ -181,9 +194,6 @@ public abstract class Connection {
                         if (!isInputStreamActive()) {
                             return;
                         }
-                        long ts = System.currentTimeMillis();
-                        NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
-                        long deserializeTime = System.currentTimeMillis() - ts;
                         networkEnvelope.verifyVersion();
                         connectionMetrics.onReceived(networkEnvelope, deserializeTime);
 

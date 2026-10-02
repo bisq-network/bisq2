@@ -58,6 +58,10 @@ of a message. The framing is the format which marks where a message starts and w
 10. All bytes of a message must arrive within 4 minutes after its length prefix. Otherwise the node closes the
     connection. The node checks the time after each read, so it closes the connection at the latest one socket timeout
     after these 4 minutes.
+11. The connections of a node parse messages of at least 64 KiB only within a common budget of 8 MiB, twice the size
+    limit of an established connection. The budget counts the bytes of the messages which are being parsed and
+    converted into objects of the node. A message waits until the budget has room for it. Smaller messages do not
+    take part.
 
 ## Reasons
 
@@ -112,6 +116,13 @@ of a message. The framing is the format which marks where a message starts and w
   connection without limit. 4 MiB over a slow Tor circuit of 20 KB per second need about 210 seconds, so the deadline
   does not close honest connections. A read which waits cannot be interrupted without closing the socket from another
   thread. The check after each read needs no further thread.
+- Rule 11: the size limit bounds the parse memory of one message, not of several connections which parse large
+  messages at the same time. The budget bounds the parse memory of all connections together, at about 2 times 93 MB
+  (estimate, see the reasons for rule 4). A slow sender does not hold the budget, because the node reads all bytes of
+  a message before it parses them (rule 4). The budget covers the parse and the conversion into the objects of the
+  node, because only then are the parsed protobuf objects no longer used. It does not cover the handling of the
+  message: the handling can wait for a response on another connection, whose read thread can wait for the budget.
+  Messages below 64 KiB, among them all handshake messages, need little memory, and they do not wait for large ones.
 - Rule 2, limit of the handshake: the node parses the first message of a peer before it checks anything of the peer:
   the type of the message, the address ownership proof and the proof of work. Any peer can send this message, without
   a key and without a proof of work. A node runs several handshakes at the same time, up to 16 with the default
@@ -146,20 +157,16 @@ of a message. The framing is the format which marks where a message starts and w
 
 ## Known limitations
 
-- **Memory of several parses at the same time.** The size limit bounds the bytes of one message, not the memory of
-  its parse. A message at the limit of an established connection with many empty sub-messages needs about 93 MB
-  (estimate, see the reasons for rule 4). A peer which completed the handshake can open several connections
-  and complete such messages at the same time. A node with a small heap, for example 2 GB, can then run out of memory.
-  The parsed objects are a temporary peak: the bytes of a message are garbage after the parse, and the parsed objects
-  after the node has handled the message. Only the objects of accepted data stay, because the node stores the data.
-  - Why it is not removed now: the size limits remove the unbounded case, in which one message could exhaust the
-    memory, and the limit of the handshake removes the case without a handshake. A lower limit of an established
-    connection only reduces the factor, because the largest legal message has about 4.1 MB.
-  - What would remove it: a limit of the number of large messages which a node parses at the same time. Because the
-    node reads all bytes of a message before it parses them (rule 4), a slow sender does not hold such a limit while
-    it sends. Another option is a format of the hash set filter without one sub-message per entry, which needs a new
-    filter type. A limit for each message type, which needs a parse in two steps, does not remove it: the inventory
-    messages need megabytes and contain the repeated sub-messages.
+- **Memory of the parse of one message.** The budget of rule 11 bounds the parse memory of all connections together,
+  at about 2 times 93 MB (estimate). One message at the size limit with many empty sub-messages still needs about
+  93 MB. The parsed objects are a temporary peak: the bytes of a message are garbage after the parse, and the parsed
+  protobuf objects after the conversion. Only the objects of accepted data stay, because the node stores the data.
+  Under an attack with large messages, honest inventory messages wait for the budget. A parse takes about 50 ms.
+  - Why it is not removed now: a lower size limit only reduces the factor, because the largest legal message has
+    about 4.1 MB.
+  - What would remove it: a format of the hash set filter without one sub-message per entry, which needs a new filter
+    type. A limit for each message type, which needs a parse in two steps, does not remove it: the inventory messages
+    need megabytes and contain the repeated sub-messages.
   - Who decides: the developers.
 - **A relayed message above the size limit closes the connection to the relay.** Nodes relay broadcasts of other
   nodes, for example storage requests. The broadcasts which nodes create are far below the size limit, so only a
