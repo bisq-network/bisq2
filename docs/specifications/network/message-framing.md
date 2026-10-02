@@ -62,7 +62,9 @@ of a message. The framing is the format which marks where a message starts and w
 11. The connections of a node parse messages of at least 64 KiB only within a common budget of 8 MiB, twice the size
     limit of an established connection. The budget counts the bytes of the messages which are being parsed and
     converted into objects of the node. A message waits until the budget has room for it. Smaller messages do not
-    take part.
+    take part. A failed parse or conversion must discard partial protobuf messages before releasing the budget.
+    Failure diagnostics must not retain these messages through exceptions or their causes. This also applies to
+    handshake messages and smaller messages, which do not use the budget.
 
 ## Reasons
 

@@ -186,6 +186,9 @@ invalid object. A new rule goes there also if earlier versions accept objects wh
 
 - `UnresolvableProtobufMessageException` (unknown message type or `Any` type) and `UnresolvableProtobufEnumException`
   (unknown enum value without a fallback) are subclasses of `UnresolvableProtobufException`.
+- `UnresolvableProtobufException` clears partial protobuf messages attached to parse exceptions in its cause chain.
+  Futures and connection close reasons can retain exceptions after parsing ends. They must not retain the parsed
+  objects after the receive path releases its parse memory budget. Exception types, messages and causes are preserved.
 - A `fromProto` method converts every `RuntimeException` of its own code into `UnresolvableProtobufException`, for
   example the `IllegalArgumentException` of the `verify` method of a constructor. So a caller does not need to catch
   `RuntimeException`. The conversion is only needed where the method itself can fail, not in a method which only

@@ -20,6 +20,7 @@ package bisq.common.proto;
 import bisq.common.util.ExceptionUtil;
 import com.google.common.base.Enums;
 import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.ProtocolMessageEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +45,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ProtobufUtils {
     private static final int MAX_LOGGED_SKIPPED_ENTRIES = 3;
     private static final int MAX_LOGGED_STACK_TRACE_LINES = 10;
+
+    // Parse exceptions can retain the entire partial message. Failures outlive parsing in futures and connection
+    // close reasons, so discard those objects before propagating the failure. Keep the diagnostics and cause chain.
+    public static void clearUnfinishedMessages(Throwable exception) {
+        Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (Throwable cause = exception; cause != null && visited.add(cause); cause = cause.getCause()) {
+            if (cause instanceof InvalidProtocolBufferException parseException) {
+                parseException.setUnfinishedMessage(null);
+            }
+        }
+    }
 
     public static <E extends Enum<E>> E enumFromProto(Class<E> enumType,
                                                       String name) throws UnresolvableProtobufEnumException {
