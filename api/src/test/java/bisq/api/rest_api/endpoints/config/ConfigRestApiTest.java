@@ -106,6 +106,7 @@ class ConfigRestApiTest {
         assertThat(ApiFeature.CONTACTS.getKey()).isEqualTo("contacts");
         assertThat(ApiFeature.PUBLIC_CHAT.getKey()).isEqualTo("public-chat");
         assertThat(ApiFeature.CLIENT_MANAGEMENT.getKey()).isEqualTo("client-management");
+        assertThat(ApiFeature.BANNED_ACCOUNT_DATA.getKey()).isEqualTo("banned-account-data");
     }
 
     /**
@@ -183,6 +184,12 @@ class ConfigRestApiTest {
                                 .as("public-chat needs %s wired to a WebSocketService", topic)
                                 .isEqualTo(topic);
                     }
+                    yield true;
+                }
+                case BANNED_ACCOUNT_DATA -> {
+                    assertThat(hasEndpoint(TradeRestApi.class, "/trades", "/{tradeId}/account-data-banned"))
+                            .as("banned-account-data must expose GET /trades/{tradeId}/account-data-banned")
+                            .isTrue();
                     yield true;
                 }
             };
