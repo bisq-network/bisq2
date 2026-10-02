@@ -152,8 +152,10 @@ identity, not with their authorized key pair:
     request was created before the cutoff date `AuthorizedData.LEGACY_OWNER_CUTOFF_DATE` (2027-01-01 UTC).
 13. The cutoff date must be later than the date at which all oracle and seed nodes publish with their authorized key
     pair. Updated nodes reject data which an oracle node of an earlier version creates after the cutoff date.
-14. At startup, oracle and seed nodes publish the data which they published with the key pair of their network identity
-    again with their authorized key pair, and they remove the entries of their network identity. The remove request
+14. At startup, oracle and seed nodes publish the data of the transition types which they published with the key pair
+    of their network identity again with their authorized key pair, and they remove the entries of their network
+    identity. They do not migrate data of other types: `AuthorizedOracleNode` names the key of the network identity as
+    its owner, and nodes of earlier versions accept it only from that key (see rule 9). The remove request
     gets the next sequence number after the entry, the new entry a higher one. They do not publish data again whose
     owner has a remove request in the store, and they ignore expired entries. They remove an entry of their network
     identity only if their store accepted the new entry, or if the owner removed the data. If the store rejects the
@@ -252,7 +254,7 @@ earlier creation date, which are the copies described in [Known limitations](#kn
   expiry.
 - The migration publishes the data again with the authorized key pair and a higher sequence number and removes the
   entry of the network identity. It runs once, does not publish data again which the owner removed, and ignores entries
-  of other publishers, data of other authorities and expired entries. If the store rejects the new entry, the entry of
+  of other publishers, data of other authorities, data of other types than the transition types and expired entries. If the store rejects the new entry, the entry of
   the network identity stays, and a later run migrates it. A failure at one entry does not stop the migration of the
   others. Oracle nodes remove bonded roles only with their authorized key pair.
 - The node broadcasts the requests of the migration one at a time, the new entries before the removals, and not twice
