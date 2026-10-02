@@ -219,13 +219,12 @@ public final class AuthorizedData extends AuthenticatedData {
 
     public boolean isNotAuthorized() {
         try {
-            AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
             if (!SignatureUtil.verify(distributedData.serializeForHash(), signature.orElseThrow(), authorizedPublicKey)) {
                 return true;
             }
 
-            if (authorizedDistributedData.staticPublicKeysProvided()) {
-                return !authorizedDistributedData.getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes));
+            if (getAuthorizedDistributedData().staticPublicKeysProvided()) {
+                return !isStaticAuthorizedKey();
             }
 
             return false;
@@ -233,6 +232,11 @@ public final class AuthorizedData extends AuthenticatedData {
             e.printStackTrace();
             return true;
         }
+    }
+
+    // Whether the authorized key is one of the keys which are written in the code for the type of the data
+    private boolean isStaticAuthorizedKey() {
+        return getAuthorizedDistributedData().getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes));
     }
 
     // The authorized key, and also the owner which the distributed data names. The authorization signature does not
