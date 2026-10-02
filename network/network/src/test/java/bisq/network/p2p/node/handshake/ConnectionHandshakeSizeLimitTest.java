@@ -139,7 +139,7 @@ class ConnectionHandshakeSizeLimitTest {
     @Test
     void largestValidHandshakeRequestIsBelowTheHandshakeLimit() {
         // The longest address is an I2P destination of 700 characters. A node creates the token of each handshake
-        // request with HASH_CASH, whose proof of work contains a copy of the request. A response is smaller.
+        // request with HASH_CASH_V2, whose proof of work contains the hash of the request.
         I2PAddress address = new I2PAddress("A".repeat(700), 65_535);
         Capability capability = new Capability(Capability.VERSION,
                 address,
@@ -152,10 +152,10 @@ class ConnectionHandshakeSizeLimitTest {
                 Long.MAX_VALUE);
         //noinspection deprecation
         AuthorizationService authorizationService = new AuthorizationService(
-                new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH)),
+                new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH_V2)),
                 new HashCashProofOfWorkService(),
                 new EquihashProofOfWorkService(),
-                Set.of(Feature.AUTHORIZATION_HASH_CASH));
+                Set.of(Feature.AUTHORIZATION_HASH_CASH_V2));
         AuthorizationToken token = authorizationService.createToken(request,
                 NetworkLoad.INITIAL_NETWORK_LOAD,
                 address.getFullAddress(),
@@ -164,7 +164,6 @@ class ConnectionHandshakeSizeLimitTest {
 
         int serializedSize = new NetworkEnvelope(token, request).completeProto().getSerializedSize();
 
-        // 1771 bytes when the test was written.
         assertThat(serializedSize).isLessThan(MAX_HANDSHAKE_SERIALIZED_SIZE);
     }
 

@@ -281,7 +281,7 @@ public class StorageCanonicalEncoderTest {
     }
 
     // The proof of work of a message's authorization token binds the token to serializeForHash() of the message
-    // (HashCashTokenService and HashCashV2TokenService). The PROOF_OF_WORK purpose must reproduce these bytes for every
+    // (HashCashV2TokenService). The PROOF_OF_WORK purpose must reproduce these bytes for every
     // message with a canonical encoding: all DataRequest types and ConfidentialMessage. AuthorizedData is always nested
     // in these messages, so its signature is part of the payload. Data of higher-level modules is contained in its hash
     // serialization, also when it has a field excluded from the hash. TRADE_CONTRACT selects the same bytes for the

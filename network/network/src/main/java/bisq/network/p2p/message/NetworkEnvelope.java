@@ -45,12 +45,12 @@ public final class NetworkEnvelope implements NetworkProto {
     // Size limit of a serialized envelope, without its length prefix. It is a protocol constant: a node closes the
     // connection when a peer announces a larger message, and it never sends one. The largest regular messages are
     // inventory messages: a request with a full hash set filter has at most about 3.0 MB, and a response of the default
-    // size with the legacy HASH_CASH token, which copies the message, about 4.1 MB (see
+    // size with a HASH_CASH_V2 token about 2 MB (see
     // docs/specifications/network/message-framing.md).
     public static final int MAX_SERIALIZED_SIZE = 4 * 1024 * 1024;
     // Size limit of the envelopes of the handshake. The node parses the first message of a peer before it checks
     // anything of the peer, and the parsed objects of a message can need about 20 times its size. The largest valid
-    // handshake message has about 1.8 KB (see docs/specifications/network/message-framing.md).
+    // handshake message is below 1.8 KB (see docs/specifications/network/message-framing.md).
     public static final int MAX_HANDSHAKE_SERIALIZED_SIZE = 64 * 1024;
 
     private final int version;

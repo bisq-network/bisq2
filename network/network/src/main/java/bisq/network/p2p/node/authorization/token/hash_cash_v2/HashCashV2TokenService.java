@@ -211,7 +211,7 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
     }
 
     private byte[] getPayload(EnvelopePayloadMessage message) {
-        // In contrast to HashCashTokenService we use the hash of the message to reduce size of the pow object.
+        // Use the hash of the message to reduce the size of the pow object.
         return DigestUtil.hash(message.serializeForHash());
     }
 
