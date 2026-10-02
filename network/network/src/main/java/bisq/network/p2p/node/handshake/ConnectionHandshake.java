@@ -211,7 +211,7 @@ public final class ConnectionHandshake {
         this.myKeyBundle = myKeyBundle;
 
         PeerSocket peerSocket = new DefaultPeerSocket(socket);
-        this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
+        this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket, NetworkEnvelope.MAX_SERIALIZED_SIZE);
     }
 
     // Client side protocol

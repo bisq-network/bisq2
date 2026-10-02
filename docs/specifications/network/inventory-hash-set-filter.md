@@ -147,15 +147,17 @@ which stays on this version keeps this rule after the cutoff date, so it must be
 Reasons:
 
 - Rule 9 bounds the size of an inventory request. An entry needs 24 to 30 bytes: 22 bytes for the hash field, 0 to 6
-  bytes for the sequence number, and 2 bytes for the repeated field. A full filter needs at most 3.0 MB. The filter of
-  a node had 38 280 entries when the limit was set (measured on 2026-10-02), so the limit leaves room for more than
-  twice as many.
+  bytes for the sequence number, and 2 bytes for the repeated field. A full filter needs at most 3.0 MB, so the request
+  fits the size limit of a message, 4 MiB (see [`message-framing.md`](message-framing.md)). The filter of a node had
+  38 280 entries when the limit was set (measured on 2026-10-02), so the limit leaves room for more than twice as
+  many.
 - Rule 10: before rule 10, a requester with more requests than the limit created a filter which its own validation
   rejected, so it could not request inventory at all.
 
 Compatibility: nodes of earlier versions accept and send filters with fewer than 200 000 entries. Their filters with
-more than 100 000 entries are rejected by nodes of this version, which cannot parse such a request and close the
-connection. Such a filter needs a node with more than 100 000 stored requests.
+more than 100 000 entries are rejected by nodes of this version, which then close the connection (see
+[`message-framing.md`](message-framing.md#compatibility)). Such a filter needs a node with more than 100 000 stored
+requests.
 
 ## Limitations
 
