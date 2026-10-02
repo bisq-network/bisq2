@@ -22,9 +22,11 @@ message, so they cannot limit the memory which these steps need.
    - the consistency of two fields, for example the publisher hash and the public key of an add request (see
      [`storage-ownership.md`](storage-ownership.md#the-publisher-hash)), or the publisher of an add request and the
      owner which its data names (see [`storage-ownership.md`](storage-ownership.md#admission));
-   - the presence of the signatures which the node requires (see
-     [`storage-request-signatures.md`](storage-request-signatures.md#verification)). `verify()` can use the clock of
-     the node for this rule, because the required signatures depend on the cutoff date of signature V1.
+   - the presence of a signature, and of signature V1 before the cutoff date of signature V1 (see
+     [`storage-request-signatures.md`](storage-request-signatures.md#verification)). `verify()` uses the clock of
+     the node for this rule. `verify()` does not require signature V2: a constructor also completes requests which
+     the node did not receive, for example the request which a creator builds to compute the preimage of signature
+     V2, and a persisted request which a store loads. The stores require signature V2 (rule 5).
 2. An object which breaks an integrity rule fails at parsing: `fromProto` throws `UnresolvableProtobufException`. The
    node does not create the object, so no later component stores, relays, serves or uses it.
 3. A new integrity rule goes into `verify()`, also if nodes of earlier versions accept objects which break the rule.
@@ -34,7 +36,7 @@ message, so they cannot limit the memory which these steps need.
    parse (rule 6). Example: a refresh request needs signature V2 also before the cutoff date of
    signature V1, but nodes up to version 2.1.13 send refresh requests with signature V1 only (see
    [`storage-request-signatures.md`](storage-request-signatures.md#refresh-requests)). The store rejects them. From
-   the cutoff date on, parsing rejects every request without signature V2 (rule 1).
+   the cutoff date on, the stores reject every request without signature V2 (rule 5).
 4. The caller of `fromProto` decides what fails with the object. The caller must know that an entry can be invalid:
    - A requester skips an inventory entry which it cannot parse, and processes the other entries (rule 7 of
      [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#entries-which-a-node-cannot-parse)).
@@ -46,8 +48,10 @@ message, so they cannot limit the memory which these steps need.
    storage requests these are the stores. Examples: the admission of registered class names and MetaData (see
    [`storage-metadata.md`](storage-metadata.md)), the owner of a stored entry after a refresh, which replaces the
    creation date of the entry (see [`storage-ownership.md`](storage-ownership.md)), the order of sequence numbers (see
-   [`storage-request-ordering.md`](storage-request-ordering.md)), the expiry of a request, which depends on the time of
-   the node, and the authorization of authorized data with the keys of the configuration. Expensive checks also stay
+   [`storage-request-ordering.md`](storage-request-ordering.md)), the expiry of a request and the requirement of
+   signature V2 from the cutoff date of signature V1 on, which depend on the time of the node (see
+   [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)), and the
+   authorization of authorized data with the keys of the configuration. Expensive checks also stay
    at the later step: the verification of signatures against the public key, which the store runs after it rejected
    copies of stored requests, and the verification of a proof of work.
 
