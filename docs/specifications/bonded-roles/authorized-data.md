@@ -39,7 +39,9 @@ publish and remove the data in the network storage is defined in
    which rule 2 or rule 3 holds. The removal of another publication does not remove it.
 9. A node applies an account timestamp (`AuthorizedAccountTimestamp`) only if rule 2 or rule 3 holds for it, with the
    oracle node as authorizing role type. The same applies when it removes an account timestamp, and when it looks up
-   the stored account timestamp of its own account to decide whether to request it again.
+   the stored account timestamp of its own account to decide whether to request it again. It keeps an applied account
+   timestamp while the network storage holds at least one publication of it for which rule 2 or rule 3 holds, for
+   example of another oracle node.
 
 ## Reasons
 
@@ -54,7 +56,9 @@ publish and remove the data in the network storage is defined in
 - Rule 9: an account timestamp states the age of a payment account, which other users trust. Without the check, any
   key could publish an earlier date for the hash of an account, or remove the applied timestamp with a copy of
   another key. A copy with a recent date could also stop the owner of the account from requesting its timestamp again
-  before the timestamp of the oracle node expires.
+  before the timestamp of the oracle node expires. Several oracle nodes can publish the same account timestamp, each
+  with its own key. The node holds one account timestamp per hash, so the removal or expiry of one publication must
+  not remove it while another publication remains.
 - Rule 5: checking the authorization of every stored entry verifies one signature per entry. This check was disabled
   at startup to reduce the startup cost. Rule 8 of [`../network/storage-ownership.md`](../network/storage-ownership.md)
   still removes stored entries whose publisher is not the owner.
@@ -69,7 +73,8 @@ publish and remove the data in the network storage is defined in
   key which is no static key, is not listed. The removal of a publication of another key does not remove a listed
   oracle node.
 - An account timestamp of an oracle node is applied. An account timestamp of another key is not applied, and its
-  removal does not remove the applied one.
+  removal does not remove the applied one. If two oracle nodes publish the same account timestamp, the removal of one
+  publication keeps it, and the removal of the last publication removes it.
 
 ## Related code
 

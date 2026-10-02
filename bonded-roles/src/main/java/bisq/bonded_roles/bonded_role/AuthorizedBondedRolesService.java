@@ -301,8 +301,9 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     }
 
     // Rules 2 and 3 of docs/specifications/bonded-roles/authorized-data.md, without side effects. The signature check is
-    // done in AuthorizedData.
-    private boolean isAuthorizedKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
+    // done in AuthorizedData. Unlike hasAuthorizedPubKey, it does not queue the data for reprocessing, so it suits a
+    // lookup of stored publications.
+    public boolean isAuthorizedKey(AuthorizedData authorizedData, BondedRoleType authorizingBondedRoleType) {
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
         if (data.staticPublicKeysProvided()) {

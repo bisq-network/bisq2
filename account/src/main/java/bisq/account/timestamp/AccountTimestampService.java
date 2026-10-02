@@ -101,8 +101,9 @@ public class AccountTimestampService implements Service, AuthorizedBondedRolesSe
 
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        // Without side effects: the removed publication must not be queued for reprocessing as added data
         if (authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp authorizedAccountTimestamp &&
-                isAuthorized(authorizedData)) {
+                isAuthorizedPublication(authorizedData)) {
             handleAuthorizedAccountTimestampRemoved(authorizedAccountTimestamp);
         }
     }
@@ -154,10 +155,17 @@ public class AccountTimestampService implements Service, AuthorizedBondedRolesSe
         accountTimestampByHash.putIfAbsent(accountTimestampHash, accountTimestamp);
     }
 
+    // Several oracle nodes can publish the same account timestamp, each with its own key. The store holds one entry per
+    // publication, but accountTimestampByHash holds one item per hash. The removal or expiry of one publication must not
+    // remove an account timestamp which another oracle node still publishes.
     private void handleAuthorizedAccountTimestampRemoved(AuthorizedAccountTimestamp authorizedAccountTimestamp) {
         AccountTimestamp accountTimestamp = authorizedAccountTimestamp.getAccountTimestamp();
-        ByteArray accountTimestampHash = new ByteArray(accountTimestamp.getHash());
-        accountTimestampByHash.remove(accountTimestampHash);
+        if (findAuthorizedAccountTimestamp(accountTimestamp.getHash()).findAny().isPresent()) {
+            log.info("A publication of an account timestamp was removed, but an oracle node still publishes it. " +
+                    "We keep the account timestamp.");
+            return;
+        }
+        accountTimestampByHash.remove(new ByteArray(accountTimestamp.getHash()));
     }
 
     private void sendAccountTimestampRequest(Account<?, ?> account, AccountTimestamp accountTimestamp) {
@@ -235,6 +243,11 @@ public class AccountTimestampService implements Service, AuthorizedBondedRolesSe
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
     }
 
+    // The same rule as isAuthorized, but without side effects, for publications which are stored or removed
+    private boolean isAuthorizedPublication(AuthorizedData authorizedData) {
+        return authorizedBondedRolesService.isAuthorizedKey(authorizedData, BondedRoleType.ORACLE_NODE);
+    }
+
     private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountTimestamp(byte[] hash) {
         String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
         return networkService.getDataService()
@@ -245,7 +258,7 @@ public class AccountTimestampService implements Service, AuthorizedBondedRolesSe
                                 .map(AuthorizedData.class::cast)
                                 .filter(authorizedData ->
                                         authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp)
-                                .filter(this::isAuthorized)
+                                .filter(this::isAuthorizedPublication)
                                 .map(authorizedData -> (AuthorizedAccountTimestamp) authorizedData.getDistributedData())
                 )
                 .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
