@@ -112,3 +112,19 @@ jobs:
             :application:test --tests 'bisq.application.ResolverConfigTest' \
                               --tests 'bisq.application.StorableTypeMetaDataTest' \
                               --tests 'bisq.application.StorableTypeMessageCostTest'
+
+          # Gradle does not report a `--tests` filter which matches no class if another filter of the same task
+          # matches. The job then passes and checks less, for example after a test was renamed or deleted. So each
+          # test class named above must have written a result. Keep this list in line with the filters above.
+          for result in \
+            common/build/test-results/test/TEST-bisq.common.proto.ProtoResolverTest.xml \
+            persistence/build/test-results/test/TEST-bisq.persistence.PersistableStoreContractTest.xml \
+            persistence/build/test-results/test/TEST-bisq.persistence.PersistableStoreReaderWriterTests.xml \
+            application/build/test-results/test/TEST-bisq.application.ResolverConfigTest.xml \
+            application/build/test-results/test/TEST-bisq.application.StorableTypeMetaDataTest.xml \
+            application/build/test-results/test/TEST-bisq.application.StorableTypeMessageCostTest.xml; do
+            if [ ! -f "$result" ]; then
+              echo "::error::Missing test result $result. The test class did not run."
+              exit 1
+            fi
+          done
