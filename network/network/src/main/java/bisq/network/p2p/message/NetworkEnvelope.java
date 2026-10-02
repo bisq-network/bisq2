@@ -103,11 +103,24 @@ public final class NetworkEnvelope implements NetworkProto {
     }
 
     public void verifyVersion() throws ConnectionException {
+        verifyVersion(version, envelopePayloadMessage.getClass().getSimpleName());
+    }
+
+    /**
+     * Checks the version of a received envelope before its payload is converted. A connection drops a message whose
+     * payload it cannot convert, but it closes for a message of another network version (rule 6 of
+     * docs/specifications/network/validation-at-parsing.md). The check must therefore not depend on the conversion.
+     */
+    public static void verifyVersion(bisq.network.protobuf.NetworkEnvelope proto) throws ConnectionException {
+        verifyVersion(proto.getVersion(), proto.getNetworkMessage().getMessageCase().name());
+    }
+
+    private static void verifyVersion(int version, String networkMessage) throws ConnectionException {
         if (version != networkVersion) {
             throw new ConnectionException(INVALID_NETWORK_VERSION, "Invalid networkEnvelopeVersion. " +
                     "version=" + version +
                     "; networkVersion=" + networkVersion +
-                    "; networkMessage=" + envelopePayloadMessage.getClass().getSimpleName());
+                    "; networkMessage=" + networkMessage);
         }
     }
 
