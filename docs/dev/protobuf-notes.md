@@ -198,7 +198,9 @@ A caller handles the exception or declares it:
 
 - A caller which converts a collection decides what fails: one entry or the whole collection. A store skips a
   persisted entry which it cannot convert and keeps the other entries (rule 4 of
-  [`validation-at-parsing.md`](../specifications/network/validation-at-parsing.md)). It uses
+  [`validation-at-parsing.md`](../specifications/network/validation-at-parsing.md)). The exception is a store which
+  must not lose an entry, for example the witness bindings of the oracle node
+  ([`account-age.md`](../specifications/reputation/account-age.md#persisted-request-compatibility)). A store uses
   `ProtobufUtils.fromProtoStreamSkippingInvalid` or `fromProtoEntryStreamSkippingInvalid`, which log only the type and
   the size of a skipped proto and the stack trace without messages, as protos can hold private data.
 - `ProtoResolverMap` propagates conversion failures without logging them. The caller owns recovery and reporting,
