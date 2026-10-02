@@ -64,6 +64,7 @@ import bisq.trade.bisq_easy.protocol.events.BisqEasyTakeOfferEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyTradeEvent;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.protocol.handler.TradeMessageHandler;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
@@ -212,12 +213,32 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
         String tradeId = message.getTradeId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> handleBisqEasyTradeMessage(message, protocol),
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    if (isMessageOfTradePeer(message, protocol)) {
+                        handleBisqEasyTradeMessage(message, protocol);
+                    } else {
+                        pendingMessages.remove(message);
+                    }
+                },
                 () -> {
                     log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
                             "re-processing when the next message arrives. message={}", tradeId, message);
                     pendingMessages.add(message);
                 });
+    }
+
+    // The state machine turns an exception of a message handler into a failure of the trade (Fsm.handle), and the
+    // handlers throw for a message which is not from the trade peer. So such a message must not reach the protocol:
+    // anybody who knows a trade ID could end the trade otherwise. The check runs when a message is processed, also for
+    // a message which was queued before the protocol existed. The take offer request creates the trade and keeps its
+    // own checks.
+    private static boolean isMessageOfTradePeer(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
+        boolean isMessageOfTradePeer = TradeMessageHandler.isMessageOfTradePeer(message, protocol.getModel());
+        if (!isMessageOfTradePeer) {
+            log.warn("We drop a trade message of type {} which the trade peer did not send.",
+                    message.getClass().getSimpleName());
+        }
+        return isMessageOfTradePeer;
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
