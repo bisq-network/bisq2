@@ -72,6 +72,8 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
     @Override
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
+        // The receiver takes the sender public key from it (SenderPublicKeyProvidingPayload)
+        checkArgument(senderNetworkId != null, "senderNetworkId must be present");
     }
 
     /**
