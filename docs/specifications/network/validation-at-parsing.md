@@ -25,7 +25,9 @@ described in [`../../dev/protobuf-notes.md`](../../dev/protobuf-notes.md#errors-
 4. The caller of `fromProto` decides what fails with the object. The caller must know that an entry can be invalid:
    - A requester skips an inventory entry which it cannot parse, and processes the other entries (rule 7 of
      [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#entries-which-a-node-cannot-parse)).
-   - A store skips a persisted entry which it cannot parse when it loads, and keeps the other entries.
+   - A store skips a persisted entry which it cannot parse when it loads, and keeps the other entries. The exception
+     is the store of witness bindings of the oracle node, which must not lose a binding (see
+     [`../reputation/account-age.md`](../reputation/account-age.md#persisted-request-compatibility)).
    - A connection closes when the node cannot parse a message which it receives.
 5. Checks which need the state of the node, not only the object, stay in the component which owns that state. For
    storage requests these are the stores. Examples: the admission of registered class names and MetaData (see

@@ -58,7 +58,8 @@ final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
     public static PeerGroupStore fromProto(bisq.network.protobuf.PeerGroupStore proto)
             throws UnresolvableProtobufException {
         try {
-            Map<Address, Peer> persistedPeersById = ProtobufUtils.fromProtoStream(proto.getPersistedPeersList(),
+            Map<Address, Peer> persistedPeersById = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getPersistedPeersList(),
                             Peer::fromProto)
                     .collect(Collectors.toMap(Peer::getAddress, e -> e));
             return new PeerGroupStore(persistedPeersById);

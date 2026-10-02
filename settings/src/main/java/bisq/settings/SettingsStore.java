@@ -334,7 +334,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                     proto.getMuSigTradeRulesConfirmed(),
                     ChatNotificationType.fromProto(proto.getChatNotificationType()),
                     proto.getIsTacAccepted(),
-                    ProtobufUtils.fromProtoStream(proto.getTacAcceptancesList(), TacAcceptance::fromProto)
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getTacAcceptancesList(),
+                                    TacAcceptance::fromProto)
                             .collect(Collectors.toList()),
                     new HashSet<>(proto.getConsumedAlertIdsList()),
                     proto.getCloseMyOfferWhenTaken(),
@@ -345,7 +346,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                     new HashSet<>(proto.getSupportedLanguageTagsList()),
                     proto.getDifficultyAdjustmentFactor(),
                     proto.getIgnoreDiffAdjustmentFromSecManager(),
-                    new HashSet<>(ProtobufUtils.fromProtoStream(proto.getFavouriteMarketsList(),
+                    new HashSet<>(ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getFavouriteMarketsList(),
                                     Market::fromProto).collect(Collectors.toSet())),
                     proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
                     maxTradePriceDeviation,

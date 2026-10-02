@@ -58,7 +58,8 @@ final class MuSigMediatorStore implements PersistableStore<MuSigMediatorStore> {
     public static MuSigMediatorStore fromProto(bisq.support.protobuf.MuSigMediatorStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new MuSigMediatorStore(ProtobufUtils.fromProtoStream(proto.getMuSigMediationCasesList(),
+            return new MuSigMediatorStore(ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getMuSigMediationCasesList(),
                             MuSigMediationCase::fromProto)
                     .collect(Collectors.toSet()));
         } catch (RuntimeException e) {

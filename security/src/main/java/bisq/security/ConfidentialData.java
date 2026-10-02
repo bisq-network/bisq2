@@ -28,13 +28,11 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.security.keys.EcPublicKeyValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@Slf4j
 @Getter
 public final class ConfidentialData implements NetworkProto, Canonical {
     private static final int MAX_SIZE_CIPHERTEXT = 20_000;
@@ -53,12 +51,8 @@ public final class ConfidentialData implements NetworkProto, Canonical {
         this.cipherText = cipherText;
         this.signature = signature;
 
-        try {
-            verify();
-        } catch (Exception e) {
-            log.error("ConfidentialData verification failed", e);
-            throw e;
-        }
+        // The caller reports invalid data: fromProto for received data, HybridEncryption for data which we create.
+        verify();
     }
 
     @Override

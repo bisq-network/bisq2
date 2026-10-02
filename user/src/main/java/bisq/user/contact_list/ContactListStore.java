@@ -60,7 +60,8 @@ public final class ContactListStore implements PersistableStore<ContactListStore
     public static ContactListStore fromProto(bisq.user.protobuf.ContactListStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new ContactListStore(new HashSet<>(ProtobufUtils.fromProtoStream(proto.getContactListEntriesList(),
+            return new ContactListStore(new HashSet<>(ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getContactListEntriesList(),
                             ContactListEntry::fromProto).
                     collect(Collectors.toSet())));
         } catch (RuntimeException e) {

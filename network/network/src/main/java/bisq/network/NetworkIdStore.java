@@ -60,7 +60,8 @@ final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkIdStore proto)
             throws UnresolvableProtobufException {
         try {
-            var networkIdByTag = ProtobufUtils.fromProtoEntryStream(proto.getNetworkIdByTagMap(), NetworkId::fromProto)
+            var networkIdByTag = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getNetworkIdByTagMap(),
+                            NetworkId::fromProto)
                     .collect(Collectors.toMap(Map.Entry::getKey,
                             Map.Entry::getValue));
             return new NetworkIdStore(networkIdByTag);

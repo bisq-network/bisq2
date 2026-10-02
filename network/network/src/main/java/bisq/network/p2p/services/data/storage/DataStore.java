@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage;
 
 import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.DataRequest;
@@ -33,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -68,16 +68,8 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
     public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new DataStore<>(proto.getMapEntriesList().stream()
-                    .map(e -> {
-                        try {
-                            return Map.entry(ByteArray.fromProto(e.getKey()), DataRequest.fromProto(e.getValue()));
-                        } catch (Exception ex) {
-                            log.warn("Could not create map entry from protobuf map entry {}", e.toString(), ex);
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
+            return new DataStore<>(ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getMapEntriesList(),
+                            e -> Map.entry(ByteArray.fromProto(e.getKey()), DataRequest.fromProto(e.getValue())))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);

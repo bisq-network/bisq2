@@ -66,7 +66,7 @@ public final class MessageDeliveryStatusStore implements PersistableStore<Messag
     public static PersistableStore<?> fromProto(bisq.network.protobuf.MessageDeliveryStatusStore proto)
             throws UnresolvableProtobufException {
         try {
-            return new MessageDeliveryStatusStore(ProtobufUtils.fromProtoEntryStream(
+            return new MessageDeliveryStatusStore(ProtobufUtils.fromProtoEntryStreamSkippingInvalid(
                             proto.getMessageDeliveryStatusByMessageIdMap(), MessageDeliveryStatus::fromProto)
                     .collect(Collectors.toMap(Map.Entry::getKey,
                             e -> new Observable<>(e.getValue()))),

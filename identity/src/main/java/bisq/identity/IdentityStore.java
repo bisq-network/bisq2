@@ -72,9 +72,11 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
             throws UnresolvableProtobufException {
         try {
             return new IdentityStore(Optional.of(Identity.fromProto(proto.getDefaultIdentity())),
-                    ProtobufUtils.fromProtoEntryStream(proto.getActiveIdentityByDomainIdMap(), Identity::fromProto)
+                    ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getActiveIdentityByDomainIdMap(),
+                                    Identity::fromProto)
                             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
-                    ProtobufUtils.fromProtoStream(proto.getRetiredList(), Identity::fromProto).collect(Collectors.toSet()));
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getRetiredList(),
+                                    Identity::fromProto).collect(Collectors.toSet()));
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }
