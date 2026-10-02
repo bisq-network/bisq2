@@ -32,6 +32,10 @@ publish and remove the data in the network storage is defined in
 6. The services which use authorized data check rule 2 or rule 3 before they use the data
    (`AuthorizedBondedRolesService.hasAuthorizedPubKey`). For rule 2 the check compares the authorized public key with
    the static keys of the version of the node. It does not rely on the check of the network storage.
+   This also applies when a node looks up stored profile timestamps (`AuthorizedTimestampData`) to decide which
+   profiles need a timestamp request. Only timestamps authorized by an oracle node count as existing timestamps,
+   using the same authorization check as applying profile age. The renewal interval for authorized timestamps is
+   unchanged.
 7. If no bonded role matches (rule 3), the application keeps the data and checks it again when a bonded role or an
    oracle node is added. Bonded roles can arrive after the data which they authorize.
 8. A node lists an oracle node (`AuthorizedOracleNode`) only while the network storage holds at least one publication
@@ -73,6 +77,9 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
   the static flag. With the root role of a removed key, that key could authorize bonded roles of every type on this
   node, because rule 3 would find its role.
 - Rule 6 needs no signature verification. It is a lookup in a set of a few keys.
+- Rule 6 also protects the profile timestamp request lookup. A signed timestamp from another key can be stored
+  without oracle authority when it has no static flag. Counting it as an existing timestamp would suppress a
+  missing-timestamp request while renewal is not due, even though the node rejects it when applying profile age.
 - Rule 8: users send their registration requests and account timestamp requests to the listed oracle nodes. Without
   the check, any key could publish an oracle node without the static flag, and users would send it these requests.
   A list which the node updates only when oracle node data is added or removed would keep an oracle node whose role a
@@ -112,6 +119,10 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
 - An account timestamp of an oracle node is applied. An account timestamp of another key is not applied, and its
   removal does not remove the applied one. If two oracle nodes publish the same account timestamp, the removal of one
   publication keeps it, and the removal of the last publication removes it.
+- With the real `DataService` and `AuthorizedBondedRolesService`, the profile timestamp request lookup ignores a
+  stored timestamp signed by a non-oracle key and counts one signed by an oracle key, even before profile age is
+  applied. With mixed publications, only profiles with an authorized timestamp count. Removing the last authorized
+  timestamp makes the profile missing again, even if an unauthorized copy remains in storage.
 - With the restriction (rules 10 and 11): an oracle node of an oracle node key is listed, with and without the static
   flag. An oracle node of a key with a role of the oracle node role type is not listed. A role of the oracle node role
   type of another key is not listed, and its key does not authorize other roles.
@@ -122,6 +133,7 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
 
 - `AuthorizedData.isNotAuthorized()` (rules 1 and 2 at add), `AuthenticatedDataStorageService.add()`.
 - `AuthorizedBondedRolesService.hasAuthorizedPubKey()` (rules 2 and 3 before use).
+- `ProfileAgeService.getTimeStampedProfileIds()` (rule 6, profile timestamp request lookup).
 - `AuthorizedBondedRolesService.getAuthorizedOracleNodes()` (rule 8), `AccountTimestampService` (rule 9).
 - `AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES` and `isOracleNodeKeyAllowed()` (rules 10 and 11),
   `Bisq1BridgeRequestService.processBondedRoleRegistrationRequest()` (rule 12), `OracleNodeService` (rule 13).
