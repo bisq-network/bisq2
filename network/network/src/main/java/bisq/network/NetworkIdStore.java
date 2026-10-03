@@ -95,4 +95,10 @@ final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     Optional<NetworkId> findNetworkId(String tag) {
         return Optional.ofNullable(networkIdByTag.get(tag));
     }
+
+    Optional<NetworkId> findNetworkIdByKeyId(String keyId) {
+        return networkIdByTag.values().stream()
+                .filter(networkId -> networkId.getKeyId().equals(keyId))
+                .findAny();
+    }
 }
