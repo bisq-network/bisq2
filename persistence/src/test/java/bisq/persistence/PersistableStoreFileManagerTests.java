@@ -49,36 +49,42 @@ public class PersistableStoreFileManagerTests {
     }
 
     @Test
-    void renameTempFileToCurrentFileIfCurrentNotExisting(@TempDir Path tempDirPath) throws IOException {
+    void replaceCurrentFileIfCurrentNotExisting(@TempDir Path tempDirPath) throws IOException {
         Path tmpFilePath = tempDirPath.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
         createEmptyFilePath(tmpFilePath);
 
         Path storePath = tempDirPath.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
-        storeFileManager.renameTempFileToCurrentFile();
+        storeFileManager.replaceCurrentFileWithTempFile();
 
         assertThat(storePath).exists();
         assertThat(tmpFilePath).doesNotExist();
     }
 
     @Test
-    void renameTempFileButStorageFileExists(@TempDir Path tempDirPath) throws IOException {
+    void replaceExistingCurrentFile(@TempDir Path tempDirPath) throws IOException {
         Path tmpFilePath = tempDirPath.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
-        createEmptyFilePath(tmpFilePath);
+        FileMutatorUtils.writeToPath("new", tmpFilePath);
 
         Path storePath = tempDirPath.resolve("store");
-        createEmptyFilePath(storePath);
+        FileMutatorUtils.writeToPath("old", storePath);
 
         var storeFileManager = new PersistableStoreFileManager(storePath);
-        assertThrows(IOException.class, storeFileManager::renameTempFileToCurrentFile);
+        storeFileManager.replaceCurrentFileWithTempFile();
+
+        assertThat(storePath).hasContent("new");
+        assertThat(tmpFilePath).doesNotExist();
     }
 
     @Test
-    void renameTempFileButTempFileDoesNotExist(@TempDir Path tempDirPath) {
+    void replaceButTempFileDoesNotExist(@TempDir Path tempDirPath) throws IOException {
         Path storePath = tempDirPath.resolve("store");
+        FileMutatorUtils.writeToPath("old", storePath);
         var storeFileManager = new PersistableStoreFileManager(storePath);
-        assertThrows(NoSuchFileException.class, storeFileManager::renameTempFileToCurrentFile);
+
+        assertThrows(NoSuchFileException.class, storeFileManager::replaceCurrentFileWithTempFile);
+        assertThat(storePath).hasContent("old");
     }
 
     public static void createEmptyFilePath(Path path) throws IOException {

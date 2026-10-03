@@ -66,11 +66,9 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         storeFileManager.createParentDirectoriesIfNotExisting();
         try {
             writeStoreToTempFilePath(persistableStore);
-            boolean hasFileBeenBackedUp = storeFileManager.maybeBackup();
-            if (!hasFileBeenBackedUp) {
-                Files.deleteIfExists(storeFilePath);
-            }
-            storeFileManager.renameTempFileToCurrentFile();
+            // The backup copies the current file, so the current file stays in place until the rename replaces it
+            storeFileManager.maybeBackup();
+            storeFileManager.replaceCurrentFileWithTempFile();
         } catch (CouldNotSerializePersistableStore e) {
             throw e;
         } catch (Exception e) {

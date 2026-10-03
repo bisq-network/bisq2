@@ -29,6 +29,7 @@ import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -262,6 +263,21 @@ public class FileMutatorUtils {
             log.error("Failed to rename {} to {}", oldPath, newPath, e);
             return false;
         }
+    }
+
+    /**
+     * Replaces targetPath with sourcePath in one rename, so that targetPath always names either the old or the new
+     * file. Uses an atomic move where the file system supports it.
+     *
+     * @throws IOException if the file could not be replaced. targetPath is then unchanged.
+     */
+    public static void replaceFile(Path sourcePath, Path targetPath) throws IOException {
+        try {
+            Files.move(sourcePath, targetPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+        applyDefaultPermissions(targetPath);
     }
 
     public static void backupCorruptedFile(Path dirPath, Path storageFilePath, String fileName, String backupFolderName)

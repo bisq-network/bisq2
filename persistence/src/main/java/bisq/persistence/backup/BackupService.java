@@ -133,11 +133,9 @@ public class BackupService {
 
     @VisibleForTesting
     boolean backup(Path backupFilePath) throws IOException {
-        boolean success = FileMutatorUtils.renameFile(storeFilePath, backupFilePath);
-        if (!success) {
-            log.error("Could not rename {} to {}", storeFilePath, backupFilePath);
-        }
-        return success;
+        // Copy, not move: the current file must stay in place until the new version replaces it
+        FileMutatorUtils.copyFile(storeFilePath, backupFilePath);
+        return true;
     }
 
     public void prune() {
