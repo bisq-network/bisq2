@@ -19,6 +19,40 @@ A copy of a refresh request which a node has applied has the sequence number of 
 does not apply it again, does not notify listeners, and does not relay it (see
 [storage-refresh-requests.md](storage-refresh-requests.md)).
 
+## Replaced add request of a stored removal
+
+A store records for each stored removal whether the removal replaced an add request in this store. For such a removal,
+the store records the sequence number of the replaced add request. This record is the replaced add request of the
+removal.
+
+Requirements:
+
+1. When a removal replaces a stored add request, the store records the sequence number of that add request with the
+   removal. This applies to authenticated data and to mailbox data, and to removals with and without signature V2.
+2. When a removal replaces a stored removal, the store keeps the record of the stored removal. If the stored removal
+   had no record, the new removal has none either.
+3. A removal which the store accepts without entry has no record.
+4. The record exists only while the store holds the removal. When an add request replaces the removal, or when the
+   store removes the removal, the store removes the record.
+5. The store persists the record with the removal, so the record stays after a restart.
+6. The record is local. It is not part of the removal, and a node does not send it. A removal which a node of an
+   earlier version persisted has no record.
+
+Reasons:
+
+- A removal contains only the hash of the removed data. A store which held the add request had checked the data: its
+  owner, its type and, for authorized data, its authorization. After the removal replaced the add request, the store
+  holds only the removal. Without the record, the store could not tell a removal of data which it checked from a
+  removal for data which it never held.
+- The record does not need to name the key which signed the removal. The storage key contains the public key of the
+  owner (see [storage-keys.md](storage-keys.md#storage-key-v2)). A removal signed with another key gets another
+  storage key, so it never replaces the add request of the owner.
+- Requirement 6: the record states what this node checked. A field in the removal would be set by the sender or a
+  relay. No signature could cover it, because the store sets it after the owner signed the removal.
+- One fact, not a score: the record states that the store checked the data, and it holds the signed sequence number
+  of that data. A separate flag would be a second representation of the same fact, and the two could disagree. A score
+  would mix this fact with a rule which can change, and a persisted score would then have the wrong value.
+
 ## Authenticated removals during signature migration
 
 Signature V1 of an authenticated removal does not cover its sequence number. A relay can change that number without

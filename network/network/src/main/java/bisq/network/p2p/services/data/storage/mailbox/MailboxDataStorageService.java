@@ -182,6 +182,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
+                getReplacedAddSequenceNrs().remove(storageKey);
                 map.put(storageKey, request);
                 persist();
                 return DataStorageResult.success().noEntry();
@@ -189,7 +190,8 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
                 // Signature V1 does not cover created, so a relay can shorten the lifetime of a V1 removal.
-                // A verified V2 removal replaces it. Otherwise the stored removal stays unchanged.
+                // A verified V2 removal replaces it. Otherwise the stored removal stays unchanged. The new removal keeps
+                // the sequence number of the add request which the stored removal replaced.
                 if (request.isSignatureV2Present() && !requestFromMap.isSignatureV2Present()) {
                     map.put(storageKey, request);
                     persist();
@@ -212,6 +214,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
+            // The store keeps the sequence number of the add request which the removal replaces. It sets the number
+            // before the removal, so that a reader which finds the removal also finds the number.
+            getReplacedAddSequenceNrs().put(storageKey, sequentialDataFromMap.getSequenceNumber());
             map.put(storageKey, request);
         }
 
@@ -270,6 +275,9 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 boolean wasRemoved;
                 synchronized (mapAccessLock) {
                     wasRemoved = persistableStore.getMap().remove(entry.getKey(), entry.getValue());
+                    if (wasRemoved) {
+                        getReplacedAddSequenceNrs().remove(entry.getKey());
+                    }
                 }
                 if (wasRemoved) {
                     addPrunedRequest(entry.getValue());

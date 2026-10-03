@@ -106,6 +106,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         });
         map.clear();
         map.putAll(rekeyed);
+        persisted.getReplacedAddSequenceNrs().keySet().retainAll(rekeyed.keySet());
         return persisted;
     }
 
@@ -140,6 +141,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(pruned);
+        persisted.getReplacedAddSequenceNrs().keySet().retainAll(pruned.keySet());
         return persisted;
     }
 
@@ -182,5 +184,11 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
             log.info("Map size for {} reached > 20 000 entries. map.size()={}", storeKey, size);
         }
         return isExceeding;
+    }
+
+    // By storage key: the sequence number of the add request which the stored removal replaced (see DataStore). The
+    // stores change it only while holding their map lock, together with the entry of the same key.
+    protected Map<ByteArray, Integer> getReplacedAddSequenceNrs() {
+        return persistableStore.getReplacedAddSequenceNrs();
     }
 }
