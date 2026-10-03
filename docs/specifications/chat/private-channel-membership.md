@@ -12,15 +12,31 @@ user of a two-party chat, or the traders and dispute agents of a trade, without 
 3. A message which names an existing channel never creates another channel, also when rule 1 rejects it.
 4. The sender is the sender profile of the message. It is bound to the key which encrypted the message, and the
    author ID of a private message is derived from it.
+5. A received message of a Bisq Easy trade chat is added to a trade channel only if its trade ID is the trade ID of the
+   channel (`BisqEasyOpenTradeChannelService`). The channel ID is not compared, because the channel ID of a message can
+   differ from the ID of the channel in a dotless i (see "Not covered").
+6. A mediation request of a trader carries only those messages of the trade channel whose trade ID is the trade ID of
+   the channel, whose channel ID is the channel ID of that trade ID (`BisqEasyOpenTradeChannel.createId`) and whose
+   sender is one of the two traders, because the mediator ignores a request with any other message
+   (`BisqEasyMediationRequestService.requestMediation`).
 
 ## Reason
 
 The sender chooses the channel ID and the trade ID of its message. Without rule 1, a user who learned the ID of a
 channel, for example a trade ID, could add messages to the conversation of other users, for example to a trade chat.
 
+Without rules 5 and 6, a trade peer could add a message with the trade ID of another trade to the trade chat of the
+other trader. That message would end up in each mediation request of the other trader, and the mediator ignores a
+request with such a message, so one message would block the mediation of the trade. Rule 6 also covers channels which
+already hold such a message, and the messages of the mediator, which the channel holds after the mediator responded to
+a request.
+
 ## Compatibility
 
-Unmodified nodes send messages only to channels in which they are a peer, so their messages pass.
+Unmodified nodes send messages only to channels in which they are a peer, and they take the trade ID and the channel ID
+of a trade chat message from the channel, so their messages pass rules 1 and 5. Rule 6 leaves out only messages of the
+mediator and messages with a channel ID with a dotless i (see "Not covered"), with which the mediator ignores a request
+as well.
 
 ## Not covered
 
