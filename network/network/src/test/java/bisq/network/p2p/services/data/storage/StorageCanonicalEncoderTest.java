@@ -434,7 +434,7 @@ public class StorageCanonicalEncoderTest {
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setCreated(CREATED)
                 .setVersion(version)
-                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
+                .setSignatureV2(signatureV2ForVersion(version))
                 .build());
     }
 
@@ -453,7 +453,7 @@ public class StorageCanonicalEncoderTest {
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setVersion(version)
                 .setCreated(CREATED)
-                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
+                .setSignatureV2(signatureV2ForVersion(version))
                 .build());
     }
 
@@ -498,14 +498,17 @@ public class StorageCanonicalEncoderTest {
         return getAddMailboxRequest(getMailboxSequentialData());
     }
 
+    // Mailbox data of version 0 comes only in requests without signature V2 and with version 0, as nodes of earlier
+    // versions sent them
     private static AddMailboxRequest getAddMailboxRequest(MailboxSequentialData mailboxSequentialData)
             throws UnresolvableProtobufException {
+        int version = mailboxSequentialData.getMailboxData().getVersion() == 0 ? 0 : 2;
         return AddMailboxRequest.fromProto(bisq.network.protobuf.AddMailboxRequest.newBuilder()
                 .setMailboxSequentialData(mailboxSequentialData.toProto(false))
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setSenderPublicKeyBytes(ByteString.copyFrom(PUBLIC_KEY_BYTES))
-                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
-                .setVersion(2)
+                .setSignatureV2(signatureV2ForVersion(version))
+                .setVersion(version)
                 .build());
     }
 
@@ -521,8 +524,13 @@ public class StorageCanonicalEncoderTest {
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setCreated(CREATED)
                 .setVersion(version)
-                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
+                .setSignatureV2(signatureV2ForVersion(version))
                 .build());
+    }
+
+    // Version 0 is not combined with signature V2 (see SignatureValidation.validateVersionOfSignatureV2)
+    private static ByteString signatureV2ForVersion(int version) {
+        return version == 0 ? ByteString.EMPTY : ByteString.copyFrom(SIGNATURE_V2);
     }
 
     private static byte[] filledBytes(int length, int value) {

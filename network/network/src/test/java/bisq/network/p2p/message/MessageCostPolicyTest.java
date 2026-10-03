@@ -197,7 +197,8 @@ class MessageCostPolicyTest {
                 double addCost = bound(0.25, 1, storageCost + confidentialCost);
                 double addCostToPay = Math.max(addCost, historicalAddCost);
                 MailboxData mailboxData = new MailboxData(historicalMetaData, createConfidentialMessage(size));
-                for (int version = 0; version <= 3; version++) {
+                // Version 0 is not combined with signature V2 (see SignatureValidation.validateVersionOfSignatureV2)
+                for (int version = 1; version <= 3; version++) {
                     MailboxData versionedData = MailboxData.fromProto(mailboxData.toProto(false).toBuilder()
                             .setVersion(version).build());
                     assertCosts(AddMailboxRequest.from(versionedData, keyPair, keyPair.getPublic()),
