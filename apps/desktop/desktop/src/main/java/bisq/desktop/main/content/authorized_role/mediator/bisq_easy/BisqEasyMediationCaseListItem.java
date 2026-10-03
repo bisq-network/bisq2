@@ -172,7 +172,8 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
     private long getNumNotifications(UserProfile userProfile) {
         return chatNotificationService.getNotConsumedNotifications(channel)
                 .filter(notification -> notification.getSenderUserProfile().isPresent())
-                .filter(notification -> notification.getSenderUserProfile().get().equals(userProfile))
+                // By ID, the hash of the key: the terms, statement and addresses of a profile can change
+                .filter(notification -> notification.getSenderUserProfile().get().getId().equals(userProfile.getId()))
                 .count();
     }
 

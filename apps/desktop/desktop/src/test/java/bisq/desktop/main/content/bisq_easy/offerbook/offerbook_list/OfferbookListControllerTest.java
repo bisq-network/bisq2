@@ -40,6 +40,7 @@ import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -75,6 +76,7 @@ class OfferbookListControllerTest {
     private final ObservableSet<String> ignoredUserProfileIds = new ObservableSet<>();
     private BisqEasyOfferbookMessageService messageService;
     private UserProfileService userProfileService;
+    private UserIdentityService userIdentityService;
     private ReputationService reputationService;
     private OfferbookListController controller;
     private BisqEasyOfferbookChannel channel;
@@ -89,8 +91,10 @@ class OfferbookListControllerTest {
 
         UserProfile authorUserProfile = mock(UserProfile.class);
         when(authorUserProfile.getNickName()).thenReturn("alice");
+        when(authorUserProfile.getId()).thenReturn("author-id");
         UserService userService = mock(UserService.class, RETURNS_DEEP_STUBS);
         userProfileService = userService.getUserProfileService();
+        userIdentityService = userService.getUserIdentityService();
         when(userProfileService.findUserProfile("author-id")).thenReturn(Optional.of(authorUserProfile));
         when(userProfileService.getIgnoredUserProfileIds()).thenReturn(ignoredUserProfileIds);
         when(userProfileService.isChatUserIgnored(any(String.class)))
@@ -273,6 +277,48 @@ class OfferbookListControllerTest {
         ignoredUserProfileIds.remove("author-id");
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(displayedMessageIds()).containsExactly("offer-message-id");
+    }
+
+    // The selected user identity holds the profile after its last edit. The offer list item holds the version of the
+    // profile which the user profile service had. Both have the ID of the same key.
+    @Test
+    void ownOfferIsShownInMyOffersWhenTheSelectedProfileIsAnotherVersionOfTheAuthorsProfile() {
+        selectUserProfileWithId("author-id");
+        putMarketPrice(FITTING_PRICE);
+        channel.addChatMessage(message);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        WaitForAsyncUtils.asyncFx(() -> controller.getModel().getShowMyOffersOnly().set(true));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(shownMessageIds()).containsExactly("offer-message-id");
+    }
+
+    @Test
+    void offerOfAnotherProfileIsNotShownInMyOffers() {
+        selectUserProfileWithId("other-id");
+        putMarketPrice(FITTING_PRICE);
+        channel.addChatMessage(message);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        WaitForAsyncUtils.asyncFx(() -> controller.getModel().getShowMyOffersOnly().set(true));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(shownMessageIds()).isEmpty();
+    }
+
+    private void selectUserProfileWithId(String userProfileId) {
+        UserProfile selectedUserProfile = mock(UserProfile.class);
+        when(selectedUserProfile.getId()).thenReturn(userProfileId);
+        UserIdentity selectedUserIdentity = mock(UserIdentity.class);
+        when(selectedUserIdentity.getUserProfile()).thenReturn(selectedUserProfile);
+        when(userIdentityService.getSelectedUserIdentity()).thenReturn(selectedUserIdentity);
+    }
+
+    private List<String> shownMessageIds() {
+        return controller.getModel().getFilteredOfferbookListItems().stream()
+                .map(item -> item.getBisqEasyOfferbookMessage().getId())
+                .toList();
     }
 
     private void putMarketPrice(double price) {

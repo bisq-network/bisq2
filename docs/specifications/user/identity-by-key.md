@@ -31,7 +31,9 @@ of a trade message also applies to MuSig.
      request is the mediator of the contract;
    - the mediator shows a mediation case only if the mediator of its trade chat channel is the mediator of the
      contract;
-   - a user cannot delete a profile while a private chat channel uses the identity of this profile.
+   - a user cannot delete a profile while a private chat channel uses the identity of this profile;
+   - the desktop shows an offer in the list of own offers, a notification as one of the mediator or of a trader, and
+     the number of mediation cases of a trader.
 3. A node sends its trade messages under the network ID which its trade peer stored for it. The taker sends under its
    network ID in the contract. The maker sends under the network ID to which the taker addressed the take offer request.
    An honest taker addresses it to the maker's network ID in the offer. The node sends from the identity of the trade,
