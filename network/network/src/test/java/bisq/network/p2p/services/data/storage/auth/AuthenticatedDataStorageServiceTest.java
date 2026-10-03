@@ -19,8 +19,10 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.MessageCostPolicy;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -316,6 +318,50 @@ class AuthenticatedDataStorageServiceTest {
         assertEquals(DataStorageService.MAX_MAP_SIZE, map.size());
         // The pending write of the other tests would have to serialize all entries
         map.clear();
+    }
+
+    // A store keeps only the requests which it pruned most recently for its observers. Otherwise a node which runs
+    // for a long time would hold every expired request in memory (see DataStorageService.MAX_PRUNED_REQUESTS).
+    @Test
+    void storeKeepsOnlyTheMostRecentlyPrunedRequests() throws GeneralSecurityException {
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService(), "pruneAll", STORE_KEY, () -> time) {
+            @Override
+            protected boolean isToPrune(AuthenticatedDataRequest request) {
+                return true;
+            }
+        };
+        List<DataRequest> notifiedRequests = new ArrayList<>();
+        store.getPrunedAndExpiredDataRequests().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAdded(DataRequest element) {
+                notifiedRequests.add(element);
+            }
+
+            @Override
+            public void onRemoved(Object element) {
+            }
+
+            @Override
+            public void onCleared() {
+            }
+        });
+        int numRequests = DataStorageService.MAX_PRUNED_REQUESTS + 10;
+        Map<ByteArray, AuthenticatedDataRequest> map = store.getPersistableStore().getMap();
+        for (int i = 0; i < numRequests; i++) {
+            AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, createData("content " + i),
+                    ownerKeyPair);
+            map.put(request.getStorageKey(), request);
+        }
+
+        store.prunePersisted(store.getPersistableStore());
+
+        assertTrue(map.isEmpty());
+        // The observers get every pruned request
+        assertEquals(numRequests, notifiedRequests.size());
+        // The store keeps the requests which it pruned last, in the order in which it pruned them
+        assertEquals(notifiedRequests.subList(10, numRequests), store.getPrunedAndExpiredDataRequests().getList());
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
     }
 
     // A node parses each copy of a request which it receives, so the copies are different objects with equal values.
@@ -835,7 +881,7 @@ class AuthenticatedDataStorageServiceTest {
         peerStore.prunePersisted(peerStore.getPersistableStore());
 
         assertEquals(Map.of(add.getStorageKey(), add, removal.getStorageKey(), removal), map);
-        assertEquals(Set.of(legacyAdd, legacyRemoval), peerStore.getPrunedAndExpiredDataRequests().getUnmodifiableSet());
+        assertEquals(Set.of(legacyAdd, legacyRemoval), Set.copyOf(peerStore.getPrunedAndExpiredDataRequests()));
     }
 
     // A node which runs at the cutoff date removes the entries with the task which removes expired entries. The
