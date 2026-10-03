@@ -134,7 +134,11 @@ class MailboxMetaDataTest {
             throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest request = createAddMailboxRequest();
         bisq.network.protobuf.AddMailboxRequest.Builder builder = request.toValueProto(false).toBuilder();
-        builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setClassName("NotRegisteredMailboxMessage");
+        // A node of a later version fills className and the className of metaData with the same name
+        //noinspection deprecation
+        builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder()
+                .setClassName("NotRegisteredMailboxMessage")
+                .setMetaData(new MetaData(MetaData.TTL_10_DAYS, "NotRegisteredMailboxMessage").toProto(false));
         AddMailboxRequest requestOfUnknownType = AddMailboxRequest.fromProto(builder.build());
 
         assertEquals("NotRegisteredMailboxMessage", requestOfUnknownType.getClassName());

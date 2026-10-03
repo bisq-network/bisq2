@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
@@ -95,9 +96,12 @@ class InventoryPrinterTest {
     @Test
     void classNameWhichIsNotRegisteredIsNotWrittenToTheReport() throws UnresolvableProtobufException {
         String className = "UnregisteredTypeOfPeer";
+        // A node of a later version fills className and the className of metaData with the same name
+        //noinspection deprecation
         RemoveAuthenticatedDataRequest withOtherClassName = RemoveAuthenticatedDataRequest.fromProto(
                 removal.toValueProto(false).toBuilder()
                         .setClassName(className)
+                        .setMetaData(new MetaData(MetaData.TTL_10_DAYS, className).toProto(false))
                         .build());
         assertEquals(className, withOtherClassName.getClassName());
 

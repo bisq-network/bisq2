@@ -83,14 +83,16 @@ class MailboxClassNameTest {
         assertEquals(CLASS_NAME, MailboxData.fromProto(proto).getClassName());
     }
 
+    // Nodes of earlier versions select the store by the className of metaData, this node by className. Both must
+    // name the same type. For a registered type, parsing replaces metaData by the registered MetaData of className.
     @Test
-    void mailboxDataUsesClassNameFieldIfPresent() throws UnresolvableProtobufException {
+    void mailboxDataWhoseMetaDataNamesAnotherClassIsRejected() throws UnresolvableProtobufException {
         bisq.network.protobuf.MailboxData proto = new MailboxData(META_DATA, createConfidentialMessage(senderKeyPair))
                 .toProto(false).toBuilder()
                 .setClassName("OtherMailboxMessage")
                 .build();
 
-        assertEquals("OtherMailboxMessage", MailboxData.fromProto(proto).getClassName());
+        assertThrows(UnresolvableProtobufException.class, () -> MailboxData.fromProto(proto));
     }
 
     @Test
