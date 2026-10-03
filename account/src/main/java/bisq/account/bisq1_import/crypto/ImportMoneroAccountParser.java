@@ -18,8 +18,8 @@
 package bisq.account.bisq1_import.crypto;
 
 import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.crypto.MoneroAccount;
-import bisq.account.accounts.crypto.MoneroAccountPayload;
+import bisq.account.accounts.crypto.monero.MoneroAccount;
+import bisq.account.accounts.crypto.monero.MoneroAccountPayload;
 import bisq.account.bisq1_import.ImportAccountParser;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.account.timestamp.KeyType;

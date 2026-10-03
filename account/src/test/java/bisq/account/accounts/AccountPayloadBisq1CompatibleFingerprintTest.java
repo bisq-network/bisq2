@@ -1,7 +1,7 @@
 package bisq.account.accounts;
 
-import bisq.account.accounts.crypto.MoneroAccountPayload;
 import bisq.account.accounts.crypto.OtherCryptoAssetAccountPayload;
+import bisq.account.accounts.crypto.monero.MoneroAccountPayload;
 import bisq.account.accounts.fiat.AchTransferAccountPayload;
 import bisq.account.accounts.fiat.AdvancedCashAccountPayload;
 import bisq.account.accounts.fiat.AliPayAccountPayload;
