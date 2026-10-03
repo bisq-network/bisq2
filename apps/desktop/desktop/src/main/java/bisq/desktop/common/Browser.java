@@ -18,6 +18,7 @@
 package bisq.desktop.common;
 
 import bisq.common.platform.PlatformUtils;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.components.overlay.Popup;
@@ -60,8 +61,11 @@ public class Browser {
         }
 
         if (dontShowAgainService.showAgain(HYPERLINKS_OPEN_IN_BROWSER)) {
+            // A link in a chat message comes from another user. java.net.URI accepts "[" and "]" in the query and
+            // the fragment, so the URL must not create a link in the popup.
+            String displayedUrl = StringUtils.neutralizeHyperlinkMarkers(url);
             new Popup().headline(Res.get("hyperlinks.openInBrowser.attention.headline"))
-                    .feedback(Res.get("hyperlinks.openInBrowser.attention", url))
+                    .feedback(Res.get("hyperlinks.openInBrowser.attention", displayedUrl))
                     .closeButtonText(Res.get("hyperlinks.openInBrowser.no"))
                     .onClose(() -> {
                         settingsService.setCookie(CookieKey.PERMIT_OPENING_BROWSER, false);
