@@ -20,7 +20,6 @@ package bisq.network.p2p.node.handshake;
 import bisq.common.network.Address;
 import bisq.common.network.AddressOwnershipProof;
 import bisq.common.network.AddressOwnershipProofGenerator;
-import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
@@ -36,7 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.*;
 
@@ -50,6 +51,8 @@ public class ConnectionHandshakeInitiator {
     @Getter
     private final CompletableFuture<OutboundConnection> completableFuture = new CompletableFuture<>();
     private final AddressOwnershipProofGenerator addressOwnershipProofGenerator;
+    @Getter
+    private final Set<Integer> receivedMessageCounters = ConcurrentHashMap.newKeySet();
 
     public ConnectionHandshakeInitiator(Capability myCapability,
                                         AuthorizationService authorizationService,
@@ -104,7 +107,7 @@ public class ConnectionHandshakeInitiator {
         boolean isAuthorized = authorizationService.isAuthorized(response,
                 responseNetworkEnvelope.getAuthorizationToken(),
                 myNetworkLoad,
-                StringUtils.createUid(),
+                receivedMessageCounters,
                 myCapability.getAddress().getFullAddress());
 
         if (!isAuthorized) {

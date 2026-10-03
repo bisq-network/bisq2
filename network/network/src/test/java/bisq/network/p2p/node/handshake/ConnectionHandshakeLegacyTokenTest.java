@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static bisq.network.p2p.message.NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE;
 import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
@@ -108,7 +109,7 @@ class ConnectionHandshakeLegacyTokenTest {
         assertThat(authorizationService.isAuthorized(responseEnvelope.getEnvelopePayloadMessage(),
                 responseEnvelope.getAuthorizationToken(),
                 request.getNetworkLoad(),
-                "connectionId",
+                ConcurrentHashMap.newKeySet(),
                 peersCapability.getAddress().getFullAddress())).isTrue();
     }
 

@@ -103,6 +103,8 @@ public abstract class Connection {
     private final AuthorizationService authorizationService;
     @Getter
     private final String id;
+    @Getter(AccessLevel.PACKAGE)
+    private final Set<Integer> receivedMessageCounters;
     @Getter
     protected final Capability peersCapability;
     @Getter
@@ -132,6 +134,7 @@ public abstract class Connection {
 
     protected Connection(AuthorizationService authorizationService,
                          String connectionId,
+                         Set<Integer> receivedMessageCounters,
                          Socket socket,
                          Capability peersCapability,
                          NetworkLoadSnapshot peersNetworkLoadSnapshot,
@@ -143,6 +146,7 @@ public abstract class Connection {
         this.authorizationService = authorizationService;
         this.parseMemoryBudget = parseMemoryBudget;
         this.id = connectionId;
+        this.receivedMessageCounters = receivedMessageCounters;
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
         this.connectionThrottle = connectionThrottle;
