@@ -210,7 +210,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             if (requestFromMap == null) {
                 log.debug("No entry at remove. hash={}", storageKey);
 
-                if (isExceedingMapSize()) {
+                if (isExceedingMapSize() || isExceedingRemovalsWithoutReplacedAdd()) {
                     return DataStorageResult.failed().maxMapSizeReached();
                 }
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep

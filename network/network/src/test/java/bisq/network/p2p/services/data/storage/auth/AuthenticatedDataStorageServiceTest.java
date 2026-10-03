@@ -364,6 +364,64 @@ class AuthenticatedDataStorageServiceTest {
         store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
     }
 
+    // The store cannot check a removal without entry against the removed data, so every key pair can create it. Such
+    // removals must not fill the store (see rule 12 of docs/specifications/network/storage-metadata.md).
+    @Test
+    void storeWithManyRemovalsAcceptsNoRemovalWithoutEntryButStillAddRequests() throws GeneralSecurityException {
+        Map<ByteArray, AuthenticatedDataRequest> map = peerStore.getPersistableStore().getMap();
+        RemoveAuthenticatedDataRequest storedRemoval = RemoveAuthenticatedDataRequest.from(peerStore,
+                createData("removed content"), ownerKeyPair);
+        // The limit counts removals without replaced add request, so the same removal under other keys fills the map
+        for (int i = 0; i < DataStorageService.MAX_REMOVALS_WITHOUT_REPLACED_ADD - 1; i++) {
+            map.put(new ByteArray(ByteBuffer.allocate(Integer.BYTES).putInt(i).array()), storedRemoval);
+        }
+
+        DataStorageResult resultBelowLimit = peerStore.remove(RemoveAuthenticatedDataRequest.from(peerStore,
+                createData("content 1"), ownerKeyPair));
+        DataStorageResult resultAtLimit = peerStore.remove(RemoveAuthenticatedDataRequest.from(peerStore,
+                createData("content 2"), ownerKeyPair));
+        DataStorageResult resultOfAdd = peerStore.add(AddAuthenticatedDataRequest.from(peerStore, authenticatedData,
+                ownerKeyPair));
+        DataStorageResult resultOfRemovalOfStoredData = peerStore.remove(RemoveAuthenticatedDataRequest.from(peerStore,
+                authenticatedData, ownerKeyPair));
+
+        assertTrue(resultBelowLimit.isSuccess() && resultBelowLimit.isNoEntry(), resultBelowLimit.toString());
+        assertFalse(resultAtLimit.isSuccess(), resultAtLimit.toString());
+        assertTrue(resultAtLimit.isMaxMapSizeReached(), resultAtLimit.toString());
+        assertTrue(resultOfAdd.isSuccess(), resultOfAdd.toString());
+        assertTrue(resultOfRemovalOfStoredData.isSuccess(), resultOfRemovalOfStoredData.toString());
+        assertFalse(resultOfRemovalOfStoredData.isNoEntry(), resultOfRemovalOfStoredData.toString());
+        assertEquals(DataStorageService.MAX_REMOVALS_WITHOUT_REPLACED_ADD + 1, map.size());
+        // The pending write of the other tests would have to serialize all entries
+        map.clear();
+        peerStore.getPersistableStore().getReplacedAddSequenceNrs().clear();
+    }
+
+    // The store checked the removed data of a removal with replaced add request. Such removals do not count against the
+    // limit (see rule 12 of docs/specifications/network/storage-metadata.md).
+    @Test
+    void removalsWithReplacedAddDoNotLimitTheRemovalsWithoutEntry() throws GeneralSecurityException {
+        Map<ByteArray, AuthenticatedDataRequest> map = peerStore.getPersistableStore().getMap();
+        Map<ByteArray, Integer> replacedAddSequenceNrs =
+                peerStore.getPersistableStore().getReplacedAddSequenceNrs();
+        RemoveAuthenticatedDataRequest storedRemoval = RemoveAuthenticatedDataRequest.from(peerStore,
+                createData("removed content"), ownerKeyPair);
+        for (int i = 0; i < DataStorageService.MAX_REMOVALS_WITHOUT_REPLACED_ADD; i++) {
+            ByteArray storageKey = new ByteArray(ByteBuffer.allocate(Integer.BYTES).putInt(i).array());
+            map.put(storageKey, storedRemoval);
+            replacedAddSequenceNrs.put(storageKey, 1);
+        }
+
+        DataStorageResult result = peerStore.remove(RemoveAuthenticatedDataRequest.from(peerStore,
+                createData("content"), ownerKeyPair));
+
+        assertTrue(result.isSuccess() && result.isNoEntry(), result.toString());
+        assertEquals(DataStorageService.MAX_REMOVALS_WITHOUT_REPLACED_ADD + 1, map.size());
+        // The pending write of the other tests would have to serialize all entries
+        map.clear();
+        replacedAddSequenceNrs.clear();
+    }
+
     // A node parses each copy of a request which it receives, so the copies are different objects with equal values.
     // The store must detect the copy before it verifies the signatures, also for authorized data, whose authorization
     // signature is an Optional of a byte array.
