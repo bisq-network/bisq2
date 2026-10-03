@@ -25,11 +25,19 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
 
 import java.util.Optional;
 
+import static bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator.validateChatChannel;
+
 public class BisqEasyConfirmBtcSentEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmBtcSentEvent> {
     private Optional<String> paymentProof;
 
     public BisqEasyConfirmBtcSentEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verifyIntegrity(BisqEasyConfirmBtcSentEvent event) {
+        validateChatChannel(serviceProvider.getChatService().getBisqEasyOpenTradeChannelService()
+                .findChannelByTradeId(trade.getId()), trade);
     }
 
     @Override
