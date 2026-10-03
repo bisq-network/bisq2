@@ -37,6 +37,9 @@ ACK-requesting message), and how it applies a received `AckMessage` to the deliv
    do. The node processes a decrypted message once for each decrypting key. It remembers the messages which it
    acknowledged by decrypting key and message ID, and sends no second `AckMessage` for a second copy of a message, for
    example the copy which arrives over the second transport.
+6. **AckMessages only for our own messages.** The node creates the delivery status of its own ACK-requesting message
+   before it sends the message. It applies an `AckMessage` only to a delivery status which exists. An `AckMessage` for
+   an unknown message ID changes nothing and creates no state, also no stored state.
 
 ## Reasons
 
@@ -54,6 +57,8 @@ ACK-requesting message), and how it applies a received `AckMessage` to the deliv
   to two user profiles and count the `AckMessage`s: one `AckMessage` means one node, two mean two nodes. The same holds
   for the deduplication of decrypted messages if it ignored the decrypting key, for message types whose content does
   not name the receiver key.
+- Rule 6: an `AckMessage` for an unknown ID created a stored delivery status in earlier versions. Anybody who knows a
+  user profile could grow this store without a limit, and the node loads the store completely at every start.
 
 ## Compatibility
 
@@ -61,3 +66,5 @@ ACK-requesting message), and how it applies a received `AckMessage` to the deliv
 - A node of version 2.1.13 which sent an ACK-requesting message matches an `AckMessage` by the message ID only. It
   does not check from which NetworkId the `AckMessage` comes. So it accepts the `AckMessage` from the current NetworkId
   of the receiver (rule 3).
+- Delivery statuses which earlier versions stored for `AckMessage`s with unknown IDs are removed by the existing rule
+  that the node removes stored delivery statuses after 30 days.
