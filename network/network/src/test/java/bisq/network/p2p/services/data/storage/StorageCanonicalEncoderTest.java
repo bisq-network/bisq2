@@ -233,8 +233,8 @@ public class StorageCanonicalEncoderTest {
     }
 
     // The hash purposes leave out the fields annotated with @ExcludeForHash, also in nested objects, so they give the
-    // bytes of serializeForHash(). The versions cover the @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-    // annotations. AuthorizedData is an exception, see
+    // bytes of serializeForHash(). The versions cover the @ExcludeForHash(excludeOnlyInVersions = ...) annotations of
+    // nested classes, and show that no version of the storage requests includes the deprecated metaData. AuthorizedData is an exception, see
     // authorizedDataContainsSignatureUnlikeHashSerialization(). Data of higher-level modules is the second exception:
     // the SIGNATURE purpose contains its exact bytes, with the fields excluded from the hash. The classes with
     // signature V2, and the classes which contain one of them, are the third exception: their SIGNATURE purpose is the

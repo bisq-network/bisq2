@@ -179,18 +179,16 @@ class MessageCostPolicyTest {
             double addCost = className.equals("AuthorizedMarketPriceData") ?
                     0.6 : bound(0.25, 0.75, historicalStorageCost + historicalDataCost);
             assertCosts(createAddRequest(historicalMetaData), addCost, addCost, className + " add");
+            // The receiver expects the policy value for every version: no version keeps the received MetaData
             for (int version = 0; version <= 3; version++) {
-                // Version 0 removals retain their unrounded MetaData in the proof of work payload.
-                double expectedRemoveCost = version == 0 ? removeCostToPay : removeCost;
-                assertCosts(createRemoveRequest(historicalMetaData, version), expectedRemoveCost, removeCostToPay,
+                assertCosts(createRemoveRequest(historicalMetaData, version), removeCost, removeCostToPay,
                         className + " remove version=" + version);
                 assertCosts(createRefreshRequest(historicalMetaData, version), removeCost, removeCostToPay,
                         className + " refresh version=" + version);
             }
         } else {
             for (int version = 0; version <= 3; version++) {
-                double expectedRemoveCost = version == 0 ? removeCostToPay : removeCost;
-                assertCosts(createRemoveMailboxRequest(historicalMetaData, version), expectedRemoveCost, removeCostToPay,
+                assertCosts(createRemoveMailboxRequest(historicalMetaData, version), removeCost, removeCostToPay,
                         className + " remove mailbox version=" + version);
             }
             for (int size : mailboxCipherTextSizes(storageCost)) {
@@ -202,9 +200,8 @@ class MessageCostPolicyTest {
                 for (int version = 0; version <= 3; version++) {
                     MailboxData versionedData = MailboxData.fromProto(mailboxData.toProto(false).toBuilder()
                             .setVersion(version).build());
-                    double expectedAddCost = version == 0 ? addCostToPay : addCost;
                     assertCosts(AddMailboxRequest.from(versionedData, keyPair, keyPair.getPublic()),
-                            expectedAddCost, addCostToPay, className + " add mailbox version=" + version + " size=" + size);
+                            addCost, addCostToPay, className + " add mailbox version=" + version + " size=" + size);
                 }
             }
         }

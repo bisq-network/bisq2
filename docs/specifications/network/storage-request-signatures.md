@@ -25,7 +25,7 @@ Nodes accept a request without signature V2 only before the cutoff date of signa
 | `AddAuthenticatedDataRequest` | `AuthenticatedSequentialData.serializeForHash()` | `ownerPublicKeyBytes` (only its hash in the sequential data), and the fields of the distributed data annotated with `@ExcludeForHash` |
 | `RemoveAuthenticatedDataRequest` | the hash of the data | `className`, `created`, `sequenceNumber`, `version`, `metaData` |
 | `RefreshAuthenticatedDataRequest` | the `AddAuthenticatedDataRequest` which the receiver rebuilds (see [Refresh requests](#refresh-requests)) | as for the add request |
-| `AddMailboxRequest` | `MailboxSequentialData.serializeForHash()` | `version` and `className` of `MailboxData`, and its `metaData` in versions 1 to 3 |
+| `AddMailboxRequest` | `MailboxSequentialData.serializeForHash()` | `version`, `className` and `metaData` of `MailboxData` |
 | `RemoveMailboxRequest` | the hash of the mailbox data | `className`, `created`, `version`, `metaData` |
 
 The fields which signature V1 does not cover are annotated with `@ExcludeForHash`, or they did not exist when the
@@ -67,11 +67,11 @@ Reasons for leaving out `metaData`:
 - A node replaces the received `metaData` with its registered MetaData before it relays or persists the request (see
   [`storage-metadata.md`](storage-metadata.md#compatibility)). If signature V2 covered `metaData`, this replacement
   would invalidate it.
-- `metaData` is deprecated and stays out of the preimage of signature V2 permanently. `serializeForHash()` contains
-  `metaData` only in version 0 and in versions above 3 of `MailboxData`, `RemoveMailboxRequest` and
-  `RemoveAuthenticatedDataRequest`. Version 0 is no longer in use, and in versions above 3 `metaData` will be retired.
-  So no version needs `metaData` in the preimage of signature V2, and the `SIGNATURE_V2_SCHEMA` of
-  these classes does not contain it for any version.
+- `metaData` is deprecated and stays out of the preimage of signature V2 permanently. It is derived from the class
+  name, which signature V2 covers, and no hash contains it in any version (see
+  [`storage-metadata.md`](storage-metadata.md#compatibility)). So a relay which changes `metaData` changes nothing which
+  any node uses for a decision, and nodes of earlier versions receive the registered value again from the next node of
+  this version.
 
 Reason for including signature V1: if signature V2 did not cover signature V1, a relay could replace signature V1.
 Nodes of earlier versions and nodes of this version would then decide differently about the same request.

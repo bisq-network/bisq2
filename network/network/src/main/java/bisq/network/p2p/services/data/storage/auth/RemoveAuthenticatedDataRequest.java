@@ -109,10 +109,10 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 new byte[]{});
     }
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
-    // registered MetaData of the class name (see fromProto) and never uses the field for a decision (see
-    // getMetaData()).
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    // Deprecated. The class name selects the MetaData (see getMetaData()); the field is still sent only because nodes of
+    // earlier versions use it. fromProto replaces the received value by the registered MetaData of the class name, so
+    // its className always equals className. No hash, storage key, proof of work or signature contains it.
+    @ExcludeForHash
     private final MetaData metaData;
     private final byte[] hash;
     private final byte[] ownerPublicKeyBytes;
@@ -208,12 +208,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                     receivedMetaData.getClassName() :
                     proto.getClassName();
             // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or
-            // relay chose. In these versions serializeForHash() does not contain metaData, so the proof of work payload
-            // does not change. The signature and the storage key never contain it: both use only the hash of the
-            // stored data.
-            MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
-                    StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
-                    receivedMetaData;
+            // relay chose. serializeForHash() never contains metaData, so the proof of work payload does not change.
+            MetaData metaData = StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData);
             return new RemoveAuthenticatedDataRequest(
                     proto.getVersion(),
                     metaData,
@@ -245,8 +241,8 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     // Canonical
     /* --------------------------------------------------------------------- */
 
-    // Contains metaData, version, className and signatureV2, which serializeForHash() omits (metaData only in versions
-    // 1 to 3), as the default encoding contains all non-transient fields.
+    // Contains metaData, version, className and signatureV2, which serializeForHash() omits, as the default
+    // encoding contains all non-transient fields.
     public static final CanonicalSchema<RemoveAuthenticatedDataRequest> DEFAULT_SCHEMA =
             bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
                     CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
@@ -263,13 +259,10 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     public static final CanonicalSchema<RemoveAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<RemoveAuthenticatedDataRequest> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
-    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1) in versions
-    // 1 to 3, version (field 7), className (field 8) and signatureV2 (field 9).
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 1), version (field 7), className (field 8) and signatureV2 (field 9).
     private static CanonicalSchema<RemoveAuthenticatedDataRequest> createSchemaForHash() {
         return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(2,
                 CanonicalSchema.<RemoveAuthenticatedDataRequest>newBuilder()
-                        // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-                        .canonical(1, request -> isMetaDataExcludedForHash(request.version) ? null : request.metaData)
                         .bytes(2, request -> request.hash)
                         .bytes(3, request -> request.ownerPublicKeyBytes)
                         .sint32(4, request -> request.sequenceNumber)
@@ -291,11 +284,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                     .bytes(7, request -> request.ownerPublicKeyBytes)
                     .bytes(8, request -> request.signature)
                     .build();
-
-    // Same versions as the @ExcludeForHash annotation of metaData
-    private static boolean isMetaDataExcludedForHash(int version) {
-        return version == 1 || version == 2 || version == 3;
-    }
 
     @Override
     public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
@@ -406,13 +394,6 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
     // does not use it for its own decisions.
     public MetaData getMetaDataForEarlierVersions() {
         return metaData;
-    }
-
-    // In version 0 serializeForHash() contains the field metaData, so the proof of work payload covers it. The
-    // signature covers only the hash of the stored data, so a relay can change the field, but then pays the proof of
-    // work for the changed request.
-    public boolean isMetaDataCoveredByHash() {
-        return !isMetaDataExcludedForHash(version);
     }
 
     @Override
