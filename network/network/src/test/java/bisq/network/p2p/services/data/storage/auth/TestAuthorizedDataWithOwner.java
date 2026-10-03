@@ -24,6 +24,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.security.DigestUtil;
 
 import java.security.PublicKey;
+import java.util.Set;
 
 /**
  * Authorized data which names its owner, like AuthorizedOracleNode
@@ -33,9 +34,16 @@ public final class TestAuthorizedDataWithOwner implements AuthorizedDistributedD
             TestAuthorizedDataWithOwner.class.getSimpleName());
 
     private final byte[] ownerPubKeyHash;
+    // A real type has its static keys in the code. The tests pass them, because they use generated key pairs.
+    private final Set<String> staticPublicKeys;
 
     public TestAuthorizedDataWithOwner(PublicKey owner) {
+        this(owner, Set.of());
+    }
+
+    public TestAuthorizedDataWithOwner(PublicKey owner, Set<String> staticPublicKeys) {
         ownerPubKeyHash = DigestUtil.hash(owner.getEncoded());
+        this.staticPublicKeys = staticPublicKeys;
     }
 
     @Override
@@ -60,5 +68,10 @@ public final class TestAuthorizedDataWithOwner implements AuthorizedDistributedD
     @Override
     public byte[] getOwnerPubKeyHash() {
         return ownerPubKeyHash;
+    }
+
+    @Override
+    public Set<String> getAuthorizedPublicKeys() {
+        return staticPublicKeys;
     }
 }

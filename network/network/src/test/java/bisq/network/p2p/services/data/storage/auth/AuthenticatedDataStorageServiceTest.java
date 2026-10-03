@@ -1042,14 +1042,50 @@ class AuthenticatedDataStorageServiceTest {
                 () -> AddAuthenticatedDataRequest.from(authorizedDataStore, authorizedData, ownerKeyPair));
     }
 
-    // For example AuthorizedOracleNode, which names the key of its network ID. Nodes of earlier versions accept it only
-    // from that key. The authorized key owns it as well, so that a later version can publish it with that key.
+    // For example AuthorizedOracleNode, which names the key of its network ID. Nodes of v2.1.13 and earlier accept it
+    // only from that key.
     @Test
-    void authorizedDataWhichNamesItsOwnerIsOwnedByThatOwnerAndTheAuthorizedKey() throws GeneralSecurityException {
-        StorableTypesRegistry.register(TestAuthorizedDataWithOwner.class, TestAuthorizedDataWithOwner.META_DATA);
-        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
-                new PruneExpiredEntriesService(), "authorizedWithOwner", TestAuthorizedDataWithOwner.class.getSimpleName());
+    void authorizedDataWhichNamesItsOwnerIsOwnedByThatOwner() throws GeneralSecurityException {
+        AuthenticatedDataStorageService store = createStoreOfAuthorizedDataWithOwner();
         AuthorizedData authorizedData = authorize(new TestAuthorizedDataWithOwner(ownerKeyPair.getPublic()));
+        KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+
+        DataStorageResult resultOfOwner = store.add(AddAuthenticatedDataRequest.from(store, authorizedData,
+                ownerKeyPair));
+
+        assertTrue(resultOfOwner.isSuccess(), resultOfOwner.toString());
+        assertThrows(IllegalArgumentException.class,
+                () -> AddAuthenticatedDataRequest.from(store, authorizedData, otherKeyPair));
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+    }
+
+    // The store checks only the signature of authorized data without the static flag, so any key can be the authorized
+    // key of data which it signs itself. If such a key owned data which names its owner, any node could publish an
+    // AuthorizedOracleNode with its own key. Nodes of v2.1.13 and earlier reject it each time, so updated nodes would
+    // send it to them with every inventory response (see docs/specifications/network/storage-ownership.md).
+    @Test
+    void authorizedKeyWhichIsNoStaticKeyDoesNotOwnAuthorizedDataWhichNamesItsOwner() {
+        AuthenticatedDataStorageService store = createStoreOfAuthorizedDataWithOwner();
+        AuthorizedData authorizedData = authorize(new TestAuthorizedDataWithOwner(ownerKeyPair.getPublic()));
+        byte[] authorizedPubKeyHash = DigestUtil.hash(authorizedKeyPair.getPublic().getEncoded());
+
+        assertFalse(authorizedData.isOwner(authorizedPubKeyHash));
+        assertTrue(authorizedData.isOwner(DigestUtil.hash(ownerKeyPair.getPublic().getEncoded())));
+        assertThrows(IllegalArgumentException.class,
+                () -> AddAuthenticatedDataRequest.from(store, authorizedData, authorizedKeyPair));
+        assertThrows(IllegalArgumentException.class,
+                () -> new AuthenticatedSequentialData(authorizedData, 1, authorizedPubKeyHash, System.currentTimeMillis()));
+        assertTrue(store.getPersistableStore().getMap().isEmpty());
+    }
+
+    // A static key is written in the code. Only the operators of the root oracle nodes hold these keys, so a later
+    // version can publish AuthorizedOracleNode with the authorized key pair, like all other authorized data.
+    @Test
+    void staticAuthorizedKeyAlsoOwnsAuthorizedDataWhichNamesItsOwner() throws GeneralSecurityException {
+        AuthenticatedDataStorageService store = createStoreOfAuthorizedDataWithOwner();
+        Set<String> staticPublicKeys = Set.of(Hex.encode(authorizedKeyPair.getPublic().getEncoded()));
+        AuthorizedData authorizedData = authorize(new TestAuthorizedDataWithOwner(ownerKeyPair.getPublic(),
+                staticPublicKeys));
         KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
 
         DataStorageResult resultOfOwner = store.add(AddAuthenticatedDataRequest.from(store, authorizedData,
@@ -1063,6 +1099,21 @@ class AuthenticatedDataStorageServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> AddAuthenticatedDataRequest.from(store, authorizedData, otherKeyPair));
         store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+    }
+
+    // A static key which did not authorize the data is not its owner
+    @Test
+    void staticKeyWhichIsNotTheAuthorizedKeyDoesNotOwnAuthorizedDataWhichNamesItsOwner() {
+        AuthenticatedDataStorageService store = createStoreOfAuthorizedDataWithOwner();
+        KeyPair staticKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        Set<String> staticPublicKeys = Set.of(Hex.encode(staticKeyPair.getPublic().getEncoded()));
+        AuthorizedData authorizedData = authorize(new TestAuthorizedDataWithOwner(ownerKeyPair.getPublic(),
+                staticPublicKeys));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> AddAuthenticatedDataRequest.from(store, authorizedData, staticKeyPair));
+        assertThrows(IllegalArgumentException.class,
+                () -> AddAuthenticatedDataRequest.from(store, authorizedData, authorizedKeyPair));
     }
 
     // Oracle nodes of earlier versions published some types with the key of their network identity. Data of these
@@ -1182,6 +1233,12 @@ class AuthenticatedDataStorageServiceTest {
 
         assertEquals(1, publishers.size());
         assertArrayEquals(DigestUtil.hash(publisherKeyPair.getPublic().getEncoded()), publishers.get(0));
+    }
+
+    private AuthenticatedDataStorageService createStoreOfAuthorizedDataWithOwner() {
+        StorableTypesRegistry.register(TestAuthorizedDataWithOwner.class, TestAuthorizedDataWithOwner.META_DATA);
+        return new AuthenticatedDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService(), "authorizedWithOwner", TestAuthorizedDataWithOwner.class.getSimpleName());
     }
 
     private AuthorizedData authorize(AuthorizedDistributedData data) {
