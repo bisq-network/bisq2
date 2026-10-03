@@ -29,6 +29,18 @@ it creates no notification, it does not open a private channel and it adds no co
 applies to private messages, including mailbox messages, and to public messages, including those
 loaded from the network data store at startup (`ChatChannelService.isValid`).
 
+## Channel IDs
+
+The sender also chooses the channel ID of a message. Private chats between two users
+(`TwoPartyPrivateChatMessage`) and the public discussion and support chats
+(`CommonPublicChatMessage`) migrate the channel IDs of older versions to current channels when they
+read the ID (`TwoPartyPrivateChatChannel.Migration`, `SubDomain`). A received message whose channel
+ID cannot be migrated is ignored in the same place as a message of an unsupported type
+(`ChatChannelService.isValid`, check `ChatMessage.hasValidChannelId`). The chat never reads the
+channel ID of such a message, also not when the message expires, so the message does not stop the
+processing of other messages, for example when a client starts. The message is not rejected at
+parsing, because a newer version can add channels whose IDs this version cannot migrate.
+
 ## Messages added to a channel
 
 Every message added to a channel is checked as well (`ChatChannel.addChatMessage`). This covers
@@ -44,7 +56,8 @@ of an own identity is ignored (`PrivateChatChannelService.isValid`).
 
 The rule does not change the protocol or the storage format. A type that is added to a kind of chat
 later must be supported by receivers in a release before the first release that sends it. A type
-value that a client does not know is read as `TEXT`.
+value that a client does not know is read as `TEXT`. Channel IDs of older versions stay valid, as
+the migration maps them to current channels.
 
 Messages of unsupported types which a client stored before this rule are dropped when the channel
 loads. A private channel that such a message opened stays, possibly empty, and so does the contact

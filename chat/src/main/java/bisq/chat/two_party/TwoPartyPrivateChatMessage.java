@@ -144,6 +144,11 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
     }
 
     @Override
+    public boolean hasValidChannelId() {
+        return TwoPartyPrivateChatChannel.Migration.findMigratedChannelId(channelId).isPresent();
+    }
+
+    @Override
     public boolean hasSupportedChatMessageType() {
         return SUPPORTED_CHAT_MESSAGE_TYPES.contains(chatMessageType);
     }
