@@ -36,21 +36,24 @@ public final class BisqEasyMediationContractIdentityChecks {
                 peer);
     }
 
+    // A party is identified by its key: NetworkId.getId() is the hash of the public key, which is also the profile ID.
+    // The address map of a NetworkId is routing data, which can change after the offer was published, for example when
+    // a user adds a transport. Comparing whole NetworkIds would make the mediator ignore the request of honest traders.
     static boolean hasMatchingContractParties(NetworkId makerNetworkId,
                                               NetworkId takerNetworkId,
                                               UserProfile requester,
                                               UserProfile peer) {
-        return (requester.getNetworkId().equals(makerNetworkId) &&
-                peer.getNetworkId().equals(takerNetworkId)) ||
-                (requester.getNetworkId().equals(takerNetworkId) &&
-                        peer.getNetworkId().equals(makerNetworkId));
+        String requesterId = requester.getNetworkId().getId();
+        String peerId = peer.getNetworkId().getId();
+        return (requesterId.equals(makerNetworkId.getId()) && peerId.equals(takerNetworkId.getId())) ||
+                (requesterId.equals(takerNetworkId.getId()) && peerId.equals(makerNetworkId.getId()));
     }
 
     public static boolean hasMatchingContractMediator(Optional<UserProfile> mediator,
                                                       NetworkId receiver) {
         return mediator
                 .map(UserProfile::getNetworkId)
-                .map(mediatorNetworkId -> mediatorNetworkId.equals(receiver))
+                .map(mediatorNetworkId -> mediatorNetworkId.getId().equals(receiver.getId()))
                 .orElse(false);
     }
 }
