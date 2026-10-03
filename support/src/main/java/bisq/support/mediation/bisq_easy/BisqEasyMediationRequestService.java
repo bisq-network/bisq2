@@ -29,6 +29,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -42,16 +43,15 @@ import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import static bisq.support.dispute.DisputeAgentSelection.selectDeterministicProfileId;
@@ -68,7 +68,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
-    private final Set<BisqEasyMediatorsResponse> pendingBisqEasyMediatorsResponseMessages = new CopyOnWriteArraySet<>();
+    private final PendingMediatorsResponses pendingMediatorsResponses = new PendingMediatorsResponses();
     @Nullable
     private Pin channeldPin;
     @Nullable
@@ -109,7 +109,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
             throttleUpdatesScheduler.stop();
             throttleUpdatesScheduler = null;
         }
-        pendingBisqEasyMediatorsResponseMessages.clear();
+        pendingMediatorsResponses.clear();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -208,11 +208,13 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
     // Private
     /* --------------------------------------------------------------------- */
 
+    // A response is applied only if its sender is the mediator of the trade channel. Responses of other senders for the
+    // same trade are processed and dropped one by one, so they cannot keep the mediator's response out.
     private void processMediationResponse(BisqEasyMediatorsResponse bisqEasyMediatorsResponse) {
         bisqEasyOpenTradeChannelService.findChannelByTradeId(bisqEasyMediatorsResponse.getTradeId())
                 .ifPresentOrElse(channel -> {
                             if (!isMediationResponseValid(bisqEasyMediatorsResponse, channel)) {
-                                pendingBisqEasyMediatorsResponseMessages.remove(bisqEasyMediatorsResponse);
+                                pendingMediatorsResponses.remove(bisqEasyMediatorsResponse);
                                 return;
                             }
 
@@ -226,15 +228,15 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
                                 //todo (Critical) - check if we do sent from both peers
                                 // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
                             }
-                            pendingBisqEasyMediatorsResponseMessages.remove(bisqEasyMediatorsResponse);
+                            pendingMediatorsResponses.remove(bisqEasyMediatorsResponse);
                         },
                         () -> {
                             // This handles an edge case that the BisqEasyMediatorsResponse arrives before the take offer request was
                             // processed (in case we are the maker and have been offline at take offer).
                             log.warn("We received a BisqEasyMediatorsResponse but did not find a matching bisqEasyOpenTradeChannel for trade ID {}.\n" +
-                                            "We add it to the pendingBisqEasyMediatorsResponseMessages set and reprocess it once a new trade channel has been added.",
-                                    bisqEasyMediatorsResponse.getTradeId());
-                            pendingBisqEasyMediatorsResponseMessages.add(bisqEasyMediatorsResponse);
+                                            "We add it to the pending responses and reprocess it once a new trade channel has been added.",
+                                    StringUtils.sanitizeForLog(bisqEasyMediatorsResponse.getTradeId()));
+                            pendingMediatorsResponses.add(bisqEasyMediatorsResponse);
                             if (channeldPin == null) {
                                 channeldPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
                                     @Override
@@ -263,7 +265,8 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
 
     private boolean isMediationResponseValid(BisqEasyMediatorsResponse bisqEasyMediatorsResponse,
                                              BisqEasyOpenTradeChannel channel) {
-        String tradeId = bisqEasyMediatorsResponse.getTradeId();
+        // The sender of the response chooses the trade ID, so it is sanitized for the log
+        String tradeId = StringUtils.sanitizeForLog(bisqEasyMediatorsResponse.getTradeId());
         Optional<UserProfile> expectedMediator = channel.getMediator();
         if (expectedMediator.isEmpty()) {
             log.warn("Ignoring BisqEasyMediatorsResponse for trade {} because the channel has no selected mediator.", tradeId);
@@ -287,6 +290,11 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
     }
 
     private void maybeProcessPendingMediatorsResponseMessages() {
-        new HashSet<>(pendingBisqEasyMediatorsResponseMessages).forEach(this::processMediationResponse);
+        pendingMediatorsResponses.getResponsesInArrivalOrder().forEach(this::processMediationResponse);
+    }
+
+    @VisibleForTesting
+    int getNumPendingMediatorsResponses() {
+        return pendingMediatorsResponses.size();
     }
 }
