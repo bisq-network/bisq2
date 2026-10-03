@@ -48,6 +48,14 @@ public final class FeeOption implements OfferOption {
     private final int blockHeightAtFeePayment;
     private final String feeTxId;
 
+    // Offer sorts its options by hashCode, and the order is part of the proof of work payload and of the offer hash.
+    // Enum.hashCode depends on the object identity and differs between JVMs, so equals and hashCode use the name of the
+    // fee type instead. Then every node computes the same order.
+    @EqualsAndHashCode.Include(replaces = "feeType")
+    private String feeTypeName() {
+        return feeType.name();
+    }
+
     public FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) {
         this.feeType = feeType;
         this.blockHeightAtFeePayment = blockHeightAtFeePayment;
