@@ -28,6 +28,12 @@ processed before the service started is defined in [`../network/startup-replay.m
 4. Rules 1 and 2 apply also to a request which the node processed before the service started, for example a request
    from the mailbox. The service receives such a request with its sender key when it starts.
 
+### Queues
+
+5. The oracle node processes the account timestamp requests in their own queue, and the account age, signed witness
+   and bonded role requests in another queue. Each queue has up to 5 threads and up to 20 waiting requests. When a
+   queue is full, the oldest waiting request of this queue is dropped.
+
 ## Reasons
 
 - Rule 1: the profile ID is the hash of the key of the profile. Without rule 1, anybody could request the timestamp of
@@ -36,6 +42,11 @@ processed before the service started is defined in [`../network/startup-replay.m
   [Open points](#open-points)).
 - Rule 4: without the sender key, the service cannot check rules 1 and 2. It would have to accept such a request
   unchecked or ignore it.
+- Rule 5: anybody can send many account timestamp requests (rule 3). With one shared queue, such requests dropped the
+  waiting account age, signed witness and bonded role requests of other users. Each queue has the size of the former
+  shared queue, so no request type has less capacity than before. The oracle node can run 5 more threads.
+- Rule 5 does not limit the account timestamp requests. A flood of them still drops the account timestamp requests of
+  other users (see [Open points](#open-points)).
 
 ## Compatibility
 
@@ -47,6 +58,7 @@ processed before the service started is defined in [`../network/startup-replay.m
 - A profile timestamp request of another key than the key of the profile is not timestamped, also when the node
   received it before the service started. The request of the owner of the profile is timestamped once, also when the
   node received it before the service started.
+- While account timestamp requests fill their queue and its threads, an account age request is still processed.
 
 ## Open points
 
