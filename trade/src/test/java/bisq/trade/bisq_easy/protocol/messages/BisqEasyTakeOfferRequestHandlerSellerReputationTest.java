@@ -130,6 +130,8 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         when(trade.isBuyer()).thenReturn(true);
 
         when(offer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(1_000_000));
+        FixPriceSpec priceSpec = new FixPriceSpec(PriceQuote.fromFiatPrice(60_000, "USD"));
+        when(offer.getPriceSpec()).thenReturn(priceSpec);
         BitcoinPaymentMethodSpec baseSidePaymentMethodSpec = mock(BitcoinPaymentMethodSpec.class);
         FiatPaymentMethodSpec quoteSidePaymentMethodSpec = mock(FiatPaymentMethodSpec.class);
         when(offer.getBaseSidePaymentMethodSpecs()).thenReturn(List.of(baseSidePaymentMethodSpec));
@@ -139,7 +141,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         when(contract.getQuoteSideAmount()).thenReturn(1_000_000L);
         // 100 USD at 60000 USD are 166667 satoshi
         when(contract.getBaseSideAmount()).thenReturn(166_667L);
-        when(contract.getPriceSpec()).thenReturn(new FixPriceSpec(PriceQuote.fromFiatPrice(60_000, "USD")));
+        when(contract.getPriceSpec()).thenReturn(priceSpec);
         when(contract.getBaseSidePaymentMethodSpec()).thenReturn(baseSidePaymentMethodSpec);
         when(contract.getQuoteSidePaymentMethodSpec()).thenReturn(quoteSidePaymentMethodSpec);
         when(contract.getMediator()).thenReturn(Optional.empty());
