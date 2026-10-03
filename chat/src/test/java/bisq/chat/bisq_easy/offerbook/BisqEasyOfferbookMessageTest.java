@@ -47,6 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 // Only the maker publishes its offer in the offerbook, so that nobody can show the offer of another user
 class BisqEasyOfferbookMessageTest {
+    private static final Market BTC_EUR = new Market("BTC", "EUR", "Bitcoin", "Euro");
+
     private final NetworkId maker = createNetworkId(1001);
     private final NetworkId otherUser = createNetworkId(1002);
 
@@ -90,8 +92,16 @@ class BisqEasyOfferbookMessageTest {
         assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOfferbookMessage.fromProto(proto));
     }
 
+    // The message is in the channel of the market of its offer. A message without offer is in the channel of BTC_EUR.
     private static BisqEasyOfferbookMessage message(String authorUserProfileId, Optional<BisqEasyOffer> offer) {
-        return new BisqEasyOfferbookMessage("channelId",
+        Market market = offer.map(BisqEasyOffer::getMarket).orElse(BTC_EUR);
+        return message(BisqEasyOfferbookChannel.createId(market), authorUserProfileId, offer);
+    }
+
+    private static BisqEasyOfferbookMessage message(String channelId,
+                                                    String authorUserProfileId,
+                                                    Optional<BisqEasyOffer> offer) {
+        return new BisqEasyOfferbookMessage(channelId,
                 authorUserProfileId,
                 offer,
                 Optional.of("text"),
@@ -107,7 +117,7 @@ class BisqEasyOfferbookMessageTest {
     private static BisqEasyOffer offer(NetworkId maker, PriceSpec priceSpec) {
         return new BisqEasyOffer(maker,
                 Direction.BUY,
-                new Market("BTC", "EUR", "Bitcoin", "Euro"),
+                BTC_EUR,
                 new BaseSideFixedAmountSpec(100_000),
                 priceSpec,
                 List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
