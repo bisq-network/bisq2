@@ -530,6 +530,11 @@ public class Bisq1BridgeRequestService implements Service,
                     log.info("No matching persisted bonded-role registration found for cancellation request {}", request);
                     return;
                 }
+                // The oracle accepts only a registration whose role data it can publish. For example, the role of a
+                // node must contain the addresses of the node (see docs/specifications/bonded-roles/registration.md).
+                if (!request.isCancellationRequest() && !hasValidRoleData(request)) {
+                    return;
+                }
 
                 BondedRoleVerificationResponse response = bondedRoleGrpcService.requestBondedRoleVerification(request, senderPublicKey);
                 log.info("BondedRoleVerificationResponse {}", response);
@@ -630,8 +635,30 @@ public class Bisq1BridgeRequestService implements Service,
         matchingRequests.forEach(this::deactivateRegistration);
     }
 
+    private boolean hasValidRoleData(BondedRoleRegistrationRequest request) {
+        try {
+            toAuthorizedBondedRole(request);
+            return true;
+        } catch (IllegalArgumentException e) {
+            log.warn("Rejecting the bonded-role registration of profile {}, because its role data is invalid: {}",
+                    request.getProfileId(), e.getMessage());
+            return false;
+        }
+    }
+
     private void deactivateRegistration(BondedRoleRegistrationRequest request) {
-        AuthorizedBondedRole data = toAuthorizedBondedRole(request);
+        AuthorizedBondedRole data;
+        try {
+            data = toAuthorizedBondedRole(request);
+        } catch (IllegalArgumentException e) {
+            // An oracle of an earlier version could persist a registration whose role data this version rejects, for
+            // example the role of a node without addresses. Nodes of this version drop such role data, and this
+            // oracle cannot create its removal. So it removes only the persisted registration.
+            log.warn("Removing the bonded-role registration of profile {} without a removal of its role data, " +
+                    "because the role data is invalid: {}", request.getProfileId(), e.getMessage());
+            removeRegistrationRequest(request);
+            return;
+        }
         removeAuthorizedData(data).whenComplete((broadcastResult, throwable) -> {
             if (throwable == null) {
                 log.info("Tried to broadcast bonded-role removal. Size of broadcastResult: {}", broadcastResult.size());

@@ -46,6 +46,7 @@ import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 
+import static bisq.bonded_roles.registration.BondedRoleRegistrationRequestTest.createAddressByTransportTypeMap;
 import static bisq.bonded_roles.registration.BondedRoleRegistrationRequestTest.createNetworkId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -92,7 +93,7 @@ class AuthorizedOracleNodeAuthorizationTest {
                 BondedRoleType.ORACLE_NODE,
                 "oracle",
                 "signature",
-                Optional.empty(),
+                Optional.of(createAddressByTransportTypeMap()),
                 createNetworkId(),
                 Optional.empty(),
                 false)));
