@@ -177,28 +177,31 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
         String messageId = ackMessage.getId();
         Map<String, Observable<MessageDeliveryStatus>> messageDeliveryStatusByMessageId = getMessageDeliveryStatusByMessageId();
         synchronized (messageDeliveryStatusByMessageId) {
-            if (messageDeliveryStatusByMessageId.containsKey(messageId)) {
-                Observable<MessageDeliveryStatus> observableStatus = messageDeliveryStatusByMessageId.get(messageId);
-                // If we have already a received state we return.
-                // This ensures that a later received failed state from one transport does not overwrite the received state from
-                // another transport.
-                if (observableStatus.get().isReceived()) {
-                    return;
-                }
+            Observable<MessageDeliveryStatus> observableStatus = messageDeliveryStatusByMessageId.get(messageId);
+            if (observableStatus == null) {
+                // We apply a status to our own message before we send it (see NetworkService.confidentialSend). An
+                // AckMessage for an unknown ID is not for a message which we sent in the last 30 days, so it must not
+                // create state.
+                log.debug("We ignore an AckMessage for a message ID which we do not know");
+                return;
+            }
 
-                if (observableStatus.get() == MessageDeliveryStatus.CONNECTING ||
-                        observableStatus.get() == MessageDeliveryStatus.SENT) {
-                    observableStatus.set(MessageDeliveryStatus.ACK_RECEIVED);
-                } else {
-                    // Covers ADDED_TO_MAILBOX, TRY_ADD_TO_MAILBOX and FAILED
-                    observableStatus.set(MessageDeliveryStatus.MAILBOX_MSG_RECEIVED);
-                }
+            // If we have already a received state we return.
+            // This ensures that a later received failed state from one transport does not overwrite the received state from
+            // another transport.
+            if (observableStatus.get().isReceived()) {
+                return;
+            }
+
+            if (observableStatus.get() == MessageDeliveryStatus.CONNECTING ||
+                    observableStatus.get() == MessageDeliveryStatus.SENT) {
+                observableStatus.set(MessageDeliveryStatus.ACK_RECEIVED);
             } else {
-                persistableStore.getCreationDateByMessageId().putIfAbsent(messageId, System.currentTimeMillis());
-                messageDeliveryStatusByMessageId.put(messageId, new Observable<>(MessageDeliveryStatus.ACK_RECEIVED));
+                // Covers ADDED_TO_MAILBOX, TRY_ADD_TO_MAILBOX and FAILED
+                observableStatus.set(MessageDeliveryStatus.MAILBOX_MSG_RECEIVED);
             }
             log.info("Received AckMessage for message with ID {} and set status to {}",
-                    messageId, messageDeliveryStatusByMessageId.get(messageId).get());
+                    messageId, observableStatus.get());
             persist();
         }
     }

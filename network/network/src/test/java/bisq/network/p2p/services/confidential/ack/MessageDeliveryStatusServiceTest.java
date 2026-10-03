@@ -44,6 +44,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -65,6 +66,8 @@ class MessageDeliveryStatusServiceTest {
     private final NetworkId myNetworkIdB = networkId(1001, keyPairB, KEY_ID_B);
     private final NetworkId peerNetworkId = networkId(2000, KeyGeneration.generateDefaultEcKeyPair(), KEY_ID_PEER);
 
+    @SuppressWarnings("rawtypes")
+    private Persistence persistence;
     private NetworkService networkService;
     private MessageDeliveryStatusService service;
 
@@ -72,7 +75,7 @@ class MessageDeliveryStatusServiceTest {
     @SuppressWarnings({"unchecked", "rawtypes"})
     void setUp() {
         PersistenceService persistenceService = mock(PersistenceService.class);
-        Persistence persistence = mock(Persistence.class);
+        persistence = mock(Persistence.class);
         when(persistenceService.getOrCreatePersistence(any(), any(DbSubDirectory.class), any(PersistableStore.class)))
                 .thenReturn(persistence);
         when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
@@ -151,6 +154,15 @@ class MessageDeliveryStatusServiceTest {
         verify(networkService, times(2)).confidentialSend(eq(new AckMessage("message1")), eq(peerNetworkId), senders.capture());
         assertEquals(List.of(myNetworkIdA, myNetworkIdB),
                 senders.getAllValues().stream().map(NetworkIdWithKeyPair::getNetworkId).toList());
+    }
+
+    @Test
+    void ackForAnUnknownMessageIdCreatesNoEntry() {
+        service.onDecryptedMessage(new AckMessage("unknown"), KEY_ID_A);
+
+        assertTrue(service.getMessageDeliveryStatusByMessageId().isEmpty());
+        assertTrue(service.getPersistableStore().getCreationDateByMessageId().isEmpty());
+        verify(persistence, never()).persistAsync(any());
     }
 
     @Test
