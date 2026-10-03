@@ -345,8 +345,10 @@ class MuSigTakeOfferRequestValidatorTest {
 
     @Test
     void nonPositiveAmountsAreRejected() {
-        assertEconomicsRejected(fiatContract(2_000_000L, -1L), TradeProtocolFailure.OFFER_NOT_AVAILABLE);
-        assertEconomicsRejected(fiatContract(0L, 10_000_000L), TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+        // A contract with an amount which is not positive cannot be created or parsed (Contract.verify()). So a take
+        // offer request with such a contract fails at parsing and does not reach the validator.
+        assertThatThrownBy(() -> fiatContract(2_000_000L, -1L)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> fiatContract(0L, 10_000_000L)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -650,8 +652,10 @@ class MuSigTakeOfferRequestValidatorTest {
         // quote (BTC) side pinned at 0.1 BTC (10,000,000 sats). At an extreme resolved price of
         // 1 sat/XMR the expected base amount is 10^7 * 10^12 = 10^19, which overflows a long and
         // wraps negative in PriceQuote.toBaseSideMonetary. The wrapped value makes the tolerance
-        // comparison "1 < negative" pass a 1-piconero base against a 10^19 expectation; the exact
+        // comparison "2 < negative" pass a 2-piconero base against a 10^19 expectation; the exact
         // BigDecimal comparison rejects it.
+        // The base amount is 2 piconero, because the price of the contract amounts must fit into a long
+        // (Contract.verify()): 10^7 * 10^12 / 2 = 5 * 10^18. A contract with 1 piconero cannot be created.
         Market market = new Market("XMR", "BTC", "Monero", "Bitcoin");
         PaymentMethodSpec<?> cryptoSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
                 bisq.account.payment_method.crypto.CryptoPaymentMethod.fromCustomName("XMR", "XMR"), "XMR");
@@ -664,10 +668,13 @@ class MuSigTakeOfferRequestValidatorTest {
                 List.of(cryptoSpec.getPaymentMethod()),
                 List.of(new bisq.offer.options.CollateralOption(0.15, 0.15)),
                 "1.0.0");
-        MuSigContract contract = createContract(offer, 1L, 10_000_000L, offer.getPriceSpec(),
+        MuSigContract contract = createContract(offer, 2L, 10_000_000L, offer.getPriceSpec(),
                 Optional.of(mediatorProfile), Optional.of(arbitratorProfile));
 
         assertEconomicsRejected(contract, TradeProtocolFailure.PRICE_DEVIATION);
+        assertThatThrownBy(() -> createContract(offer, 1L, 10_000_000L, offer.getPriceSpec(),
+                Optional.of(mediatorProfile), Optional.of(arbitratorProfile)))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
