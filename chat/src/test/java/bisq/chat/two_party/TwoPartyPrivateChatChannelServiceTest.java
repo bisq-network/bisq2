@@ -40,6 +40,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -50,6 +51,7 @@ import static org.mockito.Mockito.when;
 public class TwoPartyPrivateChatChannelServiceTest {
     private static final String PEER_PROFILE_ID = "1111111111111111111111111111111111111111";
     private static final String MY_PROFILE_ID = "2222222222222222222222222222222222222222";
+    private static final String THIRD_PROFILE_ID = "3333333333333333333333333333333333333333";
 
     private TwoPartyPrivateChatChannelService service;
     private UserProfileService userProfileService;
@@ -134,11 +136,40 @@ public class TwoPartyPrivateChatChannelServiceTest {
         assertEquals(1, channel.getChatMessages().size());
     }
 
+    // The sender chooses the channel ID. A third user who learned the ID of our channel with the peer must not add
+    // messages to it, and its message must not create another channel either.
+    @Test
+    void messageOfThirdUserWithChannelIdOfOtherConversationIsIgnored() {
+        when(userIdentityService.getSelectedUserIdentity()).thenReturn(myUserIdentity);
+        TwoPartyPrivateChatChannel channel = service.findOrCreateChannel(ChatChannelDomain.DISCUSSION, peer).orElseThrow();
+        UserProfile thirdUser = mock(UserProfile.class);
+        when(thirdUser.getId()).thenReturn(THIRD_PROFILE_ID);
+
+        service.onMessage(textMessageFrom(thirdUser));
+
+        assertTrue(channel.getChatMessages().isEmpty());
+        assertEquals(1, service.getChannels().size());
+    }
+
+    @Test
+    void channelPeerIsOnlyTheOtherUser() {
+        when(userIdentityService.getSelectedUserIdentity()).thenReturn(myUserIdentity);
+        TwoPartyPrivateChatChannel channel = service.findOrCreateChannel(ChatChannelDomain.DISCUSSION, peer).orElseThrow();
+
+        assertTrue(channel.isPeer(PEER_PROFILE_ID));
+        assertFalse(channel.isPeer(THIRD_PROFILE_ID));
+        assertFalse(channel.isPeer(MY_PROFILE_ID));
+    }
+
     private TwoPartyPrivateChatMessage textMessageFromPeer() {
+        return textMessageFrom(peer);
+    }
+
+    private TwoPartyPrivateChatMessage textMessageFrom(UserProfile sender) {
         return new TwoPartyPrivateChatMessage("messageId",
                 ChatChannelDomain.DISCUSSION,
                 TwoPartyPrivateChatChannel.createId(ChatChannelDomain.DISCUSSION, PEER_PROFILE_ID, MY_PROFILE_ID),
-                peer,
+                sender,
                 MY_PROFILE_ID,
                 mock(NetworkId.class),
                 "hi",

@@ -119,6 +119,11 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     }
 
     @Override
+    public boolean isPeer(String userProfileId) {
+        return peer.getId().equals(userProfileId);
+    }
+
+    @Override
     public String getDisplayString() {
         return getPeer().getUserName();
     }

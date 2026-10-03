@@ -277,23 +277,46 @@ public abstract class PrivateChatChannelService<
     /* --------------------------------------------------------------------- */
 
     protected void processMessage(M message) {
-        if (canProcessMessage(message)) {
-            findChannel(message)
-                    .or(() -> {
-                        // We prevent to send leave messages after a peer has left, but there might be still
-                        // race conditions where that might happen, so we check at receiving the message as well, so that
-                        // in cases we would get a leave message as first message (e.g. after having closed the channel)
-                        // we do not create a channel.
-                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                            log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
-                                    "sent a leave message around the same time as we have closed the channel.");
-                            return Optional.empty();
-                        } else {
-                            return createNewChannelFromReceivedMessage(message);
-                        }
-                    })
-                    .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+        if (!canProcessMessage(message)) {
+            return;
         }
+        Optional<C> existingChannel = findChannel(message);
+        if (existingChannel.isPresent()) {
+            // A message for an existing channel never creates another channel, also when it is rejected
+            C channel = existingChannel.get();
+            if (isSentToChannel(channel, message.getSenderUserProfile().getId(), message.getReceiverUserProfileId())) {
+                addMessageAndProcessQueuedReactions(message, channel);
+            }
+            return;
+        }
+        // We prevent to send leave messages after a peer has left, but there might be still
+        // race conditions where that might happen, so we check at receiving the message as well, so that
+        // in cases we would get a leave message as first message (e.g. after having closed the channel)
+        // we do not create a channel.
+        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+            log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
+                    "sent a leave message around the same time as we have closed the channel.");
+            return;
+        }
+        // The open trade services may return an existing channel of the trade ID in the message, so the check applies
+        // here as well. A new channel has the sender as peer and the receiver as our identity.
+        createNewChannelFromReceivedMessage(message)
+                .filter(channel -> isSentToChannel(channel, message.getSenderUserProfile().getId(),
+                        message.getReceiverUserProfileId()))
+                .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+    }
+
+    // The sender chooses the channel ID. A received message or reaction belongs to an existing channel only if its
+    // sender is a peer of the channel and its receiver is our identity in the channel. Otherwise anybody who learned the
+    // ID of a channel, for example the trade ID, could add messages to a conversation of other users.
+    private boolean isSentToChannel(C channel, String senderUserProfileId, String receiverUserProfileId) {
+        boolean isSentToChannel = channel.isPeer(senderUserProfileId) &&
+                channel.getMyUserIdentity().getId().equals(receiverUserProfileId);
+        if (!isSentToChannel) {
+            log.warn("Ignoring a message or reaction for channel {} from a sender which is not a peer of the channel, " +
+                    "or to another receiver", channel.getId());
+        }
+        return isSentToChannel;
     }
 
     protected boolean canProcessMessage(M message) {
@@ -309,8 +332,13 @@ public abstract class PrivateChatChannelService<
     }
 
     protected void processMessageReaction(R messageReaction) {
-        findChannel(messageReaction.getChatChannelId())
-                .flatMap(channel -> channel.getChatMessages().stream()
+        Optional<C> channel = findChannel(messageReaction.getChatChannelId());
+        if (channel.isPresent() && !isSentToChannel(channel.get(), messageReaction.getSenderUserProfile().getId(),
+                messageReaction.getReceiverUserProfileId())) {
+            return;
+        }
+        channel
+                .flatMap(foundChannel -> foundChannel.getChatMessages().stream()
                         .filter(message -> message.getId().equals(messageReaction.getChatMessageId()))
                         .findFirst())
                 .ifPresentOrElse(
