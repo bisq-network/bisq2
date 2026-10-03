@@ -21,6 +21,8 @@ import bisq.common.file.FileMutatorUtils;
 import bisq.persistence.backup.MaxBackupSize;
 import bisq.persistence.backup.RestoreService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 
@@ -29,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletionException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
@@ -85,10 +88,38 @@ class PersistenceWriteFailureTest {
         Files.createDirectories(storePath.getParent());
         Files.createFile(manager.getTempFilePath());
         try (MockedStatic<FileMutatorUtils> files = mockStatic(FileMutatorUtils.class, CALLS_REAL_METHODS)) {
-            files.when(() -> FileMutatorUtils.renameFile(manager.getTempFilePath(), storePath)).thenReturn(false);
+            files.when(() -> FileMutatorUtils.replaceFile(manager.getTempFilePath(), storePath))
+                    .thenThrow(new IOException("rename failed"));
 
-            assertThrows(IOException.class, manager::renameTempFileToCurrentFile);
+            assertThrows(IOException.class, manager::replaceCurrentFileWithTempFile);
         }
+    }
+
+    // A write which fails at the replacement must leave the previous store readable. If the writer removed or moved
+    // the current file before the rename, the next start would read no file and begin with an empty store.
+    @ParameterizedTest
+    @EnumSource(value = MaxBackupSize.class, names = {"ZERO", "TEN_MB"})
+    void failedReplacementKeepsPreviousStore(MaxBackupSize maxBackupSize) throws Exception {
+        Path storePath = tempDir.resolve("data/db/private/test_store.protobuf");
+        PersistableStoreFileManager manager = new PersistableStoreFileManager(storePath, maxBackupSize);
+        PersistableStoreReaderWriter<TimestampStore> readerWriter =
+                new PersistableStoreReaderWriter<>(manager, new RestoreService());
+        TimestampStore previous = new TimestampStore();
+        previous.getTimestampsByProfileId().put("A", 1L);
+        PersistableStoreResolver.addResolver(previous);
+        readerWriter.write(previous);
+
+        TimestampStore next = new TimestampStore();
+        next.getTimestampsByProfileId().put("A", 2L);
+        try (MockedStatic<FileMutatorUtils> files = mockStatic(FileMutatorUtils.class, CALLS_REAL_METHODS)) {
+            files.when(() -> FileMutatorUtils.replaceFile(manager.getTempFilePath(), storePath))
+                    .thenThrow(new IOException("rename failed"));
+
+            assertThrows(IllegalStateException.class, () -> readerWriter.write(next));
+        }
+
+        TimestampStore read = readerWriter.read().orElseThrow();
+        assertEquals(1L, read.getTimestampsByProfileId().get("A"));
     }
 
     private static void blockTemporaryFile(Persistence<?> persistence) throws Exception {

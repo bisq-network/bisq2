@@ -150,8 +150,9 @@ public class BackupServiceTest {
         Path backupFilePath = backupService.getBackupFilePath();
         assertThat(backupFilePath).doesNotExist();
         backupService.backup(backupFilePath);
-        assertThat(backupFilePath).exists();
-        assertThat(storeFilePath).doesNotExist();
+        assertThat(backupFilePath).hasContent("test");
+        // The current file stays in place until a new version replaces it
+        assertThat(storeFilePath).hasContent("test");
     }
 
     @Test
