@@ -182,7 +182,7 @@ class BisqEasyTradeServiceChatChannelBindingTest {
 
     @Test
     void mismatchingChannelExistingWhenMakerTradeIsCreatedFailsTrade() throws GeneralSecurityException {
-        when(serviceProvider.getIdentityService().findAnyIdentityByNetworkId(makerNetworkId)).thenReturn(Optional.of(makerIdentity));
+        when(serviceProvider.getIdentityService().findAnyIdentityById(makerIdentity.getId())).thenReturn(Optional.of(makerIdentity));
         service.initialize();
         BisqEasyContract contract = trade.getContract();
         // The taker's first chat message arrived before the take offer request and created the maker's channel.
