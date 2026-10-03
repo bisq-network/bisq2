@@ -154,10 +154,10 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+        super.onDisconnect(connection, closeReason);
         if (node.getNumConnections() == 0) {
             policy.onAllConnectionsLost();
         }
-        // Might let fail a pending request
         updateNumPendingRequests();
     }
 
