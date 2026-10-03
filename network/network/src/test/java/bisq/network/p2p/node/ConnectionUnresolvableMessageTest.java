@@ -21,12 +21,14 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
+import bisq.network.p2p.message.TestExternalNetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2Token;
 import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.peer_group.keep_alive.Ping;
 import bisq.security.pow.ProofOfWork;
 import org.junit.jupiter.api.AfterEach;
@@ -141,6 +143,37 @@ class ConnectionUnresolvableMessageTest {
         assertTrue(closeReasons.isEmpty());
         // The dropped message is throttled like the Ping, so a peer can send such messages only at the throttled rate
         verify(connectionThrottle, times(2)).throttleReceiveMessage();
+    }
+
+    // A message of another module, for example a chat or trade message, and an AckMessage are valid only inside a
+    // ConfidentialMessage. The receiver checks their sender only when it decrypts the ConfidentialMessage. As payload
+    // of an envelope, the node drops them before it passes them to any listener (see confidential-messages.md).
+    @Test
+    void messageWhichIsValidOnlyInsideConfidentialMessageIsDroppedAndTheConnectionStaysOpen()
+            throws IOException, InterruptedException {
+        // The node can parse the message of another module, so only the rule of the envelope drops it
+        TestExternalNetworkMessage.registerResolver();
+        bisq.network.protobuf.NetworkEnvelope validEnvelope = createEnvelope(1).toProto(false);
+        bisq.network.protobuf.NetworkEnvelope envelopeWithAckMessage = validEnvelope.toBuilder()
+                .setNetworkMessage(new AckMessage("ackRequestingMessageId").toProto(false))
+                .build();
+        bisq.network.protobuf.NetworkEnvelope envelopeWithMessageOfAnotherModule = validEnvelope.toBuilder()
+                .setNetworkMessage(new TestExternalNetworkMessage("text").toProto(false))
+                .build();
+
+        OutputStream outputStream = peerSocket.getOutputStream();
+        envelopeWithAckMessage.writeDelimitedTo(outputStream);
+        envelopeWithMessageOfAnotherModule.writeDelimitedTo(outputStream);
+        createEnvelope(2).toProto(false).writeDelimitedTo(outputStream);
+        outputStream.flush();
+
+        EnvelopePayloadMessage handled = handledMessages.poll(10, TimeUnit.SECONDS);
+        assertInstanceOf(Ping.class, handled);
+        assertEquals(2, ((Ping) handled).getNonce());
+        assertEquals(2, connection.getNumUnresolvableMessages().get());
+        assertFalse(connection.isStopped());
+        assertTrue(closeReasons.isEmpty());
+        verify(connectionThrottle, times(3)).throttleReceiveMessage();
     }
 
     // The version is checked before the payload is converted, so a message of another network version closes the

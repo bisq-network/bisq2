@@ -26,8 +26,6 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.node.CloseReason;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.node.authorization.AuthorizationService;
@@ -72,7 +70,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  * Creates nodesById, the default node and the services according to the Config.
  */
 @Slf4j
-public class ServiceNode implements Node.Listener {
+public class ServiceNode {
     @Getter
     public static final class Config {
         public static Config from(com.typesafe.config.Config config) {
@@ -148,7 +146,10 @@ public class ServiceNode implements Node.Listener {
     private Optional<NetworkLoadService> networkLoadService = Optional.empty();
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    private final Set<ConfidentialMessageService.Listener> confidentialMessageListeners = new CopyOnWriteArraySet<>();
+    // A service can add its listener before the ConfidentialMessageService exists. The lock keeps this set and the
+    // listeners of the ConfidentialMessageService consistent.
+    private final Set<ConfidentialMessageService.Listener> confidentialMessageListeners = new HashSet<>();
+    private final Object confidentialMessageListenersLock = new Object();
 
     @Getter
     public final Observable<State> state = new Observable<>(State.NEW);
@@ -182,32 +183,6 @@ public class ServiceNode implements Node.Listener {
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
         peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupManagerConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
-
-        nodesById.addNodeListener(this);
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Node.Listener
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage, Connection connection, NetworkId networkId) {
-        confidentialMessageListeners.forEach(listener -> {
-            try {
-                listener.onMessage(envelopePayloadMessage);
-            } catch (Exception e) {
-                log.error("Calling onMessage at messageListener {} failed", listener, e);
-            }
-        });
-    }
-
-    @Override
-    public void onConnection(Connection connection) {
-    }
-
-    @Override
-    public void onDisconnect(Connection connection, CloseReason closeReason) {
     }
 
 
@@ -344,22 +319,35 @@ public class ServiceNode implements Node.Listener {
         return confidentialMessageService.get().send(envelopePayloadMessage, receiverNetworkId, address, receiverPubKey, senderKeyPair, senderNetworkId);
     }
 
+    // A listener which was added before the service exists receives the decrypted messages from the time the service
+    // is created.
     @VisibleForTesting
     void createConfidentialMessageService() {
-        confidentialMessageService = Optional.of(new ConfidentialMessageService(nodesById,
-                keyBundleService,
-                dataService,
-                messageDeliveryStatusService));
+        synchronized (confidentialMessageListenersLock) {
+            ConfidentialMessageService service = new ConfidentialMessageService(nodesById,
+                    keyBundleService,
+                    dataService,
+                    messageDeliveryStatusService);
+            confidentialMessageListeners.forEach(service::addListener);
+            confidentialMessageService = Optional.of(service);
+        }
     }
 
+    // The listeners receive only the messages which the ConfidentialMessageService decrypted and whose sender and
+    // receiver keys it verified. They must not receive the messages of the nodes directly (see
+    // docs/specifications/network/confidential-messages.md).
     void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
-        confidentialMessageListeners.add(listener);
-        confidentialMessageService.ifPresent(service -> service.addListener(listener));
+        synchronized (confidentialMessageListenersLock) {
+            confidentialMessageListeners.add(listener);
+            confidentialMessageService.ifPresent(service -> service.addListener(listener));
+        }
     }
 
     void removeConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
-        confidentialMessageListeners.remove(listener);
-        confidentialMessageService.ifPresent(service -> service.removeListener(listener));
+        synchronized (confidentialMessageListenersLock) {
+            confidentialMessageListeners.remove(listener);
+            confidentialMessageService.ifPresent(service -> service.removeListener(listener));
+        }
     }
 
     void addListener(Listener listener) {

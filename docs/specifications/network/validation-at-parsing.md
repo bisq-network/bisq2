@@ -22,6 +22,8 @@ message, so they cannot limit the memory which these steps need.
    - the consistency of two fields, for example the publisher hash and the public key of an add request (see
      [`storage-ownership.md`](storage-ownership.md#the-publisher-hash)), or the publisher of an add request and the
      owner which its data names (see [`storage-ownership.md`](storage-ownership.md#admission));
+   - the type of a field, for example the payload of an envelope, which must not be a message that is valid only
+     inside a confidential message (see [`confidential-messages.md`](confidential-messages.md));
    - the presence of a signature, and of signature V1 before the cutoff date of signature V1 (see
      [`storage-request-signatures.md`](storage-request-signatures.md#verification)). `verify()` uses the clock of
      the node for this rule. `verify()` does not require signature V2: a constructor also completes requests which

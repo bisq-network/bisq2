@@ -7,7 +7,8 @@ to MuSig.
 
 - A trade message is a message of the trade protocol which one trader sends to the other trader. It carries the ID of
   the trade and the network ID of its sender. The layer for confidential messages has verified that the sender signed
-  the message with the key of this network ID.
+  the message with the key of this network ID. The node accepts a trade message only inside a confidential message
+  (see [Confidential messages](../network/confidential-messages.md)).
 - The trade peer is the other trader of a trade.
 - The protocol of a trade is the state machine which handles the events and the messages of the trade.
 
