@@ -52,6 +52,7 @@ class BisqEasyMediationTableView extends VBox {
     private final SearchBox searchBox;
     private final BisqTableView<BisqEasyMediationCaseListItem> tableView;
     private BisqTableColumn<BisqEasyMediationCaseListItem> closeCaseDateColumn;
+    private BisqTableColumn<BisqEasyMediationCaseListItem> lastMessageColumn;
     private final Hyperlink exportHyperlink;
     private final Label numEntriesLabel;
     private final ListChangeListener<BisqEasyMediationCaseListItem> listChangeListener;
@@ -275,7 +276,17 @@ class BisqEasyMediationTableView extends VBox {
                 .valueSupplier(item -> item.getTaker().getUserName())// For csv export
                 .build());
 
-        tableView.getColumns().add(DateColumnUtil.getDateColumn(tableView.getSortOrder()));
+        lastMessageColumn = new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
+                .title(Res.get("authorizedRole.mediator.table.lastMessage"))
+                .minWidth(130)
+                .comparator(BisqEasyMediationCaseListItem.BY_LAST_MESSAGE_DATE)
+                .sortType(TableColumn.SortType.DESCENDING)
+                .setCellFactory(getLastMessageCellFactory())
+                .valueSupplier(item -> item.getLastMessageDateString() + " " + item.getLastMessageTimeString())
+                .build();
+        tableView.getColumns().add(lastMessageColumn);
+
+        tableView.getColumns().add(DateColumnUtil.getDateColumn());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<BisqEasyMediationCaseListItem>()
                 .title(Res.get("bisqEasy.openTrades.table.tradeId"))
@@ -320,6 +331,40 @@ class BisqEasyMediationTableView extends VBox {
                 .valueSupplier(item -> item.getCloseCaseDateString() + " " + item.getCloseCaseTimeString())
                 .build();
         tableView.getColumns().add(closeCaseDateColumn);
+
+        UIThread.runOnNextRenderFrame(() -> tableView.getSortOrder().add(lastMessageColumn));
+    }
+
+    private Callback<TableColumn<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>,
+            TableCell<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>> getLastMessageCellFactory() {
+        return column -> new TableCell<>() {
+            private final Label date = new Label();
+            private final Label time = new Label();
+            private final VBox vBox = new VBox(3, date, time);
+
+            {
+                date.getStyleClass().add("table-view-date-column-date");
+                time.getStyleClass().add("table-view-date-column-time");
+                vBox.setAlignment(Pos.CENTER);
+                setAlignment(Pos.CENTER);
+            }
+
+            @Override
+            protected void updateItem(BisqEasyMediationCaseListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                date.textProperty().unbind();
+                time.textProperty().unbind();
+
+                if (item != null && !empty) {
+                    date.textProperty().bind(item.getLastMessageDateStringProperty());
+                    time.textProperty().bind(item.getLastMessageTimeStringProperty());
+                    setGraphic(vBox);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
     }
 
     private Callback<TableColumn<BisqEasyMediationCaseListItem, BisqEasyMediationCaseListItem>,
