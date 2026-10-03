@@ -34,6 +34,7 @@ import bisq.persistence.PersistenceService;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -146,7 +147,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().requestAlreadyReceived();
             }
 
-            if (isSequenceNumberSigned(requestFromMap) && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+            if (request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, requestFromMap))) {
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
@@ -220,10 +221,11 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                // A verified V2 removal supersedes an untrusted V1 sequence. Once upgraded, keep only
-                // higher signed sequences so a V1 request cannot discard the trusted ordering information.
+                // Only a removal with signature V2 replaces a stored removal, and only with a higher sequence number
+                // than the one by which the store orders the stored removal. For a stored removal without signature V2
+                // this is not its own sequence number, which a relay can choose (see getTrustedSequenceNumber).
                 if (request.isSignatureV2Present() &&
-                        (!requestFromMap.isSignatureV2Present() || !request.isSequenceNrInvalid(requestFromMap.getSequenceNumber()))) {
+                        !request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, requestFromMap))) {
                     // We update the map with the new request with the fresh sequence number. The new removal keeps
                     // the sequence number of the add request which the stored removal replaced.
                     map.put(storageKey, request);
@@ -373,18 +375,28 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         listeners.remove(listener);
     }
 
-    // The sequence number for the next request of the owner. A relay can change the sequence number of a removal without
-    // signature V2, so it is not used. Such a removal does not reject a request of any sequence number (see
-    // docs/specifications/network/storage-request-ordering.md).
+    // The sequence number for the next request of the owner: one more than the number by which the store orders the
+    // entry. This is 1 if the store holds no entry (see docs/specifications/network/storage-request-ordering.md).
     public int getNextSequenceNumber(ByteArray storageKey) {
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            AuthenticatedDataRequest requestFromMap = map.get(storageKey);
-            if (!isSequenceNumberSigned(requestFromMap)) {
-                return 1;
-            }
-            return Math.incrementExact(requestFromMap.getSequenceNumber());
+            return Math.incrementExact(getTrustedSequenceNumber(storageKey, map.get(storageKey)));
         }
+    }
+
+    // The sequence number by which the store orders the entry. A request replaces the entry only with a higher sequence
+    // number. Both signature versions of an add request cover its sequence number, and signature V2 of a removal covers
+    // it. A relay can change the sequence number of a removal without signature V2, so the store does not use it. It
+    // uses the sequence number of the add request which that removal replaced in this store. That is 0 if the removal
+    // replaced none, or if an earlier version stored the removal. Valid sequence numbers are positive.
+    private int getTrustedSequenceNumber(ByteArray storageKey, @Nullable AuthenticatedDataRequest requestFromMap) {
+        if (requestFromMap == null) {
+            return 0;
+        }
+        if (isSequenceNumberSigned(requestFromMap)) {
+            return requestFromMap.getSequenceNumber();
+        }
+        return getReplacedAddSequenceNrs().getOrDefault(storageKey, 0);
     }
 
     // Both signature versions of an add request cover its sequence number. Only signature V2 of a removal covers it.

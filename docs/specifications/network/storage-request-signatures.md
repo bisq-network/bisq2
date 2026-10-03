@@ -177,8 +177,11 @@ Reasons:
   inventory responses. A request which a relay changed before the cutoff date would also stay until it expires. A
   remove request contains no data. In the mailbox store it rejects the add request of the removed message until it
   expires. Without it, a receiver which removed a message with a node of an earlier version would get the message
-  again. In the store of authenticated data, a remove request without signature V2 rejects no add request (see
-  [`storage-request-ordering.md`](storage-request-ordering.md)), so the store does not keep it.
+  again. In the store of authenticated data, a remove request without signature V2 rejects only the add request which
+  it replaced, and earlier ones (see [`storage-request-ordering.md`](storage-request-ordering.md)). From the cutoff
+  date on, the store rejects an add request without signature V2 in any case. An add request with signature V2 is of a
+  node of this version. Its removal has signature V2 and replaces the copy without signature V2 when the node gets it.
+  So the store does not keep the remove request without signature V2 (see also [Open points](#open-points)).
 
 ### Conditions for the cutoff date
 
@@ -274,6 +277,12 @@ The following weaknesses can be removed by a change of other rules. The develope
   - What removes it: a rule in [`storage-request-ordering.md`](storage-request-ordering.md) by which a request with
     signature V2 replaces the stored copy of the same request without signature V2. With this rule, the stores hold
     the complete requests before the cutoff date.
+- **Removed data of nodes of this version after the cutoff date.** A node can hold only the copy without signature V2
+  of a removal of a node of this version, because it got the removal only from nodes of earlier versions. At the
+  cutoff date the store removes the copy (rule 9). After that, the node accepts the add request with signature V2 again
+  which the removal replaced, until it gets the removal with signature V2.
+  - What removes it: the store of authenticated data keeps its remove requests without signature V2 until they expire,
+    as the mailbox store does. The cost is that of the last point of this list.
 - **Remove requests without signature V2 in inventory responses.** Until they expire, the mailbox stores serve their
   remove requests without signature V2 (rule 9) in inventory responses. Nodes of this version reject them each time.
   This ends 15 days after the cutoff date.
