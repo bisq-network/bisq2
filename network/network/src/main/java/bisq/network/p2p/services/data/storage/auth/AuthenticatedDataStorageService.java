@@ -408,7 +408,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 if (!wasRemoved) {
                     return;
                 }
-                prunedAndExpiredDataRequests.add(entry.getValue());
+                addPrunedRequest(entry.getValue());
                 if (entry.getValue() instanceof AddAuthenticatedDataRequest addRequest) {
                     AuthenticatedSequentialData sequentialData = addRequest.getAuthenticatedSequentialData();
                     AuthenticatedData data = sequentialData.getAuthenticatedData();

@@ -272,7 +272,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     wasRemoved = persistableStore.getMap().remove(entry.getKey(), entry.getValue());
                 }
                 if (wasRemoved) {
-                    prunedAndExpiredDataRequests.add(entry.getValue());
+                    addPrunedRequest(entry.getValue());
                 }
             });
         }
