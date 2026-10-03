@@ -221,6 +221,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             validateBondedRole(authorizedData, authorizedBondedRole).ifPresent(role -> {
                 bondedRoles.add(new BondedRole(role));
                 if (role.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                    // The role of a node contains its addresses. Role data without them fails at parsing.
                     networkService.addSeedNodeAddressByTransport(role.getAddressByTransportTypeMap().orElseThrow());
                 }
             });

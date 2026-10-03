@@ -180,6 +180,10 @@ public final class AuthorizedBondedRole implements OracleNodeAuthorizedData {
                 "Proposal tx ID must be empty or a valid Bitcoin transaction ID");
         checkArgument(lockupTxId.isEmpty() || BitcoinTransactionValidation.isValid(lockupTxId),
                 "Lockup tx ID must be empty or a valid Bitcoin transaction ID");
+        // Nodes reach a node at the addresses of its role, for example a seed node (see
+        // docs/specifications/bonded-roles/registration.md)
+        checkArgument(!bondedRoleType.isNode() || addressByTransportTypeMap.isPresent(),
+                "The bonded role of a node must contain the addresses of the node");
     }
 
     public boolean canReconstructForRemoval() {
