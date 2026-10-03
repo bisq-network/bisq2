@@ -48,6 +48,8 @@ class BisqEasyTakeOfferRequestHandlerTest {
         ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         when(serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(takersProfileId))
                 .thenReturn(true);
+        when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
+                .thenReturn(new ObservableSet<>());
 
         BisqEasyContract takersContract = mock(BisqEasyContract.class);
         when(takersContract.getOffer()).thenReturn(mock(BisqEasyOffer.class));
@@ -60,9 +62,17 @@ class BisqEasyTakeOfferRequestHandlerTest {
 
         TradeProtocolException exception =
                 assertThrows(TradeProtocolException.class, () -> handler.verify(message));
-        // The rejection reason sent to the taker must not disclose that they have been ignored
-        assertEquals(TradeProtocolFailure.OFFER_NOT_AVAILABLE, exception.getTradeProtocolFailure());
+        // The rejection sent to the taker must not disclose that they have been ignored: it is the rejection for an offer
+        // which the maker does not have, thrown from the same line
+        assertEquals(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND, exception.getTradeProtocolFailure());
         assertFalse(exception.getMessage().toLowerCase().contains("ignor"));
+
+        when(serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(takersProfileId))
+                .thenReturn(false);
+        TradeProtocolException notFound = assertThrows(TradeProtocolException.class, () -> handler.verify(message));
+        assertEquals(notFound.getTradeProtocolFailure(), exception.getTradeProtocolFailure());
+        assertEquals(notFound.getMessage(), exception.getMessage());
+        assertEquals(notFound.getStackTrace()[0], exception.getStackTrace()[0]);
     }
 
     @Test
