@@ -26,7 +26,9 @@ a trade message also applies to MuSig.
    - an offer in the offerbook is one of the maker's own offers (see
      [take offer request validation](../trade/take-offer-request-validation.md));
    - the requester and the peer of a mediation request are the two parties of the contract, and the receiver of the
-     request is the mediator of the contract.
+     request is the mediator of the contract;
+   - the mediator shows a mediation case only if the mediator of its trade chat channel is the mediator of the
+     contract.
 3. A node sends its trade messages under the network ID which its trade peer stored for it. The taker sends under its
    network ID in the contract. The maker sends under the network ID to which the taker addressed the take offer request.
    An honest taker addresses it to the maker's network ID in the offer. The node sends from the identity of the trade,
@@ -41,6 +43,10 @@ a trade message also applies to MuSig.
   network IDs drops every trade message which the maker sends under a newer address map.
 - The maker's own identity: a maker which added a transport after it published an offer did not find its identity with
   the network ID of the offer. It dropped every take offer request for this offer, and the taker got no answer.
+- The mediation case: the mediator's node creates the trade chat channel with the mediator's current profile. The
+  contract holds the profile which the taker saw when it took the offer. A comparison of whole profiles hid the case
+  after the mediator had changed its terms, its statement or its addresses, so the mediator did not see an honest
+  request.
 - Rule 3: nodes of version 2.1.13 compare the sender of a trade message with the network ID which they stored for the
   trade peer, including the address map. The handler throws if the two differ, and the state machine then fails the
   trade. Rule 3 keeps such trades working, because the sender is the value which the peer stored.

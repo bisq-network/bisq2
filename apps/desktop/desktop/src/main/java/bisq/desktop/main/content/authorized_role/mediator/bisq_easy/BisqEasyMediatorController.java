@@ -267,12 +267,15 @@ public class BisqEasyMediatorController implements Controller {
     }
 
     // The case list shows a mediation case only if the mediator's channel of the trade matches the contract of the
-    // mediation request. The caller has checked that both have a mediator.
+    // mediation request. The caller has checked that both have a mediator. The mediator's node creates the channel with
+    // the mediator's current profile, while the contract holds the profile which the taker saw when it took the offer.
+    // A profile can change its terms, its statement and the addresses of its network ID, so the mediators are compared
+    // by their profile IDs, the hash of their key. See docs/specifications/user/identity-by-key.md.
     @VisibleForTesting
     static boolean isChannelMatchingContract(BisqEasyOpenTradeChannel channel, BisqEasyContract contract) {
         return channel.getTraders().size() == 2 &&
                 channel.getBisqEasyOffer().equals(contract.getOffer()) &&
-                channel.getMediator().equals(contract.getMediator());
+                channel.getMediator().map(UserProfile::getId).equals(contract.getMediator().map(UserProfile::getId));
     }
 
     private BisqEasyOpenTradeChannel findOrCreateChannel(BisqEasyMediationRequest bisqEasyMediationRequest,
