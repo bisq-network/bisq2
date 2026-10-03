@@ -17,13 +17,13 @@
 
 package bisq.desktop.main.content.reputation.build_reputation;
 
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.common.monetary.Fiat;
 import bisq.common.util.MathUtils;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.main.content.reputation.build_reputation.components.AgeSlider;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleIntegerProperty;

@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.chat.message_container.list;
 
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannel;
@@ -74,6 +73,7 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
