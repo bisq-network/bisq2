@@ -25,6 +25,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -36,6 +37,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -64,8 +66,12 @@ class BisqEasyOpenTradePendingMessagesTest {
         when(persistenceService.getOrCreatePersistence(any(), any(DbSubDirectory.class), any(BisqEasyOpenTradeChannelStore.class)))
                 .thenReturn(persistence);
         when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+        // Only a message addressed to one of our identities can become a pending message.
+        UserIdentityService userIdentityService = mock(UserIdentityService.class);
+        when(userIdentityService.findUserIdentity(anyString())).thenReturn(Optional.empty());
+        when(userIdentityService.findUserIdentity(MY_PROFILE_ID)).thenReturn(Optional.of(mock(UserIdentity.class)));
         UserService userService = mock(UserService.class);
-        when(userService.getUserIdentityService()).thenReturn(mock(UserIdentityService.class));
+        when(userService.getUserIdentityService()).thenReturn(userIdentityService);
         when(userService.getUserProfileService()).thenReturn(mock(UserProfileService.class));
         when(userService.getBannedUserService()).thenReturn(mock(BannedUserService.class));
         return new BisqEasyOpenTradeChannelService(persistenceService, mock(NetworkService.class), userService);
