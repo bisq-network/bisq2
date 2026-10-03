@@ -67,7 +67,10 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
         return message.getTradeId().equals(trade.getId());
     }
 
+    // A party is identified by its key. The confidential message layer has checked that the sender signed the message
+    // with the key of the sender's network ID. The addresses of a network ID are routing data, which change when the
+    // peer adds a transport, so the network ID which we stored for the peer can have other addresses.
     private static boolean isSentByTradePeer(TradeMessage message, Trade<?, ?, ?> trade) {
-        return message.getSender().equals(trade.getPeer().getNetworkId());
+        return message.getSender().getId().equals(trade.getPeer().getNetworkId().getId());
     }
 }
