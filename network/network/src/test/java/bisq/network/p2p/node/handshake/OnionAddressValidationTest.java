@@ -17,8 +17,10 @@
 
 package bisq.network.p2p.node.handshake;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,5 +32,27 @@ class OnionAddressValidationTest {
             "7200000, true", "7200001, false"})
     void acceptsOnlyDatesWithinTwoHours(long offset, boolean accepted) {
         assertThat(OnionAddressValidation.isDateWithinTolerance(NOW + offset, NOW)).isEqualTo(accepted);
+    }
+
+    @Test
+    void rejectsADifferenceWhichOverflowsToLongMinValue() {
+        assertThat(OnionAddressValidation.isDateWithinTolerance(Long.MIN_VALUE + NOW, NOW)).isFalse();
+    }
+
+    @Test
+    void rejectsAnExactLongMinValueDifference() {
+        assertThat(OnionAddressValidation.isDateWithinTolerance(0, Long.MIN_VALUE)).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {Long.MIN_VALUE, Long.MAX_VALUE})
+    void rejectsExtremePeerDates(long date) {
+        assertThat(OnionAddressValidation.isDateWithinTolerance(date, NOW)).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {Long.MIN_VALUE, Long.MAX_VALUE})
+    void acceptsTheSameDateAtTheLongLimits(long now) {
+        assertThat(OnionAddressValidation.isDateWithinTolerance(now, now)).isTrue();
     }
 }
