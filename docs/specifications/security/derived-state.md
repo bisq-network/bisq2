@@ -42,6 +42,32 @@ Reason for rule 2: the node kept the ID of every pruned message until shutdown. 
 within minutes, so the IDs grew without a limit. The stores keep at most 1 000 pruned requests for their observers, but
 this copy was not bounded.
 
+## Rate limit of chat authors
+
+A node limits how many public chat messages and reactions of one author it accepts: at most 3 within one second, 30
+within one minute, 120 within one hour and 300 within one day. A message which exceeds a limit flags its author. The
+node ignores the messages of a flagged author, and the node of a moderator reports a newly flagged author to the
+moderators.
+
+1. The node keeps the times of the messages of an author only while one of them is within the last day. An older time
+   counts in no limit. When the node processes a message, it removes the authors without such a time, at most once per
+   minute.
+2. The node keeps the times of at most 10 000 authors. When it needs to keep the times of one more author, it first
+   removes the author whose times it used least recently.
+3. For each author, the node keeps at most the newest 301 times, which is one more than the highest limit. A limit
+   counts the times within its window, and these are always the newest times, so more times do not change a decision.
+4. An author stays flagged at most while the node keeps the times of the author. The author loses the flag when the node
+   removes the times (rules 1 and 2), or when a later message of the author no longer exceeds a limit.
+
+Rules 1 and 3 do not change a decision. Rule 2 can make the node forget the recent times of an author when more than
+10 000 authors send messages within one day. The node then counts this author like a new author, so the limit can only
+become less strict for this author. The limits work per author and do not stop an attacker who uses many authors, so
+rule 2 does not weaken the protection against such an attacker.
+
+Reason: the node kept the times and the flag of every author until shutdown. A new author needs only a key pair, so an
+attacker could grow both without a limit. Honest chat traffic has far fewer than 10 000 authors per day. With the bound
+of rule 2 and the 301 times of rule 3, the times take at most about 70 MB.
+
 ## Compatibility
 
 The rules change no network message and no persisted data. They change only state in memory.
