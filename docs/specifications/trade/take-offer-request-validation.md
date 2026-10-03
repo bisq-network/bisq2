@@ -4,7 +4,7 @@ The maker verifies a take offer request before signing the contract. A trade is 
 
 The maker verifies, in this order:
 
-- the sender's user profile is not one the maker ignores (`OFFER_NOT_AVAILABLE` otherwise, which does not tell the taker the reason);
+- the sender's user profile is not one the maker ignores (`NO_MATCHING_OFFER_FOUND` otherwise: the maker rejects an ignored taker with the same failure, text and throw site as a request for an offer which it does not have, so the rejection does not tell the taker the reason);
 - the contract offer is one of the maker's own offers: it must equal, by full value equality, an offer in an offerbook message whose author is the offer's maker; if the offer is no longer in the offerbook, a stored trade which carries the maker's contract signature and an equal offer is accepted, so that a second taker of the same offer is not rejected after the first trade was archived (`NO_MATCHING_OFFER_FOUND` otherwise);
 - the contract's price specification equals the offer's price specification, see `bisq-easy-contract-price.md`;
 - the message sender is the taker of the contract and the sender's public key matches the taker's network ID;
