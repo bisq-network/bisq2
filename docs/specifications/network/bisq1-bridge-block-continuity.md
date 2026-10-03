@@ -39,6 +39,22 @@ create unbounded overlapping bulk requests. Coalescing must not drop demand: the
 rule in [../bonded-roles/registration.md](../bonded-roles/registration.md) applies to every catch-up
 trigger, not only to the bonded-role revalidation which depends on it.
 
+## Items which the oracle cannot process
+
+The oracle creates authorized data from the items of the bridge: proof-of-burn and bonded-reputation
+data from each transaction of a BSQ block, and burningman data from each burningman block. An item can
+break a rule of this data, for example a proof of burn with the amount 0.
+
+- The oracle skips such an item and logs it. It processes the other transactions of the block and the
+  other blocks of the response.
+- A skipped item is not a failed snapshot. The completed snapshot advances the cursor, and a live block
+  advances it as a block without the item would.
+
+Reason: the bridge returns the same items for the same heights, so a retry fails at the same item.
+Without the rule, one invalid item stops the catch-up and keeps the cursor at its height, and the
+oracle publishes no data of later blocks. The data of the skipped item is not published, which is the
+same result as with the retries.
+
 ## Stream termination
 
 Abnormal stream errors and normal stream completion are treated as loss of continuity. The oracle

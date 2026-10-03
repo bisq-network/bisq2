@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,6 +67,20 @@ class BridgeSubscriptionGrpcServiceTest {
         service.initialize();
 
         assertThat(service.finishedRequestCount).hasValue(1);
+    }
+
+    // The bridge sends the same item again with every retry. An item which the node cannot process must not stop the
+    // catch-up (see docs/specifications/network/bisq1-bridge-block-continuity.md).
+    @Test
+    void itemWhichCannotBeProcessedIsSkippedAndTheCatchUpCompletes() {
+        TestService service = TestService.withItems(List.of(1, 2, 3), 2);
+
+        service.initialize();
+
+        assertThat(service.handledItems).containsExactly(1, 3);
+        assertThat(service.calls).endsWith("snapshot-complete");
+        assertThat(service.finishedRequestCount).hasValue(1);
+        service.shutdown();
     }
 
     @Test
@@ -145,6 +160,9 @@ class BridgeSubscriptionGrpcServiceTest {
         private final CountDownLatch secondRequest = new CountDownLatch(1);
         private final CountDownLatch subscriptionAttempted = new CountDownLatch(1);
         private final AtomicBoolean firstRequestExecution = new AtomicBoolean(true);
+        private final List<Integer> handledItems = new ArrayList<>();
+        private List<Integer> items = List.of(1);
+        private Optional<Integer> failingItem = Optional.empty();
         private final RuntimeException requestFailure;
         private final boolean blockFirstRequest;
         private final boolean blockFirstRequestExecutionAcquisition;
@@ -172,6 +190,13 @@ class BridgeSubscriptionGrpcServiceTest {
 
         private static TestService withBlockedRequestExecutionAcquisition() {
             return new TestService(null, false, true);
+        }
+
+        private static TestService withItems(List<Integer> items, int failingItem) {
+            TestService service = new TestService();
+            service.items = items;
+            service.failingItem = Optional.of(failingItem);
+            return service;
         }
 
         // Runs directly after the state transition which acquires the execution, so blocking here reproduces the
@@ -209,12 +234,16 @@ class BridgeSubscriptionGrpcServiceTest {
             if (currentRequestCount == 2) {
                 secondRequest.countDown();
             }
-            return List.of(1);
+            return items;
         }
 
         @Override
-        protected void handleResponse(Integer ignored) {
+        protected void handleResponse(Integer item) {
             calls.add("response");
+            if (failingItem.filter(item::equals).isPresent()) {
+                throw new IllegalArgumentException("The item breaks a rule of the published data");
+            }
+            handledItems.add(item);
         }
 
         @Override
