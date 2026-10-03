@@ -70,6 +70,14 @@ final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
                             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             Map<Market, MarketPrice> map = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(protosOfKnownMarkets,
                             MarketPrice::fromProto)
+                    // An earlier version could persist a price which is not positive. We skip only that price.
+                    .filter(e -> {
+                        boolean hasPositivePrice = e.getValue().hasPositivePrice();
+                        if (!hasPositivePrice) {
+                            log.warn("We skip a persisted market price which is not positive. market={}", e.getKey());
+                        }
+                        return hasPositivePrice;
+                    })
                     .collect(Collectors.toMap(
                             e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
                             Map.Entry::getValue));

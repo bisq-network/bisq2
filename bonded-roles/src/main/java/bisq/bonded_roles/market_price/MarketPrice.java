@@ -108,6 +108,15 @@ public final class MarketPrice implements NetworkProto {
         return System.currentTimeMillis() - timestamp < INVALID_AGE;
     }
 
+    /**
+     * A node uses only market prices with a positive price. It skips other prices where they enter the node, one by
+     * one. This is not checked in verify(): the oracle signs its market price data as a whole, so parsing has to keep
+     * every entry. See docs/specifications/bonded-roles/market-prices.md.
+     */
+    public boolean hasPositivePrice() {
+        return priceQuote.getValue() > 0;
+    }
+
     @Override
     public String toString() {
         return "MarketPrice{" +
