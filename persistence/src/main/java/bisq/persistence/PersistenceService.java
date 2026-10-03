@@ -169,6 +169,6 @@ public class PersistenceService {
                                         log.warn("Failed to persist");
                                     }
                                 })))
-                .thenApply(list -> true);
+                .thenApply(list -> list.stream().allMatch(Boolean::booleanValue));
     }
 }
