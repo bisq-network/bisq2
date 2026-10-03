@@ -36,7 +36,8 @@ ACK-requesting message), and how it applies a received `AckMessage` to the deliv
 5. **Each identity acknowledges on its own.** Each identity of a node acknowledges a message as a separate node would
    do. The node processes a decrypted message once for each decrypting key. It remembers the messages which it
    acknowledged by decrypting key and message ID, and sends no second `AckMessage` for a second copy of a message, for
-   example the copy which arrives over the second transport.
+   example the copy which arrives over the second transport. It remembers at most 10 000 acknowledged messages and
+   drops the oldest entry when it adds a new one beyond this limit.
 6. **AckMessages only for our own messages.** The node creates the delivery status of its own ACK-requesting message
    before it sends the message. It applies an `AckMessage` only to a delivery status which exists. An `AckMessage` for
    an unknown message ID changes nothing and creates no state, also no stored state.
@@ -57,6 +58,9 @@ ACK-requesting message), and how it applies a received `AckMessage` to the deliv
   to two user profiles and count the `AckMessage`s: one `AckMessage` means one node, two mean two nodes. The same holds
   for the deduplication of decrypted messages if it ignored the decrypting key, for message types whose content does
   not name the receiver key.
+- Rule 5: a second `AckMessage` for a message is harmless, because the sender ignores an `AckMessage` for a message
+  which it already marked as received. The limit only bounds the memory which peers can make the node use. 10 000
+  entries cover far more messages than a node receives between two copies of one message.
 - Rule 6: an `AckMessage` for an unknown ID created a stored delivery status in earlier versions. Anybody who knows a
   user profile could grow this store without a limit, and the node loads the store completely at every start.
 

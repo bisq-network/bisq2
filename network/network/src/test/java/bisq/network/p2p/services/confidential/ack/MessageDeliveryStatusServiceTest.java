@@ -157,6 +157,26 @@ class MessageDeliveryStatusServiceTest {
     }
 
     @Test
+    void ackedMessagesAreBoundedAndTheOldestIsDropped() {
+        int numMessages = MessageDeliveryStatusService.MAX_ACKED_MESSAGES + 5;
+        for (int i = 0; i < numMessages; i++) {
+            service.onDecryptedMessage(new TestAckRequestingMessage("message" + i, peerNetworkId, myNetworkIdA), KEY_ID_A);
+        }
+
+        assertEquals(MessageDeliveryStatusService.MAX_ACKED_MESSAGES, service.getNumAckedMessages());
+        verify(networkService, times(numMessages)).confidentialSend(any(), any(), any());
+
+        // The newest entry is still known, so its copy gets no second AckMessage
+        service.onDecryptedMessage(new TestAckRequestingMessage("message" + (numMessages - 1), peerNetworkId, myNetworkIdA), KEY_ID_A);
+        verify(networkService, times(numMessages)).confidentialSend(any(), any(), any());
+
+        // The oldest entry was dropped, so its copy gets a second AckMessage, which is harmless
+        service.onDecryptedMessage(new TestAckRequestingMessage("message0", peerNetworkId, myNetworkIdA), KEY_ID_A);
+        verify(networkService, times(numMessages + 1)).confidentialSend(any(), any(), any());
+        assertEquals(MessageDeliveryStatusService.MAX_ACKED_MESSAGES, service.getNumAckedMessages());
+    }
+
+    @Test
     void ackForAnUnknownMessageIdCreatesNoEntry() {
         service.onDecryptedMessage(new AckMessage("unknown"), KEY_ID_A);
 
