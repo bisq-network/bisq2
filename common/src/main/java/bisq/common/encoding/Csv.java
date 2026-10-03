@@ -20,9 +20,12 @@ package bisq.common.encoding;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class Csv {
+    private static final Pattern SIGNED_NUMBER = Pattern.compile("[-+][0-9][0-9.,]*%?");
+
     public static String toCsv(List<String> headers, List<List<String>> data) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < headers.size(); i++) {
@@ -48,10 +51,25 @@ public class Csv {
     }
 
     public static String escapeSpecialCharacters(String value) {
-        if (value.contains(",") || value.contains("\"") || value.contains("'")) {
+        value = neutralizeFormula(value);
+        if (value.contains(",") || value.contains("\"") || value.contains("'") ||
+                value.contains("\n") || value.contains("\r")) {
             value = value.replace("\"", "\"\"");
             value = "\"" + value + "\"";
         }
         return value;
+    }
+
+    // Spreadsheet applications run a cell which starts with =, +, -, @, tab or carriage return as a formula. Cells can
+    // contain text of trade peers, for example a payment account name or a chat text, so such a cell gets a leading
+    // apostrophe, which makes it text. Numbers with a sign, for example "-1.00%", stay readable as numbers.
+    private static String neutralizeFormula(String value) {
+        if (value.isEmpty()) {
+            return value;
+        }
+        char first = value.charAt(0);
+        boolean isFormulaStart = first == '=' || first == '@' || first == '\t' || first == '\r' ||
+                ((first == '-' || first == '+') && !SIGNED_NUMBER.matcher(value).matches());
+        return isFormulaStart ? "'" + value : value;
     }
 }
