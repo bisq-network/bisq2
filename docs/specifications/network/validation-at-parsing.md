@@ -42,6 +42,11 @@ message, so they cannot limit the memory which these steps need.
      is the store of witness bindings of the oracle node, which must not lose a binding (see
      [`../reputation/account-age.md`](../reputation/account-age.md#persisted-request-compatibility)).
    - A connection drops a message which the node cannot parse, and keeps the connection open (rule 6).
+   - A mediation request, an arbitration request and a message with the data of a dispute case skip a chat message
+     which the node cannot parse, and keep the other chat messages. The trade peers created these chat messages. A
+     node of an earlier version does not check the rules of this version when it receives a chat message, and it puts
+     all chat messages of the trade into its request. The node logs the type and the size of a skipped chat message,
+     and no received values.
 5. Checks which need the state of the node, not only the object, stay in the component which owns that state. For
    storage requests these are the stores. Examples: the admission of registered class names and MetaData (see
    [`storage-metadata.md`](storage-metadata.md)), the owner of a stored entry after a refresh, which replaces the
@@ -91,6 +96,10 @@ message, so they cannot limit the memory which these steps need.
   broadcast, a node of this version drops the message and keeps the connection (rule 6). Nodes of this version
   create only objects which follow the rules. Apart from the exception of rule 3, unmodified nodes of earlier versions
   do so as well, so only a modified client can create such an object.
+- An unmodified node of an earlier version can still pass on such an object inside an object which it creates itself.
+  Example: a trade peer with a modified client sends a chat message which breaks a rule of this version, and the node
+  of version 2.1.13 puts it into its mediation request. If the request failed as a whole, the mediator of this
+  version would not receive the request of an honest user. So the request skips the chat message (rule 4).
 - A node of an earlier version which cannot parse one entry of an inventory response drops the whole response (see
   [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#entries-which-a-node-cannot-parse)). A rule of this
   version cannot change this.

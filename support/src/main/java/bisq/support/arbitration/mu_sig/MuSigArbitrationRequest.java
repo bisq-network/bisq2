@@ -136,7 +136,11 @@ public final class MuSigArbitrationRequest implements
                     proto.getMediationResultSignature().toByteArray(),
                     UserProfile.fromProto(proto.getRequester()),
                     UserProfile.fromProto(proto.getPeer()),
-                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), MuSigOpenTradeMessage::fromProto)
+                    // The trade peers created the chat messages, and a node of an earlier version accepts a message which
+                    // breaks a rule of this version. Such a message is skipped, so that it does not make the whole
+                    // request unreadable.
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    MuSigOpenTradeMessage::fromProto)
                             .collect(Collectors.toList()),
                     NetworkId.fromProto(proto.getArbitratorNetworkId()));
         } catch (RuntimeException e) {

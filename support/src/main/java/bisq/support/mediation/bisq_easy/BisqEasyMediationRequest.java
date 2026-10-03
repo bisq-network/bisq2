@@ -131,7 +131,11 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
                     BisqEasyContract.fromProto(proto.getContract()),
                     UserProfile.fromProto(proto.getRequester()),
                     UserProfile.fromProto(proto.getPeer()),
-                    ProtobufUtils.fromProtoStream(proto.getChatMessagesList(), BisqEasyOpenTradeMessage::fromProto)
+                    // The trade peers created the chat messages, and a node of an earlier version accepts a message which
+                    // breaks a rule of this version. Such a message is skipped, so that it does not make the whole
+                    // request unreadable.
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    BisqEasyOpenTradeMessage::fromProto)
                             .collect(Collectors.toList()),
                     NetworkId.fromProto(proto.getMediatorNetworkId()));
         } catch (RuntimeException e) {
