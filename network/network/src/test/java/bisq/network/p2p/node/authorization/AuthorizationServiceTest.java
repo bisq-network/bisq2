@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -99,8 +100,9 @@ class AuthorizationServiceTest {
         var token = service.createToken(message, NetworkLoad.INITIAL_NETWORK_LOAD, "peer", 0, Feature.DEFAULT_FEATURES);
         assertInstanceOf(HashCashV2Token.class, token);
         var decoded = AuthorizationToken.fromProto(token.toProto(false));
-        assertTrue(service.isAuthorized(message, decoded, NetworkLoad.INITIAL_NETWORK_LOAD, "connection", "peer"));
-        assertFalse(service.isAuthorized(message, decoded, NetworkLoad.INITIAL_NETWORK_LOAD, "connection", "peer"));
+        Set<Integer> receivedMessageCounters = ConcurrentHashMap.newKeySet();
+        assertTrue(service.isAuthorized(message, decoded, NetworkLoad.INITIAL_NETWORK_LOAD, receivedMessageCounters, "peer"));
+        assertFalse(service.isAuthorized(message, decoded, NetworkLoad.INITIAL_NETWORK_LOAD, receivedMessageCounters, "peer"));
         assertThrows(IllegalArgumentException.class, () -> service.createToken(message,
                 NetworkLoad.INITIAL_NETWORK_LOAD, "peer", 1, List.of(Feature.AUTHORIZATION_HASH_CASH)));
     }

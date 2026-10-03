@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
@@ -32,8 +31,6 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
     public final static int DIFFICULTY_TOLERANCE = 50_000;
 
     private final HashCashProofOfWorkService proofOfWorkService;
-    // Keep track of message counter per connection to avoid reuse of pow
-    private final Map<String, Set<Integer>> receivedMessageCountersByConnectionId = new ConcurrentHashMap<>();
     @Getter
     private final Metrics metrics = new Metrics();
 
@@ -74,25 +71,17 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
                                 Optional<NetworkLoad> previousNetworkLoad,
-                                String connectionId,
+                                Set<Integer> receivedMessageCounters,
                                 String myAddress) {
         HashCashV2Token hashCashV2Token = (HashCashV2Token) authorizationToken;
         ProofOfWork proofOfWork = hashCashV2Token.getProofOfWork();
         int messageCounter = hashCashV2Token.getMessageCounter();
 
-        // Verify that pow is not reused
-        Set<Integer> receivedMessageCounters;
-        if (receivedMessageCountersByConnectionId.containsKey(connectionId)) {
-            receivedMessageCounters = receivedMessageCountersByConnectionId.get(connectionId);
-            if (receivedMessageCounters.contains(messageCounter)) {
-                log.warn("Invalid receivedMessageCounters. We received the proofOfWork for that message already.");
-                return false;
-            }
-        } else {
-            receivedMessageCounters = new HashSet<>();
-            receivedMessageCountersByConnectionId.put(connectionId, receivedMessageCounters);
+        // The connection owns this concurrent set, including counters used by its handshake.
+        if (!receivedMessageCounters.add(messageCounter)) {
+            log.warn("We received the proof of work for that message counter already.");
+            return false;
         }
-        receivedMessageCounters.add(messageCounter);
 
         // Verify payload. Unlike HashCashTokenService, we accept no payload computed with serialize(): nodes of all
         // versions which support HASH_CASH_V2 use the hash of serializeForHash().

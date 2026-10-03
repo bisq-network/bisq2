@@ -98,7 +98,7 @@ class ConnectionHandshakeSizeLimitTest {
         when(keyBundle.getTorKeyPair()).thenReturn(mock(TorKeyPair.class));
         AuthorizationService authorizationService = mock(AuthorizationService.class);
         when(authorizationService.createToken(any(), any(), anyString(), anyInt(), anyCollection())).thenReturn(token);
-        when(authorizationService.isAuthorized(any(), any(), any(), anyString(), anyString())).thenAnswer(invocation -> {
+        when(authorizationService.isAuthorized(any(), any(), any(), any(), anyString())).thenAnswer(invocation -> {
             // Authorization and response handling must run after the parse releases its permits.
             assertThat(budget.getAvailableBytes()).isEqualTo(budget.getBudget());
             return true;

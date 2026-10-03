@@ -40,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -143,7 +144,7 @@ class MessageCostAuthorizationTest {
                 receivedToken,
                 NETWORK_LOAD,
                 Optional.empty(),
-                "connectionId",
+                ConcurrentHashMap.newKeySet(),
                 RECEIVER_ADDRESS);
     }
 
