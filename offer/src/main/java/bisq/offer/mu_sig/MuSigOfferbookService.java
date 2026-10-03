@@ -25,6 +25,7 @@ import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -57,7 +58,7 @@ public class MuSigOfferbookService implements Service, DataService.Listener {
 
     public CompletableFuture<Boolean> initialize() {
         networkService.getDataService().ifPresent(dataService ->
-                dataService.getAuthenticatedData().forEach(this::onAuthenticatedDataAdded));
+                StartupReplay.forEach(dataService.getAuthenticatedData(), this::onAuthenticatedDataAdded));
         networkService.addDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }

@@ -35,6 +35,7 @@ import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -109,9 +110,9 @@ public class MuSigMediatorService extends RateLimitedPersistenceClient<MuSigMedi
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
+        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
+                        .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
+                this::onMessage);
         networkService.addConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }

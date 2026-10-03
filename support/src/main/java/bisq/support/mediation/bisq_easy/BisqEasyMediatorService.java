@@ -29,6 +29,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -86,9 +87,9 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
+        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
+                        .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
+                this::onMessage);
         networkService.addConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }

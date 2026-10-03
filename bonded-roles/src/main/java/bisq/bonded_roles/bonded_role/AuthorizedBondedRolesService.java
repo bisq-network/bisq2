@@ -26,6 +26,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
@@ -174,30 +175,30 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private void applyInitialData() {
         // Start with the AuthorizedOracleNode
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode)
-                        .forEach(this::onAuthorizedDataAdded));
+                .ifPresent(dataService -> StartupReplay.forEach(dataService.getAuthorizedData()
+                                .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode),
+                        this::onAuthorizedDataAdded));
 
         // Then we process the AuthorizedBondedRole of type ORACLE_NODE
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                        .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() == BondedRoleType.ORACLE_NODE)
-                        .forEach(this::onAuthorizedDataAdded));
+                .ifPresent(dataService -> StartupReplay.forEach(dataService.getAuthorizedData()
+                                .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
+                                .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() == BondedRoleType.ORACLE_NODE),
+                        this::onAuthorizedDataAdded));
 
         // Then we process the other AuthorizedBondedRoles
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                        .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() != BondedRoleType.ORACLE_NODE)
-                        .forEach(this::onAuthorizedDataAdded));
+                .ifPresent(dataService -> StartupReplay.forEach(dataService.getAuthorizedData()
+                                .filter(e -> e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
+                                .filter(e -> ((AuthorizedBondedRole) e.getAuthorizedDistributedData()).getBondedRoleType() != BondedRoleType.ORACLE_NODE),
+                        this::onAuthorizedDataAdded));
 
         // Now we can apply other data
         networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAuthorizedData()
-                        .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode))
-                        .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole))
-                        .forEach(this::onAuthorizedDataAdded));
+                .ifPresent(dataService -> StartupReplay.forEach(dataService.getAuthorizedData()
+                                .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedOracleNode))
+                                .filter(e -> !(e.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)),
+                        this::onAuthorizedDataAdded));
 
         networkService.addDataServiceListener(this);
     }
@@ -393,7 +394,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                     "We apply all data from the network store to the listener. " +
                     "listener={}", listener);
             networkService.getDataService()
-                    .ifPresent(dataService -> dataService.getAuthorizedData().forEach(listener::onAuthorizedDataAdded));
+                    .ifPresent(dataService -> StartupReplay.forEach(dataService.getAuthorizedData(),
+                            listener::onAuthorizedDataAdded));
         }
     }
 
@@ -415,7 +417,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @VisibleForTesting
     void reprocess() {
         Set<AuthorizedData> clone = new HashSet<>(failedAuthorizedData);
-        clone.forEach(this::onAuthorizedDataAdded);
+        // As at startup, one failing item does not stop the others nor the stop of the scheduler below
+        StartupReplay.forEach(clone.stream(), this::onAuthorizedDataAdded);
         if (reprocessScheduler != null) {
             reprocessScheduler.stop();
             reprocessScheduler = null;
