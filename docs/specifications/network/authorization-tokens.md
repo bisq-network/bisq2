@@ -28,6 +28,14 @@ The declared type must match the token body. There is no fallback for unknown to
 Keep the legacy protobuf field and enum numbers allocated; do not reuse them for another
 method. Keeping these identifiers does not permit legacy authorization of other messages.
 
+## Handshake request dates
+
+A responder accepts a handshake request only if its date is within two hours of the receiver's current time.
+Both boundaries are included. This rule applies to every transport and authorization method, including a
+legacy handshake token. Extreme timestamp values outside this window must be rejected.
+
+The date check limits how long a request can be used again, while allowing differences between the clocks of peers.
+
 ## Handshake requests of earlier versions
 
 The releases up to 2.1.13 create the token of their handshake request with the legacy `HASH_CASH` method. They do not

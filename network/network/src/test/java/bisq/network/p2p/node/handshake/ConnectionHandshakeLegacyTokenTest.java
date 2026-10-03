@@ -27,6 +27,7 @@ import bisq.network.p2p.node.Capability;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2Token;
 import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2TokenService;
@@ -39,6 +40,8 @@ import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -51,6 +54,7 @@ import java.util.Set;
 
 import static bisq.network.p2p.message.NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE;
 import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
+import static bisq.network.p2p.node.ConnectionException.Reason.ONION_ADDRESS_VERIFICATION_FAILED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -128,6 +132,29 @@ class ConnectionHandshakeLegacyTokenTest {
         assertThatThrownBy(() -> handshake(socket).onSocket(new NetworkLoad()))
                 .isInstanceOfSatisfying(ConnectionException.class,
                         exception -> assertThat(exception.getReason()).isEqualTo(AUTHORIZATION_FAILED));
+        assertThat(sent.size()).isZero();
+        verify(socket).close();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true, 0", "false, 0", "true, -9223372036854775808", "false, -9223372036854775808",
+            "true, 9223372036854775807", "false, 9223372036854775807"})
+    void responderRejectsDatesOutsideTheClockTolerance(boolean legacy, long signatureDate) throws Exception {
+        ConnectionHandshake.Request request = new ConnectionHandshake.Request(peersCapability, Optional.empty(),
+                new NetworkLoad(), signatureDate);
+        bisq.network.protobuf.NetworkEnvelope envelope;
+        if (legacy) {
+            envelope = legacyEnvelope(request, myAddress, DIFFICULTY_OF_EARLIER_VERSIONS);
+        } else {
+            AuthorizationToken token = authorizationService.createToken(request, NetworkLoad.INITIAL_NETWORK_LOAD,
+                    myAddress, 0, Feature.DEFAULT_FEATURES);
+            envelope = new NetworkEnvelope(token, request).toProto(false);
+        }
+        Socket socket = socketWhichReceives(envelope);
+
+        assertThatThrownBy(() -> handshake(socket).onSocket(new NetworkLoad()))
+                .isInstanceOfSatisfying(ConnectionException.class,
+                        exception -> assertThat(exception.getReason()).isEqualTo(ONION_ADDRESS_VERIFICATION_FAILED));
         assertThat(sent.size()).isZero();
         verify(socket).close();
     }

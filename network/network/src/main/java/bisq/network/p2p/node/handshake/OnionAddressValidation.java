@@ -54,6 +54,11 @@ public class OnionAddressValidation {
     }
 
     static boolean isDateWithinTolerance(long date, long now) {
-        return Math.abs(now - date) <= MAX_SIG_AGE;
+        try {
+            long clockOffset = Math.subtractExact(now, date);
+            return clockOffset >= -MAX_SIG_AGE && clockOffset <= MAX_SIG_AGE;
+        } catch (ArithmeticException e) {
+            return false;
+        }
     }
 }
