@@ -21,6 +21,8 @@ processes it again when it processes the next message of a trade.
    the number or the order of the pending messages.
 3. A log entry about a pending message names the type of the message and the trade ID. It does not contain the
    content of the message. The trade ID is sanitized for the log, because its sender controls it.
+   The same applies when the state machine of a trade handles a message: its log entries and exception messages
+   name only the type of the event, also when the trade is in a final state or the handler fails.
 
 ## Reasons
 
