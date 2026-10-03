@@ -333,9 +333,10 @@ public class ReportToModeratorTable {
                         tooltip.setText(item.getMessage());
                         message.setTooltip(tooltip);
 
+                        // Any user can send a report, so its text must not create a link in the popup.
                         icon.setOnAction(e -> new Popup()
                                 .headline(Res.get("authorizedRole.moderator.table.message.popup.headline"))
-                                .information(item.getMessage())
+                                .information(StringUtils.neutralizeHyperlinkMarkers(item.getMessage()))
                                 .actionButtonText(Res.get("action.copyToClipboard"))
                                 .onAction(() -> ClipboardUtil.copyToClipboard(item.getMessage()))
                                 .show());

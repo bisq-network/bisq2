@@ -23,6 +23,7 @@ import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
 import bisq.api.web_socket.WebSocketService;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.qr.QrCodeDisplay;
@@ -123,7 +124,9 @@ public class BisqConnectController implements Controller {
     }
 
     void onRevokeClient(BisqConnectView.ClientListItem item) {
-        new Popup().warning(Res.get("settings.bisqConnect.clients.revoke.confirm", item.getClientName()))
+        // The paired client sends its name, so the name must not create a link in the popup.
+        String clientName = StringUtils.neutralizeHyperlinkMarkers(item.getClientName());
+        new Popup().warning(Res.get("settings.bisqConnect.clients.revoke.confirm", clientName))
                 .actionButtonText(Res.get("settings.bisqConnect.clients.revoke"))
                 .onAction(() -> {
                     item.getClientId().ifPresent(clientId -> {
