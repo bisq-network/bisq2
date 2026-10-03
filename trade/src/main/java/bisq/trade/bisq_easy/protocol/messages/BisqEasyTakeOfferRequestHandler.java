@@ -83,7 +83,8 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 .flatMap(channel -> channel.getChatMessages().stream())
                 .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
                 .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
-                .filter(offer -> offer.getMakerNetworkId().equals(trade.getMyIdentity().getNetworkId()))
+                // By key: the address map of our NetworkId can change after we published the offer
+                .filter(offer -> offer.getMakerNetworkId().getId().equals(trade.getMyIdentity().getNetworkId().getId()))
                 .collect(Collectors.toList());
         Optional<BisqEasyOffer> matchingOfferInChannel = myOffers.stream()
                 .filter(offer -> offer.equals(takersOffer))

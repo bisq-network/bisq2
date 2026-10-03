@@ -66,6 +66,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
                 .thenReturn(offerbookChannels);
 
         NetworkId myNetworkId = mock(NetworkId.class);
+        when(myNetworkId.getId()).thenReturn(MY_PROFILE_ID);
         takersOffer = mock(BisqEasyOffer.class);
         when(takersOffer.getMakerNetworkId()).thenReturn(myNetworkId);
         when(takersOffer.getMakersUserProfileId()).thenReturn(MY_PROFILE_ID);
@@ -93,6 +94,19 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         addOfferbookMessage(MY_PROFILE_ID, takersOffer);
 
         // The remaining checks run against deep stubs and fail; the offer match itself has passed.
+        assertThrows(RuntimeException.class, () -> handler.verify(message));
+        verify(tradeService, never()).hasSignedTradeWithOffer(any());
+    }
+
+    // The address map of our NetworkId can change after we published the offer, for example when we add a transport.
+    // The offer is still ours: we compare the key.
+    @Test
+    void verifyMatchesOurOfferAfterOurAddressesChanged() {
+        NetworkId makerNetworkIdAtPublishing = mock(NetworkId.class);
+        when(makerNetworkIdAtPublishing.getId()).thenReturn(MY_PROFILE_ID);
+        when(takersOffer.getMakerNetworkId()).thenReturn(makerNetworkIdAtPublishing);
+        addOfferbookMessage(MY_PROFILE_ID, takersOffer);
+
         assertThrows(RuntimeException.class, () -> handler.verify(message));
         verify(tradeService, never()).hasSignedTradeWithOffer(any());
     }
