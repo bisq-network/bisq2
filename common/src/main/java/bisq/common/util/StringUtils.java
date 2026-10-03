@@ -44,6 +44,9 @@ public class StringUtils {
     public static final String DOT_ELLIPSIS = "...";
     public static final String UNICODE_ELLIPSIS = "…";
 
+    private static final String HYPERLINK_MARKER_WORD = "HYPERLINK";
+    private static final Pattern HYPERLINK_MARKER_PATTERN = Pattern.compile("\\[" + HYPERLINK_MARKER_WORD + ":(.*?)]");
+
     // Strips every character that could forge or reorder a log line before truncating, so an
     // attacker-controlled value (e.g. a peer-supplied id) cannot inject a fake record. \p{Cntrl}
     // alone misses the C1 controls (U+0085 NEL) and the format/bidi category (U+202E), so the
@@ -158,12 +161,12 @@ public class StringUtils {
     // and add the hyperlink to the hyperlinks list.
     // E.g. ...some text: [HYPERLINK:https://bisq.community] .... -> ...some text: https://bisq.community [1] ...
     public static String extractHyperlinks(String message, List<String> hyperlinks) {
-        Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)]");
-        Matcher matcher = pattern.matcher(message);
+        Matcher matcher = HYPERLINK_MARKER_PATTERN.matcher(message);
         while (matcher.find()) {
             String link = matcher.group(1);
             hyperlinks.add(link);
-            message = message.replaceFirst(pattern.toString(), String.format("'%s' [%d]", link, hyperlinks.size()));
+            message = message.replaceFirst(HYPERLINK_MARKER_PATTERN.pattern(),
+                    String.format("'%s' [%d]", link, hyperlinks.size()));
         }
         return message;
     }
