@@ -91,6 +91,17 @@ class BisqEasyTradeServiceMessageSenderTest {
         assertThat(trade.getState()).isEqualTo(BisqEasyTradeState.FAILED_AT_PEER);
     }
 
+    // The maker published the offer, which holds the network ID that we store for the peer, before it added a
+    // transport. Its messages carry its key with the new addresses.
+    @Test
+    void messageOfTheTradePeerUnderOtherAddressesReachesTheProtocol() {
+        startServiceWithTrade();
+
+        service.onMessage(errorReport(withOtherAddress(peer, 2002)));
+
+        assertThat(trade.getState()).isEqualTo(BisqEasyTradeState.FAILED_AT_PEER);
+    }
+
     @Test
     void queuedMessageOfAThirdPartyIsDroppedWhenItIsProcessed() {
         // The protocol of the trade does not exist yet, so the service keeps the message for later
@@ -129,5 +140,11 @@ class BisqEasyTradeServiceMessageSenderTest {
         Address address = Address.from("127.0.0.1", port);
         return new NetworkId(new AddressByTransportTypeMap(Map.of(address.getTransportType(), address)),
                 new PubKey(KeyGeneration.generateDefaultEcKeyPair().getPublic(), keyId));
+    }
+
+    private static NetworkId withOtherAddress(NetworkId networkId, int port) {
+        Address otherAddress = Address.from("127.0.0.1", port);
+        return new NetworkId(new AddressByTransportTypeMap(Map.of(otherAddress.getTransportType(), otherAddress)),
+                networkId.getPubKey());
     }
 }

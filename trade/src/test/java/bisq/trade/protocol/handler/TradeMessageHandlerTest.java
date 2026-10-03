@@ -55,6 +55,16 @@ class TradeMessageHandlerTest {
         assertThatCode(() -> new Handler(trade).verifyInternal(message)).doesNotThrowAnyException();
     }
 
+    // The addresses of a network ID are routing data. The peer can have added a transport since we stored its network
+    // ID, or it sends under another address map of its key.
+    @Test
+    void messageOfTheTradePeerUnderOtherAddressesIsAccepted() {
+        TradeMessage message = message(TRADE_ID, withOtherAddress(peer, 2002));
+
+        assertThat(TradeMessageHandler.isMessageOfTradePeer(message, trade)).isTrue();
+        assertThatCode(() -> new Handler(trade).verifyInternal(message)).doesNotThrowAnyException();
+    }
+
     @Test
     void messageOfAThirdPartyWithTheTradeIdIsRejected() {
         TradeMessage message = message(TRADE_ID, thirdParty);
@@ -91,6 +101,12 @@ class TradeMessageHandlerTest {
         Address address = Address.from("127.0.0.1", port);
         return new NetworkId(new AddressByTransportTypeMap(Map.of(address.getTransportType(), address)),
                 new PubKey(KeyGeneration.generateDefaultEcKeyPair().getPublic(), keyId));
+    }
+
+    private static NetworkId withOtherAddress(NetworkId networkId, int port) {
+        Address otherAddress = Address.from("127.0.0.1", port);
+        return new NetworkId(new AddressByTransportTypeMap(Map.of(otherAddress.getTransportType(), otherAddress)),
+                networkId.getPubKey());
     }
 
     private static final class Handler extends TradeMessageHandler<Trade<?, ?, ?>, TradeMessage> {

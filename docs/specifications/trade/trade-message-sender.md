@@ -15,7 +15,9 @@ to MuSig.
 ## Rules
 
 1. A node passes a trade message to the protocol of a trade only if the message carries the ID of this trade and the
-   sender of the message is the trade peer of this trade.
+   sender of the message is the trade peer of this trade. The node compares the ID of the sender's network ID with the
+   ID of the network ID which it stored for the trade peer. The address maps of the two network IDs can differ (see
+   [identity by key](../user/identity-by-key.md)).
 2. A node drops every other trade message for an existing trade. Such a message does not change the trade, and the
    node does not keep it for later. The node logs the type of the message and no content.
 3. The node checks rule 1 when it processes the message. A message which arrived before the trade existed is kept,
@@ -33,6 +35,9 @@ to MuSig.
   log files and trade exports.
 - Rule 3: the node cannot check a message before the trade exists. So the check must run when the message is
   processed, not only when it arrives.
+- Rule 1 compares keys because the layer for confidential messages binds the sender to its key, not to its addresses.
+  The network ID which a node stored for its trade peer comes from the offer or from the take offer request. The peer
+  can have added a transport since then, and its messages then carry its key with another address map.
 
 ## Compatibility
 
