@@ -28,7 +28,8 @@ a trade message also applies to MuSig.
    - the requester and the peer of a mediation request are the two parties of the contract, and the receiver of the
      request is the mediator of the contract;
    - the mediator shows a mediation case only if the mediator of its trade chat channel is the mediator of the
-     contract.
+     contract;
+   - a user cannot delete a profile while a private chat channel uses the identity of this profile.
 3. A node sends its trade messages under the network ID which its trade peer stored for it. The taker sends under its
    network ID in the contract. The maker sends under the network ID to which the taker addressed the take offer request.
    An honest taker addresses it to the maker's network ID in the offer. The node sends from the identity of the trade,
@@ -47,6 +48,10 @@ a trade message also applies to MuSig.
   contract holds the profile which the taker saw when it took the offer. A comparison of whole profiles hid the case
   after the mediator had changed its terms, its statement or its addresses, so the mediator did not see an honest
   request.
+- Deleting a profile: a private chat channel keeps the copy of the user identity with which it was created. Editing the
+  terms or the statement replaces the user identity with one of the same key. A comparison of whole user identities did
+  not find the channel, so the user could delete an edited profile which an open trade still used, unless the profile
+  also had a message in a public channel.
 - Rule 3: nodes of version 2.1.13 compare the sender of a trade message with the network ID which they stored for the
   trade peer, including the address map. The handler throws if the two differ, and the state machine then fails the
   trade. Rule 3 keeps such trades working, because the sender is the value which the peer stored.

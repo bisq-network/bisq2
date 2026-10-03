@@ -223,10 +223,12 @@ public class ChatService implements Service {
     }
 
     public boolean isIdentityUsed(UserIdentity userIdentity) {
+        // A channel keeps the copy of the user identity with which it was created. Editing a profile replaces the user
+        // identity with one of the same ID, so the identities are compared by their IDs, the hash of their key.
         boolean usedInAnyPrivateChannel = Stream.concat(bisqEasyOpenTradeChannelService.getChannels().stream(),
                         getTwoPartyPrivateChatChannelServices()
                                 .flatMap(c -> c.getChannels().stream()))
-                .anyMatch(c -> c.getMyUserIdentity().equals(userIdentity));
+                .anyMatch(c -> c.getMyUserIdentity().getId().equals(userIdentity.getId()));
 
         boolean usedInAnyMessage = Stream.concat(bisqEasyOfferbookChannelService.getChannels().stream()
                                 .flatMap(c -> c.getChatMessages().stream()),
