@@ -148,8 +148,10 @@ public abstract class StateMainChain3b<C extends StateMainChain3b.Controller<?, 
 
         private String createWarningMessage() {
             String txValue = model.getBtcBalance().get();
-            String address = model.getBitcoinPaymentData();
-            String txId = model.getPaymentProof();
+            // The buyer sends the address and the seller sends the transaction ID. A value of the trade peer must not
+            // create a link in the popup.
+            String address = StringUtils.neutralizeHyperlinkMarkers(model.getBitcoinPaymentData());
+            String txId = StringUtils.neutralizeHyperlinkMarkers(model.getPaymentProof());
 
             if (StringUtils.isEmpty(txValue)) {
                 return Res.get("bisqEasy.tradeState.info.phase3b.button.next.noOutputForAddress", address, txId);
