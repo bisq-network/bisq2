@@ -112,7 +112,7 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         try {
             int startBlockHeight = prepareHistoricalRequest();
             historicalRequestPrepared = true;
-            doRequest(startBlockHeight).forEach(this::handleResponse);
+            doRequest(startBlockHeight).forEach(this::handleResponseOrSkip);
             onHistoricalRequestComplete();
             historicalRequestSuccessful = true;
 
@@ -150,6 +150,18 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     protected abstract List<T> doRequest(int startBlockHeight) throws UnresolvableProtobufException;
 
     protected abstract void handleResponse(T data);
+
+    // The node skips an item which it cannot process, for example one whose data breaks a rule of the data which the
+    // oracle node publishes. The bridge sends the same item again with every retry, so a failure would stop the catch-up
+    // and keep the cursor at the height of the item (see docs/specifications/network/bisq1-bridge-block-continuity.md).
+    protected void handleResponseOrSkip(T data) {
+        try {
+            handleResponse(data);
+        } catch (RuntimeException e) {
+            log.warn("Skipping a {} from the Bisq 1 bridge which this node cannot process",
+                    data.getClass().getSimpleName(), e);
+        }
+    }
 
     protected void onHistoricalRequestComplete() {
     }

@@ -72,7 +72,7 @@ public class BurningmanGrpcService extends BridgeSubscriptionGrpcService<Burning
             @Override
             public void onNext(bisq.bridge.protobuf.BurningmanBlockDto proto) {
                 try {
-                    handleResponse(BurningmanBlockDto.fromProto(proto));
+                    handleResponseOrSkip(BurningmanBlockDto.fromProto(proto));
                 } catch (UnresolvableProtobufException e) {
                     throw new RuntimeException(e);
                 }
