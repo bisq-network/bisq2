@@ -68,11 +68,14 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract(), "Takers contract must not be null");
         BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer(), "Offer from takers contract must not be null");
 
-        if (serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(message.getSender().getId())) {
+        // We reject a taker whom we have ignored with the same exception, from the same line, as a request for an offer
+        // which we do not have. The rejection, including its stack trace, goes to the taker, and must not tell them
+        // that they are ignored.
+        boolean isTakerIgnored = serviceProvider.getUserService().getUserProfileService()
+                .isChatUserIgnored(message.getSender().getId());
+        if (isTakerIgnored) {
             log.warn("We reject the take offer request because we have ignored the taker's user profile. " +
-                    "We do not disclose that to the taker but send a generic rejection reason. takersOffer={}", takersOffer);
-            throw new TradeProtocolException("The maker has rejected the take offer request because the offer is not available anymore.",
-                    TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+                    "We do not disclose that to the taker. takersOffer={}", takersOffer);
         }
 
         // The author of an offerbook message is the maker of its offer (BisqEasyOfferbookMessage.verify())
@@ -85,10 +88,10 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         Optional<BisqEasyOffer> matchingOfferInChannel = myOffers.stream()
                 .filter(offer -> offer.equals(takersOffer))
                 .findAny();
-        if (matchingOfferInChannel.isEmpty()) {
+        if (isTakerIgnored || matchingOfferInChannel.isEmpty()) {
             // If we do not find the offer it might be that another user has taken the offer recently and the offer has
             // been removed in the meantime. For this case we check if we find the offer in a trade we have signed.
-            boolean hasOfferInTrades = tradeService.hasSignedTradeWithOffer(takersOffer);
+            boolean hasOfferInTrades = !isTakerIgnored && tradeService.hasSignedTradeWithOffer(takersOffer);
             boolean closeMyOfferWhenTaken = serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get();
             if (hasOfferInTrades) {
                 log.info("The offer has not been found in open offers, but we found another trade with the same offer.\n" +
