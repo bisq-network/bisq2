@@ -43,10 +43,15 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Only the maker publishes its offer in the offerbook, so that nobody can show the offer of another user
+// Only the maker publishes its offer in the offerbook, so that nobody can show the offer of another user.
+// An offer is published only in the channel of its market, so that it is not shown in the offerbook of another market.
 class BisqEasyOfferbookMessageTest {
+    private static final Market BTC_EUR = new Market("BTC", "EUR", "Bitcoin", "Euro");
+    private static final Market BTC_USD = new Market("BTC", "USD", "Bitcoin", "US Dollar");
+
     private final NetworkId maker = createNetworkId(1001);
     private final NetworkId otherUser = createNetworkId(1002);
 
@@ -90,8 +95,59 @@ class BisqEasyOfferbookMessageTest {
         assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOfferbookMessage.fromProto(proto));
     }
 
+    @Test
+    void messageInTheChannelOfTheMarketOfItsOfferCanBeCreatedAndParsed() {
+        BisqEasyOfferbookMessage message = message(BisqEasyOfferbookChannel.createId(BTC_EUR),
+                maker.getPubKey().getId(),
+                Optional.of(offer(maker)));
+
+        BisqEasyOfferbookMessage parsed = assertDoesNotThrow(
+                () -> BisqEasyOfferbookMessage.fromProto(message.toProto(false)));
+        assertEquals(message, parsed);
+    }
+
+    @Test
+    void messageWithAnOfferInTheChannelOfAnotherMarketCannotBeCreated() {
+        assertThrows(IllegalArgumentException.class,
+                () -> message(BisqEasyOfferbookChannel.createId(BTC_USD),
+                        maker.getPubKey().getId(),
+                        Optional.of(offer(maker))));
+    }
+
+    @Test
+    void receivedMessageWithAnOfferInTheChannelOfAnotherMarketFailsAtParsing() {
+        bisq.chat.protobuf.ChatMessage proto = message(maker.getPubKey().getId(), Optional.of(offer(maker)))
+                .toProto(false);
+        bisq.chat.protobuf.ChatMessage protoInTheChannelOfAnotherMarket = proto.toBuilder()
+                .setChannelId(BisqEasyOfferbookChannel.createId(BTC_USD))
+                .build();
+
+        assertDoesNotThrow(() -> BisqEasyOfferbookMessage.fromProto(proto));
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyOfferbookMessage.fromProto(protoInTheChannelOfAnotherMarket));
+    }
+
+    @Test
+    void messageWithoutOfferCanBeInTheChannelOfAnyMarket() {
+        for (Market market : List.of(BTC_EUR, BTC_USD)) {
+            BisqEasyOfferbookMessage message = message(BisqEasyOfferbookChannel.createId(market),
+                    otherUser.getPubKey().getId(),
+                    Optional.empty());
+
+            assertDoesNotThrow(() -> BisqEasyOfferbookMessage.fromProto(message.toProto(false)));
+        }
+    }
+
+    // The message is in the channel of the market of its offer. A message without offer is in the channel of BTC_EUR.
     private static BisqEasyOfferbookMessage message(String authorUserProfileId, Optional<BisqEasyOffer> offer) {
-        return new BisqEasyOfferbookMessage("channelId",
+        Market market = offer.map(BisqEasyOffer::getMarket).orElse(BTC_EUR);
+        return message(BisqEasyOfferbookChannel.createId(market), authorUserProfileId, offer);
+    }
+
+    private static BisqEasyOfferbookMessage message(String channelId,
+                                                    String authorUserProfileId,
+                                                    Optional<BisqEasyOffer> offer) {
+        return new BisqEasyOfferbookMessage(channelId,
                 authorUserProfileId,
                 offer,
                 Optional.of("text"),
@@ -107,7 +163,7 @@ class BisqEasyOfferbookMessageTest {
     private static BisqEasyOffer offer(NetworkId maker, PriceSpec priceSpec) {
         return new BisqEasyOffer(maker,
                 Direction.BUY,
-                new Market("BTC", "EUR", "Bitcoin", "Euro"),
+                BTC_EUR,
                 new BaseSideFixedAmountSpec(100_000),
                 priceSpec,
                 List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
