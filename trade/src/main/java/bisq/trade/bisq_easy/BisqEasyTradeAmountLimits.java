@@ -197,9 +197,7 @@ public class BisqEasyTradeAmountLimits {
                                                                          Market market,
                                                                          Monetary fiatAmount) {
         return marketPriceService.findMarketPriceQuote(market)
-                .filter(fiatPriceQuote -> fiatPriceQuote.getValue() > 0)
                 .flatMap(fiatPriceQuote -> marketPriceService.findMarketPriceQuote(MarketRepository.getUSDBitcoinMarket())
-                        .filter(usdPriceQuote -> usdPriceQuote.getValue() > 0)
                         .map(usdPriceQuote -> getRequiredReputationScore(fiatPriceQuote, usdPriceQuote, fiatAmount)));
     }
 
