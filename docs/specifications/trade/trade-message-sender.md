@@ -18,7 +18,8 @@ to MuSig.
 2. A node drops every other trade message for an existing trade. Such a message does not change the trade, and the
    node does not keep it for later. The node logs the type of the message and no content.
 3. The node checks rule 1 when it processes the message. A message which arrived before the trade existed is kept,
-   and the node checks it when it processes the message again.
+   and the node checks it when it processes the message again. [Pending trade messages](pending-trade-messages.md)
+   defines how the node keeps such messages.
 4. The take offer request creates the trade at the maker, so the maker has no trade peer to compare with. The checks
    of the take offer process apply to it instead.
 
