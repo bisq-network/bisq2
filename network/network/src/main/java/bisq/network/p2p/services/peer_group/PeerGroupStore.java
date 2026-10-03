@@ -39,7 +39,7 @@ final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
     @Getter(AccessLevel.PACKAGE)
     private final Map<Address, Peer> persistedPeersByAddress = new ConcurrentHashMap<>();
 
-    private PeerGroupStore(Map<Address, Peer> persistedPeersByAddress) {
+    PeerGroupStore(Map<Address, Peer> persistedPeersByAddress) {
         this.persistedPeersByAddress.putAll(persistedPeersByAddress);
     }
 

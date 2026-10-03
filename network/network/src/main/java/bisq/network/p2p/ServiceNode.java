@@ -182,7 +182,13 @@ public class ServiceNode {
 
         transportService = TransportService.create(transportType, nodeConfig.getTransportConfig());
         nodesById = new NodesById(banList, nodeConfig, keyBundleService, transportService, networkLoadSnapshot, authorizationService);
-        peerGroupService = new PeerGroupService(persistenceService, transportType, peerGroupManagerConfig.getPeerGroupConfig(), seedNodeAddresses, banList);
+        peerGroupService = new PeerGroupService(persistenceService,
+                transportType,
+                peerGroupManagerConfig.getPeerGroupConfig(),
+                seedNodeAddresses,
+                banList,
+                peerGroupManagerConfig.getMaxReported(),
+                peerGroupManagerConfig.getMaxPersisted());
     }
 
 
