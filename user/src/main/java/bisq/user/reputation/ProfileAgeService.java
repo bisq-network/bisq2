@@ -166,6 +166,11 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     }
 
     @Override
+    protected ByteArray getUserProfileKey(String userProfileId) {
+        return UserProfile.getProfileAgeKey(userProfileId);
+    }
+
+    @Override
     public long calculateScore(AuthorizedTimestampData data) {
         // We do not apply any reputation score to the profile age
         return 0;

@@ -189,6 +189,11 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
     }
 
     @Override
+    protected ByteArray getUserProfileKey(String userProfileId) {
+        return UserProfile.getSignedWitnessKey(userProfileId);
+    }
+
+    @Override
     public long calculateScore(AuthorizedSignedWitnessData data) {
         return !data.isCurrentVersion() || claimRegistry.hasConflict(data.getWitnessNullifier())
                 ? 0
@@ -247,7 +252,7 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
                 .filter(data -> data.getProfileId().equals(userProfileId))
                 .filter(data -> !claimRegistry.hasConflict(data.getWitnessNullifier()))
                 .min(java.util.Comparator.comparingLong(AuthorizedSignedWitnessData::getDateBucket));
-        ByteArray userProfileKey = new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+        ByteArray userProfileKey = getUserProfileKey(userProfileId);
 
         if (bestData.isEmpty()) {
             dataSetByHash.remove(userProfileKey);

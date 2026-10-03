@@ -155,6 +155,9 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     protected abstract ByteArray getUserProfileKey(UserProfile userProfile);
 
+    // The same key as getUserProfileKey(UserProfile) of the profile with this ID
+    protected abstract ByteArray getUserProfileKey(String userProfileId);
+
     protected void removeFromPendingDataSet(T data) {
         ByteArray dataKey = getDataKey(data);
         pendingDataSetByHash.computeIfPresent(dataKey, (ignored, dataSet) -> {
