@@ -36,8 +36,11 @@ of a message. The framing is the format which marks where a message starts and w
    | `InventoryResponse` | about 2 MB with `HASH_CASH_V2` | the inventory size limit of the responder, 2 000 000 bytes by default; the requester accepts up to twice its own inventory size limit |
 
    A node uses `HASH_CASH_V2` for initial handshake requests. Its proof of work contains a
-   20 byte hash of the message. Legacy `HASH_CASH` tokens are rejected; see
-   [Authorization tokens](authorization-tokens.md).
+   20 byte hash of the message, and the largest envelope of a handshake request has about 950 bytes. A node of a
+   release up to 2.1.13 uses the legacy `HASH_CASH` method for its handshake request. The proof of work of this
+   method contains a copy of the request, and the largest envelope is the one of the table, with about 1 770 bytes.
+   Legacy `HASH_CASH` tokens are rejected for all other messages; see
+   [Authorization tokens](authorization-tokens.md#handshake-requests-of-earlier-versions).
 
    A change which makes a message type larger must keep its largest message below the size limit. Examples are a new
    field of a filter entry, a higher number of filter entries, and a higher default inventory size limit.
@@ -159,8 +162,8 @@ of a message. The framing is the format which marks where a message starts and w
 - Nodes of earlier versions accept an inventory response of up to twice their own inventory size limit. A responder of
   an earlier version with an inventory size limit above about 4 100 KB sends a full response above the size limit.
   A node of this version then closes the connection. The default limit is 2 000 KB.
-- Legacy `HASH_CASH` authorization is rejected, including legacy handshake tokens. See
-  [Authorization tokens](authorization-tokens.md#compatibility).
+- Legacy `HASH_CASH` authorization is rejected, except for the handshake request of a node of a release up to
+  2.1.13. See [Authorization tokens](authorization-tokens.md#compatibility).
 
 ## Known limitations
 
