@@ -72,9 +72,9 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             }
             storeFileManager.renameTempFileToCurrentFile();
         } catch (CouldNotSerializePersistableStore e) {
-            log.error("Couldn't serialize {}", persistableStore, e);
+            throw e;
         } catch (Exception e) {
-            log.error("Couldn't write persistable store to disk.", e);
+            throw new IllegalStateException("Couldn't write persistable store to " + storeFilePath, e);
         }
     }
 
