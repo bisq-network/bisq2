@@ -68,13 +68,14 @@ public abstract class Fsm<M extends FsmModel> {
                 State currentState = model.getState();
                 checkNotNull(currentState, "currentState must not be null");
                 if (currentState.isFinalState()) {
-                    log.warn("We have reached the final state and do not allow further state transition. New event was: {}", event);
+                    log.warn("We have reached the final state and do not allow further state transition. New event was: {}",
+                            describe(event));
                     return;
                 }
                 log.info("Start transition from currentState {}", currentState);
                 Class<? extends Event> eventClass = event.getClass();
                 var transitionMapEntriesForEvent = findTransitionMapEntriesForEvent(eventClass);
-                checkArgument(!transitionMapEntriesForEvent.isEmpty(), "No transition found for given event " + event);
+                checkArgument(!transitionMapEntriesForEvent.isEmpty(), "No transition found for given event " + describe(event));
                 Optional<Transition> transition = findTransition(currentState, transitionMapEntriesForEvent);
                 if (transition.isPresent()) {
                     Transition selectedTransition = transition.orElseThrow();
@@ -127,7 +128,7 @@ public abstract class Fsm<M extends FsmModel> {
                             .forEach(e -> model.eventQueue.add(event));
                 }
             } catch (Exception exception) {
-                log.error("Error at handling {}.", event, exception);
+                log.error("Error at handling {}.", describe(event), exception);
                 FsmException fsmException = new FsmException(exception, event);
                 // In case of an exception we fire the FsmErrorEvent to trigger an error state.
                 // We apply that only if the event which triggered the exception was not the FsmErrorEvent itself
@@ -268,5 +269,11 @@ public abstract class Fsm<M extends FsmModel> {
         public TransitionBuilder<M> then() {
             return new TransitionBuilder<>(fsm);
         }
+    }
+
+    // Events can be network messages, for example trade messages with the payment account data of the peer. Users
+    // share their log files, and exception messages reach the logs and error reports. So we name only the type.
+    private static String describe(Event event) {
+        return event == null ? "null" : event.getClass().getSimpleName();
     }
 }
