@@ -52,6 +52,7 @@ public final class CommonPublicChatMessageReaction extends ChatMessageReaction i
     @Override
     public void verify() {
         super.verify();
+        verifyPublicReactionId();
         // The profile ID must be the ID of a public key, so that it names the reacting user (see getOwnerPubKeyHash())
         checkArgument(PubKey.isId(userProfileId), "userProfileId is not the ID of a public key");
     }

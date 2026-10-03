@@ -36,6 +36,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode
 public abstract class ChatMessageReaction implements NetworkProto {
+    // The highest reaction ID of a public reaction (CommonPublicChatMessageReaction, BisqEasyOfferbookMessageReaction).
+    // Nodes store, relay and serve a public reaction to all nodes. Version 2.1.13 rejects a reaction with a higher ID
+    // at parsing, because it accepts only the ordinals of its 6 reactions. A 2.1.13 node which receives such a
+    // reaction closes the connection, and it drops the whole inventory response which contains it. So a node of this
+    // version must not accept, store or relay one.
+    // The bound can be raised when no supported version rejects higher IDs at parsing.
+    // A private reaction has no upper bound (see verify()), because only its receiver gets it.
+    public static final int MAX_PUBLIC_REACTION_ID = 5;
+
     protected final String id;
     protected final String userProfileId;
     private final String chatChannelId;
@@ -67,6 +76,12 @@ public abstract class ChatMessageReaction implements NetworkProto {
         NetworkDataValidation.validateProfileId(userProfileId);
         NetworkDataValidation.validateText(chatChannelId, 200); // For private channels we combine user profile IDs for channelId
         NetworkDataValidation.validateDate(date);
+    }
+
+    // The verify() of a public reaction calls it
+    protected void verifyPublicReactionId() {
+        checkArgument(reactionId <= MAX_PUBLIC_REACTION_ID,
+                "The reaction id of a public reaction must not be higher than " + MAX_PUBLIC_REACTION_ID);
     }
 
     public bisq.chat.protobuf.ChatMessageReaction.Builder getChatMessageReactionBuilder(boolean serializeForHash) {
