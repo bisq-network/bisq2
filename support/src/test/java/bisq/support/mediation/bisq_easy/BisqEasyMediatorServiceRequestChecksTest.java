@@ -259,27 +259,48 @@ class BisqEasyMediatorServiceRequestChecksTest {
     }
 
     @Test
-    void rejectsRequestWithSharedMessageIds() {
-        BannedUserService bannedUserService = mock(BannedUserService.class);
-        BisqEasyMediationRequest accepted = createRequest(contract, requester, peer,
-                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "I never paid")));
-        BisqEasyMediationRequest rejected = createRequest(contract, requester, peer,
-                List.of(createMessage("m1", requester, "hi"), createMessage("m1", peer, "I never paid")));
+    void importsMessagesWhichShareAnId() {
+        // The peer can send a message under the ID of a message of the requester. Each is marked by its content.
+        BisqEasyOpenTradeMessage requestersMessage = createMessage("m1", requester, "hi");
+        BisqEasyOpenTradeMessage peersMessage = createMessage("m1", peer, "I never paid");
+        BisqEasyMediationRequest request = createRequest(contract, requester, peer,
+                List.of(requestersMessage, peersMessage));
 
-        assertTrue(BisqEasyMediatorService.verifyMediationRequest(accepted, bannedUserService, cases, Optional.empty()).isPresent());
-        assertTrue(BisqEasyMediatorService.verifyMediationRequest(rejected, bannedUserService, cases, Optional.empty()).isEmpty());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(request,
+                mock(BannedUserService.class), cases, Optional.empty()).isPresent());
+        assertEquals(List.of(requestersMessage, peersMessage),
+                BisqEasyMediatorService.getMessagesToImport(request, Set.of()));
     }
 
     @Test
-    void rejectsTranscriptWithLocalNoticeTypes() {
-        BannedUserService bannedUserService = mock(BannedUserService.class);
-        BisqEasyMediationRequest withLeave = createRequest(contract, requester, peer,
-                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "left", ChatMessageType.LEAVE)));
-        BisqEasyMediationRequest withChatRulesWarning = createRequest(contract, requester, peer,
-                List.of(createMessage("m1", requester, "hi"), createMessage("m2", peer, "rules", ChatMessageType.CHAT_RULES_WARNING)));
+    void skipsForwardedMessagesTheMediatorCannotAccept() {
+        // The requester's channel can hold messages the requester did not choose, from the peer or from the mediator.
+        BisqEasyOpenTradeMessage requestersMessage = createMessage("m1", requester, "hi");
+        BisqEasyOpenTradeMessage peersLeaveMessage = createMessage("m2", peer, "left", ChatMessageType.LEAVE);
+        String otherTradeId = TradeId.fromContract(
+                TestContracts.contractOfOffer("other-offer", requester, peer, mediator));
+        BisqEasyMediationRequest request = createRequest(contract, requester, peer, List.of(requestersMessage,
+                peersLeaveMessage,
+                createMessage(otherTradeId, BisqEasyOpenTradeChannel.createId(tradeId), "m3", peer, "other trade",
+                        ChatMessageType.TEXT),
+                createMessage(tradeId, BisqEasyOpenTradeChannel.createId(otherTradeId), "m4", peer, "other channel",
+                        ChatMessageType.TEXT),
+                createMessage("m5", mediator, "mediator"),
+                createMessage("m6", peer, "rules", ChatMessageType.CHAT_RULES_WARNING)));
 
-        assertTrue(BisqEasyMediatorService.verifyMediationRequest(withLeave, bannedUserService, cases, Optional.empty()).isPresent());
-        assertTrue(BisqEasyMediatorService.verifyMediationRequest(withChatRulesWarning, bannedUserService, cases, Optional.empty()).isEmpty());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(request,
+                mock(BannedUserService.class), cases, Optional.empty()).isPresent());
+        assertEquals(List.of(requestersMessage, peersLeaveMessage),
+                BisqEasyMediatorService.getMessagesToImport(request, Set.of()));
+    }
+
+    @Test
+    void skippedMessagesAreNotMarked() {
+        // A forwarded copy of the mediator's own message would mark the mediator's message in its channel.
+        cases.add(new BisqEasyMediationCase(createRequest(contract, requester, peer,
+                List.of(createMessage("m1", mediator, "Please send the proof of payment")))));
+
+        assertEquals(Set.of(), BisqEasyMediatorService.getUnverifiedChatMessageKeys(tradeId, cases));
     }
 
     @Test
@@ -385,9 +406,18 @@ class BisqEasyMediatorServiceRequestChecksTest {
                                                    String text,
                                                    ChatMessageType type) {
         String messageTradeId = TradeId.fromContract(contract);
+        return createMessage(messageTradeId, BisqEasyOpenTradeChannel.createId(messageTradeId), id, sender, text, type);
+    }
+
+    private BisqEasyOpenTradeMessage createMessage(String messageTradeId,
+                                                   String channelId,
+                                                   String id,
+                                                   UserProfile sender,
+                                                   String text,
+                                                   ChatMessageType type) {
         return new BisqEasyOpenTradeMessage(messageTradeId,
                 id,
-                BisqEasyOpenTradeChannel.createId(messageTradeId),
+                channelId,
                 sender,
                 mediator.getId(),
                 mediator.getNetworkId(),
