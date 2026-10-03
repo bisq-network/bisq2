@@ -116,6 +116,7 @@ class InventoryRequestPolicy {
     }
 
     public void onAllConnectionsLost() {
+        ignoredAddresses.clear();
         log.warn("We have lost all connections. " +
                 "We reset initialInventoryRequestsCompleted to false so that we trigger " +
                 "a new inventory request once we are reconnected.");
