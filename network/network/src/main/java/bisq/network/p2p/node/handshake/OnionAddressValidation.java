@@ -39,7 +39,7 @@ public class OnionAddressValidation {
             return false;
         }
 
-        if (!isDateWithinTolerance(date)) {
+        if (!isDateWithinTolerance(date, System.currentTimeMillis())) {
             log.warn("{}'s proof failed because the signatureDate=[{}] " +
                             "is outside the 2 hour tolerance. The current time is [{}].",
                     peerAddress.getFullAddress(),
@@ -53,7 +53,12 @@ public class OnionAddressValidation {
         return TorSignatureUtil.verify(pubKey, message.getBytes(), signature.get());
     }
 
-    private static boolean isDateWithinTolerance(long date) {
-        return Math.abs(System.currentTimeMillis() - date) <= MAX_SIG_AGE;
+    static boolean isDateWithinTolerance(long date, long now) {
+        try {
+            long clockOffset = Math.subtractExact(now, date);
+            return clockOffset >= -MAX_SIG_AGE && clockOffset <= MAX_SIG_AGE;
+        } catch (ArithmeticException e) {
+            return false;
+        }
     }
 }

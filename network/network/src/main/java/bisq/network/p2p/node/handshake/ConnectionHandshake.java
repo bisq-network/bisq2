@@ -30,6 +30,7 @@ import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.authorization.LegacyHandshakeToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
 import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
@@ -37,6 +38,7 @@ import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundle;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -47,7 +49,6 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
@@ -62,8 +63,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public final class ConnectionHandshake {
-    // We tolerate up to 2 hours difference in clocks to peer
-    private static final long MAX_CLOCK_OFFSET = TimeUnit.HOURS.toMillis(2);
     @Getter
     private final String id = StringUtils.createUid();
     private final BanList banList;
@@ -310,15 +309,13 @@ public final class ConnectionHandshake {
                         "Request NetworkEnvelope protobuf is null");
             }
             long ts = System.currentTimeMillis();
-            NetworkEnvelope requestNetworkEnvelope = parseMemoryBudget.parse(requestMessage,
-                    bytes -> NetworkEnvelope.fromProto(NetworkEnvelopeSocket.parse(bytes)));
+            ReceivedRequestEnvelope requestEnvelope = parseMemoryBudget.parse(requestMessage,
+                    ConnectionHandshake::parseRequestEnvelope);
             long deserializeTime = System.currentTimeMillis() - ts;
 
-            requestNetworkEnvelope.verifyVersion();
-
-            if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof Request request)) {
-                throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
-                        requestNetworkEnvelope);
+            if (!(requestEnvelope.payload() instanceof Request request)) {
+                throw new ConnectionException("RequestEnvelope.message() not type of Request. Type=" +
+                        requestEnvelope.payload().getClass().getSimpleName());
             }
             Capability requestersCapability = request.getCapability();
             Address peerAddress = requestersCapability.getAddress();
@@ -331,18 +328,29 @@ public final class ConnectionHandshake {
             Address myAddress = capability.getAddress();
             // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the AuthorizationToken.
             String connectionId = StringUtils.createUid();
-            boolean isAuthorized = authorizationService.isAuthorized(request,
-                    requestNetworkEnvelope.getAuthorizationToken(),
-                    NetworkLoad.INITIAL_NETWORK_LOAD,
-                    connectionId,
-                    myAddress.getFullAddress());
-            if (!isAuthorized) {
-                throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
+            if (requestEnvelope.legacyToken().isPresent()) {
+                // The exception message does not contain the token: its payload is the serialized request
+                if (!authorizationService.isLegacyHandshakeRequestAuthorized(request,
+                        requestEnvelope.legacyToken().get(),
+                        myAddress.getFullAddress())) {
+                    throw new ConnectionException(AUTHORIZATION_FAILED,
+                            "Authorization of inbound connection request with a legacy token failed.");
+                }
+            } else {
+                AuthorizationToken requestToken = requestEnvelope.token().orElseThrow();
+                boolean isAuthorized = authorizationService.isAuthorized(request,
+                        requestToken,
+                        NetworkLoad.INITIAL_NETWORK_LOAD,
+                        connectionId,
+                        myAddress.getFullAddress());
+                if (!isAuthorized) {
+                    throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestToken);
+                }
             }
 
             long signatureDate = request.getSignatureDate();
             long now = System.currentTimeMillis();
-            if (Math.abs(now - signatureDate) > MAX_CLOCK_OFFSET) {
+            if (!OnionAddressValidation.isDateWithinTolerance(signatureDate, now)) {
                 throw new ConnectionException(ONION_ADDRESS_VERIFICATION_FAILED, "Peer's signature date is more than 2 hours off from the current time of our clock: " + new Date(signatureDate));
             }
 
@@ -352,7 +360,7 @@ public final class ConnectionHandshake {
             }
 
             log.debug("Clients capability {}, load={}", requestersCapability, request.getNetworkLoad());
-            connectionMetrics.onReceived(requestNetworkEnvelope, deserializeTime);
+            connectionMetrics.onReceived(request, requestMessage.length, deserializeTime);
 
             // We reply with the same version as the peer has to avoid pow hash check failures
             Capability responseCapability = Capability.withVersion(capability, requestersCapability.getVersion());
@@ -383,5 +391,31 @@ public final class ConnectionHandshake {
 
     public void shutdown() {
         // todo (Critical) close pending requests but do not close sockets
+    }
+
+    // The parts of the envelope of a received handshake request. Exactly one of the two tokens is present. A
+    // NetworkEnvelope cannot hold the legacy HASH_CASH token of the handshake request of a node of a version up to
+    // 2.1.13, because AuthorizationToken.fromProto rejects the legacy token for every message.
+    private record ReceivedRequestEnvelope(EnvelopePayloadMessage payload,
+                                           Optional<AuthorizationToken> token,
+                                           Optional<LegacyHandshakeToken> legacyToken) {
+    }
+
+    private static ReceivedRequestEnvelope parseRequestEnvelope(byte[] message)
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
+        bisq.network.protobuf.NetworkEnvelope proto = NetworkEnvelopeSocket.parse(message);
+        // Before the conversion, as for the messages of an established connection
+        NetworkEnvelope.verifyVersion(proto);
+        bisq.network.protobuf.AuthorizationToken tokenProto = proto.getAuthorizationToken();
+        if (LegacyHandshakeToken.hasLegacyBody(tokenProto)) {
+            LegacyHandshakeToken legacyToken = LegacyHandshakeToken.fromProto(tokenProto);
+            return new ReceivedRequestEnvelope(EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()),
+                    Optional.empty(),
+                    Optional.of(legacyToken));
+        }
+        NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
+        return new ReceivedRequestEnvelope(networkEnvelope.getEnvelopePayloadMessage(),
+                Optional.of(networkEnvelope.getAuthorizationToken()),
+                Optional.empty());
     }
 }

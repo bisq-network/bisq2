@@ -215,12 +215,12 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
         return DigestUtil.hash(message.serializeForHash());
     }
 
-    private byte[] getChallenge(String peerAddress, int messageCounter) {
+    public static byte[] getChallenge(String peerAddress, int messageCounter) {
         return DigestUtil.sha256(ByteArrayUtils.concat(peerAddress.getBytes(Charsets.UTF_8),
                 BigInteger.valueOf(messageCounter).toByteArray()));
     }
 
-    private double calculateDifficulty(double costFactor, NetworkLoad networkLoad) {
+    public static double calculateDifficulty(double costFactor, NetworkLoad networkLoad) {
         double messageCostFactor = MathUtils.bounded(MIN_MESSAGE_COST, 1, costFactor);
         double load = MathUtils.bounded(MIN_LOAD, 1, networkLoad.getLoad());
         double difficulty = TARGET_DIFFICULTY * messageCostFactor * load * networkLoad.getDifficultyAdjustmentFactor();
