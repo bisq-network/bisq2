@@ -60,6 +60,11 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     private final BisqEasyOpenTradeChannelStore persistableStore = new BisqEasyOpenTradeChannelStore();
     @Getter
     private final Persistence<BisqEasyOpenTradeChannelStore> persistence;
+    // Anybody can send messages without offer for made-up trade IDs, and such a message never gets a channel. So the
+    // number of pending messages is bounded, and the oldest is dropped (see pending-trade-messages.md). The set keeps
+    // the arrival order; additions are synchronized on this service.
+    @VisibleForTesting
+    static final int MAX_PENDING_MESSAGES = 100;
     private final Set<BisqEasyOpenTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
 
     public BisqEasyOpenTradeChannelService(PersistenceService persistenceService,
@@ -305,9 +310,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         // Check if there are any reactions that should be added to existing messages
         processQueuedReactions();
 
-        if (pendingMessages.contains(message)) {
-            log.info("Removing message from pendingMessages. message={}", message);
-            pendingMessages.remove(message);
+        if (pendingMessages.remove(message)) {
+            log.info("Removed message from pendingMessages. tradeId={}", StringUtils.sanitizeForLog(message.getTradeId()));
         }
     }
 
@@ -333,8 +337,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
             // We ignore that and do not re-open the channel.
             log.warn("We received the first message for a new channel without an offer. " +
                     "We add that message to pendingMessages for re-processing when we receive the next message. " +
-                    "Message={}", message);
-            pendingMessages.add(message);
+                    "tradeId={}", StringUtils.sanitizeForLog(message.getTradeId()));
+            addPendingMessage(message);
             return Optional.empty();
         }
     }
@@ -380,6 +384,24 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
 
     private boolean allowSendLeaveMessage(BisqEasyOpenTradeChannel channel, UserProfile userProfile) {
         return channel.getUserProfileIdsOfSendingLeaveMessage().contains(userProfile.getId());
+    }
+
+    private synchronized void addPendingMessage(BisqEasyOpenTradeMessage message) {
+        if (pendingMessages.contains(message)) {
+            return;
+        }
+        if (pendingMessages.size() >= MAX_PENDING_MESSAGES) {
+            BisqEasyOpenTradeMessage oldest = pendingMessages.iterator().next();
+            pendingMessages.remove(oldest);
+            log.warn("We drop the oldest pending message because the limit of {} pending messages is reached. tradeId={}",
+                    MAX_PENDING_MESSAGES, StringUtils.sanitizeForLog(oldest.getTradeId()));
+        }
+        pendingMessages.add(message);
+    }
+
+    @VisibleForTesting
+    int getNumPendingMessages() {
+        return pendingMessages.size();
     }
 
     private void processPendingMessages(String tradeId) {
