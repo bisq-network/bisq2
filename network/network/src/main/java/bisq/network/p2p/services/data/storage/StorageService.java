@@ -399,7 +399,7 @@ public class StorageService {
     // Get or create stores
     /* --------------------------------------------------------------------- */
 
-    public CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeKey) {
+    public synchronized CompletableFuture<AuthenticatedDataStorageService> getOrCreateAuthenticatedDataStore(String storeKey) {
         if (isStoreKeyNotAllowed(storeKey, AUTHENTICATED_DATA_STORE)) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
         }
@@ -413,15 +413,15 @@ public class StorageService {
             AuthenticatedDataStorageService.Listener listener = createAuthenticatedDataStoreListener();
             storageService.addListener(listener);
             authenticatedDataStoresListeners.put(storeKey, listener);
-            authenticatedDataStores.put(storeKey, storageService);
             storageService.readPersisted();
+            authenticatedDataStores.put(storeKey, storageService);
             return CompletableFuture.completedFuture(storageService);
         } else {
             return CompletableFuture.completedFuture(authenticatedDataStores.get(storeKey));
         }
     }
 
-    public CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeKey) {
+    public synchronized CompletableFuture<MailboxDataStorageService> getOrCreateMailboxDataStore(String storeKey) {
         if (isStoreKeyNotAllowed(storeKey, MAILBOX_DATA_STORE)) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
         }
@@ -458,8 +458,8 @@ public class StorageService {
 
             storageService.addListener(listener);
             mailboxStoresListeners.put(storeKey, listener);
-            mailboxStores.put(storeKey, storageService);
             storageService.readPersisted();
+            mailboxStores.put(storeKey, storageService);
             return CompletableFuture.completedFuture(storageService);
 
 
@@ -468,7 +468,7 @@ public class StorageService {
         }
     }
 
-    public CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeKey) {
+    public synchronized CompletableFuture<AppendOnlyDataStorageService> getOrCreateAppendOnlyDataStore(String storeKey) {
         if (isStoreKeyNotAllowed(storeKey, APPEND_ONLY_DATA_STORE)) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("Unsupported storeKey"));
         }
@@ -487,8 +487,8 @@ public class StorageService {
 
             storageService.addListener(listener);
             appendOnlyDataStoresListeners.put(storeKey, listener);
-            appendOnlyDataStores.put(storeKey, storageService);
             storageService.readPersisted();
+            appendOnlyDataStores.put(storeKey, storageService);
             return CompletableFuture.completedFuture(storageService);
         } else {
             return CompletableFuture.completedFuture(appendOnlyDataStores.get(storeKey));
