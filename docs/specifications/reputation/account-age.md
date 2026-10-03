@@ -170,6 +170,10 @@ with a public domain or salt, does not prevent enumeration. Publishing the SHA-2
 the Bisq 1 HASH160 construction is also forbidden because applying RIPEMD-160 would recreate the
 public witness hash.
 
+The oracle logs authorization requests for account age and signed witness. A log entry may name the Bisq 2
+profile ID, but not the witness hash, the Bisq 1 public key or the signature, alone or together with the profile ID.
+Operators share logs, and these values would link the Bisq 2 profile to the Bisq 1 account.
+
 The one-day bucket removes exact timestamp equality but provides limited resistance to correlation,
 especially when a profile publishes both account-age and signed-witness dates. The nullifier
 prevents passive observers who know only public Bisq 1 data from performing the direct

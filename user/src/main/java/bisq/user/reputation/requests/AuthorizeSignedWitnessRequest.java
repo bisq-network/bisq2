@@ -46,10 +46,15 @@ public final class AuthorizeSignedWitnessRequest implements MailboxMessage, Exte
     public static final int MAX_ACCOUNT_INPUT_LENGTH = 4096;
     public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, AuthorizeSignedWitnessRequest.class.getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
+    // The witness hash, key and signature identify the Bisq 1 account. The oracle logs the request, and the log must not
+    // link the Bisq 2 profile to the Bisq 1 account.
+    @ToString.Exclude
     private final String hashAsHex;
     private final long accountAgeWitnessDate;
     private final long witnessSignDate;
+    @ToString.Exclude
     private final String pubKeyBase64;
+    @ToString.Exclude
     private final String signatureBase64;
     private final int protocolVersion;
     @ToString.Exclude
