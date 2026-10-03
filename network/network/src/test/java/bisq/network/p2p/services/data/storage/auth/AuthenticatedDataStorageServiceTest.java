@@ -723,6 +723,35 @@ class AuthenticatedDataStorageServiceTest {
         assertSame(legacy, peerStore.getPersistableStore().getMap().get(add.getStorageKey()));
     }
 
+    // A peer can send the replaced add request again and again. The store rejects it by its sequence number before it
+    // verifies the signature, which is the most expensive check.
+    @Test
+    void addWhichLegacyRemovalReplacedIsRejectedBeforeItsSignatureIsVerified()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest add = withoutSignatureV2(
+                AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair));
+        assertTrue(ownerStore.add(add).isSuccess());
+        assertTrue(peerStore.add(add).isSuccess());
+        RemoveAuthenticatedDataRequest legacy = withoutSignatureV2(
+                RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair), 2);
+        assertTrue(peerStore.remove(legacy).isSuccess());
+        AddAuthenticatedDataRequest copyWithInvalidSignature = new AddAuthenticatedDataRequest(
+                add.getAuthenticatedSequentialData(),
+                SignatureUtil.sign(new byte[]{1}, ownerKeyPair.getPrivate()),
+                add.getSignaturePubKeyEncoded(),
+                add.getSignaturePublicKey(),
+                new byte[0],
+                0);
+        assertTrue(copyWithInvalidSignature.isSignatureInvalid(time));
+
+        DataStorageResult result = peerStore.add(copyWithInvalidSignature);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertFalse(result.isSignatureInvalid());
+        assertSame(legacy, peerStore.getPersistableStore().getMap().get(add.getStorageKey()));
+    }
+
     // The store got the removal without signature V2 before the add request. It has no sequence number which it can
     // trust, so it accepts the add request. When the removal arrives again, it replaces the add request, and the store
     // does not accept that add request again.
