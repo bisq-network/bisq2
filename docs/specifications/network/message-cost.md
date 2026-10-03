@@ -24,9 +24,8 @@ different versions compute the same value.
 
 1. The cost factor of a message, which the policy defines, depends only on
    - the type of the message,
-   - values which the receiver reads from the message: the class name of the stored type, the size of the cipher
-     text of an encrypted message, and the MetaData which version 0 of some requests contains in its proof of work
-     payload (rule 9),
+   - values which the receiver reads from the message: the class name of the stored type and the size of the cipher
+     text of an encrypted message,
    - the values of the policy.
 
    It does not depend on other definitions of a node, for example the MetaData of a type or the size limits of
@@ -63,22 +62,10 @@ definitions, for example a longer time to live for storage reasons, changed the 
 9. `RemoveAuthenticatedDataRequest`, `RefreshAuthenticatedDataRequest` and `RemoveMailboxRequest`:
    `bounded(0.1, 0.3, storage(c))`, where `c` is the field `className` of the request.
 
-   In rules 8 and 9, if `serializeForHash()` of the message contains its deprecated field `metaData`, `storage(c)` is
-   the higher of the value of the policy and the unrounded storage cost factor of this MetaData (formula of rule 10).
-   `serializeForHash()` contains the field in version 0 of `MailboxData`, `RemoveMailboxRequest` and
-   `RemoveAuthenticatedDataRequest`.
-
-   Reason: in version 0, `serializeForHash()` of the message contains this MetaData, so the proof of work payload
-   contains it. A node does not replace it when it parses the message: its payload would then differ from the payload
-   which the sender paid for, and the proof of work check would fail. Relays forward the field and pay the cost factor
-   which nodes of earlier versions compute from it (rule 15). If the receiver expected only the value of the policy, a
-   sender could create a request with a high MetaData, pay the low value of the policy, and make each relay pay up to
-   four times more.
-
-   A signature covers this MetaData only for `MailboxData`: the signature of `AddMailboxRequest`. The signatures of
-   `RemoveMailboxRequest` and `RemoveAuthenticatedDataRequest` cover only the hash of the stored data, not their own
-   field `metaData`. A relay can change the field of a removal request. It then pays the proof of work for the changed
-   request, and the next receiver expects the cost factor of the changed MetaData.
+   The receiver does not read the deprecated field `metaData` for rules 8 and 9 in any version. Parsing replaces
+   the field with the registered MetaData of the class name, and `serializeForHash()` never contains it (see
+   [Storage MetaData](storage-metadata.md#compatibility)). A sender or relay therefore cannot choose a MetaData which
+   changes the cost which the next relay pays.
 10. The storage cost factor of a type is a constant of the policy with two decimal places. Its value is the result
     of the formula which versions up to 2.1.13 apply to the MetaData of the type,
     `bounded(0, 1, bounded(0, 1, ttl / 100 days) + bounded(0, 1, n / 10 000))`, rounded half up to two decimal places.

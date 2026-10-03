@@ -98,22 +98,23 @@ class MessageCostAuthorizationTest {
     }
 
     @Test
-    void requestOfVersion0KeepsItsMetaDataAndIsAuthorized()
+    void requestOfVersion0CarriesTheRegisteredMetaDataAndIsAuthorized()
             throws GeneralSecurityException, UnresolvableProtobufException {
-        // In version 0 the proof of work payload contains metaData, so parsing keeps the received value
+        // Parsing replaces the received metaData by the registered MetaData in every version, so a sender cannot raise
+        // the cost which relays pay. Version 0 parses only without signature V2.
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage());
         //noinspection deprecation
         RemoveMailboxRequest request = RemoveMailboxRequest.fromProto(
                 RemoveMailboxRequest.from(mailboxData, receiverKeyPair).toValueProto(false).toBuilder()
                         .setVersion(0)
+                        .clearSignatureV2()
                         .setMetaData(HIGH_META_DATA.toProto(false))
                         .build());
 
         HashCashV2Token token = createToken(request);
 
-        // Nodes of earlier versions compute bounded(0.1, 0.3, 1) = 0.3 from the high MetaData. The value of the policy
-        // for AckMessage is 0.1, but for version 0 the receiver expects the higher value.
-        assertEquals(difficulty(0.3), token.getProofOfWork().getDifficulty());
+        // The registered MetaData of AckMessage has the values of the policy
+        assertEquals(difficulty(0.1), token.getProofOfWork().getDifficulty());
         assertTrue(isAuthorizedAfterTransfer(request, token));
     }
 

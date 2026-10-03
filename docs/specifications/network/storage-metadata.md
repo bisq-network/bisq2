@@ -104,14 +104,23 @@ requests as well, so these removals give it no further way to fill the store.
   `RefreshAuthenticatedDataRequest` is deprecated. New nodes still set it to the registered MetaData of the type,
   because nodes of earlier versions use it for store selection, expiry and cost factor.
 - When a node receives such a message, it replaces the received `metaData` by the MetaData which it registered for the
-  class name. It then relays and persists the message with the registered values. It keeps the received value if the
-  class name is not registered, or if `serializeForHash()` of the message contains `metaData`. It does not contain it
-  in versions 1 to 3 of `MailboxData`, `RemoveMailboxRequest` and `RemoveAuthenticatedDataRequest`, and in all
-  versions of `RefreshAuthenticatedDataRequest`. So the replacement changes neither signature V1, the storage key nor
-  the proof of work payload. The preimage of signature V2 never contains `metaData` (see
-  [`storage-request-signatures.md`](storage-request-signatures.md#requirements-for-signature-v2)), so the replacement
-  does not change it either. The signatures and storage keys of remove and refresh requests never contain their own
-  `metaData`.
+  class name, in every version of the message. It then relays and persists the message with the registered values. It
+  keeps the received value only if the class name is not registered.
+- `serializeForHash()` never contains `metaData`, in any version of these four classes. So the replacement changes
+  neither signature V1, the storage key nor the proof of work payload. The preimage of signature V2 never contains
+  `metaData` either (see
+  [`storage-request-signatures.md`](storage-request-signatures.md#requirements-for-signature-v2)).
+
+  Reason: `metaData` is derived from the class name; it carries no information of its own. Versions 1 to 3, which
+  supported nodes send, already left it out of the hash. Version 0 is the format of releases before the version field
+  existed and is no longer in use, and versions above 3 are not used. Leaving the field out of the hash in every version
+  means that no version lets a relay change a hash input without changing the request's signed content.
+- The class name of `metaData` must equal `className`. Parsing rejects a message which breaks this rule. For a
+  registered class name the replacement above guarantees it; the rule matters for class names which this node does not
+  know.
+
+  Reason: nodes of earlier versions select the store by the class name of `metaData`, nodes of this version by
+  `className`. If the two differed, the two kinds of nodes would put the data into different stores.
 
   Reason: otherwise a node forwards values which a sender or relay chose, and which it does not use itself. A node of
   an earlier version would use them for store selection, expiry and cost factor. It would then expect another cost

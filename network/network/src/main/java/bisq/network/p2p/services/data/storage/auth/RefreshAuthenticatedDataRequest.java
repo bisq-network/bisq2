@@ -39,6 +39,8 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataRequest {
 
@@ -65,9 +67,9 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
-    // registered MetaData of the class name (see fromProto) and never uses the field for a decision (see
-    // getMetaData()).
+    // Deprecated. The class name selects the MetaData (see getMetaData()); the field is still sent only because nodes of
+    // earlier versions use it. fromProto replaces the received value by the registered MetaData of the class name, so
+    // its className always equals className. No hash, storage key, proof of work or signature contains it.
     @ExcludeForHash
     private final MetaData metaData;
     private final byte[] hash; // of authenticatedData
@@ -117,7 +119,10 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         EcPublicKeyValidation.validate(ownerPublicKeyBytes);
         NetworkDataValidation.validateDate(created);
         SignatureValidation.validateSignatures(signature, signatureV2);
+        SignatureValidation.validateVersionOfSignatureV2(signatureV2, version);
         MetaData.validateClassName(className);
+        // Nodes of earlier versions select the store by the className of metaData
+        checkArgument(metaData.getClassName().equals(className), "className of metaData must equal className");
     }
 
 
@@ -350,11 +355,6 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // does not use it for its own decisions.
     public MetaData getMetaDataForEarlierVersions() {
         return metaData;
-    }
-
-    // serializeForHash() never contains the field metaData.
-    public boolean isMetaDataCoveredByHash() {
-        return false;
     }
 
     @Override

@@ -431,9 +431,9 @@ Rationale:
 Security note on `@ExcludeForHash`: a field that a hash purpose leaves out is not protected by a hash
 or signature of that purpose. The annotation keeps hashes compatible with nodes that do not know a
 field, and the `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` purposes reproduce it only for
-byte parity. In `MailboxData`, `RemoveAuthenticatedDataRequest`, and `RemoveMailboxRequest`, the
-`version` also decides whether `metaData` is left out, so in versions 1 to 3 signature V1 protects
-neither. Signature V2 covers `version`. The proof of work payload does not bind the `@ExcludeForHash`
+byte parity. In `MailboxData`, `RemoveAuthenticatedDataRequest`, and `RemoveMailboxRequest`, signature
+V1 protects neither `version` nor the deprecated `metaData`; no hash contains `metaData` in any version.
+Signature V2 covers `version`. The proof of work payload does not bind the `@ExcludeForHash`
 fields either: a proof of work stays valid when they change. The receiver computes the expected cost
 from the message that it received ([`../network/message-cost.md`](../network/message-cost.md)), so a
 change does not lower the cost that the receiver expects. The contract hash does not bind the
