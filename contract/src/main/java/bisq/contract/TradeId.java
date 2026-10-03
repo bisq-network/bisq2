@@ -27,10 +27,28 @@ import java.util.UUID;
  * The ID of a trade is derived from the data of its contract: the ID of the offer, the ID of the network ID of the
  * taker, and the take offer date. Versions up to 2.1.6 created the ID without the take offer date. Version 2.1.7 added
  * the take offer date for trades which it created from 2025-06-01 (UTC) on. A trade keeps the ID with which it was
- * created.
+ * created. See docs/specifications/trade/trade-id.md.
  */
 public final class TradeId {
     private TradeId() {
+    }
+
+    /**
+     * The ID which a trade with this contract gets when it is created.
+     */
+    public static String fromContract(Contract<?> contract) {
+        return create(contract.getOffer().getId(), contract.getTaker().getNetworkId().getId(), contract.getTakeOfferDate());
+    }
+
+    /**
+     * Whether the trade ID is the ID of the trade with this contract. A trade keeps the ID with which it was created,
+     * so the ID without the take offer date of a trade which an earlier version created matches as well.
+     */
+    public static boolean isIdOfContract(String tradeId, Contract<?> contract) {
+        String offerId = contract.getOffer().getId();
+        String takerId = contract.getTaker().getNetworkId().getId();
+        return tradeId.equals(create(offerId, takerId, contract.getTakeOfferDate())) ||
+                tradeId.equals(create(offerId, takerId));
     }
 
     public static String create(String offerId, String takerPubKeyHash) {
