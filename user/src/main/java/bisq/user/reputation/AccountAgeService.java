@@ -179,6 +179,11 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     }
 
     @Override
+    protected ByteArray getUserProfileKey(String userProfileId) {
+        return UserProfile.getAccountAgeKey(userProfileId);
+    }
+
+    @Override
     public long calculateScore(AuthorizedAccountAgeData data) {
         return !data.isCurrentVersion() || claimRegistry.hasConflict(data.getWitnessNullifier())
                 ? 0
@@ -245,7 +250,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
                 .filter(data -> data.getProfileId().equals(userProfileId))
                 .filter(data -> !claimRegistry.hasConflict(data.getWitnessNullifier()))
                 .min(java.util.Comparator.comparingLong(AuthorizedAccountAgeData::getDateBucket));
-        ByteArray userProfileKey = new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+        ByteArray userProfileKey = getUserProfileKey(userProfileId);
 
         if (bestData.isEmpty()) {
             dataSetByHash.remove(userProfileKey);
