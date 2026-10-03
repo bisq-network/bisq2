@@ -28,6 +28,7 @@ import bisq.chat.ChatService;
 import bisq.chat.Citation;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
@@ -41,6 +42,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserProfileData;
 import bisq.user.banned.BannedUserService;
@@ -48,11 +50,13 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -71,6 +75,12 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
             return new ModeratorService.Config(config.getBoolean("staticPublicKeysProvided"));
         }
     }
+
+    // Limits for received reports, which every user can send to every node. A moderator deletes handled reports, which
+    // frees the space. A user profile costs a proof of work, so the limit per reporter limits each profile and the
+    // total limit bounds the store.
+    static final int MAX_REPORTS_PER_REPORTER = 10;
+    static final int MAX_REPORTS = 5_000;
 
     private final NetworkService networkService;
     private final ChatService chatService;
@@ -114,8 +124,8 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
     @Override
     public CompletableFuture<Boolean> initialize() {
         networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
+                .flatMap(service -> service.getProcessedEnvelopePayloadMessagesAndPublicKeys().stream())
+                .forEach(e -> onConfidentialMessage(e.envelopePayloadMessage(), e.senderPublicKey()));
         networkService.addConfidentialMessageListener(this);
 
         addObserverIfModerator();
@@ -146,8 +156,13 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
 
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof ReportToModeratorMessage) {
-            processReportToModeratorMessage((ReportToModeratorMessage) envelopePayloadMessage);
+        // Reports are handled with their sender key in onConfidentialMessage
+    }
+
+    @Override
+    public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+        if (envelopePayloadMessage instanceof ReportToModeratorMessage report) {
+            processReportToModeratorMessage(report, senderPublicKey);
         }
     }
 
@@ -215,12 +230,28 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
         return Optional.ofNullable(persistableStore.getBannedUserModeratorDataMap().get(accusedUserProfileId));
     }
 
-    private void processReportToModeratorMessage(ReportToModeratorMessage message) {
+    @VisibleForTesting
+    void processReportToModeratorMessage(ReportToModeratorMessage message, PublicKey senderPublicKey) {
+        // The reporter is the profile of the key which sent the report. Otherwise anybody could report in the name of
+        // another user.
+        String senderUserProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
+        if (!senderUserProfileId.equals(message.getReporterUserProfileId())) {
+            log.warn("Report ignored as the reporter is not the sender of the report");
+            return;
+        }
         if (bannedUserService.isUserProfileBanned(message.getReporterUserProfileId())) {
             log.warn("Message ignored as sender is banned");
             return;
         }
-        getReportToModeratorMessages().add(message);
+        ObservableSet<ReportToModeratorMessage> reports = getReportToModeratorMessages();
+        long numReportsOfReporter = reports.stream()
+                .filter(report -> report.getReporterUserProfileId().equals(message.getReporterUserProfileId()))
+                .count();
+        if (numReportsOfReporter >= MAX_REPORTS_PER_REPORTER || reports.size() >= MAX_REPORTS) {
+            log.warn("Report ignored as the limit of stored reports is reached");
+            return;
+        }
+        reports.add(message);
         persist();
     }
 
