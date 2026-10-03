@@ -173,6 +173,38 @@ class DataServiceRelayTest {
         assertTrue(removedData.isEmpty());
     }
 
+    // The owner runs an earlier version: its add request and its removal have no signature V2. Copies of both requests
+    // arrive again and again, as from peers which relay them. The store accepts each request once, so the node relays
+    // each request once, and the broadcast ends (see docs/specifications/network/storage-request-ordering.md).
+    @Test
+    void addAndItsRemovalWithoutSignatureV2AreRelayedOnce()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        AddAuthenticatedDataRequest complete = AddAuthenticatedDataRequest.from(authenticatedDataStore,
+                authenticatedData, ownerKeyPair);
+        AddAuthenticatedDataRequest add = new AddAuthenticatedDataRequest(complete.getAuthenticatedSequentialData(),
+                complete.getSignatureV1(),
+                complete.getSignaturePubKeyEncoded(),
+                complete.getSignaturePublicKey(),
+                new byte[]{},
+                0);
+        dataService.processAddDataRequest(add, true).join();
+        RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.fromProto(
+                RemoveAuthenticatedDataRequest.from(authenticatedDataStore, authenticatedData, ownerKeyPair)
+                        .toValueProto(false).toBuilder()
+                        .setVersion(1)
+                        .clearSignatureV2()
+                        .build());
+
+        for (int i = 0; i < 3; i++) {
+            dataService.processRemoveDataRequest(removal, true).join();
+            dataService.processAddDataRequest(add, true).join();
+        }
+
+        assertEquals(List.of(add, removal), relayedRequests);
+        assertEquals(List.of(authenticatedData), removedData);
+        assertSame(removal, authenticatedDataStore.getPersistableStore().getMap().get(removal.getStorageKey()));
+    }
+
     @Test
     void removalOfInventoryResponseIsNotRelayed() throws GeneralSecurityException {
         RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(authenticatedDataStore,

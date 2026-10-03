@@ -34,6 +34,7 @@ import bisq.persistence.PersistenceService;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -108,13 +109,14 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
         // Detect them before the signature verification, which is the most expensive check. A copy without signature
         // V2, which a node of an earlier version relayed, is not equal to the stored request, but its sequence number is
-        // not higher. The checks are repeated inside the lock because the map can change in between.
+        // not higher. The same holds for the add request which a stored removal replaced. The checks are repeated
+        // inside the lock because the map can change in between.
         ByteArray storageKey = request.getStorageKey();
         AuthenticatedDataRequest storedRequest = persistableStore.getMap().get(storageKey);
         if (request.equals(storedRequest)) {
             return DataStorageResult.failed().requestAlreadyReceived();
         }
-        if (isSequenceNumberSigned(storedRequest) && request.isSequenceNrInvalid(storedRequest.getSequenceNumber())) {
+        if (request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, storedRequest))) {
             return DataStorageResult.failed().sequenceNrInvalid();
         }
 
@@ -146,7 +148,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().requestAlreadyReceived();
             }
 
-            if (isSequenceNumberSigned(requestFromMap) && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+            if (request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, requestFromMap))) {
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
@@ -155,6 +157,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             map.put(storageKey, request);
+            getReplacedAddSequenceNrs().remove(storageKey);
 
             // In case we only updated the seq number we still want to broadcast and update the listeners.
             // It is a valid use case that we have both an add and remove data request, and we get repeated sequences
@@ -207,22 +210,25 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             if (requestFromMap == null) {
                 log.debug("No entry at remove. hash={}", storageKey);
 
-                if (isExceedingMapSize()) {
+                if (isExceedingMapSize() || isExceedingRemovalsWithoutReplacedAdd()) {
                     return DataStorageResult.failed().maxMapSizeReached();
                 }
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
+                getReplacedAddSequenceNrs().remove(storageKey);
                 map.put(storageKey, request);
                 persist();
                 return DataStorageResult.success().noEntry();
             }
 
             if (requestFromMap instanceof RemoveAuthenticatedDataRequest) {
-                // A verified V2 removal supersedes an untrusted V1 sequence. Once upgraded, keep only
-                // higher signed sequences so a V1 request cannot discard the trusted ordering information.
+                // Only a removal with signature V2 replaces a stored removal, and only with a higher sequence number
+                // than the one by which the store orders the stored removal. For a stored removal without signature V2
+                // this is not its own sequence number, which a relay can choose (see getTrustedSequenceNumber).
                 if (request.isSignatureV2Present() &&
-                        (!requestFromMap.isSignatureV2Present() || !request.isSequenceNrInvalid(requestFromMap.getSequenceNumber()))) {
-                    // We update the map with the new request with the fresh sequence number.
+                        !request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, requestFromMap))) {
+                    // We update the map with the new request with the fresh sequence number. The new removal keeps
+                    // the sequence number of the add request which the stored removal replaced.
                     map.put(storageKey, request);
                     persist();
                     return DataStorageResult.success().alreadyRemoved();
@@ -249,6 +255,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
+            // The store keeps the signed sequence number of the add request which the removal replaces. It sets the
+            // number before the removal, so that a reader which finds the removal also finds the number.
+            getReplacedAddSequenceNrs().put(storageKey, dataFromMap.getSequenceNumber());
             map.put(storageKey, request);
         }
 
@@ -367,18 +376,28 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         listeners.remove(listener);
     }
 
-    // The sequence number for the next request of the owner. A relay can change the sequence number of a removal without
-    // signature V2, so it is not used. Such a removal does not reject a request of any sequence number (see
-    // docs/specifications/network/storage-request-ordering.md).
+    // The sequence number for the next request of the owner: one more than the number by which the store orders the
+    // entry. This is 1 if the store holds no entry (see docs/specifications/network/storage-request-ordering.md).
     public int getNextSequenceNumber(ByteArray storageKey) {
         Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            AuthenticatedDataRequest requestFromMap = map.get(storageKey);
-            if (!isSequenceNumberSigned(requestFromMap)) {
-                return 1;
-            }
-            return Math.incrementExact(requestFromMap.getSequenceNumber());
+            return Math.incrementExact(getTrustedSequenceNumber(storageKey, map.get(storageKey)));
         }
+    }
+
+    // The sequence number by which the store orders the entry. A request replaces the entry only with a higher sequence
+    // number. Both signature versions of an add request cover its sequence number, and signature V2 of a removal covers
+    // it. A relay can change the sequence number of a removal without signature V2, so the store does not use it. It
+    // uses the sequence number of the add request which that removal replaced in this store. That is 0 if the removal
+    // replaced none, or if an earlier version stored the removal. Valid sequence numbers are positive.
+    private int getTrustedSequenceNumber(ByteArray storageKey, @Nullable AuthenticatedDataRequest requestFromMap) {
+        if (requestFromMap == null) {
+            return 0;
+        }
+        if (isSequenceNumberSigned(requestFromMap)) {
+            return requestFromMap.getSequenceNumber();
+        }
+        return getReplacedAddSequenceNrs().getOrDefault(storageKey, 0);
     }
 
     // Both signature versions of an add request cover its sequence number. Only signature V2 of a removal covers it.
@@ -404,6 +423,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 boolean wasRemoved;
                 synchronized (mapAccessLock) {
                     wasRemoved = persistableStore.getMap().remove(entry.getKey(), entry.getValue());
+                    if (wasRemoved) {
+                        getReplacedAddSequenceNrs().remove(entry.getKey());
+                    }
                 }
                 if (!wasRemoved) {
                     return;
