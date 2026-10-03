@@ -98,7 +98,14 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     private final long startUpDateTime = System.currentTimeMillis();
     @Setter
     private boolean isApplicationFocussed;
-    private final Set<String> prunedAndExpiredChatMessageIds = new HashSet<>();
+    // The IDs of the notifications of chat messages which a store pruned before initialize. The stores prune the
+    // persisted data when they read it at startup, and our persisted notifications may be read after that. So we
+    // remove these notifications at initialize. After initialize, a pruned message removes its notification at once and
+    // its ID is not kept, otherwise every pruned message would stay in this set until shutdown. Guarded by itself,
+    // together with initializeCalled.
+    @VisibleForTesting
+    final Set<String> notificationIdsPrunedBeforeInitialize = new HashSet<>();
+    private boolean initializeCalled;
     @Nullable
     private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin, ignoredUserProfileIdsPin;
     private final Set<Pin> commonPublicChatChannelServicePins = new HashSet<>();
@@ -130,14 +137,8 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                                         // A message with an invalid channel ID was ignored and has no notification
                                         if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage
                                                 && chatMessage.hasValidChannelId()) {
-                                            String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
-                                            // As we get called at pruning persistence which happens before initializing the services,
-                                            // We store the ids to apply the remove at out initialize method.
-                                            // For the cases when we get expired data during runtime we call removeNotification.
-                                            // For the pre-initialize state that would fail as our persisted data might be filled after
-                                            // the network data store.
-                                            prunedAndExpiredChatMessageIds.add(id);
-                                            removeNotification(id);
+                                            onChatMessagePruned(ChatNotification.createId(chatMessage.getChannelId(),
+                                                    chatMessage.getId()));
                                         }
                                     }
                                 }
@@ -168,8 +169,10 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        prunedAndExpiredChatMessageIds.forEach(this::removeNotification);
-        prunedAndExpiredChatMessageIds.clear();
+        synchronized (notificationIdsPrunedBeforeInitialize) {
+            initializeCalled = true;
+        }
+        removeNotificationsPrunedBeforeInitialize();
 
         ignoredUserProfileIdsPin = userProfileService.getIgnoredUserProfileIds()
                 .addObserver(this::consumeNotificationsFromIgnoredUsers);
@@ -221,8 +224,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         prunedAndExpiredDataRequestPins.clear();
 
         predicateByChatChannelDomain.clear();
-        prunedAndExpiredChatMessageIds.forEach(this::removeNotification);
-        prunedAndExpiredChatMessageIds.clear();
+        removeNotificationsPrunedBeforeInitialize();
 
         changedNotification.set(null);
         return CompletableFuture.completedFuture(true);
@@ -341,6 +343,26 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         if (wasAdded) {
             persist();
         }
+    }
+
+    private void onChatMessagePruned(String notificationId) {
+        synchronized (notificationIdsPrunedBeforeInitialize) {
+            if (!initializeCalled) {
+                notificationIdsPrunedBeforeInitialize.add(notificationId);
+            }
+        }
+        // Before initialize, our persisted notifications might not be read yet, so the removal can find nothing. The
+        // removal at initialize covers that case.
+        removeNotification(notificationId);
+    }
+
+    private void removeNotificationsPrunedBeforeInitialize() {
+        Set<String> notificationIds;
+        synchronized (notificationIdsPrunedBeforeInitialize) {
+            notificationIds = Set.copyOf(notificationIdsPrunedBeforeInitialize);
+            notificationIdsPrunedBeforeInitialize.clear();
+        }
+        notificationIds.forEach(this::removeNotification);
     }
 
     private void removeNotification(String id) {
