@@ -50,6 +50,7 @@ import bisq.network.p2p.services.reporting.ReportResponseService;
 import bisq.persistence.PersistenceService;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.PubKey;
+import com.google.common.annotations.VisibleForTesting;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -239,12 +240,9 @@ public class ServiceNode implements Node.Listener {
                         nodeConfig.getFeatures())) :
                 Optional.empty();
 
-        confidentialMessageService = supportedServices.contains(SupportedService.CONFIDENTIAL) ?
-                Optional.of(new ConfidentialMessageService(nodesById,
-                        keyBundleService,
-                        dataService,
-                        messageDeliveryStatusService)) :
-                Optional.empty();
+        if (supportedServices.contains(SupportedService.CONFIDENTIAL)) {
+            createConfidentialMessageService();
+        }
 
         reportRequestService = supportedServices.contains(ServiceNode.SupportedService.REPORT_REQUEST) ?
                 Optional.of(new ReportRequestService(defaultNode)) :
@@ -344,6 +342,14 @@ public class ServiceNode implements Node.Listener {
                                                    NetworkId senderNetworkId) {
         checkArgument(confidentialMessageService.isPresent(), "ConfidentialMessageService not present at confidentialSend");
         return confidentialMessageService.get().send(envelopePayloadMessage, receiverNetworkId, address, receiverPubKey, senderKeyPair, senderNetworkId);
+    }
+
+    @VisibleForTesting
+    void createConfidentialMessageService() {
+        confidentialMessageService = Optional.of(new ConfidentialMessageService(nodesById,
+                keyBundleService,
+                dataService,
+                messageDeliveryStatusService));
     }
 
     void addConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
