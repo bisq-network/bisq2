@@ -213,6 +213,9 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
                 !existingUserProfile.get().getApplicationVersion().equals(userProfile.getApplicationVersion())) {
             if (verifyUserProfile(userProfile)) {
                 synchronized (persistableStore) {
+                    // A newer version of the profile can have another nickname and another nym
+                    findUserProfile(userProfileId).ifPresent(previousUserProfile ->
+                            removeNymFromNickNameHashMap(previousUserProfile.getNym(), previousUserProfile.getNickName()));
                     addNymToNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
                     userProfileById.put(userProfileId, userProfile);
                 }
@@ -284,12 +287,11 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         nyms.add(nym);
     }
 
+    // A nickname stays in the map while a stored profile has it
     private void removeNymFromNickNameHashMap(String nym, String nickName) {
-        Map<String, Set<String>> nymsByNickName = getNymsByNickName();
-        if (!nymsByNickName.containsKey(nickName)) {
-            return;
-        }
-        Set<String> nyms = nymsByNickName.get(nickName);
-        nyms.remove(nym);
+        getNymsByNickName().computeIfPresent(nickName, (key, nyms) -> {
+            nyms.remove(nym);
+            return nyms.isEmpty() ? null : nyms;
+        });
     }
 }

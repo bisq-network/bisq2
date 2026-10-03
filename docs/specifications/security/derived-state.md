@@ -25,7 +25,8 @@ A node keeps derived state only while its source exists:
 - a buffer which keeps data until a service has started is not filled after the service has started.
 
 Removing state whose source no longer exists does not change what the node shows or decides. A node which restarts with
-the same network data has the same state.
+the same network data has the same state. Where a bound also removes state whose source still exists, the section
+below states the bound and its effect.
 
 ## Chat notifications of pruned messages
 
@@ -68,6 +69,46 @@ Reason: the node kept the times and the flag of every author until shutdown. A n
 attacker could grow both without a limit. Honest chat traffic has far fewer than 10 000 authors per day. With the bound
 of rule 2 and the 301 times of rule 3, the times take at most about 70 MB.
 
+## Reputation
+
+Five sources derive a reputation score from authorized data which oracle nodes publish: proof of burn, bonded
+reputation, account age, signed witness and profile age. A source assigns the data to a user profile by a key which it
+derives from the profile ID. The total score of a profile is the sum of the scores of the sources.
+
+1. When the store removes a publication of reputation data, the source removes the data, unless another stored
+   publication carries equal data, for example the publication of another oracle node. A publication which the source
+   did not accept, for example one of a key without the oracle node role, removes no data.
+2. After a removal, the source computes the data and the score of the profile again from the data which is still
+   published, as a node which starts with this data would. For example, when the oldest profile age of a profile is
+   removed, the next older profile age of another oracle node applies. When the unlock marker of a bond is removed and
+   its lockup is still published, the lockup counts again. When no data remains, the source removes the score of the
+   profile.
+3. Data which waits for its user profile is removed with its last publication. A profile which arrives later does not
+   get a score from removed data.
+4. The total score of a profile exists while at least one source has a score for the profile. A score can be 0, for
+   example the score of a profile age.
+5. When the profile store removes a user profile, the sources forget the profile, unless they have data for it. A score
+   stays while its data exists, also while the profile store does not hold the profile. A user profile expires after
+   15 days, reputation data after 30 days.
+6. The node keeps a nickname in its index of nicknames while a stored profile has this nickname. When a newer version
+   of a profile has another nickname, the profile no longer counts for the old nickname.
+
+Account age and signed witness already removed their data and scores with their last publication (see
+[account-age.md](../reputation/account-age.md)). Rules 3 to 6 apply to them as well.
+
+Reason: the sources kept every user profile which the node ever received, and the data, scores and nicknames whose
+source the stores had removed. Anybody can publish a user profile for a proof of work of about 0.1 seconds and can make
+it expire within minutes. The nickname is not part of the proof of work of the profile, so the owner can publish
+versions of a profile with other nicknames without new work for the profile.
+
 ## Compatibility
 
 The rules change no network message and no persisted data. They change only state in memory.
+
+## Not covered
+
+- This specification does not define a general rule for every collection which other users can grow: a bound or an
+  expiry, an eviction order which one sender cannot use to push out the entries of others, and a removal path for every
+  add path. Such a rule needs a decision of the developers.
+- Other collections which other users can grow are not covered here, for example the private chat channels, the
+  waiting private chat reactions and the delivery states of messages.
