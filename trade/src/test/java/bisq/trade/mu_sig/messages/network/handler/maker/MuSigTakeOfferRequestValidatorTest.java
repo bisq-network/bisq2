@@ -32,6 +32,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
+import bisq.contract.TradeId;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
@@ -41,7 +42,6 @@ import bisq.offer.mu_sig.MyMuSigOffersService;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
-import bisq.trade.Trade;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
@@ -158,7 +158,7 @@ class MuSigTakeOfferRequestValidatorTest {
         MuSigContract contract = createContract();
         SetupTradeMessage_A message = createMessage(contract, TAKER_NETWORK_ID, OTHER_NETWORK_ID,
                 sign(contract, TAKER_KEY_PAIR),
-                Trade.createId(contract.getOffer().getId(),
+                TradeId.create(contract.getOffer().getId(),
                         contract.getTaker().getNetworkId().getId(),
                         contract.getTakeOfferDate()));
 
@@ -999,7 +999,7 @@ class MuSigTakeOfferRequestValidatorTest {
                                                      ContractSignatureData contractSignatureData)
             throws UnresolvableProtobufException {
         return createMessage(contract, sender, OFFER_MAKER_NETWORK_ID, contractSignatureData,
-                Trade.createId(contract.getOffer().getId(),
+                TradeId.create(contract.getOffer().getId(),
                         contract.getTaker().getNetworkId().getId(),
                         contract.getTakeOfferDate()));
     }

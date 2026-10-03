@@ -29,6 +29,7 @@ import bisq.common.market.Market;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.contract.TradeId;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -59,6 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BisqEasyMediationRequestTest {
+    // Trade ID of the chat messages. The trade ID of a request is derived from its contract.
     private static final String BOUNDARY_TRADE_ID = "trade-boundary";
     private static final String BOUNDARY_CHANNEL_ID = "channel-boundary";
 
@@ -75,7 +77,7 @@ class BisqEasyMediationRequestTest {
         assertTrue(innerProto.getSerializedSize() <= MAX_SERIALIZED_SIZE);
         assertTrue(wrappedEnvelopeSize(innerProto) > MAX_SERIALIZED_SIZE);
         SerializedSizeExceededException exception = assertThrows(SerializedSizeExceededException.class,
-                () -> new BisqEasyMediationRequest(BOUNDARY_TRADE_ID,
+                () -> new BisqEasyMediationRequest(TradeId.fromContract(contract),
                         contract,
                         requester,
                         peer,
@@ -92,7 +94,7 @@ class BisqEasyMediationRequestTest {
         BisqEasyContract contract = createContract(requester, peer, mediator);
         int textLength = findLargestAcceptedTextLength(contract, requester, peer, mediator.getNetworkId());
         List<BisqEasyOpenTradeMessage> chatMessages = createBoundaryChatMessages(requester, peer, textLength);
-        BisqEasyMediationRequest request = new BisqEasyMediationRequest(BOUNDARY_TRADE_ID,
+        BisqEasyMediationRequest request = new BisqEasyMediationRequest(TradeId.fromContract(contract),
                 contract,
                 requester,
                 peer,
@@ -167,6 +169,45 @@ class BisqEasyMediationRequestTest {
                 () -> BisqEasyMediationRequest.fromProto(withContractAmounts(valid, 1, Long.MAX_VALUE)));
     }
 
+    // The mediator files a request under its trade ID and adds its chat messages to the trade channel of this ID. A
+    // user who knows the trade ID of a mediation case of other users must not be able to send a request with this ID
+    // and a contract of its own.
+    @Test
+    void requestWhoseTradeIdIsNotTheIdOfItsContractFailsAtParsing() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        BisqEasyContract contract = createContract(requester, peer, mediator);
+        bisq.support.protobuf.MediationRequest valid = createMediationRequestProto(
+                contract, requester, peer, List.of(), mediator.getNetworkId());
+        String tradeIdOfOtherCase = TradeId.fromContract(
+                createContract(createUserProfile("other maker"), createUserProfile("other taker"), mediator));
+
+        assertEquals(TradeId.fromContract(contract), BisqEasyMediationRequest.fromProto(valid).getTradeId());
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyMediationRequest.fromProto(valid.toBuilder().setTradeId(tradeIdOfOtherCase).build()));
+        assertThrows(IllegalArgumentException.class,
+                () -> new BisqEasyMediationRequest(tradeIdOfOtherCase, contract, requester, peer, List.of(),
+                        mediator.getNetworkId()));
+    }
+
+    // Versions up to 2.1.6 created the trade ID without the take offer date, and a trade keeps its ID
+    @Test
+    void requestWithTheTradeIdWithoutTakeOfferDateParses() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        BisqEasyContract contract = createContract(requester, peer, mediator);
+        String tradeIdWithoutTakeOfferDate = TradeId.create(contract.getOffer().getId(),
+                contract.getTaker().getNetworkId().getId());
+        bisq.support.protobuf.MediationRequest request = createMediationRequestProto(
+                contract, requester, peer, List.of(), mediator.getNetworkId()).toBuilder()
+                .setTradeId(tradeIdWithoutTakeOfferDate)
+                .build();
+
+        assertEquals(tradeIdWithoutTakeOfferDate, BisqEasyMediationRequest.fromProto(request).getTradeId());
+    }
+
     private static bisq.support.protobuf.MediationRequest withContractAmounts(bisq.support.protobuf.MediationRequest request,
                                                                               long baseSideAmount,
                                                                               long quoteSideAmount) {
@@ -229,7 +270,7 @@ class BisqEasyMediationRequestTest {
                                                                                List<BisqEasyOpenTradeMessage> chatMessages,
                                                                                NetworkId mediatorNetworkId) {
         return bisq.support.protobuf.MediationRequest.newBuilder()
-                .setTradeId(BOUNDARY_TRADE_ID)
+                .setTradeId(TradeId.fromContract(contract))
                 .setContract(contract.toProto(false))
                 .setRequester(requester.toProto(false))
                 .setPeer(peer.toProto(false))
