@@ -1,7 +1,9 @@
 # Pending trade messages
 
 This specification defines how a node keeps trade messages which arrive before the trade exists. It applies to Bisq
-Easy and to MuSig. The terms are those of [Sender of a trade message](trade-message-sender.md).
+Easy and to MuSig. Rules 4 and 5 apply the same limits to chat messages and to mediator responses of Bisq Easy trades
+which arrive before the trade channel exists. The terms are those of
+[Sender of a trade message](trade-message-sender.md).
 
 ## Background
 
@@ -27,6 +29,14 @@ processes it again when it processes the next message of a trade.
 4. The chat of Bisq Easy open trades keeps a chat message without offer, whose trade channel does not exist yet, as a
    pending chat message. Rules 2 and 3 apply to these pending chat messages as well, with their own bound of 100.
 
+5. A trader's node keeps the response of a mediator to a Bisq Easy mediation request, whose trade channel does not
+   exist yet, as a pending response. It processes the pending responses again when a trade channel is added. Rules 2
+   and 3 apply to these pending responses as well, with their own bound of 100. A pending response is identified by
+   its trade ID and its sender, so the node keeps responses of different senders for the same trade apart. When the
+   node processes a response, it applies it only if its sender is the mediator of the trade channel (see
+   [Trade chat channel binding](chat-channel-binding.md)), and drops it otherwise. Dropping a response does not
+   remove a pending response of another sender.
+
 ## Reasons
 
 - Rule 2: anybody can send trade messages with made-up trade IDs to a node. Such a message never gets a trade, so
@@ -38,14 +48,22 @@ processes it again when it processes the next message of a trade.
 - Rule 3: trade messages carry private data of the traders: the payment account data of the seller, the Bitcoin
   address of the buyer, a transaction ID, or a payment proof. Users share their log files with support. A log file
   must not reveal the trade data of a trade peer.
+- Rule 5, identity by trade ID and sender: anybody who knows the trade ID can send a response for it. If the node
+  identified a pending response by its trade ID only, a response of another sender which arrived first would keep the
+  response of the mediator out, and the trader would not learn that the mediator took up the case. The sender of a
+  response cannot be forged: the network layer verifies that the sender signed the message with the key of the
+  network ID which the response names.
 
 ## Limitations
 
 - A sender who floods a node with trade messages for made-up trade IDs can push a pending message of a legitimate
   trade out of the pending messages before the trade exists. The node does not receive this message again. The bound
   limits the memory of the node; it does not protect the pending message of a legitimate trade against such a flood.
-  Without the bound the flood would instead grow the memory of the node without limit.
+  Without the bound the flood would instead grow the memory of the node without limit. The same applies to pending
+  chat messages (rule 4) and to pending mediator responses (rule 5).
 
 ## Compatibility
 
 - The rules change no message and no persisted data. The pending messages exist only in memory.
+- Rule 5 does not change when two mediator response messages are equal. The node identifies a pending response with
+  its own key of trade ID and sender.
