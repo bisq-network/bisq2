@@ -36,6 +36,7 @@ import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.security.keys.I2PKeyGeneration;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyGeneration;
@@ -78,13 +79,17 @@ public final class BisqEasyTradeTestData {
     }
 
     public static BisqEasyOffer offer(String id, NetworkId makerNetworkId, long quoteAmount) {
+        return offer(id, makerNetworkId, quoteAmount, new MarketPriceSpec());
+    }
+
+    public static BisqEasyOffer offer(String id, NetworkId makerNetworkId, long quoteAmount, PriceSpec priceSpec) {
         return new BisqEasyOffer(id,
                 System.currentTimeMillis(),
                 makerNetworkId,
                 Direction.SELL,
                 MarketRepository.getUSDBitcoinMarket(),
                 new QuoteSideFixedAmountSpec(quoteAmount),
-                new MarketPriceSpec(),
+                priceSpec,
                 List.of(TradeProtocolType.BISQ_EASY),
                 List.of(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN))),
                 List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA))),

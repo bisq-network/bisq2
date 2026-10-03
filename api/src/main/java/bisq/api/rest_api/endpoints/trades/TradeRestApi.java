@@ -46,7 +46,6 @@ import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.SupportService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
@@ -225,7 +224,6 @@ public class TradeRestApi extends RestApiBase {
             Optional<UserProfile> mediator = bisqEasyMediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
                     takerIdentity.getId(),
                     bisqEasyOffer.getId());
-            PriceSpec makersPriceSpec = bisqEasyOffer.getPriceSpec();
             long marketPrice = marketPriceService.findMarketPrice(bisqEasyOffer.getMarket())
                     .map(e -> e.getPriceQuote().getValue())
                     .orElseThrow();
@@ -236,7 +234,6 @@ public class TradeRestApi extends RestApiBase {
                     bitcoinPaymentMethodSpec,
                     fiatPaymentMethodSpec,
                     mediator,
-                    makersPriceSpec,
                     marketPrice);
             BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
             log.info("Selected mediator for trade {}: {}", bisqEasyTrade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
