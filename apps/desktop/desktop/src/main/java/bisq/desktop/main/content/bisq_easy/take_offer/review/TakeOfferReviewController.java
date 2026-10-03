@@ -198,7 +198,6 @@ public class TakeOfferReviewController implements Controller {
         Monetary takersQuoteSideAmount = model.getTakersQuoteSideAmount();
         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = model.getBitcoinPaymentMethodSpec();
         FiatPaymentMethodSpec fiatPaymentMethodSpec = model.getFiatPaymentMethodSpec();
-        PriceSpec priceSpec = bisqEasyOffer.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol;
         try {
@@ -209,7 +208,6 @@ public class TakeOfferReviewController implements Controller {
                     bitcoinPaymentMethodSpec,
                     fiatPaymentMethodSpec,
                     mediator,
-                    priceSpec,
                     marketPrice);
         } catch (TradeRestrictedException e) {
             new Popup().warning(TradeExceptionHandler.localizedMessage(e)).show();

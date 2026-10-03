@@ -42,7 +42,6 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
@@ -299,7 +298,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                                                  BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                                  FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                                  Optional<UserProfile> mediator,
-                                                 PriceSpec priceSpec,
                                                  long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
@@ -315,7 +313,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                 bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
-                priceSpec,
+                // The contract keeps the price spec of the offer (docs/specifications/trade/bisq-easy-contract-price.md)
+                bisqEasyOffer.getPriceSpec(),
                 marketPrice);
         boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
         NetworkId makerNetworkId = contract.getMaker().getNetworkId();
