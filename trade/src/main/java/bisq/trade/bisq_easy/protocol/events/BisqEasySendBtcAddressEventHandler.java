@@ -55,7 +55,7 @@ public class BisqEasySendBtcAddressEventHandler extends BisqEasyTradeEventHandle
         send(new BisqEasyBtcAddressMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 bitcoinPaymentData,
                 trade.getOffer()));

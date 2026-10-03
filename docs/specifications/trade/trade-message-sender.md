@@ -42,6 +42,8 @@ to MuSig.
 ## Compatibility
 
 - The rules change no message and no persisted data. Unmodified nodes of all versions send trade messages only to
-  their trade peer, with their own network ID as sender.
+  their trade peer, with their own network ID as sender. A node sends under the network ID which its trade peer stored
+  for it (rule 3 of [identity by key](../user/identity-by-key.md)), because nodes of version 2.1.13 compare the whole
+  network ID.
 - The message handlers keep their own check of the trade ID and the sender. It still applies to a caller which passes
   a message to the protocol directly.

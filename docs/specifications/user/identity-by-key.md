@@ -25,6 +25,10 @@ a trade message also applies to MuSig.
      [take offer request validation](../trade/take-offer-request-validation.md));
    - the requester and the peer of a mediation request are the two parties of the contract, and the receiver of the
      request is the mediator of the contract.
+3. A node sends its trade messages under the network ID which its trade peer stored for it. The taker sends under its
+   network ID in the contract. The maker sends under the network ID to which the taker addressed the take offer request.
+   An honest taker addresses it to the maker's network ID in the offer. The node sends from the identity of the trade,
+   whose network ID can have a newer address map.
 
 ## Reasons
 
@@ -33,8 +37,12 @@ a trade message also applies to MuSig.
 - A comparison of whole network IDs rejects an honest user whose address map differs from the copy which the other node
   holds. For example, the taker stores the maker's network ID from the offer as its trade peer. A comparison of whole
   network IDs drops every trade message which the maker sends under a newer address map.
+- Rule 3: nodes of version 2.1.13 compare the sender of a trade message with the network ID which they stored for the
+  trade peer, including the address map. The handler throws if the two differ, and the state machine then fails the
+  trade. Rule 3 keeps such trades working, because the sender is the value which the peer stored.
 
 ## Compatibility
 
 - The rules change no message and no persisted data.
-- Nodes of version 2.1.13 and earlier compare whole network IDs in the decisions of rule 2.
+- Nodes of version 2.1.13 and earlier compare whole network IDs in the decisions of rule 2. Rule 3 keeps the trade
+  messages of a maker whose address map changed acceptable for takers of version 2.1.13.
