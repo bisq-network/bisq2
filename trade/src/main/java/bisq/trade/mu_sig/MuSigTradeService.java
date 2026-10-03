@@ -41,6 +41,7 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -234,9 +235,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 .thenApply(result -> {
                     persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
-                    networkService.getConfidentialMessageServices().stream()
-                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                            .forEach(this::onMessage);
+                    StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
+                                    .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
+                            this::onMessage);
 
                     tradeByIdPin = getTradeById().addObserver(new HashMapObserver<>() {
                         @Override

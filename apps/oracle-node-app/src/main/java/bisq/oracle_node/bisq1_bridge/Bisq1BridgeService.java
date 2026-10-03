@@ -27,6 +27,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -168,15 +169,15 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
         networkService.addDataServiceListener(this);
         String storageKey = UserProfile.class.getSimpleName();
-        networkService.getDataService()
-                .stream() // turns Optional<DataService> into Stream<DataService>
-                .flatMap(dataService ->
-                        dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
-                                .map(AuthenticatedData::getDistributedData)
-                                .filter(UserProfile.class::isInstance)
-                                .map(UserProfile.class::cast)
-                )
-                .forEach(this::handleUserProfileAdded);
+        StartupReplay.forEach(networkService.getDataService()
+                        .stream() // turns Optional<DataService> into Stream<DataService>
+                        .flatMap(dataService ->
+                                dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
+                                        .map(AuthenticatedData::getDistributedData)
+                                        .filter(UserProfile.class::isInstance)
+                                        .map(UserProfile.class::cast)
+                        ),
+                this::handleUserProfileAdded);
 
         return grpcClient.initialize()
                 .thenCompose(result -> bisq1BridgeRequestService.initialize())

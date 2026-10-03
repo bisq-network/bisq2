@@ -21,6 +21,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -91,9 +92,9 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
                 .runnableName("checkPending")
                 .after(1000);
 
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
+        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
+                        .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
+                this::onMessage);
         networkService.addConfidentialMessageListener(this);
     }
 

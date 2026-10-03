@@ -26,6 +26,7 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.observable.Pin;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -75,7 +76,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService ->
-                dataService.getAuthenticatedData().forEach(this::handleAuthenticatedDataAdded));
+                StartupReplay.forEach(dataService.getAuthenticatedData(), this::handleAuthenticatedDataAdded));
 
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type)

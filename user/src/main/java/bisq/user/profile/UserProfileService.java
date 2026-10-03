@@ -23,6 +23,7 @@ import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
@@ -84,7 +85,7 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         log.info("initialize");
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService -> {
-            dataService.getAuthenticatedData().forEach(authenticatedData -> {
+            StartupReplay.forEach(dataService.getAuthenticatedData(), authenticatedData -> {
                 if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
                     processUserProfileAddedOrRefreshed(userProfile, true);
                 }
