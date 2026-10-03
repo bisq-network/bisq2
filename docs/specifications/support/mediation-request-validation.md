@@ -11,10 +11,15 @@ The mediator accepts a request only when:
 - the requester is not banned;
 - the requester and the peer are the maker and the taker of the contract, in either order, by network ID;
 - the contract's mediator is the receiving mediator, and neither trader is the mediator;
-- every forwarded message belongs to the trade and its channel, is authored by one of the two traders, has a unique ID within the request, and is of a type a trader's channel holds: text, leave, take offer or protocol log;
 - the requester has fewer than ten open cases for other trades, counting cases the requester is on record for as the other trader;
 - while the mediator keeps a case of the trade, each trader may request once, whether or not the mediator's channel still exists, and a request must name the same two traders as the trade's cases;
 - when the mediator's channel for the trade exists, it must hold the two traders; the channel's offer is not compared.
+
+## Forwarded messages
+
+The mediator imports a forwarded message only when it belongs to the trade and its channel, is authored by one of the two traders, and is of a type a trader's channel holds: text, leave, take offer or protocol log. It skips any other forwarded message and still accepts the request. A trader's channel can hold messages which the requester did not choose: the peer chooses the trade ID and the ID of its messages, and once the mediator joined, the channel holds the mediator's messages. If the mediator ignored a request with such a message, the peer could block the mediation of the trade with one message. A skipped message is not imported and does not count for the unverified mark.
+
+Forwarded messages can share an ID, for example when the peer sent a message under the ID of a message of the requester. Each of them is imported and marked by its exact content (see Provenance of chat messages). If the mediator skipped messages with a shared ID, the peer could remove a message of the requester from the request.
 
 ## Case identity and retained requests
 
@@ -35,8 +40,6 @@ Contract signatures of both traders and signed chat messages are not part of the
 The other trader sends no request when the mediator joins, so a differing contract shows only when both traders requested.
 
 The first accepted request fixes the trade's two traders. A later request for that trade from or naming another profile is rejected, so until contracts are signed, a party can lock its counterparty out of mediation by naming another profile first.
-
-A request sent after the mediator joined carries the mediator's own messages and is rejected as a whole, so a second case can only come from a request sent before the mediator's response arrived.
 
 A mark on a message already displayed is updated when the mediator opens the channel again. Until then, a message can keep a mark that a later request of its author cleared. A displayed message cannot miss a mark it needs: an unmarked message is either in a request of its author, which stays on record, or was received live, and a live message has the mediator as receiver, so it never matches a forwarded copy.
 

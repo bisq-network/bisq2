@@ -20,7 +20,6 @@ package bisq.support.mediation.bisq_easy;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
-import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
@@ -49,7 +48,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -69,10 +67,6 @@ import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentity
 public class BisqEasyMediatorService extends RateLimitedPersistenceClient<MediatorStore> implements Service, ConfidentialMessageService.Listener {
     @VisibleForTesting
     static final int MAX_OPEN_CASES_PER_REQUESTER = 10;
-    private static final Set<ChatMessageType> FORWARDABLE_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
-            ChatMessageType.LEAVE,
-            ChatMessageType.TAKE_BISQ_EASY_OFFER,
-            ChatMessageType.PROTOCOL_LOG_MESSAGE);
 
     @Getter
     private final MediatorStore persistableStore = new MediatorStore();
@@ -203,6 +197,13 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                     .ifPresentOrElse(existingCase -> retainRequest(existingCase, bisqEasyMediationRequest),
                             () -> addNewMediationCase(bisqEasyMediationCase));
 
+            int numSkippedMessages = bisqEasyMediationRequest.getChatMessages().size() -
+                    getAcceptedChatMessages(bisqEasyMediationRequest).size();
+            if (numSkippedMessages > 0) {
+                log.warn("Skipping {} chat messages of BisqEasyMediationRequest for trade {} which do not belong to " +
+                        "the trade, its channel or its traders, or have a type a trader's channel does not hold.",
+                        numSkippedMessages, tradeId);
+            }
             getMessagesToImport(bisqEasyMediationRequest, channel.getChatMessages())
                     .forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
@@ -248,9 +249,6 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         if (isMediatorAParty(requester, peer, bisqEasyMediationRequest.getReceiver())) {
             log.warn("Ignoring BisqEasyMediationRequest for trade {} because it names the mediator as a trader.",
                     bisqEasyMediationRequest.getTradeId());
-            return Optional.empty();
-        }
-        if (!hasValidChatMessages(bisqEasyMediationRequest, requester, peer)) {
             return Optional.empty();
         }
         if (!hasTradersOnRecord(bisqEasyMediationRequest, existingCases)) {
@@ -349,12 +347,12 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
 
     static Set<String> getUnverifiedChatMessageKeys(List<BisqEasyMediationRequest> requestsForTrade) {
         Set<String> ownMessageKeys = requestsForTrade.stream()
-                .flatMap(request -> request.getChatMessages().stream()
+                .flatMap(request -> getAcceptedChatMessages(request).stream()
                         .filter(message -> isOwnMessage(message, request)))
                 .map(BisqEasyMediatorService::getProvenanceKey)
                 .collect(Collectors.toSet());
         return requestsForTrade.stream()
-                .flatMap(request -> request.getChatMessages().stream()
+                .flatMap(request -> getAcceptedChatMessages(request).stream()
                         .filter(message -> !isOwnMessage(message, request)))
                 .map(BisqEasyMediatorService::getProvenanceKey)
                 .filter(key -> !ownMessageKeys.contains(key))
@@ -371,7 +369,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         Set<String> existingMessageKeys = channelMessages.stream()
                 .map(BisqEasyMediatorService::getProvenanceKey)
                 .collect(Collectors.toSet());
-        return bisqEasyMediationRequest.getChatMessages().stream()
+        return getAcceptedChatMessages(bisqEasyMediationRequest).stream()
                 .map(BisqEasyMediatorService::withoutReactions)
                 .filter(chatMessage -> !existingMessageKeys.contains(getProvenanceKey(chatMessage)))
                 .toList();
@@ -403,49 +401,22 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         return message.getSenderUserProfile().getId().equals(request.getRequester().getId());
     }
 
-    private static boolean hasValidChatMessages(BisqEasyMediationRequest bisqEasyMediationRequest,
-                                                UserProfile requester,
-                                                UserProfile peer) {
+    // The forwarded messages the mediator imports: the ones of the trade and its channel, authored by one of the two
+    // traders and of a type a trader's channel holds. Chat rules warnings and expired messages indicators are local UI
+    // notices, their renderers show no provenance. Other messages are skipped, not the request, as the requester's
+    // channel can hold messages the requester did not choose: the peer chooses the IDs of its messages, and the
+    // channel holds the mediator's messages once the mediator joined.
+    @VisibleForTesting
+    static List<BisqEasyOpenTradeMessage> getAcceptedChatMessages(BisqEasyMediationRequest bisqEasyMediationRequest) {
         String tradeId = bisqEasyMediationRequest.getTradeId();
         String channelId = BisqEasyOpenTradeChannel.createId(tradeId);
-        // Only message types a trader's channel holds. Chat rules warnings and expired messages indicators are
-        // local UI notices, their renderers show no provenance.
-        Optional<BisqEasyOpenTradeMessage> unexpectedType = bisqEasyMediationRequest.getChatMessages().stream()
-                .filter(chatMessage -> !FORWARDABLE_MESSAGE_TYPES.contains(chatMessage.getChatMessageType()))
-                .findAny();
-        if (unexpectedType.isPresent()) {
-            log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has type {}.",
-                    tradeId, unexpectedType.get().getId(), unexpectedType.get().getChatMessageType());
-            return false;
-        }
-        long numDistinctIds = bisqEasyMediationRequest.getChatMessages().stream()
-                .map(BisqEasyOpenTradeMessage::getId)
-                .distinct()
-                .count();
-        if (numDistinctIds != bisqEasyMediationRequest.getChatMessages().size()) {
-            log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat messages share an ID.", tradeId);
-            return false;
-        }
+        Set<String> traderIds = getTraderIds(bisqEasyMediationRequest);
         return bisqEasyMediationRequest.getChatMessages().stream()
-                .allMatch(chatMessage -> {
-                    if (!chatMessage.getTradeId().equals(tradeId)) {
-                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has trade ID {}.",
-                                tradeId, chatMessage.getId(), chatMessage.getTradeId());
-                        return false;
-                    }
-                    if (!chatMessage.getChannelId().equals(channelId)) {
-                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has channel ID {}.",
-                                tradeId, chatMessage.getId(), chatMessage.getChannelId());
-                        return false;
-                    }
-                    String senderUserProfileId = chatMessage.getSenderUserProfile().getId();
-                    if (!senderUserProfileId.equals(requester.getId()) && !senderUserProfileId.equals(peer.getId())) {
-                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has unexpected sender {}.",
-                                tradeId, chatMessage.getId(), senderUserProfileId);
-                        return false;
-                    }
-                    return true;
-                });
+                .filter(chatMessage -> chatMessage.hasSupportedChatMessageType() &&
+                        chatMessage.getTradeId().equals(tradeId) &&
+                        chatMessage.getChannelId().equals(channelId) &&
+                        traderIds.contains(chatMessage.getSenderUserProfile().getId()))
+                .toList();
     }
 
     // Every accepted request is retained before its messages get imported, so that the provenance of each
