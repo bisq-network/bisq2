@@ -76,7 +76,9 @@ public class PersistableStoreFileManager {
             throw new NoSuchFileException(tempFilePath.toAbsolutePath() + " does not exist. Cannot rename not existing file.");
         }
 
-        FileMutatorUtils.renameFile(tempFilePath, storeFilePath);
+        if (!FileMutatorUtils.renameFile(tempFilePath, storeFilePath)) {
+            throw new IOException("Couldn't replace " + storeFilePath + " with " + tempFilePath);
+        }
     }
 
     public boolean maybeBackup() {
