@@ -24,6 +24,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.TradeId;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -95,6 +97,11 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     @Override
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
+        // The mediator files the request under its trade ID and adds its chat messages to the trade channel of this
+        // ID. So the trade ID must be the ID of the trade of the contract, not any ID which the sender chooses, for
+        // example the ID of a mediation case of other users (see docs/specifications/trade/trade-id.md).
+        checkArgument(TradeId.isIdOfContract(tradeId, contract),
+                "The trade ID of a mediation request must be the ID of the trade of its contract");
         if (getSerializedSize() > MAX_SERIALIZED_SIZE) {
             throw new SerializedSizeExceededException(
                     "Serialized mediation request size must not exceed " + MAX_SERIALIZED_SIZE + " bytes");
