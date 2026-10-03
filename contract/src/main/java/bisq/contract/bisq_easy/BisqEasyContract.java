@@ -44,6 +44,10 @@ public final class BisqEasyContract extends TwoPartyContract<BisqEasyOffer> {
     private final BitcoinPaymentMethodSpec baseSidePaymentMethodSpec;
     private final FiatPaymentMethodSpec quoteSidePaymentMethodSpec;
     private final Optional<UserProfile> mediator;
+    // Equals the price spec of the offer (docs/specifications/trade/bisq-easy-contract-price.md). It stays for the hash
+    // of signed contracts and for nodes up to 2.1.13, which read it. Use the price spec of the offer instead.
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated(since = "2.1.14")
     private final PriceSpec priceSpec;
     private final long marketPrice;
 
