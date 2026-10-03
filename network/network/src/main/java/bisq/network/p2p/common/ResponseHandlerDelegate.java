@@ -26,6 +26,8 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -58,8 +60,10 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
 
     @Override
     public void shutdown() {
-        requestFuturesByConnectionId.values().forEach(handler -> handler.cancel(true));
+        // Remove before cancel, see processOnDisconnect
+        List<RequestFuture<T, R>> requestFutures = new ArrayList<>(requestFuturesByConnectionId.values());
         requestFuturesByConnectionId.clear();
+        requestFutures.forEach(requestFuture -> requestFuture.cancel(true));
     }
 
     public Optional<R> resolveResponse(EnvelopePayloadMessage message) {
@@ -131,11 +135,12 @@ class ResponseHandlerDelegate<T extends Request, R extends Response> implements 
     }
 
     public void processOnDisconnect(Connection connection, CloseReason closeReason) {
-        requestFuturesByConnectionId.computeIfPresent(connection.getId(), (key, handler) -> {
-            if (!handler.isDone()) {
-                handler.cancel(true);
-            }
-            return null; // removes entry
-        });
+        // Remove the entry first, then cancel. Cancel runs the dependent stages of the future on this thread. Those
+        // stages are client code: they must see the request as finished, and they may send a new request through this
+        // delegate (for example a retry on another connection), which must not run inside an update of the map.
+        RequestFuture<T, R> requestFuture = requestFuturesByConnectionId.remove(connection.getId());
+        if (requestFuture != null && !requestFuture.isDone()) {
+            requestFuture.cancel(true);
+        }
     }
 }
