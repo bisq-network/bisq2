@@ -89,6 +89,19 @@ Reasons:
 
 The shared hash cash proof-of-work algorithm remains available for V2 and other consumers.
 
+## Minimum difficulty of HASH_CASH_V2
+
+Every received `HASH_CASH_V2` proof must declare a finite difficulty of at least 128. Check this
+floor before applying the tolerance for current or previous network load. That tolerance permits
+temporary differences in the peers' load observations; it must not authorize zero-work proofs
+or proofs below the sender's unconditional minimum.
+
+Both this version and release 2.1.13 create V2 tokens with a difficulty of at least 128, including
+when the difficulty adjustment is zero. The floor changes no token encoding and rejects no token
+from an unmodified supported sender. Difficulty 128 remains valid when the expected difficulty
+is 128 or the existing load-tolerance rules admit it. Legacy handshake proofs still require their
+separate, higher minimum without tolerance.
+
 ## Replay state lifetime
 
 Each connection owns its received `HASH_CASH_V2` message counters. A counter is consumed atomically,
