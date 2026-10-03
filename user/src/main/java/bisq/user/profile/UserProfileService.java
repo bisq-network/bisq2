@@ -32,6 +32,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import bisq.user.contact_list.ContactListService;
+import bisq.user.identity.UserIdentityService;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -247,6 +248,17 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
     private boolean verifyUserProfile(UserProfile userProfile) {
         if (!Arrays.equals(userProfile.getProofOfWork().getPayload(), userProfile.getPubKeyHash())) {
             log.warn("Payload of proof of work not matching pubKeyHash of user profile {}", userProfile);
+            return false;
+        }
+
+        // The verifier checks the work against the difficulty which the profile claims. The nym and the cat hash icon
+        // are derived from the solution, so the claimed difficulty must not be below the difficulty at minting.
+        // Otherwise searching for a nym and icon which look like those of another user costs almost nothing.
+        // The negated comparison also rejects NaN.
+        double difficulty = userProfile.getProofOfWork().getDifficulty();
+        if (!(difficulty >= UserIdentityService.MINT_NYM_DIFFICULTY)) {
+            log.warn("Proof of work difficulty {} of user profile {} is below the required minimum {}",
+                    difficulty, userProfile.getId(), UserIdentityService.MINT_NYM_DIFFICULTY);
             return false;
         }
 
