@@ -59,6 +59,24 @@ compare both before it accepts the data.
    rejects another message when it constructs or decodes it. So only the maker publishes its offer, and nobody can
    show the offer of another user in the offerbook. Released nodes publish only their own offers.
 
+   Such a message is also valid only if its channel is the offerbook channel of the market of its offer. The ID of
+   this channel is `bisq_easy_offerbook.<base currency code>-<quote currency code>`, for example
+   `bisq_easy_offerbook.BTC-EUR`. A node rejects another message when it constructs or decodes it. A message without
+   an offer can be in any channel.
+
+   Reason: a node shows a message in the channel which the message names. Without the rule, a maker can show its offer
+   in the offerbook of every market. For example, the offer list of the desktop shows the amount of a BTC/USD offer in
+   the BTC/EUR offerbook without its currency, under the column title "EUR AMOUNT". The API lists the offer for the
+   market of the channel.
+
+   Compatibility: unmodified nodes of all released versions publish an offer in the channel of its market. Versions up
+   to 2.1.7 wrote the domain part of the ID in lower case with the rules of the default locale of the system. With a
+   Turkish or Azerbaijani locale, the letter i in `bisq` of their ID is a dotless i (U+0131). A node of this version
+   rejects the offer messages of such nodes. A node shows a message only in a channel with the same ID, and a node
+   keeps the IDs of its channels when it updates. So only nodes which first ran a version up to 2.1.7 with such a
+   locale showed these offers. Nodes of version 2.1.13 and earlier accept and relay offer messages in other channels
+   (see [`validation-at-parsing.md`](validation-at-parsing.md#compatibility)).
+
 ### The owner of authenticated data
 
 3. The owner of default authenticated data is the owner which the data names. The store rejects default authenticated
@@ -341,6 +359,8 @@ Who decides on steps 2 and 3: the developers, together with the operators of the
 - Mailbox sequential data with a receiver hash that does not match the receiver public key bytes is rejected.
 - With the real MuSig offerbook: a copy of an offer which another user signs is rejected, the removal of that user does
   not remove the offer, and the maker can remove it.
+- An offerbook message with the offer of another maker, or with an offer in the channel of another market, cannot be
+  created, and a received one fails at parsing. A message without an offer can be in the channel of any market.
 - `PubKey.isId` and `PubKey.getHashFromId` accept only IDs which `PubKey.getId()` creates, also not hex encodings of
   another length.
 
@@ -351,3 +371,4 @@ Who decides on steps 2 and 3: the developers, together with the operators of the
 - `OwnershipVerifiableData.getOwnerPubKeyHash()`, `AuthenticatedData.isOwner()`, `AuthorizedData.isOwner()` (rule 4),
   `AuthenticatedSequentialData.verify()`, `MailboxSequentialData.verify()`.
 - `StorageService` (rule 11), `AuthorizedDataPublisherMigration` (rule 14).
+- `BisqEasyOfferbookMessage.verify()` (the maker and the channel of an offerbook message).

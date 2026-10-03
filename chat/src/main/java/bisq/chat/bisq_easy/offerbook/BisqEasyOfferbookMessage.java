@@ -97,6 +97,11 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
         // can show the offer of another user in the offerbook.
         bisqEasyOffer.ifPresent(offer -> checkArgument(offer.getMakersUserProfileId().equals(authorUserProfileId),
                 "The author of an offerbook message must be the maker of its offer"));
+        // A node adds a message to the channel which the message names. The market of the offer decides the channel,
+        // so that nobody can show an offer in the offerbook of another market.
+        bisqEasyOffer.ifPresent(offer ->
+                checkArgument(channelId.equals(BisqEasyOfferbookChannel.createId(offer.getMarket())),
+                        "The channel of an offerbook message must be the channel of the market of its offer"));
     }
 
     @Override
