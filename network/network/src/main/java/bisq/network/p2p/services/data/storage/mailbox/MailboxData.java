@@ -32,6 +32,8 @@ import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Holds the ConfidentialMessage and the class name of the encrypted MailboxMessage.
  * <p>
@@ -51,11 +53,11 @@ public final class MailboxData implements StorageData, Canonical {
 
     private final ConfidentialMessage confidentialMessage;
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
-    // registered MetaData of the class name (see fromProto) and never uses the field for a decision (see
-    // getMetaData()).
+    // Deprecated. The class name selects the MetaData (see getMetaData()); the field is still sent only because nodes of
+    // earlier versions use it. fromProto replaces the received value by the registered MetaData of the class name, so
+    // its className always equals className. No hash, storage key, proof of work or signature contains it.
     @EqualsAndHashCode.Exclude
-    @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
+    @ExcludeForHash
     private final MetaData metaData;
 
     @EqualsAndHashCode.Exclude
@@ -85,6 +87,8 @@ public final class MailboxData implements StorageData, Canonical {
     @Override
     public void verify() {
         MetaData.validateClassName(className);
+        // Nodes of earlier versions select the store by the className of metaData
+        checkArgument(metaData.getClassName().equals(className), "className of metaData must equal className");
     }
 
     @Override
@@ -111,11 +115,9 @@ public final class MailboxData implements StorageData, Canonical {
                     receivedMetaData.getClassName() :
                     proto.getClassName();
             // Nodes of earlier versions use metaData. Send them the registered values, not those which a sender or relay
-            // chose. In these versions serializeForHash() does not contain metaData, so the signature and the storage key
-            // of the AddMailboxRequest and the proof of work payload do not change.
-            MetaData metaData = isMetaDataExcludedForHash(proto.getVersion()) ?
-                    StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData) :
-                    receivedMetaData;
+            // chose. serializeForHash() never contains metaData, so the signature V1 and the storage key of the
+            // AddMailboxRequest and the proof of work payload do not change.
+            MetaData metaData = StorableTypesRegistry.getMetaDataForEarlierVersions(className, receivedMetaData);
             return new MailboxData(
                     proto.getVersion(),
                     metaData,
@@ -131,8 +133,8 @@ public final class MailboxData implements StorageData, Canonical {
     // Canonical
     /* --------------------------------------------------------------------- */
 
-    // Contains metaData, version and className, which serializeForHash() omits (metaData only in versions 1 to 3), as
-    // the default encoding contains all non-transient fields.
+    // Contains metaData, version and className, which serializeForHash() omits, as the default encoding contains all
+    // non-transient fields.
     public static final CanonicalSchema<MailboxData> DEFAULT_SCHEMA = CanonicalSchema.<MailboxData>newBuilder()
             // ConfidentialMessage.encodeCanonical writes the EnvelopePayloadMessage envelope, but MailboxData contains
             // the bare message. The value schema is therefore referenced directly, and a purpose-specific schema of
@@ -157,22 +159,13 @@ public final class MailboxData implements StorageData, Canonical {
     public static final CanonicalSchema<MailboxData> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<MailboxData> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
-    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 2) in versions
-    // 1 to 3, version (field 3) and className (field 4).
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 2), version
+    // (field 3) and className (field 4).
     private static CanonicalSchema<MailboxData> createSchemaForHash() {
         return CanonicalSchema.<MailboxData>newBuilder()
                 // ConfidentialMessage uses its default value schema for every purpose
                 .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
-                // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-                .canonical(2, mailboxData -> isMetaDataExcludedForHash(mailboxData.version) ?
-                        null :
-                        mailboxData.metaData)
                 .build();
-    }
-
-    // Same versions as the @ExcludeForHash annotation of metaData
-    private static boolean isMetaDataExcludedForHash(int version) {
-        return version == 1 || version == 2 || version == 3;
     }
 
     @Override
@@ -198,12 +191,6 @@ public final class MailboxData implements StorageData, Canonical {
     // does not use it for its own decisions.
     public MetaData getMetaDataForEarlierVersions() {
         return metaData;
-    }
-
-    // In version 0 serializeForHash() contains the field metaData. Then the signature and the storage key of the
-    // AddMailboxRequest and the proof of work payload cover it, so a relay cannot change it.
-    public boolean isMetaDataCoveredByHash() {
-        return !isMetaDataExcludedForHash(version);
     }
 
     @Override

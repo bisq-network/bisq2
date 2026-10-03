@@ -48,4 +48,11 @@ public class SignatureValidation {
             NetworkDataValidation.validateECSignature(signatureV2);
         }
     }
+
+    // Version 0 is the format of releases before the version field existed. Version 2 is the first version with
+    // signature V2, and every node which signs with signature V2 sets its version. A request with signature V2 and
+    // version 0 therefore comes from no supported sender.
+    public static void validateVersionOfSignatureV2(byte[] signatureV2, int version) {
+        checkArgument(signatureV2.length == 0 || version != 0, "A request with signature V2 must not have version 0");
+    }
 }

@@ -106,26 +106,26 @@ Always pass the received `encodingPurpose` to the encoder, also when the selecte
 When the class has fields annotated with `@ExcludeForHash`, the `STORAGE_KEY`, `PROOF_OF_WORK`, and
 `TRADE_CONTRACT` purposes leave them out, as `serializeForHash()` does. Build these schemas with one
 method, name the left-out fields and their annotation in a comment, and reproduce
-`excludeOnlyInVersions` with the same version condition (compare `MailboxData`):
+`excludeOnlyInVersions` with the same version condition (compare `MailboxData`, where every excluded
+field is excluded in all versions):
 
 ```java
     public static final CanonicalSchema<MailboxData> STORAGE_KEY_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<MailboxData> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
     public static final CanonicalSchema<MailboxData> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
 
-    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 2) in versions
-    // 1 to 3, version (field 3) and className (field 4).
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: metaData (field 2), version
+    // (field 3) and className (field 4).
     private static CanonicalSchema<MailboxData> createSchemaForHash() {
         return CanonicalSchema.<MailboxData>newBuilder()
                 // ConfidentialMessage uses its default value schema for every purpose
                 .compose(1, MailboxData::getConfidentialMessage, ConfidentialMessage.DEFAULT_VALUE_SCHEMA)
-                // metaData is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3})
-                .canonical(2, mailboxData -> isMetaDataExcludedForHash(mailboxData.version) ?
-                        null :
-                        mailboxData.metaData)
                 .build();
     }
 ```
+
+For a field with `excludeOnlyInVersions`, the schema uses a getter which returns `null` in the listed
+versions, for example `.canonical(n, x -> isExcluded(x.version) ? null : x.field)`.
 
 The switch then selects `STORAGE_KEY_SCHEMA`, `PROOF_OF_WORK_SCHEMA`, and `TRADE_CONTRACT_SCHEMA`. A
 field that these schemas leave out is not protected by the storage key, the proof of work, or the
@@ -246,9 +246,8 @@ message. The name says where the bytes come from and which role the field has.
   use `value.encodeCanonical(canonicalEncoder, encodingPurpose)`.
 - **Getters with runtime values.** Encode fields, not getters that return transient overrides.
 - **`excludeOnlyInVersions`.** The condition uses the version that `getVersion()` of the object
-  returns (the `version` field of the remove requests and of `MailboxData`). Reproduce the same
-  versions in the getter of the `STORAGE_KEY`, `PROOF_OF_WORK`, and `TRADE_CONTRACT` schemas and test
-  versions inside and outside the list.
+  returns. Reproduce the same versions in the getter of the `STORAGE_KEY`, `PROOF_OF_WORK`, and
+  `TRADE_CONTRACT` schemas and test versions inside and outside the list.
 - **Class initialization cycles.** A superclass must not reference static schemas of its subclasses in
   its static fields. Use static builder methods (`getAuthenticatedDataSchemaBuilder()`).
 - **Builders are mutable.** A builder method must return a new builder on every call.

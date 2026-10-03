@@ -587,10 +587,13 @@ class AuthenticatedDataStorageServiceTest {
     void removeRequestWithClassNameOfOtherTypeIsRejected()
             throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
-        // A relay can change className, because the signature does not cover it
+        // A relay can change className, because signature V1 does not cover it. It changes the className of the
+        // deprecated metaData as well, otherwise parsing rejects the request.
+        //noinspection deprecation
         RemoveAuthenticatedDataRequest requestWithOtherClassName = RemoveAuthenticatedDataRequest.fromProto(
                 removeRequest.toValueProto(false).toBuilder()
                         .setClassName("OtherDistributedData")
+                        .setMetaData(new MetaData(MetaData.TTL_10_DAYS, "OtherDistributedData").toProto(false))
                         .build());
 
         DataStorageResult result = peerStore.remove(requestWithOtherClassName);
