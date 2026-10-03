@@ -66,6 +66,11 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
     public void verify() {
         super.verify();
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
+        // The receiver acknowledges a private reaction with an AckMessage which carries its ID, and an AckMessage
+        // accepts at most 100 characters. The reacted message is a chat message, whose ID has at most 50 characters.
+        // Unmodified clients create the ID of a reaction as a UUID.
+        NetworkDataValidation.validateId(id);
+        NetworkDataValidation.validateId(getChatMessageId());
     }
 
     @Override
