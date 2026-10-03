@@ -31,7 +31,7 @@ Compatibility: no message or storage format changes. A channel which a chat mess
 A trade chat channel matches its trade when:
 
 - the channel offer equals the contract offer by full value equality (`Offer.equals` excludes only the version fields, so a copy serialized by another app version still matches);
-- the channel mediator and the contract mediator have the same network ID, or both are absent (a user profile can change its nick name, terms and statement, so profiles are not compared by value);
+- the channel mediator and the contract mediator have the same whole network ID, including the addresses, or both are absent (a user profile can change its terms and statement, so profiles are not compared by value; the addresses are compared because the chat sends the messages for the mediator to the addresses of the channel's copy, see rule 4 of [identity by key](../user/identity-by-key.md));
 - the channel peer's profile ID equals the ID of the trade peer's network ID (both are the hash of the public key, which also binds the channel peer to the identity which signed the contract);
 - the ID of the channel's own identity equals the ID of the trader's identity in the trade (both are the hash of the own public key; on the maker's node the channel's identity comes from the receiver field of the taker's first chat message, which is not bound to the trade).
 

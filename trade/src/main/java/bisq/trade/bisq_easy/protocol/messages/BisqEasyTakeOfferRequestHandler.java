@@ -133,6 +133,9 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
                 .selectMediator(takersOffer.getMakersUserProfileId(),
                         trade.getTaker().getNetworkId().getId(),
                         trade.getOffer().getId());
+        // The whole network ID, including the addresses: we send our mediation request and our chat messages for the
+        // mediator to the addresses of the copies which the taker supplies. This check binds them to the profile which
+        // the mediator published (docs/specifications/user/identity-by-key.md, rule 4).
         if (!mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId))) {
             String errorMessage = String.format("Mediators do not match.\n" +
                     "Maker's mediator: %s\n" +
