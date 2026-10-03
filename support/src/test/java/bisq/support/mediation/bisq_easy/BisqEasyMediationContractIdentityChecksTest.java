@@ -71,6 +71,32 @@ class BisqEasyMediationContractIdentityChecksTest {
                 outsider));
     }
 
+    // A trade has two different parties. The mediator creates a channel with the requester and the peer as its two
+    // traders, so a request which names one profile twice must not match, also with another copy of the profile.
+    @Test
+    void rejectsRequesterWhoIsAlsoThePeer() {
+        UserProfile trader = createUserProfile("trader");
+        UserProfile traderWithOtherNickName = new UserProfile(0,
+                "other nick name",
+                trader.getProofOfWork(),
+                0,
+                trader.getNetworkId(),
+                "",
+                "",
+                "");
+
+        assertFalse(BisqEasyMediationContractIdentityChecks.hasMatchingContractParties(
+                trader.getNetworkId(),
+                trader.getNetworkId(),
+                trader,
+                trader));
+        assertFalse(BisqEasyMediationContractIdentityChecks.hasMatchingContractParties(
+                trader.getNetworkId(),
+                trader.getNetworkId(),
+                trader,
+                traderWithOtherNickName));
+    }
+
     @Test
     void acceptsMatchingContractMediator() {
         UserProfile mediator = createUserProfile("mediator");
