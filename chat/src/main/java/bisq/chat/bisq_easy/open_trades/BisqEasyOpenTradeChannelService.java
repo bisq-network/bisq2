@@ -98,18 +98,38 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     // API
     /* --------------------------------------------------------------------- */
 
+    // The verified mediation request is the authority for the mediator's channel. Anybody who knows the trade ID can
+    // send the mediator a chat message with an offer before the request, and that creates a channel with the sender as
+    // the only trader. Such a channel would hide the case and drop the messages of the other trader, so it is replaced.
+    // Its messages are dropped: honest traders send nothing to the mediator before the request, and the request
+    // carries the chat of the trade. Other channels of the trade are kept (see chat-channel-binding.md).
     public BisqEasyOpenTradeChannel mediatorFindOrCreatesChannel(String tradeId,
                                                                  BisqEasyOffer bisqEasyOffer,
                                                                  UserIdentity myUserIdentity,
                                                                  UserProfile requestingTrader,
                                                                  UserProfile nonRequestingTrader) {
-        return findChannelByTradeId(tradeId)
-                .orElseGet(() -> createAndAddChannel(tradeId,
-                        bisqEasyOffer,
-                        myUserIdentity,
-                        Set.of(requestingTrader, nonRequestingTrader),
-                        Optional.of(myUserIdentity.getUserProfile()),
-                        true));
+        BisqEasyOpenTradeChannel channel;
+        synchronized (this) {
+            Optional<BisqEasyOpenTradeChannel> existingChannel = findChannelByTradeId(tradeId);
+            if (existingChannel.isPresent()) {
+                if (!isCreatedByChatMessageToMediator(existingChannel.get(), myUserIdentity)) {
+                    return existingChannel.get();
+                }
+                log.warn("We replace the channel of trade {} which a chat message created before the mediation request",
+                        StringUtils.sanitizeForLog(tradeId));
+                getChannels().remove(existingChannel.get());
+            }
+            channel = BisqEasyOpenTradeChannel.create(tradeId,
+                    bisqEasyOffer,
+                    myUserIdentity,
+                    Set.of(requestingTrader, nonRequestingTrader),
+                    Optional.of(myUserIdentity.getUserProfile()),
+                    true);
+            getChannels().add(channel);
+        }
+        persist();
+        processPendingMessages(tradeId);
+        return channel;
     }
 
     public CompletableFuture<SendMessageResult> sendTakeOfferMessage(String tradeId,
@@ -377,22 +397,15 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         return channel;
     }
 
-    private BisqEasyOpenTradeChannel createAndAddChannel(String tradeId,
-                                                         BisqEasyOffer bisqEasyOffer,
-                                                         UserIdentity myUserIdentity,
-                                                         Set<UserProfile> traders,
-                                                         Optional<UserProfile> mediator,
-                                                         boolean isInMediation) {
-        BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.create(tradeId,
-                bisqEasyOffer,
-                myUserIdentity,
-                traders,
-                mediator,
-                isInMediation);
-        getChannels().add(channel);
-        persist();
-        processPendingMessages(tradeId);
-        return channel;
+    // Only a mediation request creates a channel with two traders, and the mediator profile never trades in a trade
+    // which it mediates, as the mediator selection excludes both traders. So a channel of the trade which has the
+    // mediator's identity as own identity, but not two traders, was created by a chat message of a user who knew the
+    // trade ID. A channel of another of our identities can be the channel of our own trade, and a channel with two
+    // traders holds a mediation case. Both are kept.
+    private static boolean isCreatedByChatMessageToMediator(BisqEasyOpenTradeChannel channel,
+                                                            UserIdentity mediatorUserIdentity) {
+        return channel.getMyUserIdentity().getId().equals(mediatorUserIdentity.getId()) &&
+                channel.getTraders().size() != 2;
     }
 
     private boolean allowSendLeaveMessage(BisqEasyOpenTradeChannel channel, UserProfile userProfile) {
