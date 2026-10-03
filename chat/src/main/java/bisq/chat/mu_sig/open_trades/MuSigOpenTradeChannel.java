@@ -182,6 +182,15 @@ public final class MuSigOpenTradeChannel extends PrivateGroupChatChannel<MuSigOp
         }
     }
 
+    // The traders other than us, and the dispute agents if they are not us
+    @Override
+    public boolean isPeer(String userProfileId) {
+        return !myUserIdentity.getId().equals(userProfileId) &&
+                (traders.stream().anyMatch(trader -> trader.getId().equals(userProfileId)) ||
+                        mediator.filter(mediator -> mediator.getId().equals(userProfileId)).isPresent() ||
+                        arbitrator.filter(arbitrator -> arbitrator.getId().equals(userProfileId)).isPresent());
+    }
+
     public boolean isMediator() {
         return mediator.filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
     }
