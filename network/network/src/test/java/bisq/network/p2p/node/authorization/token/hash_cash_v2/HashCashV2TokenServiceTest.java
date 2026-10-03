@@ -26,8 +26,12 @@ import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -71,7 +75,36 @@ class HashCashV2TokenServiceTest {
                 token,
                 NETWORK_LOAD,
                 Optional.empty(),
-                "connectionId",
+                ConcurrentHashMap.newKeySet(),
                 RECEIVER_ADDRESS);
+    }
+
+    @Test
+    void replayTrackingBelongsToEachConnection() {
+        Ping message = new Ping(1);
+        HashCashV2Token token = tokenService.createToken(message, NETWORK_LOAD, RECEIVER_ADDRESS, 0);
+        Set<Integer> firstConnection = ConcurrentHashMap.newKeySet();
+        Set<Integer> secondConnection = ConcurrentHashMap.newKeySet();
+
+        assertTrue(tokenService.isAuthorized(message, token, NETWORK_LOAD, Optional.empty(),
+                firstConnection, RECEIVER_ADDRESS));
+        assertFalse(tokenService.isAuthorized(message, token, NETWORK_LOAD, Optional.empty(),
+                firstConnection, RECEIVER_ADDRESS));
+        assertTrue(tokenService.isAuthorized(message, token, NETWORK_LOAD, Optional.empty(),
+                secondConnection, RECEIVER_ADDRESS));
+    }
+
+    @Test
+    void concurrentReplayOfOneCounterIsAuthorizedOnlyOnce() {
+        Ping message = new Ping(1);
+        HashCashV2Token token = tokenService.createToken(message, NETWORK_LOAD, RECEIVER_ADDRESS, 0);
+        Set<Integer> connectionCounters = ConcurrentHashMap.newKeySet();
+
+        long authorized = IntStream.range(0, 64).parallel()
+                .filter(ignored -> tokenService.isAuthorized(message, token, NETWORK_LOAD, Optional.empty(),
+                        connectionCounters, RECEIVER_ADDRESS))
+                .count();
+
+        assertEquals(1, authorized);
     }
 }

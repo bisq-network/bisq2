@@ -49,6 +49,7 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
@@ -189,15 +190,18 @@ public final class ConnectionHandshake {
         private final NetworkLoad peersNetworkLoad;
         private final ConnectionMetrics connectionMetrics;
         private final String connectionId;
+        private final Set<Integer> receivedMessageCounters;
 
         Result(Capability peersCapability,
                NetworkLoad peersNetworkLoad,
                ConnectionMetrics connectionMetrics,
-               String connectionId) {
+               String connectionId,
+               Set<Integer> receivedMessageCounters) {
             this.peersCapability = peersCapability;
             this.peersNetworkLoad = peersNetworkLoad;
             this.connectionMetrics = connectionMetrics;
             this.connectionId = connectionId;
+            this.receivedMessageCounters = receivedMessageCounters;
         }
     }
 
@@ -267,10 +271,11 @@ public final class ConnectionHandshake {
             }
 
             String connectionId = StringUtils.createUid();
+            Set<Integer> receivedMessageCounters = ConcurrentHashMap.newKeySet();
             boolean isAuthorized = authorizationService.isAuthorized(response,
                     responseNetworkEnvelope.getAuthorizationToken(),
                     myNetworkLoad,
-                    connectionId,
+                    receivedMessageCounters,
                     myAddress.getFullAddress());
 
             if (!isAuthorized) {
@@ -283,7 +288,7 @@ public final class ConnectionHandshake {
             connectionMetrics.addRtt(rrt);
 
             log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());
-            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics, connectionId);
+            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics, connectionId, receivedMessageCounters);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();
@@ -328,6 +333,7 @@ public final class ConnectionHandshake {
             Address myAddress = capability.getAddress();
             // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the AuthorizationToken.
             String connectionId = StringUtils.createUid();
+            Set<Integer> receivedMessageCounters = ConcurrentHashMap.newKeySet();
             if (requestEnvelope.legacyToken().isPresent()) {
                 // The exception message does not contain the token: its payload is the serialized request
                 if (!authorizationService.isLegacyHandshakeRequestAuthorized(request,
@@ -341,7 +347,7 @@ public final class ConnectionHandshake {
                 boolean isAuthorized = authorizationService.isAuthorized(request,
                         requestToken,
                         NetworkLoad.INITIAL_NETWORK_LOAD,
-                        connectionId,
+                        receivedMessageCounters,
                         myAddress.getFullAddress());
                 if (!isAuthorized) {
                     throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestToken);
@@ -375,7 +381,7 @@ public final class ConnectionHandshake {
             networkEnvelopeSocket.send(responseNetworkEnvelope); // Blocking
             connectionMetrics.onSent(responseNetworkEnvelope, System.currentTimeMillis() - startSendTs);
             connectionMetrics.addRtt(System.currentTimeMillis() - ts);
-            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics, connectionId);
+            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics, connectionId, receivedMessageCounters);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();

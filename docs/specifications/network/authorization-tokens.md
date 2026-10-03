@@ -88,3 +88,13 @@ Reasons:
   no longer need to connect to the network. The developers decide when this is the case.
 
 The shared hash cash proof-of-work algorithm remains available for V2 and other consumers.
+
+## Replay state lifetime
+
+Each connection owns its received `HASH_CASH_V2` message counters. A counter is consumed atomically,
+so simultaneous copies of one token cannot both be accepted on that connection. Handshake counters
+remain consumed when the handshake becomes an established connection. Connections have independent
+counter sets; this does not prevent replay across connections, as described for handshake requests.
+
+Authorization services must not retain counters for failed handshakes or closed connections. The
+state follows the handshake and connection lifetime, rather than a node-wide registry of past IDs.

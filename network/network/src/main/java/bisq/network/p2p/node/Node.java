@@ -336,6 +336,7 @@ public class Node implements Connection.Handler {
         ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
         return new InboundConnection(authorizationService,
                 result.getConnectionId(),
+                result.getReceivedMessageCounters(),
                 socket,
                 result.getPeersCapability(),
                 peersNetworkLoadSnapshot,
@@ -512,6 +513,7 @@ public class Node implements Connection.Handler {
             ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
             connection = new OutboundConnection(authorizationService,
                     result.getConnectionId(),
+                    result.getReceivedMessageCounters(),
                     socket,
                     address,
                     result.getPeersCapability(),
@@ -642,7 +644,7 @@ public class Node implements Connection.Handler {
                 authorizationToken,
                 networkLoadSnapshot.getCurrentNetworkLoad(),
                 networkLoadSnapshot.getPreviousNetworkLoad(),
-                connection.getId(),
+                connection.getReceivedMessageCounters(),
                 myAddress);
         if (!isAuthorized) {
             log.warn("Message authorization failed. Peer={}; Message={}", connection.getPeerAddress(), StringUtils.truncate(envelopePayloadMessage.toString()));
@@ -914,7 +916,7 @@ public class Node implements Connection.Handler {
                 authorizationToken,
                 networkLoadSnapshot.getCurrentNetworkLoad(),
                 networkLoadSnapshot.getPreviousNetworkLoad(),
-                connection.getId(),
+                connection.getReceivedMessageCounters(),
                 myAddress);
         if (isAuthorized) {
             if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {

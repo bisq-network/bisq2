@@ -19,7 +19,6 @@ package bisq.network.p2p.node.handshake;
 
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
-import bisq.common.util.StringUtils;
 import bisq.common.network.Address;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.Capability;
@@ -30,10 +29,13 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocketChannel;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peer_group.BanList;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.*;
 
@@ -44,6 +46,8 @@ public class ConnectionHandshakeResponder {
     private final NetworkLoad myNetworkLoad;
     private final AuthorizationService authorizationService;
     private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel;
+    @Getter
+    private final Set<Integer> receivedMessageCounters = ConcurrentHashMap.newKeySet();
 
     public ConnectionHandshakeResponder(BanList banList,
                                         Capability myCapability,
@@ -103,7 +107,7 @@ public class ConnectionHandshakeResponder {
                 request,
                 requestNetworkEnvelope.getAuthorizationToken(),
                 NetworkLoad.INITIAL_NETWORK_LOAD,
-                StringUtils.createUid(),
+                receivedMessageCounters,
                 myAddress
         );
 
