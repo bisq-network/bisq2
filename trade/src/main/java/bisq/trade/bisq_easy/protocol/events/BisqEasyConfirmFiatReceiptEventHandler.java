@@ -49,7 +49,7 @@ public class BisqEasyConfirmFiatReceiptEventHandler extends BisqEasyTradeEventHa
         send(new BisqEasyConfirmFiatReceiptMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId()));
     }
 }

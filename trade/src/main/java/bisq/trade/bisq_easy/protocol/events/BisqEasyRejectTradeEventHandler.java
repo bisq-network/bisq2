@@ -43,7 +43,7 @@ public class BisqEasyRejectTradeEventHandler extends BisqEasyTradeEventHandlerAs
         send(new BisqEasyRejectTradeMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId()));
     }
 }
