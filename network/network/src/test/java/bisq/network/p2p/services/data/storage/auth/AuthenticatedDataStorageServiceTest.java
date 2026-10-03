@@ -699,9 +699,90 @@ class AuthenticatedDataStorageServiceTest {
         assertSame(add, peerStore.getPersistableStore().getMap().get(add.getStorageKey()));
     }
 
+    // A removal without signature V2 replaced an add request. A relay can send that add request again. If the store
+    // accepted it, the removal and the add request would replace each other without end, and a node would relay them
+    // each time (see docs/specifications/network/storage-request-ordering.md).
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void addWhichLegacyRemovalReplacedIsNotAcceptedAgain(boolean addHasSignatureV2)
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest complete = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        AddAuthenticatedDataRequest add = addHasSignatureV2 ? complete : withoutSignatureV2(complete);
+        assertTrue(ownerStore.add(add).isSuccess());
+        assertTrue(peerStore.add(add).isSuccess());
+        RemoveAuthenticatedDataRequest legacy = withoutSignatureV2(
+                RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair), Integer.MAX_VALUE);
+        assertTrue(peerStore.remove(legacy).isSuccess());
+
+        DataStorageResult result = peerStore.add(add);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(legacy, peerStore.getPersistableStore().getMap().get(add.getStorageKey()));
+        assertFalse(peerStore.remove(legacy).isSuccess());
+        assertSame(legacy, peerStore.getPersistableStore().getMap().get(add.getStorageKey()));
+    }
+
+    // The store got the removal without signature V2 before the add request. It has no sequence number which it can
+    // trust, so it accepts the add request. When the removal arrives again, it replaces the add request, and the store
+    // does not accept that add request again.
+    @Test
+    void addIsAcceptedOnceAfterLegacyRemovalWithoutEntry()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest add = withoutSignatureV2(
+                AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair));
+        assertTrue(ownerStore.add(add).isSuccess());
+        RemoveAuthenticatedDataRequest legacy = withoutSignatureV2(
+                RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair), 2);
+
+        assertTrue(peerStore.remove(legacy).isSuccess());
+        assertTrue(peerStore.add(add).isSuccess());
+        assertTrue(peerStore.remove(legacy).isSuccess());
+
+        assertTrue(peerStore.add(add).isSequenceNrInvalid());
+        assertFalse(peerStore.remove(legacy).isSuccess());
+        assertSame(legacy, peerStore.getPersistableStore().getMap().get(add.getStorageKey()));
+    }
+
+    // The owner removed the data with signature V2 and published it again. A relay replaces the new add request with a
+    // removal without signature V2, and then sends the earlier removal with signature V2. That removal is older than
+    // the add request which the store held. If it replaced the stored removal, the store would accept the add request
+    // again, and the three requests would replace each other without end.
+    @Test
+    void verifiedRemovalOlderThanTheReplacedAddDoesNotReplaceLegacyRemoval()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        assertTrue(ownerStore.add(AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair))
+                .isSuccess());
+        RemoveAuthenticatedDataRequest earlierRemoval = RemoveAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair);
+        assertTrue(ownerStore.remove(earlierRemoval).isSuccess());
+        AddAuthenticatedDataRequest republished = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        assertEquals(3, republished.getSequenceNumber());
+        assertTrue(ownerStore.add(republished).isSuccess());
+        assertTrue(peerStore.add(republished).isSuccess());
+        RemoveAuthenticatedDataRequest legacy = withoutSignatureV2(earlierRemoval, Integer.MAX_VALUE);
+        assertTrue(peerStore.remove(legacy).isSuccess());
+
+        DataStorageResult result = peerStore.remove(earlierRemoval);
+
+        assertFalse(result.isSuccess(), result.toString());
+        assertTrue(result.isAlreadyRemoved(), result.toString());
+        assertSame(legacy, peerStore.getPersistableStore().getMap().get(legacy.getStorageKey()));
+        assertTrue(peerStore.add(republished).isSequenceNrInvalid());
+        // The removal which the owner creates now has a higher sequence number than the replaced add request
+        RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        assertEquals(4, removal.getSequenceNumber());
+        assertTrue(peerStore.remove(removal).isSuccess());
+        assertSame(removal, peerStore.getPersistableStore().getMap().get(removal.getStorageKey()));
+    }
+
     // The owner creates its requests with its own store. A relay can set the sequence number of a removal without
     // signature V2 to Integer.MAX_VALUE. If the owner continued from that number, it could not create any request for
-    // the data anymore.
+    // the data anymore. It continues from the sequence number of its add request which the removal replaced.
     @Test
     void ownerRepublishesDataAfterLegacyRemovalWithForgedSequence()
             throws GeneralSecurityException, UnresolvableProtobufException {
@@ -716,14 +797,56 @@ class AuthenticatedDataStorageServiceTest {
         AddAuthenticatedDataRequest republished = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
                 ownerKeyPair);
 
-        assertEquals(1, republished.getSequenceNumber());
+        assertEquals(2, republished.getSequenceNumber());
         assertTrue(ownerStore.add(republished).isSuccess());
         assertTrue(peerStore.add(republished).isSuccess());
         RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
                 ownerKeyPair);
-        assertEquals(2, removal.getSequenceNumber());
+        assertEquals(3, removal.getSequenceNumber());
         assertTrue(peerStore.remove(removal).isSuccess());
         assertSame(removal, peerStore.getPersistableStore().getMap().get(removal.getStorageKey()));
+    }
+
+    // The forged removal reached the owner, but not a node which still holds the add request of the owner. That node
+    // accepts the request which the owner creates next, because its sequence number is higher.
+    @Test
+    void nodeWhichHoldsTheReplacedAddAcceptsTheNextRequestOfTheOwner()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        addToOwnerAndPeer();
+        RemoveAuthenticatedDataRequest forged = withoutSignatureV2(
+                RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair), Integer.MAX_VALUE);
+        assertTrue(ownerStore.remove(forged).isSuccess());
+
+        AddAuthenticatedDataRequest republished = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+
+        assertTrue(ownerStore.add(republished).isSuccess());
+        assertTrue(peerStore.add(republished).isSuccess());
+        assertSame(republished, peerStore.getPersistableStore().getMap().get(republished.getStorageKey()));
+    }
+
+    // The store persists the sequence number of the replaced add request with the removal. After a restart, the node
+    // still rejects that add request, and the owner continues from that sequence number.
+    @Test
+    void replacedAddSequenceNrIsKeptAfterRestart()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        assertTrue(peerStore.add(add).isSuccess());
+        RemoveAuthenticatedDataRequest legacy = withoutSignatureV2(
+                RemoveAuthenticatedDataRequest.from(peerStore, authenticatedData, ownerKeyPair), Integer.MAX_VALUE);
+        assertTrue(peerStore.remove(legacy).isSuccess());
+        peerStore.getPersistence().persistAsync(peerStore.getPersistableStore().getClone()).join();
+
+        PersistenceService persistenceServiceAfterRestart = new PersistenceService(tempDir);
+        AuthenticatedDataStorageService peerStoreAfterRestart = new AuthenticatedDataStorageService(
+                persistenceServiceAfterRestart, new PruneExpiredEntriesService(), "peer", STORE_KEY, () -> time);
+        assertTrue(persistenceServiceAfterRestart.readAllPersisted().join());
+
+        assertEquals(Map.of(legacy.getStorageKey(), legacy), peerStoreAfterRestart.getPersistableStore().getMap());
+        assertTrue(peerStoreAfterRestart.add(add).isSequenceNrInvalid());
+        assertEquals(2, peerStoreAfterRestart.getNextSequenceNumber(legacy.getStorageKey()));
     }
 
     // Also a removal without signature V2 which the store of an earlier version holds. A removal with signature V2
