@@ -19,6 +19,9 @@ package bisq.chat.two_party;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
+import bisq.chat.priv.PrivateChatChannelService;
+import bisq.chat.reactions.Reaction;
+import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.DbSubDirectory;
@@ -38,7 +41,9 @@ import org.junit.jupiter.api.Test;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -161,12 +166,162 @@ public class TwoPartyPrivateChatChannelServiceTest {
         assertFalse(channel.isPeer(MY_PROFILE_ID));
     }
 
+    @Test
+    void pendingReactionIsAppliedWhenItsMessageArrives() {
+        when(userProfileService.isChatUserIgnored(peer)).thenReturn(false);
+        service.onMessage(reactionFromPeer("reaction", "messageId", peerChannelId()));
+
+        service.onMessage(textMessageFromPeer());
+
+        assertEquals(1, receivedMessage().getChatMessageReactions().size());
+    }
+
+    @Test
+    void messageIsProcessedWhileSeveralReactionsArePending() {
+        when(userProfileService.isChatUserIgnored(peer)).thenReturn(false);
+        service.onMessage(reactionFromPeer("reaction1", "unknownMessage1", "unknownChannel1"));
+        service.onMessage(reactionFromPeer("reaction2", "unknownMessage2", "unknownChannel2"));
+        service.onMessage(reactionFromPeer("reaction3", "messageId", peerChannelId()));
+
+        assertDoesNotThrow(() -> service.onMessage(textMessageFromPeer()));
+
+        assertEquals(1, receivedMessage().getChatMessageReactions().size());
+    }
+
+    @Test
+    void pendingReactionOfThirdUserIsNotApplied() {
+        when(userProfileService.isChatUserIgnored(peer)).thenReturn(false);
+        UserProfile thirdUser = mock(UserProfile.class);
+        when(thirdUser.getId()).thenReturn(THIRD_PROFILE_ID);
+        service.onMessage(reactionFrom(thirdUser, "reaction", "messageId", peerChannelId()));
+
+        service.onMessage(textMessageFromPeer());
+
+        assertTrue(receivedMessage().getChatMessageReactions().isEmpty());
+    }
+
+    @Test
+    void oldestPendingReactionIsDroppedWhenTheBoundIsReached() {
+        when(userProfileService.isChatUserIgnored(peer)).thenReturn(false);
+        service.onMessage(reactionFromPeer("oldest", "messageId", peerChannelId()));
+        for (int i = 0; i < PrivateChatChannelService.MAX_PENDING_REACTIONS; i++) {
+            service.onMessage(reactionFromPeer("reaction" + i, "unknownMessage" + i, "unknownChannel" + i));
+        }
+
+        service.onMessage(textMessageFromPeer());
+
+        assertTrue(receivedMessage().getChatMessageReactions().isEmpty());
+    }
+
+    @Test
+    void pendingReactionIsKeptBelowTheBound() {
+        when(userProfileService.isChatUserIgnored(peer)).thenReturn(false);
+        service.onMessage(reactionFromPeer("oldest", "messageId", peerChannelId()));
+        for (int i = 0; i < PrivateChatChannelService.MAX_PENDING_REACTIONS - 1; i++) {
+            service.onMessage(reactionFromPeer("reaction" + i, "unknownMessage" + i, "unknownChannel" + i));
+        }
+
+        service.onMessage(textMessageFromPeer());
+
+        assertEquals(1, receivedMessage().getChatMessageReactions().size());
+    }
+
+    @Test
+    void pendingReactionReceivedAgainDoesNotDropTheOldest() {
+        when(userProfileService.isChatUserIgnored(peer)).thenReturn(false);
+        service.onMessage(reactionFromPeer("oldest", "messageId", peerChannelId()));
+        TwoPartyPrivateChatMessageReaction receivedTwice = reactionFromPeer("receivedTwice", "unknownMessage", "unknownChannel");
+        service.onMessage(receivedTwice);
+        for (int i = 0; i < PrivateChatChannelService.MAX_PENDING_REACTIONS - 2; i++) {
+            service.onMessage(reactionFromPeer("reaction" + i, "unknownMessage" + i, "unknownChannel" + i));
+        }
+        service.onMessage(receivedTwice);
+
+        service.onMessage(textMessageFromPeer());
+
+        assertEquals(1, receivedMessage().getChatMessageReactions().size());
+    }
+
+    @Test
+    void rejectedPendingReactionFreesItsPlace() {
+        when(userProfileService.isChatUserIgnored(peer)).thenReturn(false);
+        UserProfile thirdUser = mock(UserProfile.class);
+        when(thirdUser.getId()).thenReturn(THIRD_PROFILE_ID);
+        service.onMessage(reactionFromPeer("oldest", "secondMessageId", peerChannelId()));
+        service.onMessage(reactionFrom(thirdUser, "rejected", "messageId", peerChannelId()));
+        service.onMessage(textMessageFromPeer());
+        for (int i = 0; i < PrivateChatChannelService.MAX_PENDING_REACTIONS - 1; i++) {
+            service.onMessage(reactionFromPeer("reaction" + i, "unknownMessage" + i, "unknownChannel" + i));
+        }
+
+        service.onMessage(textMessageFrom(peer, "secondMessageId"));
+
+        TwoPartyPrivateChatMessage secondMessage = service.getChannels().stream().findFirst().orElseThrow()
+                .getChatMessages().stream()
+                .filter(message -> message.getId().equals("secondMessageId"))
+                .findFirst().orElseThrow();
+        assertEquals(1, secondMessage.getChatMessageReactions().size());
+    }
+
+    @Test
+    void expiredPendingReactionIsNotApplied() {
+        when(userProfileService.isChatUserIgnored(peer)).thenReturn(false);
+        TwoPartyPrivateChatMessageReaction reaction = reactionFromPeer("reaction", "messageId", peerChannelId());
+        long expiredDate = System.currentTimeMillis() - reaction.getMetaData().getTtl() - TimeUnit.DAYS.toMillis(1);
+        service.onMessage(reactionFrom(peer, "reaction", "messageId", peerChannelId(), expiredDate));
+
+        service.onMessage(textMessageFromPeer());
+
+        assertTrue(receivedMessage().getChatMessageReactions().isEmpty());
+    }
+
+    private TwoPartyPrivateChatMessage receivedMessage() {
+        return service.getChannels().stream().findFirst().orElseThrow()
+                .getChatMessages().stream().findFirst().orElseThrow();
+    }
+
+    private static String peerChannelId() {
+        return TwoPartyPrivateChatChannel.createId(ChatChannelDomain.DISCUSSION, PEER_PROFILE_ID, MY_PROFILE_ID);
+    }
+
+    private TwoPartyPrivateChatMessageReaction reactionFromPeer(String id, String chatMessageId, String chatChannelId) {
+        return reactionFrom(peer, id, chatMessageId, chatChannelId);
+    }
+
+    private TwoPartyPrivateChatMessageReaction reactionFrom(UserProfile sender,
+                                                            String id,
+                                                            String chatMessageId,
+                                                            String chatChannelId) {
+        return reactionFrom(sender, id, chatMessageId, chatChannelId, System.currentTimeMillis());
+    }
+
+    private TwoPartyPrivateChatMessageReaction reactionFrom(UserProfile sender,
+                                                            String id,
+                                                            String chatMessageId,
+                                                            String chatChannelId,
+                                                            long date) {
+        return new TwoPartyPrivateChatMessageReaction(id,
+                sender,
+                MY_PROFILE_ID,
+                mock(NetworkId.class),
+                chatChannelId,
+                ChatChannelDomain.DISCUSSION,
+                chatMessageId,
+                Reaction.THUMBS_UP.ordinal(),
+                date,
+                false);
+    }
+
     private TwoPartyPrivateChatMessage textMessageFromPeer() {
         return textMessageFrom(peer);
     }
 
     private TwoPartyPrivateChatMessage textMessageFrom(UserProfile sender) {
-        return new TwoPartyPrivateChatMessage("messageId",
+        return textMessageFrom(sender, "messageId");
+    }
+
+    private TwoPartyPrivateChatMessage textMessageFrom(UserProfile sender, String messageId) {
+        return new TwoPartyPrivateChatMessage(messageId,
                 ChatChannelDomain.DISCUSSION,
                 TwoPartyPrivateChatChannel.createId(ChatChannelDomain.DISCUSSION, PEER_PROFILE_ID, MY_PROFILE_ID),
                 sender,
