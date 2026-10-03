@@ -250,8 +250,8 @@ public class AccountTimestampService implements Service, AuthorizedBondedRolesSe
 
     private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountTimestamp(byte[] hash) {
         return authorizedBondedRolesService.getAuthorizedPublishedData(AuthorizedAccountTimestamp.class,
-                        BondedRoleType.ORACLE_NODE)
-                .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
+                BondedRoleType.ORACLE_NODE,
+                e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
     }
 
     private static byte[] createHash(Account<? extends PaymentMethod<?>, ?> account) {
