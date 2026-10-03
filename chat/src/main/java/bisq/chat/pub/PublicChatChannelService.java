@@ -138,6 +138,12 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,
                                                                        String editedText,
                                                                        UserIdentity userIdentity) {
+        // Only the author edits its message. With another identity the removal of the original fails, while the edited
+        // message is published under the other profile, which links the two profiles.
+        if (!userIdentity.getId().equals(originalChatMessage.getAuthorUserProfileId())) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("Only the author of a message can edit it"));
+        }
         KeyPair ownerKeyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return networkService.removeAuthenticatedData(originalChatMessage, ownerKeyPair)
                 .thenCompose(result -> {

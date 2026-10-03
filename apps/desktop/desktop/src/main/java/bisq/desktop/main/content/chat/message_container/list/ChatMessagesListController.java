@@ -533,7 +533,12 @@ public class ChatMessagesListController implements Controller {
             return;
         }
 
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
+        // The author's identity, as in onDeleteMessage. The selected identity can be another of our profiles.
+        Optional<UserIdentity> authorUserIdentity = userIdentityService.findUserIdentity(chatMessage.getAuthorUserProfileId());
+        if (authorUserIdentity.isEmpty()) {
+            return;
+        }
+        UserIdentity userIdentity = authorUserIdentity.get();
         if (chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
             chatService.getBisqEasyOfferbookChannelService().publishEditedChatMessage(bisqEasyOfferbookMessage, editedText, userIdentity);
         } else if (chatMessage instanceof CommonPublicChatMessage commonPublicChatMessage) {
