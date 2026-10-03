@@ -21,6 +21,7 @@ import bisq.common.proto.NetworkProto;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -71,6 +72,22 @@ public final class NetworkEnvelope implements NetworkProto {
 
     @Override
     public void verify() {
+        // The receiver checks such a payload when it decrypts the ConfidentialMessage which carries it: the sender and
+        // the receiver which the payload names must own the keys of the ConfidentialMessage. As payload of an
+        // envelope, it would reach the chat, trade and support services without these checks (see
+        // docs/specifications/network/confidential-messages.md). The exception names only the type, as the payload
+        // comes from another node.
+        if (isValidOnlyInsideConfidentialMessage(envelopePayloadMessage)) {
+            throw new IllegalArgumentException("A NetworkEnvelope must not carry a " +
+                    envelopePayloadMessage.getClass().getSimpleName() +
+                    ". This type is valid only inside a ConfidentialMessage.");
+        }
+    }
+
+    // Messages of other modules (chat, trade, support, requests to oracle nodes) and AckMessage. Nodes send them only
+    // with confidentialSend.
+    private static boolean isValidOnlyInsideConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        return envelopePayloadMessage instanceof ExternalNetworkMessage || envelopePayloadMessage instanceof AckMessage;
     }
 
     @Override
