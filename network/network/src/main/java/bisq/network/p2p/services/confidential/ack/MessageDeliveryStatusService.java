@@ -20,23 +20,25 @@ package bisq.network.p2p.services.confidential.ack;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.timer.Scheduler;
+import bisq.network.NetworkIdService;
 import bisq.network.NetworkService;
-import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.keys.KeyBundleService;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -46,27 +48,38 @@ import java.util.stream.Collectors;
  * This service aggregates the message delivery status for all supported transports and provides
  * a map with the message ID as key and an observable MessageDeliveryStatus as value which holds the most
  * relevant delivery state of all transports.
- * This service depends on the ConfidentialMessageService is only enabled if the ServiceNode.Service.ACK and
- * the ServiceNode.Service.CONFIDENTIAL are set in the config.
- * <br/>
+ * It sends the AckMessage for each AckRequestingMessage which a ConfidentialMessageService decrypted, and applies the
+ * received AckMessages to the delivery status of our own messages.
+ * This service is only enabled if the ServiceNode.Service.ACK and the ServiceNode.Service.CONFIDENTIAL are set in the
+ * config. See docs/specifications/network/message-acknowledgement.md.
  */
 @Slf4j
 @Getter
-public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<MessageDeliveryStatusStore> implements ConfidentialMessageService.Listener {
+public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<MessageDeliveryStatusStore> {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
 
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyBundleService keyBundleService;
+    private final NetworkIdService networkIdService;
     private final NetworkService networkService;
-    private final Set<String> ackedMessageIds = ConcurrentHashMap.newKeySet();
+    @Getter(AccessLevel.NONE)
+    private final Set<AckedMessage> ackedMessages = ConcurrentHashMap.newKeySet();
     @Nullable
     private Scheduler checkPendingScheduler;
+    private volatile boolean isShutdown;
+
+    // Each of our identities acknowledges a message on its own, as a separate node would do. Otherwise a peer could
+    // learn from the number of AckMessages whether two user profiles belong to the same node.
+    private record AckedMessage(String receiverKeyId, String messageId) {
+    }
 
     public MessageDeliveryStatusService(PersistenceService persistenceService,
                                         KeyBundleService keyBundleService,
+                                        NetworkIdService networkIdService,
                                         NetworkService networkService) {
         this.keyBundleService = keyBundleService;
+        this.networkIdService = networkIdService;
         this.networkService = networkService;
 
         // As ResendMessageService depends on our data store we use also here the PRIVATE directory.
@@ -91,40 +104,39 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
                 .host(this)
                 .runnableName("checkPending")
                 .after(1000);
-
-        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
-                        .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
-                this::onMessage);
-        networkService.addConfidentialMessageListener(this);
     }
 
     public void shutdown() {
+        isShutdown = true;
         if (checkPendingScheduler != null) {
             checkPendingScheduler.stop();
             checkPendingScheduler = null;
         }
-        networkService.removeConfidentialMessageListener(this);
-        ackedMessageIds.clear();
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // ConfidentialMessageService.Listener
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof AckRequestingMessage) {
-            processAckRequestingMessage((AckRequestingMessage) envelopePayloadMessage);
-        } else if (envelopePayloadMessage instanceof AckMessage) {
-            processAckMessage((AckMessage) envelopePayloadMessage);
-        }
+        ackedMessages.clear();
     }
 
 
     /* --------------------------------------------------------------------- */
     // API
     /* --------------------------------------------------------------------- */
+
+    /**
+     * The ConfidentialMessageService calls this method for each message which it decrypted.
+     *
+     * @param receiverKeyId The key ID of our key which decrypted the message. We send the AckMessage from our own
+     *                      NetworkId for this key. The receiver which the message names is data of the peer, so we do
+     *                      not use it as our identity.
+     */
+    public void onDecryptedMessage(EnvelopePayloadMessage envelopePayloadMessage, String receiverKeyId) {
+        if (isShutdown) {
+            return;
+        }
+        if (envelopePayloadMessage instanceof AckRequestingMessage ackRequestingMessage) {
+            processAckRequestingMessage(ackRequestingMessage, receiverKeyId);
+        } else if (envelopePayloadMessage instanceof AckMessage ackMessage) {
+            processAckMessage(ackMessage);
+        }
+    }
 
     public void applyMessageDeliveryStatus(String ackRequestingMessageId, MessageDeliveryStatus status) {
         if (ackRequestingMessageId == null) {
@@ -191,21 +203,24 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
         }
     }
 
-    private void processAckRequestingMessage(AckRequestingMessage message) {
-        if (ackedMessageIds.contains(message.getAckRequestingMessageId())) {
-            log.warn("We received already that AckRequestingMessage and sent the AckMessage");
+    private void processAckRequestingMessage(AckRequestingMessage message, String receiverKeyId) {
+        Optional<NetworkId> myNetworkId = networkIdService.findNetworkIdByKeyId(receiverKeyId);
+        Optional<KeyPair> myKeyPair = keyBundleService.findKeyPair(receiverKeyId);
+        if (myNetworkId.isEmpty() || myKeyPair.isEmpty()) {
+            log.warn("We do not send an AckMessage for a {} because the key which decrypted it belongs to none of our " +
+                    "network identities", message.getClass().getSimpleName());
             return;
         }
 
-        AckMessage ackMessage = new AckMessage(message.getAckRequestingMessageId());
-        NetworkId networkId = message.getReceiver();
-        keyBundleService.findKeyPair(networkId.getPubKey().getKeyId())
-                .ifPresent(keyPair -> {
-                    log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), message.getAckRequestingMessageId());
-                    NetworkIdWithKeyPair networkIdWithKeyPair = new NetworkIdWithKeyPair(networkId, keyPair);
-                    networkService.confidentialSend(ackMessage, message.getSender(), networkIdWithKeyPair);
-                    ackedMessageIds.add(message.getAckRequestingMessageId());
-                });
+        String messageId = message.getAckRequestingMessageId();
+        if (!ackedMessages.add(new AckedMessage(receiverKeyId, messageId))) {
+            log.debug("We have already sent the AckMessage for that {}", message.getClass().getSimpleName());
+            return;
+        }
+
+        log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), messageId);
+        NetworkIdWithKeyPair myNetworkIdWithKeyPair = new NetworkIdWithKeyPair(myNetworkId.get(), myKeyPair.get());
+        networkService.confidentialSend(new AckMessage(messageId), message.getSender(), myNetworkIdWithKeyPair);
     }
 
     private void checkPending() {

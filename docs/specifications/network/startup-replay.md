@@ -5,8 +5,8 @@
 At startup a service replays data which the node received from other users before the service was initialized:
 
 1. the confidential messages which the node processed before, for example from the mailbox. The private chat, the
-   Bisq Easy and MuSig trades, mediation, arbitration, moderation, the message delivery status and the timestamp service
-   of the oracle node replay them;
+   Bisq Easy and MuSig trades, mediation, arbitration, moderation and the timestamp service of the oracle node replay
+   them;
 2. the data of the network store which a service handles: public chat messages, user profiles, MuSig offers, the
    authorized data which `AuthorizedBondedRolesService` applies at its start, processes again after a failure and
    replays to a listener added after its initialization, and in the oracle node the registration requests which it
@@ -36,3 +36,7 @@ the next start and is logged again.
 ## Not covered
 
 Local data which a service restores at startup, for example its own trades, is not part of this rule.
+
+The service for message delivery states replays no confidential messages. It needs no replay, because the node passes
+each confidential message to this service when it decrypts the message (rule 1 of
+[Message acknowledgement](message-acknowledgement.md)).

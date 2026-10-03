@@ -65,8 +65,15 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class ConfidentialMessageService implements Node.Listener, DataService.Listener {
     private static final ExecutorService EXECUTOR = ExecutorFactory.newSingleThreadExecutor("ConfidentialMessageService");
 
+    /**
+     * A decrypted message.
+     *
+     * @param receiverKeyId The key ID of our key which decrypted the message. The message is processed once for each
+     *                      of our keys, so that our identities behave like separate nodes.
+     */
     public record EnvelopePayloadMessageAndPublicKey(EnvelopePayloadMessage envelopePayloadMessage,
-                                                     PublicKey senderPublicKey) {
+                                                     PublicKey senderPublicKey,
+                                                     String receiverKeyId) {
     }
 
     // A listener receives only messages which this service decrypted with a key of the node, after it checked the
@@ -525,10 +532,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             }
 
             PublicKey senderPublicKey = KeyGeneration.generatePublic(encodedSenderPublicKey);
+            // The decryption succeeded, so the key of this key ID is ours and the message was encrypted for it
+            String receiverKeyId = confidentialMessage.getReceiverKeyId();
             boolean wasNotPresent = processedEnvelopePayloadMessagesAndPublicKeys.add(
-                    new EnvelopePayloadMessageAndPublicKey(decryptedEnvelopePayloadMessage, senderPublicKey));
+                    new EnvelopePayloadMessageAndPublicKey(decryptedEnvelopePayloadMessage, senderPublicKey, receiverKeyId));
             if (wasNotPresent) {
                 log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", decryptedEnvelopePayloadMessage.getClass().getSimpleName());
+                messageDeliveryStatusService.ifPresent(service -> NetworkExecutors.getNotifyExecutor()
+                        .submit(() -> service.onDecryptedMessage(decryptedEnvelopePayloadMessage, receiverKeyId)));
                 listeners.forEach(listener -> {
                     NetworkExecutors.getNotifyExecutor().submit(() -> listener.onMessage(decryptedEnvelopePayloadMessage));
                     NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey));
