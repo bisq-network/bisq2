@@ -93,6 +93,30 @@ class BisqEasyMediationContractIdentityChecksTest {
                 other.getNetworkId()));
     }
 
+    // The address map is routing data and can change after the offer was published, for example when a user adds a
+    // transport. The parties are identified by their keys.
+    @Test
+    void acceptsPartiesAndMediatorWhoseAddressesChanged() {
+        UserProfile maker = createUserProfile("maker");
+        UserProfile taker = createUserProfile("taker");
+        UserProfile mediator = createUserProfile("mediator");
+
+        assertTrue(BisqEasyMediationContractIdentityChecks.hasMatchingContractParties(
+                withOtherAddress(maker.getNetworkId()),
+                withOtherAddress(taker.getNetworkId()),
+                maker,
+                taker));
+        assertTrue(BisqEasyMediationContractIdentityChecks.hasMatchingContractMediator(
+                Optional.of(mediator),
+                withOtherAddress(mediator.getNetworkId())));
+    }
+
+    private static NetworkId withOtherAddress(NetworkId networkId) {
+        Address otherAddress = Address.from("127.0.0.1", 2000);
+        return new NetworkId(new AddressByTransportTypeMap(Map.of(otherAddress.getTransportType(), otherAddress)),
+                networkId.getPubKey());
+    }
+
     private UserProfile createUserProfile(String nickName) {
         return new UserProfile(0,
                 nickName,
