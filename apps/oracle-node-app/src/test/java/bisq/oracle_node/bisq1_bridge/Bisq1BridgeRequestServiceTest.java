@@ -66,6 +66,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
 
 import static bisq.oracle_node.TestBondedRoleRegistrations.LOCKUP_TX_ID;
@@ -218,6 +219,44 @@ class Bisq1BridgeRequestServiceTest {
                     argThat(data -> data instanceof AuthorizedAccountTimestamp), any());
             verify(networkService).subscribeToConfidentialMessages(service);
         } finally {
+            service.shutdown().join();
+        }
+    }
+
+    // Anybody can send many account timestamp requests. They have their own queue, so they cannot drop the requests of
+    // the other types (finding O-4, see docs/specifications/bonded-roles/oracle-requests.md).
+    @Test
+    void floodOfAccountTimestampRequestsDoesNotDropAnAccountAgeRequest() throws GeneralSecurityException {
+        AccountAgeWitnessGrpcService accountAgeGrpcService = mock(AccountAgeWitnessGrpcService.class);
+        when(accountAgeGrpcService.verifyAndRequestAuthorization(any()))
+                .thenReturn(new AccountAgeWitnessOwnershipResponse(dateBucket(1_700_000_123_456L), new byte[32]));
+        NetworkService networkService = mock(NetworkService.class);
+        // The publication of an account timestamp blocks, so each account timestamp request keeps its thread
+        CountDownLatch releaseAccountTimestamps = new CountDownLatch(1);
+        when(networkService.publishAuthorizedData(any(), any())).thenAnswer(invocation -> {
+            if (invocation.getArgument(0) instanceof AuthorizedAccountTimestamp) {
+                releaseAccountTimestamps.await();
+            }
+            return CompletableFuture.completedFuture(new BroadcastResult());
+        });
+        Bisq1BridgeRequestService service = createStartableService(networkService, accountAgeGrpcService);
+        service.initialize().join();
+        try {
+            AuthorizeAccountTimestampV2Request accountTimestampRequest = accountTimestampV2Request();
+            // More requests than the 5 threads and the 20 places of the queue of an executor hold
+            for (int i = 0; i < 25; i++) {
+                service.onMessage(accountTimestampRequest);
+            }
+            KeyPair sender = KeyGeneration.generateDefaultEcKeyPair();
+            service.onConfidentialMessage(accountAgeRequest(profileId(sender)), sender.getPublic());
+            // A shared queue would drop the oldest waiting requests, at last the account age request
+            for (int i = 0; i < 25; i++) {
+                service.onMessage(accountTimestampRequest);
+            }
+
+            verify(accountAgeGrpcService, timeout(5000)).verifyAndRequestAuthorization(any());
+        } finally {
+            releaseAccountTimestamps.countDown();
             service.shutdown().join();
         }
     }
