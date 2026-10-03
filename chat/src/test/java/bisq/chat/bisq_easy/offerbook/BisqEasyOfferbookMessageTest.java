@@ -22,6 +22,8 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.market.Market;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.UnresolvableProtobufException;
@@ -29,7 +31,9 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import org.junit.jupiter.api.Test;
@@ -68,6 +72,24 @@ class BisqEasyOfferbookMessageTest {
         assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOfferbookMessage.fromProto(proto));
     }
 
+    // The amount conversions of the offer lists throw for such an offer, so it must not reach them
+    // (see docs/specifications/offer/fixed-price.md)
+    @Test
+    void receivedMessageWithAnOfferWhoseFixedPriceIsOfAnotherMarketFailsAtParsing() {
+        PriceSpec fixedPriceOfTheMarket = new FixPriceSpec(PriceQuote.fromFiatPrice(55_000, "EUR"));
+        PriceSpec fixedPriceOfAnotherMarket = new FixPriceSpec(
+                PriceQuote.from(Coin.asXmrFromFaceValue(1), Coin.asBtcFromFaceValue(0.005)));
+        BisqEasyOfferbookMessage message = message(maker.getPubKey().getId(),
+                Optional.of(offer(maker, fixedPriceOfTheMarket)));
+        bisq.chat.protobuf.ChatMessage.Builder builder = message.toProto(false).toBuilder();
+        builder.getBisqEasyOfferbookMessageBuilder().getBisqEasyOfferBuilder()
+                .setPriceSpec(fixedPriceOfAnotherMarket.toProto(false));
+        bisq.chat.protobuf.ChatMessage proto = builder.build();
+
+        assertDoesNotThrow(() -> BisqEasyOfferbookMessage.fromProto(message.toProto(false)));
+        assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOfferbookMessage.fromProto(proto));
+    }
+
     private static BisqEasyOfferbookMessage message(String authorUserProfileId, Optional<BisqEasyOffer> offer) {
         return new BisqEasyOfferbookMessage("channelId",
                 authorUserProfileId,
@@ -79,11 +101,15 @@ class BisqEasyOfferbookMessageTest {
     }
 
     private static BisqEasyOffer offer(NetworkId maker) {
+        return offer(maker, new MarketPriceSpec());
+    }
+
+    private static BisqEasyOffer offer(NetworkId maker, PriceSpec priceSpec) {
         return new BisqEasyOffer(maker,
                 Direction.BUY,
                 new Market("BTC", "EUR", "Bitcoin", "Euro"),
                 new BaseSideFixedAmountSpec(100_000),
-                new MarketPriceSpec(),
+                priceSpec,
                 List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
                 List.of(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK)),
                 "",

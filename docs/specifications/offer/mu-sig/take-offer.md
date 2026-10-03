@@ -41,7 +41,9 @@ use case validates it at the trust boundary (per `docs/dev/input_validation_poli
   (−10% to +50%); an offer outside them could not have been created legitimately and is
   rejected
 * a fixed price specification must carry a price quote whose market equals the offer's
-  market
+  market. This is an integrity rule of every offer (see
+  [`../fixed-price.md`](../fixed-price.md)): an offer which breaks it fails at parsing and
+  does not reach the take process. The use case keeps its check as a second check.
 * the resolved price quote must lie within the maximum deviation from the current
   market price, once that bound is defined (see Price)
 * the taker-selectable side (the non-Bitcoin side) must contain between one and four
