@@ -48,11 +48,13 @@ import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
+import bisq.trade.TradeActionNotAppliedException;
 import bisq.trade.TradeRestrictedException;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsTakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.trade.bisq_easy.protocol.BisqEasySellerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasySellerAsTakerProtocol;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyAccountDataEvent;
@@ -336,23 +338,23 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     }
 
     public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyAccountDataEvent(paymentAccountData));
+        applyUserTradeAction(trade, new BisqEasyAccountDataEvent(paymentAccountData));
     }
 
     public void buyerConfirmFiatSent(BisqEasyTrade trade) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmFiatSentEvent());
+        applyUserTradeAction(trade, new BisqEasyConfirmFiatSentEvent());
     }
 
     public void buyerSendBitcoinPaymentData(BisqEasyTrade trade, String buyersBitcoinPaymentData) {
-        handleBisqEasyTradeEvent(trade, new BisqEasySendBtcAddressEvent(buyersBitcoinPaymentData));
+        applyUserTradeAction(trade, new BisqEasySendBtcAddressEvent(buyersBitcoinPaymentData));
     }
 
     public void sellerConfirmFiatReceipt(BisqEasyTrade trade) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmFiatReceiptEvent());
+        applyUserTradeAction(trade, new BisqEasyConfirmFiatReceiptEvent());
     }
 
     public void sellerConfirmBtcSent(BisqEasyTrade trade, Optional<String> paymentProof) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmBtcSentEvent(paymentProof));
+        applyUserTradeAction(trade, new BisqEasyConfirmBtcSentEvent(paymentProof));
     }
 
     public void btcConfirmed(BisqEasyTrade trade) {
@@ -365,6 +367,27 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     public void cancelTrade(BisqEasyTrade trade) {
         handleBisqEasyTradeEvent(trade, new BisqEasyCancelTradeEvent());
+    }
+
+    // A user action whose data the caller also sends to the peer as trade log message, for example the payment account
+    // data. The protocol does not throw when it does not apply an event: Fsm ignores an event in a final state, and
+    // BisqEasyProtocol turns a failure into the FAILED state. So we report it here, and the caller sends the trade log
+    // message only if this method returns normally. Otherwise a peer which cancelled or failed the trade would still get
+    // the data.
+    private void applyUserTradeAction(BisqEasyTrade trade, BisqEasyTradeEvent event) {
+        verifyTradingNotOnHalt();
+        verifyMinVersionForTrading();
+        String tradeId = trade.getId();
+        BisqEasyProtocol protocol = findProtocol(tradeId).orElseThrow(() ->
+                new TradeActionNotAppliedException("The trade has no protocol anymore. tradeId=" + tradeId));
+        if (trade.getTradeState().isFinalState()) {
+            throw new TradeActionNotAppliedException("The trade is in the final state " + trade.getTradeState());
+        }
+        protocol.handle(event);
+        BisqEasyTradeState state = trade.getTradeState();
+        if (state == BisqEasyTradeState.FAILED || state == BisqEasyTradeState.FAILED_AT_PEER) {
+            throw new TradeActionNotAppliedException("The trade failed at handling " + event.getClass().getSimpleName());
+        }
     }
 
     private void handleBisqEasyTradeEvent(BisqEasyTrade trade, BisqEasyTradeEvent event) {

@@ -19,6 +19,7 @@ package bisq.desktop.common.utils;
 
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.trade.TradeActionNotAppliedException;
 import bisq.trade.TradeRestrictedException;
 
 public final class TradeExceptionHandler {
@@ -31,6 +32,10 @@ public final class TradeExceptionHandler {
             return true;
         } catch (TradeRestrictedException e) {
             new Popup().warning(localizedMessage(e)).show();
+            return false;
+        } catch (TradeActionNotAppliedException e) {
+            // The trade was closed or failed in the meantime. The caller must not send the data of the action.
+            new Popup().warning(Res.get("trade.error.actionNotApplied")).show();
             return false;
         }
     }
