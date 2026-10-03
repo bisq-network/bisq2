@@ -65,6 +65,7 @@ import bisq.trade.bisq_easy.protocol.events.BisqEasyTradeEvent;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.protocol.messages.PendingTradeMessages;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
@@ -79,7 +80,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
@@ -112,7 +112,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
-    private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    private final PendingTradeMessages<BisqEasyTradeMessage> pendingMessages = new PendingTradeMessages<>();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
@@ -221,8 +221,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                     }
                 },
                 () -> {
-                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
-                            "re-processing when the next message arrives. message={}", tradeId, message);
+                    // Trade messages carry private data of the traders, so the log names only the message type.
+                    log.info("Protocol with tradeId {} not found. We add the message of type {} to pendingMessages " +
+                                    "for re-processing when the next message arrives.",
+                            StringUtils.sanitizeForLog(tradeId), message.getClass().getSimpleName());
                     pendingMessages.add(message);
                 });
     }
@@ -244,14 +246,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
         protocol.handle(message);
 
-        if (pendingMessages.contains(message)) {
-            log.info("We remove message {} from pendingMessages.", message);
-            pendingMessages.remove(message);
+        if (pendingMessages.remove(message)) {
+            log.info("We remove the message of type {} with tradeId {} from pendingMessages.",
+                    message.getClass().getSimpleName(), StringUtils.sanitizeForLog(message.getTradeId()));
         }
 
         if (!pendingMessages.isEmpty()) {
             log.info("We have pendingMessages. We try to re-process them now.");
-            pendingMessages.forEach(this::handleBisqEasyTradeMessage);
+            pendingMessages.getMessagesInArrivalOrder().forEach(this::handleBisqEasyTradeMessage);
         }
     }
 
