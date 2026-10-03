@@ -89,6 +89,7 @@ import bisq.trade.mu_sig.protocol.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest;
 import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.protocol.messages.PendingTradeMessages;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
@@ -105,7 +106,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -166,7 +166,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Pin tradeByIdPin, muSigOpenTradeChannelPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
-    private final Set<MuSigTradeMessage> pendingTradeMessages = new CopyOnWriteArraySet<>();
+    private final PendingTradeMessages<MuSigTradeMessage> pendingTradeMessages = new PendingTradeMessages<>();
     private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
     // Coordinates early-message buffering with protocol registration. Never acquire a protocol
@@ -463,8 +463,10 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     }
                 },
                 () -> {
-                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
-                            "re-processing when the next message arrives. message={}", tradeId, message);
+                    // Trade messages carry private data of the traders, so the log names only the message type.
+                    log.info("Protocol with tradeId {} not found. We add the message of type {} to pendingMessages " +
+                                    "for re-processing when the next message arrives.",
+                            StringUtils.sanitizeForLog(tradeId), message.getClass().getSimpleName());
                     pendingTradeMessages.add(message);
                 });
     }
@@ -494,14 +496,14 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 protocol.handle(message);
             }
 
-            if (pendingTradeMessages.contains(message)) {
-                log.info("We remove message {} from pendingMessages.", message);
-                pendingTradeMessages.remove(message);
+            if (pendingTradeMessages.remove(message)) {
+                log.info("We remove the message of type {} with tradeId {} from pendingMessages.",
+                        message.getClass().getSimpleName(), StringUtils.sanitizeForLog(message.getTradeId()));
             }
 
             if (!pendingTradeMessages.isEmpty()) {
                 log.info("We have pendingMessages. We try to re-process them now.");
-                pendingTradeMessages.forEach(this::handleMuSigTradeMessage);
+                pendingTradeMessages.getMessagesInArrivalOrder().forEach(this::handleMuSigTradeMessage);
             }
         });
     }
