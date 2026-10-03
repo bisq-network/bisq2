@@ -135,6 +135,16 @@ class InventoryRequestPolicyTest {
     }
 
     @Test
+    void freshDiscoveryAfterLosingAllConnectionsReconsidersPreviouslyIgnoredPeers() {
+        policy.onInventoryProcessed(connection, fullResponse, 0);
+        assertTrue(policy.getCandidatesForPeriodicRequests().isEmpty());
+
+        policy.onAllConnectionsLost();
+
+        assertEquals(List.of(connection), policy.getCandidatesForPeriodicRequests());
+    }
+
+    @Test
     void peerIsAskedAgainIfWeStoredPartOfItsFullResponse() {
         policy.onInventoryProcessed(connection, fullResponse, 1);
 
