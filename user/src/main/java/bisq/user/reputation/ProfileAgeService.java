@@ -19,7 +19,6 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
-import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Delay;
 import bisq.common.timer.Scheduler;
@@ -113,23 +112,6 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
             requestTimestampFuture = null;
         }
         return super.shutdown();
-    }
-
-    @Override
-    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedTimestampData timestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
-                String userProfileId = timestampData.getProfileId();
-                userProfileService.findUserProfile(userProfileId)
-                        .map(this::getUserProfileKey)
-                        .ifPresent(dataSetByHash::remove);
-                if (scoreByUserProfileId.containsKey(userProfileId)) {
-                    scoreByUserProfileId.remove(userProfileId);
-                    userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
-                }
-            }
-        }
     }
 
     @Override
