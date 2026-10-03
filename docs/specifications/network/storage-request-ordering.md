@@ -160,6 +160,17 @@ Consequences, until the cutoff date of signature V1:
   above 0, rejects the requests of the owner whose sequence number is not higher, until its entry expires. The owner's
   store verified no sequence number for such a removal, so it has no number from which it could continue.
 
+### The highest sequence number
+
+If the trusted sequence number is `Integer.MAX_VALUE`, no higher sequence number exists. Until the entry expires, no
+request of the owner for this storage key can replace it, in the store of the owner and in every store which holds the
+entry. The node of the owner then creates the request with `Integer.MAX_VALUE` and logs a warning. Its own store
+rejects the request, so the node does not broadcast it.
+
+Reason: the trusted sequence number comes only from numbers which the owner signed, so only a modified client of the
+owner or an edited store creates such an entry. The request fails like every other request which the store rejects.
+An exception at the creation of the request would reach the caller as an unexpected error instead.
+
 ## Mailbox requests
 
 Mailbox add requests have sequence number 1. A mailbox removal has the fixed sequence number `Integer.MAX_VALUE`,

@@ -917,6 +917,31 @@ class AuthenticatedDataStorageServiceTest {
         assertSame(republished, peerStore.getPersistableStore().getMap().get(republished.getStorageKey()));
     }
 
+    // A store accepts a request only with a higher sequence number, so no request can follow an entry with
+    // Integer.MAX_VALUE. The node of the owner creates its requests with Integer.MAX_VALUE then, and its store rejects
+    // them. Before, creating the request threw an ArithmeticException (finding A8). Only the owner signs this number,
+    // so only a modified client of the owner creates such an entry.
+    @Test
+    void noRequestFollowsAnEntryWithTheHighestSequenceNumber() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest last = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair,
+                Integer.MAX_VALUE);
+        assertTrue(ownerStore.add(last).isSuccess());
+
+        DataStorageResult resultOfAdd = ownerStore.add(AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair));
+        DataStorageResult resultOfRefresh = ownerStore.refresh(RefreshAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair));
+        DataStorageResult resultOfRemoval = ownerStore.remove(RemoveAuthenticatedDataRequest.from(ownerStore,
+                authenticatedData, ownerKeyPair));
+
+        assertEquals(Integer.MAX_VALUE, ownerStore.getNextSequenceNumber(last.getStorageKey()));
+        assertTrue(resultOfAdd.isSequenceNrInvalid(), resultOfAdd.toString());
+        assertTrue(resultOfRefresh.isSequenceNrInvalid(), resultOfRefresh.toString());
+        assertTrue(resultOfRemoval.isSequenceNrInvalid(), resultOfRemoval.toString());
+        assertSame(last, ownerStore.getPersistableStore().getMap().get(last.getStorageKey()));
+        ownerStore.getPersistence().persistAsync(ownerStore.getPersistableStore().getClone()).join();
+    }
+
     // The store persists the sequence number of the replaced add request with the removal. After a restart, the node
     // still rejects that add request, and the owner continues from that sequence number.
     @Test
