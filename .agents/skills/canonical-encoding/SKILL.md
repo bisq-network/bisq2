@@ -198,6 +198,10 @@ message. The name says where the bytes come from and which role the field has.
   of that data, and for the classes with a `SIGNATURE_V2_SCHEMA` and the classes that contain them.
 - **Changing a `SIGNATURE_V2_SCHEMA`** changes the preimage of signature V2: it is a protocol change.
 - **Adding a protobuf field** to a canonical class: add it to the schemas in the same change.
+- **Changing a protobuf field number or type** of a canonical class changes the hashes and signatures of
+  all data which the last released version stores or signs with it: it is a protocol change. A field which
+  only unreleased commits added may change (see **Baseline for Backward Compatibility** in the project
+  instructions).
 - **Adding or changing an `@ExcludeForHash` annotation**: update `createSchemaForHash()` (the
   `STORAGE_KEY_SCHEMA`, `PROOF_OF_WORK_SCHEMA`, and `TRADE_CONTRACT_SCHEMA`) of the class in the same
   change.

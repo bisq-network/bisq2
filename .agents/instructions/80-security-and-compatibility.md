@@ -33,6 +33,13 @@
   * or other externally observable behavior.
 * Explicitly raise compatibility or migration risks when a sound solution requires a breaking change.
 
+### Baseline for Backward Compatibility
+
+* The baseline is the last released version: the newest release tag, for example `v2.1.13`. A change must stay compatible with the network messages and the persisted data which that version writes and reads.
+* Unreleased development work is not a baseline. A message, field, format, or rule which only commits after the last release introduced can be changed, renumbered, or removed without a compatibility measure, also when development builds have already written data with it.
+* Before using compatibility as an argument, check whether the last release contains the affected definition: compare the file with its version at the release tag (`git show v2.1.13:<path>`), or check the commit with `git tag --contains <commit>`.
+* Protobuf: a field number which the last release writes or reads must keep its type and its meaning. A removed field of the last release keeps its number and its name as `reserved`. A new field gets a number above every number which the last release uses, including the reserved numbers. A field which only unreleased commits added may get another number, type, or meaning. The rules and the reasons are in `docs/dev/backward-compatibility.md`.
+
 ### Completeness of Integrity Protection
 
 When a change adds or reviews a signature, MAC, hash commitment, or another integrity protection:
