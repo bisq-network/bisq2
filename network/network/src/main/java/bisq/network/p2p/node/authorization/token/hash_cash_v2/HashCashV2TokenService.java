@@ -127,6 +127,10 @@ public class HashCashV2TokenService extends AuthorizationTokenService<HashCashV2
                                         double proofOfWorkDifficulty,
                                         NetworkLoad currentNetworkLoad,
                                         Optional<NetworkLoad> previousNetworkLoad) {
+        if (!Double.isFinite(proofOfWorkDifficulty) || proofOfWorkDifficulty < MIN_DIFFICULTY) {
+            log.warn("Proof-of-work difficulty is below the minimum or is not finite");
+            return true;
+        }
         double costFactor = MessageCostPolicy.getCostFactor(message);
         log.debug("isDifficultyInvalid/currentNetworkLoad: costFactor={}, networkLoad.getValue()={}",
                 costFactor, currentNetworkLoad.getLoad());
