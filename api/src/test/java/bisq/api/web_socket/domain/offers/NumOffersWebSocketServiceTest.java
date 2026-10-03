@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -50,7 +51,9 @@ class NumOffersWebSocketServiceTest {
         when(message.getId()).thenReturn("offer-message-id");
         when(message.getAuthorUserProfileId()).thenReturn("author-id");
         when(message.hasBisqEasyOffer()).thenReturn(true);
-        channel.addChatMessage(message);
+        // A channel holds only messages of supported types
+        when(message.hasSupportedChatMessageType()).thenReturn(true);
+        assertTrue(channel.addChatMessage(message));
         ObservableSet<BisqEasyOfferbookChannel> channels = new ObservableSet<>();
         channels.add(channel);
         ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
