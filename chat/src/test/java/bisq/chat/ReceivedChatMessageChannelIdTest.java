@@ -17,6 +17,7 @@
 
 package bisq.chat;
 
+import bisq.chat.ProcessedConfidentialMessages.ReceivedMessage;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.common.CommonPublicChatMessage;
@@ -26,8 +27,6 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.persistence.DbSubDirectory;
@@ -45,6 +44,7 @@ import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -54,8 +54,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -68,9 +66,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+@Isolated("ProcessedConfidentialMessages uses the static NetworkExecutors")
 class ReceivedChatMessageChannelIdTest {
     private static final UserIdentity MY_USER_IDENTITY = ChatTestUsers.createUserIdentity("me");
-    private static final UserProfile PEER = ChatTestUsers.createUserIdentity("peer").getUserProfile();
+    private static final UserIdentity PEER_IDENTITY = ChatTestUsers.createUserIdentity("peer");
+    private static final UserProfile PEER = PEER_IDENTITY.getUserProfile();
 
     private PersistenceService persistenceService;
     private NetworkService networkService;
@@ -141,32 +141,11 @@ class ReceivedChatMessageChannelIdTest {
         }
 
         @Test
-        void initializeProcessesMessagesAfterOneWithInvalidChannelId() {
+        void initializeProcessesMessagesAfterOneWithInvalidChannelId() throws Exception {
             TwoPartyPrivateChatMessage message = message(ChatChannelDomain.DISCUSSION, channelId);
-            ConfidentialMessageService confidentialMessageService = mock(ConfidentialMessageService.class);
-            when(confidentialMessageService.getProcessedEnvelopePayloadMessages()).thenReturn(new CopyOnWriteArraySet<>(
-                    List.of(message(ChatChannelDomain.DISCUSSION, "discussion.a"), message)));
-            when(networkService.getConfidentialMessageServices()).thenReturn(Set.of(confidentialMessageService));
-
-            service.initialize();
-
-            TwoPartyPrivateChatChannel channel = service.findChannel(channelId).orElseThrow();
-            assertEquals(Set.of(message), channel.getChatMessages());
-        }
-
-        // The network layer returns its processed messages as a copy in a hash-based set
-        // (ConfidentialMessageService.getProcessedEnvelopePayloadMessages). The copy calls hashCode of each message,
-        // before the chat checks the message. The service makes the copy in the stream which it passes to
-        // StartupReplay.forEach, so the copy is outside of the isolation of each replayed message.
-        @Test
-        void initializeProcessesAHashBasedCopyOfMessagesWithOneWithInvalidChannelId() {
-            TwoPartyPrivateChatMessage message = message(ChatChannelDomain.DISCUSSION, channelId);
-            Set<EnvelopePayloadMessage> processedMessages = new CopyOnWriteArraySet<>(
-                    List.of(message(ChatChannelDomain.DISCUSSION, "discussion.a"), message));
-            ConfidentialMessageService confidentialMessageService = mock(ConfidentialMessageService.class);
-            when(confidentialMessageService.getProcessedEnvelopePayloadMessages())
-                    .thenAnswer(invocation -> processedMessages.stream().collect(Collectors.toUnmodifiableSet()));
-            when(networkService.getConfidentialMessageServices()).thenReturn(Set.of(confidentialMessageService));
+            ProcessedConfidentialMessages.addToNetworkService(networkService, MY_USER_IDENTITY, List.of(
+                    new ReceivedMessage(message(ChatChannelDomain.DISCUSSION, "discussion.a"), PEER_IDENTITY),
+                    new ReceivedMessage(message, PEER_IDENTITY)));
 
             service.initialize();
 

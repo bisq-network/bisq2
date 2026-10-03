@@ -17,6 +17,7 @@
 
 package bisq.chat;
 
+import bisq.chat.ProcessedConfidentialMessages.ReceivedMessage;
 import bisq.chat.common.CommonPublicChatChannel;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.common.CommonPublicChatMessage;
@@ -26,8 +27,6 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
@@ -45,10 +44,10 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -56,8 +55,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -65,9 +66,12 @@ import static org.mockito.Mockito.when;
  * At startup the chat services replay data which they received before. An item whose processing fails does not stop
  * the start of the service nor the processing of the other items (docs/specifications/network/startup-replay.md).
  */
+@Isolated("ProcessedConfidentialMessages uses the static NetworkExecutors")
 class ChatStartupReplayTest {
     private static final UserIdentity MY_USER_IDENTITY = ChatTestUsers.createUserIdentity("me");
-    private static final UserProfile PEER = ChatTestUsers.createUserIdentity("peer").getUserProfile();
+    private static final UserIdentity PEER_IDENTITY = ChatTestUsers.createUserIdentity("peer");
+    private static final UserProfile PEER = PEER_IDENTITY.getUserProfile();
+    private static final UserIdentity FAILING_PEER = ChatTestUsers.createUserIdentity("failingPeer");
 
     private PersistenceService persistenceService;
     private NetworkService networkService;
@@ -126,7 +130,13 @@ class ChatStartupReplayTest {
     }
 
     @Test
-    void privateChatStartsAndProcessesMessagesAfterOneWhoseProcessingFails() {
+    void privateChatStartsAndProcessesMessagesAfterOneWhoseProcessingFails() throws Exception {
+        // Stands for any exception in the processing of a message from another user
+        BannedUserService bannedUserService = mock(BannedUserService.class);
+        when(bannedUserService.isUserProfileBanned(argThat((UserProfile profile) ->
+                profile != null && profile.getId().equals(FAILING_PEER.getId()))))
+                .thenThrow(new IllegalStateException("Processing a received message failed"));
+        when(userService.getBannedUserService()).thenReturn(bannedUserService);
         SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getDoAutoAddToContactList()).thenReturn(true);
         TwoPartyPrivateChatChannelService service = new TwoPartyPrivateChatChannelService(persistenceService,
@@ -134,11 +144,31 @@ class ChatStartupReplayTest {
                 userService,
                 settingsService,
                 ChatChannelDomain.DISCUSSION);
-        String channelId = TwoPartyPrivateChatChannel.createId(ChatChannelDomain.DISCUSSION, PEER.getId(), MY_USER_IDENTITY.getId());
-        TwoPartyPrivateChatMessage message = new TwoPartyPrivateChatMessage(StringUtils.createUid(),
+        String channelId = privateChannelIdWith(PEER_IDENTITY);
+        TwoPartyPrivateChatMessage message = privateMessage(PEER_IDENTITY);
+        // The services receive the processed messages through the network layer, so a real ConfidentialMessageService
+        // decrypts them. It processes the failing message first.
+        ProcessedConfidentialMessages.addToNetworkService(networkService, MY_USER_IDENTITY, List.of(
+                new ReceivedMessage(privateMessage(FAILING_PEER), FAILING_PEER),
+                new ReceivedMessage(message, PEER_IDENTITY)));
+
+        service.initialize();
+
+        TwoPartyPrivateChatChannel channel = service.findChannel(channelId).orElseThrow();
+        assertEquals(Set.of(message), channel.getChatMessages());
+        // The processing of the failing message throws before it creates a channel
+        assertTrue(service.findChannel(privateChannelIdWith(FAILING_PEER)).isEmpty());
+    }
+
+    private static String privateChannelIdWith(UserIdentity peer) {
+        return TwoPartyPrivateChatChannel.createId(ChatChannelDomain.DISCUSSION, peer.getId(), MY_USER_IDENTITY.getId());
+    }
+
+    private static TwoPartyPrivateChatMessage privateMessage(UserIdentity sender) {
+        return new TwoPartyPrivateChatMessage(StringUtils.createUid(),
                 ChatChannelDomain.DISCUSSION,
-                channelId,
-                PEER,
+                privateChannelIdWith(sender),
+                sender.getUserProfile(),
                 MY_USER_IDENTITY.getId(),
                 MY_USER_IDENTITY.getUserProfile().getNetworkId(),
                 "text",
@@ -147,16 +177,6 @@ class ChatStartupReplayTest {
                 false,
                 ChatMessageType.TEXT,
                 new HashSet<>());
-        ConfidentialMessageService confidentialMessageService = mock(ConfidentialMessageService.class);
-        // A LinkedHashSet keeps the order and, unlike a CopyOnWriteArraySet, does not call equals on the failing item
-        when(confidentialMessageService.getProcessedEnvelopePayloadMessages()).thenReturn(new LinkedHashSet<>(
-                List.<EnvelopePayloadMessage>of(failingItem(TwoPartyPrivateChatMessage.class), message)));
-        when(networkService.getConfidentialMessageServices()).thenReturn(Set.of(confidentialMessageService));
-
-        service.initialize();
-
-        TwoPartyPrivateChatChannel channel = service.findChannel(channelId).orElseThrow();
-        assertEquals(Set.of(message), channel.getChatMessages());
     }
 
     // An item of which every method throws, so that its processing fails whichever method the service calls first
