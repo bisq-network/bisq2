@@ -178,64 +178,37 @@ class MailboxMetaDataTest {
         assertEquals(metaDataOfUnknownType.toProto(false), mailboxData.toProto(false).getMetaData());
     }
 
+    // No version keeps the received metaData, and no hash contains it, also not version 0
     @Test
-    void mailboxDataKeepsTheReceivedMetaDataIfTheHashCoversIt() throws UnresolvableProtobufException {
-        // In version 0 serializeForHash() contains metaData. Another value would change the signature and the storage
-        // key of the AddMailboxRequest and the proof of work payload.
-        bisq.network.protobuf.MailboxData proto = new MailboxData(FORGED_META_DATA,
-                createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
+    void mailboxDataOfVersion0CarriesTheRegisteredMetaData() throws UnresolvableProtobufException {
+        MailboxData registered = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
+        bisq.network.protobuf.MailboxData forgedProto = new MailboxData(FORGED_META_DATA,
+                registered.getConfidentialMessage()).toProto(false).toBuilder()
                 .setVersion(0)
                 .build();
 
-        assertEquals(proto, MailboxData.fromProto(proto).toProto(false));
+        MailboxData mailboxData = MailboxData.fromProto(forgedProto);
+
+        //noinspection deprecation
+        assertEquals(AckMessage.META_DATA.toProto(false), mailboxData.toProto(false).getMetaData());
+        assertArrayEquals(registered.serializeForHash(), mailboxData.serializeForHash());
     }
 
-    // Nodes of earlier versions compute the cost factor from the field metaData, which carries the registered
-    // MetaData. If the registered MetaData differs from the values of the policy, the sender pays the higher value.
+    // Without signature V2, version 0 still parses. The receiver uses the registered MetaData and the policy value.
     @Test
-    void senderPaysTheCostFactorWhichEarlierVersionsComputeFromMetaData()
+    void removeRequestOfVersion0WithoutSignatureV2UsesTheRegisteredMetaData()
             throws GeneralSecurityException, UnresolvableProtobufException {
-        // The registered MetaData of AckMessage has the values of the policy
-        AddMailboxRequest ackRequest = createAddMailboxRequest();
-        assertEquals(MessageCostPolicy.getCostFactor(ackRequest), MessageCostPolicy.getCostFactorToPay(ackRequest));
-
-        // The policy has no values for LongLivedMailboxMessage. Its registered MetaData has a time to live of 30 days
-        // and a maximum map size of 1000, which gives a storage cost factor of 0.3 + 0.1. The cipher text adds 0.1.
-        MailboxData mailboxData = new MailboxData(LongLivedMailboxMessage.META_DATA,
-                createConfidentialMessage(senderKeyPair));
-        AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
-        assertEquals(0.25, MessageCostPolicy.getCostFactor(addRequest));
-        assertEquals(0.5, MessageCostPolicy.getCostFactorToPay(addRequest), 1e-9);
-
-        RemoveMailboxRequest removeRequest = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
-        assertEquals(0.1, MessageCostPolicy.getCostFactor(removeRequest));
-        assertEquals(0.3, MessageCostPolicy.getCostFactorToPay(removeRequest));
-    }
-
-    // In version 0 serializeForHash() contains metaData, so the proof of work payload contains it and no node replaces
-    // it. Relays pay the cost factor which nodes of earlier versions compute from it. The receiver expects the same, so
-    // that a sender cannot make relays pay more than it paid. The signature of the AddMailboxRequest covers the field
-    // of MailboxData; the signature of the RemoveMailboxRequest does not cover its own field.
-    @Test
-    void receiverExpectsTheCostFactorOfMetaDataWhichTheHashCovers()
-            throws GeneralSecurityException, UnresolvableProtobufException {
-        // FORGED_META_DATA has a time to live of 100 days, which gives a storage cost factor of 1
-        MailboxData mailboxData = MailboxData.fromProto(new MailboxData(FORGED_META_DATA,
-                createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
-                .setVersion(0)
-                .build());
-        AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
-        assertEquals(1, MessageCostPolicy.getCostFactor(addRequest));
-        assertEquals(1, MessageCostPolicy.getCostFactorToPay(addRequest));
-
         //noinspection deprecation
         RemoveMailboxRequest removeRequest = RemoveMailboxRequest.fromProto(createRemoveMailboxRequest()
                 .toValueProto(false).toBuilder()
                 .setVersion(0)
+                .clearSignatureV2()
                 .setMetaData(FORGED_META_DATA.toProto(false))
                 .build());
-        assertEquals(0.3, MessageCostPolicy.getCostFactor(removeRequest));
-        assertEquals(0.3, MessageCostPolicy.getCostFactorToPay(removeRequest));
+
+        //noinspection deprecation
+        assertEquals(AckMessage.META_DATA.toProto(false), removeRequest.toValueProto(false).getMetaData());
+        assertEquals(0.1, MessageCostPolicy.getCostFactor(removeRequest));
     }
 
     private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException, UnresolvableProtobufException {

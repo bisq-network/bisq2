@@ -24,15 +24,17 @@ import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The metaData field of the remove requests is annotated with @ExcludeForHash(excludeOnlyInVersions = {1, 2, 3}).
- * Proto uses getVersion() to decide about the exclusion. serializeForHash() is used for the proof of work payload,
- * so it must stay identical across node versions.
+ * The deprecated metaData field of the remove requests is excluded from the hash in every version. Versions 1 to 3
+ * are the versions which supported nodes send; for them serializeForHash(), the proof of work payload, is the same as
+ * in nodes of earlier versions. Versions 0 and above 3 are not used by supported nodes.
  */
 class DataRequestVersionTest {
     private static final ByteString HASH = ByteString.copyFrom(new byte[20]);
@@ -41,12 +43,13 @@ class DataRequestVersionTest {
     private static final bisq.network.protobuf.MetaData META_DATA =
             new MetaData(MetaData.TTL_10_DAYS, "TestDistributedData").toProto(false);
 
-    @Test
-    void removeAuthenticatedDataRequestExcludesMetaDataFromHashInVersion1()
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2, 3, 4})
+    void removeAuthenticatedDataRequestExcludesMetaDataFromHashInEveryVersion(int version)
             throws InvalidProtocolBufferException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.fromProto(
                 bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
-                        .setVersion(1)
+                        .setVersion(version)
                         .setMetaData(META_DATA)
                         .setHash(HASH)
                         .setOwnerPublicKeyBytes(PUBLIC_KEY)
@@ -55,17 +58,18 @@ class DataRequestVersionTest {
                         .setCreated(System.currentTimeMillis())
                         .build());
 
-        assertEquals(1, request.getVersion());
+        assertEquals(version, request.getVersion());
         assertFalse(parse(request.serializeForHash()).getRemoveAuthenticatedDataRequest().hasMetaData());
         assertTrue(parse(request.serialize()).getRemoveAuthenticatedDataRequest().hasMetaData());
     }
 
-    @Test
-    void removeMailboxRequestExcludesMetaDataFromHashInVersion1()
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2, 3, 4})
+    void removeMailboxRequestExcludesMetaDataFromHashInEveryVersion(int version)
             throws InvalidProtocolBufferException, UnresolvableProtobufException {
         RemoveMailboxRequest request = RemoveMailboxRequest.fromProto(
                 bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
-                        .setVersion(1)
+                        .setVersion(version)
                         .setMetaData(META_DATA)
                         .setHash(HASH)
                         .setReceiverPublicKeyBytes(PUBLIC_KEY)
@@ -73,7 +77,7 @@ class DataRequestVersionTest {
                         .setCreated(System.currentTimeMillis())
                         .build());
 
-        assertEquals(1, request.getVersion());
+        assertEquals(version, request.getVersion());
         assertFalse(parse(request.serializeForHash()).getRemoveMailboxRequest().hasMetaData());
         assertTrue(parse(request.serialize()).getRemoveMailboxRequest().hasMetaData());
     }

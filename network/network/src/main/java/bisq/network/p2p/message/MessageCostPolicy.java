@@ -211,23 +211,14 @@ public final class MessageCostPolicy {
                     MathUtils.bounded(0.5, 1, getDataCostFactor(request.getAppendOnlyData().getClassName()));
             case AddMailboxRequest request -> {
                 MailboxData mailboxData = request.getMailboxSequentialData().getMailboxData();
-                double storageCostFactor = getStorageCostFactor(mailboxData.getClassName(),
-                        mailboxData.getMetaDataForEarlierVersions(),
-                        mailboxData.isMetaDataCoveredByHash());
-                yield getAddMailboxRequestCostFactor(mailboxData, storageCostFactor);
+                yield getAddMailboxRequestCostFactor(mailboxData, getStorageCostFactor(mailboxData.getClassName()));
             }
-            case RemoveMailboxRequest request -> getRemoveOrRefreshCostFactor(getStorageCostFactor(
-                    request.getClassName(),
-                    request.getMetaDataForEarlierVersions(),
-                    request.isMetaDataCoveredByHash()));
-            case RemoveAuthenticatedDataRequest request -> getRemoveOrRefreshCostFactor(getStorageCostFactor(
-                    request.getClassName(),
-                    request.getMetaDataForEarlierVersions(),
-                    request.isMetaDataCoveredByHash()));
-            case RefreshAuthenticatedDataRequest request -> getRemoveOrRefreshCostFactor(getStorageCostFactor(
-                    request.getClassName(),
-                    request.getMetaDataForEarlierVersions(),
-                    request.isMetaDataCoveredByHash()));
+            case RemoveMailboxRequest request ->
+                    getRemoveOrRefreshCostFactor(getStorageCostFactor(request.getClassName()));
+            case RemoveAuthenticatedDataRequest request ->
+                    getRemoveOrRefreshCostFactor(getStorageCostFactor(request.getClassName()));
+            case RefreshAuthenticatedDataRequest request ->
+                    getRemoveOrRefreshCostFactor(getStorageCostFactor(request.getClassName()));
             default -> UNEXPECTED_MESSAGE_COST_FACTOR;
         };
     }
@@ -304,20 +295,6 @@ public final class MessageCostPolicy {
     // Otherwise the authorization could reject messages of newer nodes.
     private static double getStorageCostFactor(String className) {
         return STORAGE_COST_FACTOR_BY_CLASS_NAME.getOrDefault(className, 0d);
-    }
-
-    // Nodes of earlier versions compute the storage cost factor from the field metaData. If serializeForHash() of the
-    // message contains the field (version 0), the proof of work payload contains it, so no node replaces it. Relays
-    // forward it and pay the cost factor which nodes of earlier versions compute from it (see getCostFactorToPay()).
-    // The receiver then also expects this cost factor, if it is higher. Otherwise a sender could make relays pay more
-    // than it paid.
-    private static double getStorageCostFactor(String className,
-                                               MetaData metaDataForEarlierVersions,
-                                               boolean isMetaDataCoveredByHash) {
-        double storageCostFactor = getStorageCostFactor(className);
-        return isMetaDataCoveredByHash ?
-                Math.max(storageCostFactor, getStorageCostFactorOfEarlierVersions(metaDataForEarlierVersions)) :
-                storageCostFactor;
     }
 
     // The formula of versions up to 2.1.13 (MetaData.getCostFactor()). This node uses it only to compute the cost

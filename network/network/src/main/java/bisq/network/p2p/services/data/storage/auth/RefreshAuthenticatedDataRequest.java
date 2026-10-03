@@ -65,9 +65,9 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     }
 
 
-    // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it. This node sends its
-    // registered MetaData of the class name (see fromProto) and never uses the field for a decision (see
-    // getMetaData()).
+    // Deprecated. The class name selects the MetaData (see getMetaData()); the field is still sent only because nodes of
+    // earlier versions use it. fromProto replaces the received value by the registered MetaData of the class name, so
+    // its className always equals className. No hash, storage key, proof of work or signature contains it.
     @ExcludeForHash
     private final MetaData metaData;
     private final byte[] hash; // of authenticatedData
@@ -350,11 +350,6 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
     // does not use it for its own decisions.
     public MetaData getMetaDataForEarlierVersions() {
         return metaData;
-    }
-
-    // serializeForHash() never contains the field metaData.
-    public boolean isMetaDataCoveredByHash() {
-        return false;
     }
 
     @Override
