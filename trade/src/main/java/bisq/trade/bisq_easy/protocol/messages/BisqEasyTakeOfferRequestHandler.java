@@ -35,6 +35,7 @@ import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandlerAsMessageSender;
+import bisq.trade.bisq_easy.validation.BisqEasyPriceSpecValidator;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.profile.UserProfile;
@@ -104,6 +105,9 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
             }
         }
 
+        // After the check above the offer is our own offer, so this binds the contract price to our offer
+        BisqEasyPriceSpecValidator.validatePriceSpec(takersOffer, takersContract.getPriceSpec());
+
         checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()),
                 "Senders networkId must be same as takers networkId from takers contract");
         ContractService contractService = serviceProvider.getContractService();
@@ -152,8 +156,6 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
     @Override
     protected void process(BisqEasyTakeOfferRequest message) {
         BisqEasyContract contract = message.getBisqEasyContract();
-        // Price-spec equality is intentionally not required; keep the amount-deviation checks.
-        // See docs/specifications/trade/bisq-easy-take-offer-price.md before changing this policy.
         takersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         try {
@@ -226,7 +228,7 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
         Market market = takersOffer.getMarket();
         MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(market);
         Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService,
-                takersContract.getPriceSpec(), market);
+                takersOffer.getPriceSpec(), market);
         checkArgument(priceQuote.isPresent(),
                 "PriceQuote is empty. Might be that no market price is available. marketPrice=" + marketPrice);
         Optional<Monetary> amount;
