@@ -84,22 +84,14 @@ data class GpgKeyInfo(
 )
 
 val bisq2ReleaseKeyIds = listOf("E222AA02", "387C8307")
+// The names the in-app updaters download (UpdaterUtils). Updaters up to 2.1.13 download the plain dmg.
 val bisq2InstallerReleaseAssets = listOf(
-    "Bisq-%s-linux_x86_64.deb",
-    "Bisq-%s-linux_arm64.deb",
-    "Bisq-%s-linux_x86_64.rpm",
-    "Bisq-%s-linux_arm64.rpm",
+    "Bisq-%s.deb",
+    "Bisq-%s.rpm",
+    "Bisq-%s.exe",
+    "Bisq-%s.dmg",
     "Bisq-x86_64-%s.dmg",
     "Bisq-aarch64-%s.dmg",
-    "Bisq-%s-win_x86_64.exe",
-    "Bisq-%s-win_x86_64.msi",
-)
-val bisq2DesktopUpdateJarReleaseAssets = listOf(
-    "desktop-app-%s-linux_x86_64-all.jar",
-    "desktop-app-%s-linux_arm64-all.jar",
-    "desktop-app-%s-macos_x86_64-all.jar",
-    "desktop-app-%s-macos_arm64-all.jar",
-    "desktop-app-%s-win_x86_64-all.jar",
 )
 val bisq2ReleaseArtifactExtensions = listOf("deb", "dmg", "exe", "jar", "msi", "rpm", "sha256")
 
@@ -299,10 +291,7 @@ fun expectedBisq2ReleaseAssets(releaseVersion: String): List<String> {
 }
 
 fun expectedBisq2SignableReleaseAssets(releaseVersion: String): List<String> {
-    val installers = bisq2InstallerReleaseAssets.map { it.format(releaseVersion) }
-    val updateJars = bisq2DesktopUpdateJarReleaseAssets.map { it.format(releaseVersion) }
-    val jarHash = "Bisq-$releaseVersion-all-jars.sha256"
-    return installers + updateJars + jarHash
+    return bisq2InstallerReleaseAssets.map { it.format(releaseVersion) }
 }
 
 fun isExpectedBisq2ReleaseArtifact(candidate: File): Boolean {
@@ -772,20 +761,6 @@ tasks.register("verifyReleaseReadiness") {
             }
         }
 
-        fun readLauncherKeyIds(): List<String> {
-            val launcherFile = file("apps/desktop/desktop-app-launcher/src/main/java/bisq/desktop_app_launcher/DesktopAppLauncher.java")
-            if (!launcherFile.isFile) {
-                return emptyList()
-            }
-
-            val keyIdRegex = Regex("private\\s+static\\s+final\\s+String\\s+FINGER_PRINT_[A-Z_]+\\s*=\\s*\"([0-9A-Fa-f]{8})\"")
-            return keyIdRegex.findAll(launcherFile.readText(StandardCharsets.UTF_8))
-                .map { it.groupValues[1].uppercase(Locale.ROOT) }
-                .distinct()
-                .sorted()
-                .toList()
-        }
-
         fun checkVersionValue(results: MutableList<ReadinessResult>,
                               releaseVersion: String,
                               label: String,
@@ -916,20 +891,6 @@ tasks.register("verifyReleaseReadiness") {
             if (extraAssets.isNotEmpty()) {
                 addResult(results, "WARN", "GitHub extra assets", "Unexpected uploaded asset(s): ${extraAssets.sorted().joinToString(", ")}")
             }
-        }
-
-        val launcherKeyIds = readLauncherKeyIds()
-        if (launcherKeyIds.isEmpty()) {
-            addResult(results, "FAIL", "Launcher signer key ids", "Could not parse signer key ids from DesktopAppLauncher")
-        } else if (launcherKeyIds == bisq2ReleaseKeyIds.sorted()) {
-            addResult(results, "PASS", "Launcher signer key ids", "DesktopAppLauncher signer ids are ${launcherKeyIds.joinToString(", ")}")
-        } else {
-            addResult(
-                results,
-                "FAIL",
-                "Launcher signer key ids",
-                "DesktopAppLauncher signer ids are ${launcherKeyIds.joinToString(", ")}, expected ${bisq2ReleaseKeyIds.sorted().joinToString(", ")}"
-            )
         }
 
         val signingKeyFile = file("apps/desktop/desktop-app-launcher/maintainer_public_keys/signingkey.asc")
