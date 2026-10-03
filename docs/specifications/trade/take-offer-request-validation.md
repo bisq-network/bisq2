@@ -19,7 +19,7 @@ The maker verifies, in this order:
 - the amounts are positive and within the offer's amount specification (equal to its fixed amount or within its range);
 - the Bitcoin amount does not deviate, to the maker's disadvantage, by more than the maker's maximum trade price deviation from the amount the maker calculates for the quote amount at the price it derives itself from the offer's price specification (`PRICE_DEVIATION` otherwise);
 - the payment method specifications of the contract are ones the offer lists;
-- the contract mediator equals, by network ID, the mediator the maker selects deterministically for the two traders and the offer (`MEDIATORS_NOT_MATCHING` otherwise);
+- the contract mediator equals, by its whole network ID including the addresses, the mediator the maker selects deterministically for the two traders and the offer (`MEDIATORS_NOT_MATCHING` otherwise). The maker sends its mediation request and its chat messages for the mediator to the addresses of the copies of the mediator's profile which the taker supplies in the contract and in its first chat message. This check binds these addresses to the profile which the mediator published, see rule 4 of [identity by key](../user/identity-by-key.md);
 - the taker's contract signature belongs to the taker's public key and verifies over the contract;
 - if the taker is the seller, the taker's reputation score allows the trade amount, see `bisq-easy-seller-reputation-limit.md` (`SELLER_REPUTATION_TOO_LOW` otherwise).
 
