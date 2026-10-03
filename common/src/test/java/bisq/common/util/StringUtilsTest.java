@@ -4,6 +4,7 @@ import bisq.common.data.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -149,6 +150,16 @@ public class StringUtilsTest {
         String input = "  \u202Duser@example.com\u202C  ";
         String expected = "user@example.com";
         assertEquals(expected, StringUtils.cleanUserInput(input));
+    }
+
+    @Test
+    void extractHyperlinksReplacesEachMarkerWithItsLinkAndNumber() {
+        List<String> hyperlinks = new ArrayList<>();
+        String message = StringUtils.extractHyperlinks(
+                "Read [HYPERLINK:https://bisq.wiki/Reputation] and [HYPERLINK:https://bisq.network].", hyperlinks);
+
+        assertEquals("Read 'https://bisq.wiki/Reputation' [1] and 'https://bisq.network' [2].", message);
+        assertEquals(List.of("https://bisq.wiki/Reputation", "https://bisq.network"), hyperlinks);
     }
 
     @Test
