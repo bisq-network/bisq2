@@ -315,12 +315,25 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         }
     }
 
+    // The sender chooses the trade ID of its message. A message with the trade ID of another trade does not belong to
+    // this trade, and the mediator ignores a mediation request which carries such a message (rule 5 of
+    // docs/specifications/chat/private-channel-membership.md).
+    @Override
+    protected boolean isMessageOfChannel(BisqEasyOpenTradeChannel channel, BisqEasyOpenTradeMessage message) {
+        boolean isMessageOfTrade = channel.getTradeId().equals(message.getTradeId());
+        if (!isMessageOfTrade) {
+            log.warn("Ignoring a trade chat message whose trade ID is not the trade ID of channel {}", channel.getId());
+        }
+        return isMessageOfTrade;
+    }
+
     @Override
     protected Optional<BisqEasyOpenTradeChannel> createNewChannelFromReceivedMessage(BisqEasyOpenTradeMessage message) {
         Optional<UserIdentity> myUserIdentity = userIdentityService.findUserIdentity(message.getReceiverUserProfileId());
         if (myUserIdentity.isEmpty() || message.isExpired()) {
             log.warn("We received a message for a new channel which is not addressed to one of our identities or is " +
-                    "expired. We ignore it. tradeId={}, messageId={}", message.getTradeId(), message.getId());
+                    "expired. We ignore it. tradeId={}, messageId={}", StringUtils.sanitizeForLog(message.getTradeId()),
+                    StringUtils.sanitizeForLog(message.getId()));
             return Optional.empty();
         }
         if (message.getBisqEasyOffer().isPresent()) {

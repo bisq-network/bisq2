@@ -284,7 +284,8 @@ public abstract class PrivateChatChannelService<
         if (existingChannel.isPresent()) {
             // A message for an existing channel never creates another channel, also when it is rejected
             C channel = existingChannel.get();
-            if (isSentToChannel(channel, message.getSenderUserProfile().getId(), message.getReceiverUserProfileId())) {
+            if (isSentToChannel(channel, message.getSenderUserProfile().getId(), message.getReceiverUserProfileId()) &&
+                    isMessageOfChannel(channel, message)) {
                 addMessageAndProcessQueuedReactions(message, channel);
             }
             return;
@@ -303,7 +304,14 @@ public abstract class PrivateChatChannelService<
         createNewChannelFromReceivedMessage(message)
                 .filter(channel -> isSentToChannel(channel, message.getSenderUserProfile().getId(),
                         message.getReceiverUserProfileId()))
+                .filter(channel -> isMessageOfChannel(channel, message))
                 .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+    }
+
+    // Whether a received message belongs to the channel apart from its peers, for example to the trade of a trade
+    // channel. The sender chooses the IDs in the message.
+    protected boolean isMessageOfChannel(C channel, M message) {
+        return true;
     }
 
     // The sender chooses the channel ID. A received message or reaction belongs to an existing channel only if its

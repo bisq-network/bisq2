@@ -25,12 +25,15 @@ import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.market.MarketRepository;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.common.util.StringUtils;
 import bisq.contract.TradeId;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -55,6 +58,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.security.KeyPair;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -138,6 +142,25 @@ class BisqEasyMediationRequestServiceTest {
     }
 
     @Test
+    void requestCarriesOnlyMessagesOfTheTrade() {
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(mediator));
+        String channelIdOfTrade = BisqEasyOpenTradeChannel.createId(tradeId);
+        BisqEasyOpenTradeMessage messageOfTrade = message(taker, tradeId, channelIdOfTrade);
+        channel.addChatMessage(messageOfTrade);
+        // The taker chooses the IDs of its messages, and the channel holds messages of the mediator as well. The
+        // mediator ignores a request with a message of another trade, channel or sender.
+        channel.addChatMessage(message(taker, "other-trade-id", channelIdOfTrade));
+        channel.addChatMessage(message(taker, tradeId, BisqEasyOpenTradeChannel.createId("other-trade-id")));
+        channel.addChatMessage(message(mediator, tradeId, channelIdOfTrade));
+
+        service.requestMediation(channel, contract);
+
+        ArgumentCaptor<BisqEasyMediationRequest> request = ArgumentCaptor.forClass(BisqEasyMediationRequest.class);
+        verify(networkService).confidentialSend(request.capture(), eq(mediator.getNetworkId()), any());
+        assertEquals(List.of(messageOfTrade), request.getValue().getChatMessages());
+    }
+
+    @Test
     void requestWithAnotherOfferInTheChannelIsRefused() {
         BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.create(tradeId,
                 createOffer(makerIdentity.getUserProfile().getNetworkId(), 200_0000),
@@ -190,6 +213,23 @@ class BisqEasyMediationRequestServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
 
         verify(networkService, never()).confidentialSend(any(), any(), any());
+    }
+
+    private BisqEasyOpenTradeMessage message(UserProfile sender, String messageTradeId, String channelId) {
+        return new BisqEasyOpenTradeMessage(messageTradeId,
+                StringUtils.createUid(),
+                channelId,
+                sender,
+                makerIdentity.getId(),
+                makerIdentity.getUserProfile().getNetworkId(),
+                "text",
+                Optional.empty(),
+                System.currentTimeMillis(),
+                false,
+                Optional.empty(),
+                ChatMessageType.TEXT,
+                Optional.empty(),
+                new HashSet<>());
     }
 
     private static BisqEasyOffer createOffer(NetworkId makerNetworkId) {
