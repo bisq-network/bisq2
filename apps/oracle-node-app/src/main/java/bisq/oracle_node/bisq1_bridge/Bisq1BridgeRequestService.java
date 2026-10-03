@@ -380,8 +380,7 @@ public class Bisq1BridgeRequestService implements Service,
                     return;
                 }
                 if (hasWitnessClaimConflict(request.getHashAsHex(), request.getProfileId())) {
-                    log.warn("Rejecting account age witness {} because it is already authorized for another profile",
-                            request.getHashAsHex());
+                    log.warn("Rejecting an account age witness because it is already authorized for another profile");
                     return;
                 }
                 var response = accountAgeWitnessGrpcService.verifyAndRequestAuthorization(request);
@@ -450,8 +449,7 @@ public class Bisq1BridgeRequestService implements Service,
                     return;
                 }
                 if (hasWitnessClaimConflict(request.getHashAsHex(), request.getProfileId())) {
-                    log.warn("Rejecting signed witness {} because it is already authorized for another profile",
-                            request.getHashAsHex());
+                    log.warn("Rejecting a signed witness because it is already authorized for another profile");
                     return;
                 }
                 var response = signedWitnessGrpcService.verifyAndRequestAuthorization(request);
