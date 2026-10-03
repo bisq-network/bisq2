@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.common.data.ByteArray;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
@@ -594,9 +595,13 @@ class MailboxDataStorageServiceTest {
     @Test
     void addRequestWithClassNameOfOtherTypeIsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
         AddMailboxRequest addRequest = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
-        // A relay can change className, because the signature does not cover it
+        // A relay can change className, because signature V1 does not cover it. It changes the className of the
+        // deprecated metaData as well, otherwise parsing rejects the request.
         bisq.network.protobuf.AddMailboxRequest.Builder builder = addRequest.toValueProto(false).toBuilder();
-        builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setClassName("OtherMailboxMessage");
+        //noinspection deprecation
+        builder.getMailboxSequentialDataBuilder().getMailboxDataBuilder()
+                .setClassName("OtherMailboxMessage")
+                .setMetaData(new MetaData(MetaData.TTL_10_DAYS, "OtherMailboxMessage").toProto(false));
         AddMailboxRequest requestWithOtherClassName = AddMailboxRequest.fromProto(builder.build());
 
         DataStorageResult result = store.add(requestWithOtherClassName);
@@ -610,9 +615,11 @@ class MailboxDataStorageServiceTest {
     void removeRequestWithClassNameOfOtherTypeIsRejected()
             throws GeneralSecurityException, UnresolvableProtobufException {
         RemoveMailboxRequest removeRequest = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        //noinspection deprecation
         RemoveMailboxRequest requestWithOtherClassName = RemoveMailboxRequest.fromProto(
                 removeRequest.toValueProto(false).toBuilder()
                         .setClassName("OtherMailboxMessage")
+                        .setMetaData(new MetaData(MetaData.TTL_10_DAYS, "OtherMailboxMessage").toProto(false))
                         .build());
 
         DataStorageResult result = store.remove(requestWithOtherClassName);

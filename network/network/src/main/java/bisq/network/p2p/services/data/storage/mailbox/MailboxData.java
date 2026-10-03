@@ -32,6 +32,8 @@ import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Holds the ConfidentialMessage and the class name of the encrypted MailboxMessage.
  * <p>
@@ -85,6 +87,8 @@ public final class MailboxData implements StorageData, Canonical {
     @Override
     public void verify() {
         MetaData.validateClassName(className);
+        // Nodes of earlier versions select the store by the className of metaData
+        checkArgument(metaData.getClassName().equals(className), "className of metaData must equal className");
     }
 
     @Override

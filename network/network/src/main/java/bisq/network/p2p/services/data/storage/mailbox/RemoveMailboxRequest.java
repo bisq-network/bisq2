@@ -152,6 +152,8 @@ public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataReq
         NetworkDataValidation.validateDate(created);
         SignatureValidation.validateSignatures(signature, signatureV2);
         MetaData.validateClassName(className);
+        // Nodes of earlier versions select the store by the className of metaData
+        checkArgument(metaData.getClassName().equals(className), "className of metaData must equal className");
     }
 
 

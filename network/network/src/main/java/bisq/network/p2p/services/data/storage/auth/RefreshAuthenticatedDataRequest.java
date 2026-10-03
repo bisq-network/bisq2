@@ -39,6 +39,8 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataRequest {
 
@@ -118,6 +120,8 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         NetworkDataValidation.validateDate(created);
         SignatureValidation.validateSignatures(signature, signatureV2);
         MetaData.validateClassName(className);
+        // Nodes of earlier versions select the store by the className of metaData
+        checkArgument(metaData.getClassName().equals(className), "className of metaData must equal className");
     }
 
 

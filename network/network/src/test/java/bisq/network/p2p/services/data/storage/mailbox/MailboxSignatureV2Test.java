@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.mailbox;
 
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
@@ -125,7 +126,11 @@ class MailboxSignatureV2Test {
 
         // Signature V1 does not cover the version and className of MailboxData. Signature V2 covers them.
         bisq.network.protobuf.AddMailboxRequest.Builder changedClassName = proto.toBuilder();
-        changedClassName.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setClassName("OtherType");
+        // The className of the deprecated metaData changes as well, otherwise parsing rejects the request
+        //noinspection deprecation
+        changedClassName.getMailboxSequentialDataBuilder().getMailboxDataBuilder()
+                .setClassName("OtherType")
+                .setMetaData(new MetaData(MetaData.TTL_10_DAYS, "OtherType").toProto(false));
         assertTrue(AddMailboxRequest.fromProto(changedClassName.build()).isSignatureInvalid());
 
         bisq.network.protobuf.AddMailboxRequest.Builder changedDataVersion = proto.toBuilder();
@@ -194,7 +199,11 @@ class MailboxSignatureV2Test {
         bisq.network.protobuf.RemoveMailboxRequest proto = createRemoveMailboxRequest().toValueProto(false);
 
         // Signature V1 covers only the hash. Signature V2 covers these fields as well.
-        assertTrue(RemoveMailboxRequest.fromProto(proto.toBuilder().setClassName("OtherType").build())
+        //noinspection deprecation
+        assertTrue(RemoveMailboxRequest.fromProto(proto.toBuilder()
+                        .setClassName("OtherType")
+                        .setMetaData(new MetaData(MetaData.TTL_10_DAYS, "OtherType").toProto(false))
+                        .build())
                 .isSignatureInvalid());
         assertTrue(RemoveMailboxRequest.fromProto(proto.toBuilder().setCreated(proto.getCreated() - 1).build())
                 .isSignatureInvalid());

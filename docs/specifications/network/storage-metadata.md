@@ -115,6 +115,17 @@ requests as well, so these removals give it no further way to fill the store.
   supported nodes send, already left it out of the hash. Version 0 is the format of releases before the version field
   existed and is no longer in use, and versions above 3 are not used. Leaving the field out of the hash in every version
   means that no version lets a relay change a hash input without changing the request's signed content.
+- The class name of `metaData` must equal `className`. Parsing rejects a message which breaks this rule. For a
+  registered class name the replacement above guarantees it; the rule matters for class names which this node does not
+  know.
+
+  Reason: nodes of earlier versions select the store by the class name of `metaData`, nodes of this version by
+  `className`. If the two differed, the two kinds of nodes would put the data into different stores.
+
+  Reason: otherwise a node forwards values which a sender or relay chose, and which it does not use itself. A node of
+  an earlier version would use them for store selection, expiry and cost factor. It would then expect another cost
+  factor than the relay paid (see [Message cost](message-cost.md#compatibility)), and select another store if
+  `className` and `metaData` name different types.
 - `className` is excluded from the hash. Preimages of signature V1, storage keys, proof of work payloads and the order
   of inventory entries are computed without it. Nodes of earlier versions drop the unknown field and compute the same
   bytes. The preimage of signature V2 contains it; nodes of earlier versions do not verify signature V2.

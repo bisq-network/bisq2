@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.EcPublicKeyVariants;
@@ -218,7 +219,12 @@ class AuthenticatedDataSignatureV2Test {
         bisq.network.protobuf.RemoveAuthenticatedDataRequest proto = request.toValueProto(false);
 
         // Signature V1 covers only the hash. Signature V2 covers these fields as well.
-        assertTrue(RemoveAuthenticatedDataRequest.fromProto(proto.toBuilder().setClassName("OtherType").build())
+        // The className of the deprecated metaData changes as well, otherwise parsing rejects the request
+        //noinspection deprecation
+        assertTrue(RemoveAuthenticatedDataRequest.fromProto(proto.toBuilder()
+                        .setClassName("OtherType")
+                        .setMetaData(new MetaData(MetaData.TTL_10_DAYS, "OtherType").toProto(false))
+                        .build())
                 .isSignatureInvalid());
         assertTrue(RemoveAuthenticatedDataRequest.fromProto(proto.toBuilder().setCreated(proto.getCreated() - 1).build())
                 .isSignatureInvalid());
