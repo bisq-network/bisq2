@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -308,12 +309,21 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
      */
     public <T extends AuthorizedDistributedData> Stream<T> getAuthorizedPublishedData(Class<T> type,
                                                                                     BondedRoleType authorizingBondedRoleType) {
+        return getAuthorizedPublishedData(type, authorizingBondedRoleType, data -> true);
+    }
+
+    // As getAuthorizedPublishedData above, only for the data which the filter accepts. The filter runs before the check
+    // of the authorized key, which encodes the key of each publication. A store can hold many publications.
+    public <T extends AuthorizedDistributedData> Stream<T> getAuthorizedPublishedData(Class<T> type,
+                                                                                    BondedRoleType authorizingBondedRoleType,
+                                                                                    Predicate<? super T> dataFilter) {
         return networkService.getDataService()
                 .stream()
                 .flatMap(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(type.getSimpleName()))
                 .filter(AuthorizedData.class::isInstance)
                 .map(AuthorizedData.class::cast)
                 .filter(publication -> type.isInstance(publication.getAuthorizedDistributedData()))
+                .filter(publication -> dataFilter.test(type.cast(publication.getAuthorizedDistributedData())))
                 .filter(publication -> isAuthorizedKey(publication, authorizingBondedRoleType))
                 .map(publication -> type.cast(publication.getAuthorizedDistributedData()));
     }
@@ -321,7 +331,9 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     // Whether the network storage holds a publication of data equal to the given data, for which rule 2 or rule 3 holds
     // now, with the authorizing role type (see getAuthorizedPublishedData)
     public boolean hasAuthorizedPublication(AuthorizedDistributedData data, BondedRoleType authorizingBondedRoleType) {
-        return getAuthorizedPublishedData(data.getClass(), authorizingBondedRoleType).anyMatch(data::equals);
+        return getAuthorizedPublishedData(data.getClass(), authorizingBondedRoleType, data::equals)
+                .findAny()
+                .isPresent();
     }
 
     public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream(boolean ignoreBannedState) {
