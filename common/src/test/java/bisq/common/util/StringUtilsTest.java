@@ -4,6 +4,8 @@ import bisq.common.data.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -149,6 +151,94 @@ public class StringUtilsTest {
         String input = "  \u202Duser@example.com\u202C  ";
         String expected = "user@example.com";
         assertEquals(expected, StringUtils.cleanUserInput(input));
+    }
+
+    @Test
+    void extractHyperlinksReplacesEachMarkerWithItsLinkAndNumber() {
+        List<String> hyperlinks = new ArrayList<>();
+        String message = StringUtils.extractHyperlinks(
+                "Read [HYPERLINK:https://bisq.wiki/Reputation] and [HYPERLINK:https://bisq.network].", hyperlinks);
+
+        assertEquals("Read 'https://bisq.wiki/Reputation' [1] and 'https://bisq.network' [2].", message);
+        assertEquals(List.of("https://bisq.wiki/Reputation", "https://bisq.network"), hyperlinks);
+    }
+
+    // Only the application's own text templates may create a link in a popup. Text of another user is shown as plain
+    // text, also when the application inserts it into a template. See docs/specifications/desktop/links.md.
+    @Test
+    void neutralizedTextOfAnotherUserCreatesNoLink() {
+        String report = "Look at [HYPERLINK:\\\\attacker.example\\share\\report.exe]";
+
+        List<String> hyperlinks = new ArrayList<>();
+        String message = StringUtils.extractHyperlinks(StringUtils.neutralizeHyperlinkMarkers(report), hyperlinks);
+
+        assertEquals(List.of(), hyperlinks);
+        assertEquals("Look at [hyperlink:\\\\attacker.example\\share\\report.exe]", message);
+    }
+
+    @Test
+    void templateMarkerStillCreatesLinkWhenTextOfAnotherUserIsInserted() {
+        String template = "Client ''{0}'' wrote: {1}. Read more: [HYPERLINK:https://bisq.wiki/Reputation]";
+        String text = MessageFormat.format(template,
+                StringUtils.neutralizeHyperlinkMarkers("[HYPERLINK:smb://attacker.example/share]"),
+                StringUtils.neutralizeHyperlinkMarkers("[HYPERLINK:https://attacker.example]"));
+
+        List<String> hyperlinks = new ArrayList<>();
+        String message = StringUtils.extractHyperlinks(text, hyperlinks);
+
+        assertEquals(List.of("https://bisq.wiki/Reputation"), hyperlinks);
+        assertEquals("Client '[hyperlink:smb://attacker.example/share]' wrote: [hyperlink:https://attacker.example]. " +
+                "Read more: 'https://bisq.wiki/Reputation' [1]", message);
+    }
+
+    // A value can complete a marker together with a character of the template. Breaking the marker word, and not
+    // only a complete marker, covers these cases too.
+    @Test
+    void neutralizedValueCannotCompleteMarkerWithCharactersOfTemplate() {
+        // The value ends with "[HYPERLINK", and the template continues with ":".
+        assertNoHyperlink(MessageFormat.format("{0}: {1}]",
+                StringUtils.neutralizeHyperlinkMarkers("[HYPERLINK"),
+                StringUtils.neutralizeHyperlinkMarkers("\\\\attacker.example\\x.exe")));
+        // The template ends with "[", and the value starts with "HYPERLINK:".
+        assertNoHyperlink(MessageFormat.format("[{0}]",
+                StringUtils.neutralizeHyperlinkMarkers("HYPERLINK:\\\\attacker.example\\x.exe")));
+    }
+
+    @Test
+    void neutralizationCannotBeBypassedWithNestedMarkerWord() {
+        String neutralized = StringUtils.neutralizeHyperlinkMarkers("[HYPERHYPERLINKLINK:\\\\attacker.example\\x.exe]");
+
+        assertEquals("[HYPERhyperlinkLINK:\\\\attacker.example\\x.exe]", neutralized);
+        assertNoHyperlink(neutralized);
+    }
+
+    // extractHyperlinks passes the link to String.replaceFirst as part of the replacement, where "$" starts a group
+    // reference. A marker with the link "$" made extractHyperlinks throw, so the popup could not be created.
+    @Test
+    void neutralizedMarkerWithDollarSignDoesNotBreakPopupText() {
+        String neutralized = StringUtils.neutralizeHyperlinkMarkers("[HYPERLINK:$]");
+
+        List<String> hyperlinks = new ArrayList<>();
+        assertEquals("[hyperlink:$]", StringUtils.extractHyperlinks(neutralized, hyperlinks));
+        assertEquals(List.of(), hyperlinks);
+    }
+
+    @Test
+    void neutralizationKeepsOtherTextAndChangesNothingTheSecondTime() {
+        String text = "Price [EUR]: 1.000 per BTC, see https://bisq.network and [hyperlink:x] or HyperLink";
+        assertEquals(text, StringUtils.neutralizeHyperlinkMarkers(text));
+
+        String neutralized = StringUtils.neutralizeHyperlinkMarkers("[HYPERLINK:x] HYPERLINK");
+        assertEquals("[hyperlink:x] hyperlink", neutralized);
+        assertEquals(neutralized, StringUtils.neutralizeHyperlinkMarkers(neutralized));
+
+        assertNull(StringUtils.neutralizeHyperlinkMarkers(null));
+    }
+
+    private static void assertNoHyperlink(String text) {
+        List<String> hyperlinks = new ArrayList<>();
+        StringUtils.extractHyperlinks(text, hyperlinks);
+        assertEquals(List.of(), hyperlinks, "text: " + text);
     }
 
     @Test
