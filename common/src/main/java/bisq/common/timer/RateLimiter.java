@@ -17,14 +17,30 @@
 
 package bisq.common.timer;
 
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Consumer;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+/**
+ * Counts the events of each user profile ID in four time windows: the last second, minute, hour and day. An event
+ * exceeds the limit if a window holds more events than its maximum.
+ * <p>
+ * Anybody can create user profile IDs, so the limiter keeps state only while it can change a decision. It removes an
+ * ID without an event within the last day, and it keeps at most maxUserProfileIds IDs (see "Rate limit of chat
+ * authors" in docs/specifications/security/derived-state.md).
+ */
 @Slf4j
 public class RateLimiter {
     private final static long SECOND = 1000L;
@@ -36,14 +52,28 @@ public class RateLimiter {
     public final static int DEFAULT_MAX_PER_MINUTE = 30;
     public final static int DEFAULT_MAX_PER_HOUR = 120;
     public final static int DEFAULT_MAX_PER_DAY = 300;
+    // Far more than the authors of honest chat traffic of one day. At the limit, an ID with the newest events takes at
+    // most about 7 KB, so the limiter takes at most about 70 MB.
+    public final static int DEFAULT_MAX_USER_PROFILE_IDS = 10_000;
+    // The limiter removes the IDs without an event within the last day at most once in this interval
+    private final static long REMOVE_IDLE_INTERVAL = MINUTE;
 
     private final Clock clock;
     private final int maxPerSecond;
     private final int maxPerMinute;
     private final int maxPerHour;
     private final int maxPerDay;
-
-    private final Map<String, Deque<Long>> timestampsByUserProfileId = new ConcurrentHashMap<>();
+    private final int maxUserProfileIds;
+    // A window which holds more events than the highest maximum exceeds its maximum. So the newest (highest maximum + 1)
+    // events of an ID decide as all of its events do.
+    private final int maxTimestampsPerUserProfileId;
+    // Guarded by this. In access order, so that the ID whose state was used least recently comes first. A priority queue
+    // keeps the oldest event first, also for events which are not added in the order of their time.
+    private final LinkedHashMap<String, PriorityQueue<Long>> timestampsByUserProfileId =
+            new LinkedHashMap<>(16, 0.75f, true);
+    private final Set<Consumer<String>> removedUserProfileIdListeners = new CopyOnWriteArraySet<>();
+    // Guarded by this
+    private long lastRemoveIdleTime;
 
     public RateLimiter() {
         this(DEFAULT_MAX_PER_SECOND, DEFAULT_MAX_PER_MINUTE, DEFAULT_MAX_PER_HOUR, DEFAULT_MAX_PER_DAY);
@@ -54,11 +84,29 @@ public class RateLimiter {
     }
 
     public RateLimiter(Clock clock, int maxPerSecond, int maxPerMinute, int maxPerHour, int maxPerDay) {
+        this(clock, maxPerSecond, maxPerMinute, maxPerHour, maxPerDay, DEFAULT_MAX_USER_PROFILE_IDS);
+    }
+
+    @VisibleForTesting
+    RateLimiter(Clock clock, int maxPerSecond, int maxPerMinute, int maxPerHour, int maxPerDay, int maxUserProfileIds) {
+        checkArgument(maxUserProfileIds > 0, "maxUserProfileIds must be positive");
         this.clock = clock;
         this.maxPerSecond = maxPerSecond;
         this.maxPerMinute = maxPerMinute;
         this.maxPerHour = maxPerHour;
         this.maxPerDay = maxPerDay;
+        this.maxUserProfileIds = maxUserProfileIds;
+        long highestMaximum = Math.max(Math.max(maxPerSecond, maxPerMinute), Math.max(maxPerHour, maxPerDay));
+        maxTimestampsPerUserProfileId = (int) Math.min(Integer.MAX_VALUE, highestMaximum + 1);
+    }
+
+    /**
+     * The listener gets each user profile ID whose state the limiter removed: an ID without an event within the last
+     * day, or the least recently used ID when a new ID exceeds maxUserProfileIds. The limiter calls the listener after
+     * it has released its lock.
+     */
+    public void addRemovedUserProfileIdListener(Consumer<String> listener) {
+        removedUserProfileIdListeners.add(listener);
     }
 
     public boolean exceedsLimit(String userProfileId) {
@@ -74,31 +122,92 @@ public class RateLimiter {
     }
 
     public Optional<String> getExceedsLimitInfo(String userProfileId, long timeStamp) {
-        timestampsByUserProfileId.putIfAbsent(userProfileId, new ArrayDeque<>());
-        Deque<Long> timestamps = timestampsByUserProfileId.get(userProfileId);
-        synchronized (timestamps) {
-            timestamps.addLast(timeStamp);
-
-            while (!timestamps.isEmpty() && timeStamp - timestamps.peekFirst() > DAY) {
-                timestamps.pollFirst();
-            }
-
+        List<String> removedUserProfileIds = new ArrayList<>();
+        Optional<String> exceedsLimitInfo;
+        synchronized (this) {
             long now = clock.now();
-            long countLastSecond = timestamps.stream().filter(t -> now - t <= SECOND).count();
-            long countLastMinute = timestamps.stream().filter(t -> now - t <= MINUTE).count();
-            long countLastHour = timestamps.stream().filter(t -> now - t <= HOUR).count();
-            long countLastDay = timestamps.stream().filter(t -> now - t <= DAY).count();
-            if (countLastSecond > maxPerSecond ||
-                    countLastMinute > maxPerMinute ||
-                    countLastHour > maxPerHour ||
-                    countLastDay > maxPerDay) {
-                String message = String.format("Rate limit exceeded: countLastSecond %d, countLastMinute %d, countLastHour %d, countLastDay=%d",
-                        countLastSecond, countLastMinute, countLastHour, countLastDay);
-                log.info(message);
-                return Optional.of(message);
+            removeIdleUserProfileIds(now, removedUserProfileIds);
+
+            PriorityQueue<Long> timestamps = timestampsByUserProfileId.get(userProfileId);
+            if (timestamps == null) {
+                if (timestampsByUserProfileId.size() >= maxUserProfileIds) {
+                    removeLeastRecentlyUsedUserProfileId(removedUserProfileIds);
+                }
+                timestamps = new PriorityQueue<>();
+                timestampsByUserProfileId.put(userProfileId, timestamps);
             }
+            timestamps.add(timeStamp);
+            removeEventsOlderThanOneDay(timestamps, now);
+            while (timestamps.size() > maxTimestampsPerUserProfileId) {
+                timestamps.poll();
+            }
+
+            exceedsLimitInfo = getExceedsLimitInfo(timestamps, now);
         }
 
+        notifyRemovedUserProfileIdListeners(removedUserProfileIds);
+        exceedsLimitInfo.ifPresent(log::info);
+        return exceedsLimitInfo;
+    }
+
+    @VisibleForTesting
+    synchronized int getNumUserProfileIds() {
+        return timestampsByUserProfileId.size();
+    }
+
+    private Optional<String> getExceedsLimitInfo(PriorityQueue<Long> timestamps, long now) {
+        long countLastSecond = timestamps.stream().filter(t -> now - t <= SECOND).count();
+        long countLastMinute = timestamps.stream().filter(t -> now - t <= MINUTE).count();
+        long countLastHour = timestamps.stream().filter(t -> now - t <= HOUR).count();
+        long countLastDay = timestamps.stream().filter(t -> now - t <= DAY).count();
+        if (countLastSecond > maxPerSecond ||
+                countLastMinute > maxPerMinute ||
+                countLastHour > maxPerHour ||
+                countLastDay > maxPerDay) {
+            return Optional.of(String.format("Rate limit exceeded: countLastSecond %d, countLastMinute %d, countLastHour %d, countLastDay=%d",
+                    countLastSecond, countLastMinute, countLastHour, countLastDay));
+        }
         return Optional.empty();
+    }
+
+    // An event older than one day counts in no window, now or later
+    private static void removeEventsOlderThanOneDay(PriorityQueue<Long> timestamps, long now) {
+        while (!timestamps.isEmpty() && now - timestamps.peek() > DAY) {
+            timestamps.poll();
+        }
+    }
+
+    private void removeIdleUserProfileIds(long now, List<String> removedUserProfileIds) {
+        if (now - lastRemoveIdleTime < REMOVE_IDLE_INTERVAL) {
+            return;
+        }
+        lastRemoveIdleTime = now;
+        // Iterating does not change the access order
+        Iterator<Map.Entry<String, PriorityQueue<Long>>> iterator = timestampsByUserProfileId.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, PriorityQueue<Long>> entry = iterator.next();
+            removeEventsOlderThanOneDay(entry.getValue(), now);
+            if (entry.getValue().isEmpty()) {
+                iterator.remove();
+                removedUserProfileIds.add(entry.getKey());
+            }
+        }
+    }
+
+    private void removeLeastRecentlyUsedUserProfileId(List<String> removedUserProfileIds) {
+        Iterator<String> iterator = timestampsByUserProfileId.keySet().iterator();
+        removedUserProfileIds.add(iterator.next());
+        iterator.remove();
+    }
+
+    private void notifyRemovedUserProfileIdListeners(List<String> removedUserProfileIds) {
+        removedUserProfileIds.forEach(userProfileId ->
+                removedUserProfileIdListeners.forEach(listener -> {
+                    try {
+                        listener.accept(userProfileId);
+                    } catch (Exception e) {
+                        log.error("Calling the listener of removed user profile IDs failed", e);
+                    }
+                }));
     }
 }

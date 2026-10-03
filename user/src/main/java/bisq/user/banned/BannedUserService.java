@@ -32,10 +32,8 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -64,7 +62,11 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.rateLimiter = Objects.requireNonNull(rateLimiter, "rateLimiter");
         this.rateLimitEnabled = rateLimitEnabled;
-        if (!rateLimitEnabled) {
+        if (rateLimitEnabled) {
+            // A profile stays flagged at most while the rate limiter keeps its events. Otherwise the flag of a profile
+            // which sends nothing more would stay until shutdown.
+            rateLimiter.addRemovedUserProfileIdListener(rateLimitExceedingUserProfiles::remove);
+        } else {
             log.warn("Chat profile rate limiting disabled. Use only for local/dev testing.");
         }
     }
@@ -173,11 +175,10 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     /* --------------------------------------------------------------------- */
 
     private void refresh(String userProfileId) {
-        Set<String> clone = new HashSet<>(rateLimitExceedingUserProfiles);
-        clone.stream().filter(e -> e.equals(userProfileId))
-                .filter(e -> !rateLimiter.exceedsLimit(e)) // Time window has moved so we are not exceeding anymore
-                .findAny()
-                .ifPresent(rateLimitExceedingUserProfiles::remove);
+        // A flagged profile loses its flag when the time windows have moved and it no longer exceeds the limit
+        if (rateLimitExceedingUserProfiles.contains(userProfileId) && !rateLimiter.exceedsLimit(userProfileId)) {
+            rateLimitExceedingUserProfiles.remove(userProfileId);
+        }
     }
 
 

@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,6 +40,7 @@ import static org.mockito.Mockito.when;
 
 class BannedUserServiceTest {
     private static final String USER_PROFILE_ID = "0123456789abcdef0123456789abcdef01234567";
+    private static final String OTHER_USER_PROFILE_ID = "76543210fedcba9876543210fedcba9876543210";
 
     @Test
     void disabledRateLimitAlwaysReturnsNotExceeding() {
@@ -67,6 +70,29 @@ class BannedUserServiceTest {
         service.checkRateLimit(USER_PROFILE_ID, now);
 
         assertTrue(service.isRateLimitExceeding(USER_PROFILE_ID));
+    }
+
+    @Test
+    void flagOfIdleProfileExpiresAndActiveProfileIsStillFlagged() {
+        AtomicLong time = new AtomicLong(TimeUnit.DAYS.toMillis(10));
+        RateLimiter rateLimiter = new RateLimiter(time::get, 3, 30, 120, 300);
+        BannedUserService service = createService(true, rateLimiter);
+        // The 4th message within one second exceeds the limit of 3 per second
+        for (int i = 0; i < 4; i++) {
+            service.checkRateLimit(USER_PROFILE_ID, time.get());
+        }
+        assertTrue(service.getRateLimitExceedingUserProfiles().contains(USER_PROFILE_ID));
+
+        // The profile sends nothing more. A message of another profile one day and one minute later removes the
+        // rate limit state of the idle profile, and with it the flag.
+        time.addAndGet(TimeUnit.DAYS.toMillis(1) + TimeUnit.MINUTES.toMillis(1) + 1);
+        service.checkRateLimit(OTHER_USER_PROFILE_ID, time.get());
+
+        assertFalse(service.getRateLimitExceedingUserProfiles().contains(USER_PROFILE_ID));
+        for (int i = 0; i < 3; i++) {
+            service.checkRateLimit(OTHER_USER_PROFILE_ID, time.get());
+        }
+        assertTrue(service.isRateLimitExceeding(OTHER_USER_PROFILE_ID));
     }
 
     private static BannedUserService createService(boolean rateLimitEnabled, RateLimiter rateLimiter) {
