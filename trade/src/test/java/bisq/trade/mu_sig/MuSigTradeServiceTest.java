@@ -310,6 +310,43 @@ class MuSigTradeServiceTest {
         }
     }
 
+    // Only the trade peer can change the state of a trade with a trade message. The state machine moves a trade to
+    // FAILED when a message handler throws, so the service drops a message of another sender before the protocol
+    // handles it.
+    @Test
+    void settlementMessageOfAThirdPartyWithTheTradeIdDoesNotReachTheProtocol() throws Exception {
+        try (MediationFixture fixture = new MediationFixture(true)) {
+            MuSigTrade trade = fixture.trade;
+            MuSigTradeState stateBefore = trade.getTradeState();
+            NetworkId thirdParty = createNetworkId("third-party", 9995);
+
+            fixture.service.onMessage(createPsbtMessage(trade, thirdParty));
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            assertThat(trade.getTradeState()).isEqualTo(stateBefore);
+            assertThat(trade.getPeer().getCustomPayoutData()).isEmpty();
+            assertThat(fixture.service.getMuSigMediationCustomPayoutService()
+                    .getPendingMessagesInReplayOrder(trade.getId())).isEmpty();
+        }
+    }
+
+    @Test
+    void errorReportOfAThirdPartyWithTheTradeIdDoesNotReachTheProtocol() throws Exception {
+        try (MediationFixture fixture = new MediationFixture(true)) {
+            MuSigTrade trade = fixture.trade;
+            MuSigTradeState stateBefore = trade.getTradeState();
+            MuSigReportErrorMessage message = new MuSigReportErrorMessage("third-party-error", trade.getId(),
+                    MuSigProtocol.VERSION, createNetworkId("third-party", 9995), trade.getMyself().getNetworkId(),
+                    "error", "", TradeProtocolFailure.UNKNOWN);
+
+            fixture.service.onMessage(message);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            assertThat(trade.getTradeState()).isEqualTo(stateBefore);
+            assertThat(trade.getEventQueue()).isEmpty();
+        }
+    }
+
     @Test
     void earlyDisputeAndSettlementMessagesAreReplayedAfterProtocolRegistration() throws Exception {
         MuSigTrade trade = createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED);
@@ -657,8 +694,12 @@ class MuSigTradeServiceTest {
     }
 
     private static MuSigCustomPayoutPsbtMessage createPsbtMessage(MuSigTrade trade) {
+        return createPsbtMessage(trade, trade.getPeer().getNetworkId());
+    }
+
+    private static MuSigCustomPayoutPsbtMessage createPsbtMessage(MuSigTrade trade, NetworkId sender) {
         return new MuSigCustomPayoutPsbtMessage("peer-psbt", trade.getId(), MuSigProtocol.VERSION,
-                trade.getPeer().getNetworkId(), trade.getMyself().getNetworkId(),
+                sender, trade.getMyself().getNetworkId(),
                 MuSigMediationResultService.getMediationResultHash(trade.getTradeDispute().getMuSigMediationResult().orElseThrow()),
                 CUSTOM_PAYOUT_TX_ID, new byte[]{4, 5, 6});
     }

@@ -18,7 +18,6 @@
 package bisq.trade.protocol.handler;
 
 import bisq.common.fsm.EventHandler;
-import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.protocol.messages.TradeMessage;
@@ -48,12 +47,27 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
     protected abstract void commit();
 
     protected void verifyInternal(M message) {
-        checkArgument(message.getTradeId().equals(trade.getId()),
+        checkArgument(hasTradeId(message, trade),
                 "TradeId of message not matching the tradeId from the trade data");
-        NetworkId sender = message.getSender();
-        checkArgument(sender.equals(trade.getPeer().getNetworkId()),
+        checkArgument(isSentByTradePeer(message, trade),
                 "Message sender networkID not matching the peers networkId from the trade data");
         // We verify if the sender of the message is banned at the message handler in the service class.
         // As the message handler is optional we prefer to block banned messages at the level instead of handling it here.
+    }
+
+    /**
+     * Whether the message carries the ID of the trade and was sent by the trade peer. These are the two conditions
+     * which {@link #verifyInternal} requires.
+     */
+    public static boolean isMessageOfTradePeer(TradeMessage message, Trade<?, ?, ?> trade) {
+        return hasTradeId(message, trade) && isSentByTradePeer(message, trade);
+    }
+
+    private static boolean hasTradeId(TradeMessage message, Trade<?, ?, ?> trade) {
+        return message.getTradeId().equals(trade.getId());
+    }
+
+    private static boolean isSentByTradePeer(TradeMessage message, Trade<?, ?, ?> trade) {
+        return message.getSender().equals(trade.getPeer().getNetworkId());
     }
 }
