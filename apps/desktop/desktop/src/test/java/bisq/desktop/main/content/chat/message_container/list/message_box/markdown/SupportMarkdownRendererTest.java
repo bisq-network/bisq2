@@ -78,6 +78,17 @@ class SupportMarkdownRendererTest {
                 hyperlink("https://bisq.network"));
     }
 
+    // The hyperlink of a URL with user info would show the trusted name in front of the "@" and lead to the host
+    // behind it (see MarkdownSecurityUtilsTest). Such a URL is no link, neither as markdown link nor as auto link.
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "[docs](https://bisq.network@evil.example/)",
+            "Open https://bisq.network@evil.example/ now"
+    })
+    void linkWithUserInfoIsShownAsText(String markdown) {
+        assertThat(render(markdown)).containsExactly(text(markdown));
+    }
+
     // The parser creates no link without a URL, but the type of the segment allows it
     @Test
     void linkWithoutATargetIsShownAsText() {
