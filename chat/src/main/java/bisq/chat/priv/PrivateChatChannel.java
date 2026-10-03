@@ -53,6 +53,11 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage<?>> extend
         chatMessages.forEach(this::addChatMessage);
     }
 
+    // Whether the user profile takes part in this channel besides our own identity. A sender chooses the channel ID of
+    // its message, so a received message or reaction is added to an existing channel only if its sender is a peer of
+    // that channel (see PrivateChatChannelService).
+    public abstract boolean isPeer(String userProfileId);
+
     @Override
     public boolean addChatMessage(M chatMessage) {
         boolean changed = super.addChatMessage(chatMessage);

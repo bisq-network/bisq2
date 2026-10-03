@@ -178,6 +178,14 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
         }
     }
 
+    // The traders other than us, and the mediator if it is not us
+    @Override
+    public boolean isPeer(String userProfileId) {
+        return !myUserIdentity.getId().equals(userProfileId) &&
+                (traders.stream().anyMatch(trader -> trader.getId().equals(userProfileId)) ||
+                        mediator.filter(mediator -> mediator.getId().equals(userProfileId)).isPresent());
+    }
+
     public boolean isMediator() {
         return mediator.filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
     }
