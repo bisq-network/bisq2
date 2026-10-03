@@ -314,9 +314,10 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
     }
 
     private void updatePredicate() {
-        UserProfile selectedProfile = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
+        // A profile is identified by its ID, the hash of its key: its terms, statement and addresses can change.
+        Optional<String> selectedProfileId = Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
                 .map(UserIdentity::getUserProfile)
-                .orElse(null);
+                .map(UserProfile::getId);
 
         model.getFilteredOfferbookListItems().setPredicate(item -> {
             if (model.getShowBuyOffers().get() != item.isBuyOffer()) {
@@ -334,7 +335,7 @@ public class OfferbookListController implements bisq.desktop.common.view.Control
             }
 
             if (model.getShowMyOffersOnly().get()) {
-                boolean isMyOffer = item.getSenderUserProfile().equals(selectedProfile);
+                boolean isMyOffer = selectedProfileId.equals(Optional.of(item.getSenderUserProfile().getId()));
                 if (!isMyOffer) {
                     return false;
                 }

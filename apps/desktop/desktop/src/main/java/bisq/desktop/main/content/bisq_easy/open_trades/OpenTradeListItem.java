@@ -39,6 +39,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Optional;
+
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -128,8 +130,11 @@ class OpenTradeListItem implements DateTableItem {
             return;
         }
         UIThread.run(() -> {
-            boolean isSenderMediator = notification.getSenderUserProfile().equals(channel.getMediator());
-            boolean isNotificationFromMediator = notification.getMediator().equals(notification.getSenderUserProfile());
+            // Profiles are identified by their IDs, the hash of their key: their terms, statement and addresses can
+            // change, and the channel keeps the mediator's profile from the time when the trade was taken.
+            Optional<String> senderId = notification.getSenderUserProfile().map(UserProfile::getId);
+            boolean isSenderMediator = senderId.equals(channel.getMediator().map(UserProfile::getId));
+            boolean isNotificationFromMediator = notification.getMediator().map(UserProfile::getId).equals(senderId);
             long numNotifications = chatNotificationService.getNumNotifications(channel);
             if (isSenderMediator && isNotificationFromMediator) {
                 mediatorNumNotifications = numNotifications - peerNumNotifications;
