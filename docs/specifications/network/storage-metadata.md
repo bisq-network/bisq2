@@ -82,6 +82,22 @@ Reason: until this rule, the code intended to read the limit from the first entr
 all stores was 100 000. Enforcing `maxMapSize` would lower the limit to at most 10 000 and could remove entries from
 existing stores. Whether stores need per-type limits is an open decision, see [Open points](#open-points).
 
+12. A removal without entry is a removal for whose storage key the store holds no entry. A store accepts a removal
+    without entry only while fewer than 50 000 of its entries are removals without
+    [replaced add request](storage-request-ordering.md#replaced-add-request-of-a-stored-removal). This limit does not
+    apply to a removal which replaces a stored add request or a stored removal.
+
+Reason: a removal contains only the hash of the removed data. If the store does not hold the data, it cannot check
+the owner of the data, and for an authorized type it cannot check the authorization. So every key pair can create
+removals without entry for every store, also for the stores of alerts, bans and bonded roles. Without rule 12, a peer
+can fill a store with 100 000 such removals. The store then rejects every add request under a new key until the
+removals expire, which takes up to 100 days. With rule 12, such removals use at most half of a store. The other half
+stays available for add requests and for the removals of data which the store checked.
+
+The limit counts only the removals without replaced add request. A removal with replaced add request removed data which
+passed the checks of an add request in this store. A peer which can create such data can fill the store with add
+requests as well, so these removals give it no further way to fill the store.
+
 ## Compatibility
 
 - The field `metaData` of `MailboxData`, `RemoveMailboxRequest`, `RemoveAuthenticatedDataRequest` and
@@ -119,6 +135,11 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
 - Each node applies its own MetaData. If two versions have different MetaData for a type, their entries can expire at
   different times. The cost factor of messages does not depend on MetaData. Nodes of earlier versions compute it
   from the MetaData in the message (see [Message cost](message-cost.md#compatibility)).
+- Nodes of earlier versions do not apply rule 12. They accept removals without entry until their store holds
+  100 000 entries. A node of this version which did not accept such a removal receives it again with the inventory
+  responses of other nodes, until it expires.
+- Nodes of earlier versions did not record replaced add requests. After an update, the removals which such a node
+  stored count against the limit of rule 12 until they expire.
 
 ## Known limitations
 
@@ -131,6 +152,19 @@ existing stores. Whether stores need per-type limits is an open decision, see [O
   only requests with signature V2 (see
   [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 - Nodes of earlier versions still use the MetaData from the network until they update.
+- Removals without entry still use up to half of a store (rule 12). A node stores them, relays them and sends them
+  with inventory responses, as it does with the removals of stored data. A peer can so place up to 50 000 entries in
+  each store of each node. While a store holds 50 000 removals without replaced add request, it does not keep a
+  further removal which arrives before its add request. That add request is then accepted until the removal arrives
+  again with an inventory response.
+  - The record of the replaced add request is local. A node which never held the data, for example a node which starts
+    for the first time, holds every removal without replaced add request. For such a node, the removals of a peer which
+    fills the store and the removals of real data look the same.
+  - Why it is not removed now: a node which holds no add request, for example a node which starts for the first time,
+    needs the removals to reject add requests which were removed. The inventory protocol sends a node every entry
+    which is not in its filter, so a node which did not store these removals would receive them with every response.
+  - What would remove it: a removal which the store can check without the data, or another way to tell nodes which
+    data was removed. Both change the protocol. The developers have to decide.
 
 ## Open points
 

@@ -22,6 +22,7 @@ import bisq.common.observable.collection.ObservableArray;
 import bisq.common.timer.Clock;
 import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.DataRequest;
+import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
@@ -44,6 +45,11 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
     public static final int MAX_MAP_SIZE = 100_000;
     // Maximum number of pruned requests which a store keeps for its observers (see prunedAndExpiredDataRequests)
     public static final int MAX_PRUNED_REQUESTS = 1000;
+    // A store accepts a removal for which it holds no entry only while it holds fewer removals without replaced add
+    // request than this limit (see rule 12 of docs/specifications/network/storage-metadata.md). The store did not check
+    // the removed data of such a removal, so every key pair can create it. The rest of the store stays available for
+    // add requests and for the removals of data which the store checked.
+    public static final int MAX_REMOVALS_WITHOUT_REPLACED_ADD = MAX_MAP_SIZE / 2;
 
     @Getter
     protected final Persistence<DataStore<T>> persistence;
@@ -106,6 +112,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         });
         map.clear();
         map.putAll(rekeyed);
+        persisted.getReplacedAddSequenceNrs().keySet().retainAll(rekeyed.keySet());
         return persisted;
     }
 
@@ -140,6 +147,7 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(pruned);
+        persisted.getReplacedAddSequenceNrs().keySet().retainAll(pruned.keySet());
         return persisted;
     }
 
@@ -180,6 +188,35 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         }
         if (size > 20_000) {
             log.info("Map size for {} reached > 20 000 entries. map.size()={}", storeKey, size);
+        }
+        return isExceeding;
+    }
+
+    // By storage key: the sequence number of the add request which the stored removal replaced (see DataStore). The
+    // stores change it only while holding their map lock, together with the entry of the same key.
+    protected Map<ByteArray, Integer> getReplacedAddSequenceNrs() {
+        return persistableStore.getReplacedAddSequenceNrs();
+    }
+
+    // Whether the store holds too many removals without replaced add request to accept one more removal for which it
+    // holds no entry. The stores call it inside their map lock, before they store such a removal.
+    protected boolean isExceedingRemovalsWithoutReplacedAdd() {
+        Map<ByteArray, T> map = persistableStore.getMap();
+        // The map is scanned only if it has enough entries to reach the limit
+        if (map.size() < MAX_REMOVALS_WITHOUT_REPLACED_ADD) {
+            return false;
+        }
+        Map<ByteArray, Integer> replacedAddSequenceNrs = getReplacedAddSequenceNrs();
+        long numRemovalsWithoutReplacedAdd = map.entrySet().stream()
+                .filter(entry -> entry.getValue() instanceof RemoveDataRequest &&
+                        !replacedAddSequenceNrs.containsKey(entry.getKey()))
+                .limit(MAX_REMOVALS_WITHOUT_REPLACED_ADD)
+                .count();
+        boolean isExceeding = numRemovalsWithoutReplacedAdd >= MAX_REMOVALS_WITHOUT_REPLACED_ADD;
+        if (isExceeding) {
+            // Not a warning: a peer which sends such removals would fill the log
+            log.debug("Max. number of removals without replaced add request reached for {}. We do not store a " +
+                    "removal without entry.", storeKey);
         }
         return isExceeding;
     }
