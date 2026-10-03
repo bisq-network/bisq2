@@ -23,6 +23,8 @@ import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
+
 @Slf4j
 public class InboundConnectionChannel extends ConnectionChannel {
     @Setter
@@ -31,8 +33,9 @@ public class InboundConnectionChannel extends ConnectionChannel {
     public InboundConnectionChannel(Capability peersCapability,
                                     NetworkLoadSnapshot peersNetworkLoadSnapshot,
                                     NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
-                                    ConnectionMetrics connectionMetrics) {
-        super(peersCapability, peersNetworkLoadSnapshot, networkEnvelopeSocketChannel, connectionMetrics);
+                                    ConnectionMetrics connectionMetrics,
+                                    Set<Integer> receivedMessageCounters) {
+        super(peersCapability, peersNetworkLoadSnapshot, networkEnvelopeSocketChannel, connectionMetrics, receivedMessageCounters);
         log.debug("Create inboundConnection");
     }
 

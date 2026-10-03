@@ -170,7 +170,8 @@ public class OutboundConnectionManager {
                     peerCapability,
                     peersNetworkLoadSnapshot,
                     networkEnvelopeSocketChannel,
-                    new ConnectionMetrics()
+                    new ConnectionMetrics(),
+                    handshakeInitiator.getReceivedMessageCounters()
             );
 
             connectionByChannel.put(socketChannel, outboundConnectionChannel);

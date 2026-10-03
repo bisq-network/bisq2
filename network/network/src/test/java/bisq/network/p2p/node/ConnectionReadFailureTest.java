@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -148,6 +149,7 @@ class ConnectionReadFailureTest {
                 "2.1.9");
         connection = new Connection(mock(AuthorizationService.class),
                 "test-connection",
+                ConcurrentHashMap.newKeySet(),
                 socket,
                 capability,
                 new NetworkLoadSnapshot(),

@@ -24,12 +24,14 @@ import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.Socket;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 @Slf4j
 public class InboundConnection extends Connection {
     InboundConnection(AuthorizationService authorizationService,
                       String connectionId,
+                      Set<Integer> receivedMessageCounters,
                       Socket socket,
                       Capability peersCapability,
                       NetworkLoadSnapshot peersNetworkLoadSnapshot,
@@ -40,6 +42,7 @@ public class InboundConnection extends Connection {
                       BiConsumer<Connection, Exception> errorHandler) {
         super(authorizationService,
                 connectionId,
+                receivedMessageCounters,
                 socket,
                 peersCapability,
                 peersNetworkLoadSnapshot,

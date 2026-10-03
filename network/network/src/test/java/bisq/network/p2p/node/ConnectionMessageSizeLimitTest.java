@@ -44,6 +44,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -73,6 +74,7 @@ class ConnectionMessageSizeLimitTest {
                 "2.1.14");
         connection = new InboundConnection(mock(AuthorizationService.class),
                 "connectionId",
+                ConcurrentHashMap.newKeySet(),
                 socket,
                 peersCapability,
                 new NetworkLoadSnapshot(),

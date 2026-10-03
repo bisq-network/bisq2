@@ -96,13 +96,13 @@ public class AuthorizationService {
     public boolean isAuthorized(EnvelopePayloadMessage message,
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
-                                String connectionId,
+                                Set<Integer> receivedMessageCounters,
                                 String myAddress) {
         return isAuthorized(message,
                 authorizationToken,
                 currentNetworkLoad,
                 Optional.empty(),
-                connectionId,
+                receivedMessageCounters,
                 myAddress);
     }
 
@@ -110,7 +110,7 @@ public class AuthorizationService {
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
                                 Optional<NetworkLoad> previousNetworkLoad,
-                                String connectionId,
+                                Set<Integer> receivedMessageCounters,
                                 String myAddress) {
         AuthorizationTokenType authorizationTokenType = authorizationToken.getAuthorizationTokenType();
         if (!supportedServices.containsKey(authorizationTokenType)) {
@@ -121,7 +121,7 @@ public class AuthorizationService {
                 authorizationToken,
                 currentNetworkLoad,
                 previousNetworkLoad,
-                connectionId,
+                receivedMessageCounters,
                 myAddress);
     }
 

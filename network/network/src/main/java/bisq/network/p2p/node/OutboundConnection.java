@@ -26,6 +26,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.Socket;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 @Slf4j
@@ -36,6 +37,7 @@ public class OutboundConnection extends Connection {
 
     OutboundConnection(AuthorizationService authorizationService,
                        String connectionId,
+                       Set<Integer> receivedMessageCounters,
                        Socket socket,
                        Address address,
                        Capability peersCapability,
@@ -47,6 +49,7 @@ public class OutboundConnection extends Connection {
                        BiConsumer<Connection, Exception> errorHandler) {
         super(authorizationService,
                 connectionId,
+                receivedMessageCounters,
                 socket,
                 peersCapability,
                 peersNetworkLoadSnapshot,
