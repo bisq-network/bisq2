@@ -30,6 +30,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.security.keys.KeyBundleService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,10 +38,11 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -57,14 +59,20 @@ import java.util.stream.Collectors;
 @Getter
 public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<MessageDeliveryStatusStore> {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
+    // The set only prevents a second AckMessage for a message which arrives twice, for example over two transports.
+    // A second AckMessage is harmless, so the set keeps only the most recent entries. 10 000 entries cover far more
+    // messages than a node receives between two copies of one message, and need about 3 MB at most.
+    @VisibleForTesting
+    static final int MAX_ACKED_MESSAGES = 10_000;
 
     private final MessageDeliveryStatusStore persistableStore = new MessageDeliveryStatusStore();
     private final Persistence<MessageDeliveryStatusStore> persistence;
     private final KeyBundleService keyBundleService;
     private final NetworkIdService networkIdService;
     private final NetworkService networkService;
+    // Insertion order is the order in which we sent the AckMessages. All access is guarded by the monitor of the set.
     @Getter(AccessLevel.NONE)
-    private final Set<AckedMessage> ackedMessages = ConcurrentHashMap.newKeySet();
+    private final Set<AckedMessage> ackedMessages = new LinkedHashSet<>();
     @Nullable
     private Scheduler checkPendingScheduler;
     private volatile boolean isShutdown;
@@ -112,7 +120,9 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
             checkPendingScheduler.stop();
             checkPendingScheduler = null;
         }
-        ackedMessages.clear();
+        synchronized (ackedMessages) {
+            ackedMessages.clear();
+        }
     }
 
 
@@ -168,6 +178,13 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
         return persistableStore.getMessageDeliveryStatusByMessageId();
     }
 
+    @VisibleForTesting
+    int getNumAckedMessages() {
+        synchronized (ackedMessages) {
+            return ackedMessages.size();
+        }
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Private
@@ -216,7 +233,7 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
         }
 
         String messageId = message.getAckRequestingMessageId();
-        if (!ackedMessages.add(new AckedMessage(receiverKeyId, messageId))) {
+        if (!addAckedMessage(new AckedMessage(receiverKeyId, messageId))) {
             log.debug("We have already sent the AckMessage for that {}", message.getClass().getSimpleName());
             return;
         }
@@ -224,6 +241,21 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
         log.info("Received a {} with message ID {}", message.getClass().getSimpleName(), messageId);
         NetworkIdWithKeyPair myNetworkIdWithKeyPair = new NetworkIdWithKeyPair(myNetworkId.get(), myKeyPair.get());
         networkService.confidentialSend(new AckMessage(messageId), message.getSender(), myNetworkIdWithKeyPair);
+    }
+
+    // Returns false if we have sent the AckMessage for that message already
+    private boolean addAckedMessage(AckedMessage ackedMessage) {
+        synchronized (ackedMessages) {
+            if (!ackedMessages.add(ackedMessage)) {
+                return false;
+            }
+            if (ackedMessages.size() > MAX_ACKED_MESSAGES) {
+                Iterator<AckedMessage> iterator = ackedMessages.iterator();
+                iterator.next();
+                iterator.remove();
+            }
+            return true;
+        }
     }
 
     private void checkPending() {
