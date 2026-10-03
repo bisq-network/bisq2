@@ -25,10 +25,14 @@ import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.application.HostServices;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Locale;
 
 import static bisq.settings.DontShowAgainKey.HYPERLINKS_OPEN_IN_BROWSER;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -49,6 +53,12 @@ public class Browser {
     }
 
     public static void open(String url) {
+        if (!isWebUrl(url)) {
+            // The value can come from text of another user, so we do not log it.
+            log.warn("We do not open the link because it is not a web URL with the scheme http or https and a host");
+            return;
+        }
+
         if (dontShowAgainService.showAgain(HYPERLINKS_OPEN_IN_BROWSER)) {
             new Popup().headline(Res.get("hyperlinks.openInBrowser.attention.headline"))
                     .feedback(Res.get("hyperlinks.openInBrowser.attention", url))
@@ -74,6 +84,30 @@ public class Browser {
             Popup popup = new Popup().notify(Res.get("hyperlinks.copiedToClipboard"));
             popup.show();
             UIScheduler.run(popup::hide).after(3000);
+        }
+    }
+
+    /**
+     * The application opens only a web URL: {@link URI} parses the value, the scheme is http or https in any case,
+     * and the URI has a host. The operating system opens other values with other programs, for example a file path
+     * or a UNC path ({@code \\host\share\file.exe}) on Windows, or the handler of another scheme.
+     * See docs/specifications/desktop/links.md.
+     */
+    @VisibleForTesting
+    static boolean isWebUrl(@Nullable String url) {
+        if (url == null) {
+            return false;
+        }
+        try {
+            URI uri = new URI(url);
+            String scheme = uri.getScheme();
+            if (scheme == null) {
+                return false;
+            }
+            String normalizedScheme = scheme.toLowerCase(Locale.ROOT);
+            return (normalizedScheme.equals("http") || normalizedScheme.equals("https")) && uri.getHost() != null;
+        } catch (URISyntaxException e) {
+            return false;
         }
     }
 
