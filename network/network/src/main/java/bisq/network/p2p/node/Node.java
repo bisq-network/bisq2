@@ -42,6 +42,7 @@ import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
+import com.google.common.annotations.VisibleForTesting;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -300,17 +301,7 @@ public class Node implements Connection.Handler {
                     Address address = result.getPeersCapability().getAddress();
                     log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
 
-                    // As time passed we check again if connection is still not available
-                    if (inboundConnectionsByAddress.containsKey(address)) {
-                        log.warn("Have already an InboundConnection from {}. This can happen when a " +
-                                "handshake was in progress while we received a new connection from that address. " +
-                                "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
-                        inboundConnectionsByAddress.get(address).shutdown(CloseReason.MAYBE_STALE_CONNECTION);
-                    }
-
-                    InboundConnection connection = createInboundConnection(socket, result);
-                    inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-                    listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
+                    registerInboundConnection(createInboundConnection(socket, result));
                 } catch (Throwable throwable) {
                     try {
                         socket.close();
@@ -329,6 +320,24 @@ public class Node implements Connection.Handler {
             log.error("Node executor rejected task at handleNewClientSocketAsync", e);
             return CompletableFuture.failedFuture(new ConnectionException("Node executor rejected task at handleNewClientSocketAsync"));
         }
+    }
+
+    // One put per address: the new connection replaces the previous one atomically. A check before the put would let
+    // two handshakes from the same address both register, and the replaced connection would keep running outside of
+    // the map. The previous connection might be stale, so we close it and keep the new one. Its entry is already
+    // replaced, so handleConnectionClosed does not report it; the thread which replaced it reports it instead.
+    @VisibleForTesting
+    void registerInboundConnection(InboundConnection connection) {
+        Address address = connection.getPeerAddress();
+        InboundConnection previous = inboundConnectionsByAddress.put(address, connection);
+        if (previous != null && previous != connection) {
+            log.warn("Have already an InboundConnection from {}. This can happen when a " +
+                    "handshake was in progress while we received a new connection from that address. " +
+                    "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
+            previous.shutdown(CloseReason.MAYBE_STALE_CONNECTION);
+            notifyDisconnect(previous, CloseReason.MAYBE_STALE_CONNECTION);
+        }
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
     }
 
     private InboundConnection createInboundConnection(Socket socket, ConnectionHandshake.Result result) {
@@ -523,11 +532,7 @@ public class Node implements Connection.Handler {
                     parseMemoryBudget,
                     this,
                     this::handleException);
-            outboundConnectionsByAddress.put(address, connection);
-
-            OutboundConnection finalConnection = connection;
-            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(finalConnection)));
-            return connection;
+            return registerOutboundConnection(address, connection);
         } catch (Exception exception) {
             log.error("Creating outbound connection failed", exception);
             try {
@@ -536,7 +541,7 @@ public class Node implements Connection.Handler {
             }
             if (connection != null) {
                 connection.shutdown(CloseReason.EXCEPTION);
-                outboundConnectionsByAddress.remove(address);
+                outboundConnectionsByAddress.remove(address, connection);
             }
             handleException(exception);
             throw new ConnectionException(exception);
@@ -582,6 +587,22 @@ public class Node implements Connection.Handler {
                 connectionHandshakes.remove(connectionHandshake.getId());
             }
         }
+    }
+
+    // Registers the connection only if no connection to that address exists. Two concurrent outbound connection
+    // attempts to the same address can both pass the earlier checks. The first registered connection is kept, as
+    // callers may already use it, and the new one is closed. The new one was never registered or announced, so its
+    // close is not reported to listeners.
+    @VisibleForTesting
+    OutboundConnection registerOutboundConnection(Address address, OutboundConnection connection) {
+        OutboundConnection existing = outboundConnectionsByAddress.putIfAbsent(address, connection);
+        if (existing != null && existing != connection) {
+            log.warn("Have already an OutboundConnection to {}. We close the new connection and use the existing one.", address);
+            connection.shutdown(CloseReason.DUPLICATE_CONNECTION);
+            return existing;
+        }
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
+        return connection;
     }
 
     private Optional<OutboundConnection> findOutboundConnectionAndCloseSocketIfPresent(Address address, Socket socket) {
@@ -679,16 +700,18 @@ public class Node implements Connection.Handler {
     public void handleConnectionClosed(Connection connection, CloseReason closeReason) {
         Address peerAddress = connection.getPeerAddress();
         log.debug("Got called onConnectionClosed. connection={}, peerAddress={}", connection, peerAddress);
+        // Remove only the entry of this connection. The address may already map to a connection which replaced this
+        // one; removing that entry would leave the newer connection running outside of the map and unreported.
         boolean wasRemoved = false;
         if (connection instanceof InboundConnection) {
-            wasRemoved = inboundConnectionsByAddress.remove(peerAddress) != null;
+            wasRemoved = inboundConnectionsByAddress.remove(peerAddress, connection);
             if (!wasRemoved) {
                 log.debug("Did not had entry in inboundConnections at onConnectionClosed. " +
                                 "This can happen if different threads triggered a close. connection={}, peerAddress={}",
                         connection, peerAddress);
             }
         } else if (connection instanceof OutboundConnection) {
-            wasRemoved = outboundConnectionsByAddress.remove(peerAddress) != null;
+            wasRemoved = outboundConnectionsByAddress.remove(peerAddress, connection);
             if (!wasRemoved) {
                 log.debug("Did not had entry in outboundConnections at onConnectionClosed. " +
                                 "This can happen if different threads triggered a close. connection={}, peerAddress={}",
@@ -696,8 +719,12 @@ public class Node implements Connection.Handler {
             }
         }
         if (wasRemoved) {
-            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onDisconnect(connection, closeReason)));
+            notifyDisconnect(connection, closeReason);
         }
+    }
+
+    private void notifyDisconnect(Connection connection, CloseReason closeReason) {
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onDisconnect(connection, closeReason)));
     }
 
     /* --------------------------------------------------------------------- */
