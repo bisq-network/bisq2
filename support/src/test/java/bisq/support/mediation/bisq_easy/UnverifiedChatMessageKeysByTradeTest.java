@@ -21,6 +21,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.contract.TradeId;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,7 @@ class UnverifiedChatMessageKeysByTradeTest {
     private UserProfile peer;
     private UserProfile mediator;
     private BisqEasyContract contract;
+    private String tradeId;
     private ObservableSet<BisqEasyMediationCase> mediationCases;
     private UnverifiedChatMessageKeysByTrade unverifiedChatMessageKeysByTrade;
     private BisqEasyOpenTradeMessage peersMessage;
@@ -52,6 +54,7 @@ class UnverifiedChatMessageKeysByTradeTest {
         peer = TestUserProfiles.create("peer");
         mediator = TestUserProfiles.create("mediator");
         contract = TestContracts.contract(requester, peer, mediator);
+        tradeId = TradeId.fromContract(contract);
         mediationCases = new ObservableSet<>();
         unverifiedChatMessageKeysByTrade = new UnverifiedChatMessageKeysByTrade(mediationCases);
         peersMessage = createMessage("m1", peer, "I never paid");
@@ -62,54 +65,54 @@ class UnverifiedChatMessageKeysByTradeTest {
     void keysFollowPeersRequestSetInPlace() {
         BisqEasyMediationCase mediationCase = new BisqEasyMediationCase(createRequest(requester, peer, List.of(peersMessage)));
         mediationCases.add(mediationCase);
-        Set<String> keys = unverifiedChatMessageKeysByTrade.get("trade-1");
+        Set<String> keys = unverifiedChatMessageKeysByTrade.get(tradeId);
         assertEquals(Set.of(peersMessageKey), keys);
-        assertSame(keys, unverifiedChatMessageKeysByTrade.get("trade-1"));
+        assertSame(keys, unverifiedChatMessageKeysByTrade.get(tradeId));
 
         // The author's own request joins the case already in the set.
         mediationCase.setPeersMediationRequest(createRequest(peer, requester, List.of(createMessage("m1", peer, "I never paid"))));
 
-        assertTrue(unverifiedChatMessageKeysByTrade.get("trade-1").isEmpty());
+        assertTrue(unverifiedChatMessageKeysByTrade.get(tradeId).isEmpty());
     }
 
     @Test
     void keysFollowAddedAndRemovedCase() {
         mediationCases.add(new BisqEasyMediationCase(createRequest(requester, peer, List.of(peersMessage))));
-        assertEquals(Set.of(peersMessageKey), unverifiedChatMessageKeysByTrade.get("trade-1"));
+        assertEquals(Set.of(peersMessageKey), unverifiedChatMessageKeysByTrade.get(tradeId));
 
         // The author's request with a differing contract opens a second case of the trade.
         BisqEasyContract otherContract = TestContracts.contract(requester, peer, mediator, List.of("en", "de"));
-        BisqEasyMediationCase secondCase = new BisqEasyMediationCase(new BisqEasyMediationRequest("trade-1",
+        BisqEasyMediationCase secondCase = new BisqEasyMediationCase(new BisqEasyMediationRequest(tradeId,
                 otherContract,
                 peer,
                 requester,
                 new ArrayList<>(List.of(createMessage("m1", peer, "I never paid"))),
                 mediator.getNetworkId()));
         mediationCases.add(secondCase);
-        assertTrue(unverifiedChatMessageKeysByTrade.get("trade-1").isEmpty());
+        assertTrue(unverifiedChatMessageKeysByTrade.get(tradeId).isEmpty());
 
         mediationCases.remove(secondCase);
-        assertEquals(Set.of(peersMessageKey), unverifiedChatMessageKeysByTrade.get("trade-1"));
+        assertEquals(Set.of(peersMessageKey), unverifiedChatMessageKeysByTrade.get(tradeId));
     }
 
     @Test
     void keysFollowCaseRequestedAgainWithOtherMessages() {
         BisqEasyMediationCase mediationCase = new BisqEasyMediationCase(createRequest(requester, peer, List.of(peersMessage)));
         mediationCases.add(mediationCase);
-        assertEquals(Set.of(peersMessageKey), unverifiedChatMessageKeysByTrade.get("trade-1"));
+        assertEquals(Set.of(peersMessageKey), unverifiedChatMessageKeysByTrade.get(tradeId));
 
         // After the mediator removed the case, an equal request with another transcript opens it again.
         mediationCases.remove(mediationCase);
         BisqEasyOpenTradeMessage otherPeersMessage = createMessage("m2", peer, "I paid");
         mediationCases.add(new BisqEasyMediationCase(createRequest(requester, peer, List.of(otherPeersMessage))));
 
-        assertEquals(Set.of(BisqEasyMediatorService.getProvenanceKey(otherPeersMessage)), unverifiedChatMessageKeysByTrade.get("trade-1"));
+        assertEquals(Set.of(BisqEasyMediatorService.getProvenanceKey(otherPeersMessage)), unverifiedChatMessageKeysByTrade.get(tradeId));
     }
 
     private BisqEasyMediationRequest createRequest(UserProfile requester,
                                                    UserProfile peer,
                                                    List<BisqEasyOpenTradeMessage> chatMessages) {
-        return new BisqEasyMediationRequest("trade-1",
+        return new BisqEasyMediationRequest(tradeId,
                 TestContracts.protoCopy(contract),
                 requester,
                 peer,
@@ -118,9 +121,9 @@ class UnverifiedChatMessageKeysByTradeTest {
     }
 
     private BisqEasyOpenTradeMessage createMessage(String id, UserProfile sender, String text) {
-        return new BisqEasyOpenTradeMessage("trade-1",
+        return new BisqEasyOpenTradeMessage(tradeId,
                 id,
-                BisqEasyOpenTradeChannel.createId("trade-1"),
+                BisqEasyOpenTradeChannel.createId(tradeId),
                 sender,
                 mediator.getId(),
                 mediator.getNetworkId(),

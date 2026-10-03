@@ -50,12 +50,29 @@ final class TestContracts {
         return contract(maker, taker, mediator, List.of("en"));
     }
 
-    // Contracts built with different language codes differ only in one field of the offer.
+    // Contracts built with different language codes differ only in one field of the offer. They have the same trade ID.
     static BisqEasyContract contract(UserProfile maker,
                                      UserProfile taker,
                                      UserProfile mediator,
                                      List<String> supportedLanguageCodes) {
-        BisqEasyOffer offer = new BisqEasyOffer("offer-1",
+        return contract("offer-1", maker, taker, mediator, supportedLanguageCodes);
+    }
+
+    // The trade ID is derived from the offer ID, the taker and the take offer date, so the contract of another offer is
+    // the contract of another trade.
+    static BisqEasyContract contractOfOffer(String offerId,
+                                            UserProfile maker,
+                                            UserProfile taker,
+                                            UserProfile mediator) {
+        return contract(offerId, maker, taker, mediator, List.of("en"));
+    }
+
+    private static BisqEasyContract contract(String offerId,
+                                             UserProfile maker,
+                                             UserProfile taker,
+                                             UserProfile mediator,
+                                             List<String> supportedLanguageCodes) {
+        BisqEasyOffer offer = new BisqEasyOffer(offerId,
                 OFFER_DATE,
                 maker.getNetworkId(),
                 Direction.SELL,

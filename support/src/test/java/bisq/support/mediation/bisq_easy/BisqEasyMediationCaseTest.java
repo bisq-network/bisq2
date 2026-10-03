@@ -21,6 +21,7 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.contract.TradeId;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ class BisqEasyMediationCaseTest {
     private UserProfile peer;
     private UserProfile mediator;
     private BisqEasyContract contract;
+    private String tradeId;
 
     @BeforeEach
     void setUp() {
@@ -46,6 +48,7 @@ class BisqEasyMediationCaseTest {
         peer = TestUserProfiles.create("peer");
         mediator = TestUserProfiles.create("mediator");
         contract = TestContracts.contract(requester, peer, mediator);
+        tradeId = TradeId.fromContract(contract);
     }
 
     @Test
@@ -83,9 +86,9 @@ class BisqEasyMediationCaseTest {
     }
 
     private BisqEasyMediationRequest createRequest(UserProfile requester, UserProfile peer, String text) {
-        BisqEasyOpenTradeMessage message = new BisqEasyOpenTradeMessage("trade-1",
+        BisqEasyOpenTradeMessage message = new BisqEasyOpenTradeMessage(tradeId,
                 "message-of-" + requester.getNickName(),
-                BisqEasyOpenTradeChannel.createId("trade-1"),
+                BisqEasyOpenTradeChannel.createId(tradeId),
                 requester,
                 peer.getId(),
                 peer.getNetworkId(),
@@ -97,7 +100,7 @@ class BisqEasyMediationCaseTest {
                 ChatMessageType.TEXT,
                 Optional.empty(),
                 new HashSet<>());
-        return new BisqEasyMediationRequest("trade-1",
+        return new BisqEasyMediationRequest(tradeId,
                 TestContracts.protoCopy(contract),
                 requester,
                 peer,
