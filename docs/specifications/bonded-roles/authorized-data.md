@@ -66,8 +66,8 @@ is `true` in the configuration files of all applications, and a node which no co
 While it is `true`, these rules apply:
 
 10. If the authorizing role type is the oracle node, the authorized public key must be an oracle node key. This applies
-    to data with and without the static flag, and it replaces rule 3 for this authorizing role type. Rules 8 and 9 and
-    the counting of publications in [`registration.md`](registration.md) use this rule.
+    to data with and without the static flag, and it replaces rule 3 for this authorizing role type. Rules 8, 9 and 18
+    and the counting of publications in [`registration.md`](registration.md) use this rule.
 11. A node lists a bonded role of the oracle node role type only if the authorized public key of the role is an oracle
     node key.
 12. An oracle node does not accept a new registration of a role of the oracle node role type whose authorized public key
@@ -76,7 +76,7 @@ While it is `true`, these rules apply:
 14. Data which fails rule 10 is not checked again when a bonded role is added (rule 7), because the static keys do not
     change while the node runs.
 
-When the option is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 apply unchanged.
+When the option is `false`, rules 10 to 14 and 16 do not apply, and the other rules apply unchanged.
 
 ### The holder of authorized data
 
@@ -100,6 +100,22 @@ When the option is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9
 
 17. All nodes of a network use the same value of the option. A node sets the value when it starts, before its stores
     load their data, and does not change it while it runs.
+
+### Several publications of the same data
+
+18. Several keys can publish equal data, each with its own authorized key. For example, the alert view of the desktop
+    publishes every alert again with the key of the security manager who opens it, and several oracle nodes publish
+    the same bonded role. A node which holds one item for equal data keeps the item while the network storage holds at
+    least one publication of it for which rule 2 or rule 3 holds at that time, with the authorizing role type of the
+    data. When a publication is removed or expires, the node removes the item only if no such publication remains. It
+    does not check the removed publication itself. This applies to:
+    - bonded roles (see [`registration.md`](registration.md#several-oracle-nodes)), oracle nodes (rule 8) and account
+      timestamps (rule 9);
+    - alerts and difficulty adjustments, with the security manager as authorizing role type;
+    - release notifications, with the release manager as authorizing role type;
+    - bans of user profiles, with the moderator as authorizing role type;
+    - reputation data, including profile timestamps: see
+      [`../security/derived-state.md`](../security/derived-state.md#reputation).
 
 ## Reasons
 
@@ -209,6 +225,17 @@ When the option is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9
   per entry. This check was disabled at startup to reduce the startup cost. Rule 8 of
   [`../network/storage-ownership.md`](../network/storage-ownership.md) still removes stored entries whose publisher is
   not the owner.
+- Rule 18: a node which starts derives its items from the stored publications. Before rule 18, the removal or expiry of
+  one publication removed the item from the running nodes, while nodes which started later still had it from another
+  publication. Running and restarted nodes then disagreed, for example about a ban or about an alert which halts
+  trading.
+- Rule 18 does not check the removed publication. A removal of a publication whose key has lost its authority, for
+  example the key of a banned security manager, still removes an item which no remaining publication supports. A node
+  which starts would not hold it either. The removal of a copy of another key removes no item while an authorized
+  publication remains.
+- Rule 18 does not decide who publishes and removes data. With the alert view of the desktop, every security manager
+  who opens the view publishes all alerts again, so an alert stays until each of them removes his publication. Release
+  notifications behave the same way (see [Open points](#open-points)).
 
 ## Known limitations
 
@@ -229,6 +256,17 @@ When the option is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9
   storage accepts data of the types which oracle nodes authorize from every key again (rule 4). Before the default
   changes, the developers must decide how the network storage limits such data, for example with a proof of authority
   as described above.
+
+## Open points
+
+- **Who can remove an alert or a release notification.** The alert view of the desktop publishes every alert again
+  with the key of each security manager who opens it. The view of the release manager does the same with the release
+  notifications. With rule 18, an alert then stays until every security manager who opened the view removes his
+  publication, and the same holds for a release notification. Before rule 18, the removal by one of them removed the
+  data only on the running nodes.
+  - Decision needed: should these views publish only the data of the user who opens them, so that only their
+    publisher removes them? Or should any holder of the role be able to remove every publication of the data?
+  - Who decides: the developers, together with the security managers and release managers.
 
 ## Verification
 
@@ -269,6 +307,12 @@ When the option is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9
   type of another key is not listed, and its key does not authorize other roles.
 - With the restriction (rule 12): an oracle node does not accept a new registration of an oracle node role of another
   key, and it accepts its cancellation.
+- With the real stores (rule 18): if two security managers publish the same alert, the removal of one publication keeps
+  the alert and a ban which it applies, and the removal of the last publication removes them. The same holds for
+  release notifications, difficulty adjustments and bans of user profiles. The removal of a copy of another key keeps
+  the item. If two oracle nodes publish the same timestamp of a profile, the removal of one keeps the profile age. If
+  their timestamps differ, the removal of the older one gives the profile the newer one, and the removal of the last
+  removes the profile age.
 
 ## Related code
 
@@ -280,6 +324,10 @@ When the option is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9
 - `AuthorizedBondedRolesService.hasAuthorizedPubKey()` (rules 2 and 3 before use).
 - `ProfileAgeService.getTimeStampedProfileIds()` (rule 6, profile timestamp request lookup).
 - `AuthorizedBondedRolesService.getAuthorizedOracleNodes()` (rule 8), `AccountTimestampService` (rule 9).
+- `AuthorizedBondedRolesService.getAuthorizedPublishedData()` and `hasAuthorizedPublication()` (the lookup of rules 8, 9
+  and 18), `onAuthorizedDataRemoved` of `AlertService`, `DifficultyAdjustmentService`, `ReleaseNotificationsService`
+  and `BannedUserService` (rule 18), `SourceReputationService.onAuthorizedDataRemoved` (reputation data,
+  `../security/derived-state.md`).
 - `BondedRolesService.Config` and `OnlyStaticOracleNodes` (the configuration option, rule 17),
   `AuthorizedBondedRolesService.isOracleNodeKeyAllowed()` (rules 10 and 11),
   `Bisq1BridgeRequestService.processBondedRoleRegistrationRequest()` (rule 12), `OracleNodeService` (rule 13).

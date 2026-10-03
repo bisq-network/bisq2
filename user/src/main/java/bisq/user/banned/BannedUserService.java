@@ -122,14 +122,17 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
         }
     }
 
+    // Several moderators can ban the same user profile, each with its own key. The node keeps a ban while the network
+    // storage holds a publication of it which a moderator authorized (see
+    // docs/specifications/bonded-roles/authorized-data.md).
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData) {
-            if (isAuthorized(authorizedData)) {
-                BannedUserProfileData bannedUserProfileData = (BannedUserProfileData) authorizedData.getAuthorizedDistributedData();
-                getBannedUserProfileDataSet().remove(bannedUserProfileData);
-                persist();
-            }
+        if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData bannedUserProfileData &&
+                getBannedUserProfileDataSet().contains(bannedUserProfileData) &&
+                !authorizedBondedRolesService.hasAuthorizedPublication(bannedUserProfileData,
+                        BondedRoleType.MODERATOR)) {
+            getBannedUserProfileDataSet().remove(bannedUserProfileData);
+            persist();
         }
     }
 
