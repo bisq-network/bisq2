@@ -52,6 +52,10 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
             // handleInstanceLockFailure is expected to terminate the JVM. In case a custom implementation
             // returns, we must not continue with a half initialized application.
             throw e;
+        } catch (TailsDataDirMigrationException e) {
+            shutDownStarted = true;
+            handleTailsDataDirMigrationFailure(e);
+            throw e;
         }
     }
 
@@ -62,6 +66,17 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
     protected void handleInstanceLockFailure(InstanceLockException exception) {
         // We do not localize the message here. Headless applications are operated from logs and a console, where
         // English is expected. The desktop application overrides this method to show a localized message.
+        log.error(exception.getMessage(), exception.getCause());
+        System.err.println("Error: " + exception.getMessage());
+        System.exit(PlatformUtils.EXIT_FAILURE);
+    }
+
+    /**
+     * Called if the data directory of an earlier version could not be copied to Persistent Storage on Tails.
+     * The default implementation logs the reason and exits. Applications with a UI override it to inform the user
+     * before exiting.
+     */
+    protected void handleTailsDataDirMigrationFailure(TailsDataDirMigrationException exception) {
         log.error(exception.getMessage(), exception.getCause());
         System.err.println("Error: " + exception.getMessage());
         System.exit(PlatformUtils.EXIT_FAILURE);

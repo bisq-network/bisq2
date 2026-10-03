@@ -1,0 +1,56 @@
+#!/bin/sh
+# postinst script for APPLICATION_PACKAGE
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see https://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+package_type=deb
+LAUNCHER_AS_SERVICE_SCRIPTS
+
+# Enable Bisq's onion-grater profile on Tails so Bisq can reach the system Tor
+# control port without a manual preparation step. No-op on non-Tails systems
+# (the /etc/onion-grater.d directory only exists on Tails). Idempotent and
+# non-fatal: a failure here must never abort package installation.
+enable_onion_grater_on_tails() {
+    [ -d /etc/onion-grater.d ] || return 0
+
+    profile="$(ls /opt/*/lib/onion-grater/40_bisq_tails.yml 2>/dev/null | head -n1)"
+    [ -n "$profile" ] || profile="$(ls /opt/*/onion-grater/40_bisq_tails.yml 2>/dev/null | head -n1)"
+    [ -n "$profile" ] && [ -f "$profile" ] || return 0
+
+    install -m 0644 "$profile" /etc/onion-grater.d/bisq.yml || return 0
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl restart onion-grater.service >/dev/null 2>&1 || true
+    fi
+}
+
+case "$1" in
+    configure)
+DESKTOP_COMMANDS_INSTALL
+LAUNCHER_AS_SERVICE_COMMANDS_INSTALL
+        enable_onion_grater_on_tails || true
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

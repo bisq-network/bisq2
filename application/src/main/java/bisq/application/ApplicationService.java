@@ -29,6 +29,7 @@ import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
 import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
+import bisq.common.platform.TailsPersistenceGuard;
 import bisq.i18n.Res;
 import bisq.persistence.PersistenceService;
 import ch.qos.logback.classic.Level;
@@ -45,6 +46,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -52,6 +54,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public abstract class ApplicationService implements Service {
     public static final String CUSTOM_CONFIG_FILE_NAME = "bisq.conf";
+    // Explicit user permission to run on Tails without persistent storage (data lost on shutdown).
+    public static final String ALLOW_NON_PERSISTENT_TAILS_ENV = "BISQ_ALLOW_NON_PERSISTENT_TAILS";
 
     @Getter
     @ToString
@@ -159,6 +163,15 @@ public abstract class ApplicationService implements Service {
     // We keep the reference for the lifetime of the application. If the InstanceLock got garbage collected the file
     // lock would be released silently.
     private InstanceLock instanceLock;
+    // True when running on Tails with a data directory that is not on Persistent Storage and the
+    // user has not granted explicit permission to run anyway. The presentation layer decides what
+    // to do with this (the desktop app shows a quit/continue warning popup).
+    @Getter
+    private final boolean tailsDataDirNonPersistent;
+    // Present when the data directory was just migrated on Tails and the Dotfiles copy it came from is
+    // still there. The presentation layer asks the user to delete that outdated copy.
+    @Getter
+    private final Optional<Path> tailsDotfilesDataDirPath;
     @Getter
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -176,9 +189,25 @@ public abstract class ApplicationService implements Service {
                 .resolve();
 
         String appName = rootConfig.getString("application.appName");
-        Path appDataDirPath = rootConfig.hasPath("application.baseDir")
+        boolean hasCustomBaseDir = rootConfig.hasPath("application.baseDir");
+        Path appDataDirPath = hasCustomBaseDir
                 ? Paths.get(rootConfig.getString("application.baseDir"))
                 : userDataDirPath.resolve(appName);
+
+        // Set up before the Tails migration and the instance lock check, so that their user facing
+        // messages can be localized.
+        Locale locale = LocaleRepository.getDefaultLocale();
+        CountryRepository.applyDefaultLocale(locale);
+        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
+        FiatCurrencyRepository.setLocale(locale);
+        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
+        ResolverConfig.config();
+
+        // Must run before the data directory is created, as an existing one is never overwritten.
+        Optional<Path> tailsMigratedFromPath = hasCustomBaseDir
+                ? Optional.empty()
+                : TailsDataDirMigration.migrateIfNeeded(appDataDirPath);
+
         try {
             FileMutatorUtils.createDirectories(appDataDirPath);
         } catch (IOException e) {
@@ -204,13 +233,6 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeWalletSetup(config.isDevModeWalletSetup());
         }
 
-        Locale locale = LocaleRepository.getDefaultLocale();
-        CountryRepository.applyDefaultLocale(locale);
-        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
-        FiatCurrencyRepository.setLocale(locale);
-        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
-        ResolverConfig.config();
-
         // We check the instance lock after Res is set up, so that the user facing message can be
         // localized, but before the file based logging and the services which use the data directory
         // are started: a rejected instance must not append to or rotate the log files of the running
@@ -220,6 +242,18 @@ public abstract class ApplicationService implements Service {
         }
 
         setupLogging(appDataDirPath);
+
+        tailsMigratedFromPath.ifPresent(migratedFromPath ->
+                log.info("Copied the data directory from {} to {}. The original was left in place.",
+                        migratedFromPath, appDataDirPath));
+        tailsDotfilesDataDirPath = tailsMigratedFromPath.isPresent()
+                ? TailsDataDirMigration.findDotfilesDataDir(appDataDirPath)
+                : Optional.empty();
+        tailsDotfilesDataDirPath.ifPresent(dotfilesDataDirPath ->
+                log.warn("The outdated Tails Dotfiles copy at {} is no longer used and should be deleted.",
+                        dotfilesDataDirPath));
+
+        tailsDataDirNonPersistent = evaluateTailsDataDirNonPersistent(appDataDirPath);
 
         persistenceService = new PersistenceService(appDataDirPath);
         migrationService = new MigrationService(appDataDirPath);
@@ -267,6 +301,32 @@ public abstract class ApplicationService implements Service {
         log.info("Data directory: {}", appDataDirPath);
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
         log.info("Tor Version: v{}", ApplicationVersion.getTorVersionString());
+    }
+
+    /**
+     * Detects whether we run on Tails with a data directory that is NOT on the Persistent Storage
+     * volume. We do not abort here, as that is a UX decision the presentation layer owns (e.g. the
+     * desktop app shows a warning popup with a quit/continue choice). Headless apps still get the
+     * logged warning. Returns false when the user has granted explicit permission to run without
+     * persistence via {@value #ALLOW_NON_PERSISTENT_TAILS_ENV}.
+     */
+    private boolean evaluateTailsDataDirNonPersistent(Path appDataDirPath) {
+        if (!TailsPersistenceGuard.isDataDirAmnesic(appDataDirPath)) {
+            return false;
+        }
+
+        String overrideValue = System.getenv(ALLOW_NON_PERSISTENT_TAILS_ENV);
+        boolean userAllowsNonPersistent = overrideValue != null && !overrideValue.isBlank();
+        if (userAllowsNonPersistent) {
+            log.warn("Running on Tails with a non-persistent data directory ({}). {} is set, so Bisq " +
+                            "continues at the user's request. ALL data will be lost on shutdown.",
+                    appDataDirPath, ALLOW_NON_PERSISTENT_TAILS_ENV);
+            return false;
+        }
+
+        log.warn("Running on Tails but the data directory '{}' is not on the Persistent Storage volume. " +
+                "Identity keys and open offers would be lost on shutdown.", appDataDirPath);
+        return true;
     }
 
     protected void checkInstanceLock() {

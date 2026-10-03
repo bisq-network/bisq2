@@ -19,6 +19,7 @@ package bisq.network.tor.common.torrc;
 
 import lombok.Builder;
 
+import java.util.List;
 import java.util.Map;
 
 import static bisq.network.tor.common.torrc.Torrc.Keys.SOCKS_PORT;
@@ -33,9 +34,9 @@ public class ClientTorrcGenerator implements TorrcConfigGenerator {
     }
 
     @Override
-    public Map<String, String> generate() {
-        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
-        torConfigMap.put(SOCKS_PORT,  SOCKS_PORT_AUTO);
+    public Map<String, List<String>> generate() {
+        Map<String, List<String>> torConfigMap = baseTorrcConfigGenerator.generate();
+        torConfigMap.put(SOCKS_PORT, List.of(SOCKS_PORT_AUTO));
         return torConfigMap;
     }
 }

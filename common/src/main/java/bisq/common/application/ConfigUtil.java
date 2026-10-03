@@ -20,6 +20,7 @@ package bisq.common.application;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -66,6 +67,16 @@ public class ConfigUtil {
         } catch (Exception ex) {
             throw toConfigValidationException.apply(path, ex);
         }
+    }
+
+    public static boolean parseBooleanFlag(@Nullable String value) { // config.get() may return null
+        if (value == null) {
+            return false;
+        }
+        String normalized = value.trim();
+        return normalized.equals("1") ||
+                normalized.equalsIgnoreCase("true") ||
+                normalized.equalsIgnoreCase("yes");
     }
 
     public static List<String> getStringList(Config config, String path) {
