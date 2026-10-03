@@ -127,7 +127,9 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                                 @Override
                                 public void onAdded(DataRequest element) {
                                     if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-                                        if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
+                                        // A message with an invalid channel ID was ignored and has no notification
+                                        if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage
+                                                && chatMessage.hasValidChannelId()) {
                                             String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
                                             // As we get called at pruning persistence which happens before initializing the services,
                                             // We store the ids to apply the remove at out initialize method.

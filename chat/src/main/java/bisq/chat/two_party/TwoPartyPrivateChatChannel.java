@@ -24,6 +24,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import com.google.common.base.Enums;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -128,21 +130,24 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         return getPeer().getUserName();
     }
 
-    @Slf4j
     public static class Migration {
         public static String migrateChannelId(String chatChannelId) {
-            try {
-                String[] tokens = chatChannelId.split("\\.");
-                String chatChannelDomainName = tokens[0].toUpperCase(Locale.ROOT);
-                ChatChannelDomain chatChannelDomain = ChatChannelDomain.valueOf(chatChannelDomainName).migrate();
-                String[] peers = tokens[1].split("-");
-                String userProfileId1 = peers[0];
-                String userProfileId2 = peers[1];
-                return createId(chatChannelDomain, userProfileId1, userProfileId2);
-            } catch (Exception e) {
-                log.error("Cannot migrate chatChannelId from chatChannelId={}.", chatChannelId, e);
-                throw e;
+            return findMigratedChannelId(chatChannelId)
+                    .orElseThrow(() -> new IllegalArgumentException("Cannot migrate chatChannelId " + chatChannelId));
+        }
+
+        public static Optional<String> findMigratedChannelId(String chatChannelId) {
+            String[] tokens = chatChannelId.split("\\.");
+            if (tokens.length < 2) {
+                return Optional.empty();
             }
+            String[] peers = tokens[1].split("-");
+            if (peers.length < 2) {
+                return Optional.empty();
+            }
+            String chatChannelDomainName = tokens[0].toUpperCase(Locale.ROOT);
+            return Enums.getIfPresent(ChatChannelDomain.class, chatChannelDomainName).toJavaUtil()
+                    .map(chatChannelDomain -> createId(chatChannelDomain.migrate(), peers[0], peers[1]));
         }
     }
 }
