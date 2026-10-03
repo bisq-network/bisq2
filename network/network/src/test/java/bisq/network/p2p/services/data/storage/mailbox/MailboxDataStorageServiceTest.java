@@ -211,6 +211,67 @@ class MailboxDataStorageServiceTest {
         assertSame(legacy, store.getPersistableStore().getMap().get(legacy.getStorageKey()));
     }
 
+    // The store records with a removal which replaces an add request the sequence number of that add request, so it
+    // knows that it checked the removed message. A removal which replaces a stored removal keeps the number (see
+    // docs/specifications/network/storage-request-ordering.md).
+    @Test
+    void removalRecordsTheSequenceNumberOfTheAddWhichItReplaced()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        RemoveMailboxRequest verified = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        assertTrue(store.add(add).isSuccess());
+        Map<ByteArray, Integer> replacedAddSequenceNrs =
+                store.getPersistableStore().getReplacedAddSequenceNrs();
+
+        assertTrue(store.remove(toLegacy(verified)).isSuccess());
+        assertEquals(Map.of(add.getStorageKey(), 1), replacedAddSequenceNrs);
+        assertTrue(store.remove(verified).isSuccess());
+        assertEquals(Map.of(add.getStorageKey(), 1), replacedAddSequenceNrs);
+    }
+
+    // A store which holds no entry for the key of a removal did not check the removed message
+    @Test
+    void removalWithoutEntryRecordsNoSequenceNumber() throws GeneralSecurityException {
+        DataStorageResult result = store.remove(RemoveMailboxRequest.from(mailboxData, receiverKeyPair));
+
+        assertTrue(result.isSuccess() && result.isNoEntry(), result.toString());
+        assertTrue(store.getPersistableStore().getReplacedAddSequenceNrs().isEmpty());
+    }
+
+    // The store removes the number together with the removal when the removal expires
+    @Test
+    void replacedAddSequenceNrIsRemovedWithTheRemoval() throws GeneralSecurityException {
+        AtomicReference<Runnable> pruneTask = new AtomicReference<>();
+        MailboxDataStorageService store = new MailboxDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService() {
+                    @Override
+                    public void addTask(Runnable task) {
+                        pruneTask.set(task);
+                    }
+                },
+                "pruneRemoval",
+                STORE_KEY,
+                () -> time) {
+            // As if the removal had expired
+            @Override
+            protected boolean isToPrune(MailboxRequest request) {
+                return request instanceof RemoveMailboxRequest;
+            }
+        };
+        AddMailboxRequest add = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        assertTrue(store.add(add).isSuccess());
+        assertTrue(store.remove(RemoveMailboxRequest.from(mailboxData, receiverKeyPair)).isSuccess());
+        assertEquals(Map.of(add.getStorageKey(), 1),
+                store.getPersistableStore().getReplacedAddSequenceNrs());
+
+        pruneTask.get().run();
+
+        assertTrue(store.getPersistableStore().getMap().isEmpty());
+        assertTrue(store.getPersistableStore().getReplacedAddSequenceNrs().isEmpty());
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+    }
+
     private static RemoveMailboxRequest toLegacy(RemoveMailboxRequest request) throws UnresolvableProtobufException {
         return RemoveMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
                 .setVersion(1).clearSignatureV2().build());

@@ -155,6 +155,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             map.put(storageKey, request);
+            getReplacedAddSequenceNrs().remove(storageKey);
 
             // In case we only updated the seq number we still want to broadcast and update the listeners.
             // It is a valid use case that we have both an add and remove data request, and we get repeated sequences
@@ -212,6 +213,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 }
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
+                getReplacedAddSequenceNrs().remove(storageKey);
                 map.put(storageKey, request);
                 persist();
                 return DataStorageResult.success().noEntry();
@@ -222,7 +224,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 // higher signed sequences so a V1 request cannot discard the trusted ordering information.
                 if (request.isSignatureV2Present() &&
                         (!requestFromMap.isSignatureV2Present() || !request.isSequenceNrInvalid(requestFromMap.getSequenceNumber()))) {
-                    // We update the map with the new request with the fresh sequence number.
+                    // We update the map with the new request with the fresh sequence number. The new removal keeps
+                    // the sequence number of the add request which the stored removal replaced.
                     map.put(storageKey, request);
                     persist();
                     return DataStorageResult.success().alreadyRemoved();
@@ -249,6 +252,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
+            // The store keeps the signed sequence number of the add request which the removal replaces. It sets the
+            // number before the removal, so that a reader which finds the removal also finds the number.
+            getReplacedAddSequenceNrs().put(storageKey, dataFromMap.getSequenceNumber());
             map.put(storageKey, request);
         }
 
@@ -404,6 +410,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 boolean wasRemoved;
                 synchronized (mapAccessLock) {
                     wasRemoved = persistableStore.getMap().remove(entry.getKey(), entry.getValue());
+                    if (wasRemoved) {
+                        getReplacedAddSequenceNrs().remove(entry.getKey());
+                    }
                 }
                 if (!wasRemoved) {
                     return;

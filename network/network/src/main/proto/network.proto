@@ -385,6 +385,11 @@ message DataStore {
   message MapEntry {
     .common.ByteArray key = 1; // The leading dot is needed to distinguish between common module and network.common
     DataRequest value = 2;
+    // Only for a stored removal: the sequence number of the add request which the removal replaced in this store,
+    // directly or through the removal which it replaced. 0 if it replaced none, and in the entries of nodes of earlier
+    // versions. Valid sequence numbers are positive. The store sets it. It is not part of the removal, and no peer gets
+    // it.
+    sint32 replacedAddSequenceNr = 3;
   }
   repeated MapEntry mapEntries = 1;
 }
