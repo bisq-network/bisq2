@@ -65,6 +65,10 @@ message, so they cannot limit the memory which these steps need.
    message which protobuf can parse, but which `fromProto` cannot parse, does not close the connection. The connection
    throttles such a message like every other message, and then drops it. The node logs at most three such messages per
    connection with their type and size, and no received values.
+7. The message of an exception which an integrity rule throws names the rule, the limit and the size of the rejected
+   value. It does not contain the rejected value. The callers log these messages, for example when a confidential
+   message fails at parsing, and the rejected values come from other nodes: chat texts, payment account data, Bitcoin
+   addresses, transaction IDs. Users share their log files with support.
 
 ## Reasons
 

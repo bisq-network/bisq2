@@ -23,7 +23,6 @@ import bisq.common.util.DateUtils;
 import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Optional;
@@ -43,6 +42,9 @@ public class NetworkDataValidation {
     public static final int PROFILE_ID_LENGTH = 40;
     public static final int MAX_ID_LENGTH = 50;
 
+    // The messages of the exceptions name the limit and the size of a rejected value, not the value. The values come
+    // from other nodes, for example chat texts, payment account data or Bitcoin addresses, and the callers log the
+    // exception messages. Users share their log files with support.
     public static void validateDate(long date) {
         // Date can be max 2 hours in future and cannot be older than bisq 1 launch date
         checkArgument(date < System.currentTimeMillis() + TWO_HOURS && date > BISQ_1_LAUNCH_DATE,
@@ -62,13 +64,13 @@ public class NetworkDataValidation {
 
     public static void validateECSignature(byte[] signature) {
         checkArgument(signature.length >= MIN_EC_SIGNATURE_LENGTH && signature.length <= MAX_EC_SIGNATURE_LENGTH,
-                "Signature not of the expected size. signature=" + Arrays.toString(signature));
+                "Signature not of the expected size. signature.length=" + signature.length);
     }
 
     // ECPubKey is usually 88–91 bytes
     public static void validateECPubKey(byte[] pubKey) {
         checkArgument(isECPubKeySizeValid(pubKey),
-                "Public key not of the expected size. pubKey=" + Arrays.toString(pubKey));
+                "Public key not of the expected size. pubKey.length=" + pubKey.length);
     }
 
     // For a caller which must reject key bytes of another size before it parses them
@@ -81,7 +83,7 @@ public class NetworkDataValidation {
     // Can be short id as well or custom IDs...
     public static void validateId(String id) {
         checkArgument(id.length() <= MAX_ID_LENGTH,
-                "ID must not be longer than " + MAX_ID_LENGTH + " characters. id=" + id);
+                "ID must not be longer than " + MAX_ID_LENGTH + " characters. id.length=" + id.length());
     }
 
     public static void validateId(Optional<String> id) {
@@ -91,7 +93,7 @@ public class NetworkDataValidation {
     // Profile ID is hash as hex
     public static void validateProfileId(String profileId) {
         checkArgument(profileId.length() == PROFILE_ID_LENGTH,
-                "Profile ID must be " + PROFILE_ID_LENGTH + " characters. profileId=" + profileId);
+                "Profile ID must be " + PROFILE_ID_LENGTH + " characters. profileId.length=" + profileId.length());
     }
 
     public static void validateTradeId(String tradeId) {
@@ -101,18 +103,18 @@ public class NetworkDataValidation {
 
     public static void validateSerializedSize(Proto proto, int maxSize) {
         checkArgument(proto.getSerializedSize() <= maxSize,
-                "Proto must not be larger than " + maxSize + " bytes. Proto=" + proto);
+                "Proto must not be larger than " + maxSize + " bytes. serializedSize=" + proto.getSerializedSize());
     }
 
     public static void validateText(String text, int maxLength) {
         checkArgument(text.length() <= maxLength,
-                "Text must not be longer than " + maxLength + ". text=" + text);
+                "Text must not be longer than " + maxLength + ". text.length=" + text.length());
     }
 
     public static void validateText(String text, int minLength, int maxLength) {
         validateText(text, maxLength);
         checkArgument(text.length() >= minLength,
-                "Text must not be shorter than " + minLength + ". text=" + text);
+                "Text must not be shorter than " + minLength + ". text.length=" + text.length());
     }
 
     public static void validateText(Optional<String> text, int maxTextLength) {
@@ -150,15 +152,15 @@ public class NetworkDataValidation {
     public static void validateVersion(String version) {
         Version.validate(version);
         checkArgument(version.length() <= 11 && !version.isEmpty(),
-                "Version too long or empty. version=" + version);
+                "Version too long or empty. version.length=" + version.length());
     }
 
     // Language or country code
     public static void validateCode(String code) {
         checkArgument(code.length() < 10,
-                "Code too long. code=" + code);
+                "Code too long. code.length=" + code.length());
         checkArgument(code.length() > 1,
-                "Code too short. code=" + code);
+                "Code too short. code.length=" + code.length());
     }
 
     public static void validateRequiredCode(String code) {
@@ -168,41 +170,41 @@ public class NetworkDataValidation {
 
     public static void validateBtcTxId(String txId) {
         checkArgument(txId.length() == 64,
-                "BTC txId must be 64 characters. txId=" + txId);
+                "BTC txId must be 64 characters. txId.length=" + txId.length());
     }
 
     public static void validateBtcAddress(String address) {
         checkArgument(address.length() >= 26 && address.length() <= 90,
-                "BTC address not in expected size. address=" + address);
+                "BTC address not in expected size. address.length=" + address.length());
     }
 
     public static void validateHashAsHex(String hashAsHex) {
         checkArgument(hashAsHex.length() == 40,
-                "Hash as hex must be 40 characters. hashAsHex=" + hashAsHex);
+                "Hash as hex must be 40 characters. hashAsHex.length=" + hashAsHex.length());
     }
 
     // Bisq 1 pubKeys about 600 chars
     public static void validatePubKeyBase64(String pubKeyBase64) {
         checkArgument(pubKeyBase64.length() < 1000,
-                "pubKeyBase64 too long. pubKeyBase64=" + pubKeyBase64);
+                "pubKeyBase64 too long. pubKeyBase64.length=" + pubKeyBase64.length());
     }
 
     // About 176 chars
     public static void validatePubKeyHex(String pubKeyHex) {
         checkArgument(pubKeyHex.length() < 200,
-                "signatureBase64 too long.pubKeyHex=" + pubKeyHex);
+                "pubKeyHex too long. pubKeyHex.length=" + pubKeyHex.length());
     }
 
     // Bisq 1 signatureBase64 about 88 chars 
     public static void validateSignatureBase64(String signatureBase64) {
         checkArgument(signatureBase64.length() < 100,
-                "signatureBase64 too long. signatureBase64=" + signatureBase64);
+                "signatureBase64 too long. signatureBase64.length=" + signatureBase64.length());
     }
 
     // Bisq 1 bond usernames
     public static void validateBondUserName(String bondUserName) {
         checkArgument(bondUserName.length() < 100,
-                "Bond username too long. bondUserName=" + bondUserName);
+                "Bond username too long. bondUserName.length=" + bondUserName.length());
     }
 
     // A Bisq 1 bond is looked up by its username, so an empty name can never identify a bond. Used for messages
