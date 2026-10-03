@@ -1,0 +1,90 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.chat.bisq_easy.open_trades;
+
+import bisq.chat.ChatMessageType;
+import bisq.network.NetworkService;
+import bisq.network.identity.NetworkId;
+import bisq.persistence.DbSubDirectory;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceService;
+import bisq.user.UserService;
+import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class BisqEasyOpenTradePendingMessagesTest {
+    private static final String SENDER_PROFILE_ID = "1111111111111111111111111111111111111111";
+    private static final String MY_PROFILE_ID = "2222222222222222222222222222222222222222";
+
+    // Anybody can send messages without offer for made-up trade IDs. Such a message never gets a channel.
+    @Test
+    void pendingMessagesAreBounded() {
+        BisqEasyOpenTradeChannelService service = createService();
+        UserProfile sender = mock(UserProfile.class);
+        when(sender.getId()).thenReturn(SENDER_PROFILE_ID);
+
+        for (int i = 0; i < BisqEasyOpenTradeChannelService.MAX_PENDING_MESSAGES + 20; i++) {
+            service.onMessage(messageWithoutOffer(sender, "tradeId" + i));
+        }
+
+        assertEquals(BisqEasyOpenTradeChannelService.MAX_PENDING_MESSAGES, service.getNumPendingMessages());
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static BisqEasyOpenTradeChannelService createService() {
+        PersistenceService persistenceService = mock(PersistenceService.class);
+        Persistence persistence = mock(Persistence.class);
+        when(persistenceService.getOrCreatePersistence(any(), any(DbSubDirectory.class), any(BisqEasyOpenTradeChannelStore.class)))
+                .thenReturn(persistence);
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+        UserService userService = mock(UserService.class);
+        when(userService.getUserIdentityService()).thenReturn(mock(UserIdentityService.class));
+        when(userService.getUserProfileService()).thenReturn(mock(UserProfileService.class));
+        when(userService.getBannedUserService()).thenReturn(mock(BannedUserService.class));
+        return new BisqEasyOpenTradeChannelService(persistenceService, mock(NetworkService.class), userService);
+    }
+
+    private static BisqEasyOpenTradeMessage messageWithoutOffer(UserProfile sender, String tradeId) {
+        return new BisqEasyOpenTradeMessage(tradeId,
+                "messageId-" + tradeId,
+                BisqEasyOpenTradeChannel.createId(tradeId),
+                sender,
+                MY_PROFILE_ID,
+                mock(NetworkId.class),
+                "text",
+                Optional.empty(),
+                System.currentTimeMillis(),
+                false,
+                Optional.empty(),
+                ChatMessageType.TEXT,
+                Optional.empty(),
+                new HashSet<>());
+    }
+}

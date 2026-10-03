@@ -24,6 +24,9 @@ processes it again when it processes the next message of a trade.
    The same applies when the state machine of a trade handles a message: its log entries and exception messages
    name only the type of the event, also when the trade is in a final state or the handler fails.
 
+4. The chat of Bisq Easy open trades keeps a chat message without offer, whose trade channel does not exist yet, as a
+   pending chat message. Rules 2 and 3 apply to these pending chat messages as well, with their own bound of 100.
+
 ## Reasons
 
 - Rule 2: anybody can send trade messages with made-up trade IDs to a node. Such a message never gets a trade, so
