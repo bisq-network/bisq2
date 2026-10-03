@@ -198,6 +198,23 @@ class MailboxMetaDataTest {
         assertArrayEquals(registered.serializeForHash(), mailboxData.serializeForHash());
     }
 
+    // Version 0 is the format of releases before the version field existed. No node signs it with signature V2.
+    @Test
+    void requestWithSignatureV2AndVersion0IsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
+        MailboxData mailboxDataOfVersion0 = MailboxData.fromProto(new MailboxData(AckMessage.META_DATA,
+                createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
+                .setVersion(0)
+                .build());
+        assertThrows(IllegalArgumentException.class,
+                () -> AddMailboxRequest.from(mailboxDataOfVersion0, senderKeyPair, receiverKeyPair.getPublic()));
+
+        bisq.network.protobuf.RemoveMailboxRequest removeProto = createRemoveMailboxRequest().toValueProto(false)
+                .toBuilder()
+                .setVersion(0)
+                .build();
+        assertThrows(UnresolvableProtobufException.class, () -> RemoveMailboxRequest.fromProto(removeProto));
+    }
+
     // Without signature V2, version 0 still parses. The receiver uses the registered MetaData and the policy value.
     @Test
     void removeRequestOfVersion0WithoutSignatureV2UsesTheRegisteredMetaData()

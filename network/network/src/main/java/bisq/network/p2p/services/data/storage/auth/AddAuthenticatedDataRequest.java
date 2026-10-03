@@ -168,6 +168,7 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         checkArgument(Arrays.equals(authenticatedSequentialData.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes)),
                 "pubKeyHash must match the hash of ownerPublicKeyBytes");
         SignatureValidation.validateSignatures(signature, signatureV2);
+        SignatureValidation.validateVersionOfSignatureV2(signatureV2, version);
     }
 
 
