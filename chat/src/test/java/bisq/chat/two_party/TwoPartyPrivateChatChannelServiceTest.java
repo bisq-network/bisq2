@@ -57,6 +57,7 @@ public class TwoPartyPrivateChatChannelServiceTest {
     private static final String PEER_PROFILE_ID = "1111111111111111111111111111111111111111";
     private static final String MY_PROFILE_ID = "2222222222222222222222222222222222222222";
     private static final String THIRD_PROFILE_ID = "3333333333333333333333333333333333333333";
+    private static final String OTHER_OWN_PROFILE_ID = "4444444444444444444444444444444444444444";
 
     private TwoPartyPrivateChatChannelService service;
     private UserProfileService userProfileService;
@@ -275,6 +276,58 @@ public class TwoPartyPrivateChatChannelServiceTest {
         assertTrue(receivedMessage().getChatMessageReactions().isEmpty());
     }
 
+    // The network layer decrypted the message with the key of its receiver network ID. A message which names another
+    // of our identities as receiver must not open a conversation of that identity.
+    @Test
+    void messageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdOpensNoChannel() {
+        when(userIdentityService.findUserIdentity(OTHER_OWN_PROFILE_ID)).thenReturn(Optional.of(mock(UserIdentity.class)));
+
+        service.onMessage(textMessageFrom(peer, "messageId", networkIdOf(OTHER_OWN_PROFILE_ID)));
+
+        assertTrue(service.getChannels().isEmpty());
+    }
+
+    @Test
+    void messageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsNotAddedToExistingChannel() {
+        when(userIdentityService.getSelectedUserIdentity()).thenReturn(myUserIdentity);
+        TwoPartyPrivateChatChannel channel = service.findOrCreateChannel(ChatChannelDomain.DISCUSSION, peer).orElseThrow();
+
+        service.onMessage(textMessageFrom(peer, "messageId", networkIdOf(OTHER_OWN_PROFILE_ID)));
+
+        assertTrue(channel.getChatMessages().isEmpty());
+    }
+
+    @Test
+    void reactionWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsNotApplied() {
+        TwoPartyPrivateChatMessage message = textMessageFromPeer();
+        service.onMessage(message);
+
+        service.onMessage(reactionFromPeer(message, networkIdOf(OTHER_OWN_PROFILE_ID)));
+
+        assertTrue(message.getChatMessageReactions().isEmpty());
+    }
+
+    // Such a reaction is ignored when it arrives, so it is not applied when its message arrives later
+    @Test
+    void reactionWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsNotKeptAsPending() {
+        service.onMessage(reactionFrom(peer, "reaction", "messageId", peerChannelId(), System.currentTimeMillis(),
+                networkIdOf(OTHER_OWN_PROFILE_ID)));
+
+        service.onMessage(textMessageFromPeer());
+
+        assertTrue(receivedMessage().getChatMessageReactions().isEmpty());
+    }
+
+    @Test
+    void reactionOfPeerIsApplied() {
+        TwoPartyPrivateChatMessage message = textMessageFromPeer();
+        service.onMessage(message);
+
+        service.onMessage(reactionFromPeer(message, networkIdOf(MY_PROFILE_ID)));
+
+        assertEquals(1, message.getChatMessageReactions().size());
+    }
+
     private TwoPartyPrivateChatMessage receivedMessage() {
         return service.getChannels().stream().findFirst().orElseThrow()
                 .getChatMessages().stream().findFirst().orElseThrow();
@@ -286,6 +339,12 @@ public class TwoPartyPrivateChatChannelServiceTest {
 
     private TwoPartyPrivateChatMessageReaction reactionFromPeer(String id, String chatMessageId, String chatChannelId) {
         return reactionFrom(peer, id, chatMessageId, chatChannelId);
+    }
+
+    private TwoPartyPrivateChatMessageReaction reactionFromPeer(TwoPartyPrivateChatMessage message,
+                                                                NetworkId receiverNetworkId) {
+        return reactionFrom(peer, "reactionId", message.getId(), message.getChannelId(), System.currentTimeMillis(),
+                receiverNetworkId);
     }
 
     private TwoPartyPrivateChatMessageReaction reactionFrom(UserProfile sender,
@@ -300,10 +359,19 @@ public class TwoPartyPrivateChatChannelServiceTest {
                                                             String chatMessageId,
                                                             String chatChannelId,
                                                             long date) {
+        return reactionFrom(sender, id, chatMessageId, chatChannelId, date, networkIdOf(MY_PROFILE_ID));
+    }
+
+    private TwoPartyPrivateChatMessageReaction reactionFrom(UserProfile sender,
+                                                            String id,
+                                                            String chatMessageId,
+                                                            String chatChannelId,
+                                                            long date,
+                                                            NetworkId receiverNetworkId) {
         return new TwoPartyPrivateChatMessageReaction(id,
                 sender,
                 MY_PROFILE_ID,
-                mock(NetworkId.class),
+                receiverNetworkId,
                 chatChannelId,
                 ChatChannelDomain.DISCUSSION,
                 chatMessageId,
@@ -321,17 +389,30 @@ public class TwoPartyPrivateChatChannelServiceTest {
     }
 
     private TwoPartyPrivateChatMessage textMessageFrom(UserProfile sender, String messageId) {
+        return textMessageFrom(sender, messageId, networkIdOf(MY_PROFILE_ID));
+    }
+
+    private TwoPartyPrivateChatMessage textMessageFrom(UserProfile sender,
+                                                       String messageId,
+                                                       NetworkId receiverNetworkId) {
         return new TwoPartyPrivateChatMessage(messageId,
                 ChatChannelDomain.DISCUSSION,
                 TwoPartyPrivateChatChannel.createId(ChatChannelDomain.DISCUSSION, PEER_PROFILE_ID, MY_PROFILE_ID),
                 sender,
                 MY_PROFILE_ID,
-                mock(NetworkId.class),
+                receiverNetworkId,
                 "hi",
                 Optional.empty(),
                 System.currentTimeMillis(),
                 false,
                 ChatMessageType.TEXT,
                 new HashSet<>());
+    }
+
+    // The ID of a network ID is the hash of its public key, which is also the profile ID of that key
+    private static NetworkId networkIdOf(String userProfileId) {
+        NetworkId networkId = mock(NetworkId.class);
+        when(networkId.getId()).thenReturn(userProfileId);
+        return networkId;
     }
 }

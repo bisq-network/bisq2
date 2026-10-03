@@ -78,12 +78,15 @@ class BisqEasyOpenTradePendingMessagesTest {
     }
 
     private static BisqEasyOpenTradeMessage messageWithoutOffer(UserProfile sender, String tradeId) {
+        // The ID of the receiver network ID is the receiver profile ID, as with every unmodified sender
+        NetworkId receiverNetworkId = mock(NetworkId.class);
+        when(receiverNetworkId.getId()).thenReturn(MY_PROFILE_ID);
         return new BisqEasyOpenTradeMessage(tradeId,
                 "messageId-" + tradeId,
                 BisqEasyOpenTradeChannel.createId(tradeId),
                 sender,
                 MY_PROFILE_ID,
-                mock(NetworkId.class),
+                receiverNetworkId,
                 "text",
                 Optional.empty(),
                 System.currentTimeMillis(),

@@ -15,7 +15,8 @@ to a channel.
 1. A node keeps a received reaction as a pending reaction if it does not have the channel or the message of the
    reaction. When it adds a received message to a channel, it processes all pending reactions again. A reaction which
    then finds its message is applied and is no longer pending. A reaction whose message is still missing stays
-   pending.
+   pending. A reaction which rule 7 of [Private channel membership](private-channel-membership.md) rejects is ignored
+   when it arrives and is never pending.
 2. A pending reaction is applied only if its sender is a peer of the channel and its receiver is our identity in the
    channel, as [Private channel membership](private-channel-membership.md) defines. The node checks this when it
    processes the reaction, also after it was pending. A pending reaction which this check rejects is no longer
