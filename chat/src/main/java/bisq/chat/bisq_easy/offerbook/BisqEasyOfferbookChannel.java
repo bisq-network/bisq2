@@ -36,6 +36,9 @@ import java.util.stream.Stream;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOfferbookMessage> {
+    // The ID is part of the network data: an offerbook message with an offer is valid only in the channel with the ID
+    // of the market of its offer (BisqEasyOfferbookMessage.verify()). If the format of the ID changes, nodes reject
+    // the offers of the other versions.
     static String createId(Market market) {
         return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase(Locale.ROOT) + "." +
                 market.getBaseCurrencyCode() + "-" +
