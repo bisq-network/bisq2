@@ -25,10 +25,10 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
 import bisq.contract.Contract;
+import bisq.contract.TradeId;
 import bisq.identity.Identity;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
-import bisq.security.DigestUtil;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,28 +36,13 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements PersistableProto {
-    public static String createId(String offerId, String takerPubKeyHash) {
-        return createId(offerId, takerPubKeyHash, Optional.empty());
-    }
-
-    public static String createId(String offerId, String takerPubKeyHash, long takeOfferDate) {
-        return createId(offerId, takerPubKeyHash, Optional.of(takeOfferDate));
-    }
-
-    public static String createId(String offerId, String takerPubKeyHash, Optional<Long> takeOfferDate) {
-        String combined = offerId + takerPubKeyHash + takeOfferDate.map(String::valueOf).orElse("");
-        return UUID.nameUUIDFromBytes(DigestUtil.hash(combined.getBytes(StandardCharsets.UTF_8))).toString();
-    }
-
     private static TradeRole createRole(boolean isBuyer, boolean isTaker) {
         return isBuyer ?
                 (isTaker ?
@@ -98,7 +83,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                  TradeLifecycleState lifecycleState) {
         this(contract,
                 state,
-                createId(offer.getId(), taker.getNetworkId().getId(), contract.getTakeOfferDate()),
+                TradeId.create(offer.getId(), taker.getNetworkId().getId(), contract.getTakeOfferDate()),
                 createRole(isBuyer, isTaker),
                 myIdentity,
                 taker,

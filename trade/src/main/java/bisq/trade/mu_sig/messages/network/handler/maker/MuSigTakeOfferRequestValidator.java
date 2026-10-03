@@ -33,6 +33,7 @@ import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
+import bisq.contract.TradeId;
 import bisq.network.identity.NetworkId;
 import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.mu_sig.MuSigOffer;
@@ -44,7 +45,6 @@ import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.SettingsService;
-import bisq.trade.Trade;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.arbitration.MuSigTraderArbitrationService;
@@ -93,7 +93,7 @@ public final class MuSigTakeOfferRequestValidator {
             throw reject("The message receiver does not match the offer's maker network id. receiverId="
                     + StringUtils.sanitizeForLog(message.getReceiver().getId()) + ", offer makerId=" + StringUtils.sanitizeForLog(contract.getOffer().getMakerNetworkId().getId()));
         }
-        String expectedTradeId = Trade.createId(contract.getOffer().getId(),
+        String expectedTradeId = TradeId.create(contract.getOffer().getId(),
                 takerNetworkId.getId(),
                 contract.getTakeOfferDate());
         if (!message.getTradeId().equals(expectedTradeId)) {
