@@ -21,6 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
@@ -39,6 +40,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -507,6 +509,71 @@ class MailboxDataStorageServiceTest {
                 .setSenderPublicKeyHash(ByteString.copyFrom(DigestUtil.hash(otherPublicKeyBytes)));
 
         assertThrows(UnresolvableProtobufException.class, () -> AddMailboxRequest.fromProto(builder.build()));
+    }
+
+    // The store cannot check a removal without entry against the removed data, so every key pair can create it. Such
+    // removals must not fill the store (see rule 12 of docs/specifications/network/storage-metadata.md).
+    @Test
+    void storeWithManyRemovalsAcceptsNoRemovalWithoutEntryButStillAddRequests()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        Map<ByteArray, MailboxRequest> map = store.getPersistableStore().getMap();
+        RemoveMailboxRequest storedRemoval = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        // The limit counts removals without replaced add request, so the same removal under other keys fills the map
+        for (int i = 0; i < DataStorageService.MAX_REMOVALS_WITHOUT_REPLACED_ADD - 1; i++) {
+            map.put(new ByteArray(ByteBuffer.allocate(Integer.BYTES).putInt(i).array()), storedRemoval);
+        }
+        // Messages of other senders, so that the removals have other storage keys
+        MailboxData dataOfRemovalBelowLimit = new MailboxData(AckMessage.META_DATA,
+                createConfidentialMessage(KeyGeneration.generateDefaultEcKeyPair()));
+        MailboxData dataOfRemovalAtLimit = new MailboxData(AckMessage.META_DATA,
+                createConfidentialMessage(KeyGeneration.generateDefaultEcKeyPair()));
+
+        DataStorageResult resultBelowLimit = store.remove(RemoveMailboxRequest.from(dataOfRemovalBelowLimit,
+                receiverKeyPair));
+        DataStorageResult resultAtLimit = store.remove(RemoveMailboxRequest.from(dataOfRemovalAtLimit,
+                receiverKeyPair));
+        DataStorageResult resultOfAdd = store.add(AddMailboxRequest.from(mailboxData, senderKeyPair,
+                receiverKeyPair.getPublic()));
+        DataStorageResult resultOfRemovalOfStoredData = store.remove(RemoveMailboxRequest.from(mailboxData,
+                receiverKeyPair));
+
+        assertTrue(resultBelowLimit.isSuccess() && resultBelowLimit.isNoEntry(), resultBelowLimit.toString());
+        assertFalse(resultAtLimit.isSuccess(), resultAtLimit.toString());
+        assertTrue(resultAtLimit.isMaxMapSizeReached(), resultAtLimit.toString());
+        assertTrue(resultOfAdd.isSuccess(), resultOfAdd.toString());
+        assertTrue(resultOfRemovalOfStoredData.isSuccess(), resultOfRemovalOfStoredData.toString());
+        assertFalse(resultOfRemovalOfStoredData.isNoEntry(), resultOfRemovalOfStoredData.toString());
+        assertEquals(DataStorageService.MAX_REMOVALS_WITHOUT_REPLACED_ADD + 1, map.size());
+        // The pending write would have to serialize all entries
+        map.clear();
+        store.getPersistableStore().getReplacedAddSequenceNrs().clear();
+    }
+
+    // The store checked the removed message of a removal with replaced add request. Such removals do not count against
+    // the limit (see rule 12 of docs/specifications/network/storage-metadata.md).
+    @Test
+    void removalsWithReplacedAddDoNotLimitTheRemovalsWithoutEntry()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        Map<ByteArray, MailboxRequest> map = store.getPersistableStore().getMap();
+        Map<ByteArray, Integer> replacedAddSequenceNrs =
+                store.getPersistableStore().getReplacedAddSequenceNrs();
+        RemoveMailboxRequest storedRemoval = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        for (int i = 0; i < DataStorageService.MAX_REMOVALS_WITHOUT_REPLACED_ADD; i++) {
+            ByteArray storageKey = new ByteArray(ByteBuffer.allocate(Integer.BYTES).putInt(i).array());
+            map.put(storageKey, storedRemoval);
+            replacedAddSequenceNrs.put(storageKey, 1);
+        }
+        // The message of another sender, so that the removal has another storage key
+        MailboxData otherData = new MailboxData(AckMessage.META_DATA,
+                createConfidentialMessage(KeyGeneration.generateDefaultEcKeyPair()));
+
+        DataStorageResult result = store.remove(RemoveMailboxRequest.from(otherData, receiverKeyPair));
+
+        assertTrue(result.isSuccess() && result.isNoEntry(), result.toString());
+        assertEquals(DataStorageService.MAX_REMOVALS_WITHOUT_REPLACED_ADD + 1, map.size());
+        // The pending write would have to serialize all entries
+        map.clear();
+        replacedAddSequenceNrs.clear();
     }
 
     @Test

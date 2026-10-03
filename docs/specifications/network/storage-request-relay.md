@@ -7,7 +7,8 @@ decide whether a store accepts a request are defined in [`storage-request-orderi
 
 1. A store accepts a request when it stores the request. For a removal, this includes three cases:
    - the removal replaces the add request of the data;
-   - the store holds no entry for the storage key, and it keeps the removal for a later add request;
+   - the store holds no entry for the storage key, and it keeps the removal for a later add request. The store
+     keeps such a removal only within the limit of rule 12 of [`storage-metadata.md`](storage-metadata.md#size-limit);
    - the removal replaces a stored removal, as the replacement rules allow.
 2. A request which leaves the store unchanged is not accepted, also when it is valid. Examples are a request which the
    store holds already, a removal which does not replace the stored removal, and an add request whose sequence number

@@ -176,7 +176,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         synchronized (mapAccessLock) {
             MailboxRequest requestFromMap = map.get(storageKey);
             if (requestFromMap == null) {
-                if (isExceedingMapSize()) {
+                if (isExceedingMapSize() || isExceedingRemovalsWithoutReplacedAdd()) {
                     return DataStorageResult.failed().maxMapSizeReached();
                 }
 
