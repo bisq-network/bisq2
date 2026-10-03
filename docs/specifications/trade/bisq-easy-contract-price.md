@@ -34,6 +34,6 @@ The rule does not change the protocol or the storage format. The contract keeps 
 specification field for stored trades and the protobuf format. All current clients put the offer's
 price specification into the contract: the desktop client (since version 2.0.3), the REST API and
 the Bisq mobile node mode. Only desktop takers older than 2.0.3 could propose another price, and
-their requests are rejected. Trades signed before this rule are not affected; for those the
-desktop client still asks a buyer who is maker to accept or reject a price specification that
-differs from the offer's.
+their requests are rejected. Trades signed before this rule keep their contract, but the desktop
+client no longer asks a buyer who is maker to accept or reject a price specification that differs
+from the offer's.
