@@ -43,6 +43,8 @@ See `Makefile` for multi‑node local test setups (clearnet/tor/i2p) using `scre
 - Field names use lowerCamelCase (not underscore)
 - Enums use ALL_CAPS with a type prefix (e.g., `CHATMESSAGETYPE_TEXT`)
 - Optional Java fields should use `optional` in proto
+- A change of a `.proto` file must stay compatible with the last released version only, not with unreleased
+  development commits. See **Baseline for Backward Compatibility** and `docs/dev/backward-compatibility.md`
 
 ## Testing Instructions
 - Add or update tests when behavior changes
