@@ -74,6 +74,15 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage<?>> extend
         return changed;
     }
 
+    // The client adds notices of its own as protocol log messages, e.g. that the peer is banned. A received message
+    // from an own identity is ignored (PrivateChatChannelService.isValid).
+    @Override
+    protected boolean holdsChatMessageType(M chatMessage) {
+        return super.holdsChatMessageType(chatMessage) ||
+                (chatMessage.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE &&
+                        chatMessage.getAuthorUserProfileId().equals(myUserIdentity.getId()));
+    }
+
     // Called when removing expired messages. We do not support deleting private messages
     public boolean removeChatMessage(M chatMessage) {
         return super.removeChatMessage(chatMessage);
