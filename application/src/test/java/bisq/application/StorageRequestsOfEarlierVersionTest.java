@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -46,15 +47,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * creates requests. Nodes of version 2.1.13 accepted, stored and relayed all of them, and they serve them in inventory
  * responses.
  * <p>
- * A valid request of version 2.1.13 has signature V1 only. A node of this version parses it until the cutoff date of
- * signature V1. The other requests break integrity rules of this version, so parsing rejects them (rules 1 to 3 of
+ * A valid request of version 2.1.13 has signature V1 only. A node of this version parses it. Its stores accept it
+ * until the cutoff date of signature V1 (rule 5 of docs/specifications/network/storage-request-signatures.md). The
+ * other requests break integrity rules of this version, so parsing rejects them (rules 1 to 3 of
  * docs/specifications/network/validation-at-parsing.md). In an inventory response, the requester skips them and keeps
  * the other entries (rule 7 of docs/specifications/network/inventory-hash-set-filter.md).
  * <p>
- * Parsing compares the cutoff date with the time of the node, so the expected result of the valid request depends on
- * the date on which the test runs.
+ * Parsing does not require signature V2, so the results do not depend on the date on which the test runs.
  */
 class StorageRequestsOfEarlierVersionTest {
+    // The last time at which a store accepts requests without signature V2, and the first time at which it requires
+    // signature V2
+    private static final long BEFORE_CUTOFF = SignedRequest.SIGNATURE_V1_CUTOFF_DATE.getTime() - 1;
+    private static final long AT_CUTOFF = SignedRequest.SIGNATURE_V1_CUTOFF_DATE.getTime();
+
     private static Properties requests;
     private static int previousInventoryMaxSize;
 
@@ -77,12 +83,16 @@ class StorageRequestsOfEarlierVersionTest {
     }
 
     @Test
-    void validRequestIsParsedUntilTheCutoffDateOfSignatureV1() {
-        if (isSignatureV2Required()) {
-            assertThrows(UnresolvableProtobufException.class, () -> parse("poison.good.add"));
-        } else {
-            assertInstanceOf(AddAuthenticatedDataRequest.class, parseValidRequest("poison.good.add"));
-        }
+    void validRequestIsParsedAndIsRejectedByTheStoresFromTheCutoffDateOfSignatureV1On() {
+        AddAuthenticatedDataRequest request = assertInstanceOf(AddAuthenticatedDataRequest.class,
+                parseValidRequest("poison.good.add"));
+
+        assertFalse(request.isSignatureV2Present());
+        // The stores check these two conditions with their clock
+        assertFalse(request.isRequiredSignatureV2Missing(BEFORE_CUTOFF));
+        assertFalse(request.isSignatureInvalid(BEFORE_CUTOFF));
+        assertTrue(request.isRequiredSignatureV2Missing(AT_CUTOFF));
+        assertTrue(request.isSignatureInvalid(AT_CUTOFF));
     }
 
     // The reason makes sure that the integrity rule rejects the request, and not another failure, for example a missing
@@ -109,16 +119,8 @@ class StorageRequestsOfEarlierVersionTest {
 
         List<? extends DataRequest> entries = Inventory.fromProto(proto).getEntries();
 
-        if (isSignatureV2Required()) {
-            assertEquals(List.of(), entries);
-        } else {
-            assertEquals(1, entries.size());
-            assertEquals(parseValidRequest("poison.good.add"), entries.get(0));
-        }
-    }
-
-    private static boolean isSignatureV2Required() {
-        return SignedRequest.isSignatureV2Required(System.currentTimeMillis());
+        assertEquals(1, entries.size());
+        assertEquals(parseValidRequest("poison.good.add"), entries.get(0));
     }
 
     private static EnvelopePayloadMessage parseValidRequest(String name) {

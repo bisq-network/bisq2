@@ -20,27 +20,32 @@ package bisq.network.p2p.services.data.storage;
 import bisq.common.validation.NetworkDataValidation;
 import com.google.common.annotations.VisibleForTesting;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class SignatureValidation {
 
     public static void validateSignatures(byte[] signatureV1, byte[] signatureV2) {
         validateSignatures(signatureV1, signatureV2, System.currentTimeMillis());
     }
 
+    // The constructors of the requests call this method, so it also runs for a request which is not received:
+    // - for the request without signature V2 which the creator builds to compute the preimage of signature V2;
+    // - for the persisted requests which a store loads. The mailbox store keeps removals without signature V2 after
+    //   the cutoff date of signature V1.
+    // The method therefore does not require signature V2. The stores reject a received request without signature V2
+    // from the cutoff date on, with their clock, and they remove such requests which they hold (see rules 5 and 9 of
+    // docs/specifications/network/storage-request-signatures.md).
     // now: the time of the node which parses the request
     @VisibleForTesting
     static void validateSignatures(byte[] signatureV1, byte[] signatureV2, long now) {
-        if (SignedRequest.isSignatureV2Required(now)) {
-            // After cutoff date we might omit the v1 signature.
-            if (signatureV1.length > 0) {
-                NetworkDataValidation.validateECSignature(signatureV1);
-            }
-            NetworkDataValidation.validateECSignature(signatureV2);
-        } else {
+        checkArgument(signatureV1.length > 0 || signatureV2.length > 0, "A request must contain a signature");
+        // Before the cutoff date nodes of earlier versions take part in the network. They cannot parse a request
+        // without signature V1. After the cutoff date we might omit the v1 signature.
+        if (signatureV1.length > 0 || !SignedRequest.isSignatureV2Required(now)) {
             NetworkDataValidation.validateECSignature(signatureV1);
-            if (signatureV2.length > 0) {
-                NetworkDataValidation.validateECSignature(signatureV2);
-            }
         }
-
+        if (signatureV2.length > 0) {
+            NetworkDataValidation.validateECSignature(signatureV2);
+        }
     }
 }
