@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,7 +78,11 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private final ObservableSet<BondedRole> bondedRoles = new ObservableSet<>();
     @Getter
     private final DataService.Listener initialDataServiceListener;
-    private final Set<AuthorizedData> failedAuthorizedData = new CopyOnWriteArraySet<>();
+    // Data whose key is not the key of a bonded role yet. It is processed again when a bonded role arrives, because
+    // data can arrive before the role which authorizes it. The set holds only data which the stores still hold (see
+    // onAuthorizedDataRemoved), so the limits of the stores bound it. It is a hash set, because any key can publish
+    // such data: with a CopyOnWriteArraySet each add would copy all entries.
+    private final Set<AuthorizedData> failedAuthorizedData = ConcurrentHashMap.newKeySet();
     @Nullable
     private Scheduler initialDataScheduler, reprocessScheduler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
@@ -255,6 +260,12 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
                 log.error("Error at onAuthorizedDataRemoved", e);
             }
         });
+
+        // Removed or expired data must not be processed again when a bonded role arrives later: the listeners would
+        // get data which the stores no longer hold, and the set would keep all such data until shutdown. We remove
+        // it after the calls above, because hasAuthorizedPubKey adds data without an authorized key to the set, also
+        // when it is called for removed data.
+        failedAuthorizedData.remove(authorizedData);
     }
 
 
@@ -401,7 +412,8 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         }
     }
 
-    private void reprocess() {
+    @VisibleForTesting
+    void reprocess() {
         Set<AuthorizedData> clone = new HashSet<>(failedAuthorizedData);
         clone.forEach(this::onAuthorizedDataAdded);
         if (reprocessScheduler != null) {
