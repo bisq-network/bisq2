@@ -21,6 +21,7 @@ import bisq.common.network.Address;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkExecutors;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
@@ -48,7 +49,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -57,6 +60,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -92,6 +96,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<EnvelopePayloadMessageAndPublicKey> processedEnvelopePayloadMessagesAndPublicKeys = new CopyOnWriteArraySet<>();
+    // Held while a decrypted message is added to the processed messages and passed to the listeners, and while
+    // addListenerAndDeliverProcessedMessages adds a listener and copies the processed messages. So such a listener
+    // receives each processed message exactly once: in the copy or as a new message.
+    private final Object processedMessagesLock = new Object();
     private volatile boolean isShutdownInProgress;
 
     public ConfidentialMessageService(NodesById nodesById,
@@ -390,18 +398,37 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         listeners.add(listener);
     }
 
+    /**
+     * Adds the listener and passes to it the messages which this service processed before, in the order in which it
+     * processed them. Each message goes to onMessage and to onConfidentialMessage, as a new message does. Together with
+     * the new messages, the listener receives each processed message exactly once. The processed messages are passed
+     * in the thread of the caller. Each call is processed on its own, as in StartupReplay: an exception of the listener
+     * is logged, and the other calls still happen. If the listener was added before, nothing happens.
+     * See docs/specifications/network/startup-replay.md.
+     */
+    public void addListenerAndDeliverProcessedMessages(Listener listener) {
+        List<EnvelopePayloadMessageAndPublicKey> processedMessages;
+        synchronized (processedMessagesLock) {
+            if (!listeners.add(listener)) {
+                return;
+            }
+            // A list: a hash-based copy would call hashCode of each received message, which can throw
+            processedMessages = new ArrayList<>(processedEnvelopePayloadMessagesAndPublicKeys);
+        }
+        processedMessages.forEach(processedMessage -> deliverProcessedMessage(listener, processedMessage));
+    }
+
     public void removeListener(Listener listener) {
         listeners.remove(listener);
     }
 
+    // Services which start use NetworkService.addConfidentialMessageListenerAndDeliverProcessedMessages instead of
+    // this copy. The copy is hash-based, so a message whose hashCode throws makes it fail. A message which the node
+    // processes between this copy and the registration of a listener is lost for the listener or reaches it twice.
     public Set<EnvelopePayloadMessage> getProcessedEnvelopePayloadMessages() {
         return processedEnvelopePayloadMessagesAndPublicKeys.stream()
                 .map(EnvelopePayloadMessageAndPublicKey::envelopePayloadMessage)
                 .collect(Collectors.toUnmodifiableSet());
-    }
-
-    public Set<EnvelopePayloadMessageAndPublicKey> getProcessedEnvelopePayloadMessagesAndPublicKeys() {
-        return Set.copyOf(processedEnvelopePayloadMessagesAndPublicKeys);
     }
 
 
@@ -544,18 +571,30 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     }
 
     private void addAndNotifyListeners(EnvelopePayloadMessageAndPublicKey processedMessage) {
-        boolean wasNotPresent = processedEnvelopePayloadMessagesAndPublicKeys.add(processedMessage);
-        if (wasNotPresent) {
-            EnvelopePayloadMessage message = processedMessage.envelopePayloadMessage();
-            PublicKey senderPublicKey = processedMessage.senderPublicKey();
-            log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", message.getClass().getSimpleName());
-            messageDeliveryStatusService.ifPresent(service -> NetworkExecutors.getNotifyExecutor()
-                    .submit(() -> service.onDecryptedMessage(message, processedMessage.receiverKeyId())));
-            listeners.forEach(listener -> {
-                NetworkExecutors.getNotifyExecutor().submit(() -> listener.onMessage(message));
-                NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConfidentialMessage(message, senderPublicKey));
-            });
+        synchronized (processedMessagesLock) {
+            boolean wasNotPresent = processedEnvelopePayloadMessagesAndPublicKeys.add(processedMessage);
+            if (wasNotPresent) {
+                EnvelopePayloadMessage message = processedMessage.envelopePayloadMessage();
+                PublicKey senderPublicKey = processedMessage.senderPublicKey();
+                log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", message.getClass().getSimpleName());
+                messageDeliveryStatusService.ifPresent(service -> NetworkExecutors.getNotifyExecutor()
+                        .submit(() -> service.onDecryptedMessage(message, processedMessage.receiverKeyId())));
+                listeners.forEach(listener -> {
+                    NetworkExecutors.getNotifyExecutor().submit(() -> listener.onMessage(message));
+                    NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConfidentialMessage(message, senderPublicKey));
+                });
+            }
         }
+    }
+
+    // A new message reaches each of the two methods in a task of its own, so each call is processed on its own here as
+    // well. StartupReplay logs a failed call with the type of the message, as for the other replayed data.
+    private static void deliverProcessedMessage(Listener listener, EnvelopePayloadMessageAndPublicKey processedMessage) {
+        EnvelopePayloadMessage message = processedMessage.envelopePayloadMessage();
+        PublicKey senderPublicKey = processedMessage.senderPublicKey();
+        StartupReplay.forEach(Stream.of(message), listener::onMessage);
+        StartupReplay.forEach(Stream.of(message),
+                replayedMessage -> listener.onConfidentialMessage(replayedMessage, senderPublicKey));
     }
 
     static void verifySenderPublicKeyBinding(SenderPublicKeyProvidingPayload pubKeyProvidingMessage,

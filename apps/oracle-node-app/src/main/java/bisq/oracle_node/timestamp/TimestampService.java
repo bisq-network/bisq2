@@ -22,7 +22,6 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
-import bisq.network.StartupReplay;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -78,10 +77,7 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
-                        .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
-                this::onMessage);
-        networkService.addConfidentialMessageListener(this);
+        networkService.addConfidentialMessageListenerAndDeliverProcessedMessages(this);
         authorizedBondedRolesService.addListener(this);
 
         // We do not republish the AuthorizedTimestampData we have in our store as we rely on the user to request again
