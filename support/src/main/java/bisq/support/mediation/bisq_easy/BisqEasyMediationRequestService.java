@@ -52,6 +52,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import static bisq.support.dispute.DisputeAgentSelection.selectDeterministicProfileId;
+import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractParties;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -126,12 +127,15 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
 
     public void requestMediation(BisqEasyOpenTradeChannel channel,
                                  BisqEasyContract contract) {
-        checkArgument(channel.getBisqEasyOffer().equals(contract.getOffer()));
+        // The channel's mediator is a copy. The request goes to the mediator of the signed contract.
+        UserProfile mediator = contract.getMediator().orElseThrow();
+        findChannelMismatch(channel, contract).ifPresent(mismatch -> {
+            throw new IllegalArgumentException(mismatch);
+        });
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
         UserProfile peer = channel.getPeer();
-        UserProfile mediator = channel.getMediator().orElseThrow();
         NetworkId mediatorNetworkId = mediator.getNetworkId();
         BisqEasyMediationRequest bisqEasyMediationRequest = ChatMessagePruning.createWithMaybePrunedMessages(
                 new ArrayList<>(channel.getChatMessages()),
@@ -145,6 +149,25 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         networkService.confidentialSend(bisqEasyMediationRequest,
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
+    }
+
+    // A request is refused while the channel does not match the contract: the chat routes messages to the channel's
+    // mediator and accepts responses only from it, and the mediator ignores a request whose requester and peer are
+    // not the parties of the contract. The check has no side effect, so a client can run it before it adds the trade
+    // log message which the request carries.
+    public Optional<String> findChannelMismatch(BisqEasyOpenTradeChannel channel, BisqEasyContract contract) {
+        if (!channel.getBisqEasyOffer().equals(contract.getOffer())) {
+            return Optional.of("The channel's offer does not match the contract's offer");
+        }
+        Optional<NetworkId> channelMediator = channel.getMediator().map(UserProfile::getNetworkId);
+        Optional<NetworkId> contractMediator = contract.getMediator().map(UserProfile::getNetworkId);
+        if (!channelMediator.equals(contractMediator)) {
+            return Optional.of("The channel's mediator does not match the contract's mediator");
+        }
+        if (!hasMatchingContractParties(contract, channel.getMyUserIdentity().getUserProfile(), channel.getPeer())) {
+            return Optional.of("The channel's parties do not match the contract's parties");
+        }
+        return Optional.empty();
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId,

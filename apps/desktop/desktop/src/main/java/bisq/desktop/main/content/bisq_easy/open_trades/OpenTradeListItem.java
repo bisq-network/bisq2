@@ -80,7 +80,7 @@ class OpenTradeListItem implements DateTableItem {
         peersUserName = peersUserProfile.getUserName();
         myUserName = channel.getMyUserIdentity().getUserName();
         directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(trade);
-        offerId = channel.getBisqEasyOffer().getId();
+        offerId = trade.getOffer().getId();
         this.tradeId = trade.getId();
         shortTradeId = trade.getShortId();
 
@@ -113,7 +113,7 @@ class OpenTradeListItem implements DateTableItem {
             }
             this.isInMediation = isInMediation;
             if (isInMediation) {
-                mediatorUserName = channel.getMediator().map(UserProfile::getUserName).orElse("");
+                mediatorUserName = trade.getContract().getMediator().map(UserProfile::getUserName).orElse("");
             }
         });
     }
