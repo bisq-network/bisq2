@@ -33,6 +33,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,6 +45,9 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPartyPrivateChatMessageReaction> {
+    private static final Set<ChatMessageType> SUPPORTED_CHAT_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
+            ChatMessageType.LEAVE);
+
     // Metadata needs to be symmetric with TwoPartyPrivateChatMessageReaction.
     public static final MetaData META_DATA = new MetaData(TTL_15_DAYS, TwoPartyPrivateChatMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
@@ -137,6 +141,11 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
     @Override
     public MetaData getMetaData() {
         return META_DATA;
+    }
+
+    @Override
+    public boolean hasSupportedChatMessageType() {
+        return SUPPORTED_CHAT_MESSAGE_TYPES.contains(chatMessageType);
     }
 
     @Override

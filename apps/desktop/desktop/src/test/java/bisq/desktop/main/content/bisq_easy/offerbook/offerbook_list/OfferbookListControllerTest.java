@@ -135,6 +135,8 @@ class OfferbookListControllerTest {
         when(message.getId()).thenReturn("offer-message-id");
         when(message.getAuthorUserProfileId()).thenReturn("author-id");
         when(message.hasBisqEasyOffer()).thenReturn(true);
+        // A channel holds only messages of supported types
+        when(message.hasSupportedChatMessageType()).thenReturn(true);
         when(message.getBisqEasyOffer()).thenReturn(Optional.of(offer));
 
         channel = new BisqEasyOfferbookChannel(MARKET);
@@ -234,10 +236,12 @@ class OfferbookListControllerTest {
         when(failingMessage.getId()).thenReturn("failing-message-id");
         when(failingMessage.getAuthorUserProfileId()).thenReturn("failing-author-id");
         when(failingMessage.hasBisqEasyOffer()).thenReturn(true);
+        when(failingMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(failingMessage.getBisqEasyOffer()).thenReturn(Optional.of(offer));
         when(secondMessage.getId()).thenReturn("second-message-id");
         when(secondMessage.getAuthorUserProfileId()).thenReturn("author-id");
         when(secondMessage.hasBisqEasyOffer()).thenReturn(true);
+        when(secondMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(secondMessage.getBisqEasyOffer()).thenReturn(Optional.of(offer));
         UserProfile failingAuthor = mock(UserProfile.class);
         when(userProfileService.findUserProfile("failing-author-id")).thenReturn(Optional.of(failingAuthor));

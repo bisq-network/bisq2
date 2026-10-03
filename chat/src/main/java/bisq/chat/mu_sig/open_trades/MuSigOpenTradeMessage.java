@@ -36,6 +36,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -51,6 +52,9 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTradeMessageReaction> {
     public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
+    private static final Set<ChatMessageType> SUPPORTED_CHAT_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
+            ChatMessageType.LEAVE,
+            ChatMessageType.PROTOCOL_LOG_MESSAGE);
 
     // Metadata needs to be symmetric with MuSigOpenTradeMessageReaction.
     public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
@@ -218,6 +222,11 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
     @Override
     public MetaData getMetaData() {
         return META_DATA;
+    }
+
+    @Override
+    public boolean hasSupportedChatMessageType() {
+        return SUPPORTED_CHAT_MESSAGE_TYPES.contains(chatMessageType);
     }
 
     @Override

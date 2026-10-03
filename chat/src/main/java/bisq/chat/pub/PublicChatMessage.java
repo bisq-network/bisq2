@@ -78,6 +78,11 @@ public abstract class PublicChatMessage extends ChatMessage implements Ownership
     }
 
     @Override
+    public boolean hasSupportedChatMessageType() {
+        return chatMessageType == ChatMessageType.TEXT;
+    }
+
+    @Override
     public boolean addChatMessageReaction(ChatMessageReaction reaction) {
         return getChatMessageReactions().add(reaction);
     }

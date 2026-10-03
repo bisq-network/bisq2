@@ -177,6 +177,9 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         return userIdentityService.isUserIdentityPresent(authorUserProfileId);
     }
 
+    // Types a peer sends in this kind of chat. Notices which the client shows by itself are never sent.
+    public abstract boolean hasSupportedChatMessageType();
+
     @Override
     public int compareTo(@Nonnull ChatMessage o) {
         return id.compareTo(o.getId());

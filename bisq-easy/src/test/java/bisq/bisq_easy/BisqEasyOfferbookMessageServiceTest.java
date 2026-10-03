@@ -140,6 +140,8 @@ class BisqEasyOfferbookMessageServiceTest {
         when(makersMessage.getId()).thenReturn("offer-message-id");
         when(makersMessage.getAuthorUserProfileId()).thenReturn("author-id");
         when(makersMessage.hasBisqEasyOffer()).thenReturn(true);
+        // A channel holds only messages of supported types
+        when(makersMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(makersMessage.getBisqEasyOffer()).thenReturn(Optional.of(offer));
         channel.addChatMessage(makersMessage);
         ObservableSet<BisqEasyOfferbookChannel> channels = new ObservableSet<>();
