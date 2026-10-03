@@ -54,6 +54,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
     private static final String TRADE_ID = "tradeId";
 
     private BisqEasyOpenTradeChannelService service;
+    private UserIdentityService userIdentityService;
     private UserProfile taker;
     private UserIdentity makerIdentity;
 
@@ -66,7 +67,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
                 .thenReturn(persistence);
         when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
 
-        UserIdentityService userIdentityService = mock(UserIdentityService.class);
+        userIdentityService = mock(UserIdentityService.class);
         UserService userService = mock(UserService.class);
         when(userService.getUserIdentityService()).thenReturn(userIdentityService);
         when(userService.getUserProfileService()).thenReturn(mock(UserProfileService.class));
@@ -166,6 +167,21 @@ public class BisqEasyOpenTradeChannelServiceTest {
         assertTrue(channel.getChatMessages().contains(takeOfferMessage));
     }
 
+    // The network layer decrypted the message with the key of its receiver network ID. A message which names another
+    // of our identities as receiver must not open a channel of that identity.
+    @Test
+    void takeOfferMessageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsIgnored() {
+        String otherOwnProfileId = "4444444444444444444444444444444444444444";
+        when(userIdentityService.findUserIdentity(otherOwnProfileId)).thenReturn(Optional.of(mock(UserIdentity.class)));
+
+        service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class),
+                MAKER_PROFILE_ID,
+                networkIdOf(otherOwnProfileId),
+                System.currentTimeMillis()));
+
+        assertTrue(service.getChannels().isEmpty());
+    }
+
     private BisqEasyOpenTradeMessage textMessage(String receiverUserProfileId, long date) {
         return textMessage(TRADE_ID, "textMessageId", receiverUserProfileId, date);
     }
@@ -180,7 +196,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
                 BisqEasyOpenTradeChannel.createId(TRADE_ID),
                 taker,
                 receiverUserProfileId,
-                mock(NetworkId.class),
+                networkIdOf(receiverUserProfileId),
                 "text",
                 Optional.empty(),
                 date,
@@ -192,12 +208,19 @@ public class BisqEasyOpenTradeChannelServiceTest {
     }
 
     private BisqEasyOpenTradeMessage takeOfferMessage(BisqEasyOffer bisqEasyOffer, String receiverUserProfileId, long date) {
+        return takeOfferMessage(bisqEasyOffer, receiverUserProfileId, networkIdOf(receiverUserProfileId), date);
+    }
+
+    private BisqEasyOpenTradeMessage takeOfferMessage(BisqEasyOffer bisqEasyOffer,
+                                                      String receiverUserProfileId,
+                                                      NetworkId receiverNetworkId,
+                                                      long date) {
         return new BisqEasyOpenTradeMessage(TRADE_ID,
                 "messageId",
                 BisqEasyOpenTradeChannel.createId(TRADE_ID),
                 taker,
                 receiverUserProfileId,
-                mock(NetworkId.class),
+                receiverNetworkId,
                 null,
                 Optional.empty(),
                 date,
@@ -206,5 +229,12 @@ public class BisqEasyOpenTradeChannelServiceTest {
                 ChatMessageType.TAKE_BISQ_EASY_OFFER,
                 Optional.of(bisqEasyOffer),
                 new HashSet<>());
+    }
+
+    // The ID of a network ID is the hash of its public key, which is also the profile ID of that key
+    private static NetworkId networkIdOf(String userProfileId) {
+        NetworkId networkId = mock(NetworkId.class);
+        when(networkId.getId()).thenReturn(userProfileId);
+        return networkId;
     }
 }
