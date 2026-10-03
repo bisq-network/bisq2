@@ -49,7 +49,6 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
@@ -64,8 +63,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public final class ConnectionHandshake {
-    // We tolerate up to 2 hours difference in clocks to peer
-    private static final long MAX_CLOCK_OFFSET = TimeUnit.HOURS.toMillis(2);
     @Getter
     private final String id = StringUtils.createUid();
     private final BanList banList;
@@ -353,7 +350,7 @@ public final class ConnectionHandshake {
 
             long signatureDate = request.getSignatureDate();
             long now = System.currentTimeMillis();
-            if (Math.abs(now - signatureDate) > MAX_CLOCK_OFFSET) {
+            if (!OnionAddressValidation.isDateWithinTolerance(signatureDate, now)) {
                 throw new ConnectionException(ONION_ADDRESS_VERIFICATION_FAILED, "Peer's signature date is more than 2 hours off from the current time of our clock: " + new Date(signatureDate));
             }
 
