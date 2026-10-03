@@ -17,6 +17,8 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceProviderInfo;
 import bisq.bonded_roles.market_price.MarketPriceService;
@@ -24,9 +26,15 @@ import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.observable.collection.ObservableSet;
+import bisq.common.observable.map.ObservableHashMap;
+import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.exceptions.TradeProtocolException;
@@ -36,12 +44,16 @@ import bisq.user.reputation.ReputationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -56,16 +68,19 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
     // MarketPrice treats a price older than 12 hours as outdated
     private static final long OUTDATED_AGE = TimeUnit.HOURS.toMillis(12) + TimeUnit.MINUTES.toMillis(1);
 
+    private ServiceProvider serviceProvider;
+    private BisqEasyTrade trade;
     private MarketPriceService marketPriceService;
     private ReputationService reputationService;
     private BisqEasyOffer offer;
     private BisqEasyContract contract;
     private BisqEasyTakeOfferRequestHandler handler;
     private long now;
+    private final ObservableHashMap<Market, MarketPrice> marketPriceByMarket = new ObservableHashMap<>();
 
     @BeforeEach
     void setUp() {
-        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
+        serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         marketPriceService = mock(MarketPriceService.class);
         when(serviceProvider.getBondedRolesService().getMarketPriceService()).thenReturn(marketPriceService);
         now = System.currentTimeMillis();
@@ -81,13 +96,61 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         when(contract.getQuoteSideMonetary()).thenReturn(Fiat.fromFaceValue(100, "USD"));
         when(contract.getTaker().getNetworkId().getId()).thenReturn("taker-profile");
 
-        handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, mock(BisqEasyTrade.class));
+        trade = mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS);
+        handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, trade);
     }
 
     private void setUpMarketPrice(Market market, double price, long timestamp) {
         PriceQuote priceQuote = PriceQuote.fromFiatPrice(price, market.getQuoteCurrencyCode());
         MarketPrice marketPrice = new MarketPrice(priceQuote, timestamp, mock(MarketPriceProviderInfo.class));
         when(marketPriceService.findMarketPrice(market)).thenReturn(Optional.of(marketPrice));
+        marketPriceByMarket.put(market, marketPrice);
+    }
+
+    // A take offer request for 100 USD at a fixed price of 60000 USD, which passes all checks of verify()
+    // that run before the reputation check.
+    private BisqEasyTakeOfferRequest setUpRequestPassingChecksBeforeReputation() {
+        when(marketPriceService.getMarketPriceByCurrencyMap()).thenReturn(marketPriceByMarket);
+        when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
+                .thenReturn(new ObservableSet<>());
+        // The offer is matched through a trade whose contract we have signed.
+        when(serviceProvider.getBisqEasyTradeService().hasSignedTradeWithOffer(offer)).thenReturn(true);
+        when(serviceProvider.getContractService().arePublicKeysMatching(any(PublicKey.class), any(PublicKey.class)))
+                .thenReturn(true);
+        when(serviceProvider.getContractService().arePublicKeysMatching(any(ContractSignatureData.class), any(PublicKey.class)))
+                .thenReturn(true);
+        try {
+            when(serviceProvider.getContractService().verifyContractSignature(any(), any())).thenReturn(true);
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
+        when(serviceProvider.getSettingsService().getMaxTradePriceDeviation().get()).thenReturn(0.05);
+        when(serviceProvider.getSupportService().getBisqEasyMediationRequestService().selectMediator(any(), any(), any()))
+                .thenReturn(Optional.empty());
+        when(trade.isBuyer()).thenReturn(true);
+
+        when(offer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(1_000_000));
+        BitcoinPaymentMethodSpec baseSidePaymentMethodSpec = mock(BitcoinPaymentMethodSpec.class);
+        FiatPaymentMethodSpec quoteSidePaymentMethodSpec = mock(FiatPaymentMethodSpec.class);
+        when(offer.getBaseSidePaymentMethodSpecs()).thenReturn(List.of(baseSidePaymentMethodSpec));
+        when(offer.getQuoteSidePaymentMethodSpecs()).thenReturn(List.of(quoteSidePaymentMethodSpec));
+
+        when(contract.getOffer()).thenReturn(offer);
+        when(contract.getQuoteSideAmount()).thenReturn(1_000_000L);
+        // 100 USD at 60000 USD are 166667 satoshi
+        when(contract.getBaseSideAmount()).thenReturn(166_667L);
+        when(contract.getPriceSpec()).thenReturn(new FixPriceSpec(PriceQuote.fromFiatPrice(60_000, "USD")));
+        when(contract.getBaseSidePaymentMethodSpec()).thenReturn(baseSidePaymentMethodSpec);
+        when(contract.getQuoteSidePaymentMethodSpec()).thenReturn(quoteSidePaymentMethodSpec);
+        when(contract.getMediator()).thenReturn(Optional.empty());
+        NetworkId takersNetworkId = mock(NetworkId.class, RETURNS_DEEP_STUBS);
+        when(takersNetworkId.getId()).thenReturn("taker-profile");
+        when(contract.getTaker().getNetworkId()).thenReturn(takersNetworkId);
+
+        BisqEasyTakeOfferRequest message = mock(BisqEasyTakeOfferRequest.class, RETURNS_DEEP_STUBS);
+        when(message.getBisqEasyContract()).thenReturn(contract);
+        when(message.getSender()).thenReturn(takersNetworkId);
+        return message;
     }
 
     private void setUpEurOffer(long eurPriceTimestamp) {
@@ -95,6 +158,24 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpMarketPrice(EUR_MARKET, 50_000, eurPriceTimestamp);
         // 500 EUR are 0.01 BTC, which are 600 USD and require a score of 120_000
         when(contract.getQuoteSideMonetary()).thenReturn(Fiat.fromFaceValue(500, "EUR"));
+    }
+
+    @Test
+    void verifyRejectsTakeOfferRequestOfTakerWithoutReputation() {
+        BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation();
+        setUpTakersReputationScore(0);
+
+        TradeProtocolException exception = assertThrows(TradeProtocolException.class, () -> handler.verify(message));
+
+        assertEquals(TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW, exception.getTradeProtocolFailure());
+    }
+
+    @Test
+    void verifyAcceptsTakeOfferRequestOfTakerWithReputationCoveringTradeAmount() {
+        BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation();
+        setUpTakersReputationScore(20_000);
+
+        assertDoesNotThrow(() -> handler.verify(message));
     }
 
     private void setUpTakersReputationScore(long totalScore) {
