@@ -205,6 +205,25 @@ class ConfidentialMessageServiceDeliveryTest {
         assertEquals(1, Collections.frequency(listener.confidentialMessages, message));
     }
 
+    // Mailbox messages are sent in two versions, so the node decrypts most of them twice
+    @Test
+    void aMessageReceivedTwiceIsDeliveredOnce() throws Exception {
+        AckMessage message = new AckMessage("message1");
+        AckMessage nextMessage = new AckMessage("message2");
+        RecordingListener listener = new RecordingListener();
+        confidentialMessageService.subscribe(listener);
+
+        receive(message);
+        receive(message);
+        // One thread processes the messages in their order
+        receive(nextMessage);
+        await(() -> listener.messages.contains(nextMessage));
+        awaitNotifications();
+
+        assertEquals(List.of(message, nextMessage), listener.messages);
+        assertEquals(List.of(message, nextMessage), listener.confidentialMessages);
+    }
+
     // The confidential message services must add the listener before the service nodes add it, otherwise it would
     // not receive the processed messages. The service nodes keep it for removeConfidentialMessageListener.
     @Test
