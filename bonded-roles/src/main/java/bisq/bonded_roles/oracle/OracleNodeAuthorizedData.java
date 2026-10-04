@@ -1,0 +1,35 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.bonded_roles.oracle;
+
+import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+
+import java.util.Set;
+
+/**
+ * Authorized data whose authorizing role type is the oracle node: oracle nodes, bonded roles, reputation data, account
+ * timestamps, market prices and burningman data (see docs/specifications/bonded-roles/authorized-data.md). Its static
+ * keys are the oracle node keys.
+ */
+public interface OracleNodeAuthorizedData extends AuthorizedDistributedData {
+    @Override
+    default Set<String> getAuthorizedPublicKeys() {
+        return AuthorizedPubKeys.getOracleNodePubKeys();
+    }
+}
