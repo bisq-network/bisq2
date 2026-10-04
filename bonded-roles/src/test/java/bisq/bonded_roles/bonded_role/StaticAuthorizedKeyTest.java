@@ -47,9 +47,10 @@ import static org.mockito.Mockito.when;
 
 /**
  * Data with staticPublicKeysProvided is authorized by a key which is written in the code. The network layer checks
- * this when it adds the data. It does not check stored data again when it loads a store. So the application checks
- * the key against the static keys of its version: a later version can remove a key, and a node which updates still
- * holds the data which that key published.
+ * this when it adds the data and when it loads a store. The application checks the key against the static keys of its
+ * version as well, and does not rely on the network layer (rule 6 of
+ * docs/specifications/bonded-roles/authorized-data.md): a later version can remove a key, and a node which updates
+ * held the data which that key published.
  * <p>
  * The test uses the real DataService with its store and the real AuthorizedBondedRolesService.
  */
@@ -88,17 +89,21 @@ class StaticAuthorizedKeyTest {
         KeyPair removedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         AuthorizedData rootRole = authorize(createOracleRole(removedKeyPair.getPublic(), true), removedKeyPair);
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, rootRole, removedKeyPair);
-        // The store does not accept the role, because its key is no static key
-        assertThat(store.add(request).isSuccess()).isFalse();
-        // A store which holds the role from an earlier version, in which the key was a static key, loads it unchecked
+        // The store does not accept the role, because its key is no static key. It also removes such a role when it
+        // loads, for example a role of an earlier version, in which the key was a static key. The application does not
+        // rely on that, so the test puts the role into the store directly.
+        assertThat(store.add(request).isAuthorizedKeyNotStatic()).isTrue();
         store.getPersistableStore().getMap().put(request.getStorageKey(), request);
+        assertThat(store.prunePersisted(store.getPersistableStore().getMutableClone()).getMap())
+                .doesNotContainKey(request.getStorageKey());
 
         authorizedBondedRolesService.initialize().join();
 
         assertThat(authorizedBondedRolesService.hasAuthorizedPubKey(rootRole, BondedRoleType.ORACLE_NODE)).isFalse();
         assertThat(authorizedBondedRolesService.getBondedRoles()).isEmpty();
 
-        // The key cannot authorize other roles either. The store accepts them, because they do not claim a static key.
+        // The key cannot authorize other roles either. The store rejects them, because oracle node keys must authorize
+        // bonded roles also without the static flag (rule 16). The application checks them as well.
         AuthorizedBondedRole mediatorRole = new AuthorizedBondedRole("b".repeat(40),
                 "public-key",
                 BondedRoleType.MEDIATOR,
@@ -108,8 +113,10 @@ class StaticAuthorizedKeyTest {
                 createNetworkId(),
                 Optional.empty(),
                 false);
-        assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorize(mediatorRole, removedKeyPair),
-                removedKeyPair)).isSuccess()).isTrue();
+        AuthorizedData authorizedMediatorRole = authorize(mediatorRole, removedKeyPair);
+        assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, removedKeyPair))
+                .isAuthorizedKeyNotStatic()).isTrue();
+        authorizedBondedRolesService.onAuthorizedDataAdded(authorizedMediatorRole);
 
         assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).isEmpty();
     }

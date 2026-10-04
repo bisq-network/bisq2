@@ -62,9 +62,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * that key. This version also accepts the authorized key as publisher, but only if it is a static oracle node key
  * (see rule 4 of docs/specifications/network/storage-ownership.md).
  * <p>
- * The network storage checks only the signature of authorized data without the static flag. So without the limit to
- * static keys, any node could publish an AuthorizedOracleNode with its own key as authorized key and as publisher.
- * Nodes of this version would store and relay it. Nodes of v2.1.13 reject it each time they receive it, so nodes of
+ * The network storage checks only the signature of authorized data without the static flag, unless the type requires
+ * a static key. AuthorizedOracleNode requires one while only static oracle nodes are allowed (rule 16 of
+ * docs/specifications/bonded-roles/authorized-data.md). The owner rule does not depend on that: without its limit to
+ * static keys, any node could publish an AuthorizedOracleNode with its own key as authorized key and as publisher, once
+ * the type does not require a static key. Nodes of v2.1.13 reject such an entry each time they receive it, so nodes of
  * this version would send it to them again with every inventory response.
  * <p>
  * The tests use the real store of the DataService.
@@ -105,15 +107,39 @@ class AuthorizedOracleNodeOwnerTest {
         dataService.shutdown();
     }
 
-    // As oracle nodes publish it, and as nodes of v2.1.13 and earlier require it
+    // As oracle nodes publish it, and as nodes of v2.1.13 and earlier require it. The authorized key is an oracle node
+    // key, and the publisher is the key of the network ID.
     @Test
     void oracleNodePublishedByTheKeyOfItsNetworkIdIsAccepted() throws GeneralSecurityException {
+        DevMode.setDevMode(true);
+        try {
+            KeyPair staticKeyPair = getStaticKeyPair();
+            AuthorizedData publication = authorize(createOracleNode(staticKeyPair.getPublic(), false), staticKeyPair);
+
+            DataStorageResult result = store.add(AddAuthenticatedDataRequest.from(store, publication,
+                    identityKeyPair));
+
+            assertThat(result.isSuccess()).as(result.toString()).isTrue();
+            assertThat(store.getPersistableStore().getMap()).hasSize(1);
+        } finally {
+            DevMode.setDevMode(false);
+        }
+    }
+
+    // Any node can create an oracle node of its own network ID and authorize it with its own key, without the static
+    // flag. The store rejects it, because only the oracle node keys may authorize an oracle node (rules 2 and 16 of
+    // docs/specifications/bonded-roles/authorized-data.md). The check concerns the authorized key, which the
+    // authorization signature binds to the data, not the publisher. Nodes of earlier versions accept and relay such an
+    // oracle node, so the rejection is no severe failure.
+    @Test
+    void oracleNodeOfAnAuthorizedKeyWhichIsNoStaticKeyIsRejected() throws GeneralSecurityException {
         AuthorizedData publication = authorize(createOracleNode(authorizedKeyPair.getPublic(), false), authorizedKeyPair);
 
         DataStorageResult result = store.add(AddAuthenticatedDataRequest.from(store, publication, identityKeyPair));
 
-        assertThat(result.isSuccess()).as(result.toString()).isTrue();
-        assertThat(store.getPersistableStore().getMap()).hasSize(1);
+        assertThat(result.isAuthorizedKeyNotStatic()).as(result.toString()).isTrue();
+        assertThat(result.isSevereFailure()).as(result.toString()).isFalse();
+        assertThat(store.getPersistableStore().getMap()).isEmpty();
     }
 
     @Test
@@ -186,8 +212,7 @@ class AuthorizedOracleNodeOwnerTest {
     void oracleNodePublishedByAStaticAuthorizedKeyIsAccepted(boolean staticPublicKeysProvided) throws GeneralSecurityException {
         DevMode.setDevMode(true);
         try {
-            KeyPair staticKeyPair = new KeyPair(KeyGeneration.generatePublic(Hex.decode(DEV_PUBLIC_KEY)),
-                    KeyGeneration.generatePrivate(Hex.decode(DEV_PRIVATE_KEY)));
+            KeyPair staticKeyPair = getStaticKeyPair();
             AuthorizedData publication = authorize(createOracleNode(staticKeyPair.getPublic(), staticPublicKeysProvided),
                     staticKeyPair);
 
@@ -229,6 +254,12 @@ class AuthorizedOracleNodeOwnerTest {
                 "oracle",
                 "signature",
                 staticPublicKeysProvided);
+    }
+
+    // A static key in dev mode
+    private static KeyPair getStaticKeyPair() throws GeneralSecurityException {
+        return new KeyPair(KeyGeneration.generatePublic(Hex.decode(DEV_PUBLIC_KEY)),
+                KeyGeneration.generatePrivate(Hex.decode(DEV_PRIVATE_KEY)));
     }
 
     private static AuthorizedData authorize(AuthorizedOracleNode data, KeyPair keyPair) throws GeneralSecurityException {

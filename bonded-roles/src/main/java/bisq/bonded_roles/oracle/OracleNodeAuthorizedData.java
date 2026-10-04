@@ -18,6 +18,7 @@
 package bisq.bonded_roles.oracle;
 
 import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 
 import java.util.Set;
@@ -31,5 +32,13 @@ public interface OracleNodeAuthorizedData extends AuthorizedDistributedData {
     @Override
     default Set<String> getAuthorizedPublicKeys() {
         return AuthorizedPubKeys.getOracleNodePubKeys();
+    }
+
+    // While only static oracle nodes are allowed, only the oracle node keys may authorize the data, with and without
+    // the static flag (rule 10). So the network storage rejects the data of other keys when it adds it, and removes
+    // such data when it loads a store (rules 2, 4, 5 and 16 of docs/specifications/bonded-roles/authorized-data.md).
+    @Override
+    default boolean isStaticPublicKeyRequired() {
+        return AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES;
     }
 }
