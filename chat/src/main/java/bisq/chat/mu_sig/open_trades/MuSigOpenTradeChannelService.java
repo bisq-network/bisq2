@@ -262,8 +262,26 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                         }
                         return Optional.empty();
                     })
-                    .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+                    .ifPresent(channel -> {
+                        if (isReceivedMessageOfChannel(channel, message)) {
+                            addMessageAndProcessQueuedReactions(message, channel);
+                        } else {
+                            pendingMessages.remove(message);
+                        }
+                    });
         }
+    }
+
+    // The sender chooses the trade ID of its message. A message with the trade ID of another trade does not belong to
+    // this trade, and the mediator ignores a mediation request which carries such a message (rule 5 of
+    // docs/specifications/chat/private-channel-membership.md).
+    @Override
+    protected boolean isMessageOfChannel(MuSigOpenTradeChannel channel, MuSigOpenTradeMessage message) {
+        boolean isMessageOfTrade = channel.getTradeId().equals(message.getTradeId());
+        if (!isMessageOfTrade) {
+            log.warn("Ignoring a trade chat message whose trade ID is not the trade ID of channel {}", channel.getId());
+        }
+        return isMessageOfTrade;
     }
 
     @Override
