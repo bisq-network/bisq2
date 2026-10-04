@@ -41,10 +41,13 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -58,7 +61,10 @@ public abstract class PrivateChatChannelService<
         C extends PrivateChatChannel<M>,
         S extends PersistableStore<S>
         > extends ChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
-    private final Set<R> unprocessedReactions = new HashSet<>();
+    // In arrival order, bounded (see docs/specifications/chat/pending-reactions.md). Access is synchronized on the set.
+    @VisibleForTesting
+    public static final int MAX_PENDING_REACTIONS = 100;
+    private final Set<R> unprocessedReactions = new LinkedHashSet<>();
 
     public PrivateChatChannelService(NetworkService networkService,
                                      UserService userService,
@@ -83,7 +89,9 @@ public abstract class PrivateChatChannelService<
     @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeConfidentialMessageListener(this);
-        unprocessedReactions.clear();
+        synchronized (unprocessedReactions) {
+            unprocessedReactions.clear();
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -333,27 +341,62 @@ public abstract class PrivateChatChannelService<
     }
 
     protected void processMessageReaction(R messageReaction) {
+        if (applyMessageReaction(messageReaction)) {
+            return;
+        }
+        addPendingReaction(messageReaction);
+        // Another thread can have added the message after the first attempt, without seeing the pending reaction
+        if (applyMessageReaction(messageReaction)) {
+            removePendingReaction(messageReaction);
+        }
+    }
+
+    // Returns false only if the channel or the message is missing; a reaction of a non-peer is ignored (true)
+    private boolean applyMessageReaction(R messageReaction) {
         Optional<C> channel = findChannel(messageReaction.getChatChannelId());
         if (channel.isPresent() && !isSentToChannel(channel.get(), messageReaction.getSenderUserProfile().getId(),
                 messageReaction.getReceiverUserProfileId())) {
-            return;
+            return true;
         }
-        channel
-                .flatMap(foundChannel -> foundChannel.getChatMessages().stream()
-                        .filter(message -> message.getId().equals(messageReaction.getChatMessageId()))
-                        .findFirst())
-                .ifPresentOrElse(
-                        message -> addMessageReaction(messageReaction, message),
-                        () -> unprocessedReactions.add(messageReaction));
+        Optional<M> message = channel.flatMap(foundChannel -> foundChannel.getChatMessages().stream()
+                .filter(chatMessage -> chatMessage.getId().equals(messageReaction.getChatMessageId()))
+                .findFirst());
+        message.ifPresent(chatMessage -> addMessageReaction(messageReaction, chatMessage));
+        return message.isPresent();
+    }
+
+    private void addPendingReaction(R messageReaction) {
+        synchronized (unprocessedReactions) {
+            if (unprocessedReactions.contains(messageReaction)) {
+                return;
+            }
+            if (unprocessedReactions.size() >= MAX_PENDING_REACTIONS) {
+                Iterator<R> iterator = unprocessedReactions.iterator();
+                iterator.next();
+                iterator.remove();
+                log.warn("We drop the oldest pending reaction because the limit of {} pending reactions is reached",
+                        MAX_PENDING_REACTIONS);
+            }
+            unprocessedReactions.add(messageReaction);
+        }
+    }
+
+    private void removePendingReaction(R messageReaction) {
+        synchronized (unprocessedReactions) {
+            unprocessedReactions.remove(messageReaction);
+        }
     }
 
     protected void processQueuedReactions() {
+        List<R> pendingReactions;
+        synchronized (unprocessedReactions) {
+            pendingReactions = new ArrayList<>(unprocessedReactions);
+        }
         long now = System.currentTimeMillis();
-        unprocessedReactions.forEach(reaction -> {
-            unprocessedReactions.remove(reaction);
-            long age = now - reaction.getDate();
-            if (age < reaction.getMetaData().getTtl()) {
-                processMessageReaction(reaction);
+        pendingReactions.forEach(reaction -> {
+            boolean isExpired = now - reaction.getDate() >= reaction.getMetaData().getTtl();
+            if (isExpired || applyMessageReaction(reaction)) {
+                removePendingReaction(reaction);
             }
         });
     }
