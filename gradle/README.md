@@ -125,6 +125,19 @@ Checksum fallback artifacts must be reviewed in `gradle/dependency-checksum-fall
 Keep the allowlist exact and sorted. `verifyDependencySignaturePolicy` fails when a fallback artifact is missing from
 the allowlist, when an allowlist entry is stale, or when an entry has no rationale.
 
+Gradle verifies an artifact by its checksum only if the artifact has no signature or if every key which signed it is
+ignored. The policy treats a checksum as fallback if it has a reason (Gradle writes `Artifact is not signed`, `A key
+couldn't be downloaded` or `PGP signature verification failed!`) or if neither a `pgp` entry nor a `trusted-key` entry
+for the module names a key which is not ignored. It checks every entry in `gradle/verification-metadata.xml`, not only
+the resolved dependency graph, because Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
+against it. Entries for versions no build uses therefore also need an allowlist entry until they are removed.
+
+Gradle writes a reason once and keeps it when it regenerates the metadata. After `refreshDependencyVerificationKeyring`
+adds a key, remove the key from `ignored-keys`, delete the component entries of the artifacts it signs and run
+`resolveAndVerifyDependencies --write-verification-metadata pgp,sha256` so Gradle writes them again with the current
+result. Do not remove reasons by hand: the policy cannot see which key signed an artifact, so a wrongly removed reason
+can hide a checksum-only artifact.
+
 Executable Maven artifacts, such as `protoc` and `protoc-gen-grpc-java`, must also have explicit entries in
 `gradle/verification-metadata.xml` for the resolved classifier. `verifyDependencySignaturePolicy` fails when a resolved
 executable is covered only by a broad trusted-key rule or when executable metadata remains for an older unresolved
