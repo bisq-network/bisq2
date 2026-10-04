@@ -22,6 +22,7 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -92,31 +93,39 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
         if (isSupported) {
             Boolean useTransientNotifications = settingsService.getCookie().asBoolean(CookieKey.USE_TRANSIENT_NOTIFICATIONS)
                     .orElse(true);
-
-            List<String> command = new ArrayList<>();
-            command.add("notify-send");
-
-            if (iconPath != null) {
-                command.add("-i");
-                command.add(iconPath);
-            }
-
-            // notify-send does not support removing notifications. To avoid that we fill up the notification center we
-            // can set the notification transient.
-            if (useTransientNotifications) {
-                command.add("--hint=int:transient:1");
-            }
-
-            command.add("--app-name");
-            command.add("Bisq");
-
-            command.add(title);
-            command.add(message);
+            List<String> command = createCommand(iconPath, useTransientNotifications, title, message);
             try {
                 Runtime.getRuntime().exec(command.toArray(new String[0]));
             } catch (IOException e) {
                 throw new RuntimeException("Unable to notify with Notify OSD", e);
             }
         }
+    }
+
+    @VisibleForTesting
+    static List<String> createCommand(@Nullable String iconPath,
+                                      boolean useTransientNotifications,
+                                      String title,
+                                      String message) {
+        List<String> command = new ArrayList<>();
+        command.add("notify-send");
+
+        if (iconPath != null) {
+            command.add("-i");
+            command.add(iconPath);
+        }
+
+        // notify-send does not support removing notifications. To avoid that we fill up the notification center we
+        // can set the notification transient.
+        if (useTransientNotifications) {
+            command.add("--hint=int:transient:1");
+        }
+
+        command.add("--app-name");
+        command.add("Bisq");
+
+        command.add(title);
+        command.add(message);
+        return command;
     }
 }
