@@ -17,9 +17,8 @@
 
 package bisq.user.reputation.data;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufException;
@@ -28,7 +27,6 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -39,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
@@ -47,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData, PublishDateAware {
+public final class AuthorizedProofOfBurnData implements OracleNodeAuthorizedData, PublishDateAware {
     private static final int VERSION = 1;
 
     public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, AuthorizedProofOfBurnData.class.getSimpleName());
@@ -162,15 +159,6 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     @Override
     public boolean isLegacyOwnerAccepted() {
         return true;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
     }
 
     @Override

@@ -31,6 +31,14 @@ public interface AuthorizedDistributedData extends DistributedData {
         return false;
     }
 
+    // Whether only the static keys of the type (getAuthorizedPublicKeys) may authorize its data, also without the
+    // static flag (staticPublicKeysProvided). The type decides it, not the data, because the publisher sets the fields
+    // of the data. The network storage then rejects data of other keys when it adds it, and removes such data when it
+    // loads a store (see docs/specifications/bonded-roles/authorized-data.md).
+    default boolean isStaticPublicKeyRequired() {
+        return false;
+    }
+
     // Oracle and seed nodes of earlier versions published data of some types with the key pair of their network
     // identity instead of their authorized key pair. For these types, data created before
     // AuthorizedData.LEGACY_OWNER_CUTOFF_DATE can have another owner than its authorized key. Can be removed when no

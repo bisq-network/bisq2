@@ -49,6 +49,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.Arrays;
@@ -69,10 +70,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * simulate data of a newer version: its payload contains field 3, which the model of this node does not know. Under the
  * rules for new fields, the newer version annotates field 3 with @ExcludeForHash, so that the hash serialization, and
  * with it the storage key and the signature of the add request, is the same on nodes which do not know the field.
+ * <p>
+ * Authorized data is valid only inside AuthorizedData, and other data only inside the other holders. So the tests of
+ * AuthorizedData use their own payload type, AuthorizedPayloadData, with its own protobuf type.
  */
 public class DistributedDataAnyTest {
     private static final String KEY = "content";
     private static final long VALUE = 5;
+    // The field of AuthorizedPayloadData which is annotated with @ExcludeForHash
+    private static final String NAME = "name";
     private static final KeyPair KEY_PAIR = KeyGeneration.generateDefaultEcKeyPair();
     private static final byte[] PUBLIC_KEY_BYTES = KEY_PAIR.getPublic().getEncoded();
     private static final byte[] AUTHORIZATION_SIGNATURE = filledBytes(70, 0x22);
@@ -82,6 +88,8 @@ public class DistributedDataAnyTest {
     static void registerResolver() {
         DistributedDataResolver.addResolver("common.StringLongPair", PayloadData.class, PayloadData::fromAny);
         DistributedDataResolver.addResolver("common.Country", NestedPayloadData.class, NestedPayloadData::fromAny);
+        DistributedDataResolver.addResolver("common.Region", AuthorizedPayloadData.class,
+                AuthorizedPayloadData::fromAny);
     }
 
     @Test
@@ -103,15 +111,16 @@ public class DistributedDataAnyTest {
     @Test
     public void authorizedDataKeepsFieldUnknownToThisNode()
             throws InvalidProtocolBufferException, UnresolvableProtobufException {
-        bisq.network.protobuf.AuthenticatedData proto = getAuthorizedDataProto(getNewerAny("new field"));
+        bisq.network.protobuf.AuthenticatedData proto = getAuthorizedDataProto(getNewerAuthorizedAny("new field"));
 
         AuthenticatedData received = AuthenticatedData.fromProto(proto);
 
-        assertEquals(new PayloadData(KEY, VALUE), received.getDistributedData());
+        assertEquals(new AuthorizedPayloadData(KEY, NAME), received.getDistributedData());
         assertArrayEquals(proto.toByteArray(), received.serialize());
         assertArrayEquals(proto.toByteArray(), relay(received).serialize());
         // serializeForHash() of AuthorizedData leaves out the signature as well
-        bisq.network.protobuf.AuthenticatedData hashSerialization = getAuthorizedDataProto(getHashSerializationAny())
+        bisq.network.protobuf.AuthenticatedData hashSerialization =
+                getAuthorizedDataProto(getAuthorizedHashSerializationAny())
                 .toBuilder()
                 .setAuthorizedData(proto.getAuthorizedData().toBuilder().clearSignature())
                 .build();
@@ -226,9 +235,14 @@ public class DistributedDataAnyTest {
 
         DefaultAuthenticatedData created = new DefaultAuthenticatedData(payloadData);
         assertEquals(completeAny, created.toProto(false).getDistributedData());
-        assertEquals(completeAny,
-                new AuthorizedData(payloadData, KEY_PAIR.getPublic()).toProto(false).getDistributedData());
         assertEquals(completeAny, new AddAppendOnlyDataRequest(payloadData).toValueProto(false).getAppendOnlyData());
+        Any completeAuthorizedAny = Any.pack(bisq.common.protobuf.Region.newBuilder()
+                .setCode(KEY)
+                .setName(NAME)
+                .build());
+        AuthorizedData createdAuthorizedData = new AuthorizedData(new AuthorizedPayloadData(KEY, NAME),
+                KEY_PAIR.getPublic());
+        assertEquals(completeAuthorizedAny, createdAuthorizedData.toProto(false).getDistributedData());
 
         // A copy received from a peer is equal to the created data, a copy with more fields is not
         assertEquals(created, AuthenticatedData.fromProto(created.toProto(false)));
@@ -279,12 +293,20 @@ public class DistributedDataAnyTest {
         AuthenticatedData received = AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any));
         assertArrayEquals(getDefaultAuthenticatedDataProto(getHashSerializationAny()).toByteArray(),
                 received.serializeForHash());
+
+        Any authorizedAny = getNewerAuthorizedAny("x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES - 3));
+        assertEquals(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES,
+                authorizedAny.unpack(bisq.common.protobuf.Region.class).getUnknownFields().getSerializedSize());
+        assertAuthorizedDataKeeps(authorizedAny);
     }
 
     @Test
     public void holdersRejectPayloadAboveExtraByteLimit() {
         assertAllHoldersReject(getNewerAny("x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES - 2)));
         assertAllHoldersReject(getNewerAny("x".repeat(3_000_000)));
+        assertAuthorizedDataRejects(getNewerAuthorizedAny(
+                "x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES - 2)));
+        assertAuthorizedDataRejects(getNewerAuthorizedAny("x".repeat(3_000_000)));
     }
 
     @Test
@@ -312,23 +334,38 @@ public class DistributedDataAnyTest {
         assertTrue(any.getValue().size() > DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES);
 
         assertAllHoldersKeep(any);
+        assertAuthorizedDataKeeps(Any.pack(bisq.common.protobuf.Region.newBuilder()
+                .setCode(KEY)
+                .setName("x".repeat(DistributedDataAny.MAX_EXTRA_PAYLOAD_BYTES + 1))
+                .build()));
     }
 
     @Test
     public void holdersRejectRedundantKnownFieldsWithoutUnknownFields() throws Exception {
-        Any original = new PayloadData(KEY, VALUE).toAny(false);
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        CodedOutputStream protobuf = CodedOutputStream.newInstance(output);
-        // A singular string is overwritten by its last occurrence, so this large first value is lost on decoding.
-        protobuf.writeString(1, "x".repeat(3_000_000));
-        protobuf.writeRawBytes(original.getValue());
-        protobuf.flush();
-        Any padded = original.toBuilder().setValue(ByteString.copyFrom(output.toByteArray())).build();
+        Any padded = withRedundantFirstField(new PayloadData(KEY, VALUE).toAny(false));
         bisq.common.protobuf.StringLongPair decoded = padded.unpack(bisq.common.protobuf.StringLongPair.class);
         assertEquals(KEY, decoded.getKey());
         assertEquals(0, decoded.getUnknownFields().getSerializedSize());
 
         assertAllHoldersReject(padded);
+
+        Any paddedAuthorized = withRedundantFirstField(new AuthorizedPayloadData(KEY, NAME).toAny(false));
+        bisq.common.protobuf.Region decodedAuthorized = paddedAuthorized.unpack(bisq.common.protobuf.Region.class);
+        assertEquals(KEY, decodedAuthorized.getCode());
+        assertEquals(0, decodedAuthorized.getUnknownFields().getSerializedSize());
+
+        assertAuthorizedDataRejects(paddedAuthorized);
+    }
+
+    // Field 1 of both payloads is a singular string. It is overwritten by its last occurrence, so the large first value
+    // is lost on decoding.
+    private static Any withRedundantFirstField(Any original) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        CodedOutputStream protobuf = CodedOutputStream.newInstance(output);
+        protobuf.writeString(1, "x".repeat(3_000_000));
+        protobuf.writeRawBytes(original.getValue());
+        protobuf.flush();
+        return original.toBuilder().setValue(ByteString.copyFrom(output.toByteArray())).build();
     }
 
     @Test
@@ -400,13 +437,15 @@ public class DistributedDataAnyTest {
         assertArrayEquals(received.serialize(), restored.getMap().get(received.getStorageKey()).serialize());
     }
 
+    // The holders of data which is no authorized data. AuthorizedData holds AuthorizedPayloadData (see
+    // assertAuthorizedDataKeeps). The limit of nested unknown fields is a rule of DistributedDataAny, which all holders
+    // use, so only the holders of the nested payload test it.
     private static void assertAllHoldersKeep(Any any) throws UnresolvableProtobufException {
-        for (bisq.network.protobuf.AuthenticatedData proto : List.of(getDefaultAuthenticatedDataProto(any),
-                getAuthorizedDataProto(any))) {
-            AuthenticatedData received = AuthenticatedData.fromProto(proto);
-            assertEquals(any, received.toProto(false).getDistributedData());
-            assertArrayEquals(received.serialize(), received.encodeCanonical(EncodingPurpose.SIGNATURE));
-        }
+        AuthenticatedData receivedAuthenticatedData =
+                AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any));
+        assertEquals(any, receivedAuthenticatedData.toProto(false).getDistributedData());
+        assertArrayEquals(receivedAuthenticatedData.serialize(),
+                receivedAuthenticatedData.encodeCanonical(EncodingPurpose.SIGNATURE));
         AddAppendOnlyDataRequest received = AddAppendOnlyDataRequest.fromProto(
                 bisq.network.protobuf.AddAppendOnlyDataRequest.newBuilder().setAppendOnlyData(any).build());
         assertEquals(any, received.toValueProto(false).getAppendOnlyData());
@@ -418,11 +457,20 @@ public class DistributedDataAnyTest {
                         () -> AuthenticatedData.fromProto(getDefaultAuthenticatedDataProto(any))).getCause());
         assertInstanceOf(IllegalArgumentException.class,
                 assertThrows(UnresolvableProtobufException.class,
-                        () -> AuthenticatedData.fromProto(getAuthorizedDataProto(any))).getCause());
-        assertInstanceOf(IllegalArgumentException.class,
-                assertThrows(UnresolvableProtobufException.class,
                         () -> AddAppendOnlyDataRequest.fromProto(bisq.network.protobuf.AddAppendOnlyDataRequest
                                 .newBuilder().setAppendOnlyData(any).build())).getCause());
+    }
+
+    private static void assertAuthorizedDataKeeps(Any any) throws UnresolvableProtobufException {
+        AuthenticatedData received = AuthenticatedData.fromProto(getAuthorizedDataProto(any));
+        assertEquals(any, received.toProto(false).getDistributedData());
+        assertArrayEquals(received.serialize(), received.encodeCanonical(EncodingPurpose.SIGNATURE));
+    }
+
+    private static void assertAuthorizedDataRejects(Any any) {
+        assertInstanceOf(IllegalArgumentException.class,
+                assertThrows(UnresolvableProtobufException.class,
+                        () -> AuthenticatedData.fromProto(getAuthorizedDataProto(any))).getCause());
     }
 
     private static UnknownFieldSet getUnknownBytes(int length) {
@@ -457,6 +505,28 @@ public class DistributedDataAnyTest {
     private static Any getHashSerializationAny() {
         return Any.pack(bisq.common.protobuf.StringLongPair.newBuilder()
                 .setKey(KEY)
+                .build());
+    }
+
+    // The authorized payload as a newer node sends it: with field 3, which this node does not know
+    private static Any getNewerAuthorizedAny(String field3) {
+        UnknownFieldSet newField = UnknownFieldSet.newBuilder()
+                .addField(3, UnknownFieldSet.Field.newBuilder()
+                        .addLengthDelimited(ByteString.copyFromUtf8(field3))
+                        .build())
+                .build();
+        return Any.pack(bisq.common.protobuf.Region.newBuilder()
+                .setCode(KEY)
+                .setName(NAME)
+                .setUnknownFields(newField)
+                .build());
+    }
+
+    // The authorized payload in the hash serialization: without name and field 3, which are annotated with
+    // @ExcludeForHash
+    private static Any getAuthorizedHashSerializationAny() {
+        return Any.pack(bisq.common.protobuf.Region.newBuilder()
+                .setCode(KEY)
                 .build());
     }
 
@@ -529,8 +599,7 @@ public class DistributedDataAnyTest {
 
     // Uses a nested model whose decoder drops unknown fields, as production payload models do.
     // Names the test key as its owner, so that requests which this key publishes are valid
-    private static final class NestedPayloadData implements AuthorizedDistributedData, AppendOnlyData,
-            OwnershipVerifiableData {
+    private static final class NestedPayloadData implements AppendOnlyData, OwnershipVerifiableData {
         private final String code;
         @ExcludeForHash
         private final String name;
@@ -605,8 +674,7 @@ public class DistributedDataAnyTest {
     // annotated with @ExcludeForHash, like a field which was added under the rules for new fields.
     @EqualsAndHashCode
     // Names the test key as its owner, so that requests which this key publishes are valid
-    private static final class PayloadData implements AuthorizedDistributedData, AppendOnlyData,
-            OwnershipVerifiableData {
+    private static final class PayloadData implements AppendOnlyData, OwnershipVerifiableData {
         private final String key;
         @ExcludeForHash
         private final long value;
@@ -672,6 +740,51 @@ public class DistributedDataAnyTest {
                 case TRADE_CONTRACT -> SCHEMA_FOR_HASH;
             };
             return canonicalEncoder.encode(this, schema, encodingPurpose);
+        }
+    }
+
+    // Authorized data of a higher-level module as this node knows it. It serializes as common.Region. name is annotated
+    // with @ExcludeForHash, like a field which was added under the rules for new fields.
+    @EqualsAndHashCode
+    private static final class AuthorizedPayloadData implements AuthorizedDistributedData {
+        private final String code;
+        @ExcludeForHash
+        private final String name;
+        private final transient MetaData metaData = new MetaData(MetaData.TTL_10_DAYS, "AuthorizedPayloadData");
+
+        private AuthorizedPayloadData(String code, String name) {
+            this.code = code;
+            this.name = name;
+        }
+
+        private static AuthorizedPayloadData fromAny(Any any) throws UnresolvableProtobufException {
+            try {
+                bisq.common.protobuf.Region proto = any.unpack(bisq.common.protobuf.Region.class);
+                return new AuthorizedPayloadData(proto.getCode(), proto.getName());
+            } catch (InvalidProtocolBufferException e) {
+                throw new UnresolvableProtobufMessageException(e);
+            }
+        }
+
+        @Override
+        public void verify() {
+        }
+
+        @Override
+        public bisq.common.protobuf.Region.Builder getBuilder(boolean serializeForHash) {
+            return bisq.common.protobuf.Region.newBuilder()
+                    .setCode(code)
+                    .setName(name);
+        }
+
+        @Override
+        public bisq.common.protobuf.Region toProto(boolean serializeForHash) {
+            return unsafeToProto(serializeForHash);
+        }
+
+        @Override
+        public MetaData getMetaData() {
+            return metaData;
         }
     }
 }

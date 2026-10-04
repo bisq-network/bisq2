@@ -62,7 +62,7 @@ JAVA_OPTS="
 
 Currently `[PUB_KEY]` must be one of the keys in `AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS`. Otherwise the oracle node
 does not start, because other nodes accept only oracle nodes with such a key
-(`AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES` is `true`).
+(`application.bondedRoles.onlyStaticOracleNodes` is `true`).
 
 ### Part 3: Finalize install
 
