@@ -37,6 +37,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -362,7 +363,7 @@ public class Bisq1BridgeRequestService implements Service,
         // initialization first. This explicit replay makes recovery independent of the initialization order and is
         // idempotent. Read the authorized wrappers here because their outer signing key is required for ownership.
         networkService.getDataService().ifPresent(dataService ->
-                dataService.getAuthorizedData().forEach(this::onAuthorizedDataAdded));
+                StartupReplay.forEach(dataService.getAuthorizedData(), this::onAuthorizedDataAdded));
     }
 
     private void processAuthorizeAccountAgeRequest(PublicKey senderPublicKey,
