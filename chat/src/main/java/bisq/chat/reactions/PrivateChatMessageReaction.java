@@ -32,6 +32,8 @@ import lombok.ToString;
 
 import java.security.PublicKey;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
@@ -71,6 +73,9 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
         // Unmodified clients create the ID of a reaction as a UUID.
         NetworkDataValidation.validateId(id);
         NetworkDataValidation.validateId(getChatMessageId());
+        // The key of receiverNetworkId decrypts the reaction, so the receiver is the profile of that key
+        checkArgument(receiverUserProfileId.equals(receiverNetworkId.getId()),
+                "receiverUserProfileId is not the ID of the key of receiverNetworkId");
     }
 
     @Override

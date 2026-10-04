@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -123,12 +124,14 @@ class MuSigOpenTradeChannelServiceTest {
     }
 
     // The network layer decrypted the message with the key of its receiver network ID, which belongs to another of our
-    // identities. The message must not be added to the trade chat of the identity which it names as receiver.
+    // identities. The message must not be added to the trade chat of the identity which it names as receiver. Such a
+    // message fails at parsing (PrivateChatMessage.verify), so it never reaches the service.
     @Test
     void messageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsNotAdded() {
         MuSigOpenTradeChannel channel = createChannel();
 
-        service.onMessage(textMessage(taker, TRADE_ID, "message", networkIdOf(OTHER_OWN_PROFILE_ID)));
+        assertThrows(IllegalArgumentException.class,
+                () -> textMessage(taker, TRADE_ID, "message", networkIdOf(OTHER_OWN_PROFILE_ID)));
 
         assertTrue(channel.getChatMessages().isEmpty());
     }
@@ -136,7 +139,8 @@ class MuSigOpenTradeChannelServiceTest {
     @Test
     void pendingMessageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsNotAddedWhenTheChannelIsCreated() {
         MuSigOpenTradeMessage messageOfPeer = textMessage(taker, TRADE_ID, "messageOfPeer");
-        service.onMessage(textMessage(taker, TRADE_ID, "messageToOtherIdentity", networkIdOf(OTHER_OWN_PROFILE_ID)));
+        assertThrows(IllegalArgumentException.class,
+                () -> textMessage(taker, TRADE_ID, "messageToOtherIdentity", networkIdOf(OTHER_OWN_PROFILE_ID)));
         service.onMessage(messageOfPeer);
 
         MuSigOpenTradeChannel channel = createChannel();
