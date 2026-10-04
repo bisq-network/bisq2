@@ -194,14 +194,6 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         subscriptions.add(EasyBind.subscribe(model.getUseFixPrice(), useFixPrice ->
                 UIScheduler.run(this::updatePriceSpec).after(100)));
 
-        subscriptions.add(EasyBind.subscribe(model.getIsOverlayVisible(), isOverlayVisible -> {
-            if (isOverlayVisible) {
-                root.setOnKeyPressed(controller::onKeyPressedWhileShowingOverlay);
-            } else {
-                root.setOnKeyPressed(null);
-            }
-        }));
-
         percentagePriceButton.setOnAction(e -> controller.usePercentagePrice());
         fixedPriceButton.setOnAction(e -> controller.useFixedPrice());
         showLearnWhyButton.setOnAction(e -> controller.onShowOverlay());
@@ -241,8 +233,6 @@ public class MuSigCreateOfferPriceView extends View<VBox, MuSigCreateOfferPriceM
         fixedPriceButton.setOnAction(null);
         showLearnWhyButton.setOnAction(null);
         closeOverlayButton.setOnAction(null);
-
-        root.setOnKeyPressed(null);
 
         Parent node = root;
         while (node.getParent() != null) {
