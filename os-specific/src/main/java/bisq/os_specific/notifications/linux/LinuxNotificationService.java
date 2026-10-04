@@ -124,6 +124,9 @@ public class LinuxNotificationService implements OsSpecificNotificationService {
         command.add("--app-name");
         command.add("Bisq");
 
+        // The title and the message can come from other users, for example a chat message, and can start with "-".
+        // notify-send reads such an argument as an option, so "--" ends the options before them.
+        command.add("--");
         command.add(title);
         command.add(message);
         return command;
