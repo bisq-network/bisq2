@@ -53,7 +53,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * While only static oracle nodes are allowed (AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES), only
+ * While only static oracle nodes are allowed (OnlyStaticOracleNodes), only
  * the static oracle node keys of this version may act as an oracle node. A bonded role of type ORACLE_NODE does not
  * give this authority (see docs/specifications/bonded-roles/authorized-data.md).
  */

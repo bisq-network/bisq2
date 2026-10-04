@@ -18,6 +18,7 @@
 package bisq.bonded_roles.bonded_role;
 
 import bisq.bonded_roles.BondedRoleType;
+import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -54,9 +55,17 @@ import static org.mockito.Mockito.when;
  * nodes publish them with their authorized key pair, which owns them. Applications use only the publication of the
  * owner (see docs/specifications/network/storage-ownership.md).
  * <p>
- * The test uses the real DataService with its stores and the real AuthorizedBondedRolesService.
+ * The test uses the real DataService with its stores and the real AuthorizedBondedRolesService. The store accepts bonded
+ * roles only from the oracle node keys (rule 16 of docs/specifications/bonded-roles/authorized-data.md). In dev mode
+ * these are the dev keys of AuthorizedPubKeys, whose private keys are known.
  */
 class AuthorizedBondedRolePublisherTest {
+    // The first two of the dev keys of AuthorizedPubKeys.DEV_PUB_KEYS
+    private static final String DEV_PRIVATE_KEY_1 = "30818d020100301006072a8648ce3d020106052b8104000a0476307402010104205b4479d165652fe5410419b1d03c937956be0e1c4f46e9fbe86c66776529d81ca00706052b8104000aa144034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091";
+    private static final String DEV_PUBLIC_KEY_1 = "3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091";
+    private static final String DEV_PRIVATE_KEY_2 = "30818d020100301006072a8648ce3d020106052b8104000a0476307402010104201c6685cef332eecfddb253b601c0ed89e7c822d2d03c53d5a720a860b5dc9419a00706052b8104000aa144034200044b3a5f869a4a4346fb37ca70991ff55f3ef4f0ed3a31b51238aee75858af48fddaeafb11b9c59b3e9f551ee9022a767e5f39dcea2b4a96e1c610a5f1b1a1878e";
+    private static final String DEV_PUBLIC_KEY_2 = "3056301006072a8648ce3d020106052b8104000a034200044b3a5f869a4a4346fb37ca70991ff55f3ef4f0ed3a31b51238aee75858af48fddaeafb11b9c59b3e9f551ee9022a767e5f39dcea2b4a96e1c610a5f1b1a1878e";
+
     @TempDir
     Path tempDir;
 
@@ -74,8 +83,11 @@ class AuthorizedBondedRolePublisherTest {
     void setUp() throws GeneralSecurityException {
         StorableTypesRegistry.register(AuthorizedBondedRole.class, AuthorizedBondedRole.META_DATA);
         // The static oracle node keys of this version
-        authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        otherOracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        DevMode.setDevMode(true);
+        authorizedKeyPair = new KeyPair(KeyGeneration.getPublicKeyFromHex(DEV_PUBLIC_KEY_1),
+                KeyGeneration.getPrivateKeyFromHex(DEV_PRIVATE_KEY_1));
+        otherOracleKeyPair = new KeyPair(KeyGeneration.getPublicKeyFromHex(DEV_PUBLIC_KEY_2),
+                KeyGeneration.getPrivateKeyFromHex(DEV_PRIVATE_KEY_2));
         oracleNodePubKeys = Set.of(Hex.encode(authorizedKeyPair.getPublic().getEncoded()),
                 Hex.encode(otherOracleKeyPair.getPublic().getEncoded()));
         identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -112,8 +124,12 @@ class AuthorizedBondedRolePublisherTest {
     // in it. A write queued now completes after all earlier ones.
     @AfterEach
     void tearDown() {
-        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
-        dataService.shutdown();
+        try {
+            store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+            dataService.shutdown();
+        } finally {
+            DevMode.setDevMode(false);
+        }
     }
 
     // The case of the review: the oracle node published the role again with its authorized key pair, and the entry of
@@ -202,16 +218,18 @@ class AuthorizedBondedRolePublisherTest {
         assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).contains(mediatorRole);
     }
 
-    // A publication counts only if an oracle node authorized it. Anyone can publish role data which the own key
-    // authorizes.
+    // A publication counts only if an oracle node authorized it. The store rejects role data which another key
+    // authorizes (rules 2 and 16 of docs/specifications/bonded-roles/authorized-data.md). The applications do not rely
+    // on the store (rule 6), so the test puts such a publication into the store directly.
     @Test
     void publicationWhichNoOracleNodeAuthorizedDoesNotKeepTheRole() throws GeneralSecurityException {
         KeyPair otherKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        AuthorizedData publicationOfOtherKey = authorize(mediatorRole, otherKeyPair);
+        AddAuthenticatedDataRequest publicationOfOtherKey = AddAuthenticatedDataRequest.from(store,
+                authorize(mediatorRole, otherKeyPair), otherKeyPair);
         assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
                 .isSuccess()).isTrue();
-        assertThat(store.add(AddAuthenticatedDataRequest.from(store, publicationOfOtherKey, otherKeyPair))
-                .isSuccess()).isTrue();
+        assertThat(store.add(publicationOfOtherKey).isAuthorizedKeyNotStatic()).isTrue();
+        store.getPersistableStore().getMap().put(publicationOfOtherKey.getStorageKey(), publicationOfOtherKey);
 
         assertThat(store.remove(RemoveAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
                 .isSuccess()).isTrue();
@@ -220,8 +238,9 @@ class AuthorizedBondedRolePublisherTest {
     }
 
     // A publication with staticPublicKeysProvided counts only if its key is a static key of this version. A later
-    // version can remove a static key, and the store still holds the publications of that key from an earlier version
-    // (see docs/specifications/bonded-roles/authorized-data.md).
+    // version can remove a static key. The store neither accepts the publications of that key nor keeps them when it
+    // loads (rules 4 and 5 of docs/specifications/bonded-roles/authorized-data.md). The applications do not rely on the
+    // store (rule 6), so the test puts such a publication into the store directly.
     @Test
     void storedPublicationOfARemovedStaticKeyDoesNotKeepTheRole() throws GeneralSecurityException {
         KeyPair removedStaticKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -237,9 +256,10 @@ class AuthorizedBondedRolePublisherTest {
         assertThat(roleWithStaticFlag).isEqualTo(mediatorRole);
         AddAuthenticatedDataRequest publicationOfRemovedKey = AddAuthenticatedDataRequest.from(store,
                 authorize(roleWithStaticFlag, removedStaticKeyPair), removedStaticKeyPair);
-        // The store does not accept it now. A store which holds it from an earlier version loads it unchecked.
-        assertThat(store.add(publicationOfRemovedKey).isSuccess()).isFalse();
+        assertThat(store.add(publicationOfRemovedKey).isAuthorizedKeyNotStatic()).isTrue();
         store.getPersistableStore().getMap().put(publicationOfRemovedKey.getStorageKey(), publicationOfRemovedKey);
+        assertThat(store.prunePersisted(store.getPersistableStore().getMutableClone()).getMap())
+                .doesNotContainKey(publicationOfRemovedKey.getStorageKey());
         assertThat(store.add(AddAuthenticatedDataRequest.from(store, authorizedMediatorRole, authorizedKeyPair))
                 .isSuccess()).isTrue();
         assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).contains(mediatorRole);

@@ -19,6 +19,7 @@ package bisq.account.timestamp;
 
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
+import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.network.NetworkService;
@@ -49,11 +50,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * The network layer checks only the signature of an AuthorizedAccountTimestamp without staticPublicKeysProvided, so
- * any key can publish one. AccountTimestampService applies only account timestamps which an oracle node authorized
- * (see docs/specifications/bonded-roles/authorized-data.md).
+ * AccountTimestampService applies only account timestamps which an oracle node authorized. While only static oracle
+ * nodes are allowed, the network layer accepts an AuthorizedAccountTimestamp only from an oracle node key as well. The
+ * service does not rely on that (see rules 6, 9 and 16 of docs/specifications/bonded-roles/authorized-data.md), so most
+ * tests notify the service directly. The test with the real store uses the dev keys, which are the oracle node keys in
+ * dev mode.
  */
 class AccountTimestampAuthorizationTest {
+    // The first two of the dev keys of AuthorizedPubKeys.DEV_PUB_KEYS. In dev mode they are the oracle node keys.
+    private static final String DEV_PRIVATE_KEY_1 = "30818d020100301006072a8648ce3d020106052b8104000a0476307402010104205b4479d165652fe5410419b1d03c937956be0e1c4f46e9fbe86c66776529d81ca00706052b8104000aa144034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091";
+    private static final String DEV_PUBLIC_KEY_1 = "3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091";
+    private static final String DEV_PRIVATE_KEY_2 = "30818d020100301006072a8648ce3d020106052b8104000a0476307402010104201c6685cef332eecfddb253b601c0ed89e7c822d2d03c53d5a720a860b5dc9419a00706052b8104000aa144034200044b3a5f869a4a4346fb37ca70991ff55f3ef4f0ed3a31b51238aee75858af48fddaeafb11b9c59b3e9f551ee9022a767e5f39dcea2b4a96e1c610a5f1b1a1878e";
+    private static final String DEV_PUBLIC_KEY_2 = "3056301006072a8648ce3d020106052b8104000a034200044b3a5f869a4a4346fb37ca70991ff55f3ef4f0ed3a31b51238aee75858af48fddaeafb11b9c59b3e9f551ee9022a767e5f39dcea2b4a96e1c610a5f1b1a1878e";
+
     @TempDir
     Path tempDir;
 
@@ -69,9 +78,12 @@ class AccountTimestampAuthorizationTest {
         dataService = new DataService(new PersistenceService(tempDir));
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getDataService()).thenReturn(Optional.of(dataService));
-        // The static oracle node key of this version
-        oracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        otherOracleKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        // The static oracle node keys of this version
+        DevMode.setDevMode(true);
+        oracleKeyPair = new KeyPair(KeyGeneration.getPublicKeyFromHex(DEV_PUBLIC_KEY_1),
+                KeyGeneration.getPrivateKeyFromHex(DEV_PRIVATE_KEY_1));
+        otherOracleKeyPair = new KeyPair(KeyGeneration.getPublicKeyFromHex(DEV_PUBLIC_KEY_2),
+                KeyGeneration.getPrivateKeyFromHex(DEV_PRIVATE_KEY_2));
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, false,
                 Set.of(Hex.encode(oracleKeyPair.getPublic().getEncoded()),
                         Hex.encode(otherOracleKeyPair.getPublic().getEncoded())), true);
@@ -89,8 +101,12 @@ class AccountTimestampAuthorizationTest {
 
     @AfterEach
     void tearDown() {
-        accountTimestampService.shutdown().join();
-        dataService.shutdown();
+        try {
+            accountTimestampService.shutdown().join();
+            dataService.shutdown();
+        } finally {
+            DevMode.setDevMode(false);
+        }
     }
 
     @Test

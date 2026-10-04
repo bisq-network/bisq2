@@ -86,6 +86,9 @@ and the requests after that response would never arrive from that peer. This hap
 - The responder is a node of an earlier version, and the requester is a node of this version which sent the request
   shortly before the cutoff date of signature V1 and gets the response after it. It rejects every request without
   signature V2. From the cutoff date on, rule 8 prevents such requests.
+- The responder is a node of an earlier version which holds authorized data of keys which this version does not
+  accept, for example data which another key than an oracle node key authorized (rule 16 of
+  [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md)). The requester rejects it.
 
 Reason for the check of the filter: the requester can hold a request of a response although its stores accepted
 nothing from that response. Several initial requests run at the same time with the same filter, so peers with the same

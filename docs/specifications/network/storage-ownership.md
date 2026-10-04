@@ -83,7 +83,9 @@ compare both before it accepts the data.
    data whose data names no owner.
 
    Reason: authorized data names no owner. Wrapped as default authenticated data, it would otherwise skip the check of
-   its authorization.
+   its authorization. Authorized data which names its owner, `AuthorizedOracleNode`, would pass this rule. It is
+   rejected at parsing, because authorized data is valid only inside `AuthorizedData` (rule 15 of
+   [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md#the-holder-of-authorized-data)).
 
 4. The authorized key (`authorizedPublicKeyBytes`) is the owner of authorized data which names no owner. If the data
    names an owner, that owner is an owner. The authorized key is then an owner as well only if it is a static key of
@@ -103,8 +105,9 @@ compare both before it accepts the data.
    [Owner of `AuthorizedOracleNode`](#owner-of-authorizedoraclenode)).
 
    Reason for the limit to static keys: the store checks only the authorization signature of data without the static
-   flag (rule 4 of [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md#rules)). So for the store,
-   every key can be the authorized key of data which it signs itself. If every authorized key were an owner, any node
+   flag, unless its type requires a static key (rules 2 and 4 of
+   [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md#rules)). So for the store, every key can
+   be the authorized key of such data which it signs itself. If every authorized key were an owner, any node
    could publish an `AuthorizedOracleNode` with its own key as authorized key and as publisher. Updated nodes would
    store, relay and serve such entries. Nodes of v2.1.13 and earlier reject them each time they receive them, so the
    entries never enter the inventory filter of these nodes. Updated nodes would send them again with every inventory
