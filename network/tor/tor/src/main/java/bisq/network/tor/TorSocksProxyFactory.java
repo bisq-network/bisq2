@@ -26,7 +26,6 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
@@ -48,19 +47,6 @@ public class TorSocksProxyFactory {
 
     public TorSocksProxyFactory(int socksPort) {
         this.socksPort = socksPort;
-    }
-
-    // Connects to host and port through the SOCKS port of Tor
-    public Socket getSocket(String host, int port, int socketTimeout) throws IOException {
-        Socket socket = new Socket(getProxy());
-        socket.setSoTimeout(socketTimeout);
-        try {
-            socket.connect(InetSocketAddress.createUnresolved(host, port));
-        } catch (IOException e) {
-            socket.close();
-            throw e;
-        }
-        return socket;
     }
 
     // Connects to host and port through the SOCKS port of Tor. Tor isolates streams by the SOCKS username and password,
@@ -159,12 +145,6 @@ public class TorSocksProxyFactory {
         Socks5Proxy socks5Proxy = new Socks5Proxy("127.0.0.1", socksPort);
         socks5Proxy.resolveAddrLocally(false);
         return socks5Proxy;
-    }
-
-    private Proxy getProxy() throws IOException {
-        Socks5Proxy socks5Proxy = getSocks5Proxy();
-        InetSocketAddress socketAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
-        return new Proxy(Proxy.Type.SOCKS, socketAddress);
     }
 
     private static byte[] toUsername(String streamId) {
