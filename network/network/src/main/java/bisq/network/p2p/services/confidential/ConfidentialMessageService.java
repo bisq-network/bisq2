@@ -44,11 +44,13 @@ import bisq.security.HybridEncryption;
 import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -95,7 +97,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final Optional<DataService> dataService;
     private final Optional<MessageDeliveryStatusService> messageDeliveryStatusService;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    private final Set<EnvelopePayloadMessageAndPublicKey> processedEnvelopePayloadMessagesAndPublicKeys = new CopyOnWriteArraySet<>();
+    // Used to drop duplicates and for the startup replay. Bounded by number and by the size of the decrypted messages;
+    // the oldest entry is dropped. Guarded by processedMessagesLock.
+    // See docs/specifications/network/processed-confidential-messages.md.
+    @VisibleForTesting
+    static final int MAX_PROCESSED_MESSAGES = 10_000;
+    @VisibleForTesting
+    static final long MAX_PROCESSED_MESSAGES_SIZE = 64 * 1024 * 1024;
+    private final ArrayDeque<ProcessedMessage> processedMessages = new ArrayDeque<>();
+    private long processedMessagesSize;
     // Held while a decrypted message is added to the processed messages and passed to the listeners, and while
     // subscribe adds a listener and copies the processed messages. So such a listener
     // receives each processed message exactly once: in the copy or as a new message.
@@ -126,7 +136,10 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
         listeners.clear();
-        processedEnvelopePayloadMessagesAndPublicKeys.clear();
+        synchronized (processedMessagesLock) {
+            processedMessages.clear();
+            processedMessagesSize = 0;
+        }
     }
 
 
@@ -407,15 +420,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
      * See docs/specifications/network/startup-replay.md.
      */
     public void subscribe(Listener listener) {
-        List<EnvelopePayloadMessageAndPublicKey> processedMessages;
+        List<EnvelopePayloadMessageAndPublicKey> messagesToDeliver;
         synchronized (processedMessagesLock) {
             if (!listeners.add(listener)) {
                 return;
             }
             // A list: a hash-based copy would call hashCode of each received message, which can throw
-            processedMessages = new ArrayList<>(processedEnvelopePayloadMessagesAndPublicKeys);
+            messagesToDeliver = copyProcessedMessages();
         }
-        processedMessages.forEach(processedMessage -> deliverProcessedMessage(listener, processedMessage));
+        messagesToDeliver.forEach(processedMessage -> deliverProcessedMessage(listener, processedMessage));
     }
 
     public void removeListener(Listener listener) {
@@ -426,7 +439,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     // hash-based, so a message whose hashCode throws makes it fail. A message which the node processes between this
     // copy and the registration of a listener is lost for the listener or reaches it twice.
     public Set<EnvelopePayloadMessage> getProcessedEnvelopePayloadMessages() {
-        return processedEnvelopePayloadMessagesAndPublicKeys.stream()
+        List<EnvelopePayloadMessageAndPublicKey> messages;
+        synchronized (processedMessagesLock) {
+            messages = copyProcessedMessages();
+        }
+        return messages.stream()
                 .map(EnvelopePayloadMessageAndPublicKey::envelopePayloadMessage)
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -562,7 +579,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             // The decryption succeeded, so the key of this key ID is ours and the message was encrypted for it
             String receiverKeyId = confidentialMessage.getReceiverKeyId();
             addAndNotifyListeners(
-                    new EnvelopePayloadMessageAndPublicKey(decryptedEnvelopePayloadMessage, senderPublicKey, receiverKeyId));
+                    new EnvelopePayloadMessageAndPublicKey(decryptedEnvelopePayloadMessage, senderPublicKey, receiverKeyId),
+                    decryptedBytes.length);
             return true;
         } catch (Exception e) {
             log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);
@@ -570,9 +588,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         }
     }
 
-    private void addAndNotifyListeners(EnvelopePayloadMessageAndPublicKey processedMessage) {
+    private void addAndNotifyListeners(EnvelopePayloadMessageAndPublicKey processedMessage, int size) {
         synchronized (processedMessagesLock) {
-            boolean wasNotPresent = processedEnvelopePayloadMessagesAndPublicKeys.add(processedMessage);
+            boolean wasNotPresent = addProcessedMessage(processedMessage, size);
             if (wasNotPresent) {
                 EnvelopePayloadMessage message = processedMessage.envelopePayloadMessage();
                 PublicKey senderPublicKey = processedMessage.senderPublicKey();
@@ -585,6 +603,35 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 });
             }
         }
+    }
+
+    // Compares with equals, so that no hash code of a received message is computed (see startup-replay.md). The size is
+    // the size of the decrypted message.
+    @VisibleForTesting
+    boolean addProcessedMessage(EnvelopePayloadMessageAndPublicKey processedMessage, int size) {
+        synchronized (processedMessagesLock) {
+            for (ProcessedMessage kept : processedMessages) {
+                if (kept.messageAndPublicKey().equals(processedMessage)) {
+                    return false;
+                }
+            }
+            processedMessages.addLast(new ProcessedMessage(processedMessage, size));
+            processedMessagesSize += size;
+            while (processedMessages.size() > 1 &&
+                    (processedMessages.size() > MAX_PROCESSED_MESSAGES || processedMessagesSize > MAX_PROCESSED_MESSAGES_SIZE)) {
+                processedMessagesSize -= processedMessages.removeFirst().size();
+            }
+            return true;
+        }
+    }
+
+    private List<EnvelopePayloadMessageAndPublicKey> copyProcessedMessages() {
+        List<EnvelopePayloadMessageAndPublicKey> copy = new ArrayList<>(processedMessages.size());
+        processedMessages.forEach(processedMessage -> copy.add(processedMessage.messageAndPublicKey()));
+        return copy;
+    }
+
+    private record ProcessedMessage(EnvelopePayloadMessageAndPublicKey messageAndPublicKey, int size) {
     }
 
     // A new message reaches each of the two methods in a task of its own, so each call is processed on its own here as
