@@ -25,6 +25,8 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -34,18 +36,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
-
 // Data size: 49 bytes
 @Slf4j
 @EqualsAndHashCode
 @Getter
+@StoragePolicy(ttl = Ttl.DAYS_30)
 public final class AuthorizedTimestampData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
-    public static final long TTL = TTL_30_DAYS;
+    public static final long TTL = MetaData.from(AuthorizedTimestampData.class).getTtl();
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

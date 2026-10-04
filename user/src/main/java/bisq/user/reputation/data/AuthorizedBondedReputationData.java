@@ -25,8 +25,10 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Priority;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -39,19 +41,16 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
+@StoragePolicy(ttl = Ttl.DAYS_30, priority = Priority.HIGH)
 public final class AuthorizedBondedReputationData implements AuthorizedDistributedData, PublishDateAware {
     public static final int LEGACY_VERSION = 1;
     public static final int VERSION = 2;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {0, LEGACY_VERSION})
     private final int version;

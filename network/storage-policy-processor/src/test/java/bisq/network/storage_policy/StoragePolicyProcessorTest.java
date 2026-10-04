@@ -1,0 +1,364 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.network.storage_policy;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static javax.tools.Diagnostic.Kind.ERROR;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Compiles fixtures with the processor attached and asserts what it reports.
+ * <p>
+ * Without this nothing checks the processor itself. A rule that stops firing, a missing service registration or an
+ * early return that skips a kind of type all leave every other build green, because the processor's only output is
+ * a diagnostic that is no longer produced.
+ * <p>
+ * The interface and the annotation are declared in the fixture rather than depended on, because this module is
+ * applied to the module that defines them and so cannot depend on it.
+ */
+class StoragePolicyProcessorTest {
+    @TempDir
+    Path classOutput;
+
+    private static final String PACKAGE = "package bisq.network.p2p.services.data.storage;\n";
+
+    // Top level in that package, because the processor matches them by fully qualified name.
+    private static final String AWARE = PACKAGE + """
+            public interface StoragePolicyAware { default Object getMetaData() { return null; } }
+            """;
+
+    private static final String META_DATA = PACKAGE + """
+            public class MetaData { }
+            """;
+
+    private static final String LOMBOK = """
+            package lombok;
+            import java.lang.annotation.*;
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target({ElementType.TYPE, ElementType.FIELD})
+            public @interface Getter { AccessLevel value() default AccessLevel.PUBLIC; boolean lazy() default false; }
+            """;
+
+    private static final String ACCESS_LEVEL = """
+            package lombok;
+            public enum AccessLevel { PUBLIC, NONE }
+            """;
+
+    private static final String POLICY = PACKAGE + """
+            import java.lang.annotation.*;
+            @Inherited
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target(ElementType.TYPE)
+            public @interface StoragePolicy { }
+            """;
+
+    @Test
+    void storedTypeWithoutAPolicyIsRejected() {
+        assertError("declares no storage properties", """
+                class Payload implements StoragePolicyAware { }
+                """);
+    }
+
+    @Test
+    void policyOnATypeTheStorageIgnoresIsRejected() {
+        assertError("has no effect here", """
+                @StoragePolicy
+                class NotStored { }
+                """);
+    }
+
+    @Test
+    void declaringAndOverridingIsRejected() {
+        assertError("both declares", """
+                @StoragePolicy
+                class Both implements StoragePolicyAware {
+                    public Object getMetaData() { return null; }
+                }
+                """);
+    }
+
+    @Test
+    void aDeclaredPolicyIsAccepted() {
+        assertNoError("""
+                @StoragePolicy
+                class Declared implements StoragePolicyAware { }
+                """);
+    }
+
+    /** The same rule applies to an abstract base: the policy would be dormant until the override was removed. */
+    @Test
+    void anAbstractTypeDeclaringAndOverridingIsRejected() {
+        assertError("both declares", """
+                @StoragePolicy
+                abstract class AbstractBoth implements StoragePolicyAware {
+                    public MetaData getMetaData() { return null; }
+                }
+                """);
+    }
+
+    /** An abstract base needs no policy of its own, since its subclasses carry one. */
+    @Test
+    void anAbstractTypeWithNeitherIsAccepted() {
+        assertNoError("""
+                abstract class AbstractNeither implements StoragePolicyAware { }
+                """);
+    }
+
+    /** Inheriting a policy and overriding the accessor is the same dormant state as declaring one and overriding. */
+    @Test
+    void inheritingAPolicyAndOverridingIsRejected() {
+        assertError("both declares", """
+                @StoragePolicy
+                abstract class InheritedBase implements StoragePolicyAware { }
+                class InheritedBoth extends InheritedBase {
+                    public MetaData getMetaData() { return null; }
+                }
+                """);
+    }
+
+    /** Only the value element of @Getter carries the AccessLevel; the others must not read as no accessor. */
+    @Test
+    void aGetterWithANonAccessLevelElementStillCounts() {
+        assertNoError("""
+                class OtherElement implements StoragePolicyAware {
+                    @lombok.Getter(lazy = true)
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
+    /**
+     * MetaData and the coverage tests read the accessor with getMethod, which sees an interface default, so the
+     * processor has to agree or it rejects a type that does have one.
+     */
+    @Test
+    void anAccessorInheritedFromAnInterfaceCounts() {
+        assertNoError("""
+                interface Wrapper extends StoragePolicyAware {
+                    default MetaData getMetaData() { return null; }
+                }
+                class ViaInterface implements Wrapper { }
+                """);
+    }
+
+    /** getMethod sees only public methods, and a private one is not inherited, so it is not an accessor. */
+    @Test
+    void aPrivateAccessorInASuperclassDoesNotCount() {
+        assertError("declares no storage properties", """
+                abstract class PrivateBase {
+                    private MetaData getMetaData() { return null; }
+                }
+                class ViaPrivate extends PrivateBase implements StoragePolicyAware { }
+                """);
+    }
+
+    @Test
+    void anInheritedPolicyIsAccepted() {
+        assertNoError("""
+                @StoragePolicy
+                abstract class Base implements StoragePolicyAware { }
+                class Leaf extends Base { }
+                """);
+    }
+
+    @Test
+    void anOverrideInsteadOfAPolicyIsAccepted() {
+        assertNoError("""
+                class Wrapper implements StoragePolicyAware {
+                    public Object getMetaData() { return null; }
+                }
+                """);
+    }
+
+    /** Lombok generates the accessor from this field, and only if it runs first, so the field has to count. */
+    @Test
+    void aMetaDataFieldWithALombokGetterCountsAsAnOverride() {
+        assertNoError("""
+                @lombok.Getter
+                class LombokStyle implements StoragePolicyAware {
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
+    @Test
+    void aFieldLevelLombokGetterAlsoCounts() {
+        assertNoError("""
+                class FieldLevel implements StoragePolicyAware {
+                    @lombok.Getter
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
+    /** AccessLevel.NONE is how a class level getter is suppressed, so it generates no accessor at all. */
+    @Test
+    void aGetterSuppressedWithAccessLevelNoneDoesNotCount() {
+        assertError("declares no storage properties", """
+                @lombok.Getter
+                class Suppressed implements StoragePolicyAware {
+                    @lombok.Getter(lombok.AccessLevel.NONE)
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
+    /** Without a @Getter nothing generates an accessor, so the type would fall back to the failing default. */
+    @Test
+    void aMetaDataFieldWithNoGetterDoesNotCount() {
+        assertError("declares no storage properties", """
+                class NoAccessor implements StoragePolicyAware {
+                    private final MetaData metaData = null;
+                }
+                """);
+    }
+
+    /** @Inherited does not reach a type through an interface, so a policy declared there resolves for nobody. */
+    @Test
+    void aPolicyOnAnInterfaceIsRejected() {
+        assertError("no effect on an interface", """
+                @StoragePolicy
+                interface Inert extends StoragePolicyAware { }
+                """);
+    }
+
+    /** Only the field an accessor would be generated from counts, so the name alone must not exempt a type. */
+    @Test
+    void aFieldNamedMetaDataOfAnotherTypeDoesNotCount() {
+        assertError("declares no storage properties", """
+                class Misleading implements StoragePolicyAware {
+                    private final String metaData = null;
+                }
+                """);
+    }
+
+    @Test
+    void aRecordIsCheckedLikeAClass() {
+        assertError("declares no storage properties", """
+                record Rec(int x) implements StoragePolicyAware { }
+                """);
+    }
+
+    @Test
+    void anEnumIsCheckedLikeAClass() {
+        assertError("declares no storage properties", """
+                enum Plain implements StoragePolicyAware { A, B }
+                """);
+    }
+
+    /** A constant with a body makes the enum abstract in the class file, but not in the model the processor sees. */
+    @Test
+    void anEnumWithAConstantBodyIsChecked() {
+        assertError("declares no storage properties", """
+                enum WithBody implements StoragePolicyAware {
+                    A { public String toString() { return "a"; } }
+                }
+                """);
+    }
+
+    @Test
+    void aTypeNestedTwoLevelsDeepIsChecked() {
+        assertError("declares no storage properties", """
+                class Outer { static class Middle { static class Inner implements StoragePolicyAware { } } }
+                """);
+    }
+
+    @Test
+    void theProcessorIsRegisteredAsAService() throws IOException {
+        assertEquals(StoragePolicyProcessor.class.getName(),
+                readResource("META-INF/services/javax.annotation.processing.Processor").strip());
+    }
+
+    @Test
+    void theProcessorIsDeclaredIncremental() throws IOException {
+        assertTrue(readResource("META-INF/gradle/incremental.annotation.processors")
+                        .contains(StoragePolicyProcessor.class.getName() + ",ISOLATING"),
+                "without this Gradle turns off incremental compilation");
+    }
+
+    /**
+     * Read from the classpath rather than from src/main/resources, because being on the classpath is the thing that
+     * matters: javac finds the processor through the service file and Gradle reads the incremental declaration the
+     * same way. A path relative to the working directory would also pass while the resource was not packaged.
+     */
+    private String readResource(String name) throws IOException {
+        URL url = getClass().getClassLoader().getResource(name);
+        assertNotNull(url, name + " is not on the classpath");
+        try (InputStream stream = url.openStream()) {
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private void assertError(String expected, String source) {
+        List<String> errors = compile(source);
+        assertTrue(errors.stream().anyMatch(message -> message.contains(expected)),
+                "Expected an error containing \"" + expected + "\" but got " + errors);
+    }
+
+    private void assertNoError(String source) {
+        assertEquals(List.of(), compile(source));
+    }
+
+    private List<String> compile(String source) {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+        try (var fileManager = compiler.getStandardFileManager(diagnostics, null, null)) {
+            fileManager.setLocation(StandardLocation.CLASS_OUTPUT, List.of(classOutput.toFile()));
+            JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, null, null,
+                    List.of(inMemory("StoragePolicyAware", AWARE), inMemory("StoragePolicy", POLICY),
+                            inMemory("MetaData", META_DATA), inMemory("Getter", LOMBOK), inMemory("AccessLevel", ACCESS_LEVEL),
+                            inMemory("Fixture", PACKAGE + source)));
+            task.setProcessors(List.of(new StoragePolicyProcessor()));
+            task.call();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return diagnostics.getDiagnostics().stream()
+                .filter(diagnostic -> diagnostic.getKind() == ERROR)
+                .map(diagnostic -> diagnostic.getMessage(null))
+                .collect(Collectors.toList());
+    }
+
+    private static JavaFileObject inMemory(String name, String source) {
+        return new SimpleJavaFileObject(URI.create("string:///" + name + ".java"), JavaFileObject.Kind.SOURCE) {
+            @Override
+            public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+                return source;
+            }
+        };
+    }
+}

@@ -49,7 +49,7 @@ storage solution like a specialized node which holds those data in a database.
 
 ## Data stores
 The data are held in a hashmap using the hash of the data as key.
-We use time to life to purge expired data. All data type has its own dedicated data store (e.g. a file for Offers, a file for mailbox messages,...). The MetaData attached to the data is used to derive properties for the store, like store name, max store size,...
+We use time to life to purge expired data. All data type has its own dedicated data store (e.g. a file for Offers, a file for mailbox messages,...). The storage properties of a data type, declared with `@StoragePolicy` on the class and resolved into a `MetaData`, are used to derive properties for the store, like store name, max store size,...
 That way, we can limit potential attacks to one type of data and can fine tune the stores according to the expected data volume.
 Once the store reaches its limit it would reject newly added data, thus protects itself to run out of memory.
 All data is held in memory and is persisted at change (using a lazy persistence approach to reduce disk IO). Only at 

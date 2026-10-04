@@ -7,6 +7,8 @@ plugins {
 version = rootProject.version
 
 dependencies {
+    // So a test can run the processor against the real interface and pin the names it matches by string.
+    testImplementation(project(":storage-policy-processor"))
     implementation("bisq:common")
     implementation("bisq:security")
     implementation("bisq:persistence")

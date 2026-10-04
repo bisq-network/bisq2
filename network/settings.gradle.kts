@@ -34,5 +34,6 @@ include("i2p")
 include("network")
 include("network-identity")
 include("socks5-socket-channel")
+include("storage-policy-processor")
 
 rootProject.name = "network"

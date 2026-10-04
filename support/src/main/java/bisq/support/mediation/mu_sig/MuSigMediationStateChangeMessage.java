@@ -24,7 +24,9 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.Priority;
+import bisq.network.p2p.services.data.storage.StoragePolicy;
+import bisq.network.p2p.services.data.storage.Ttl;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.support.mediation.MediationCaseState;
 import com.google.protobuf.ByteString;
@@ -38,14 +40,11 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
-
 @Slf4j
 @Getter
 @ToString
+@StoragePolicy(ttl = Ttl.DAYS_10, priority = Priority.HIGH)
 public final class MuSigMediationStateChangeMessage implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
     private final String id;
     private final String tradeId;
     private final NetworkId senderNetworkId;
