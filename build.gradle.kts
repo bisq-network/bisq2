@@ -761,6 +761,22 @@ tasks.register("verifyReleaseReadiness") {
             }
         }
 
+        // The in-app updater accepts a release signed with one of these keys (UpdaterService, DownloadedFilesVerification)
+        fun readUpdaterKeyIds(desktopConfigFile: File): List<String> {
+            if (!desktopConfigFile.isFile) {
+                return emptyList()
+            }
+
+            val keyIdsRegex = Regex("""(?m)^\s*keyIds\s*=\s*"([^"]*)"""")
+            val keyIds = keyIdsRegex.find(desktopConfigFile.readText(StandardCharsets.UTF_8))?.groupValues?.get(1)
+                ?: return emptyList()
+            return keyIds.split(",")
+                .map { it.trim().uppercase(Locale.ROOT) }
+                .filter { it.isNotEmpty() }
+                .distinct()
+                .sorted()
+        }
+
         fun checkVersionValue(results: MutableList<ReadinessResult>,
                               releaseVersion: String,
                               label: String,
@@ -891,6 +907,21 @@ tasks.register("verifyReleaseReadiness") {
             if (extraAssets.isNotEmpty()) {
                 addResult(results, "WARN", "GitHub extra assets", "Unexpected uploaded asset(s): ${extraAssets.sorted().joinToString(", ")}")
             }
+        }
+
+        val desktopConfigFile = file("apps/desktop/desktop-app/src/main/resources/desktop.conf")
+        val updaterKeyIds = readUpdaterKeyIds(desktopConfigFile)
+        if (updaterKeyIds.isEmpty()) {
+            addResult(results, "FAIL", "Updater signer key ids", "Could not parse keyIds from ${rootProject.relativePath(desktopConfigFile)}")
+        } else if (updaterKeyIds == bisq2ReleaseKeyIds.sorted()) {
+            addResult(results, "PASS", "Updater signer key ids", "desktop.conf keyIds are ${updaterKeyIds.joinToString(", ")}")
+        } else {
+            addResult(
+                results,
+                "FAIL",
+                "Updater signer key ids",
+                "desktop.conf keyIds are ${updaterKeyIds.joinToString(", ")}, expected ${bisq2ReleaseKeyIds.sorted().joinToString(", ")}"
+            )
         }
 
         val signingKeyFile = file("apps/desktop/desktop-app-launcher/maintainer_public_keys/signingkey.asc")
