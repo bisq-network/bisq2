@@ -94,8 +94,8 @@ public class TorTransportService implements TransportService {
         if (address instanceof TorAddress torAddress) {
             long ts = System.currentTimeMillis();
             log.info("Start creating tor socket to {}", torAddress);
-            // Blocking call. Takes 5-15 sec usually.
-            Socket socket = torService.getSocket(torAddress.getHost(), torAddress.getPort(), socketTimeout);
+            // Blocking call. Takes 5-15 sec usually. The node ID isolates the circuits of the nodes of one user.
+            Socket socket = torService.getSocket(torAddress.getHost(), torAddress.getPort(), nodeId, socketTimeout);
             log.info("Tor socket creation to {} took {} ms", torAddress, System.currentTimeMillis() - ts);
             return socket;
         } else {
