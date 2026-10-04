@@ -35,6 +35,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
+import bisq.network.StartupReplay;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -123,9 +124,9 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessagesAndPublicKeys().stream())
-                .forEach(e -> onConfidentialMessage(e.envelopePayloadMessage(), e.senderPublicKey()));
+        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
+                        .flatMap(service -> service.getProcessedEnvelopePayloadMessagesAndPublicKeys().stream()),
+                e -> onConfidentialMessage(e.envelopePayloadMessage(), e.senderPublicKey()));
         networkService.addConfidentialMessageListener(this);
 
         addObserverIfModerator();
