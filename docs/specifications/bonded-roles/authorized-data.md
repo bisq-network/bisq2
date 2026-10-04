@@ -61,8 +61,9 @@ publish and remove the data in the network storage is defined in
 An **oracle node key** is one of the static keys of the oracle node role type. A **non-static oracle node** is an
 oracle node whose key is not an oracle node key, and whose authority comes from a bonded role of the oracle node role
 type (rule 3). Oracle nodes with an oracle node key can register a role of the oracle node role type as well, but they
-do not need it. The application has a flag in the code, `AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES`. It is
-currently `true`. While it is `true`, these rules apply:
+do not need it. The configuration option `application.bondedRoles.onlyStaticOracleNodes` enables the restriction. It
+is `true` in the configuration files of all applications, and a node which no configuration sets uses `true` as well.
+While it is `true`, these rules apply:
 
 10. If the authorizing role type is the oracle node, the authorized public key must be an oracle node key. This applies
     to data with and without the static flag, and it replaces rule 3 for this authorizing role type. Rules 8 and 9 and
@@ -75,7 +76,7 @@ currently `true`. While it is `true`, these rules apply:
 14. Data which fails rule 10 is not checked again when a bonded role is added (rule 7), because the static keys do not
     change while the node runs.
 
-When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 apply unchanged.
+When the option is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 apply unchanged.
 
 ### The holder of authorized data
 
@@ -86,14 +87,19 @@ When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 a
 
 ### Oracle node keys in the network storage
 
-16. While `ONLY_STATIC_ORACLE_NODES` is `true`, the types whose authorizing role type is the oracle node require a
-    static key (rule 2): `AuthorizedOracleNode`, `AuthorizedBondedRole`, `AuthorizedMarketPriceData`,
+16. While the option `onlyStaticOracleNodes` is `true`, the types whose authorizing role type is the oracle node
+    require a static key (rule 2): `AuthorizedOracleNode`, `AuthorizedBondedRole`, `AuthorizedMarketPriceData`,
     `AuthorizedBurningmanListByBlock`, `AuthorizedAccountTimestamp`, `AuthorizedAccountAgeData`,
     `AuthorizedSignedWitnessData`, `AuthorizedTimestampData`, `AuthorizedProofOfBurnData` and
     `AuthorizedBondedReputationData`. So the network storage applies rule 10 as well: it rejects their data of other
     keys when it adds it (rule 4), and it removes such data when it loads a store (rule 5). For `AuthorizedOracleNode`,
     the rule concerns the authorized public key, not the publisher. The oracle node still publishes it with the key of
     its network ID (rule 9 of [`../network/storage-ownership.md`](../network/storage-ownership.md)).
+
+### The configuration option `onlyStaticOracleNodes`
+
+17. All nodes of a network use the same value of the option. A node sets the value when it starts, before its stores
+    load their data, and does not change it while it runs.
 
 ## Reasons
 
@@ -124,14 +130,12 @@ When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 a
 - Rules 10 to 13: for now, only the oracle node keys in the released code may act as oracle nodes. Otherwise an oracle
   node could register further oracle nodes with non-static keys, and the authority over all data which oracle nodes authorize (bonded roles,
   reputation, account timestamps, market prices, burningman data) would depend on a chain of registrations. The code
-  for non-static oracle nodes stays, so that a later release can allow them again by changing the flag.
+  for non-static oracle nodes stays, so that a network can allow them again with the configuration option.
 - Rule 10 does not depend on the static flag, because the publisher sets the flag.
 - Rule 11: the role list shows the oracle nodes to the users, and monitoring tools use it to find the oracle nodes. A role
   of another key would show an oracle node which no node accepts.
 - Rules 12 and 13 stop an oracle node from publishing data which no node with the restriction accepts. Rules 10 and 11
   do not depend on them, because oracle nodes of earlier versions still accept such registrations.
-- The flag is a constant in the code, not a configuration option. All nodes of a release must apply the same rule.
-  Otherwise nodes disagree about which bonded roles and which reputation data are valid.
 - Compatibility: nodes of earlier versions still accept non-static oracle nodes. Oracle nodes with an oracle node key
   publish their data with the static flag, which all versions accept.
 - Rule 2, static key requirement: the publisher sets the static flag. If only the flag required a static key, any key
@@ -166,7 +170,7 @@ When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 a
   100 000 entries per store limited it. Several of these types have the highest priority in inventory responses, which
   have a size limit, so a node which synchronizes received such data first and could miss other data. The applications
   ignore such data (rule 10), so the rejection in the network storage changes no decision of an application.
-- Rule 16, why the network storage can apply rule 10: while the flag is `true`, rule 10 does not depend on the bonded
+- Rule 16, why the network storage can apply rule 10: while the option is `true`, rule 10 does not depend on the bonded
   roles. The static keys do not change while a node runs, so data of another key cannot become valid later (rule 14).
   This is not true for rule 3, which the network storage still does not check.
 - Rule 16, the authorized key and not the publisher: the authorization signature binds the authorized key to the
@@ -177,8 +181,8 @@ When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 a
   type of `AuthorizedOracleNode` is not needed for rule 16.
 - Rule 16, the type declares the requirement: the network module does not know oracle nodes. It knows only that a
   type can require its static keys (`AuthorizedDistributedData.isStaticPublicKeyRequired()`). The types which oracle
-  nodes authorize implement `OracleNodeAuthorizedData` of the bonded roles module, which returns the flag
-  `ONLY_STATIC_ORACLE_NODES`. The decision stays in the bonded roles domain, and the dependency points from the
+  nodes authorize implement `OracleNodeAuthorizedData` of the bonded roles module, which returns the value of the
+  option `onlyStaticOracleNodes`. The decision stays in the bonded roles domain, and the dependency points from the
   bonded roles module to the network module.
 - Rule 16, compatibility: no field, message, signature or storage key changes. Nodes of earlier versions accept data
   of other keys and relay it. A node of this version rejects it without verifying a signature and keeps the connection
@@ -190,6 +194,17 @@ When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 a
   this version. An oracle node of an earlier version with another key is not an oracle node for nodes of this version
   (rule 10). Nodes of this version also stop relaying its data, so nodes of earlier versions receive it only from
   other nodes of earlier versions.
+- The restriction is a configuration option, not a constant in the code (developer decision of 2026-10-04).
+- Rule 17: a node with another value than the other nodes disagrees with them about which oracle nodes, bonded roles
+  and reputation data are valid (rules 10 and 11), and its network storage accepts other data (rule 16). With `false`
+  in a network of nodes with `true`, it stores, relays and serves data of other keys which the other nodes reject, and
+  as an oracle node it accepts registrations of oracle node roles of other keys and starts with another key (rules 12
+  and 13). The other nodes ignore the data of such an oracle node. With `true` in a network which allows non-static
+  oracle nodes, the node rejects their data. So the value is part of the definition of a network, like its seed nodes.
+- Rule 17, set at start: the network storage reads the value through the type of the data (rule 16), so the node keeps
+  it in one setting for the whole node (`OnlyStaticOracleNodes`). The stores check rule 2 when they add data and when
+  they load (rules 4 and 5). A value which changed while the node runs would leave data in the stores which they
+  would not accept now, or would reject data which they accepted before.
 - Rule 5, signatures: verifying the authorization signature of every stored entry costs one signature verification
   per entry. This check was disabled at startup to reduce the startup cost. Rule 8 of
   [`../network/storage-ownership.md`](../network/storage-ownership.md) still removes stored entries whose publisher is
@@ -210,10 +225,10 @@ When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 a
   - Who decides: the developers.
 - **Nodes of earlier versions** store, relay and serve data of other keys of the types of rule 16 until they update.
   Their inventory responses can be full of such data.
-- **The flag.** When `ONLY_STATIC_ORACLE_NODES` is set to `false`, rule 16 does not apply, and the network storage
-  accepts data of the types which oracle nodes authorize from every key again (rule 4). Before the flag changes, the
-  developers must decide how the network storage limits such data, for example with a proof of authority as described
-  above.
+- **The configuration option.** A node with `onlyStaticOracleNodes=false` does not apply rule 16, and its network
+  storage accepts data of the types which oracle nodes authorize from every key again (rule 4). Before the default
+  changes, the developers must decide how the network storage limits such data, for example with a proof of authority
+  as described above.
 
 ## Verification
 
@@ -245,6 +260,10 @@ When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 a
   and the rejection is no severe failure. A bonded role and a profile timestamp of another key are rejected, and a role
   of a removed static key is removed when the store loads. The applications still ignore such data when a store holds
   it (rule 6).
+- Rule 17: the configuration of the bonded roles contains the option. With the default, the network storage rejects a
+  bonded role of another key, and the bonded role service of the application does not allow another oracle node key.
+  With `false`, the network storage accepts such a role without the static flag, the service allows the key, and the
+  types which oracle nodes authorize do not require a static key.
 - With the restriction (rules 10 and 11): an oracle node of an oracle node key is listed, with and without the static
   flag. An oracle node of a key with a role of the oracle node role type is not listed. A role of the oracle node role
   type of another key is not listed, and its key does not authorize other roles.
@@ -261,6 +280,7 @@ When the flag is `false`, rules 10 to 14 and 16 do not apply, and rules 1 to 9 a
 - `AuthorizedBondedRolesService.hasAuthorizedPubKey()` (rules 2 and 3 before use).
 - `ProfileAgeService.getTimeStampedProfileIds()` (rule 6, profile timestamp request lookup).
 - `AuthorizedBondedRolesService.getAuthorizedOracleNodes()` (rule 8), `AccountTimestampService` (rule 9).
-- `AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES` and `isOracleNodeKeyAllowed()` (rules 10 and 11),
+- `BondedRolesService.Config` and `OnlyStaticOracleNodes` (the configuration option, rule 17),
+  `AuthorizedBondedRolesService.isOracleNodeKeyAllowed()` (rules 10 and 11),
   `Bisq1BridgeRequestService.processBondedRoleRegistrationRequest()` (rule 12), `OracleNodeService` (rule 13).
 - `AuthorizedPubKeys` (the static keys, `getOracleNodePubKeys()` for the oracle node keys).
