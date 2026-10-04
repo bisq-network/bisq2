@@ -40,6 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -51,6 +52,7 @@ import static org.mockito.Mockito.when;
 public class BisqEasyOpenTradeChannelServiceTest {
     private static final String TAKER_PROFILE_ID = "1111111111111111111111111111111111111111";
     private static final String MAKER_PROFILE_ID = "2222222222222222222222222222222222222222";
+    private static final String OTHER_PROFILE_ID = "3333333333333333333333333333333333333333";
     private static final String TRADE_ID = "tradeId";
 
     private BisqEasyOpenTradeChannelService service;
@@ -86,6 +88,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
 
     @Test
     void takeOfferMessageCreatesChannel() {
+        tradeWithTakerExists();
         BisqEasyOffer offer = mock(BisqEasyOffer.class);
         BisqEasyOpenTradeMessage message = takeOfferMessage(offer, MAKER_PROFILE_ID, System.currentTimeMillis());
 
@@ -143,6 +146,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
 
     @Test
     void expiredMessageWithoutOfferIsDroppedAndNotParked() {
+        tradeWithTakerExists();
         long elevenDaysAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11);
         service.onMessage(textMessage(MAKER_PROFILE_ID, elevenDaysAgo));
 
@@ -157,6 +161,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
 
     @Test
     void messageWithoutOfferForUnknownReceiverIdentityIsDroppedAndNotParked() {
+        tradeWithTakerExists();
         service.onMessage(textMessage("3333333333333333333333333333333333333333", System.currentTimeMillis()));
 
         BisqEasyOpenTradeMessage takeOfferMessage = takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis());
@@ -171,6 +176,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
     // of our identities as receiver must not open a channel of that identity.
     @Test
     void takeOfferMessageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsIgnored() {
+        tradeWithTakerExists();
         String otherOwnProfileId = "4444444444444444444444444444444444444444";
         when(userIdentityService.findUserIdentity(otherOwnProfileId)).thenReturn(Optional.of(mock(UserIdentity.class)));
 
@@ -180,6 +186,55 @@ public class BisqEasyOpenTradeChannelServiceTest {
                 System.currentTimeMillis()));
 
         assertTrue(service.getChannels().isEmpty());
+    }
+
+    @Test
+    void takeOfferMessageWithoutTradeCreatesNoChannel() {
+        service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis()));
+
+        assertTrue(service.getChannels().isEmpty());
+    }
+
+    @Test
+    void takeOfferMessageFromAnotherUserThanTheTradePeerCreatesNoChannel() {
+        service.setIsTradeWithPeer((tradeId, userProfileId) -> userProfileId.equals(OTHER_PROFILE_ID));
+
+        service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis()));
+
+        assertTrue(service.getChannels().isEmpty());
+    }
+
+    @Test
+    void pendingTakeOfferMessageCreatesChannelWhenTradeExists() {
+        BisqEasyOffer offer = mock(BisqEasyOffer.class);
+        BisqEasyOpenTradeMessage message = takeOfferMessage(offer, MAKER_PROFILE_ID, System.currentTimeMillis());
+        service.onMessage(message);
+        assertTrue(service.getChannels().isEmpty());
+
+        tradeWithTakerExists();
+        service.processPendingMessages(TRADE_ID);
+
+        BisqEasyOpenTradeChannel channel = service.findChannelByTradeId(TRADE_ID).orElseThrow();
+        assertSame(offer, channel.getBisqEasyOffer());
+        assertTrue(channel.getChatMessages().contains(message));
+    }
+
+    // The trade service creates the trade and processes the pending messages after the check, before the message is
+    // pending. onMessage processes the pending messages again after the message.
+    @Test
+    void tradeCreatedWhileTheMessageBecomesPendingCreatesChannel() {
+        AtomicInteger checks = new AtomicInteger();
+        service.setIsTradeWithPeer((tradeId, userProfileId) -> checks.incrementAndGet() > 1);
+        BisqEasyOpenTradeMessage message = takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis());
+
+        service.onMessage(message);
+
+        assertTrue(service.findChannelByTradeId(TRADE_ID).orElseThrow().getChatMessages().contains(message));
+    }
+
+    private void tradeWithTakerExists() {
+        service.setIsTradeWithPeer((tradeId, userProfileId) ->
+                tradeId.equals(TRADE_ID) && userProfileId.equals(TAKER_PROFILE_ID));
     }
 
     private BisqEasyOpenTradeMessage textMessage(String receiverUserProfileId, long date) {

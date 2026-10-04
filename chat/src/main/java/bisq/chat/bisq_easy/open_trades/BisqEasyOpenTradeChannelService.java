@@ -47,6 +47,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,12 +61,16 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     private final BisqEasyOpenTradeChannelStore persistableStore = new BisqEasyOpenTradeChannelStore();
     @Getter
     private final Persistence<BisqEasyOpenTradeChannelStore> persistence;
-    // Anybody can send messages without offer for made-up trade IDs, and such a message never gets a channel. So the
+    // Anybody can send messages for made-up trade IDs, and such a message never gets a channel. So the
     // number of pending messages is bounded, and the oldest is dropped (see pending-trade-messages.md). The set keeps
     // the arrival order; additions are synchronized on this service.
     @VisibleForTesting
     static final int MAX_PENDING_MESSAGES = 100;
     private final Set<BisqEasyOpenTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    // Set by the trade service: whether we have a trade with the trade ID whose peer is the user profile. A received
+    // message creates a channel only for such a trade (see pending-trade-messages.md). Until it is set, received
+    // messages create no channel.
+    private volatile BiPredicate<String, String> isTradeWithPeer = (tradeId, userProfileId) -> false;
 
     public BisqEasyOpenTradeChannelService(PersistenceService persistenceService,
                                            NetworkService networkService,
@@ -356,24 +361,23 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                     StringUtils.sanitizeForLog(message.getId()));
             return Optional.empty();
         }
-        if (message.getBisqEasyOffer().isPresent()) {
+        if (message.getBisqEasyOffer().isPresent() &&
+                isTradeWithPeer.test(message.getTradeId(), message.getSenderUserProfile().getId())) {
             return Optional.of(traderFindOrCreatesChannel(message.getTradeId(),
                     message.getBisqEasyOffer().get(),
                     myUserIdentity.get(),
                     message.getSenderUserProfile(),
                     message.getMediator()));
-        } else {
-            // It could be that taker sends quickly a message after take offer, and we receive them
-            // out of order. In that case the seconds message (which arrived first) would get dropped.
-            // This is a very unlikely case, so we ignore it.
-            // It also happens if we left a trade channel and receive a message again.
-            // We ignore that and do not re-open the channel.
-            log.warn("We received the first message for a new channel without an offer. " +
-                    "We add that message to pendingMessages for re-processing when we receive the next message. " +
-                    "tradeId={}", StringUtils.sanitizeForLog(message.getTradeId()));
-            addPendingMessage(message);
-            return Optional.empty();
         }
+        // A message without offer, or for a trade which we do not have. The taker's first chat message can arrive
+        // before the take offer request which creates our trade; the trade service then processes the pending messages.
+        // If the trade is created after the check above, onMessage processes the pending messages again.
+        addPendingMessage(message);
+        return Optional.empty();
+    }
+
+    public void setIsTradeWithPeer(BiPredicate<String, String> isTradeWithPeer) {
+        this.isTradeWithPeer = isTradeWithPeer;
     }
 
     // The taker's UI and the received take offer message can both create the channel, on different threads.
@@ -423,6 +427,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                     MAX_PENDING_MESSAGES, StringUtils.sanitizeForLog(oldest.getTradeId()));
         }
         pendingMessages.add(message);
+        log.debug("We keep a message for a trade channel which does not exist as pending message. tradeId={}",
+                StringUtils.sanitizeForLog(message.getTradeId()));
     }
 
     @VisibleForTesting
@@ -430,7 +436,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         return pendingMessages.size();
     }
 
-    private void processPendingMessages(String tradeId) {
+    public void processPendingMessages(String tradeId) {
         pendingMessages.stream()
                 .filter(message -> message.getTradeId().equals(tradeId))
                 .forEach(this::processMessage);

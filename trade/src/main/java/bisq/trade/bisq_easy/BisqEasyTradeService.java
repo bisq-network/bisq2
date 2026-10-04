@@ -147,6 +147,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
+        bisqEasyOpenTradeChannelService.setIsTradeWithPeer((tradeId, userProfileId) -> findTrade(tradeId)
+                .filter(trade -> trade.getPeer().getNetworkId().getId().equals(userProfileId))
+                .isPresent());
 
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
@@ -536,6 +539,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
         bisqEasyOpenTradeChannelService.findChannelByTradeId(id)
                 .ifPresent(channel -> failTradeOnChatChannelMismatch(trade, channel));
+        // The taker's first chat message, which creates our trade chat channel, can be pending if it arrived first
+        bisqEasyOpenTradeChannelService.processPendingMessages(id);
         return tradeProtocol;
     }
 
