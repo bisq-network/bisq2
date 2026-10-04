@@ -80,7 +80,9 @@ definitions, for example a longer time to live for storage reasons, changed the 
 13. A message type for which the policy has no rule has the cost factor 1.
 
     Reason: peers send a `MailboxMessage`, including `AckMessage`, only inside a `ConfidentialMessage` or an
-    `AddMailboxRequest`. They do not send it as a message of its own. A peer which does so pays the highest cost.
+    `AddMailboxRequest`. They do not send it as a message of its own. A node drops such a message when it parses it,
+    before it checks the cost (see [Confidential messages](confidential-messages.md)). A type for which the policy has
+    no rule gets the highest cost.
 
 `bounded(a, b, x)` is `x`, limited to the range from `a` to `b`. The class names and the values of rules 10 and 11 are
 listed in `MessageCostPolicy`.

@@ -69,6 +69,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                                                      PublicKey senderPublicKey) {
     }
 
+    // A listener receives only messages which this service decrypted with a key of the node, after it checked the
+    // sender key and the receiver key which the message names. The chat, trade and support services rely on this
+    // (see docs/specifications/network/confidential-messages.md).
     public interface Listener {
         void onMessage(EnvelopePayloadMessage envelopePayloadMessage);
 
