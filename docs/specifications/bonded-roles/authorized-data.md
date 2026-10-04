@@ -13,22 +13,28 @@ publish and remove the data in the network storage is defined in
 - **Static keys**: public keys which are written in the code, one set per role type (oracle node, security manager,
   release manager, moderator). In dev mode, one set of dev keys replaces all sets.
 - **Static flag**: the field `staticPublicKeysProvided` of the data. It states that a static key authorized the data.
+- **Static key requirement**: a type of authorized data can require a static key
+  (`AuthorizedDistributedData.isStaticPublicKeyRequired()`). Then only the static keys of the type may authorize its
+  data, with and without the static flag. The type declares the requirement in the code, not the data, because the
+  publisher sets the fields of the data.
 - **Authorizing role type**: the type of bonded role which may authorize a type of data. For example, an oracle node
   authorizes bonded roles and reputation data, and a security manager authorizes alerts.
 
 ## Rules
 
 1. The authorization signature must be valid for the authorized public key and the data.
-2. If the data has the static flag, the authorized public key must be one of the static keys of the type of the data.
-3. If the data does not have the static flag, the authorized public key must be the authorized key of a bonded role of
-   the authorizing role type. A banned role does not count, unless the node is configured to ignore the security
-   manager.
+2. If the data has the static flag, or if its type requires a static key, the authorized public key must be one of the
+   static keys of the type of the data.
+3. If the data does not have the static flag and its type does not require a static key, the authorized public key must
+   be the authorized key of a bonded role of the authorizing role type. A banned role does not count, unless the node is
+   configured to ignore the security manager.
 
 ### Where a node checks the rules
 
-4. The network storage checks rules 1 and 2 when it adds the data. It does not know the bonded roles, so it does not
-   check rule 3.
-5. The network storage does not check stored data again when it loads a store.
+4. The network storage checks rules 1 and 2 when it adds the data. It checks rule 2 first, because rule 2 needs no
+   signature verification. It does not know the bonded roles, so it does not check rule 3.
+5. When the network storage loads a store, it removes the data which fails rule 2. It does not verify the
+   authorization signatures of the stored data again (rule 1).
 6. The services which use authorized data check rule 2 or rule 3 before they use the data
    (`AuthorizedBondedRolesService.hasAuthorizedPubKey`). For rule 2 the check compares the authorized public key with
    the static keys of the version of the node. It does not rely on the check of the network storage.
@@ -80,11 +86,12 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
 
 ## Reasons
 
-- Rule 6: a later version can remove a static key, for example after the key was compromised. A node which updates
-  still holds the data which that key published, for up to 100 days, and the store does not check it again (rule 5).
-  If the application relied on the check of rule 4, it would still use this data. The root role of an oracle node has
-  the static flag. With the root role of a removed key, that key could authorize bonded roles of every type on this
-  node, because rule 3 would find its role.
+- Rule 6: a later version can remove a static key, for example after the key was compromised. The network storage
+  removes the data of that key when it loads a store (rule 5), and the applications check the key again before they
+  use the data. The applications do not rely on the network storage, because a gap in its checks would otherwise give
+  authority to data which no valid key authorized (for example the gap which rule 15 closes). The root role of an
+  oracle node has the static flag. With the root role of a removed key, that key could authorize bonded roles of every
+  type on this node, because rule 3 would find its role.
 - Rule 6 needs no signature verification. It is a lookup in a set of a few keys.
 - Rule 6 also protects the profile timestamp request lookup. A signed timestamp from another key can be stored
   without oracle authority when it has no static flag. Counting it as an existing timestamp would suppress a
@@ -116,6 +123,26 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
   Otherwise nodes disagree about which bonded roles and which reputation data are valid.
 - Compatibility: nodes of earlier versions still accept non-static oracle nodes. Oracle nodes with an oracle node key
   publish their data with the static flag, which all versions accept.
+- Rule 2, static key requirement: the publisher sets the static flag. If only the flag required a static key, any key
+  could authorize data without the flag, and the network storage would accept it (rule 4). The applications ignore
+  such data, but all nodes would store, relay and serve it, up to the limit of the store. For a type whose authorizing
+  role type has only static keys, such data is never valid, so the type declares the requirement, and the network
+  storage rejects the data of other keys.
+- Rule 4, order: rule 2 is a lookup in a set of a few keys, and rule 1 costs a signature verification. With rule 2
+  first, a node rejects data of other keys cheaply, also when a node of an earlier version sends much of it in an
+  inventory response.
+- Rule 4, data which fails rule 2 is no sign of an attack by the peer: nodes of earlier versions accept data of other
+  keys for types which require a static key now, and a later version can remove a static key. Honest nodes of earlier
+  versions then relay such data. A node of this version therefore does not log each such rejection as a warning. An
+  invalid authorization signature (rule 1) is not caused by a difference between versions.
+- Rule 5: a node which updates can hold data which this version rejects: data of other keys of a type which requires
+  a static key now, and data of a static key which this version removed. If the store kept it, the node would serve it
+  in its inventory responses until it expires, up to 100 days. Other nodes of this version reject it, so they receive
+  it again with each response of that node. If a full response contains nothing else which they accept, they stop
+  requesting inventory from that node (rule 6 of
+  [`../network/inventory-hash-set-filter.md`](../network/inventory-hash-set-filter.md#repeated-requests)). Rule 2 needs
+  no signature verification, so the check costs little when the store loads. The static keys do not change while the
+  node runs, so the store does not need to check rule 2 again later.
 - Rule 15: the network storage checks rules 1 and 2 only for data inside `AuthorizedData`. As default authenticated
   data, authorized data would have no authorization at all. The owner rule rejects such data if it names no owner (rule
   3 of [`../network/storage-ownership.md`](../network/storage-ownership.md)). `AuthorizedOracleNode` names its owner,
@@ -123,9 +150,10 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
   ID and any key as default authenticated data. All nodes would store, relay and serve it with the highest priority,
   although no key authorized it. Nodes of earlier versions do not create such data, so the rule is checked at parsing
   (rule 3 of [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md)).
-- Rule 5: checking the authorization of every stored entry verifies one signature per entry. This check was disabled
-  at startup to reduce the startup cost. Rule 8 of [`../network/storage-ownership.md`](../network/storage-ownership.md)
-  still removes stored entries whose publisher is not the owner.
+- Rule 5, signatures: verifying the authorization signature of every stored entry costs one signature verification
+  per entry. This check was disabled at startup to reduce the startup cost. Rule 8 of
+  [`../network/storage-ownership.md`](../network/storage-ownership.md) still removes stored entries whose publisher is
+  not the owner.
 
 ## Verification
 
@@ -143,6 +171,12 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
   stored timestamp signed by a non-oracle key and counts one signed by an oracle key, even before profile age is
   applied. With mixed publications, only profiles with an authorized timestamp count. Removing the last authorized
   timestamp makes the profile missing again, even if an unauthorized copy remains in storage.
+- Rules 2, 4 and 5 with a test type which requires a static key: the network storage rejects its data of another key,
+  with and without the static flag, and accepts its data of a static key without the static flag. It accepts data of
+  another key without the static flag of a type without the requirement, and rejects such data with the static flag.
+  It checks the key before the signature: data of another key with an invalid signature fails rule 2, and the
+  rejection is no severe failure. An invalid signature of a static key is a severe failure. When the store loads, it
+  removes the data which fails rule 2 and keeps the other data.
 - Rule 15: default authenticated data whose data is authorized data cannot be created, and a received one fails at
   parsing. This includes the real `AuthorizedOracleNode` published by the key of its network ID.
 - With the restriction (rules 10 and 11): an oracle node of an oracle node key is listed, with and without the static
@@ -153,7 +187,9 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
 
 ## Related code
 
-- `AuthorizedData.isNotAuthorized()` (rules 1 and 2 at add), `AuthenticatedDataStorageService.add()`.
+- `AuthorizedDistributedData.isStaticPublicKeyRequired()` (static key requirement).
+- `AuthorizedData.isAuthorizedKeyAllowed()` (rule 2), `AuthorizedData.isAuthorizationSignatureInvalid()` (rule 1),
+  `AuthenticatedDataStorageService.add()` (rule 4) and `AuthenticatedDataStorageService.isToPrune()` (rule 5).
 - `DefaultAuthenticatedData.verify()` (rule 15).
 - `AuthorizedBondedRolesService.hasAuthorizedPubKey()` (rules 2 and 3 before use).
 - `ProfileAgeService.getTimeStampedProfileIds()` (rule 6, profile timestamp request lookup).

@@ -105,8 +105,9 @@ compare both before it accepts the data.
    [Owner of `AuthorizedOracleNode`](#owner-of-authorizedoraclenode)).
 
    Reason for the limit to static keys: the store checks only the authorization signature of data without the static
-   flag (rule 4 of [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md#rules)). So for the store,
-   every key can be the authorized key of data which it signs itself. If every authorized key were an owner, any node
+   flag, unless its type requires a static key (rules 2 and 4 of
+   [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md#rules)). So for the store, every key can
+   be the authorized key of such data which it signs itself. If every authorized key were an owner, any node
    could publish an `AuthorizedOracleNode` with its own key as authorized key and as publisher. Updated nodes would
    store, relay and serve such entries. Nodes of v2.1.13 and earlier reject them each time they receive them, so the
    entries never enter the inventory filter of these nodes. Updated nodes would send them again with every inventory

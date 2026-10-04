@@ -26,7 +26,7 @@ public class DataStorageResult {
     private final boolean success;
     private boolean requestAlreadyReceived, payloadAlreadyStored, publicKeyHashInvalid, sequenceNrInvalid, signatureInvalid,
             isNotAuthorized, expired, noEntry, alreadyRemoved, maxMapSizeReached, isSevereFailure, metaDataInvalid,
-            classNameInvalid, ownerInvalid, signatureV2Missing;
+            classNameInvalid, ownerInvalid, signatureV2Missing, authorizedKeyNotStatic;
 
     public static DataStorageResult success() {
         return new DataStorageResult(true);
@@ -111,6 +111,14 @@ public class DataStorageResult {
         return this;
     }
 
+    // The authorized key of authorized data is not one of the static keys of its type, although the data has the static
+    // flag or its type requires a static key (rule 2 of docs/specifications/bonded-roles/authorized-data.md). Nodes of
+    // earlier versions accept such data of some types, and relay it. So this is not a severe failure.
+    public DataStorageResult authorizedKeyNotStatic() {
+        authorizedKeyNotStatic = true;
+        return this;
+    }
+
     public DataStorageResult noEntry() {
         noEntry = true;
         return this;
@@ -141,6 +149,7 @@ public class DataStorageResult {
                 ", classNameInvalid=" + classNameInvalid +
                 ", ownerInvalid=" + ownerInvalid +
                 ", signatureV2Missing=" + signatureV2Missing +
+                ", authorizedKeyNotStatic=" + authorizedKeyNotStatic +
                 '}';
     }
 }
