@@ -72,9 +72,9 @@ processes it again when it processes the next message of a trade.
 - Rule 6: a flood of chat messages for made-up trade IDs can push the taker's first chat message out of the pending chat
   messages before the take offer request arrives. The maker then has no trade channel, and the trade fails at the
   next step of the maker (the trade requires its chat channel).
-- Rule 6 relies on the trades of the node. The maker stores a trade when it receives a take offer request, before it
-  verifies the request (issue #47). A sender who sends a take offer request first can still get a channel stored for
-  that trade.
+- Rule 6 relies on the trades of the node. The maker stores a trade only for a take offer request which it accepted (see
+  [take offer request validation](take-offer-request-validation.md)). A trade which an earlier version stored for a
+  rejected request still lets the taker of that request get a channel stored for that trade.
 
 ## Compatibility
 
