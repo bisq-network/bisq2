@@ -139,6 +139,11 @@ adds a key, remove the key from `ignored-keys`, delete the component entries of 
 result. Do not remove reasons by hand: the policy cannot see which key signed an artifact, so a wrongly removed reason
 can hide a checksum-only artifact.
 
+`ignored-keys` is only for signing keys that no key server publishes. `verifyDependencySignaturePolicy` fails when a
+global or artifact-level ignored key is in `gradle/verification-keyring.keys`. Gradle never verifies a signature made
+with an ignored key, also when the keyring contains the key, so such an entry reduces the artifacts it signs to their
+checksums without need.
+
 Executable Maven artifacts, such as `protoc` and `protoc-gen-grpc-java`, must also have explicit entries in
 `gradle/verification-metadata.xml` for the resolved classifier. `verifyDependencySignaturePolicy` fails when a resolved
 executable is covered only by a broad trusted-key rule or when executable metadata remains for an older unresolved
