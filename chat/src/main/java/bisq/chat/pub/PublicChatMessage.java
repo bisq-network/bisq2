@@ -69,6 +69,10 @@ public abstract class PublicChatMessage extends ChatMessage implements Ownership
         super.verify();
         // The profile ID must be the ID of a public key, so that it names the author (see getOwnerPubKeyHash())
         checkArgument(PubKey.isId(authorUserProfileId), "authorUserProfileId is not the ID of a public key");
+        // Clients publish public messages only as text, so a node does not store or relay another type. The desktop
+        // creates the expired messages indicator for display only. That type has no protobuf value and is never sent.
+        checkArgument(hasSupportedChatMessageType() || chatMessageType == ChatMessageType.EXPIRED_MESSAGES_INDICATOR,
+                "chatMessageType is not supported in public chats");
     }
 
     // The author owns the message. The profile ID is the ID of the public key of the author (PubKey.getId()).
