@@ -32,6 +32,7 @@ import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
@@ -147,6 +148,35 @@ class AuthorizedOracleNodeOwnerTest {
                 .isInstanceOf(UnresolvableProtobufException.class)
                 .satisfies(exception -> assertThat(ExceptionUtil.getRootCauseMessage(exception))
                         .contains("not the owner"));
+    }
+
+    // AuthorizedOracleNode names its owner. As default authenticated data, it would pass the owner rule with the key of
+    // its network ID, without any authorization signature. The store would then hold, relay and serve an oracle node
+    // which no key authorized. Authorized data is valid only as AuthorizedData (see
+    // docs/specifications/bonded-roles/authorized-data.md), so a received copy fails at parsing.
+    @Test
+    void oracleNodeAsDefaultAuthenticatedDataFailsAtParsing() throws GeneralSecurityException {
+        AuthorizedOracleNode oracleNode = createOracleNode(authorizedKeyPair.getPublic(), false);
+        assertThatThrownBy(() -> new DefaultAuthenticatedData(oracleNode))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        // As a modified node sends it
+        bisq.network.protobuf.AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store,
+                authorize(oracleNode, authorizedKeyPair), identityKeyPair).toValueProto(false);
+        bisq.network.protobuf.AuthenticatedSequentialData sequentialData = request.getAuthenticatedSequentialData();
+        bisq.network.protobuf.AddAuthenticatedDataRequest requestAsDefaultAuthenticatedData = request.toBuilder()
+                .setAuthenticatedSequentialData(sequentialData.toBuilder()
+                        .setAuthenticatedData(sequentialData.getAuthenticatedData().toBuilder()
+                                .setDefaultAuthenticatedData(bisq.network.protobuf.DefaultAuthenticatedData.newBuilder())))
+                .build();
+
+        assertThat(requestAsDefaultAuthenticatedData.getAuthenticatedSequentialData().getAuthenticatedData()
+                .hasAuthorizedData()).isFalse();
+        assertThatThrownBy(() -> AddAuthenticatedDataRequest.fromProto(requestAsDefaultAuthenticatedData))
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .satisfies(exception -> assertThat(ExceptionUtil.getRootCauseMessage(exception))
+                        .contains("valid only as AuthorizedData"));
+        assertThat(store.getPersistableStore().getMap()).isEmpty();
     }
 
     // In a later version the root oracle nodes publish their AuthorizedOracleNode also with their authorized key pair.

@@ -25,6 +25,7 @@ import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
@@ -1313,14 +1314,24 @@ class AuthenticatedDataStorageServiceTest {
                 () -> AddAuthenticatedDataRequest.from(peerStore, authenticatedData, otherKeyPair));
     }
 
-    // Distributed data which names no owner has no owner as default authenticated data. Authorized data names no
-    // owner, so it cannot be stored as default authenticated data, which would skip its authorization check.
+    // Distributed data which names no owner has no owner as default authenticated data
     @Test
     void defaultAuthenticatedDataWithoutOwnerCannotBePublished() {
-        AuthenticatedData dataWithoutOwner = new DefaultAuthenticatedData(new TestAuthorizedDistributedData("content"));
+        AuthenticatedData dataWithoutOwner = new DefaultAuthenticatedData(new DataWithoutOwner("content"));
 
         assertThrows(IllegalArgumentException.class,
-                () -> AddAuthenticatedDataRequest.from(authorizedDataStore, dataWithoutOwner, authorizedKeyPair));
+                () -> AddAuthenticatedDataRequest.from(peerStore, dataWithoutOwner, ownerKeyPair));
+    }
+
+    // Authorized data is valid only as AuthorizedData. As default authenticated data, it would skip the checks of its
+    // authorization. Authorized data which names its owner, like AuthorizedOracleNode, would also pass the owner rule.
+    // A received copy fails at parsing, because fromProto uses the same constructor.
+    @Test
+    void authorizedDataCannotBeDefaultAuthenticatedData() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DefaultAuthenticatedData(new TestAuthorizedDistributedData("content")));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DefaultAuthenticatedData(new TestAuthorizedDataWithOwner(ownerKeyPair.getPublic())));
     }
 
     // The authorization signature does not cover the key which signs the add request. The authorized key therefore
@@ -1573,5 +1584,33 @@ class AuthenticatedDataStorageServiceTest {
         AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
         assertTrue(ownerStore.add(addRequest).isSuccess());
         assertTrue(peerStore.add(addRequest).isSuccess());
+    }
+
+    // Distributed data which names no owner and is no authorized data
+    private static final class DataWithoutOwner implements DistributedData {
+        private final String content;
+
+        private DataWithoutOwner(String content) {
+            this.content = content;
+        }
+
+        @Override
+        public void verify() {
+        }
+
+        @Override
+        public bisq.network.protobuf.MetaData.Builder getBuilder(boolean serializeForHash) {
+            return bisq.network.protobuf.MetaData.newBuilder().setClassName(content);
+        }
+
+        @Override
+        public bisq.network.protobuf.MetaData toProto(boolean serializeForHash) {
+            return unsafeToProto(serializeForHash);
+        }
+
+        @Override
+        public MetaData getMetaData() {
+            return TestDistributedData.META_DATA;
+        }
     }
 }

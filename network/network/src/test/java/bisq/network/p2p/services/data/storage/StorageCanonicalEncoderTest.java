@@ -117,7 +117,8 @@ public class StorageCanonicalEncoderTest {
         // serializeForHash() omits the signature, so that republishing keeps the storage key
         assertFalse(Arrays.equals(withSignature.serializeForHash(), withSignature.encodeCanonical()));
 
-        AuthorizedData withoutSignature = new AuthorizedData(new ExternalData("content", 0), KEY_PAIR.getPublic());
+        AuthorizedData withoutSignature = new AuthorizedData(new AuthorizedExternalData("content", 0),
+                KEY_PAIR.getPublic());
         assertArrayEquals(withoutSignature.serialize(), withoutSignature.encodeCanonical());
         assertArrayEquals(withoutSignature.serializeForHash(), withoutSignature.encodeCanonical());
 
@@ -133,7 +134,7 @@ public class StorageCanonicalEncoderTest {
 
         // The STORAGE_KEY purpose contains the external data in its hash serialization, the SIGNATURE purpose with its
         // exact bytes
-        AuthorizedData withExcludedField = new AuthorizedData(new ExternalData("content", 7),
+        AuthorizedData withExcludedField = new AuthorizedData(new AuthorizedExternalData("content", 7),
                 Optional.of(SIGNATURE),
                 KEY_PAIR.getPublic());
         assertArrayEquals(withExcludedField.serialize(), withExcludedField.encodeCanonical(EncodingPurpose.SIGNATURE));
@@ -292,7 +293,8 @@ public class StorageCanonicalEncoderTest {
         for (AuthenticatedData authenticatedData : List.of(getDefaultAuthenticatedData(),
                 getAuthorizedData(),
                 new DefaultAuthenticatedData(new ExternalData("content", 7)),
-                new AuthorizedData(new ExternalData("content", 7), Optional.of(SIGNATURE), KEY_PAIR.getPublic()))) {
+                new AuthorizedData(new AuthorizedExternalData("content", 7), Optional.of(SIGNATURE),
+                        KEY_PAIR.getPublic()))) {
             messages.add(getAddAuthenticatedDataRequest(new AuthenticatedSequentialData(authenticatedData,
                     3,
                     PUBLIC_KEY_HASH,
@@ -406,7 +408,8 @@ public class StorageCanonicalEncoderTest {
     }
 
     private static AuthorizedData getAuthorizedData() {
-        return new AuthorizedData(new ExternalData("content", 0), Optional.of(SIGNATURE), KEY_PAIR.getPublic());
+        return new AuthorizedData(new AuthorizedExternalData("content", 0), Optional.of(SIGNATURE),
+                KEY_PAIR.getPublic());
     }
 
     // With signature V2 and version 2, as nodes of this version create it
@@ -542,7 +545,7 @@ public class StorageCanonicalEncoderTest {
     // Data of a higher-level module, held in an Any. It serializes as network.MetaData so that no resolver is needed.
     // priority is excluded from the hash, as the name matches the protobuf field.
     // Names the test key as its owner, so that requests which this key publishes are valid
-    private static class ExternalData implements AuthorizedDistributedData, AppendOnlyData, OwnershipVerifiableData {
+    private static class ExternalData implements AppendOnlyData, OwnershipVerifiableData {
         private final String content;
         @ExcludeForHash
         private final int priority;
@@ -600,6 +603,14 @@ public class StorageCanonicalEncoderTest {
                 case TRADE_CONTRACT -> SCHEMA_FOR_HASH;
             };
             return canonicalEncoder.encode(this, schema, encodingPurpose);
+        }
+    }
+
+    // The same data as authorized data. Authorized data is valid only inside AuthorizedData, so ExternalData, which is
+    // used inside DefaultAuthenticatedData as well, is no authorized data.
+    private static final class AuthorizedExternalData extends ExternalData implements AuthorizedDistributedData {
+        private AuthorizedExternalData(String content, int priority) {
+            super(content, priority);
         }
     }
 

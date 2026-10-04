@@ -71,6 +71,13 @@ currently `true`. While it is `true`, these rules apply:
 
 When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply unchanged.
 
+### The holder of authorized data
+
+15. Authorized data is valid only inside `AuthorizedData`, which carries the authorized public key and the
+    authorization signature. A node rejects default authenticated data whose data is authorized data when it constructs
+    or decodes it (see [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md)). So no node of this
+    version stores, relays, serves or uses such data, and a store skips such a persisted entry when it loads.
+
 ## Reasons
 
 - Rule 6: a later version can remove a static key, for example after the key was compromised. A node which updates
@@ -109,6 +116,13 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
   Otherwise nodes disagree about which bonded roles and which reputation data are valid.
 - Compatibility: nodes of earlier versions still accept non-static oracle nodes. Oracle nodes with an oracle node key
   publish their data with the static flag, which all versions accept.
+- Rule 15: the network storage checks rules 1 and 2 only for data inside `AuthorizedData`. As default authenticated
+  data, authorized data would have no authorization at all. The owner rule rejects such data if it names no owner (rule
+  3 of [`../network/storage-ownership.md`](../network/storage-ownership.md)). `AuthorizedOracleNode` names its owner,
+  the key of its network ID. So without rule 15, any node could publish an `AuthorizedOracleNode` with its own network
+  ID and any key as default authenticated data. All nodes would store, relay and serve it with the highest priority,
+  although no key authorized it. Nodes of earlier versions do not create such data, so the rule is checked at parsing
+  (rule 3 of [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md)).
 - Rule 5: checking the authorization of every stored entry verifies one signature per entry. This check was disabled
   at startup to reduce the startup cost. Rule 8 of [`../network/storage-ownership.md`](../network/storage-ownership.md)
   still removes stored entries whose publisher is not the owner.
@@ -129,6 +143,8 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
   stored timestamp signed by a non-oracle key and counts one signed by an oracle key, even before profile age is
   applied. With mixed publications, only profiles with an authorized timestamp count. Removing the last authorized
   timestamp makes the profile missing again, even if an unauthorized copy remains in storage.
+- Rule 15: default authenticated data whose data is authorized data cannot be created, and a received one fails at
+  parsing. This includes the real `AuthorizedOracleNode` published by the key of its network ID.
 - With the restriction (rules 10 and 11): an oracle node of an oracle node key is listed, with and without the static
   flag. An oracle node of a key with a role of the oracle node role type is not listed. A role of the oracle node role
   type of another key is not listed, and its key does not authorize other roles.
@@ -138,6 +154,7 @@ When the flag is `false`, rules 10 to 14 do not apply, and rules 1 to 9 apply un
 ## Related code
 
 - `AuthorizedData.isNotAuthorized()` (rules 1 and 2 at add), `AuthenticatedDataStorageService.add()`.
+- `DefaultAuthenticatedData.verify()` (rule 15).
 - `AuthorizedBondedRolesService.hasAuthorizedPubKey()` (rules 2 and 3 before use).
 - `ProfileAgeService.getTimeStampedProfileIds()` (rule 6, profile timestamp request lookup).
 - `AuthorizedBondedRolesService.getAuthorizedOracleNodes()` (rule 8), `AccountTimestampService` (rule 9).
