@@ -978,6 +978,24 @@ if (isBisqRepositoryRootBuild) {
                 markdown.append('\n')
             }
 
+            val unresolvedChecksumOnlyArtifacts = componentsById.values
+                .filter { !resolved.resolvedComponents.contains(it.id) }
+                .flatMap { component -> component.artifacts.filter { it.checksumOnly }.map { component.id to it.name } }
+            if (unresolvedChecksumOnlyArtifacts.isNotEmpty()) {
+                markdown.append("## Checksum-Only Metadata Outside the Resolved Graph\n\n")
+                markdown.append(
+                    "Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms against the " +
+                            "metadata. These checksum-only entries are not part of the resolved dependency graph.\n\n"
+                )
+                markdown.append("| Dependency | Artifact and review rationale |\n")
+                markdown.append("| --- | --- |\n")
+                unresolvedChecksumOnlyArtifacts.forEach { (id, artifactName) ->
+                    val rationale = allowlist.rationales["$id\t$artifactName"] ?: "Missing allowlist rationale"
+                    markdown.append("| `$id` | `$artifactName`<br>${htmlEscape(rationale)} |\n")
+                }
+                markdown.append('\n')
+            }
+
             if (
                 executableMetadataViolations.missingArtifacts.isNotEmpty() ||
                 executableMetadataViolations.staleArtifacts.isNotEmpty()
