@@ -83,7 +83,9 @@ compare both before it accepts the data.
    data whose data names no owner.
 
    Reason: authorized data names no owner. Wrapped as default authenticated data, it would otherwise skip the check of
-   its authorization.
+   its authorization. Authorized data which names its owner, `AuthorizedOracleNode`, would pass this rule. It is
+   rejected at parsing, because authorized data is valid only inside `AuthorizedData` (rule 15 of
+   [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md#the-holder-of-authorized-data)).
 
 4. The authorized key (`authorizedPublicKeyBytes`) is the owner of authorized data which names no owner. If the data
    names an owner, that owner is an owner. The authorized key is then an owner as well only if it is a static key of

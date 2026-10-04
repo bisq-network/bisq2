@@ -23,10 +23,13 @@ import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.DistributedDataAny;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @ToString(callSuper = true)
@@ -44,8 +47,13 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
         verify();
     }
 
+    // Authorized data is valid only inside AuthorizedData, which carries its authorization. As default authenticated
+    // data, it would skip the checks of its authorization. If it names its owner, the owner rule would accept it from
+    // the key of that owner (see docs/specifications/bonded-roles/authorized-data.md).
     @Override
     public void verify() {
+        checkArgument(!(distributedData instanceof AuthorizedDistributedData),
+                "Authorized data is valid only as AuthorizedData. className=%s", getClassName());
     }
 
     public bisq.network.protobuf.AuthenticatedData toProto(boolean serializeForHash) {
