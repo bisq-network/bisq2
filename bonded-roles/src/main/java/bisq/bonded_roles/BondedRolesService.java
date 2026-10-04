@@ -65,7 +65,8 @@ public class BondedRolesService implements Service {
                     config.getConfig("blockchainExplorer"),
                     config.getConfig("mobileNotifications"),
                     config.getBoolean("ignoreSecurityManager"),
-                    config.getBoolean("onlyStaticOracleNodes"));
+                    // A node without the key uses true (docs/specifications/bonded-roles/authorized-data.md)
+                    !config.hasPath("onlyStaticOracleNodes") || config.getBoolean("onlyStaticOracleNodes"));
         }
     }
 
