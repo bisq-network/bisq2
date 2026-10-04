@@ -37,9 +37,12 @@ import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.security.GeneralSecurityException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiPredicate;
 
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.buyerAsTakerTrade;
@@ -52,9 +55,13 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.sellerAsMakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userIdentity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -196,6 +203,37 @@ class BisqEasyTradeServiceChatChannelBindingTest {
         BisqEasyTrade makerTrade = service.findTrade(trade.getId()).orElseThrow();
         assertEquals(BisqEasyTradeState.FAILED, makerTrade.getState());
         assertEquals(TradeProtocolFailure.CHANNEL_DATA_MISMATCH, makerTrade.getTradeProtocolFailure());
+    }
+
+    @Test
+    void chatChannelIsCreatedOnlyForATradeWithThatPeer() {
+        BisqEasyOpenTradeChannelService channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
+        service.getPersistableStore().addTrade(trade);
+        service.initialize();
+
+        ArgumentCaptor<BiPredicate<String, String>> isTradeWithPeer = ArgumentCaptor.captor();
+        verify(channelService).setIsTradeWithPeer(isTradeWithPeer.capture());
+        assertTrue(isTradeWithPeer.getValue().test(trade.getId(), makerNetworkId.getId()));
+        assertFalse(isTradeWithPeer.getValue().test(trade.getId(), takerIdentity.getNetworkId().getId()));
+        assertFalse(isTradeWithPeer.getValue().test("unknownTradeId", makerNetworkId.getId()));
+        verify(channelService).processPendingMessages(trade.getId());
+    }
+
+    @Test
+    void pendingChatMessagesAreProcessedWhenMakerTradeIsCreated() throws GeneralSecurityException {
+        BisqEasyOpenTradeChannelService channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
+        when(serviceProvider.getIdentityService().findAnyIdentityById(makerIdentity.getId())).thenReturn(Optional.of(makerIdentity));
+        service.initialize();
+        AtomicBoolean tradeStoredWhenProcessing = new AtomicBoolean();
+        doAnswer(invocation -> {
+            tradeStoredWhenProcessing.set(service.findTrade(invocation.getArgument(0)).isPresent());
+            return null;
+        }).when(channelService).processPendingMessages(anyString());
+
+        service.onMessage(takeOfferRequest(trade.getContract()));
+
+        verify(channelService).processPendingMessages(trade.getId());
+        assertTrue(tradeStoredWhenProcessing.get());
     }
 
     private BisqEasyTakeOfferRequest takeOfferRequest(BisqEasyContract contract) throws GeneralSecurityException {
