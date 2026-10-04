@@ -217,19 +217,28 @@ public final class AuthorizedData extends AuthenticatedData {
         return (AuthorizedDistributedData) distributedData;
     }
 
-    public boolean isNotAuthorized() {
+    // Rule 2 of docs/specifications/bonded-roles/authorized-data.md: if the data has the static flag, or if its type
+    // requires a static key, the authorized key must be one of the static keys of the type. Other keys can authorize
+    // data only with a bonded role, which the network storage does not know (rule 3). The check is a lookup in a set of
+    // a few keys. So the store runs it before it verifies the signature, and also when it loads a store.
+    public boolean isAuthorizedKeyAllowed() {
+        AuthorizedDistributedData data = getAuthorizedDistributedData();
+        if (data.staticPublicKeysProvided() || data.isStaticPublicKeyRequired()) {
+            return isStaticAuthorizedKey();
+        }
+        return true;
+    }
+
+    // Rule 1 of docs/specifications/bonded-roles/authorized-data.md. Only removals use AuthorizedData without a
+    // signature.
+    public boolean isAuthorizationSignatureInvalid() {
+        if (signature.isEmpty()) {
+            return true;
+        }
         try {
-            if (!SignatureUtil.verify(distributedData.serializeForHash(), signature.orElseThrow(), authorizedPublicKey)) {
-                return true;
-            }
-
-            if (getAuthorizedDistributedData().staticPublicKeysProvided()) {
-                return !isStaticAuthorizedKey();
-            }
-
-            return false;
+            return !SignatureUtil.verify(distributedData.serializeForHash(), signature.get(), authorizedPublicKey);
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.warn("Verifying the authorization signature failed", e);
             return true;
         }
     }
@@ -248,10 +257,11 @@ public final class AuthorizedData extends AuthenticatedData {
     // version can publish it with the authorized key pair of a root oracle node.
     //
     // Another authorized key is not an owner of data which names its owner. The store checks only the signature of
-    // authorized data without the static flag, so for the store any key can be the authorized key. If each authorized
-    // key were an owner, any node could publish an AuthorizedOracleNode with its own key. Nodes of v2.1.13 and earlier
-    // reject such an entry each time they receive it, so updated nodes would send it to them again with every
-    // inventory response (see docs/specifications/network/storage-ownership.md).
+    // authorized data without the static flag, unless its type requires a static key. So for the store, any key can be
+    // the authorized key of such data. If each authorized key were an owner, any node could publish an
+    // AuthorizedOracleNode with its own key. Nodes of v2.1.13 and earlier reject such an entry each time they receive
+    // it, so updated nodes would send it to them again with every inventory response (see
+    // docs/specifications/network/storage-ownership.md).
     @Override
     public boolean isOwner(byte[] pubKeyHash) {
         if (distributedData instanceof OwnershipVerifiableData ownershipVerifiableData) {

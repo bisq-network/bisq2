@@ -126,9 +126,20 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
         AuthenticatedSequentialData authenticatedSequentialData = request.getAuthenticatedSequentialData();
         AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
-        if (authenticatedData instanceof AuthorizedData authorizedData && authorizedData.isNotAuthorized()) {
-            log.warn("AuthorizedData is not authorized. request={}", StringUtils.truncate(request.toString(), 1500));
-            return DataStorageResult.failed().isNotAuthorized();
+        if (authenticatedData instanceof AuthorizedData authorizedData) {
+            // Rules 2 and 1 of docs/specifications/bonded-roles/authorized-data.md. The key comes first, as it needs no
+            // signature verification. Nodes of earlier versions relay data of other keys for some types, so we do not
+            // log it as a warning.
+            if (!authorizedData.isAuthorizedKeyAllowed()) {
+                log.debug("The authorized key is not a static key of {}. storageKey={}",
+                        authenticatedData.getClassName(), storageKey);
+                return DataStorageResult.failed().authorizedKeyNotStatic();
+            }
+            if (authorizedData.isAuthorizationSignatureInvalid()) {
+                log.warn("AuthorizedData is not authorized. request={}",
+                        StringUtils.truncate(request.toString(), 1500));
+                return DataStorageResult.failed().isNotAuthorized();
+            }
         }
         if (request.isSignatureInvalid(now)) {
             log.warn("Signature is invalid at add. request={}", request);
@@ -408,7 +419,26 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         return isAdd || isRemoveWithSignatureV2;
     }
 
-    // Removes the entries which have expired, and those without signature V2 when the node requires it (see isToPrune).
+    // A store also removes the authorized data whose authorized key it does not allow (rule 5 of
+    // docs/specifications/bonded-roles/authorized-data.md). It can hold such data from an earlier version: data of
+    // another key of a type which requires a static key now, or data of a static key which this version removed. The
+    // store removes it when it loads. The static keys do not change while the node runs, so the periodic pruning finds
+    // no such data.
+    @Override
+    protected boolean isToPrune(AuthenticatedDataRequest request) {
+        return super.isToPrune(request) || isAuthorizedKeyNotAllowed(request);
+    }
+
+    private static boolean isAuthorizedKeyNotAllowed(AuthenticatedDataRequest request) {
+        if (request instanceof AddAuthenticatedDataRequest addRequest &&
+                addRequest.getAuthenticatedSequentialData().getAuthenticatedData() instanceof AuthorizedData data) {
+            return !data.isAuthorizedKeyAllowed();
+        }
+        return false;
+    }
+
+    // Removes the entries which isToPrune selects: those which have expired, those without signature V2 when the node
+    // requires it, and those whose authorized key this version does not allow.
     // A request can replace an entry after it was selected, so an entry is removed only if the map still holds it.
     // The removal holds the lock which add, remove and refresh hold.
     private void pruneExpired() {
@@ -417,7 +447,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 .map(entry -> Map.entry(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} entries from our {} map which have expired or have no signature V2",
+            log.info("We remove {} entries from our {} map which have expired, have no signature V2, or whose " +
+                            "authorized key is not allowed",
                     expiredEntries.size(), getStoreKey());
             expiredEntries.forEach(entry -> {
                 boolean wasRemoved;
