@@ -52,10 +52,6 @@ public class TradeStateModel implements Model {
     private final BooleanProperty showReportToMediatorButton = new SimpleBooleanProperty();
     private final StringProperty tradeInterruptedInfo = new SimpleStringProperty();
     private final StringProperty errorMessage = new SimpleStringProperty();
-    private final BooleanProperty shouldShowSellerPriceApprovalOverlay = new SimpleBooleanProperty();
-    private final BooleanProperty hasBuyerAcceptedSellersPriceSpec = new SimpleBooleanProperty();
-    private final StringProperty buyerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
-    private final StringProperty sellerPriceDescriptionApprovalOverlay = new SimpleStringProperty();
     private final BooleanProperty isTradeCompleted = new SimpleBooleanProperty();
     private final ObjectProperty<MessageDeliveryStatus> requestMediationDeliveryStatus = new SimpleObjectProperty<>();
     private final BooleanProperty shouldShowTryRequestMediationAgain = new SimpleBooleanProperty();
@@ -80,10 +76,6 @@ public class TradeStateModel implements Model {
         showReportToMediatorButton.set(false);
         tradeInterruptedInfo.set(null);
         errorMessage.set(null);
-        shouldShowSellerPriceApprovalOverlay.set(false);
-        hasBuyerAcceptedSellersPriceSpec.set(false);
-        buyerPriceDescriptionApprovalOverlay.set(null);
-        sellerPriceDescriptionApprovalOverlay.set(null);
         isTradeCompleted.set(false);
         requestMediationDeliveryStatus.set(null);
         shouldShowTryRequestMediationAgain.set(false);

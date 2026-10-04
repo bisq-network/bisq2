@@ -476,7 +476,6 @@ public class TradeWizardReviewController implements Controller {
         Monetary takersQuoteSideAmount = model.getFixQuoteSideAmount();
         BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec = new BitcoinPaymentMethodSpec(model.getTakersSelectedBitcoinPaymentMethod());
         FiatPaymentMethodSpec fiatPaymentMethodSpec = new FiatPaymentMethodSpec(model.getTakersSelectedFiatPaymentMethod());
-        PriceSpec sellersPriceSpec = model.getPriceSpec();
         long marketPrice = model.getMarketPrice();
         BisqEasyProtocol bisqEasyProtocol;
         try {
@@ -487,7 +486,6 @@ public class TradeWizardReviewController implements Controller {
                     bitcoinPaymentMethodSpec,
                     fiatPaymentMethodSpec,
                     mediator,
-                    sellersPriceSpec,
                     marketPrice);
         } catch (TradeRestrictedException e) {
             new Popup().warning(TradeExceptionHandler.localizedMessage(e)).show();
