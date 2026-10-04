@@ -104,7 +104,8 @@ equality of a role leaves out the oracle node which authorized it, so a node sho
   version of the node, or the key of a known oracle node role. This is the same check as for every use of authorized
   data (rules 2 and 3 of [`authorized-data.md`](authorized-data.md)). While only static oracle nodes are allowed,
   only the hard-coded oracle keys count (rule 10 of [`authorized-data.md`](authorized-data.md)). A publication of a key which a later version
-  removed from the hard-coded keys does not count, also if the store holds it from an earlier version.
+  removed from the hard-coded keys does not count. The store removes it when it loads (rule 5 of
+  [`authorized-data.md`](authorized-data.md)), but the count does not rely on that.
 
 Reasons:
 
