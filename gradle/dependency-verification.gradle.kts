@@ -44,6 +44,7 @@ data class TrustedKeyEntry(
     val group: String,
     val name: String,
     val version: String,
+    val file: String,
     val regex: Boolean,
 )
 data class TrustedKey(val id: String, val entries: List<TrustedKeyEntry>)
@@ -92,7 +93,6 @@ val dependencyVerificationKeyring = File(bisqRepositoryRoot, "gradle/verificatio
 val dependencyVerificationBinaryKeyring = File(bisqRepositoryRoot, "gradle/verification-keyring.gpg")
 val dependencyChecksumFallbackAllowlist = File(bisqRepositoryRoot, "gradle/dependency-checksum-fallback-allowlist.tsv")
 val dependencySignatureReport = File(bisqRepositoryRoot, "docs/dependency-signature-report.md")
-val unsignedArtifactReason = "Artifact is not signed"
 val gradleWrapperCommand =
     if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) "gradlew.bat" else "./gradlew"
 val dependencyVerificationBuildDirs = listOf(
@@ -510,40 +510,19 @@ fun parseVerificationMetadata(metadataFile: File): Pair<Map<String, VerifiedComp
         .newDocumentBuilder()
         .parse(metadataFile)
 
-    val componentsById = TreeMap<String, VerifiedComponent>()
-    document.getElementsByTagName("component").elements().forEach { component ->
-        val group = component.getAttribute("group")
-        val name = component.getAttribute("name")
-        val version = component.getAttribute("version")
-        val id = "$group:$name:$version"
-        val artifacts = component.getElementsByTagName("artifact").elements().map { artifact ->
-            val checksumFallbackReason = artifact.getElementsByTagName("sha256").elements()
-                .map { it.getAttribute("reason") }
-                .firstOrNull { it == unsignedArtifactReason }
-                ?: ""
-            VerifiedArtifact(
-                name = artifact.getAttribute("name"),
-                checksumOnly = checksumFallbackReason == unsignedArtifactReason,
-                checksumFallbackReason = checksumFallbackReason,
-                keyIds = artifact.getElementsByTagName("pgp").elements()
-                    .map { it.getAttribute("value") }
-                    .filter { it.isNotEmpty() },
-            )
-        }
-        componentsById[id] = VerifiedComponent(id, group, name, version, artifacts)
-    }
-
     val trustedKeys = document.getElementsByTagName("trusted-key").elements().map { trustedKey ->
         val entries = mutableListOf<TrustedKeyEntry>()
         if (
             trustedKey.getAttribute("group").isNotEmpty() ||
             trustedKey.getAttribute("name").isNotEmpty() ||
-            trustedKey.getAttribute("version").isNotEmpty()
+            trustedKey.getAttribute("version").isNotEmpty() ||
+            trustedKey.getAttribute("file").isNotEmpty()
         ) {
             entries += TrustedKeyEntry(
                 group = trustedKey.getAttribute("group"),
                 name = trustedKey.getAttribute("name"),
                 version = trustedKey.getAttribute("version"),
+                file = trustedKey.getAttribute("file"),
                 regex = trustedKey.getAttribute("regex") == "true",
             )
         }
@@ -552,13 +531,76 @@ fun parseVerificationMetadata(metadataFile: File): Pair<Map<String, VerifiedComp
                 group = trusting.getAttribute("group"),
                 name = trusting.getAttribute("name"),
                 version = trusting.getAttribute("version"),
+                file = trusting.getAttribute("file"),
                 regex = trusting.getAttribute("regex") == "true",
             )
         }
         TrustedKey(trustedKey.getAttribute("id"), entries)
     }
 
+    val globallyIgnoredKeyIds = document.getElementsByTagName("configuration").elements()
+        .flatMap { it.getElementsByTagName("ignored-key").elements() }
+        .map { it.getAttribute("id") }
+
+    val componentsById = TreeMap<String, VerifiedComponent>()
+    document.getElementsByTagName("component").elements().forEach { component ->
+        val group = component.getAttribute("group")
+        val name = component.getAttribute("name")
+        val version = component.getAttribute("version")
+        val id = "$group:$name:$version"
+        val artifacts = component.getElementsByTagName("artifact").elements().map { artifact ->
+            val artifactName = artifact.getAttribute("name")
+            val checksums = artifact.getElementsByTagName("sha256").elements() +
+                    artifact.getElementsByTagName("sha512").elements()
+            val keyIds = artifact.getElementsByTagName("pgp").elements()
+                .map { it.getAttribute("value") }
+                .filter { it.isNotEmpty() }
+            val ignoredKeyIds = globallyIgnoredKeyIds + artifact.getElementsByTagName("ignored-key").elements()
+                .map { it.getAttribute("id") }
+            val usableKeyIds = (keyIds + matchingTrustedKeyIds(trustedKeys, group, name, version, artifactName))
+                .filter { keyId -> ignoredKeyIds.none { isSameKey(it, keyId) } }
+            // Gradle writes a reason only on checksums it uses as fallback. Without a reason, a checksum is still
+            // the only check if no key which is not ignored could verify a signature of the artifact.
+            val checksumFallbackReason = checksums.map { it.getAttribute("reason") }.firstOrNull { it.isNotEmpty() }
+                ?: if (checksums.isNotEmpty() && usableKeyIds.isEmpty()) "No usable key can verify a signature" else ""
+            VerifiedArtifact(
+                name = artifactName,
+                checksumOnly = checksumFallbackReason.isNotEmpty(),
+                checksumFallbackReason = checksumFallbackReason,
+                keyIds = keyIds,
+            )
+        }
+        componentsById[id] = VerifiedComponent(id, group, name, version, artifacts)
+    }
+
     return componentsById to trustedKeys
+}
+
+fun matchingTrustedKeyIds(
+    trustedKeys: List<TrustedKey>,
+    group: String,
+    name: String,
+    version: String,
+    artifactName: String? = null,
+): List<String> =
+    trustedKeys
+        .filter { trustedKey ->
+            trustedKey.entries.any { entry ->
+                patternMatches(entry.group, group, entry.regex) &&
+                        patternMatches(entry.name, name, entry.regex) &&
+                        patternMatches(entry.version, version, entry.regex) &&
+                        (artifactName == null || patternMatches(entry.file, artifactName, entry.regex))
+            }
+        }
+        .map { it.id }
+        .distinct()
+        .sorted()
+
+// Key ids are fingerprints or 64-bit ids; a 64-bit id is the end of the fingerprint.
+fun isSameKey(first: String, second: String): Boolean {
+    val a = first.uppercase(Locale.ROOT)
+    val b = second.uppercase(Locale.ROOT)
+    return a.endsWith(b) || b.endsWith(a)
 }
 
 fun patternMatches(pattern: String, value: String, regex: Boolean): Boolean =
@@ -704,8 +746,7 @@ if (isBisqRepositoryRootBuild) {
             val (componentsById) = parseVerificationMetadata(dependencyVerificationMetadata)
             val executableMetadataViolations = executableArtifactMetadataViolations(resolved, componentsById)
             val checksumFallbackEntries = TreeSet<String>()
-            resolved.resolvedComponents.forEach { componentId ->
-                val component = componentsById[componentId] ?: return@forEach
+            componentsById.values.forEach { component ->
                 component.artifacts.filter { it.checksumOnly }.forEach { artifact ->
                     checksumFallbackEntries += "${component.id}\t${artifact.name}"
                 }
@@ -779,24 +820,11 @@ if (isBisqRepositoryRootBuild) {
             val (componentsById, trustedKeys) = parseVerificationMetadata(dependencyVerificationMetadata)
             val executableMetadataViolations = executableArtifactMetadataViolations(resolved, componentsById)
 
-            fun matchingTrustedKeyIds(group: String, name: String, version: String): List<String> =
-                trustedKeys
-                    .filter { trustedKey ->
-                        trustedKey.entries.any { entry ->
-                            patternMatches(entry.group, group, entry.regex) &&
-                                    patternMatches(entry.name, name, entry.regex) &&
-                                    patternMatches(entry.version, version, entry.regex)
-                        }
-                    }
-                    .map { it.id }
-                    .distinct()
-                    .sorted()
-
             val rows = resolved.resolvedComponents.map { id ->
                 val component = componentsById[id]
                 if (component == null) {
                     val (group, name, version) = id.split(':', limit = 3)
-                    val matchingTrustedKeys = matchingTrustedKeyIds(group, name, version)
+                    val matchingTrustedKeys = matchingTrustedKeyIds(trustedKeys, group, name, version)
                     if (matchingTrustedKeys.isEmpty()) {
                         DependencyReportRow(
                             id = id,
@@ -819,7 +847,7 @@ if (isBisqRepositoryRootBuild) {
                         )
                     }
                 } else {
-                    val matchingTrustedKeys = matchingTrustedKeyIds(component.group, component.name, component.version)
+                    val matchingTrustedKeys = matchingTrustedKeyIds(trustedKeys, component.group, component.name, component.version)
                     val signedCount = component.artifacts.count { !it.checksumOnly }
                     val checksumOnlyCount = component.artifacts.count { it.checksumOnly }
                     val status = if (checksumOnlyCount == 0) {
