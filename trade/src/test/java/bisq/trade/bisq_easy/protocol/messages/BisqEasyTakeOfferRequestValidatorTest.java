@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
@@ -32,7 +33,10 @@ import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
+import static bisq.trade.bisq_easy.protocol.messages.OfferbookTestData.offerbookChannel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -103,14 +107,19 @@ class BisqEasyTakeOfferRequestValidatorTest {
         when(message.getBisqEasyContract()).thenReturn(takersContract);
         when(message.getSender()).thenReturn(takerNetworkId);
 
-        // The offer is matched through a trade whose contract we have signed.
+        // The offer is in an offerbook message of ours
+        NetworkId myNetworkId = mock(NetworkId.class);
+        when(myNetworkId.getId()).thenReturn("maker-profile");
+        Identity myIdentity = mock(Identity.class);
+        when(myIdentity.getNetworkId()).thenReturn(myNetworkId);
+        when(takersOffer.getMakerNetworkId()).thenReturn(myNetworkId);
+        BisqEasyOfferbookChannel channel = offerbookChannel("maker-profile", takersOffer);
         when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
-                .thenReturn(new ObservableSet<>());
-        when(serviceProvider.getBisqEasyTradeService().hasSignedTradeWithOffer(takersOffer)).thenReturn(true);
+                .thenReturn(new ObservableSet<>(Set.of(channel)));
         when(serviceProvider.getContractService().arePublicKeysMatching(any(java.security.PublicKey.class), any(java.security.PublicKey.class))).thenReturn(true);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> validate(serviceProvider, mock(Identity.class), message));
+                () -> validate(serviceProvider, myIdentity, message));
         assertTrue(exception.getMessage().contains("take offer request"));
     }
 }

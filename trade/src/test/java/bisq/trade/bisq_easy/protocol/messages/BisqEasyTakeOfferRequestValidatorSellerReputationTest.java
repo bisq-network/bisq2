@@ -22,6 +22,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceProviderInfo;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Fiat;
@@ -48,10 +49,12 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validateTakersReputation;
+import static bisq.trade.bisq_easy.protocol.messages.OfferbookTestData.offerbookChannel;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -112,10 +115,14 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
     // that run before the reputation check.
     private BisqEasyTakeOfferRequest setUpRequestPassingChecksBeforeReputation() {
         when(marketPriceService.getMarketPriceByCurrencyMap()).thenReturn(marketPriceByMarket);
+        // The offer is in an offerbook message of ours
+        NetworkId myNetworkId = mock(NetworkId.class);
+        when(myNetworkId.getId()).thenReturn("maker-profile");
+        when(myIdentity.getNetworkId()).thenReturn(myNetworkId);
+        when(offer.getMakerNetworkId()).thenReturn(myNetworkId);
+        BisqEasyOfferbookChannel channel = offerbookChannel("maker-profile", offer);
         when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
-                .thenReturn(new ObservableSet<>());
-        // The offer is matched through a trade whose contract we have signed.
-        when(serviceProvider.getBisqEasyTradeService().hasSignedTradeWithOffer(offer)).thenReturn(true);
+                .thenReturn(new ObservableSet<>(Set.of(channel)));
         when(serviceProvider.getContractService().arePublicKeysMatching(any(PublicKey.class), any(PublicKey.class)))
                 .thenReturn(true);
         when(serviceProvider.getContractService().arePublicKeysMatching(any(ContractSignatureData.class), any(PublicKey.class)))

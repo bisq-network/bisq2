@@ -24,7 +24,6 @@ import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,21 +33,19 @@ import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestVal
 import static bisq.trade.bisq_easy.protocol.messages.OfferbookTestData.offerbookChannel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * The taker's offer must be found in an offerbook message we authored, or in a trade we have signed.
+ * The taker's offer must be found in an offerbook message we authored.
  */
 class BisqEasyTakeOfferRequestOfferMatchingTest {
     private static final String MY_PROFILE_ID = "my-profile-id";
 
     private ServiceProvider serviceProvider;
-    private BisqEasyTradeService tradeService;
+    private BisqEasyContract takersContract;
     private BisqEasyTakeOfferRequest message;
     private BisqEasyOffer takersOffer;
     private ObservableSet<BisqEasyOfferbookChannel> offerbookChannels;
@@ -57,8 +54,6 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
     @BeforeEach
     void setUp() {
         serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
-        tradeService = mock(BisqEasyTradeService.class);
-        when(serviceProvider.getBisqEasyTradeService()).thenReturn(tradeService);
         offerbookChannels = new ObservableSet<>();
         when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
                 .thenReturn(offerbookChannels);
@@ -68,7 +63,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         takersOffer = mock(BisqEasyOffer.class);
         when(takersOffer.getMakerNetworkId()).thenReturn(myNetworkId);
         when(takersOffer.getMakersUserProfileId()).thenReturn(MY_PROFILE_ID);
-        BisqEasyContract takersContract = mock(BisqEasyContract.class, RETURNS_DEEP_STUBS);
+        takersContract = mock(BisqEasyContract.class, RETURNS_DEEP_STUBS);
         when(takersContract.getOffer()).thenReturn(takersOffer);
         message = mock(BisqEasyTakeOfferRequest.class, RETURNS_DEEP_STUBS);
         when(message.getBisqEasyContract()).thenReturn(takersContract);
@@ -78,9 +73,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
     }
 
     @Test
-    void verifyRejectsOfferNeitherInOfferbookNorInASignedTrade() {
-        when(tradeService.hasSignedTradeWithOffer(takersOffer)).thenReturn(false);
-
+    void verifyRejectsOfferNotInOfferbook() {
         TradeProtocolException exception =
                 assertThrows(TradeProtocolException.class, () -> validate(serviceProvider, myIdentity, message));
         assertEquals(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND, exception.getTradeProtocolFailure());
@@ -92,7 +85,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
 
         // The remaining checks run against deep stubs and fail; the offer match itself has passed.
         assertThrows(RuntimeException.class, () -> validate(serviceProvider, myIdentity, message));
-        verify(tradeService, never()).hasSignedTradeWithOffer(any());
+        verify(takersContract).getPriceSpec();
     }
 
     // The address map of our NetworkId can change after we published the offer, for example when we add a transport.
@@ -105,6 +98,6 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         offerbookChannels.add(offerbookChannel(MY_PROFILE_ID, takersOffer));
 
         assertThrows(RuntimeException.class, () -> validate(serviceProvider, myIdentity, message));
-        verify(tradeService, never()).hasSignedTradeWithOffer(any());
+        verify(takersContract).getPriceSpec();
     }
 }
