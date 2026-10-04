@@ -33,6 +33,7 @@ import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
@@ -43,7 +44,6 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -72,13 +73,14 @@ class BisqEasyTakeOfferRequestPriceSpecTest {
 
     private final NetworkId myNetworkId = networkId();
     private final BisqEasyOffer myOffer = offer(new MarketPriceSpec());
+    private ServiceProvider serviceProvider;
+    private Identity myIdentity;
     private BisqEasyTakeOfferRequest message;
     private BisqEasyContract takersContract;
-    private BisqEasyTakeOfferRequestHandler handler;
 
     @BeforeEach
     void setUp() {
-        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
+        serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         BisqEasyOfferbookMessage offerbookMessage = new BisqEasyOfferbookMessage(new BisqEasyOfferbookChannel(myOffer.getMarket()).getId(),
                 myOffer.getMakersUserProfileId(),
                 Optional.of(myOffer),
@@ -95,9 +97,8 @@ class BisqEasyTakeOfferRequestPriceSpecTest {
         message = mock(BisqEasyTakeOfferRequest.class, RETURNS_DEEP_STUBS);
         when(message.getBisqEasyContract()).thenReturn(takersContract);
 
-        BisqEasyTrade trade = mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS);
-        when(trade.getMyIdentity().getNetworkId()).thenReturn(myNetworkId);
-        handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, trade);
+        myIdentity = mock(Identity.class);
+        when(myIdentity.getNetworkId()).thenReturn(myNetworkId);
     }
 
     @Test
@@ -105,7 +106,7 @@ class BisqEasyTakeOfferRequestPriceSpecTest {
         when(takersContract.getOffer()).thenReturn(copyOf(myOffer));
         when(takersContract.getPriceSpec()).thenReturn(TAKERS_FIXED_PRICE);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.verify(message));
+        assertThrows(IllegalArgumentException.class, () -> validate(serviceProvider, myIdentity, message));
         verify(takersContract, never()).getTaker();
     }
 
@@ -114,7 +115,8 @@ class BisqEasyTakeOfferRequestPriceSpecTest {
         when(takersContract.getOffer()).thenReturn(offer(TAKERS_FIXED_PRICE));
         when(takersContract.getPriceSpec()).thenReturn(TAKERS_FIXED_PRICE);
 
-        TradeProtocolException exception = assertThrows(TradeProtocolException.class, () -> handler.verify(message));
+        TradeProtocolException exception =
+                assertThrows(TradeProtocolException.class, () -> validate(serviceProvider, myIdentity, message));
         assertEquals(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND, exception.getTradeProtocolFailure());
     }
 
@@ -124,7 +126,7 @@ class BisqEasyTakeOfferRequestPriceSpecTest {
         when(takersContract.getPriceSpec()).thenReturn(copyOf(myOffer).getPriceSpec());
 
         // Control case: the sender check that follows runs against deep stubs and fails.
-        assertThrows(IllegalArgumentException.class, () -> handler.verify(message));
+        assertThrows(IllegalArgumentException.class, () -> validate(serviceProvider, myIdentity, message));
         verify(takersContract).getTaker();
     }
 
