@@ -42,8 +42,12 @@ import bisq.security.SecurityService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
+import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.user.contact_list.ContactReason;
+import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,11 +63,13 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.buyerAsTakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.contract;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -73,6 +79,8 @@ import static org.mockito.Mockito.when;
  * The maker creates the trade of a take offer request under its identity with the key of the offer's maker. The
  * addresses of the maker's network ID can have changed since it published the offer, for example when it added a
  * transport. A request which cannot create a trade of the maker is dropped without an exception and without an answer.
+ * The maker verifies a request before it creates the trade, so a rejected request leaves no trade and no contact, see
+ * docs/specifications/trade/take-offer-request-validation.md.
  */
 class BisqEasyTradeServiceTakeOfferRequestTest {
     private ServiceProvider serviceProvider;
@@ -181,27 +189,86 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
     @Test
     void secondRequestForAnExistingTradeIsDropped() throws GeneralSecurityException {
-        // Our offer under the current addresses. A second request with the same offer, taker and take offer date has
-        // the trade ID of the first one.
-        BisqEasyContract contractOfOurOffer = contract(offer("offer-id", makerIdentity.getNetworkId(), QUOTE_AMOUNT),
-                takerIdentity.getNetworkId(),
-                Optional.empty());
-        BisqEasyTakeOfferRequest request = takeOfferRequest(contractOfOurOffer, makerIdentity.getNetworkId());
+        // A second request with the same offer, taker and take offer date has the trade ID of the first one.
+        BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
         service.onMessage(request);
         BisqEasyTrade trade = service.findTrade(request.getTradeId()).orElseThrow();
         BisqEasyTradeState stateAfterFirstRequest = trade.getTradeState();
 
-        BisqEasyTakeOfferRequest secondRequest = takeOfferRequest(contractOfOurOffer, makerIdentity.getNetworkId());
+        BisqEasyTakeOfferRequest secondRequest = takeOfferRequest(contract, offersNetworkId);
         assertThatCode(() -> service.onMessage(secondRequest)).doesNotThrowAnyException();
 
         assertThat(service.getTrades()).containsExactly(trade);
         assertThat(trade.getTradeState()).isEqualTo(stateAfterFirstRequest);
     }
 
+    @Test
+    void acceptedRequestAddsTheTakerToTheContacts() throws GeneralSecurityException {
+        UserProfile takerProfile = userProfile(takerIdentity.getNetworkId());
+        UserProfile makerProfile = userProfile(makerIdentity.getNetworkId());
+        enableAutoAddToContactList(takerProfile, makerProfile);
+
+        service.onMessage(takeOfferRequest(contract, offersNetworkId));
+
+        verify(serviceProvider.getUserService().getContactListService())
+                .addContactListEntry(takerProfile, makerProfile, ContactReason.BISQ_EASY_TRADE);
+    }
+
+    @Test
+    void rejectedRequestLeavesNoTradeAndNoContact() throws GeneralSecurityException {
+        enableAutoAddToContactList(userProfile(takerIdentity.getNetworkId()),
+                userProfile(makerIdentity.getNetworkId()));
+        removeOffersFromOfferbook();
+        BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
+
+        service.onMessage(request);
+
+        assertThat(service.findTrade(request.getTradeId())).isEmpty();
+        assertThat(service.findProtocol(request.getTradeId())).isEmpty();
+        verify(serviceProvider.getUserService().getContactListService(), never())
+                .addContactListEntry(any(), any(), any());
+        ArgumentCaptor<BisqEasyReportErrorMessage> report = ArgumentCaptor.forClass(BisqEasyReportErrorMessage.class);
+        verify(serviceProvider.getNetworkService()).confidentialSend(report.capture(),
+                eq(takerIdentity.getNetworkId()),
+                any());
+        assertThat(report.getValue().getTradeId()).isEqualTo(request.getTradeId());
+        assertThat(report.getValue().getTradeProtocolFailure()).isEqualTo(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
+    }
+
+    @Test
+    void requestWithAnotherTradeIdIsDropped() throws GeneralSecurityException {
+        BisqEasyTakeOfferRequest request = takeOfferRequest("another-trade-id", contract, offersNetworkId);
+
+        assertThatCode(() -> service.onMessage(request)).doesNotThrowAnyException();
+
+        assertThat(service.getTrades()).isEmpty();
+        verify(serviceProvider.getNetworkService(), never()).confidentialSend(any(), any(), any());
+    }
+
+    @Test
+    void copyOfRequestForAnExistingTradeIsDroppedWithoutValidation() throws GeneralSecurityException {
+        BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
+        service.onMessage(request);
+        BisqEasyTrade trade = service.findTrade(request.getTradeId()).orElseThrow();
+        // The validation would reject the copy, as the offer left the offerbook when it was taken
+        removeOffersFromOfferbook();
+        clearInvocations(serviceProvider.getNetworkService());
+
+        service.onMessage(takeOfferRequest(contract, offersNetworkId));
+
+        assertThat(service.getTrades()).containsExactly(trade);
+        verify(serviceProvider.getNetworkService(), never()).confidentialSend(any(), any(), any());
+    }
+
     private BisqEasyTakeOfferRequest takeOfferRequest(BisqEasyContract contract, NetworkId receiver)
             throws GeneralSecurityException {
+        return takeOfferRequest(buyerAsTakerTrade(contract, takerIdentity).getId(), contract, receiver);
+    }
+
+    private BisqEasyTakeOfferRequest takeOfferRequest(String tradeId, BisqEasyContract contract, NetworkId receiver)
+            throws GeneralSecurityException {
         return new BisqEasyTakeOfferRequest(StringUtils.createUid(),
-                buyerAsTakerTrade(contract, takerIdentity).getId(),
+                tradeId,
                 BisqEasyProtocol.VERSION,
                 takerIdentity.getNetworkId(),
                 receiver,
@@ -218,6 +285,19 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
         when(channel.getChatMessages()).thenReturn(new ObservableSet<>(Set.of(offerbookMessage)));
         when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
                 .thenReturn(new ObservableSet<>(Set.of(channel)));
+    }
+
+    private void removeOffersFromOfferbook() {
+        when(serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels())
+                .thenReturn(new ObservableSet<>());
+    }
+
+    private void enableAutoAddToContactList(UserProfile takerProfile, UserProfile makerProfile) {
+        when(serviceProvider.getSettingsService().getDoAutoAddToContactList()).thenReturn(true);
+        when(serviceProvider.getUserService().getUserProfileService().findUserProfile(takerProfile.getId()))
+                .thenReturn(Optional.of(takerProfile));
+        when(serviceProvider.getUserService().getUserProfileService().findUserProfile(makerProfile.getId()))
+                .thenReturn(Optional.of(makerProfile));
     }
 
     private void setMarketPrice(Market market, PriceQuote priceQuote) {

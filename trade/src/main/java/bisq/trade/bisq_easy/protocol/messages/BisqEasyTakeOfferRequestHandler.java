@@ -41,7 +41,7 @@ public class BisqEasyTakeOfferRequestHandler extends BisqEasyTradeMessageHandler
 
     @Override
     protected void verify(BisqEasyTakeOfferRequest message) {
-        BisqEasyTakeOfferRequestValidator.validate(serviceProvider, trade.getMyIdentity(), message);
+        // BisqEasyTradeService validates the request before it creates the trade (BisqEasyTakeOfferRequestValidator)
     }
 
     @Override

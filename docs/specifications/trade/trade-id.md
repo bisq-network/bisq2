@@ -20,8 +20,10 @@ A message which carries a trade ID and the contract of the trade can carry an ID
 contract. A receiver which files the message under its trade ID checks that the ID is the ID of the trade of the
 contract.
 
-4. The maker checks the trade ID of a MuSig take offer request: it must be the ID with the take offer date. A take
-   offer request creates a new trade, so the form without the date does not apply.
+4. The maker checks the trade ID of a take offer request: it must be the ID with the take offer date. A take offer
+   request creates a new trade, so the form without the date does not apply. A MuSig maker rejects a request with
+   another ID, and a Bisq Easy maker drops it before it creates the trade (see
+   [take offer request validation](take-offer-request-validation.md)).
 5. A node checks the trade ID of a Bisq Easy mediation request at parsing: it must be the ID of the trade of the
    contract in the request, with or without the take offer date (rule 3). A request which breaks the rule fails at
    parsing (rule 1 of [validation at parsing](../network/validation-at-parsing.md)), and the store of the mediator
