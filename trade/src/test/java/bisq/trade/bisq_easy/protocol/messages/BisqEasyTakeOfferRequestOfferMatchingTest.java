@@ -18,7 +18,6 @@
 package bisq.trade.bisq_easy.protocol.messages;
 
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -31,10 +30,8 @@ import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
-import java.util.Set;
-
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
+import static bisq.trade.bisq_easy.protocol.messages.OfferbookTestData.offerbookChannel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -91,7 +88,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
 
     @Test
     void verifyMatchesOfferbookMessageWeAuthored() {
-        addOfferbookMessage(MY_PROFILE_ID, takersOffer);
+        offerbookChannels.add(offerbookChannel(MY_PROFILE_ID, takersOffer));
 
         // The remaining checks run against deep stubs and fail; the offer match itself has passed.
         assertThrows(RuntimeException.class, () -> validate(serviceProvider, myIdentity, message));
@@ -105,18 +102,9 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         NetworkId makerNetworkIdAtPublishing = mock(NetworkId.class);
         when(makerNetworkIdAtPublishing.getId()).thenReturn(MY_PROFILE_ID);
         when(takersOffer.getMakerNetworkId()).thenReturn(makerNetworkIdAtPublishing);
-        addOfferbookMessage(MY_PROFILE_ID, takersOffer);
+        offerbookChannels.add(offerbookChannel(MY_PROFILE_ID, takersOffer));
 
         assertThrows(RuntimeException.class, () -> validate(serviceProvider, myIdentity, message));
         verify(tradeService, never()).hasSignedTradeWithOffer(any());
-    }
-
-    private void addOfferbookMessage(String authorUserProfileId, BisqEasyOffer offer) {
-        BisqEasyOfferbookMessage offerbookMessage = mock(BisqEasyOfferbookMessage.class);
-        when(offerbookMessage.getBisqEasyOffer()).thenReturn(Optional.of(offer));
-        when(offerbookMessage.getAuthorUserProfileId()).thenReturn(authorUserProfileId);
-        BisqEasyOfferbookChannel channel = mock(BisqEasyOfferbookChannel.class);
-        when(channel.getChatMessages()).thenReturn(new ObservableSet<>(Set.of(offerbookMessage)));
-        offerbookChannels.add(channel);
     }
 }
