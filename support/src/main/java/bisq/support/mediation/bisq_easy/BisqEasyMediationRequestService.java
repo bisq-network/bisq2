@@ -24,6 +24,7 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
@@ -46,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -138,8 +140,18 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
 
         UserProfile peer = channel.getPeer();
         NetworkId mediatorNetworkId = mediator.getNetworkId();
+        // The mediator ignores a request which carries a message of another trade, channel or sender. The channel can
+        // hold such a message, from the peer or from the mediator, so the request carries only the messages of the two
+        // traders of this trade.
+        String channelIdOfTrade = BisqEasyOpenTradeChannel.createId(channel.getTradeId());
+        List<BisqEasyOpenTradeMessage> messagesOfTrade = channel.getChatMessages().stream()
+                .filter(message -> message.getTradeId().equals(channel.getTradeId()) &&
+                        message.getChannelId().equals(channelIdOfTrade) &&
+                        (message.getSenderUserProfile().getId().equals(myUserIdentity.getId()) ||
+                                message.getSenderUserProfile().getId().equals(peer.getId())))
+                .collect(Collectors.toCollection(ArrayList::new));
         BisqEasyMediationRequest bisqEasyMediationRequest = ChatMessagePruning.createWithMaybePrunedMessages(
-                new ArrayList<>(channel.getChatMessages()),
+                messagesOfTrade,
                 channel.getTradeId(),
                 chatMessages -> new BisqEasyMediationRequest(channel.getTradeId(),
                         contract,

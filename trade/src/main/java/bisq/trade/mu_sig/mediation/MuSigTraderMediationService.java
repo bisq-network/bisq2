@@ -26,6 +26,7 @@ import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigDisputeAgentType;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.contract.ContractService;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
@@ -44,6 +45,7 @@ import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -109,8 +111,18 @@ public class MuSigTraderMediationService {
 
         UserProfile requester = userProfileService.findUserProfile(myIdentity.getId()).orElseThrow();
         UserProfile peerUserProfile = userProfileService.findUserProfile(peer.getNetworkId().getId()).orElseThrow();
+        // The mediator ignores a request which carries a message of another trade, channel or sender. The channel can
+        // hold such a message, from the peer or from a dispute agent, so the request carries only the messages of the
+        // two traders of this trade.
+        String channelIdOfTrade = MuSigOpenTradeChannel.createId(tradeId);
+        List<MuSigOpenTradeMessage> messagesOfTrade = channel.getChatMessages().stream()
+                .filter(message -> message.getTradeId().equals(tradeId) &&
+                        message.getChannelId().equals(channelIdOfTrade) &&
+                        (message.getSenderUserProfile().getId().equals(requester.getId()) ||
+                                message.getSenderUserProfile().getId().equals(peerUserProfile.getId())))
+                .collect(Collectors.toCollection(ArrayList::new));
         MuSigMediationRequest muSigMediationRequest = ChatMessagePruning.createWithMaybePrunedMessages(
-                new ArrayList<>(channel.getChatMessages()),
+                messagesOfTrade,
                 tradeId,
                 chatMessages -> new MuSigMediationRequest(tradeId,
                         contract,
