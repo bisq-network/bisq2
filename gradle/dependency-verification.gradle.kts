@@ -48,6 +48,11 @@ data class TrustedKeyEntry(
     val regex: Boolean,
 )
 data class TrustedKey(val id: String, val entries: List<TrustedKeyEntry>)
+data class VerificationMetadata(
+    val componentsById: Map<String, VerifiedComponent>,
+    val trustedKeys: List<TrustedKey>,
+    val ignoredKeyIds: List<String>,
+)
 data class VerifiedArtifact(
     val name: String,
     val checksumOnly: Boolean,
@@ -508,7 +513,7 @@ fun secureDocumentBuilderFactory(): DocumentBuilderFactory =
         isExpandEntityReferences = false
     }
 
-fun parseVerificationMetadata(metadataFile: File): Pair<Map<String, VerifiedComponent>, List<TrustedKey>> {
+fun parseVerificationMetadata(metadataFile: File): VerificationMetadata {
     val document = secureDocumentBuilderFactory()
         .newDocumentBuilder()
         .parse(metadataFile)
@@ -575,7 +580,21 @@ fun parseVerificationMetadata(metadataFile: File): Pair<Map<String, VerifiedComp
         componentsById[id] = VerifiedComponent(id, group, name, version, artifacts)
     }
 
-    return componentsById to trustedKeys
+    // Global and artifact-level ignored keys.
+    val allIgnoredKeyIds = document.getElementsByTagName("ignored-key").elements()
+        .map { it.getAttribute("id") }
+        .filter { it.isNotEmpty() }
+        .distinct()
+        .sorted()
+
+    return VerificationMetadata(componentsById, trustedKeys, allIgnoredKeyIds)
+}
+
+// Gradle never verifies a signature made with an ignored key, also when the keyring contains the key. An ignored key
+// in the keyring therefore turns the artifacts it signs into checksum-only artifacts without need.
+fun ignoredKeysInKeyring(ignoredKeyIds: List<String>, keyringFile: File): List<String> {
+    val signerMetadata = loadSignerMetadata(keyringFile)
+    return ignoredKeyIds.filter { signerMetadata.containsKey(keyIdSuffix(it)) }
 }
 
 fun matchingTrustedKeyIds(
@@ -734,6 +753,8 @@ if (isBisqRepositoryRootBuild) {
         dependsOn("resolveAndVerifyDependencies")
         inputs.files(dependencyVerificationInventoryFiles).withPropertyName("dependencyInventories")
         inputs.file(dependencyVerificationMetadata)
+        // The keyring is optional; inputs.file would require it to exist.
+        inputs.files(dependencyVerificationKeyring).withPropertyName("dependencyVerificationKeyring")
         inputs.file(dependencyChecksumFallbackAllowlist)
 
         doLast {
@@ -745,7 +766,8 @@ if (isBisqRepositoryRootBuild) {
             }
             val allowlist = readChecksumFallbackAllowlist(dependencyChecksumFallbackAllowlist)
             val resolved = readResolvedDependencyInventory()
-            val (componentsById) = parseVerificationMetadata(dependencyVerificationMetadata)
+            val (componentsById, _, ignoredKeyIds) = parseVerificationMetadata(dependencyVerificationMetadata)
+            val ignoredKeysPresentInKeyring = ignoredKeysInKeyring(ignoredKeyIds, dependencyVerificationKeyring)
             val executableMetadataViolations = executableArtifactMetadataViolations(resolved, componentsById)
             val checksumFallbackEntries = TreeSet<String>()
             componentsById.values.forEach { component ->
@@ -759,10 +781,23 @@ if (isBisqRepositoryRootBuild) {
             if (
                 unapprovedEntries.isNotEmpty() ||
                 staleAllowlistEntries.isNotEmpty() ||
+                ignoredKeysPresentInKeyring.isNotEmpty() ||
                 executableMetadataViolations.missingArtifacts.isNotEmpty() ||
                 executableMetadataViolations.staleArtifacts.isNotEmpty()
             ) {
                 val message = StringBuilder("Dependency signature policy failed.")
+                if (ignoredKeysPresentInKeyring.isNotEmpty()) {
+                    message
+                        .append("\n\nIgnored signing keys that are present in ")
+                        .append(dependencyVerificationKeyring)
+                        .append(":\n - ")
+                        .append(ignoredKeysPresentInKeyring.joinToString("\n - "))
+                        .append(
+                            "\n\nGradle never verifies a signature made with an ignored key, so the artifacts " +
+                                    "signed by these keys are verified by their checksums only. Remove the " +
+                                    "<ignored-key> entries and regenerate the metadata of these artifacts."
+                        )
+                }
                 if (unapprovedEntries.isNotEmpty()) {
                     message.append("\n\nUnapproved checksum-only dependency artifacts:\n - ")
                         .append(unapprovedEntries.joinToString("\n - "))
@@ -789,7 +824,8 @@ if (isBisqRepositoryRootBuild) {
             }
 
             logger.lifecycle(
-                "Verified ${checksumFallbackEntries.size} approved checksum-only dependency artifact(s) " +
+                "Verified ${checksumFallbackEntries.size} approved checksum-only dependency artifact(s), " +
+                        "${ignoredKeyIds.size} ignored signing key(s) absent from the exported keyring " +
                         "and ${executableMetadataViolations.missingArtifacts.size} missing / " +
                         "${executableMetadataViolations.staleArtifacts.size} stale executable artifact metadata entries."
             )
