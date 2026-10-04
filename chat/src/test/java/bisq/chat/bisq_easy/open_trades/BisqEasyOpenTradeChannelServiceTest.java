@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -109,6 +110,21 @@ public class BisqEasyOpenTradeChannelServiceTest {
     }
 
     @Test
+    void messageWithTheTradeIdOfAnotherTradeIsNotAddedToTheChannel() {
+        BisqEasyOpenTradeChannel channel = service.traderFindOrCreatesChannel(TRADE_ID, mock(BisqEasyOffer.class),
+                makerIdentity, taker, Optional.empty());
+        BisqEasyOpenTradeMessage messageOfTrade = textMessage(TRADE_ID, "messageOfTrade", MAKER_PROFILE_ID,
+                System.currentTimeMillis());
+        BisqEasyOpenTradeMessage messageOfAnotherTrade = textMessage("otherTradeId", "messageOfAnotherTrade",
+                MAKER_PROFILE_ID, System.currentTimeMillis());
+
+        service.onMessage(messageOfTrade);
+        service.onMessage(messageOfAnotherTrade);
+
+        assertEquals(Set.of(messageOfTrade), channel.getChatMessages());
+    }
+
+    @Test
     void expiredTakeOfferMessageIsIgnored() {
         long elevenDaysAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(11);
 
@@ -151,8 +167,16 @@ public class BisqEasyOpenTradeChannelServiceTest {
     }
 
     private BisqEasyOpenTradeMessage textMessage(String receiverUserProfileId, long date) {
-        return new BisqEasyOpenTradeMessage(TRADE_ID,
-                "textMessageId",
+        return textMessage(TRADE_ID, "textMessageId", receiverUserProfileId, date);
+    }
+
+    // A text message to the channel of TRADE_ID which carries the given trade ID
+    private BisqEasyOpenTradeMessage textMessage(String tradeId,
+                                                 String messageId,
+                                                 String receiverUserProfileId,
+                                                 long date) {
+        return new BisqEasyOpenTradeMessage(tradeId,
+                messageId,
                 BisqEasyOpenTradeChannel.createId(TRADE_ID),
                 taker,
                 receiverUserProfileId,
