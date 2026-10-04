@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -174,7 +175,8 @@ public class BisqEasyOpenTradeChannelServiceTest {
         String otherOwnProfileId = "4444444444444444444444444444444444444444";
         when(userIdentityService.findUserIdentity(otherOwnProfileId)).thenReturn(Optional.of(mock(UserIdentity.class)));
 
-        service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class),
+        // Such a message fails at parsing (PrivateChatMessage.verify), so it never reaches the service
+        assertThrows(IllegalArgumentException.class, () -> takeOfferMessage(mock(BisqEasyOffer.class),
                 MAKER_PROFILE_ID,
                 networkIdOf(otherOwnProfileId),
                 System.currentTimeMillis()));

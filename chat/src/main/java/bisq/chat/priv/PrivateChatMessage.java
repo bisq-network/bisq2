@@ -40,6 +40,8 @@ import java.security.PublicKey;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
  * mailbox message.
@@ -116,6 +118,9 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
     public void verify() {
         super.verify();
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
+        // The key of receiverNetworkId decrypts the message, so the receiver is the profile of that key
+        checkArgument(receiverUserProfileId.equals(receiverNetworkId.getId()),
+                "receiverUserProfileId is not the ID of the key of receiverNetworkId");
     }
 
     // We are an ExternalNetworkMessage, toValueProto and getValueBuilder are our entry points
