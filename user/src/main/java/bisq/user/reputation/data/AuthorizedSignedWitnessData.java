@@ -17,16 +17,14 @@
 
 package bisq.user.reputation.data;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.user.reputation.WitnessReputationProtocol;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -36,14 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
 @Getter
-public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
+public final class AuthorizedSignedWitnessData implements OracleNodeAuthorizedData {
     public static final int LEGACY_VERSION = 1;
     public static final int VERSION = 2;
     public static final long TTL = TTL_30_DAYS;
@@ -149,15 +146,6 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     @Override
     public boolean isLegacyOwnerAccepted() {
         return true;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
     }
 
     @Override

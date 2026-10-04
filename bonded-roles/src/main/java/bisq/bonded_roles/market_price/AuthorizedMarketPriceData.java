@@ -17,9 +17,8 @@
 
 package bisq.bonded_roles.market_price;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.proto.ProtoResolver;
@@ -28,7 +27,6 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -47,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
+public final class AuthorizedMarketPriceData implements OracleNodeAuthorizedData {
     private static final int VERSION = 1;
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
 
@@ -142,15 +139,6 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     @Override
     public boolean isLegacyOwnerAccepted() {
         return true;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
     }
 
     @Override

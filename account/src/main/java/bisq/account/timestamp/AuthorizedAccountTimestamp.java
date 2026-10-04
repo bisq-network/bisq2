@@ -17,23 +17,19 @@
 
 package bisq.account.timestamp;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_20_DAYS;
@@ -41,7 +37,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_20_DAYS;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAccountTimestamp implements AuthorizedDistributedData, PublishDateAware {
+public final class AuthorizedAccountTimestamp implements OracleNodeAuthorizedData, PublishDateAware {
     private static final int VERSION = 1;
 
     public static final MetaData META_DATA = new MetaData(TTL_20_DAYS, DEFAULT_PRIORITY, AuthorizedAccountTimestamp.class.getSimpleName());
@@ -124,15 +120,6 @@ public final class AuthorizedAccountTimestamp implements AuthorizedDistributedDa
     @Override
     public boolean isLegacyOwnerAccepted() {
         return true;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
     }
 
     @Override

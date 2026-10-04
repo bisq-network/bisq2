@@ -17,12 +17,11 @@
 
 package bisq.bonded_roles.bonded_role;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufException;
@@ -32,14 +31,12 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.Set;
 
 import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.LEGACY_VERSION;
 import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.PROPOSAL_KEY_VERSION;
@@ -51,7 +48,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedBondedRole implements AuthorizedDistributedData {
+public final class AuthorizedBondedRole implements OracleNodeAuthorizedData {
     private static final int LEGACY_DATA_VERSION = 1;
     private static final int PROPOSAL_KEY_DATA_VERSION = 2;
     private static final int CURRENT_DATA_VERSION = PROPOSAL_KEY_DATA_VERSION;
@@ -282,15 +279,6 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     @Override
     public boolean isLegacyOwnerAccepted() {
         return true;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
     }
 
     @Override

@@ -17,9 +17,8 @@
 
 package bisq.burningman;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
@@ -27,7 +26,6 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +33,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
@@ -44,7 +41,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public final class AuthorizedBurningmanListByBlock implements AuthorizedDistributedData, PublishDateAware {
+public final class AuthorizedBurningmanListByBlock implements OracleNodeAuthorizedData, PublishDateAware {
     private static final int VERSION = 1;
 
     // We use a rather long TTL to ensure in case the oracle nodes have issues to still have BM data in the network.
@@ -132,15 +129,6 @@ public final class AuthorizedBurningmanListByBlock implements AuthorizedDistribu
     @Override
     public boolean isLegacyOwnerAccepted() {
         return true;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
     }
 
     @Override
