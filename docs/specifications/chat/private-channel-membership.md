@@ -12,7 +12,8 @@ user of a two-party chat, or the traders and dispute agents of a trade, without 
    channel of its trade was created. A pending message which these rules reject is no longer pending.
 3. A message which names an existing channel never creates another channel, also when rule 1 rejects it.
 4. The sender is the sender profile of the message. It is bound to the key which encrypted the message, and the
-   author ID of a private message is derived from it.
+   author ID of a private message is derived from it. The node accepts such a message only inside a confidential
+   message, which provides this binding (see [Confidential messages](../network/confidential-messages.md)).
 5. A received message of a Bisq Easy or MuSig trade chat is added to a trade channel only if its trade ID is the trade
    ID of the channel (`BisqEasyOpenTradeChannelService`, `MuSigOpenTradeChannelService`). The channel ID is not compared, because the channel ID of a message can
    differ from the ID of the channel in a dotless i (see "Not covered").
