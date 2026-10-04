@@ -20,6 +20,7 @@ package bisq.bonded_roles.bonded_role;
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.oracle.OnlyStaticOracleNodes;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
@@ -59,11 +60,6 @@ import java.util.stream.Stream;
  */
 @Slf4j
 public class AuthorizedBondedRolesService implements Service, DataService.Listener {
-    // Temporary restriction: while true, only the static oracle node keys may act as an oracle node. A bonded role of
-    // type ORACLE_NODE of a non-static key does not give this authority. Set it to false to allow oracle nodes with a
-    // non-static key again (see docs/specifications/bonded-roles/authorized-data.md).
-    public static final boolean ONLY_STATIC_ORACLE_NODES = true;
-
     public interface Listener {
         void onAuthorizedDataAdded(AuthorizedData authorizedData);
 
@@ -74,6 +70,9 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     private final NetworkService networkService;
     private final boolean ignoreSecurityManager;
     private final Set<String> oracleNodePubKeys;
+    // Temporary restriction: while true, only the static oracle node keys may act as an oracle node. A bonded role of
+    // type ORACLE_NODE of a non-static key does not give this authority (see OnlyStaticOracleNodes and
+    // docs/specifications/bonded-roles/authorized-data.md).
     private final boolean onlyStaticOracleNodes;
     @Getter
     private final ObservableSet<BondedRole> bondedRoles = new ObservableSet<>();
@@ -94,7 +93,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         this(networkService,
                 ignoreSecurityManager,
                 AuthorizedPubKeys.getOracleNodePubKeys(),
-                ONLY_STATIC_ORACLE_NODES);
+                OnlyStaticOracleNodes.isEnabled());
     }
 
     @VisibleForTesting

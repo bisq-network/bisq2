@@ -20,9 +20,9 @@ package bisq.application;
 import bisq.account.timestamp.AuthorizedAccountTimestamp;
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.market_price.AuthorizedMarketPriceData;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.oracle.OnlyStaticOracleNodes;
 import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
@@ -90,12 +90,21 @@ class OracleNodeAuthorizedDataTest {
                 assertFalse(OracleNodeAuthorizedData.class.isAssignableFrom(type), type.getName()));
     }
 
-    // The requirement does not depend on the static flag, which the publisher sets
+    // The requirement follows the configured restriction (application.bondedRoles.onlyStaticOracleNodes), not the
+    // static flag, which the publisher sets
     @Test
     void requirementFollowsTheRestrictionToStaticOracleNodes() {
         AuthorizedTimestampData timestamp = new AuthorizedTimestampData("a".repeat(40), 1_700_000_000_000L, false);
-
-        assertEquals(AuthorizedBondedRolesService.ONLY_STATIC_ORACLE_NODES, timestamp.isStaticPublicKeyRequired());
+        assertTrue(OnlyStaticOracleNodes.isEnabled());
+        assertTrue(timestamp.isStaticPublicKeyRequired());
         assertEquals(AuthorizedPubKeys.getOracleNodePubKeys(), timestamp.getAuthorizedPublicKeys());
+
+        try {
+            OnlyStaticOracleNodes.setEnabled(false);
+
+            assertFalse(timestamp.isStaticPublicKeyRequired());
+        } finally {
+            OnlyStaticOracleNodes.setEnabled(true);
+        }
     }
 }
