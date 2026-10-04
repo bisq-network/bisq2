@@ -22,16 +22,17 @@ import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.Test;
 
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class BisqEasyTakeOfferRequestHandlerTest {
+class BisqEasyTakeOfferRequestValidatorTest {
     @Test
     void verifyRejectsTakeOfferRequestFromIgnoredTaker() {
         String takersProfileId = "takersProfileId";
@@ -57,11 +58,10 @@ class BisqEasyTakeOfferRequestHandlerTest {
         when(message.getBisqEasyContract()).thenReturn(takersContract);
         when(message.getSender().getId()).thenReturn(takersProfileId);
 
-        BisqEasyTakeOfferRequestHandler handler =
-                new BisqEasyTakeOfferRequestHandler(serviceProvider, mock(BisqEasyTrade.class));
+        Identity myIdentity = mock(Identity.class);
 
         TradeProtocolException exception =
-                assertThrows(TradeProtocolException.class, () -> handler.verify(message));
+                assertThrows(TradeProtocolException.class, () -> validate(serviceProvider, myIdentity, message));
         // The rejection sent to the taker must not disclose that they have been ignored: it is the rejection for an offer
         // which the maker does not have, thrown from the same line
         assertEquals(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND, exception.getTradeProtocolFailure());
@@ -69,7 +69,8 @@ class BisqEasyTakeOfferRequestHandlerTest {
 
         when(serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(takersProfileId))
                 .thenReturn(false);
-        TradeProtocolException notFound = assertThrows(TradeProtocolException.class, () -> handler.verify(message));
+        TradeProtocolException notFound =
+                assertThrows(TradeProtocolException.class, () -> validate(serviceProvider, myIdentity, message));
         assertEquals(notFound.getTradeProtocolFailure(), exception.getTradeProtocolFailure());
         assertEquals(notFound.getMessage(), exception.getMessage());
         assertEquals(notFound.getStackTrace()[0], exception.getStackTrace()[0]);
@@ -108,11 +109,8 @@ class BisqEasyTakeOfferRequestHandlerTest {
         when(serviceProvider.getBisqEasyTradeService().hasSignedTradeWithOffer(takersOffer)).thenReturn(true);
         when(serviceProvider.getContractService().arePublicKeysMatching(any(java.security.PublicKey.class), any(java.security.PublicKey.class))).thenReturn(true);
 
-        BisqEasyTakeOfferRequestHandler handler =
-                new BisqEasyTakeOfferRequestHandler(serviceProvider, mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS));
-
-        IllegalArgumentException exception =
-                assertThrows(IllegalArgumentException.class, () -> handler.verify(message));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> validate(serviceProvider, mock(Identity.class), message));
         assertTrue(exception.getMessage().contains("take offer request"));
     }
 }
