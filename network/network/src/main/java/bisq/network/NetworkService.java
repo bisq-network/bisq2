@@ -157,7 +157,7 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
 
         messageDeliveryStatusService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
                 supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
-                Optional.of(new MessageDeliveryStatusService(persistenceService, keyBundleService, this)) :
+                Optional.of(new MessageDeliveryStatusService(persistenceService, keyBundleService, networkIdService, this)) :
                 Optional.empty();
         resendMessageService = supportedServices.contains(ServiceNode.SupportedService.ACK) &&
                 supportedServices.contains(ServiceNode.SupportedService.CONFIDENTIAL) ?
