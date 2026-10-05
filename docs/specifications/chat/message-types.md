@@ -5,7 +5,8 @@
 The type of a chat message decides how a client shows the message, for example as a text bubble,
 as a notice that a user left the chat or as a line of the trade log. The sender chooses the type. A
 client therefore accepts from the network only the types that clients send in that kind of chat,
-and a chat channel holds only messages of these types.
+and a chat channel holds only messages of these types. A node does not store or relay public
+messages of other types either.
 
 ## Supported types
 
@@ -28,6 +29,13 @@ A received message of an unsupported type is ignored before the chat acts on it:
 it creates no notification, it does not open a private channel and it adds no contact. This
 applies to private messages, including mailbox messages, and to public messages, including those
 loaded from the network data store at startup (`ChatChannelService.isValid`).
+
+A public message of another type than `TEXT` fails at parsing (`PublicChatMessage.verify`, rule 2 of
+[`../network/validation-at-parsing.md`](../network/validation-at-parsing.md)). A node therefore does
+not store, relay or serve it, and a store skips it when it loads. The expired messages indicator,
+which the desktop client creates as a public message, passes the rule: its type has no protobuf
+value, so no node sends or receives it. The type of a private message is checked only by the chat
+of its receiver, as nodes which relay or store a private message see only its encrypted form.
 
 ## Channel IDs
 
@@ -65,6 +73,13 @@ Messages of unsupported types which a client stored before this rule are dropped
 loads. A private channel that such a message opened stays, possibly empty, and so does the contact
 entry. Notifications created before this rule are not removed by it.
 
+Unmodified clients of all versions publish public messages only as `TEXT`, so the check at parsing
+follows rule 3 of [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md).
+Nodes of earlier versions still store and relay public messages of other types. A node of this
+version skips such an entry of an inventory response, and drops such a message which it receives
+from the network without closing the connection.
+
 ## Not covered
 
-Clients without this rule still show received messages of any type.
+Clients without this rule still show received messages of any type. They receive public messages of
+other types only from nodes of earlier versions or from the modified client which creates them.
