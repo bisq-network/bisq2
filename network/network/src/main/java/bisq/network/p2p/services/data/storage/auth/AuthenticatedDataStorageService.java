@@ -389,11 +389,22 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
 
     // The sequence number for the next request of the owner: one more than the number by which the store orders the
     // entry. This is 1 if the store holds no entry (see docs/specifications/network/storage-request-ordering.md).
+    // If the store orders the entry by Integer.MAX_VALUE, no higher number exists, so no request can replace the entry
+    // in a store which holds it, until the entry expires. The method then returns Integer.MAX_VALUE, and the store of
+    // the owner rejects the request which the owner creates with it, so the node does not broadcast it. Only the owner
+    // signs the numbers by which a store orders an entry, so only a modified client of the owner, or an edited store,
+    // creates this state.
     public int getNextSequenceNumber(ByteArray storageKey) {
-        Map<ByteArray, AuthenticatedDataRequest> map = persistableStore.getMap();
+        int trustedSequenceNumber;
         synchronized (mapAccessLock) {
-            return Math.incrementExact(getTrustedSequenceNumber(storageKey, map.get(storageKey)));
+            trustedSequenceNumber = getTrustedSequenceNumber(storageKey, persistableStore.getMap().get(storageKey));
         }
+        if (trustedSequenceNumber == Integer.MAX_VALUE) {
+            log.warn("The sequence number of the entry is Integer.MAX_VALUE. No request for this data can replace " +
+                    "the entry until it expires. storageKey={}", storageKey);
+            return Integer.MAX_VALUE;
+        }
+        return trustedSequenceNumber + 1;
     }
 
     // The sequence number by which the store orders the entry. A request replaces the entry only with a higher sequence
