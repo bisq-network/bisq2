@@ -534,21 +534,27 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             PublicKey senderPublicKey = KeyGeneration.generatePublic(encodedSenderPublicKey);
             // The decryption succeeded, so the key of this key ID is ours and the message was encrypted for it
             String receiverKeyId = confidentialMessage.getReceiverKeyId();
-            boolean wasNotPresent = processedEnvelopePayloadMessagesAndPublicKeys.add(
+            addAndNotifyListeners(
                     new EnvelopePayloadMessageAndPublicKey(decryptedEnvelopePayloadMessage, senderPublicKey, receiverKeyId));
-            if (wasNotPresent) {
-                log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", decryptedEnvelopePayloadMessage.getClass().getSimpleName());
-                messageDeliveryStatusService.ifPresent(service -> NetworkExecutors.getNotifyExecutor()
-                        .submit(() -> service.onDecryptedMessage(decryptedEnvelopePayloadMessage, receiverKeyId)));
-                listeners.forEach(listener -> {
-                    NetworkExecutors.getNotifyExecutor().submit(() -> listener.onMessage(decryptedEnvelopePayloadMessage));
-                    NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConfidentialMessage(decryptedEnvelopePayloadMessage, senderPublicKey));
-                });
-            }
             return true;
         } catch (Exception e) {
             log.error("Error at decryption using receiversKeyId={}", confidentialMessage.getReceiverKeyId(), e);
             throw new RuntimeException(e);
+        }
+    }
+
+    private void addAndNotifyListeners(EnvelopePayloadMessageAndPublicKey processedMessage) {
+        boolean wasNotPresent = processedEnvelopePayloadMessagesAndPublicKeys.add(processedMessage);
+        if (wasNotPresent) {
+            EnvelopePayloadMessage message = processedMessage.envelopePayloadMessage();
+            PublicKey senderPublicKey = processedMessage.senderPublicKey();
+            log.info("Decrypted confidentialMessage. decryptedEnvelopePayloadMessage={}", message.getClass().getSimpleName());
+            messageDeliveryStatusService.ifPresent(service -> NetworkExecutors.getNotifyExecutor()
+                    .submit(() -> service.onDecryptedMessage(message, processedMessage.receiverKeyId())));
+            listeners.forEach(listener -> {
+                NetworkExecutors.getNotifyExecutor().submit(() -> listener.onMessage(message));
+                NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConfidentialMessage(message, senderPublicKey));
+            });
         }
     }
 
