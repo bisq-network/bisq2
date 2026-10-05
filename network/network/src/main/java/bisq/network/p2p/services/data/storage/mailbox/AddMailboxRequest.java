@@ -137,7 +137,6 @@ public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
                 "senderPublicKeyHash must match the hash of senderPublicKeyBytes");
         SignatureValidation.validateSignatures(signature, signatureV2);
         SignatureValidation.validateVersionOfSignatureV2(signatureV2, version);
-        SignatureValidation.validateVersionOfSignatureV2(signatureV2, mailboxSequentialData.getMailboxData().getVersion());
     }
 
 

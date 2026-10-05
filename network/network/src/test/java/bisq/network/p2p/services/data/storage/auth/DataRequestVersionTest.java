@@ -29,12 +29,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The deprecated metaData field of the remove requests is excluded from the hash in every version. Versions 1 to 3
- * are the versions which supported nodes send; for them serializeForHash(), the proof of work payload, is the same as
- * in nodes of earlier versions. Versions 0 and above 3 are not used by supported nodes.
+ * The deprecated metaData field of the remove requests is excluded from the hash. Versions 1 to 3 are the versions
+ * which supported nodes send; for them serializeForHash(), the proof of work payload, is the same as in nodes of
+ * earlier versions. Version 0 fails at parsing.
  */
 class DataRequestVersionTest {
     private static final ByteString HASH = ByteString.copyFrom(new byte[20]);
@@ -44,8 +45,8 @@ class DataRequestVersionTest {
             new MetaData(MetaData.TTL_10_DAYS, "TestDistributedData").toProto(false);
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 2, 3, 4})
-    void removeAuthenticatedDataRequestExcludesMetaDataFromHashInEveryVersion(int version)
+    @ValueSource(ints = {1, 2, 3})
+    void removeAuthenticatedDataRequestExcludesMetaDataFromHash(int version)
             throws InvalidProtocolBufferException, UnresolvableProtobufException {
         RemoveAuthenticatedDataRequest request = RemoveAuthenticatedDataRequest.fromProto(
                 bisq.network.protobuf.RemoveAuthenticatedDataRequest.newBuilder()
@@ -64,22 +65,22 @@ class DataRequestVersionTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 1, 2, 3, 4})
-    void removeMailboxRequestExcludesMetaDataFromHashInEveryVersion(int version)
+    @ValueSource(ints = {1, 2, 3})
+    void removeMailboxRequestExcludesMetaDataFromHash(int version)
             throws InvalidProtocolBufferException, UnresolvableProtobufException {
         RemoveMailboxRequest request = RemoveMailboxRequest.fromProto(
-                bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
-                        .setVersion(version)
-                        .setMetaData(META_DATA)
-                        .setHash(HASH)
-                        .setReceiverPublicKeyBytes(PUBLIC_KEY)
-                        .setSignature(SIGNATURE)
-                        .setCreated(System.currentTimeMillis())
-                        .build());
+                removeMailboxRequestProto().setVersion(version).build());
 
         assertEquals(version, request.getVersion());
         assertFalse(parse(request.serializeForHash()).getRemoveMailboxRequest().hasMetaData());
         assertTrue(parse(request.serialize()).getRemoveMailboxRequest().hasMetaData());
+    }
+
+    // Version 0 is the format of releases before the version field existed. Since v2.1.0, nodes send version 1.
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0})
+    void requestsOfVersion0FailAtParsing(int version) {
+        assertRequestsFailAtParsing(version);
     }
 
     @Test
@@ -139,6 +140,26 @@ class DataRequestVersionTest {
                 .setHash(HASH)
                 .setOwnerPublicKeyBytes(PUBLIC_KEY)
                 .setSequenceNumber(2)
+                .setSignature(SIGNATURE)
+                .setCreated(System.currentTimeMillis());
+    }
+
+    private static void assertRequestsFailAtParsing(int version) {
+        assertThrows(UnresolvableProtobufException.class, () -> RemoveAuthenticatedDataRequest.fromProto(
+                removeAuthenticatedDataRequestProto().setVersion(version).build()));
+        assertThrows(UnresolvableProtobufException.class, () -> RemoveMailboxRequest.fromProto(
+                removeMailboxRequestProto().setVersion(version).build()));
+        assertThrows(UnresolvableProtobufException.class, () -> RefreshAuthenticatedDataRequest.fromProto(
+                refreshAuthenticatedDataRequestProto().setVersion(version).build()));
+    }
+
+    private static bisq.network.protobuf.RemoveMailboxRequest.Builder removeMailboxRequestProto() {
+        //noinspection deprecation
+        return bisq.network.protobuf.RemoveMailboxRequest.newBuilder()
+                .setVersion(1)
+                .setMetaData(META_DATA)
+                .setHash(HASH)
+                .setReceiverPublicKeyBytes(PUBLIC_KEY)
                 .setSignature(SIGNATURE)
                 .setCreated(System.currentTimeMillis());
     }

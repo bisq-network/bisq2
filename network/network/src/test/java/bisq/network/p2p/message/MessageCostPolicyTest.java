@@ -179,15 +179,16 @@ class MessageCostPolicyTest {
             double addCost = className.equals("AuthorizedMarketPriceData") ?
                     0.6 : bound(0.25, 0.75, historicalStorageCost + historicalDataCost);
             assertCosts(createAddRequest(historicalMetaData), addCost, addCost, className + " add");
-            // The receiver expects the policy value for every version: no version keeps the received MetaData
-            for (int version = 0; version <= 3; version++) {
+            // The receiver expects the policy value for every version: no version keeps the received MetaData.
+            // Version 0 fails at parsing (rule 6 of storage-request-signatures.md).
+            for (int version = 1; version <= 3; version++) {
                 assertCosts(createRemoveRequest(historicalMetaData, version), removeCost, removeCostToPay,
                         className + " remove version=" + version);
                 assertCosts(createRefreshRequest(historicalMetaData, version), removeCost, removeCostToPay,
                         className + " refresh version=" + version);
             }
         } else {
-            for (int version = 0; version <= 3; version++) {
+            for (int version = 1; version <= 3; version++) {
                 assertCosts(createRemoveMailboxRequest(historicalMetaData, version), removeCost, removeCostToPay,
                         className + " remove mailbox version=" + version);
             }
@@ -197,7 +198,7 @@ class MessageCostPolicyTest {
                 double addCost = bound(0.25, 1, storageCost + confidentialCost);
                 double addCostToPay = Math.max(addCost, historicalAddCost);
                 MailboxData mailboxData = new MailboxData(historicalMetaData, createConfidentialMessage(size));
-                // Version 0 is not combined with signature V2 (see SignatureValidation.validateVersionOfSignatureV2)
+                // MailboxData of version 0 fails at parsing (rule 6 of storage-request-signatures.md)
                 for (int version = 1; version <= 3; version++) {
                     MailboxData versionedData = MailboxData.fromProto(mailboxData.toProto(false).toBuilder()
                             .setVersion(version).build());

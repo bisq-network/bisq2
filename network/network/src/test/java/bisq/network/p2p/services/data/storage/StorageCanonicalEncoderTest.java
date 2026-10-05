@@ -264,7 +264,8 @@ public class StorageCanonicalEncoderTest {
         assertArrayEquals(addAppendOnlyDataRequest.serialize(),
                 addAppendOnlyDataRequest.encodeCanonical(EncodingPurpose.SIGNATURE));
 
-        for (int version = 0; version <= 4; version++) {
+        // Version 0 fails at parsing (rule 6 of storage-request-signatures.md)
+        for (int version = 1; version <= 3; version++) {
             String description = "version " + version;
             MailboxData mailboxData = getMailboxData(version);
             MailboxSequentialData mailboxSequentialData = getMailboxSequentialData(mailboxData);
@@ -303,7 +304,7 @@ public class StorageCanonicalEncoderTest {
         messages.add(new AddAppendOnlyDataRequest(new ExternalData("content", 0)));
         messages.add(new AddAppendOnlyDataRequest(new ExternalData("content", 7)));
         messages.add(ConfidentialMessage.fromProto(getConfidentialMessageProto()));
-        for (int version = 0; version <= 4; version++) {
+        for (int version = 1; version <= 3; version++) {
             messages.add(getAddMailboxRequest(getMailboxSequentialData(getMailboxData(version))));
             messages.add(getRemoveMailboxRequest(version));
             messages.add(getRemoveAuthenticatedDataRequest(version));
@@ -501,17 +502,15 @@ public class StorageCanonicalEncoderTest {
         return getAddMailboxRequest(getMailboxSequentialData());
     }
 
-    // Mailbox data of version 0 comes only in requests without signature V2 and with version 0, as nodes of earlier
-    // versions sent them
+    // With signature V2 and version 2, as nodes of this version send it
     private static AddMailboxRequest getAddMailboxRequest(MailboxSequentialData mailboxSequentialData)
             throws UnresolvableProtobufException {
-        int version = mailboxSequentialData.getMailboxData().getVersion() == 0 ? 0 : 2;
         return AddMailboxRequest.fromProto(bisq.network.protobuf.AddMailboxRequest.newBuilder()
                 .setMailboxSequentialData(mailboxSequentialData.toProto(false))
                 .setSignature(ByteString.copyFrom(SIGNATURE))
                 .setSenderPublicKeyBytes(ByteString.copyFrom(PUBLIC_KEY_BYTES))
-                .setSignatureV2(signatureV2ForVersion(version))
-                .setVersion(version)
+                .setSignatureV2(ByteString.copyFrom(SIGNATURE_V2))
+                .setVersion(2)
                 .build());
     }
 
