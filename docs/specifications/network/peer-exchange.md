@@ -20,6 +20,8 @@ peers: any connected node can send any list.
    persisted peers (default 100). The limits apply to the peers of all address types. When the node adds peers and a
    limit is exceeded, it removes the peers with the oldest dates.
 4. **Load.** When the node loads the persisted peers, it applies rules 1 to 3, and it writes the result back to disk.
+5. **Invalid peers.** A peer exchange message has at most 500 peers. Parsing checks this number before it converts any
+   peer. A peer which parsing rejects is skipped, and the other peers of the message are kept.
 
 ## Reasons
 
@@ -39,6 +41,11 @@ peers: any connected node can send any list.
   the next periodic housekeeping.
 - Rule 4: a store which an earlier version wrote can contain peers of other transports, peers dated in the future and
   more peers than the limit. Rule 4 makes such a store shrink at the first start of this version.
+- Rule 5: the reported peers are data of other nodes, which the reporter only relays. A node of another version can
+  relay a peer which this version rejects, for example a peer whose network load is not a number, which nodes up to
+  2.1.13 accept. If one such peer failed the whole message, a modified client could stop the peer exchange between
+  nodes of version 2.1.13 and nodes of this version, in both directions, with one peer. The peers are not part of the
+  hash of the message, so a skipped peer does not change its proof of work payload.
 
 ## Compatibility
 
