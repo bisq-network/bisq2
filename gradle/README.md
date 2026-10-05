@@ -128,7 +128,8 @@ the allowlist, when an allowlist entry is stale, or when an entry has no rationa
 Gradle verifies an artifact by its checksum only if the artifact has no signature or if every key which signed it is
 ignored. The policy treats a checksum as fallback if it has a reason (Gradle writes `Artifact is not signed`, `A key
 couldn't be downloaded` or `PGP signature verification failed!`) or if neither a `pgp` entry nor a `trusted-key` entry
-for the module names a key which is not ignored. It checks every entry in `gradle/verification-metadata.xml`, not only
+for the module names a key which is not ignored. This applies to every checksum kind which Gradle verifies (`md5`,
+`sha1`, `sha256` and `sha512`), also if the metadata of this repository uses only `sha256` today. It checks every entry in `gradle/verification-metadata.xml`, not only
 the resolved dependency graph, because Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
 against it. Entries for versions no build uses therefore also need an allowlist entry until they are removed.
 
