@@ -75,6 +75,8 @@ class TorSocksProxyFactoryTest {
 
         try (Socket socket = factory.getSocket(HOST, PORT, "node1", TIMEOUT)) {
             assertTrue(socket.isConnected());
+            // The established connection has no other timeout for its reads
+            assertEquals(TIMEOUT, socket.getSoTimeout());
             assertArrayEquals("ok".getBytes(StandardCharsets.US_ASCII), readTwoBytes(socket));
         }
         Request received = request.get(TIMEOUT, TimeUnit.MILLISECONDS);
@@ -108,12 +110,16 @@ class TorSocksProxyFactoryTest {
         }
     }
 
+    // 0xFF: the proxy accepts none of the offered methods. 0: the proxy selects no authentication, which the node did not
+    // offer. clientClosed shows that the node sent no connect request without credentials.
     @Test
     void proxyWithoutUsernameAuthenticationIsRejected() throws Exception {
-        CompletableFuture<Request> request = serve(new Answers((byte) 0xFF, null, null));
+        for (byte method : new byte[]{(byte) 0xFF, 0}) {
+            CompletableFuture<Request> request = serve(new Answers(method, null, null));
 
-        assertThrows(SocketException.class, () -> factory.getSocket(HOST, PORT, "node1", TIMEOUT));
-        assertTrue(request.get(TIMEOUT, TimeUnit.MILLISECONDS).clientClosed());
+            assertThrows(SocketException.class, () -> factory.getSocket(HOST, PORT, "node1", TIMEOUT));
+            assertTrue(request.get(TIMEOUT, TimeUnit.MILLISECONDS).clientClosed());
+        }
     }
 
     @Test
