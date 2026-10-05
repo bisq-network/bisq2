@@ -20,8 +20,8 @@ the service does not fail because of one item. An `Error`, for example an out of
 ## Registration of a confidential message listener
 
 A processed message is a confidential message which the node decrypted and checked in this run (rule 4 of
-[Confidential messages](confidential-messages.md)). The node keeps the processed messages in memory until it shuts
-down.
+[Confidential messages](confidential-messages.md)). The node keeps the most recent processed messages in memory until
+it shuts down (see [Processed confidential messages](processed-confidential-messages.md)).
 
 A confidential message listener registers and receives the replay of the processed messages in one step. The private
 chat, the Bisq Easy trade, the Bisq Easy mediator, the mediation request, the moderation, and in the oracle node the
@@ -29,7 +29,9 @@ timestamp service and the request service of the Bisq 1 bridge do so. For them, 
 
 - Exactly once: the listener receives each processed message exactly once. It receives the messages which the node
   processed before the registration in the replay, and each later message as a new message. A message which the node
-  processes while the listener registers reaches the listener either in the replay or as a new message.
+  processes while the listener registers reaches the listener either in the replay or as a new message. This holds for
+  the messages which the node still keeps: a message which the node dropped is not replayed, and it is processed and
+  passed again if it is received again (see [Processed confidential messages](processed-confidential-messages.md)).
 - Same calls as a new message: the replay passes each message in the same way as a new message, to the listener method
   for the message alone and to the listener method for the message with the public key of its sender. Each of these
   calls is processed on its own, as each replayed item in the rule above.
