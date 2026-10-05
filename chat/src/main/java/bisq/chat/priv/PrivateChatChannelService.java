@@ -78,7 +78,7 @@ public abstract class PrivateChatChannelService<
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addConfidentialMessageListenerAndDeliverProcessedMessages(this);
+        networkService.subscribeToConfidentialMessages(this);
         return CompletableFuture.completedFuture(true);
     }
 

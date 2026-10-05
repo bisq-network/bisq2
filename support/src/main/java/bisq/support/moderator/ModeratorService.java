@@ -127,7 +127,7 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addConfidentialMessageListenerAndDeliverProcessedMessages(this);
+        networkService.subscribeToConfidentialMessages(this);
 
         addObserverIfModerator();
 

@@ -107,7 +107,7 @@ class ConfidentialMessageServiceDeliveryTest {
         receiveAndAwaitProcessing(first, second);
         RecordingListener listener = new RecordingListener();
 
-        confidentialMessageService.addListenerAndDeliverProcessedMessages(listener);
+        confidentialMessageService.subscribe(listener);
 
         // The messages are passed before the method returns
         assertEquals(List.of(first, second), listener.messages);
@@ -121,10 +121,10 @@ class ConfidentialMessageServiceDeliveryTest {
         AckMessage processedAfter = new AckMessage("message2");
         receiveAndAwaitProcessing(processedBefore);
         RecordingListener listener = new RecordingListener();
-        confidentialMessageService.addListenerAndDeliverProcessedMessages(listener);
+        confidentialMessageService.subscribe(listener);
 
         receiveAndAwaitProcessing(processedAfter);
-        confidentialMessageService.addListenerAndDeliverProcessedMessages(listener);
+        confidentialMessageService.subscribe(listener);
         awaitNotifications();
 
         assertEquals(List.of(processedBefore, processedAfter), listener.messages);
@@ -142,7 +142,7 @@ class ConfidentialMessageServiceDeliveryTest {
         appender.start();
         replayLogger.addAppender(appender);
         try {
-            assertDoesNotThrow(() -> confidentialMessageService.addListenerAndDeliverProcessedMessages(listener));
+            assertDoesNotThrow(() -> confidentialMessageService.subscribe(listener));
         } finally {
             replayLogger.detachAppender(appender);
             appender.stop();
@@ -181,7 +181,7 @@ class ConfidentialMessageServiceDeliveryTest {
             receive(message);
             assertTrue(pausingAppender.paused.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
-            Thread addingThread = new Thread(() -> confidentialMessageService.addListenerAndDeliverProcessedMessages(listener));
+            Thread addingThread = new Thread(() -> confidentialMessageService.subscribe(listener));
             addingThread.start();
             // The adding thread waits for the lock which the processing thread holds
             awaitBlockedOrTerminated(addingThread);
@@ -213,7 +213,7 @@ class ConfidentialMessageServiceDeliveryTest {
         receiveAndAwaitProcessing(message);
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getConfidentialMessageServices()).thenReturn(Set.of(confidentialMessageService));
-        doCallRealMethod().when(networkService).addConfidentialMessageListenerAndDeliverProcessedMessages(any());
+        doCallRealMethod().when(networkService).subscribeToConfidentialMessages(any());
         // The service nodes add the listener to the confidential message services as well
         doAnswer(invocation -> {
             confidentialMessageService.addListener(invocation.getArgument(0));
@@ -221,7 +221,7 @@ class ConfidentialMessageServiceDeliveryTest {
         }).when(networkService).addConfidentialMessageListener(any());
         RecordingListener listener = new RecordingListener();
 
-        networkService.addConfidentialMessageListenerAndDeliverProcessedMessages(listener);
+        networkService.subscribeToConfidentialMessages(listener);
 
         assertEquals(List.of(message), listener.messages);
         verify(networkService).addConfidentialMessageListener(listener);

@@ -90,7 +90,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.addConfidentialMessageListenerAndDeliverProcessedMessages(this);
+        networkService.subscribeToConfidentialMessages(this);
         return CompletableFuture.completedFuture(true);
     }
 
