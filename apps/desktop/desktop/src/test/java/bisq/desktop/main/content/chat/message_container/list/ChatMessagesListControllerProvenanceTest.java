@@ -77,9 +77,11 @@ class ChatMessagesListControllerProvenanceTest {
     private static final String TRADE_ID = "trade-id";
 
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
+    private UserService userService;
     private BisqEasyMediatorService mediatorService;
     private ChatMessagesListController controller;
     private BisqEasyOpenTradeChannel channel;
+    private UserProfile peer;
     private BisqEasyOpenTradeMessage forwardedMessageOfPeer;
 
     @BeforeEach
@@ -89,7 +91,7 @@ class ChatMessagesListControllerProvenanceTest {
         when(mediatorIdentity.getId()).thenReturn(mediator.getId());
         when(mediatorIdentity.getUserProfile()).thenReturn(mediator);
         UserProfile requester = userProfile("requester");
-        UserProfile peer = userProfile("peer");
+        peer = userProfile("peer");
         channel = BisqEasyOpenTradeChannel.create(TRADE_ID,
                 mock(BisqEasyOffer.class),
                 mediatorIdentity,
@@ -112,7 +114,7 @@ class ChatMessagesListControllerProvenanceTest {
                 Optional.empty(),
                 new HashSet<>());
 
-        UserService userService = mock(UserService.class, RETURNS_DEEP_STUBS);
+        userService = mock(UserService.class, RETURNS_DEEP_STUBS);
         when(userService.getUserProfileService().getIgnoredUserProfileIds()).thenReturn(new ObservableSet<>());
         when(userService.getUserIdentityService().getSelectedUserIdentity()).thenReturn(mediatorIdentity);
         when(userService.getUserIdentityService().getSelectedUserIdentityObservable())
@@ -192,6 +194,26 @@ class ChatMessagesListControllerProvenanceTest {
                 .filteredOn(item -> item.getChatMessage().equals(forwardedMessageOfPeer))
                 .singleElement()
                 .matches(ChatMessageListItem::isUnverifiedForwardedMessage);
+    }
+
+    @Test
+    void unverifiedMessageOfAnotherProfileOfTheNodeIsNotShownAsOwnMessage() {
+        // A request can name another profile of the mediator's node as a party, for example a second mediator profile
+        when(userService.getUserIdentityService().isUserIdentityPresent(peer.getId())).thenReturn(true);
+        channel.addChatMessage(forwardedMessageOfPeer);
+        when(mediatorService.getUnverifiedChatMessageKeys(TRADE_ID))
+                .thenReturn(Set.of(BisqEasyMediatorService.getProvenanceKey(forwardedMessageOfPeer)));
+
+        selectedChannel.set(channel);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        ChatMessageListItem<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>> item =
+                controller.getModel().getChatMessages().stream()
+                        .filter(listItem -> listItem.getChatMessage().equals(forwardedMessageOfPeer))
+                        .findAny()
+                        .orElseThrow();
+        assertThat(item.isUnverifiedForwardedMessage()).isTrue();
+        assertThat(item.isMyMessage()).isFalse();
     }
 
     private static UserProfile userProfile(String nickName) {
