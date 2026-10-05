@@ -210,7 +210,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         BisqEasyContract contract = bisqEasyMediationRequest.getContract();
         UserProfile peer = bisqEasyMediationRequest.getPeer();
         if (!hasMatchingContractParties(contract, requester, peer)) {
-            log.warn("Ignoring BisqEasyMediationRequest for trade {} because requester {} and peer {} do not match contract parties.",
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because requester {} and peer {} are not the two contract parties.",
                     bisqEasyMediationRequest.getTradeId(), requester.getId(), peer.getId());
             return Optional.empty();
         }

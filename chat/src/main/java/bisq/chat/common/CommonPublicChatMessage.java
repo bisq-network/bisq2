@@ -128,9 +128,14 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
         return chatChannelDomain.migrate();
     }
 
+    // The sender chooses the channel ID, and isValid ignores a message whose ID cannot be migrated (hasValidChannelId).
+    // The getter must still not throw for such an ID, because the generated equals, hashCode and toString call it
+    // before any check, for example when a received message is put into a hash-based set.
     @Override
     public String getChannelId() {
-        return CommonPublicChatChannel.Migration.migrateChannelId(channelId);
+        return SubDomain.find(channelId)
+                .map(subDomain -> subDomain.migrate().getChannelId())
+                .orElse(channelId);
     }
 
     @Override

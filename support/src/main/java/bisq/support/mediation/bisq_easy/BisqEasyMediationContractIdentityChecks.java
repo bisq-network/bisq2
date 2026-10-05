@@ -39,12 +39,17 @@ public final class BisqEasyMediationContractIdentityChecks {
     // A party is identified by its key: NetworkId.getId() is the hash of the public key, which is also the profile ID.
     // The address map of a NetworkId is routing data, which can change after the offer was published, for example when
     // a user adds a transport. Comparing whole NetworkIds would make the mediator ignore the request of honest traders.
+    // A trade has two different parties. A request which names one profile as requester and peer, with a contract
+    // which names it as maker and taker, does not match, because a mediation channel needs two traders.
     static boolean hasMatchingContractParties(NetworkId makerNetworkId,
                                               NetworkId takerNetworkId,
                                               UserProfile requester,
                                               UserProfile peer) {
         String requesterId = requester.getNetworkId().getId();
         String peerId = peer.getNetworkId().getId();
+        if (requesterId.equals(peerId)) {
+            return false;
+        }
         return (requesterId.equals(makerNetworkId.getId()) && peerId.equals(takerNetworkId.getId())) ||
                 (requesterId.equals(takerNetworkId.getId()) && peerId.equals(makerNetworkId.getId()));
     }

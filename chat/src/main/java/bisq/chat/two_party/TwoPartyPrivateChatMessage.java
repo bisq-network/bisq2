@@ -133,9 +133,12 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
         return chatChannelDomain.migrate();
     }
 
+    // The sender chooses the channel ID, and isValid ignores a message whose ID cannot be migrated (hasValidChannelId).
+    // The getter must still not throw for such an ID: the generated equals, hashCode and toString call it, also in the
+    // network layer before any check, for example when it copies its set of processed messages.
     @Override
     public String getChannelId() {
-        return TwoPartyPrivateChatChannel.Migration.migrateChannelId(channelId);
+        return TwoPartyPrivateChatChannel.Migration.findMigratedChannelId(channelId).orElse(channelId);
     }
 
     @Override

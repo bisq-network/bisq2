@@ -26,6 +26,7 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
@@ -54,9 +55,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -150,6 +154,37 @@ class ReceivedChatMessageChannelIdTest {
             assertEquals(Set.of(message), channel.getChatMessages());
         }
 
+        // The network layer returns its processed messages as a copy in a hash-based set
+        // (ConfidentialMessageService.getProcessedEnvelopePayloadMessages). The copy calls hashCode of each message,
+        // before the chat checks the message. The service makes the copy in the stream which it passes to
+        // StartupReplay.forEach, so the copy is outside of the isolation of each replayed message.
+        @Test
+        void initializeProcessesAHashBasedCopyOfMessagesWithOneWithInvalidChannelId() {
+            TwoPartyPrivateChatMessage message = message(ChatChannelDomain.DISCUSSION, channelId);
+            Set<EnvelopePayloadMessage> processedMessages = new CopyOnWriteArraySet<>(
+                    List.of(message(ChatChannelDomain.DISCUSSION, "discussion.a"), message));
+            ConfidentialMessageService confidentialMessageService = mock(ConfidentialMessageService.class);
+            when(confidentialMessageService.getProcessedEnvelopePayloadMessages())
+                    .thenAnswer(invocation -> processedMessages.stream().collect(Collectors.toUnmodifiableSet()));
+            when(networkService.getConfidentialMessageServices()).thenReturn(Set.of(confidentialMessageService));
+
+            service.initialize();
+
+            TwoPartyPrivateChatChannel channel = service.findChannel(channelId).orElseThrow();
+            assertEquals(Set.of(message), channel.getChatMessages());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"", "...", "discussion", "discussion.a", "discussion.a-", "unknown.a-b"})
+        void messageWithInvalidChannelIdCanBeCopiedIntoAHashBasedSet(String invalidChannelId) {
+            TwoPartyPrivateChatMessage message = message(ChatChannelDomain.DISCUSSION, invalidChannelId);
+
+            Set<TwoPartyPrivateChatMessage> copy = assertDoesNotThrow(() -> Set.copyOf(List.of(message)));
+            assertTrue(copy.contains(message));
+            assertEquals(invalidChannelId, message.getChannelId());
+            assertFalse(message.hasValidChannelId());
+        }
+
         private TwoPartyPrivateChatMessage message(ChatChannelDomain chatChannelDomain, String channelId) {
             return new TwoPartyPrivateChatMessage(StringUtils.createUid(),
                     chatChannelDomain,
@@ -214,6 +249,17 @@ class ReceivedChatMessageChannelIdTest {
             service.initialize();
 
             assertEquals(Set.of(message), channel.getChatMessages());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"", "...", "discussion", "discussion.unknown", "unknown.bisq", "discussion_off.topic"})
+        void messageWithInvalidChannelIdCanBeCopiedIntoAHashBasedSet(String invalidChannelId) {
+            CommonPublicChatMessage message = message(invalidChannelId);
+
+            Set<CommonPublicChatMessage> copy = assertDoesNotThrow(() -> Set.copyOf(List.of(message)));
+            assertTrue(copy.contains(message));
+            assertEquals(invalidChannelId, message.getChannelId());
+            assertFalse(message.hasValidChannelId());
         }
 
         private CommonPublicChatMessage message(String channelId) {
