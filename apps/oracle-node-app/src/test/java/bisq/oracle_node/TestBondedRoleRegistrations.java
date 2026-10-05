@@ -45,13 +45,20 @@ public final class TestBondedRoleRegistrations {
     }
 
     // A registration of the owner of profileKeyPair with the network ID of networkIdKeyPair. Released clients send the
-    // network ID of the profile, so both key pairs are equal.
+    // network ID of the profile, so both key pairs are equal, and the key of the profile as authorized key.
     public static BondedRoleRegistrationRequest createCurrentRequest(KeyPair profileKeyPair, KeyPair networkIdKeyPair) {
+        return createCurrentRequest(profileKeyPair, networkIdKeyPair,
+                Hex.encode(profileKeyPair.getPublic().getEncoded()));
+    }
+
+    public static BondedRoleRegistrationRequest createCurrentRequest(KeyPair profileKeyPair,
+                                                                     KeyPair networkIdKeyPair,
+                                                                     String authorizedPublicKey) {
         var addressMap = new AddressByTransportTypeMap(Map.of(
                 TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(1234)));
         NetworkId networkId = new NetworkId(addressMap, new PubKey(networkIdKeyPair.getPublic(), "test-key"));
         return new BondedRoleRegistrationRequest(Hex.encode(DigestUtil.hash(profileKeyPair.getPublic().getEncoded())),
-                "public-key",
+                authorizedPublicKey,
                 BondedRoleType.MEDIATOR,
                 "bond-user",
                 "signature",
