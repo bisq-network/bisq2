@@ -86,25 +86,14 @@ public final class BisqEasyTakeOfferRequestValidator {
         Optional<BisqEasyOffer> matchingOfferInChannel = myOffers.stream()
                 .filter(offer -> offer.equals(takersOffer))
                 .findAny();
+        // An offer which is no longer in our offerbook is not takeable, also not when we have a trade with it
+        // (docs/specifications/trade/take-offer-request-validation.md)
         if (isTakerIgnored || matchingOfferInChannel.isEmpty()) {
-            // If we do not find the offer it might be that another user has taken the offer recently and the offer has
-            // been removed in the meantime. For this case we check if we find the offer in a trade we have signed.
-            boolean hasOfferInTrades = !isTakerIgnored &&
-                    serviceProvider.getBisqEasyTradeService().hasSignedTradeWithOffer(takersOffer);
             boolean closeMyOfferWhenTaken = serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get();
-            if (hasOfferInTrades) {
-                log.info("The offer has not been found in open offers, but we found another trade with the same offer.\n" +
-                                "We accept the take offer request as it might be from processing mailbox messages " +
-                                "where multiple takers took the same offer.\n" +
-                                "closeMyOfferWhenTaken={}; takersOffer={}",
-                        closeMyOfferWhenTaken, takersOffer);
-            } else {
-                String errorMessage = String.format("Could not find matching offer in BisqEasyOfferbookChannel and no " +
-                        "trade with that offer was found.\n" +
-                        "closeMyOfferWhenTaken=%s; takersOffer=%s", closeMyOfferWhenTaken, takersOffer);
-                log.error(errorMessage);
-                throw new TradeProtocolException(errorMessage, TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
-            }
+            String errorMessage = String.format("Could not find matching offer in BisqEasyOfferbookChannel.\n" +
+                    "closeMyOfferWhenTaken=%s; takersOffer=%s", closeMyOfferWhenTaken, takersOffer);
+            log.error(errorMessage);
+            throw new TradeProtocolException(errorMessage, TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
         }
 
         // After the check above the offer is our own offer, so this binds the contract price to our offer
