@@ -75,7 +75,7 @@ class BannedUserServiceTest {
     @Test
     void flagOfIdleProfileExpiresAndActiveProfileIsStillFlagged() {
         AtomicLong time = new AtomicLong(TimeUnit.DAYS.toMillis(10));
-        RateLimiter rateLimiter = new RateLimiter(time::get, 3, 30, 120, 300);
+        RateLimiter rateLimiter = new RateLimiter(time::get, 3, 30, 120, 300, 1000);
         BannedUserService service = createService(true, rateLimiter);
         // The 4th message within one second exceeds the limit of 3 per second
         for (int i = 0; i < 4; i++) {

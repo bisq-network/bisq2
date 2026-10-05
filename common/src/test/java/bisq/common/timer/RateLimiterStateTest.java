@@ -34,12 +34,12 @@ class RateLimiterStateTest {
     private static final long MINUTE = TimeUnit.MINUTES.toMillis(1);
 
     @Test
-    void idleUserProfileIdIsRemovedAndActiveOneIsStillLimited() {
+    void idleKeyIsRemovedAndActiveOneIsStillLimited() {
         MockClock clock = new MockClock();
         clock.setTime(DAY);
-        RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300);
+        RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300, 1000);
         List<String> removedIds = new ArrayList<>();
-        rateLimiter.addRemovedUserProfileIdListener(removedIds::add);
+        rateLimiter.addRemovedKeyListener(removedIds::add);
         for (int i = 0; i < 1000; i++) {
             assertFalse(rateLimiter.exceedsLimit("idle-" + i));
         }
@@ -48,7 +48,7 @@ class RateLimiterStateTest {
         clock.advanceTime(DAY + MINUTE + 1);
         assertFalse(rateLimiter.exceedsLimit("active"));
 
-        assertEquals(1, rateLimiter.getNumUserProfileIds());
+        assertEquals(1, rateLimiter.getNumKeys());
         assertEquals(1000, removedIds.size());
         assertFalse(rateLimiter.exceedsLimit("active"));
         assertFalse(rateLimiter.exceedsLimit("active"));
@@ -57,32 +57,32 @@ class RateLimiterStateTest {
     }
 
     @Test
-    void userProfileIdWithEventWithinTheLastDayIsKept() {
+    void keyWithEventWithinTheLastDayIsKept() {
         MockClock clock = new MockClock();
         clock.setTime(DAY);
-        RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300);
+        RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300, 1000);
         rateLimiter.exceedsLimit("recent");
 
         clock.advanceTime(DAY - 1);
         rateLimiter.exceedsLimit("other");
 
-        assertEquals(2, rateLimiter.getNumUserProfileIds());
+        assertEquals(2, rateLimiter.getNumKeys());
     }
 
     @Test
-    void numberOfUserProfileIdsIsBoundedAndLeastRecentlyUsedIdIsRemoved() {
+    void numberOfKeysIsBoundedAndLeastRecentlyUsedKeyIsRemoved() {
         MockClock clock = new MockClock();
         clock.setTime(DAY);
         RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300, 2);
         List<String> removedIds = new ArrayList<>();
-        rateLimiter.addRemovedUserProfileIdListener(removedIds::add);
+        rateLimiter.addRemovedKeyListener(removedIds::add);
 
         assertFalse(rateLimiter.exceedsLimit("a"));
         assertFalse(rateLimiter.exceedsLimit("b"));
         assertFalse(rateLimiter.exceedsLimit("a"));
         assertFalse(rateLimiter.exceedsLimit("c"));
 
-        assertEquals(2, rateLimiter.getNumUserProfileIds());
+        assertEquals(2, rateLimiter.getNumKeys());
         assertEquals(List.of("b"), removedIds);
         // The kept ID keeps its events: its 3rd and 4th event within one second exceed the limit of 3 per second
         assertFalse(rateLimiter.exceedsLimit("a"));
@@ -94,7 +94,7 @@ class RateLimiterStateTest {
         MockClock clock = new MockClock();
         clock.setTime(10 * DAY);
         long now = clock.now();
-        RateLimiter rateLimiter = new RateLimiter(clock, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 300);
+        RateLimiter rateLimiter = new RateLimiter(clock, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 300, 1000);
         List<Long> eventTimes = new ArrayList<>();
         // 1000 events older than one day count in no window
         for (int i = 1; i <= 1000; i++) {
@@ -118,7 +118,7 @@ class RateLimiterStateTest {
         clock.setTime(10 * DAY);
         long now = clock.now();
         // The limiter keeps the newest 301 events of an ID
-        RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300);
+        RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300, 1000);
         List<Long> eventTimes = new ArrayList<>();
         // 400 events within the last 20 hours, 3 minutes apart: only the limit per day is exceeded
         for (int i = 0; i < 400; i++) {
@@ -137,7 +137,7 @@ class RateLimiterStateTest {
     void manyEventsWithinOneSecondExceedTheLimitAsBefore() {
         MockClock clock = new MockClock();
         clock.setTime(DAY);
-        RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300);
+        RateLimiter rateLimiter = new RateLimiter(clock, 3, 30, 120, 300, 1000);
         for (int i = 0; i < 3; i++) {
             assertFalse(rateLimiter.exceedsLimit("user"));
         }
