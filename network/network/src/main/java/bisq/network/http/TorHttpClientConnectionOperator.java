@@ -17,6 +17,8 @@
 
 package bisq.network.http;
 
+import bisq.common.util.StringUtils;
+import bisq.network.tor.TorSocksProxyFactory;
 import org.apache.hc.client5.http.ConnectExceptionSupport;
 import org.apache.hc.client5.http.SchemePortResolver;
 import org.apache.hc.client5.http.UnsupportedSchemeException;
@@ -46,7 +48,6 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.Socket;
 import java.net.SocketAddress;
 
@@ -110,8 +111,7 @@ class TorHttpClientConnectionOperator implements HttpClientConnectionOperator {
         Args.notNull(socketConfig, "Socket config");
         Args.notNull(context, "Context");
         final Timeout soTimeout = socketConfig.getSoTimeout();
-        final SocketAddress socksProxyAddress = socketConfig.getSocksProxyAddress();
-        final Proxy socksProxy = socksProxyAddress != null ? new Proxy(Proxy.Type.SOCKS, socksProxyAddress) : null;
+        final SocketAddress socksProxyAddress = Args.notNull(socketConfig.getSocksProxyAddress(), "SOCKS proxy address");
         final int port = this.schemePortResolver.resolve(endpointHost.getSchemeName(), endpointHost);
 
         // Hostname is an .onion address. Do not try to resolve it to an InetAddress.
@@ -122,7 +122,8 @@ class TorHttpClientConnectionOperator implements HttpClientConnectionOperator {
         if (LOG.isDebugEnabled()) {
             LOG.debug("{} connecting {}->{} ({})", endpointHost, localAddress, remoteAddress, connectTimeout);
         }
-        final Socket socket = detachedSocketFactory.create(socksProxy);
+        // A plain socket, because we perform the SOCKS handshake ourselves (see below)
+        final Socket socket = detachedSocketFactory.create(null);
         try {
             conn.bind(socket);
             if (soTimeout != null) {
@@ -146,7 +147,13 @@ class TorHttpClientConnectionOperator implements HttpClientConnectionOperator {
             if (localAddress != null) {
                 socket.bind(localAddress);
             }
-            socket.connect(remoteAddress, TimeValue.isPositive(connectTimeout) ? connectTimeout.toMillisecondsIntBound() : 0);
+            final int connectTimeoutMillis = TimeValue.isPositive(connectTimeout) ? connectTimeout.toMillisecondsIntBound() : 0;
+            socket.connect(socksProxyAddress, connectTimeoutMillis);
+            // The handshake waits until Tor has connected to the host, so the connect timeout limits its reads.
+            // conn.setSocketTimeout below sets the socket timeout again.
+            socket.setSoTimeout(connectTimeoutMillis);
+            // A new random stream ID gives each HTTP connection its own Tor circuit (see tor-stream-isolation.md)
+            TorSocksProxyFactory.performHandshake(socket, endpointHost.getHostName(), port, StringUtils.createUid());
             conn.bind(socket);
             onAfterSocketConnect(context, endpointHost);
             if (LOG.isDebugEnabled()) {
