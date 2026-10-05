@@ -354,6 +354,8 @@ public class TradeRestApi extends RestApiBase {
             asyncResponse.resume(buildNoContentResponse());
         } catch (TradeRestrictedException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, toTradeRestrictedErrorEntity(e)));
+        } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
