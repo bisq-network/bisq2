@@ -46,12 +46,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Rules 1 and 5 of docs/specifications/chat/private-channel-membership.md for the MuSig trade chat.
+ * Rules 1, 5 and 7 of docs/specifications/chat/private-channel-membership.md for the MuSig trade chat.
  */
 class MuSigOpenTradeChannelServiceTest {
     private static final String MAKER_PROFILE_ID = "1111111111111111111111111111111111111111";
     private static final String TAKER_PROFILE_ID = "2222222222222222222222222222222222222222";
     private static final String THIRD_USER_PROFILE_ID = "3333333333333333333333333333333333333333";
+    private static final String OTHER_OWN_PROFILE_ID = "4444444444444444444444444444444444444444";
     private static final String TRADE_ID = "tradeId";
 
     private MuSigOpenTradeChannelService service;
@@ -121,6 +122,28 @@ class MuSigOpenTradeChannelServiceTest {
         assertEquals(Set.of(messageOfPeer), channel.getChatMessages());
     }
 
+    // The network layer decrypted the message with the key of its receiver network ID, which belongs to another of our
+    // identities. The message must not be added to the trade chat of the identity which it names as receiver.
+    @Test
+    void messageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsNotAdded() {
+        MuSigOpenTradeChannel channel = createChannel();
+
+        service.onMessage(textMessage(taker, TRADE_ID, "message", networkIdOf(OTHER_OWN_PROFILE_ID)));
+
+        assertTrue(channel.getChatMessages().isEmpty());
+    }
+
+    @Test
+    void pendingMessageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsNotAddedWhenTheChannelIsCreated() {
+        MuSigOpenTradeMessage messageOfPeer = textMessage(taker, TRADE_ID, "messageOfPeer");
+        service.onMessage(textMessage(taker, TRADE_ID, "messageToOtherIdentity", networkIdOf(OTHER_OWN_PROFILE_ID)));
+        service.onMessage(messageOfPeer);
+
+        MuSigOpenTradeChannel channel = createChannel();
+
+        assertEquals(Set.of(messageOfPeer), channel.getChatMessages());
+    }
+
     private MuSigOpenTradeChannel createChannel() {
         return service.traderFindOrCreatesChannel(TRADE_ID, makerIdentity, taker, Optional.empty(), Optional.empty());
     }
@@ -133,12 +156,19 @@ class MuSigOpenTradeChannelServiceTest {
 
     // A text message to the maker in the channel of TRADE_ID which carries the given trade ID
     private static MuSigOpenTradeMessage textMessage(UserProfile sender, String tradeId, String messageId) {
+        return textMessage(sender, tradeId, messageId, networkIdOf(MAKER_PROFILE_ID));
+    }
+
+    private static MuSigOpenTradeMessage textMessage(UserProfile sender,
+                                                     String tradeId,
+                                                     String messageId,
+                                                     NetworkId receiverNetworkId) {
         return new MuSigOpenTradeMessage(tradeId,
                 messageId,
                 MuSigOpenTradeChannel.createId(TRADE_ID),
                 sender,
                 MAKER_PROFILE_ID,
-                mock(NetworkId.class),
+                receiverNetworkId,
                 "text",
                 Optional.empty(),
                 System.currentTimeMillis(),
@@ -148,5 +178,12 @@ class MuSigOpenTradeChannelServiceTest {
                 ChatMessageType.TEXT,
                 Optional.empty(),
                 new HashSet<>());
+    }
+
+    // The ID of a network ID is the hash of its public key, which is also the profile ID of that key
+    private static NetworkId networkIdOf(String userProfileId) {
+        NetworkId networkId = mock(NetworkId.class);
+        when(networkId.getId()).thenReturn(userProfileId);
+        return networkId;
     }
 }

@@ -353,6 +353,11 @@ public abstract class PrivateChatChannelService<
     }
 
     protected void processMessageReaction(R messageReaction) {
+        // Checked first, so that such a reaction is neither applied nor kept as a pending reaction
+        if (!isProfileIdOfNetworkId(messageReaction.getReceiverUserProfileId(), messageReaction.getReceiverNetworkId())) {
+            log.warn("Ignoring a reaction whose receiver profile ID is not the ID of its receiver network ID");
+            return;
+        }
         if (applyMessageReaction(messageReaction)) {
             return;
         }
@@ -423,7 +428,23 @@ public abstract class PrivateChatChannelService<
             log.warn("Message invalid as sender is banned");
             return false;
         }
+        if (!isProfileIdOfNetworkId(message.getReceiverUserProfileId(), message.getReceiverNetworkId())) {
+            log.warn("Message ignored as its receiver profile ID is not the ID of its receiver network ID. MessageId={}",
+                    StringUtils.sanitizeForLog(message.getId()));
+            return false;
+        }
         return super.isValid(message);
+    }
+
+    // A private message or reaction names its receiver twice. The network layer decrypts it only with the key of the
+    // receiver network ID, and the chat selects our identity by the receiver profile ID. Both IDs are the hash of the
+    // public key, so they must be equal. Otherwise a sender could encrypt a message to one of our identities and have
+    // it added to a conversation of another of our identities. The rule concerns the message alone, so it is checked
+    // at admission, before a channel is found or created and before anything is kept as pending.
+    // isReceivedMessageOfChannel runs only after a channel was found or created (rule 7 of
+    // docs/specifications/chat/private-channel-membership.md).
+    private static boolean isProfileIdOfNetworkId(String userProfileId, NetworkId networkId) {
+        return userProfileId.equals(networkId.getId());
     }
 
     protected abstract C createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity);
