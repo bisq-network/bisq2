@@ -302,6 +302,24 @@ class BisqEasyMediatorServiceRequestChecksTest {
     }
 
     @Test
+    void rejectsRequestNamingTheMediatorUnderOtherAddressesAsTrader() {
+        // The requester can name a copy of the mediator's profile with other addresses, which has the mediator's key.
+        UserProfile mediatorWithOtherAddress = TestUserProfiles.withOtherAddress(mediator);
+        BisqEasyContract mediatorAsTakerContract = TestContracts.contract(requester,
+                mediatorWithOtherAddress,
+                mediator);
+        BisqEasyMediationRequest request = createRequest(mediatorAsTakerContract, requester, mediatorWithOtherAddress,
+                List.of(createMessage(mediatorAsTakerContract,
+                        "m1",
+                        mediatorWithOtherAddress,
+                        "I confirm the payment arrived",
+                        ChatMessageType.TEXT)));
+
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(request, mock(BannedUserService.class), cases)
+                .isEmpty());
+    }
+
+    @Test
     void requestsOfBothTradersAreDistinctMessagesForOneCase() {
         BisqEasyContract realContract = TestContracts.contract(requester, peer, mediator);
         BisqEasyMediationRequest requestersRequest = createRequest(TestContracts.protoCopy(realContract), requester, peer);

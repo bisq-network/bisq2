@@ -48,6 +48,15 @@ final class TestUserProfiles {
         return new UserIdentity(new Identity(nickName, networkId, keyBundle), create(nickName, networkId));
     }
 
+    // A copy of the profile with the same key and other addresses
+    static UserProfile withOtherAddress(UserProfile userProfile) {
+        Address otherAddress = Address.from("127.0.0.1", 2000);
+        NetworkId networkId = new NetworkId(
+                new AddressByTransportTypeMap(Map.of(otherAddress.getTransportType(), otherAddress)),
+                userProfile.getNetworkId().getPubKey());
+        return create(userProfile.getNickName(), networkId);
+    }
+
     private static UserProfile create(String nickName, NetworkId networkId) {
         return new UserProfile(0,
                 nickName,
