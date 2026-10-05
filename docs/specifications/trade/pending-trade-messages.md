@@ -28,13 +28,13 @@ processes it again when it processes the next message of a trade.
 
 4. The chat of Bisq Easy open trades keeps a chat message whose trade channel does not exist yet as a pending chat
    message. Rules 2 and 3 apply to these pending chat messages as well, with their own bound of 100.
-5. A trader's node keeps the response of a mediator to a Bisq Easy mediation request, whose trade channel does not
-   exist yet, as a pending response. It processes the pending responses again when a trade channel is added. Rules 2
-   and 3 apply to these pending responses as well, with their own bound of 100. A pending response is identified by
-   its trade ID and its sender, so the node keeps responses of different senders for the same trade apart. When the
-   node processes a response, it applies it only if its sender is the mediator of the trade channel (see
-   [Trade chat channel binding](chat-channel-binding.md)), and drops it otherwise. Dropping a response does not
-   remove a pending response of another sender.
+5. A trader's node keeps the response of a mediator to a Bisq Easy mediation request, whose trade channel does not exist
+   yet, as a pending response, only if its sender is a mediator whose bonded role is authorized and not banned. It
+   processes the pending responses again when a trade channel is added. Rules 2 and 3 apply to these pending responses
+   as well, with their own bound of 100. A pending response is identified by its trade ID and its sender, so the node
+   keeps responses of different senders for the same trade apart. When the node processes a response, it applies it only
+   if its sender is the mediator of the trade channel (see [Trade chat channel binding](chat-channel-binding.md)), and
+   drops it otherwise. Dropping a response does not remove a pending response of another sender.
 
 6. A received chat message creates a Bisq Easy trade channel only if it carries an offer and the node has a trade with
    its trade ID whose peer is the sender of the message. Otherwise the message is a pending chat message (rule 4). When
@@ -60,6 +60,9 @@ processes it again when it processes the next message of a trade.
   response of the mediator out, and the trader would not learn that the mediator took up the case. The sender of a
   response cannot be forged: the network layer verifies that the sender signed the message with the key of the
   network ID which the response names.
+- Rule 5, sender: only a mediator sends a response, and every node knows the mediators, so the node can check the
+  sender before the trade channel exists. Unlike the messages of rules 1 and 4, whose sender the node does not know
+  before the trade exists, a flood of another sender therefore cannot push the response of the mediator out.
 
 ## Limitations
 
@@ -67,7 +70,8 @@ processes it again when it processes the next message of a trade.
   trade out of the pending messages before the trade exists. The node does not receive this message again. The bound
   limits the memory of the node; it does not protect the pending message of a legitimate trade against such a flood.
   Without the bound the flood would instead grow the memory of the node without limit. The same applies to pending
-  chat messages (rule 4) and to pending mediator responses (rule 5).
+  chat messages (rule 4). For pending mediator responses (rule 5) only a mediator can cause such a flood, because the
+  node keeps only responses of mediators.
 
 - Rule 6: a flood of chat messages for made-up trade IDs can push the taker's first chat message out of the pending chat
   messages before the take offer request arrives. The maker then has no trade channel, and the trade fails at the
