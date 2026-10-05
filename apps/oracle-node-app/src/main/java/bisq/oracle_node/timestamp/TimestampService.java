@@ -20,6 +20,7 @@ package bisq.oracle_node.timestamp;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -29,6 +30,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.security.DigestUtil;
 import bisq.user.reputation.data.AuthorizedTimestampData;
 import bisq.user.reputation.requests.AuthorizeTimestampRequest;
 import lombok.Getter;
@@ -77,6 +79,8 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
+        // A timestamp request needs the sender key. The subscription passes each processed message with it (see
+        // docs/specifications/bonded-roles/oracle-requests.md).
         networkService.subscribeToConfidentialMessages(this);
         authorizedBondedRolesService.addListener(this);
 
@@ -98,10 +102,15 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
     // ConfidentialMessageService.Listener
     /* --------------------------------------------------------------------- */
 
+    // A timestamp request needs the sender key, so onConfidentialMessage handles it
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
-        if (envelopePayloadMessage instanceof AuthorizeTimestampRequest) {
-            processAuthorizeTimestampRequest((AuthorizeTimestampRequest) envelopePayloadMessage);
+    }
+
+    @Override
+    public void onConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage, PublicKey senderPublicKey) {
+        if (envelopePayloadMessage instanceof AuthorizeTimestampRequest request) {
+            processAuthorizeTimestampRequest(request, senderPublicKey);
         }
     }
 
@@ -134,8 +143,15 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
     }
 
-    private void processAuthorizeTimestampRequest(AuthorizeTimestampRequest request) {
+    private void processAuthorizeTimestampRequest(AuthorizeTimestampRequest request, PublicKey senderPublicKey) {
         String profileId = request.getProfileId();
+        // The profile ID is the hash of the key of the profile. Only the owner of a profile may request its timestamp
+        // (see docs/specifications/bonded-roles/oracle-requests.md).
+        String senderProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
+        if (!profileId.equals(senderProfileId)) {
+            log.warn("Rejecting a timestamp request whose profile does not match the confidential sender");
+            return;
+        }
         long date;
         if (!persistableStore.getTimestampsByProfileId().containsKey(profileId)) {
             date = request.getDate();

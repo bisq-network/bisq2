@@ -20,13 +20,16 @@ package bisq.oracle_node;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
+import bisq.common.encoding.Hex;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.identity.NetworkId;
+import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 
+import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,6 +42,25 @@ public final class TestBondedRoleRegistrations {
 
     public static BondedRoleRegistrationRequest createCurrentRequest() {
         return createCurrentRequest(1234, LOCKUP_TX_ID);
+    }
+
+    // A registration of the owner of profileKeyPair with the network ID of networkIdKeyPair. Released clients send the
+    // network ID of the profile, so both key pairs are equal.
+    public static BondedRoleRegistrationRequest createCurrentRequest(KeyPair profileKeyPair, KeyPair networkIdKeyPair) {
+        var addressMap = new AddressByTransportTypeMap(Map.of(
+                TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(1234)));
+        NetworkId networkId = new NetworkId(addressMap, new PubKey(networkIdKeyPair.getPublic(), "test-key"));
+        return new BondedRoleRegistrationRequest(Hex.encode(DigestUtil.hash(profileKeyPair.getPublic().getEncoded())),
+                "public-key",
+                BondedRoleType.MEDIATOR,
+                "bond-user",
+                "signature",
+                Optional.empty(),
+                networkId,
+                false,
+                BondedRoleRegistrationProtocol.CURRENT_VERSION,
+                PROPOSAL_TX_ID,
+                LOCKUP_TX_ID);
     }
 
     public static BondedRoleRegistrationRequest createCurrentRequest(int port, String lockupTxId) {
