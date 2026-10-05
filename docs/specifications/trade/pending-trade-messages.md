@@ -26,9 +26,8 @@ processes it again when it processes the next message of a trade.
    The same applies when the state machine of a trade handles a message: its log entries and exception messages
    name only the type of the event, also when the trade is in a final state or the handler fails.
 
-4. The chat of Bisq Easy open trades keeps a chat message without offer, whose trade channel does not exist yet, as a
-   pending chat message. Rules 2 and 3 apply to these pending chat messages as well, with their own bound of 100.
-
+4. The chat of Bisq Easy open trades keeps a chat message whose trade channel does not exist yet as a pending chat
+   message. Rules 2 and 3 apply to these pending chat messages as well, with their own bound of 100.
 5. A trader's node keeps the response of a mediator to a Bisq Easy mediation request, whose trade channel does not
    exist yet, as a pending response. It processes the pending responses again when a trade channel is added. Rules 2
    and 3 apply to these pending responses as well, with their own bound of 100. A pending response is identified by
@@ -36,6 +35,10 @@ processes it again when it processes the next message of a trade.
    node processes a response, it applies it only if its sender is the mediator of the trade channel (see
    [Trade chat channel binding](chat-channel-binding.md)), and drops it otherwise. Dropping a response does not
    remove a pending response of another sender.
+
+6. A received chat message creates a Bisq Easy trade channel only if it carries an offer and the node has a trade with
+   its trade ID whose peer is the sender of the message. Otherwise the message is a pending chat message (rule 4). When
+   the node creates a trade, or loads it at startup, it processes the pending chat messages of that trade again.
 
 ## Reasons
 
@@ -45,6 +48,10 @@ processes it again when it processes the next message of a trade.
   of them.
 - Rule 2 drops the oldest message because a message of a legitimate trade gets its trade shortly after it arrives. An
   old pending message is most likely one which never gets a trade.
+- Rule 6: the user does not see a trade channel without a trade and cannot leave it, and the node persists every trade
+  channel. If any received chat message with an offer created a channel, anybody could make a node persist channels
+  for made-up trade IDs with chat messages alone. The taker's first chat message can arrive before the take offer request which
+  creates the trade of the maker, so the message waits as a pending chat message until the trade exists.
 - Rule 3: trade messages carry private data of the traders: the payment account data of the seller, the Bitcoin
   address of the buyer, a transaction ID, or a payment proof. Users share their log files with support. A log file
   must not reveal the trade data of a trade peer.
@@ -61,6 +68,13 @@ processes it again when it processes the next message of a trade.
   limits the memory of the node; it does not protect the pending message of a legitimate trade against such a flood.
   Without the bound the flood would instead grow the memory of the node without limit. The same applies to pending
   chat messages (rule 4) and to pending mediator responses (rule 5).
+
+- Rule 6: a flood of chat messages for made-up trade IDs can push the taker's first chat message out of the pending chat
+  messages before the take offer request arrives. The maker then has no trade channel, and the trade fails at the
+  next step of the maker (the trade requires its chat channel).
+- Rule 6 relies on the trades of the node. The maker stores a trade when it receives a take offer request, before it
+  verifies the request (issue #47). A sender who sends a take offer request first can still get a channel stored for
+  that trade.
 
 ## Compatibility
 
