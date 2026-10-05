@@ -236,6 +236,8 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
                 any());
         assertThat(report.getValue().getTradeId()).isEqualTo(request.getTradeId());
         assertThat(report.getValue().getTradeProtocolFailure()).isEqualTo(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
+        // As in the trade messages, the taker stored the network ID of the offer for the maker.
+        assertThat(report.getValue().getSender()).isEqualTo(offersNetworkId);
     }
 
     @Test
