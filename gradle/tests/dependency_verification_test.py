@@ -98,17 +98,17 @@ class DependencyVerificationTest(unittest.TestCase):
                     lines.append(f"fixture:{name}:{version}\t{name}-{version}.{extension}\tLocal test fixture")
         (self.gradle / "dependency-checksum-fallback-allowlist.tsv").write_text("\n".join(sorted(lines)) + "\n")
 
-    def add_metadata_artifact(self, name, artifact, reason=None, pgp=None):
+    def add_metadata_artifact(self, name, artifact, reason=None, pgp=None, checksum="sha256"):
         tree = ET.parse(self.metadata)
         components = tree.getroot().find("components")
         component = ET.SubElement(components, "component", group="fixture", name=name, version="1")
         entry = ET.SubElement(component, "artifact", name=artifact)
         if pgp:
             ET.SubElement(entry, "pgp", value=pgp)
-        attributes = {"value": "0" * 64}
+        attributes = {"value": "0" * {"md5": 32, "sha1": 40, "sha256": 64, "sha512": 128}[checksum]}
         if reason:
             attributes["reason"] = reason
-        ET.SubElement(entry, "sha256", **attributes)
+        ET.SubElement(entry, checksum, **attributes)
         tree.write(self.metadata, encoding="utf-8", xml_declaration=True)
 
     def set_reason(self, artifact, reason):
@@ -232,6 +232,20 @@ class DependencyVerificationTest(unittest.TestCase):
         self.assertIn("fixture:other:1\tother-1.jar", output)
         self.assertNotIn("fixture:signed:1\tsigned-1.jar", output)
         self.assertNotIn("fixture:trusted:1\ttrusted-1.jar", output)
+
+    def test_checksum_of_any_kind_without_usable_key_requires_approval(self):
+        # Gradle also verifies md5, sha1 and sha512 checksums. An artifact which only such a checksum pins is verified
+        # by that checksum only, as one which a sha256 checksum pins.
+        self.add_metadata_artifact("sha1", "sha1-1.jar", checksum="sha1")
+        self.add_metadata_artifact("md5", "md5-1.jar", checksum="md5")
+        self.add_metadata_artifact("sha512", "sha512-1.jar", checksum="sha512")
+        self.add_metadata_artifact("reason", "reason-1.jar", reason="Artifact is not signed", checksum="sha1",
+                                   pgp="0123456789ABCDEF0123456789ABCDEF01234567")
+        output = self.run_gradle("check", success=False)
+        self.assertIn("fixture:sha1:1\tsha1-1.jar", output)
+        self.assertIn("fixture:md5:1\tmd5-1.jar", output)
+        self.assertIn("fixture:sha512:1\tsha512-1.jar", output)
+        self.assertIn("fixture:reason:1\treason-1.jar", output)
 
     def test_allowlist_entry_for_signed_artifact_is_stale(self):
         self.add_metadata_artifact("signed", "signed-1.jar", pgp="0123456789ABCDEF0123456789ABCDEF01234567")

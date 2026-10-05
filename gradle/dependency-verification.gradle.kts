@@ -93,6 +93,9 @@ val dependencyVerificationKeyring = File(bisqRepositoryRoot, "gradle/verificatio
 val dependencyVerificationBinaryKeyring = File(bisqRepositoryRoot, "gradle/verification-keyring.gpg")
 val dependencyChecksumFallbackAllowlist = File(bisqRepositoryRoot, "gradle/dependency-checksum-fallback-allowlist.tsv")
 val dependencySignatureReport = File(bisqRepositoryRoot, "docs/dependency-signature-report.md")
+// The checksum kinds of the verification metadata. Gradle verifies each kind which an artifact declares, also md5 and
+// sha1, so a checksum of any kind can be the only check of an artifact.
+val verificationChecksumKinds = listOf("md5", "sha1", "sha256", "sha512")
 val gradleWrapperCommand =
     if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) "gradlew.bat" else "./gradlew"
 val dependencyVerificationBuildDirs = listOf(
@@ -550,8 +553,7 @@ fun parseVerificationMetadata(metadataFile: File): Pair<Map<String, VerifiedComp
         val id = "$group:$name:$version"
         val artifacts = component.getElementsByTagName("artifact").elements().map { artifact ->
             val artifactName = artifact.getAttribute("name")
-            val checksums = artifact.getElementsByTagName("sha256").elements() +
-                    artifact.getElementsByTagName("sha512").elements()
+            val checksums = verificationChecksumKinds.flatMap { artifact.getElementsByTagName(it).elements() }
             val keyIds = artifact.getElementsByTagName("pgp").elements()
                 .map { it.getAttribute("value") }
                 .filter { it.isNotEmpty() }
