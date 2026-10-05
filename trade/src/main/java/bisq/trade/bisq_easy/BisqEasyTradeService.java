@@ -523,7 +523,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return Optional.of(createAndAddTradeProtocol(bisqEasyTrade));
     }
 
-    // The request is data of its sender, so the log names only the message type and the sanitized trade ID.
     // A rejected take offer request creates no trade, so no state machine reports the rejection to the taker. We
     // report it with the data which BisqEasyFsmErrorEventHandler reports for a failed trade.
     private void reportTakeOfferRejection(BisqEasyTrade bisqEasyTrade, RuntimeException exception) {
@@ -543,6 +542,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         networkService.confidentialSend(report, takerNetworkId, myIdentity.getNetworkIdWithKeyPair());
     }
 
+    // The request is data of its sender, so the log names only the message type and the sanitized trade ID.
     private static void logDroppedTakeOfferRequest(BisqEasyTakeOfferRequest message, String reason, String tradeId) {
         log.warn("We drop a {} because {}. tradeId={}",
                 message.getClass().getSimpleName(), reason, StringUtils.sanitizeForLog(tradeId));
