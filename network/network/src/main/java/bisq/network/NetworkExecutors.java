@@ -21,12 +21,15 @@ import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.threading.MaxSizeAwareQueue;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class NetworkExecutors {
     @Getter
     private static ThreadPoolExecutor notifyExecutor;
@@ -61,8 +64,23 @@ public class NetworkExecutors {
                 TimeUnit.SECONDS,
                 queue,
                 ExecutorFactory.getThreadFactoryWithCounter(name),
-                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize));
+                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize)) {
+            @Override
+            protected void afterExecute(Runnable runnable, Throwable throwable) {
+                super.afterExecute(runnable, throwable);
+                logExceptionOfFailedTask(runnable);
+            }
+        };
         queue.applyExecutor(executor, maxPoolSize - 2);
         return executor;
+    }
+
+    // The callers notify their listeners with submit, so the task keeps the exception of a listener, and nobody reads
+    // it. The log entry contains only the exception: the task does not know the message which it passed on. An
+    // exception of a task which was passed to execute reaches the uncaught exception handler of the thread.
+    private static void logExceptionOfFailedTask(Runnable runnable) {
+        if (runnable instanceof Future<?> future && future.state() == Future.State.FAILED) {
+            log.error("A task of the network notify executor failed", future.exceptionNow());
+        }
     }
 }

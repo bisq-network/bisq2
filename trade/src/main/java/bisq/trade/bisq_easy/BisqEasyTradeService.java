@@ -38,7 +38,6 @@ import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -163,10 +162,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             }
         });
 
-        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
-                        .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
-                this::onMessage);
-        networkService.addConfidentialMessageListener(this);
+        networkService.subscribeToConfidentialMessages(this);
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
