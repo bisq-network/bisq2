@@ -134,10 +134,25 @@ class MailboxSignatureV2Test {
         assertTrue(AddMailboxRequest.fromProto(changedClassName.build()).isSignatureInvalid());
 
         bisq.network.protobuf.AddMailboxRequest.Builder changedDataVersion = proto.toBuilder();
-        changedDataVersion.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setVersion(4);
+        // Another version which parses (MetaData.validateVersionForHashOfEarlierVersions)
+        changedDataVersion.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setVersion(3);
         assertTrue(AddMailboxRequest.fromProto(changedDataVersion.build()).isSignatureInvalid());
 
         assertTrue(AddMailboxRequest.fromProto(proto.toBuilder().setVersion(3).build()).isSignatureInvalid());
+    }
+
+    // Version 2 is the first version with signature V2. Add requests of nodes up to 2.1.13 have version 0, remove
+    // requests version 1, both without signature V2.
+    @Test
+    void mailboxRequestsWithSignatureV2AndVersion1AreRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        bisq.network.protobuf.AddMailboxRequest addProto = createAddMailboxRequest().toValueProto(false);
+        assertThrows(UnresolvableProtobufException.class,
+                () -> AddMailboxRequest.fromProto(addProto.toBuilder().setVersion(1).build()));
+
+        bisq.network.protobuf.RemoveMailboxRequest removeProto = createRemoveMailboxRequest().toValueProto(false);
+        assertThrows(UnresolvableProtobufException.class,
+                () -> RemoveMailboxRequest.fromProto(removeProto.toBuilder().setVersion(1).build()));
     }
 
     @Test

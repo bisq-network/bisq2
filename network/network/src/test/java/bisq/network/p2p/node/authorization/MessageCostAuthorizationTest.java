@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Checks the cost of MessageCostPolicy end to end: a node creates a token for a message, the message and the token
  * travel as protobuf, and the receiver parses both and checks the token. Parsing replaces the field metaData of mailbox
- * data and remove requests in versions 1 to 3 by the registered MetaData, and keeps it in version 0.
+ * data and remove requests by the registered MetaData in every version.
  */
 class MessageCostAuthorizationTest {
     private static final String RECEIVER_ADDRESS = "receiver.onion:1000";
@@ -98,15 +98,15 @@ class MessageCostAuthorizationTest {
     }
 
     @Test
-    void requestOfVersion0CarriesTheRegisteredMetaDataAndIsAuthorized()
+    void requestOfAnEarlierVersionCarriesTheRegisteredMetaDataAndIsAuthorized()
             throws GeneralSecurityException, UnresolvableProtobufException {
         // Parsing replaces the received metaData by the registered MetaData in every version, so a sender cannot raise
-        // the cost which relays pay. Version 0 parses only without signature V2.
+        // the cost which relays pay. Version 1 without signature V2 is the format of nodes up to 2.1.13.
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage());
         //noinspection deprecation
         RemoveMailboxRequest request = RemoveMailboxRequest.fromProto(
                 RemoveMailboxRequest.from(mailboxData, receiverKeyPair).toValueProto(false).toBuilder()
-                        .setVersion(0)
+                        .setVersion(1)
                         .clearSignatureV2()
                         .setMetaData(HIGH_META_DATA.toProto(false))
                         .build());
