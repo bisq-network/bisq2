@@ -4,7 +4,8 @@
 
 Bisq must not let an observer link the user profiles of one user through a shared Tor circuit.
 Therefore, outgoing peer-to-peer (P2P) connections of different user profiles must use different
-Tor circuits.
+Tor circuits. HTTP requests over Tor must not share a circuit with each other or with P2P
+connections.
 
 ## Terms
 
@@ -42,7 +43,16 @@ Bisq must send different credentials for them.
 4. Different nodes have different node IDs and therefore different credentials. Tor never puts the
    connections of two nodes on the same circuit.
 
+## Rules for HTTP requests over Tor
+
+1. Each HTTP connection over Tor sends new SOCKS credentials. The username is a hash of a new random
+   value. The password is the fixed value `0`.
+2. Therefore, an HTTP connection never shares a circuit with another HTTP connection or with a P2P
+   connection.
+
 ## Rules for the SOCKS5 handshake
+
+These rules apply to P2P connections and to HTTP connections.
 
 1. Bisq performs the SOCKS5 handshake itself. It does not use the SOCKS client of the Java runtime
    (see "Why Bisq performs the SOCKS5 handshake itself").
@@ -51,10 +61,12 @@ Bisq must send different credentials for them.
    the connection would have the same empty credentials as every other connection without
    credentials.
 3. Bisq sends the target host as a domain name, and Tor resolves it. Bisq never resolves an onion
-   address locally.
+   address or the host of an HTTP request locally.
 4. Bisq rejects the connection if the proxy reports an error or sends an invalid reply.
 
 ## Why separate circuits are needed
+
+### Linking profiles through automatic acknowledgements
 
 Bisq automatically sends an acknowledgement (ACK) when a node receives a message. The node of the
 receiving profile sends the ACK to the sender's address. If it has no connection to that address,
@@ -70,29 +82,39 @@ If two nodes of one user could share a circuit, an attacker could link their pro
 
 With different credentials for each node, the two streams arrive on different circuits.
 
+### Linking HTTP requests
+
+Bisq sends HTTP requests over Tor, for example to price nodes and to block explorers. Explorer
+requests concern the trades of different profiles. If these requests shared a circuit, the explorer
+operator could link the trades to one user. With new credentials for each connection, each request
+uses its own circuit.
+
 ## Why Bisq performs the SOCKS5 handshake itself
 
-Earlier versions of Bisq created P2P sockets as `java.net.Socket` with a SOCKS `java.net.Proxy`.
-For such a socket, the Java runtime performs the SOCKS5 handshake inside `Socket.connect`. This
-Java SOCKS client cannot send different credentials for each node:
+Earlier versions of Bisq created P2P and HTTP sockets as `java.net.Socket` with a SOCKS
+`java.net.Proxy`. For such a socket, the Java runtime performs the SOCKS5 handshake inside
+`Socket.connect`. This Java SOCKS client cannot send different credentials for each node or for
+each HTTP connection:
 
 - It offers "no authentication" and "username and password". Tor selects username and password,
   so that `IsolateSOCKSAuth` can work.
 - It takes the credentials from the global `java.net.Authenticator`. The authenticator receives
-  only the address of the proxy. It cannot tell which node opens the connection.
+  only the address of the proxy. It cannot tell which node or which HTTP request opens the
+  connection.
 - Bisq sets no authenticator. The Java SOCKS client then sends the Java system property `user.name`
   (the operating system account) with an empty password.
 
-So every node sent the same credentials. `IsolateSOCKSAuth` was on, but it had nothing to separate.
-Tor could put the connections of different nodes on the same circuit.
+So all connections of all nodes and all HTTP connections sent the same credentials.
+`IsolateSOCKSAuth` was on, but it had nothing to separate. Tor could put the connections of
+different nodes on the same circuit, and HTTP connections as well.
 
 ## Remaining privacy limits and costs
 
-Separate P2P circuits prevent the attack above. They do not remove every way to link profiles.
+Separate circuits prevent the attacks above. They do not remove every way to link profiles.
 
-- **HTTP requests:** HTTP requests over Tor, for example to price nodes and block explorers, still
-  use the Java SOCKS client. They all send the same credentials. They do not share circuits with
-  P2P connections, because the credentials differ, but they can share circuits with each other.
+- **Request content and timing:** An HTTP server still sees the content and the time of each
+  request, for example the transaction ID in an explorer request. It can link requests by their
+  content or timing, but not by a shared circuit.
 - **Shared availability:** All onion services of a user run in the same Tor process. They are
   published together and become reachable or unreachable together. A peer can observe this over
   time and conclude that the profiles belong to the same user.
@@ -101,7 +123,8 @@ Separate P2P circuits prevent the attack above. They do not remove every way to 
   needed to connect to an onion service. After one node fetches a descriptor, another node can reuse
   it. The second connection can then be faster.
 - **More circuits:** When several nodes of one user connect to the same peer, each node needs its
-  own circuit to that peer. Users with several profiles therefore create more circuits.
+  own circuit to that peer. Users with several profiles therefore create more circuits. Each HTTP
+  connection also needs its own circuit.
 - **Configuration:** The SOCKS port flag `NoIsolateSOCKSAuth` disables this protection. It can be
   set in the configuration of an external Tor or with a `torrc` override.
 
@@ -109,7 +132,8 @@ Separate P2P circuits prevent the attack above. They do not remove every way to 
 
 ### Network and proxy compatibility
 
-Network messages and persisted data do not change. Peers see the same protocol as before.
+Network messages and persisted data do not change. Peers and HTTP servers see the same protocol as
+before.
 
 Tor accepts username and password authentication. Bisq offers only this method. A proxy in front of
 an external Tor that accepts only connections without authentication rejects Bisq's connections.
@@ -117,22 +141,28 @@ In earlier versions, such a proxy worked.
 
 ### Timeouts
 
-The socket timeout of the transport applies to the connect to the SOCKS port and to each read during
-the handshake. This includes the wait for Tor's reply to the connect request. The shipped
-configurations use 120 seconds. The timeout applies to each operation, not to the whole handshake.
+For P2P connections, the socket timeout of the transport applies to the connect to the SOCKS port
+and to each read during the handshake. This includes the wait for Tor's reply to the connect
+request. The shipped configurations use 120 seconds. The timeout applies to each operation, not to
+the whole handshake.
 
-In earlier versions, the wait for Tor's connect reply had no timeout. Now a read that waits longer
-than the socket timeout fails. This also applies when an onion service uses proof-of-work protection
-and Tor needs more time to establish the connection.
+In earlier versions, a P2P connection waited for Tor's connect reply without a timeout. Now a read
+that waits longer than the socket timeout fails. This also applies when an onion service uses
+proof-of-work protection and Tor needs more time to establish the connection.
 
-After the handshake, the returned socket keeps the socket timeout for later reads, as before.
-Without it, a read on the established connection could block forever if the peer stops sending.
+After the handshake, the P2P socket keeps the socket timeout for later reads, as before. Without
+it, a read on the established connection could block forever if the peer stops sending.
+
+For HTTP connections, the connect timeout of the HTTP client applies to the connect to the SOCKS
+port and to each read during the handshake. It is 3 minutes by default. After the handshake, the
+socket timeout of the HTTP client applies to the HTTP exchange. In earlier versions, the Java SOCKS
+client applied the connect timeout to the whole handshake.
 
 ### Reported errors
 
 | Failure | Exception |
 | --- | --- |
-| Tor reports that it could not connect to the peer | `ConnectException` |
+| Tor reports that it could not connect to the peer or HTTP server | `ConnectException` |
 | Another SOCKS error occurs | `SocketException` |
 | A connection or read times out | `SocketTimeoutException` |
 | The proxy closes the connection during the handshake | `EOFException` |
@@ -141,3 +171,6 @@ The Java SOCKS client reported the failed connection, other SOCKS errors, and th
 as `SocketException`. It did not time out during the handshake (see Timeouts).
 `ConnectException` is a subclass of `SocketException`, so code that handles `SocketException` still
 handles a failed connection to the peer. `EOFException` is not a subclass of `SocketException`.
+
+For HTTP connections, the HTTP client replaces `ConnectException` with `HttpHostConnectException` and
+`SocketTimeoutException` with `ConnectTimeoutException`. These are subclasses that name the host.
