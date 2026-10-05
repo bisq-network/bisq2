@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -221,6 +222,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             validateBondedRole(authorizedData, authorizedBondedRole).ifPresent(role -> {
                 bondedRoles.add(new BondedRole(role));
                 if (role.getBondedRoleType() == BondedRoleType.SEED_NODE) {
+                    // The role of a node contains its addresses. Role data without them fails at parsing.
                     networkService.addSeedNodeAddressByTransport(role.getAddressByTransportTypeMap().orElseThrow());
                 }
             });
@@ -240,7 +242,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         AuthorizedDistributedData data = authorizedData.getAuthorizedDistributedData();
         if (data instanceof AuthorizedBondedRole) {
             validateBondedRole(authorizedData, (AuthorizedBondedRole) data).ifPresent(authorizedBondedRole -> {
-                if (isPublishedByAnOracleNode(AuthorizedBondedRole.class, authorizedBondedRole)) {
+                // Several oracle nodes can publish the same role, each with its own authorized key. The store holds one
+                // entry per publication, but bondedRoles holds one item per role: the equality of a role leaves out the
+                // oracle node which authorized it. The removal or expiry of one publication, for example of a copy
+                // without signature V2 at the cutoff date of signature V1, must not remove a role which another
+                // publication still authorizes. Otherwise OracleNodeService would also remove its own publication, and
+                // the removal would spread to all oracle nodes (see docs/specifications/bonded-roles/registration.md).
+                if (hasAuthorizedPublication(authorizedBondedRole, BondedRoleType.ORACLE_NODE)) {
                     log.info("A publication of the bonded role {} of {} was removed, but an oracle node still " +
                                     "publishes it. We keep the role.",
                             authorizedBondedRole.getBondedRoleType(), authorizedBondedRole.getProfileId());
@@ -288,16 +296,44 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
      * event for the oracle node data.
      */
     public Set<AuthorizedOracleNode> getAuthorizedOracleNodes() {
+        return getAuthorizedPublishedData(AuthorizedOracleNode.class, BondedRoleType.ORACLE_NODE)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * The data of the publications of a type which the network storage holds, and for which rule 2 or rule 3 of
+     * docs/specifications/bonded-roles/authorized-data.md holds now, with the authorizing role type. Several
+     * publications can carry equal data, each with its own authorized key. A service which holds one item for equal
+     * data derives from them whether the item stays when one publication is removed or expires. Unlike
+     * hasAuthorizedPubKey, it does not queue data for reprocessing, so it suits a lookup of stored publications.
+     */
+    public <T extends AuthorizedDistributedData> Stream<T> getAuthorizedPublishedData(Class<T> type,
+                                                                                    BondedRoleType authorizingBondedRoleType) {
+        return getAuthorizedPublishedData(type, authorizingBondedRoleType, data -> true);
+    }
+
+    // As getAuthorizedPublishedData above, only for the data which the filter accepts. The filter runs before the check
+    // of the authorized key, which encodes the key of each publication. A store can hold many publications.
+    public <T extends AuthorizedDistributedData> Stream<T> getAuthorizedPublishedData(Class<T> type,
+                                                                                    BondedRoleType authorizingBondedRoleType,
+                                                                                    Predicate<? super T> dataFilter) {
         return networkService.getDataService()
-                .map(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(
-                                AuthorizedOracleNode.class.getSimpleName())
-                        .filter(AuthorizedData.class::isInstance)
-                        .map(AuthorizedData.class::cast)
-                        .filter(publication -> publication.getAuthorizedDistributedData() instanceof AuthorizedOracleNode)
-                        .filter(publication -> isAuthorizedKey(publication, BondedRoleType.ORACLE_NODE))
-                        .map(publication -> (AuthorizedOracleNode) publication.getAuthorizedDistributedData())
-                        .collect(Collectors.toUnmodifiableSet()))
-                .orElse(Set.of());
+                .stream()
+                .flatMap(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(type.getSimpleName()))
+                .filter(AuthorizedData.class::isInstance)
+                .map(AuthorizedData.class::cast)
+                .filter(publication -> type.isInstance(publication.getAuthorizedDistributedData()))
+                .filter(publication -> dataFilter.test(type.cast(publication.getAuthorizedDistributedData())))
+                .filter(publication -> isAuthorizedKey(publication, authorizingBondedRoleType))
+                .map(publication -> type.cast(publication.getAuthorizedDistributedData()));
+    }
+
+    // Whether the network storage holds a publication of data equal to the given data, for which rule 2 or rule 3 holds
+    // now, with the authorizing role type (see getAuthorizedPublishedData)
+    public boolean hasAuthorizedPublication(AuthorizedDistributedData data, BondedRoleType authorizingBondedRoleType) {
+        return getAuthorizedPublishedData(data.getClass(), authorizingBondedRoleType, data::equals)
+                .findAny()
+                .isPresent();
     }
 
     public Stream<AuthorizedBondedRole> getAuthorizedBondedRoleStream(boolean ignoreBannedState) {
@@ -422,24 +458,6 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
             reprocessScheduler.stop();
             reprocessScheduler = null;
         }
-    }
-
-    // Whether the store of the type holds a publication of equal data which an oracle node authorized.
-    // Several oracle nodes can publish the same role, each with its own authorized key. The store holds one entry per
-    // publication, but bondedRoles holds one item per role: the equality of a role leaves out the oracle node which
-    // authorized it. The removal or expiry of one publication, for example of a copy without signature V2 at the cutoff
-    // date of signature V1, must not remove a role which another publication still authorizes. Otherwise
-    // OracleNodeService would also remove its own publication, and the removal would spread to all oracle nodes (see
-    // docs/specifications/bonded-roles/registration.md).
-    private boolean isPublishedByAnOracleNode(Class<? extends AuthorizedDistributedData> type,
-                                              AuthorizedDistributedData data) {
-        return networkService.getDataService()
-                .map(dataService -> dataService.getAuthenticatedPayloadStreamByStoreName(type.getSimpleName())
-                        .filter(AuthorizedData.class::isInstance)
-                        .map(AuthorizedData.class::cast)
-                        .filter(publication -> data.equals(publication.getAuthorizedDistributedData()))
-                        .anyMatch(publication -> isAuthorizedKey(publication, BondedRoleType.ORACLE_NODE)))
-                .orElse(false);
     }
 
     private Optional<AuthorizedBondedRole> validateBondedRole(AuthorizedData authorizedData,

@@ -460,6 +460,59 @@ class Bisq1BridgeRequestServiceTest {
         verify(bondedRoleGrpcService).requestBondedRoleVerification(any(), any());
     }
 
+    // The role of a node contains the addresses of the node. Nodes add the addresses of a seed node role to their seed
+    // nodes (see docs/specifications/bonded-roles/registration.md).
+    @Test
+    void registrationOfANodeWithoutAddressesIsRejectedBeforeBridgeVerification() {
+        BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
+        when(bondedRoleGrpcService.requestBondedRoleVerification(any(), any()))
+                .thenReturn(new BondedRoleVerificationResponse(Optional.empty()));
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.publishAuthorizedData(any(), any()))
+                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
+        Bisq1BridgeRequestService service = createService(KeyGeneration.generateDefaultEcKeyPair(),
+                networkService,
+                mock(AuthorizedBondedRolesService.class),
+                bondedRoleGrpcService);
+        useDirectExecutor(service);
+
+        service.onConfidentialMessage(seedNodeRequestWithoutAddresses(),
+                KeyGeneration.generateDefaultEcKeyPair().getPublic());
+
+        verify(bondedRoleGrpcService, never()).requestBondedRoleVerification(any(), any());
+        verify(networkService, never()).publishAuthorizedData(any(), any());
+        assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).isEmpty();
+    }
+
+    // An oracle of an earlier version could persist the registration of a node without addresses. Nodes of this
+    // version drop its role data, and this oracle cannot create the removal of it. A failed revalidation removes only
+    // the registration, and the oracle still deactivates the other registrations.
+    @Test
+    void storedRegistrationWithInvalidRoleDataDoesNotStopTheDeactivationOfOthers()
+            throws UnresolvableProtobufException {
+        BondedRoleRegistrationRequest withoutAddresses = seedNodeRequestWithoutAddresses();
+        BondedRoleRegistrationRequest other = createCurrentRequest(4321, "c".repeat(64));
+        BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
+        when(bondedRoleGrpcService.requestBondedRoleBatchVerification(any()))
+                .thenReturn(new BondedRolesVerificationResponse(941001,
+                        List.of(new BondedRoleVerificationResponse(Optional.of("invalid")),
+                                new BondedRoleVerificationResponse(Optional.of("invalid")))));
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.removeAuthorizedData(any(), any()))
+                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
+        KeyPair authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        Bisq1BridgeRequestService service = createService(authorizedKeyPair,
+                networkService, mock(AuthorizedBondedRolesService.class), bondedRoleGrpcService,
+                mock(GrpcClient.class));
+        service.getPersistableStore().getBondedRoleRegistrationRequests().addAll(List.of(withoutAddresses, other));
+
+        service.revalidateBondedRolesNow();
+
+        // One removal: the one of the other registration
+        verifyRemovalWithAuthorizedKeyPair(networkService, authorizedKeyPair);
+        assertThat(service.getPersistableStore().getBondedRoleRegistrationRequests()).isEmpty();
+    }
+
     // The registration of an oracle node role of a non-static key can still be cancelled
     @Test
     void knownOracleNodeRegistrationOfAKeyWhichIsNoStaticOracleNodeKeyCanBeCancelled() {
@@ -710,6 +763,7 @@ class Bisq1BridgeRequestServiceTest {
         verify(bondedRoleGrpcService).requestBondedRoleBatchVerification(any());
     }
 
+    // The registration of a node contains the addresses of the node, as the desktop sends it
     private static BondedRoleRegistrationRequest oracleNodeRequest(boolean cancellation) {
         BondedRoleRegistrationRequest current = createCurrentRequest();
         return new BondedRoleRegistrationRequest(current.getProfileId(),
@@ -717,9 +771,25 @@ class Bisq1BridgeRequestServiceTest {
                 BondedRoleType.ORACLE_NODE,
                 current.getBondUserName(),
                 current.getSignatureBase64(),
-                current.getAddressByTransportTypeMap(),
+                Optional.of(current.getNetworkId().getAddressByTransportTypeMap()),
                 current.getNetworkId(),
                 cancellation,
+                current.getRegistrationProtocolVersion(),
+                current.getProposalTxId(),
+                current.getLockupTxId());
+    }
+
+    // A modified client can send it. Released clients send the addresses of a node with its registration.
+    private static BondedRoleRegistrationRequest seedNodeRequestWithoutAddresses() {
+        BondedRoleRegistrationRequest current = createCurrentRequest();
+        return new BondedRoleRegistrationRequest(current.getProfileId(),
+                current.getAuthorizedPublicKey(),
+                BondedRoleType.SEED_NODE,
+                current.getBondUserName(),
+                current.getSignatureBase64(),
+                Optional.empty(),
+                current.getNetworkId(),
+                false,
                 current.getRegistrationProtocolVersion(),
                 current.getProposalTxId(),
                 current.getLockupTxId());

@@ -79,14 +79,16 @@ public class DifficultyAdjustmentService implements Service, AuthorizedBondedRol
         }
     }
 
+    // The node keeps a difficulty adjustment while the network storage holds a publication of it which a security
+    // manager authorized. Several security managers can publish the same data, each with its own key (see
+    // docs/specifications/bonded-roles/authorized-data.md).
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedDifficultyAdjustmentData authorizedDifficultyAdjustmentData = (AuthorizedDifficultyAdjustmentData) authorizedData.getAuthorizedDistributedData();
-                authorizedDifficultyAdjustmentDataSet.remove(authorizedDifficultyAdjustmentData);
-                updateMostRecentValueOrDefault();
-            }
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedDifficultyAdjustmentData data &&
+                authorizedDifficultyAdjustmentDataSet.contains(data) &&
+                !authorizedBondedRolesService.hasAuthorizedPublication(data, BondedRoleType.SECURITY_MANAGER)) {
+            authorizedDifficultyAdjustmentDataSet.remove(data);
+            updateMostRecentValueOrDefault();
         }
     }
 

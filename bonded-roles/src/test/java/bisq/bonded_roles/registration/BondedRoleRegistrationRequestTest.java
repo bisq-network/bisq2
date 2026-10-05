@@ -134,8 +134,12 @@ public class BondedRoleRegistrationRequestTest {
 
     public static NetworkId createNetworkId() {
         var keyPair = KeyGeneration.generateDefaultEcKeyPair();
-        var addressMap = new AddressByTransportTypeMap(Map.of(
+        return new NetworkId(createAddressByTransportTypeMap(), new PubKey(keyPair.getPublic(), "test-key"));
+    }
+
+    // The addresses of the network IDs of createNetworkId. The role of a node contains the addresses of the node.
+    public static AddressByTransportTypeMap createAddressByTransportTypeMap() {
+        return new AddressByTransportTypeMap(Map.of(
                 TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(1234)));
-        return new NetworkId(addressMap, new PubKey(keyPair.getPublic(), "test-key"));
     }
 }

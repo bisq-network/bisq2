@@ -82,14 +82,17 @@ public class AlertService implements Service, AuthorizedBondedRolesService.Liste
         }
     }
 
+    // Several security managers can publish the same alert, each with its own key. The alert view publishes every alert
+    // again with the key of the security manager who opens it. The node keeps an alert while the network storage holds
+    // a publication of it which a security manager authorized (see docs/specifications/bonded-roles/authorized-data.md).
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedAlertData authorizedAlertData = (AuthorizedAlertData) authorizedData.getAuthorizedDistributedData();
-                authorizedAlertDataSet.remove(authorizedAlertData);
-                maybeApplyBannedState(authorizedAlertData, false);
-            }
+        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedAlertData authorizedAlertData &&
+                authorizedAlertDataSet.contains(authorizedAlertData) &&
+                !authorizedBondedRolesService.hasAuthorizedPublication(authorizedAlertData,
+                        BondedRoleType.SECURITY_MANAGER)) {
+            authorizedAlertDataSet.remove(authorizedAlertData);
+            maybeApplyBannedState(authorizedAlertData, false);
         }
     }
 
