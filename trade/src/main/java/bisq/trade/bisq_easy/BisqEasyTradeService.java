@@ -424,15 +424,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return persistableStore.tradeExists(tradeId);
     }
 
-    // Earlier versions stored the trade of a take offer request before they verified the request, so a stored
-    // trade of a rejected request can hold an unauthenticated copy of the offer. Only a trade we have signed the
-    // contract of proves that we made the offer.
-    public boolean hasSignedTradeWithOffer(BisqEasyOffer bisqEasyOffer) {
-        return getAllTrades().stream()
-                .filter(trade -> trade.getMaker().getContractSignatureData().get() != null)
-                .anyMatch(trade -> trade.getOffer().equals(bisqEasyOffer));
-    }
-
     public boolean wasOfferAlreadyTaken(BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId) {
         return getTrades().stream().anyMatch(trade ->
                 trade.getOffer().getId().equals(bisqEasyOffer.getId()) &&
@@ -532,9 +523,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return Optional.of(createAndAddTradeProtocol(bisqEasyTrade));
     }
 
-    // The request is data of its sender, so the log names only the message type and the sanitized trade ID.
     // A rejected take offer request creates no trade, so no state machine reports the rejection to the taker. We
-    // report it with the data which BisqEasyFsmErrorEventHandler reports for a failed trade.
+    // report it with the data which BisqEasyFsmErrorEventHandler reports for a failed trade. Like the trade messages,
+    // the report names us by the network ID to which the taker addressed the request, not by the current addresses of
+    // our identity (docs/specifications/user/identity-by-key.md, rule 3).
     private void reportTakeOfferRejection(BisqEasyTrade bisqEasyTrade, RuntimeException exception) {
         TradeProtocolFailure tradeProtocolFailure = exception instanceof TradeProtocolException tradeProtocolException ?
                 tradeProtocolException.getTradeProtocolFailure() :
@@ -544,7 +536,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         BisqEasyReportErrorMessage report = new BisqEasyReportErrorMessage(StringUtils.createUid(),
                 bisqEasyTrade.getId(),
                 BisqEasyProtocol.VERSION,
-                myIdentity.getNetworkId(),
+                bisqEasyTrade.getMyself().getNetworkId(),
                 takerNetworkId,
                 StringUtils.truncate(ExceptionUtil.getRootCauseMessage(exception), MAX_LENGTH_ERROR_MESSAGE),
                 StringUtils.truncate(ExceptionUtil.getSafeStackTraceAsString(exception), MAX_LENGTH_STACKTRACE),
@@ -552,6 +544,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         networkService.confidentialSend(report, takerNetworkId, myIdentity.getNetworkIdWithKeyPair());
     }
 
+    // The request is data of its sender, so the log names only the message type and the sanitized trade ID.
     private static void logDroppedTakeOfferRequest(BisqEasyTakeOfferRequest message, String reason, String tradeId) {
         log.warn("We drop a {} because {}. tradeId={}",
                 message.getClass().getSimpleName(), reason, StringUtils.sanitizeForLog(tradeId));

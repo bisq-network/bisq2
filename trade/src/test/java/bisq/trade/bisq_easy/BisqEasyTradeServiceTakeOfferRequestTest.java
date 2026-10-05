@@ -63,6 +63,7 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.buyerAsTakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.contract;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.sellerAsMakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -114,6 +115,8 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
         when(serviceProvider.getSettingsService().getCloseMyOfferWhenTaken()).thenReturn(new Observable<>(false));
 
         service = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP);
+        // As in the application, the protocol and its handlers get this service from the service provider.
+        when(serviceProvider.getBisqEasyTradeService()).thenReturn(service);
         service.initialize().join();
     }
 
@@ -233,6 +236,8 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
                 any());
         assertThat(report.getValue().getTradeId()).isEqualTo(request.getTradeId());
         assertThat(report.getValue().getTradeProtocolFailure()).isEqualTo(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
+        // As in the trade messages, the taker stored the network ID of the offer for the maker.
+        assertThat(report.getValue().getSender()).isEqualTo(offersNetworkId);
     }
 
     @Test
@@ -243,6 +248,29 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
         assertThat(service.getTrades()).isEmpty();
         verify(serviceProvider.getNetworkService(), never()).confidentialSend(any(), any(), any());
+    }
+
+    @Test
+    void requestForAnOfferClosedByAnotherTakeIsRejected() throws GeneralSecurityException {
+        // Another taker took the offer, which closed it. The trade with that taker carries our signature.
+        BisqEasyContract otherContract = contract(contract.getOffer(),
+                identity("other-taker").getNetworkId(),
+                Optional.empty());
+        BisqEasyTrade otherTrade = sellerAsMakerTrade(otherContract, makerIdentity);
+        otherTrade.getMaker().getContractSignatureData().set(new ContractService(mock(SecurityService.class))
+                .signContract(otherContract, makerIdentity.getKeyBundle().getKeyPair()));
+        service.getPersistableStore().addTrade(otherTrade);
+        removeOffersFromOfferbook();
+        BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
+
+        service.onMessage(request);
+
+        assertThat(service.findTrade(request.getTradeId())).isEmpty();
+        ArgumentCaptor<BisqEasyReportErrorMessage> report = ArgumentCaptor.forClass(BisqEasyReportErrorMessage.class);
+        verify(serviceProvider.getNetworkService()).confidentialSend(report.capture(),
+                eq(takerIdentity.getNetworkId()),
+                any());
+        assertThat(report.getValue().getTradeProtocolFailure()).isEqualTo(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
     }
 
     @Test

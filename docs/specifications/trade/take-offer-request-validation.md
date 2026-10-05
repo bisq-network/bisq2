@@ -14,7 +14,7 @@ The sender of the request controls these conditions. So the maker drops a reques
 The maker verifies, in this order:
 
 - the sender's user profile is not one the maker ignores (`NO_MATCHING_OFFER_FOUND` otherwise: the maker rejects an ignored taker with the same failure, text and throw site as a request for an offer which it does not have, so the rejection does not tell the taker the reason);
-- the contract offer is one of the maker's own offers: it must equal, by full value equality, an offer in an offerbook message whose author is the offer's maker and whose maker network ID has the key of the trade's identity (the addresses can differ); if the offer is no longer in the offerbook, a stored trade which carries the maker's contract signature and an equal offer is accepted, so that a second taker of the same offer is not rejected after the first trade was archived (`NO_MATCHING_OFFER_FOUND` otherwise);
+- the contract offer is one of the maker's current offers (`NO_MATCHING_OFFER_FOUND` otherwise): it must equal, by full value equality, an offer in an offerbook message whose author is the offer's maker and whose maker network ID has the key of the trade's identity (the addresses can differ);
 - the contract's price specification equals the offer's price specification, see `bisq-easy-contract-price.md`;
 - the message sender is the taker of the contract and the sender's public key matches the taker's network ID;
 - the amounts are positive and within the offer's amount specification (equal to its fixed amount or within its range);
@@ -23,5 +23,7 @@ The maker verifies, in this order:
 - the contract mediator equals, by its whole network ID including the addresses, the mediator the maker selects deterministically for the two traders and the offer (`MEDIATORS_NOT_MATCHING` otherwise). The maker sends its mediation request and its chat messages for the mediator to the addresses of the copies of the mediator's profile which the taker supplies in the contract and in its first chat message. This check binds these addresses to the profile which the mediator published, see rule 4 of [identity by key](../user/identity-by-key.md);
 - the taker's contract signature belongs to the taker's public key and verifies over the contract;
 - if the taker is the seller, the taker's reputation score allows the trade amount, see `bisq-easy-seller-reputation-limit.md` (`SELLER_REPUTATION_TOO_LOW` otherwise).
+
+An offer which the maker removed, or which was closed when it was taken, is not accepted, as for MuSig. A trade with the offer does not keep it takeable: the taker chooses the take offer date and with it the trade ID, so a copy of an offer which was taken once could be taken again any number of times, also after the maker withdrew it. With "close my offer when taken", a second taker whose request arrives after the first take closed the offer is rejected. The error message of `NO_MATCHING_OFFER_FOUND` starts with "Could not find matching offer", by which clients recognize this rejection.
 
 The take offer chat message is not part of this verification. The trade chat channel created from it is bound to the signed contract separately, see `chat-channel-binding.md`.
