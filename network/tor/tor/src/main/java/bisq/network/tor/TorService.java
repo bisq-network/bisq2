@@ -283,9 +283,9 @@ public class TorService implements Service {
                 .orTimeout(1, TimeUnit.MINUTES);
     }
 
-    public Socket getSocket() throws IOException {
+    public Socket getSocket(String host, int port, int socketTimeout) throws IOException {
         TorSocksProxyFactory socksProxyFactory = torSocksProxyFactory.orElseThrow();
-        return socksProxyFactory.getSocket();
+        return socksProxyFactory.getSocket(host, port, socketTimeout);
     }
 
     public Socks5Proxy getSocks5Proxy() throws IOException {
