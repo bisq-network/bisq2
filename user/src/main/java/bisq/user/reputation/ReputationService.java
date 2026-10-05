@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @Getter
 @Slf4j
@@ -149,18 +150,28 @@ public class ReputationService implements Service {
         return Optional.of(new ReputationScore(score, fiveSystemScore, rank));
     }
 
-    private void onUserProfileScoreChanged(Pair<String, Long> userProfileIdScorePair) {
+    // Synchronized, so that the last computation of a profile reads the scores after the last change of a source
+    private synchronized void onUserProfileScoreChanged(Pair<String, Long> userProfileIdScorePair) {
         if (userProfileIdScorePair == null) {
             return;
         }
         String userProfileId = userProfileIdScorePair.getFirst();
-        long score = proofOfBurnService.getScore(userProfileId) +
-                bondedReputationService.getScore(userProfileId) +
-                accountAgeService.getScore(userProfileId) +
-                signedWitnessService.getScore(userProfileId) +
-                profileAgeService.getScore(userProfileId);
-        scoreByUserProfileId.put(userProfileId, score);
+        // A profile has a total score while a source has data for it, as after a restart. The total can be 0.
+        if (getSourceServices().anyMatch(service -> service.hasScore(userProfileId))) {
+            long score = getSourceServices().mapToLong(service -> service.getScore(userProfileId)).sum();
+            scoreByUserProfileId.put(userProfileId, score);
+        } else {
+            scoreByUserProfileId.remove(userProfileId);
+        }
         userProfileIdWithScoreChange.set(userProfileId);
+    }
+
+    private Stream<SourceReputationService<?>> getSourceServices() {
+        return Stream.of(proofOfBurnService,
+                bondedReputationService,
+                accountAgeService,
+                signedWitnessService,
+                profileAgeService);
     }
 
     @VisibleForTesting
