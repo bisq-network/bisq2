@@ -530,9 +530,10 @@ public class StorageCanonicalEncoderTest {
                 .build());
     }
 
-    // Version 0 is not combined with signature V2 (see SignatureValidation.validateVersionOfSignatureV2)
+    // A request with signature V2 has version 2 or higher (SignatureValidation.validateVersionOfSignatureV2). Nodes up
+    // to 2.1.13 send version 1 without signature V2.
     private static ByteString signatureV2ForVersion(int version) {
-        return version == 0 ? ByteString.EMPTY : ByteString.copyFrom(SIGNATURE_V2);
+        return version < 2 ? ByteString.EMPTY : ByteString.copyFrom(SIGNATURE_V2);
     }
 
     private static byte[] filledBytes(int length, int value) {
