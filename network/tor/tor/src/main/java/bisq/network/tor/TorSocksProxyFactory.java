@@ -31,9 +31,17 @@ public class TorSocksProxyFactory {
         this.socksPort = socksPort;
     }
 
-    public Socket getSocket() throws IOException {
-        Proxy proxy = getProxy();
-        return new Socket(proxy);
+    // Connects to host and port through the SOCKS port of Tor
+    public Socket getSocket(String host, int port, int socketTimeout) throws IOException {
+        Socket socket = new Socket(getProxy());
+        socket.setSoTimeout(socketTimeout);
+        try {
+            socket.connect(InetSocketAddress.createUnresolved(host, port));
+        } catch (IOException e) {
+            socket.close();
+            throw e;
+        }
+        return socket;
     }
 
     public Socks5Proxy getSocks5Proxy() throws IOException {
