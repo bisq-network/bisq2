@@ -21,10 +21,12 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.keys.KeyGeneration;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -38,6 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * The storage layer takes the MetaData of mailbox data and mailbox remove requests from the StorableTypesRegistry. The
@@ -217,6 +222,41 @@ class MailboxMetaDataTest {
         assertThrows(UnresolvableProtobufException.class, () -> RemoveMailboxRequest.fromProto(removeProto));
         assertThrows(UnresolvableProtobufException.class,
                 () -> RemoveMailboxRequest.fromProto(removeProto.toBuilder().clearSignatureV2().build()));
+    }
+
+    // Before the cutoff date of signature V1, nodes up to 2.1.13 take part in the network. They include metaData in
+    // serializeForHash() of MailboxData in versions above 3, so the storage key, signature V1 and the proof of work
+    // payload of the add request would differ between the two kinds of nodes. Any sender can create such data.
+    @Test
+    void mailboxDataOfVersion4IsRejectedBeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        bisq.network.protobuf.MailboxData mailboxDataProto = new MailboxData(AckMessage.META_DATA,
+                createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
+                .setVersion(4)
+                .build();
+        try (MockedStatic<SignedRequest> signedRequest = mockStatic(SignedRequest.class, CALLS_REAL_METHODS)) {
+            signedRequest.when(() -> SignedRequest.isSignatureV2Required(anyLong())).thenReturn(false);
+
+            assertThrows(UnresolvableProtobufException.class, () -> MailboxData.fromProto(mailboxDataProto));
+        }
+    }
+
+    // From the cutoff date on, nodes up to 2.1.13 cannot publish data anymore, and a later release can raise the
+    // version. The hash contains neither the version nor metaData.
+    @Test
+    void mailboxDataOfVersion4ParsesFromTheCutoffDate() throws GeneralSecurityException, UnresolvableProtobufException {
+        MailboxData registered = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
+        bisq.network.protobuf.MailboxData mailboxDataProto = registered.toProto(false).toBuilder()
+                .setVersion(4)
+                .build();
+        try (MockedStatic<SignedRequest> signedRequest = mockStatic(SignedRequest.class, CALLS_REAL_METHODS)) {
+            signedRequest.when(() -> SignedRequest.isSignatureV2Required(anyLong())).thenReturn(true);
+
+            MailboxData mailboxData = MailboxData.fromProto(mailboxDataProto);
+
+            assertEquals(4, mailboxData.getVersion());
+            assertArrayEquals(registered.serializeForHash(), mailboxData.serializeForHash());
+        }
     }
 
     // A remove request of nodes up to 2.1.13 has version 1 and no signature V2. The receiver uses the registered

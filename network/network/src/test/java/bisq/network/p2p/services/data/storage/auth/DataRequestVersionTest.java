@@ -19,6 +19,7 @@ package bisq.network.p2p.services.data.storage.auth;
 
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
@@ -26,16 +27,23 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.MockedStatic;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 
 /**
  * The deprecated metaData field of the remove requests is excluded from the hash. Versions 1 to 3 are the versions
  * which supported nodes send; for them serializeForHash(), the proof of work payload, is the same as in nodes of
- * earlier versions. Version 0 fails at parsing.
+ * earlier versions. Version 0 fails at parsing. Before the cutoff date of signature V1, a remove request of a version
+ * above 3 fails at parsing as well.
  */
 class DataRequestVersionTest {
     private static final ByteString HASH = ByteString.copyFrom(new byte[20]);
@@ -81,6 +89,56 @@ class DataRequestVersionTest {
     @ValueSource(ints = {-1, 0})
     void requestsOfVersion0FailAtParsing(int version) {
         assertRequestsFailAtParsing(version);
+    }
+
+    // Nodes up to 2.1.13 include metaData in serializeForHash() of the remove requests in versions above 3. Any key
+    // pair can sign such a request, also with signature V2, and signature V1 does not cover the version, so a relay
+    // could also change it in a request of these nodes.
+    @ParameterizedTest
+    @ValueSource(ints = {4, 5})
+    void removeRequestsOfVersionAbove3FailAtParsingBeforeTheCutoffDate(int version) {
+        try (MockedStatic<SignedRequest> signedRequest = mockStatic(SignedRequest.class, CALLS_REAL_METHODS)) {
+            signedRequest.when(() -> SignedRequest.isSignatureV2Required(anyLong())).thenReturn(false);
+
+            for (ByteString signatureV2 : List.of(ByteString.EMPTY, SIGNATURE)) {
+                assertThrows(UnresolvableProtobufException.class, () -> RemoveAuthenticatedDataRequest.fromProto(
+                        removeAuthenticatedDataRequestProto().setVersion(version).setSignatureV2(signatureV2).build()));
+                assertThrows(UnresolvableProtobufException.class, () -> RemoveMailboxRequest.fromProto(
+                        removeMailboxRequestProto().setVersion(version).setSignatureV2(signatureV2).build()));
+            }
+        }
+    }
+
+    // From the cutoff date on, nodes up to 2.1.13 cannot publish data anymore, and a later release can raise the
+    // version
+    @ParameterizedTest
+    @ValueSource(ints = {4, 5})
+    void removeRequestsOfVersionAbove3ParseFromTheCutoffDate(int version)
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
+        try (MockedStatic<SignedRequest> signedRequest = mockStatic(SignedRequest.class, CALLS_REAL_METHODS)) {
+            signedRequest.when(() -> SignedRequest.isSignatureV2Required(anyLong())).thenReturn(true);
+
+            RemoveAuthenticatedDataRequest authenticatedDataRequest = RemoveAuthenticatedDataRequest.fromProto(
+                    removeAuthenticatedDataRequestProto().setVersion(version).setSignatureV2(SIGNATURE).build());
+            RemoveMailboxRequest mailboxRequest = RemoveMailboxRequest.fromProto(
+                    removeMailboxRequestProto().setVersion(version).setSignatureV2(SIGNATURE).build());
+
+            assertEquals(version, authenticatedDataRequest.getVersion());
+            assertFalse(parse(authenticatedDataRequest.serializeForHash()).getRemoveAuthenticatedDataRequest()
+                    .hasMetaData());
+            assertEquals(version, mailboxRequest.getVersion());
+            assertFalse(parse(mailboxRequest.serializeForHash()).getRemoveMailboxRequest().hasMetaData());
+        }
+    }
+
+    // Nodes up to 2.1.13 leave metaData of the refresh request out of the hash in every version
+    @ParameterizedTest
+    @ValueSource(ints = {4, 5})
+    void refreshRequestOfVersionAbove3Parses(int version) throws UnresolvableProtobufException {
+        RefreshAuthenticatedDataRequest request = RefreshAuthenticatedDataRequest.fromProto(
+                refreshAuthenticatedDataRequestProto().setVersion(version).setSignatureV2(SIGNATURE).build());
+
+        assertEquals(version, request.getVersion());
     }
 
     @Test
