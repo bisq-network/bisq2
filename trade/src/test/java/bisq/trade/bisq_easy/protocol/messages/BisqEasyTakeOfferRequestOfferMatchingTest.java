@@ -21,10 +21,10 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Optional;
 import java.util.Set;
 
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,7 +55,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
     private BisqEasyTakeOfferRequest message;
     private BisqEasyOffer takersOffer;
     private ObservableSet<BisqEasyOfferbookChannel> offerbookChannels;
-    private BisqEasyTakeOfferRequestHandler handler;
+    private Identity myIdentity;
 
     @BeforeEach
     void setUp() {
@@ -75,9 +76,8 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         message = mock(BisqEasyTakeOfferRequest.class, RETURNS_DEEP_STUBS);
         when(message.getBisqEasyContract()).thenReturn(takersContract);
 
-        BisqEasyTrade trade = mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS);
-        when(trade.getMyIdentity().getNetworkId()).thenReturn(myNetworkId);
-        handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, trade);
+        myIdentity = mock(Identity.class);
+        when(myIdentity.getNetworkId()).thenReturn(myNetworkId);
     }
 
     @Test
@@ -85,7 +85,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         when(tradeService.hasSignedTradeWithOffer(takersOffer)).thenReturn(false);
 
         TradeProtocolException exception =
-                assertThrows(TradeProtocolException.class, () -> handler.verify(message));
+                assertThrows(TradeProtocolException.class, () -> validate(serviceProvider, myIdentity, message));
         assertEquals(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND, exception.getTradeProtocolFailure());
     }
 
@@ -94,7 +94,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         addOfferbookMessage(MY_PROFILE_ID, takersOffer);
 
         // The remaining checks run against deep stubs and fail; the offer match itself has passed.
-        assertThrows(RuntimeException.class, () -> handler.verify(message));
+        assertThrows(RuntimeException.class, () -> validate(serviceProvider, myIdentity, message));
         verify(tradeService, never()).hasSignedTradeWithOffer(any());
     }
 
@@ -107,7 +107,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         when(takersOffer.getMakerNetworkId()).thenReturn(makerNetworkIdAtPublishing);
         addOfferbookMessage(MY_PROFILE_ID, takersOffer);
 
-        assertThrows(RuntimeException.class, () -> handler.verify(message));
+        assertThrows(RuntimeException.class, () -> validate(serviceProvider, myIdentity, message));
         verify(tradeService, never()).hasSignedTradeWithOffer(any());
     }
 

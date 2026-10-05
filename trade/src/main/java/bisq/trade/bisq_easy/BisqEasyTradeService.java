@@ -32,6 +32,7 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
@@ -67,9 +68,13 @@ import bisq.trade.bisq_easy.protocol.events.BisqEasyRejectTradeEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasySendBtcAddressEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyTakeOfferEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyTradeEvent;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.protocol.handler.TradeMessageHandler;
 import bisq.trade.protocol.messages.PendingTradeMessages;
 import bisq.user.banned.BannedUserService;
@@ -89,6 +94,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_ERROR_MESSAGE;
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_STACKTRACE;
 import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -264,8 +271,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // The state machine turns an exception of a message handler into a failure of the trade (Fsm.handle), and the
     // handlers throw for a message which is not from the trade peer. So such a message must not reach the protocol:
     // anybody who knows a trade ID could end the trade otherwise. The check runs when a message is processed, also for
-    // a message which was queued before the protocol existed. The take offer request creates the trade and keeps its
-    // own checks.
+    // a message which was queued before the protocol existed. The take offer request creates the trade, so
+    // makerCreatesProtocol checks it against the trade before the trade is stored.
     private static boolean isMessageOfTradePeer(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
         boolean isMessageOfTradePeer = TradeMessageHandler.isMessageOfTradePeer(message, protocol.getModel());
         if (!isMessageOfTradePeer) {
@@ -417,9 +424,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return persistableStore.tradeExists(tradeId);
     }
 
-    // Trades are created from the taker's contract before the take offer request gets verified, so a trade
-    // whose request got rejected, or is still under verification, holds an unauthenticated copy of the offer.
-    // Only a trade we have signed the contract of proves that we made the offer.
+    // Earlier versions stored the trade of a take offer request before they verified the request, so a stored
+    // trade of a rejected request can hold an unauthenticated copy of the offer. Only a trade we have signed the
+    // contract of proves that we made the offer.
     public boolean hasSignedTradeWithOffer(BisqEasyOffer bisqEasyOffer) {
         return getAllTrades().stream()
                 .filter(trade -> trade.getMaker().getContractSignatureData().get() != null)
@@ -472,9 +479,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    // We only create the data required for the protocol creation. The BisqEasyTakeOfferRequestHandler verifies the
-    // request and answers a rejection with an error report to the taker. A request which cannot create a trade of ours
-    // is dropped here without an answer: the sender controls the conditions, so they must not throw.
+    // We verify the request before we create the trade (BisqEasyTakeOfferRequestValidator) and answer a rejection with
+    // an error report to the taker, so a rejected request leaves no trade and no contact. A request which cannot create
+    // a trade of ours is dropped here without an answer: the sender controls the conditions, so they must not throw.
     private Optional<BisqEasyProtocol> makerCreatesProtocol(BisqEasyTakeOfferRequest message) {
         BisqEasyContract contract = message.getBisqEasyContract();
         BisqEasyOffer offer = contract.getOffer();
@@ -497,9 +504,23 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         boolean isBuyer = offer.getMakersDirection().isBuy();
         BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity.get(), offer, sender, receiver);
         String tradeId = bisqEasyTrade.getId();
+        if (!TradeMessageHandler.isMessageOfTradePeer(message, bisqEasyTrade)) {
+            logDroppedTakeOfferRequest(message, "its trade ID is not the ID of the trade which it would create",
+                    message.getTradeId());
+            return Optional.empty();
+        }
         synchronized (tradeCreationLock) {
             if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
                 logDroppedTakeOfferRequest(message, "a trade with its trade ID exists already", tradeId);
+                return Optional.empty();
+            }
+            // Only after the check above: a rejection of a copy of a request which we have handled would fail the
+            // trade at the taker
+            try {
+                BisqEasyTakeOfferRequestValidator.validate(serviceProvider, myIdentity.get(), message);
+            } catch (RuntimeException e) {
+                log.warn("We reject the take offer request. tradeId={}", tradeId, e);
+                reportTakeOfferRejection(bisqEasyTrade, e);
                 return Optional.empty();
             }
             persistableStore.addTrade(bisqEasyTrade);
@@ -512,6 +533,25 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     }
 
     // The request is data of its sender, so the log names only the message type and the sanitized trade ID.
+    // A rejected take offer request creates no trade, so no state machine reports the rejection to the taker. We
+    // report it with the data which BisqEasyFsmErrorEventHandler reports for a failed trade.
+    private void reportTakeOfferRejection(BisqEasyTrade bisqEasyTrade, RuntimeException exception) {
+        TradeProtocolFailure tradeProtocolFailure = exception instanceof TradeProtocolException tradeProtocolException ?
+                tradeProtocolException.getTradeProtocolFailure() :
+                TradeProtocolFailure.UNKNOWN;
+        Identity myIdentity = bisqEasyTrade.getMyIdentity();
+        NetworkId takerNetworkId = bisqEasyTrade.getPeer().getNetworkId();
+        BisqEasyReportErrorMessage report = new BisqEasyReportErrorMessage(StringUtils.createUid(),
+                bisqEasyTrade.getId(),
+                BisqEasyProtocol.VERSION,
+                myIdentity.getNetworkId(),
+                takerNetworkId,
+                StringUtils.truncate(ExceptionUtil.getRootCauseMessage(exception), MAX_LENGTH_ERROR_MESSAGE),
+                StringUtils.truncate(ExceptionUtil.getSafeStackTraceAsString(exception), MAX_LENGTH_STACKTRACE),
+                tradeProtocolFailure);
+        networkService.confidentialSend(report, takerNetworkId, myIdentity.getNetworkIdWithKeyPair());
+    }
+
     private static void logDroppedTakeOfferRequest(BisqEasyTakeOfferRequest message, String reason, String tradeId) {
         log.warn("We drop a {} because {}. tradeId={}",
                 message.getClass().getSimpleName(), reason, StringUtils.sanitizeForLog(tradeId));
