@@ -20,6 +20,7 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.bridge.protobuf.BondedRoleGrpcServiceGrpc;
+import bisq.common.encoding.Hex;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationResponse;
@@ -79,6 +80,23 @@ class BondedRoleGrpcServiceTest {
                 .cause()
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("not matching the key of the network ID");
+    }
+
+    // The identity of a registration contains the authorized key. With another key, the holder of a role could create
+    // another role record for the same bond, for example to come back after a ban of its record.
+    @Test
+    void senderWhoNamesAnotherAuthorizedKeyIsRejectedBeforeAnyBridgeCall() {
+        // The null gRPC client guarantees that a bypassed ownership check would fail differently.
+        BondedRoleGrpcService service = new BondedRoleGrpcService(null);
+        KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        String otherKey = Hex.encode(KeyGeneration.generateDefaultEcKeyPair().getPublic().getEncoded());
+        BondedRoleRegistrationRequest request = createCurrentRequest(senderKeyPair, senderKeyPair, otherKey);
+
+        assertThatThrownBy(() -> service.requestBondedRoleVerification(request, senderKeyPair.getPublic()))
+                .isInstanceOf(RuntimeException.class)
+                .cause()
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not matching the authorized public key");
     }
 
     @Test

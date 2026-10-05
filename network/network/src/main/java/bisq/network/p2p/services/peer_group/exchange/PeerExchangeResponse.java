@@ -86,8 +86,16 @@ public final class PeerExchangeResponse implements EnvelopePayloadMessage, Respo
     public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto)
             throws UnresolvableProtobufException {
         try {
+            // Before any peer is converted (rule 8 of docs/specifications/network/validation-at-parsing.md)
+            checkArgument(proto.getPeersCount() <= maxNumPeers,
+                    "Size of peers exceeds the limit. size=" + proto.getPeersCount());
+            // The peers are reports of other nodes, which the sender only relays. A node of an earlier version can relay
+            // a peer which this version rejects, so such a peer is skipped and the others are kept (see
+            // docs/specifications/network/peer-exchange.md). The peers are not part of the hash, so skipping one does
+            // not change the proof of work payload.
             return new PeerExchangeResponse(proto.getNonce(),
-                    ProtobufUtils.fromProtoStream(proto.getPeersList(), Peer::fromProto).collect(Collectors.toList()));
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getPeersList(), Peer::fromProto)
+                            .collect(Collectors.toList()));
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }

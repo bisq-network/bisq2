@@ -58,6 +58,10 @@ public class BondedRoleGrpcService implements Service {
             checkArgument(Arrays.equals(request.getNetworkId().getPubKey().getPublicKey().getEncoded(),
                             senderPublicKey.getEncoded()),
                     "Senders pub key is not matching the key of the network ID");
+            // The role data contains the authorized key, which authorizes the data of the role, and the identity of a
+            // registration contains it. Only the key of the profile may be named, as for the network ID.
+            checkArgument(request.getAuthorizedPublicKey().equals(Hex.encode(senderPublicKey.getEncoded())),
+                    "Senders pub key is not matching the authorized public key");
 
             var protoRequest = toVerificationRequest(request).completeProto();
             var protoResponse = GrpcClient.withInteractiveRequestDeadline(grpcClient.getBondedRoleBlockingStub())
