@@ -54,8 +54,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Real offers, contracts, user profiles, identities, trades and channels for tests of the trade chat channel
- * binding. A trade in a given state is read back from its protobuf form, so the fixture uses no mocks.
+ * Real offers, contracts, user profiles, identities, trades and channels for trade tests. A trade in a given state is
+ * read back from its protobuf form, so the fixture uses no mocks.
  */
 public final class BisqEasyTradeTestData {
     public static final long QUOTE_AMOUNT = 100_0000;
@@ -101,12 +101,19 @@ public final class BisqEasyTradeTestData {
     }
 
     public static BisqEasyContract contract(BisqEasyOffer offer, NetworkId takerNetworkId, Optional<UserProfile> mediator) {
+        return contract(offer, takerNetworkId, mediator, BitcoinPaymentRail.MAIN_CHAIN);
+    }
+
+    public static BisqEasyContract contract(BisqEasyOffer offer,
+                                            NetworkId takerNetworkId,
+                                            Optional<UserProfile> mediator,
+                                            BitcoinPaymentRail bitcoinPaymentRail) {
         return new BisqEasyContract(System.currentTimeMillis(),
                 offer,
                 takerNetworkId,
                 BASE_AMOUNT,
                 QUOTE_AMOUNT,
-                new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
+                new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(bitcoinPaymentRail)),
                 new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
                 mediator,
                 new MarketPriceSpec(),
