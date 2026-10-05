@@ -32,7 +32,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -88,11 +87,15 @@ public class TacRiskAckView extends View<VBox, TacRiskAckModel, TacRiskAckContro
         HBox buttons = new HBox(20, Spacer.fillHBox(), rejectButton, closeButton, nextButton);
         buttons.setAlignment(Pos.CENTER_LEFT);
         buttons.setMaxWidth(Double.MAX_VALUE);
-        VBox.setMargin(confirmHeadline, new Insets(22, 0, 0, 0));
-        VBox headerSection = createHeaderSection();
-        VBox.setMargin(headerSection, new Insets(0, 0, 22, 0));
+        VBox.setMargin(confirmHeadline, new Insets(16, 0, 0, 0));
+        Label headline = new Label(Res.get("tac.risk.headline"));
+        headline.getStyleClass().add("tac-section-headline");
+        headline.setWrapText(true);
 
-        root.getChildren().addAll(headerSection,
+        VBox headlineBox = new VBox(headline);
+        VBox.setMargin(headlineBox, new Insets(0, 0, 4, 0));
+
+        root.getChildren().addAll(headlineBox,
                 riskSections,
                 confirmHeadline,
                 lossAcknowledged,
@@ -161,20 +164,6 @@ public class TacRiskAckView extends View<VBox, TacRiskAckModel, TacRiskAckContro
         nextButton.setOnAction(null);
         rejectButton.setOnAction(null);
         closeButton.setOnAction(null);
-    }
-
-    private VBox createHeaderSection() {
-        Label headline = new Label(Res.get("tac.risk.headline"));
-        headline.getStyleClass().add("tac-headline");
-        headline.setWrapText(true);
-        headline.setAlignment(Pos.CENTER);
-        headline.setTextAlignment(TextAlignment.CENTER);
-        headline.setMaxWidth(Double.MAX_VALUE);
-
-        VBox section = new VBox(3, headline);
-        section.setAlignment(Pos.TOP_CENTER);
-        section.setMaxWidth(Double.MAX_VALUE);
-        return section;
     }
 
     private HBox createRiskSection(String imageId, String title, String body) {

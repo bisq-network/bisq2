@@ -20,14 +20,21 @@ package bisq.desktop.overlay.tac;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.overlay.OverlayModel;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TacView extends NavigationView<VBox, TacModel, TacController> {
     private static final double PADDING = 30;
+    private static final double STEP_TOP_PADDING = 18;
 
     public TacView(TacModel model, TacController controller) {
         super(new VBox(), model, controller);
@@ -35,20 +42,35 @@ public class TacView extends NavigationView<VBox, TacModel, TacController> {
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
+        Label headline = new Label(Res.get("tac.headline"));
+        headline.getStyleClass().add("tac-headline");
+        headline.setWrapText(true);
+        headline.setAlignment(Pos.CENTER);
+        headline.setMaxWidth(Double.MAX_VALUE);
+
+        VBox header = new VBox(headline);
+        VBox.setMargin(headline, new Insets(-10, 0, -10, 0));
+        header.setPadding(new Insets(PADDING, PADDING, 0, PADDING));
+
+        // The header stays in place while the steps slide in and out. A StackPane lets the
+        // outgoing and the incoming step use the same area during the transition.
+        StackPane stepContainer = new StackPane();
+        VBox.setVgrow(stepContainer, Priority.ALWAYS);
+
+        root.getChildren().addAll(header, stepContainer);
+
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
-                childRoot.setPrefWidth(OverlayModel.WIDTH);
-                childRoot.setPrefHeight(OverlayModel.HEIGHT);
-                childRoot.setPadding(new Insets(PADDING));
-                root.getChildren().add(childRoot);
+                childRoot.setPadding(new Insets(STEP_TOP_PADDING, PADDING, PADDING, PADDING));
+                stepContainer.getChildren().add(childRoot);
                 if (oldValue != null) {
                     Transitions.transitLeftOut(childRoot, oldValue.getRoot());
                 } else {
                     Transitions.fadeIn(childRoot);
                 }
             } else {
-                root.getChildren().clear();
+                stepContainer.getChildren().clear();
             }
         });
     }
