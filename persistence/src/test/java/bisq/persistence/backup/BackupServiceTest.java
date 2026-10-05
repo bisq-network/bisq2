@@ -480,6 +480,24 @@ public class BackupServiceTest {
     }
 
     @Test
+    void testDeleteAllRemovesOnlyThisStoresBackups(@TempDir Path tempDir) throws IOException {
+        Path storePath = tempDir.resolve("db").resolve("test_store.protobuf");
+        Path backupPathDir = tempDir.resolve("backups").resolve("test");
+        FileMutatorUtils.createDirectories(backupPathDir);
+        FileMutatorUtils.writeToPath("dummy text", backupPathDir.resolve("test_store.protobuf_2025-12-04_0901"));
+        FileMutatorUtils.writeToPath("dummy text", backupPathDir.resolve("test_store.protobuf_2024-01-01_0000"));
+        Path unrelated = backupPathDir.resolve("other.txt");
+        FileMutatorUtils.writeToPath("dummy text", unrelated);
+        BackupService bs = new BackupService(tempDir, storePath, MaxBackupSize.HUNDRED_MB);
+        assertEquals(2, bs.getBackups().size());
+
+        bs.deleteAll();
+
+        assertTrue(bs.getBackups().isEmpty());
+        assertThat(unrelated).exists();
+    }
+
+    @Test
     void testGetBackupsReadsDirectoryAndReturnsParsedBackups(@TempDir Path tempDir) throws IOException {
         Path dbDirPath = tempDir.resolve("db");
         Path storePath = dbDirPath.resolve("test_store.protobuf");

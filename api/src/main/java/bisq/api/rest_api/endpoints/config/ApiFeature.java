@@ -41,7 +41,8 @@ public enum ApiFeature {
     NETWORK_INFO("network-info"),
     PRIVATE_CHAT("private-chat"),
     CONTACTS("contacts"),
-    PUBLIC_CHAT("public-chat");
+    PUBLIC_CHAT("public-chat"),
+    CLIENT_MANAGEMENT("client-management");
 
     private final String key;
 
