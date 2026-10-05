@@ -216,7 +216,11 @@ public class Bisq1BridgeRequestService implements Service,
                 .thenCompose(result -> bondedRoleGrpcService.initialize())
                 .thenApply(result -> {
                     authorizedBondedRolesService.addListener(this);
-                    networkService.addConfidentialMessageListener(this);
+                    // Requests can arrive before this service starts, for example from the mailbox. The node
+                    // removes a mailbox message from the network when it decrypted it, so without the delivery of
+                    // the processed messages no service would process such a request (see
+                    // docs/specifications/network/startup-replay.md).
+                    networkService.subscribeToConfidentialMessages(this);
                     recoverRegistrationRequestsFromLoadedData();
                     revalidateBondedRoles();
                     return result;
