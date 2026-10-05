@@ -91,9 +91,23 @@ class BisqEasyOpenTradeMediatorChannelTest {
         service = new BisqEasyOpenTradeChannelService(persistenceService, mock(NetworkService.class), userService);
     }
 
+    // The mediator has no trade, so a chat message creates no channel at the mediator. It waits, and the channel which
+    // the request creates takes it.
+    @Test
+    void chatMessageWithOfferBeforeTheRequestCreatesNoChannel() {
+        BisqEasyOpenTradeMessage messageOfPeer = messageToMediator(peer, Optional.of(offer));
+        service.onMessage(messageOfPeer);
+        assertTrue(service.getChannels().isEmpty());
+
+        BisqEasyOpenTradeChannel channel = service.mediatorFindOrCreatesChannel(TRADE_ID, offer, mediatorIdentity, requester, peer);
+
+        assertEquals(Set.of(REQUESTER_PROFILE_ID, PEER_PROFILE_ID), traderIds(channel));
+        assertTrue(channel.getChatMessages().contains(messageOfPeer));
+    }
+
     @Test
     void channelWhichAChatMessageCreatedBeforeTheRequestIsReplaced() {
-        service.onMessage(messageToMediator(peer, Optional.of(offer)));
+        channelCreatedByChatMessageOfOlderVersion();
         BisqEasyOpenTradeChannel channelOfChatMessage = service.findChannelByTradeId(TRADE_ID).orElseThrow();
 
         BisqEasyOpenTradeChannel channel = service.mediatorFindOrCreatesChannel(TRADE_ID, offer, mediatorIdentity, requester, peer);
@@ -110,7 +124,7 @@ class BisqEasyOpenTradeMediatorChannelTest {
 
     @Test
     void messagesOfTheOtherTraderAreAcceptedAfterTheReplacement() {
-        service.onMessage(messageToMediator(peer, Optional.of(offer)));
+        channelCreatedByChatMessageOfOlderVersion();
         BisqEasyOpenTradeChannel channel = service.mediatorFindOrCreatesChannel(TRADE_ID, offer, mediatorIdentity, requester, peer);
 
         BisqEasyOpenTradeMessage messageOfRequester = messageToMediator(requester, Optional.empty());
@@ -163,6 +177,14 @@ class BisqEasyOpenTradeMediatorChannelTest {
                 Optional.of(mediator));
 
         assertSame(tradersChannel, service.mediatorFindOrCreatesChannel(TRADE_ID, offer, mediatorIdentity, requester, peer));
+    }
+
+    // Older versions created a channel from a chat message with an offer without a trade, and such a channel can be in
+    // the persisted store. The predicate which holds for any trade lets the message create it.
+    private void channelCreatedByChatMessageOfOlderVersion() {
+        service.setIsTradeWithPeer((tradeId, userProfileId) -> true);
+        service.onMessage(messageToMediator(peer, Optional.of(offer)));
+        service.setIsTradeWithPeer((tradeId, userProfileId) -> false);
     }
 
     private BisqEasyOpenTradeMessage messageToMediator(UserProfile sender, Optional<BisqEasyOffer> bisqEasyOffer) {

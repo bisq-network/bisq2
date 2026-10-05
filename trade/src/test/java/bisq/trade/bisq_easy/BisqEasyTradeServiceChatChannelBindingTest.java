@@ -22,25 +22,24 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.common.util.StringUtils;
-import bisq.contract.ContractService;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.security.SecurityService;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
-import java.security.GeneralSecurityException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiPredicate;
 
+import static bisq.trade.bisq_easy.BisqEasyTakeOfferRequestTestFixtures.makerAcceptsTakeOfferRequests;
+import static bisq.trade.bisq_easy.BisqEasyTakeOfferRequestTestFixtures.takeOfferRequest;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.buyerAsTakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.channel;
@@ -52,9 +51,13 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.sellerAsMakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userIdentity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -181,8 +184,8 @@ class BisqEasyTradeServiceChatChannelBindingTest {
     }
 
     @Test
-    void mismatchingChannelExistingWhenMakerTradeIsCreatedFailsTrade() throws GeneralSecurityException {
-        when(serviceProvider.getIdentityService().findAnyIdentityById(makerIdentity.getId())).thenReturn(Optional.of(makerIdentity));
+    void mismatchingChannelExistingWhenMakerTradeIsCreatedFailsTrade() {
+        makerAcceptsTakeOfferRequests(serviceProvider, makerIdentity, offer);
         service.initialize();
         BisqEasyContract contract = trade.getContract();
         // The taker's first chat message arrived before the take offer request and created the maker's channel.
@@ -191,20 +194,42 @@ class BisqEasyTradeServiceChatChannelBindingTest {
                 userProfile(takerIdentity.getNetworkId()),
                 Optional.empty()));
 
-        service.onMessage(takeOfferRequest(contract));
+        service.onMessage(takeOfferRequest(trade.getId(), takerIdentity, contract));
 
         BisqEasyTrade makerTrade = service.findTrade(trade.getId()).orElseThrow();
         assertEquals(BisqEasyTradeState.FAILED, makerTrade.getState());
         assertEquals(TradeProtocolFailure.CHANNEL_DATA_MISMATCH, makerTrade.getTradeProtocolFailure());
     }
 
-    private BisqEasyTakeOfferRequest takeOfferRequest(BisqEasyContract contract) throws GeneralSecurityException {
-        return new BisqEasyTakeOfferRequest(StringUtils.createUid(),
-                trade.getId(),
-                BisqEasyProtocol.VERSION,
-                takerIdentity.getNetworkId(),
-                makerNetworkId,
-                contract,
-                new ContractService(mock(SecurityService.class)).signContract(contract, takerIdentity.getKeyBundle().getKeyPair()));
+    @Test
+    void chatChannelIsCreatedOnlyForATradeWithThatPeer() {
+        BisqEasyOpenTradeChannelService channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
+        service.getPersistableStore().addTrade(trade);
+        service.initialize();
+
+        ArgumentCaptor<BiPredicate<String, String>> isTradeWithPeer = ArgumentCaptor.captor();
+        verify(channelService).setIsTradeWithPeer(isTradeWithPeer.capture());
+        assertTrue(isTradeWithPeer.getValue().test(trade.getId(), makerNetworkId.getId()));
+        assertFalse(isTradeWithPeer.getValue().test(trade.getId(), takerIdentity.getNetworkId().getId()));
+        assertFalse(isTradeWithPeer.getValue().test("unknownTradeId", makerNetworkId.getId()));
+        verify(channelService).processPendingMessages(trade.getId());
     }
+
+    @Test
+    void pendingChatMessagesAreProcessedWhenMakerTradeIsCreated() {
+        BisqEasyOpenTradeChannelService channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
+        makerAcceptsTakeOfferRequests(serviceProvider, makerIdentity, offer);
+        service.initialize();
+        AtomicBoolean tradeStoredWhenProcessing = new AtomicBoolean();
+        doAnswer(invocation -> {
+            tradeStoredWhenProcessing.set(service.findTrade(invocation.getArgument(0)).isPresent());
+            return null;
+        }).when(channelService).processPendingMessages(anyString());
+
+        service.onMessage(takeOfferRequest(trade.getId(), takerIdentity, trade.getContract()));
+
+        verify(channelService).processPendingMessages(trade.getId());
+        assertTrue(tradeStoredWhenProcessing.get());
+    }
+
 }
