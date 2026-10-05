@@ -55,7 +55,7 @@ public class BisqEasyConfirmBtcSentEventHandler extends BisqEasyTradeEventHandle
         send(new BisqEasyConfirmBtcSentMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 paymentProof));
     }

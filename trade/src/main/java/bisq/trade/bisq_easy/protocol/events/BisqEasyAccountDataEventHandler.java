@@ -55,7 +55,7 @@ public class BisqEasyAccountDataEventHandler extends BisqEasyTradeEventHandlerAs
         send(new BisqEasyAccountDataMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 paymentAccountData,
                 trade.getOffer()));

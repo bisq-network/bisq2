@@ -43,7 +43,7 @@ public class BisqEasyCancelTradeEventHandler extends BisqEasyTradeEventHandlerAs
         send(new BisqEasyCancelTradeMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId()));
     }
 }

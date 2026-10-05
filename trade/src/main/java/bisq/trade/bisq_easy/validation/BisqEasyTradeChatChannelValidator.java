@@ -50,7 +50,9 @@ public final class BisqEasyTradeChatChannelValidator {
         if (!channel.getBisqEasyOffer().equals(trade.getOffer())) {
             return Optional.of("The offer of the trade chat channel does not match the offer of the contract. tradeId=" + trade.getId());
         }
-        // A user profile can change its nick name, terms and statement, so mediators are compared by network ID.
+        // A user profile can change its terms and statement, so mediators are not compared by value. The whole network
+        // ID is compared, including the addresses, because the chat sends the messages for the mediator to the addresses
+        // of the channel's copy (docs/specifications/user/identity-by-key.md, rule 4).
         Optional<NetworkId> channelMediator = channel.getMediator().map(UserProfile::getNetworkId);
         Optional<NetworkId> contractMediator = trade.getContract().getMediator().map(UserProfile::getNetworkId);
         if (!channelMediator.equals(contractMediator)) {
