@@ -182,47 +182,52 @@ class MailboxMetaDataTest {
         assertEquals(metaDataOfUnknownType.toProto(false), mailboxData.toProto(false).getMetaData());
     }
 
-    // No version keeps the received metaData, and no hash contains it, also not version 0
+    // No version keeps the received metaData, and no hash contains it
     @Test
-    void mailboxDataOfVersion0CarriesTheRegisteredMetaData() throws UnresolvableProtobufException {
+    void mailboxDataOfEveryVersionCarriesTheRegisteredMetaData() throws UnresolvableProtobufException {
         MailboxData registered = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
-        bisq.network.protobuf.MailboxData forgedProto = new MailboxData(FORGED_META_DATA,
-                registered.getConfidentialMessage()).toProto(false).toBuilder()
-                .setVersion(0)
-                .build();
+        for (int version = 1; version <= 3; version++) {
+            bisq.network.protobuf.MailboxData forgedProto = new MailboxData(FORGED_META_DATA,
+                    registered.getConfidentialMessage()).toProto(false).toBuilder()
+                    .setVersion(version)
+                    .build();
 
-        MailboxData mailboxData = MailboxData.fromProto(forgedProto);
+            MailboxData mailboxData = MailboxData.fromProto(forgedProto);
 
-        //noinspection deprecation
-        assertEquals(AckMessage.META_DATA.toProto(false), mailboxData.toProto(false).getMetaData());
-        assertArrayEquals(registered.serializeForHash(), mailboxData.serializeForHash());
+            //noinspection deprecation
+            assertEquals(AckMessage.META_DATA.toProto(false), mailboxData.toProto(false).getMetaData());
+            assertArrayEquals(registered.serializeForHash(), mailboxData.serializeForHash());
+        }
     }
 
-    // Version 0 is the format of releases before the version field existed. No node signs it with signature V2.
+    // Version 0 is the format of releases before the version field existed. Since v2.1.0, nodes send version 1.
     @Test
-    void requestWithSignatureV2AndVersion0IsRejected() throws GeneralSecurityException, UnresolvableProtobufException {
-        MailboxData mailboxDataOfVersion0 = MailboxData.fromProto(new MailboxData(AckMessage.META_DATA,
+    void mailboxDataAndRemoveRequestOfVersion0AreRejected()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        bisq.network.protobuf.MailboxData mailboxDataProto = new MailboxData(AckMessage.META_DATA,
                 createConfidentialMessage(senderKeyPair)).toProto(false).toBuilder()
                 .setVersion(0)
-                .build());
-        assertThrows(IllegalArgumentException.class,
-                () -> AddMailboxRequest.from(mailboxDataOfVersion0, senderKeyPair, receiverKeyPair.getPublic()));
+                .build();
+        assertThrows(UnresolvableProtobufException.class, () -> MailboxData.fromProto(mailboxDataProto));
 
         bisq.network.protobuf.RemoveMailboxRequest removeProto = createRemoveMailboxRequest().toValueProto(false)
                 .toBuilder()
                 .setVersion(0)
                 .build();
         assertThrows(UnresolvableProtobufException.class, () -> RemoveMailboxRequest.fromProto(removeProto));
+        assertThrows(UnresolvableProtobufException.class,
+                () -> RemoveMailboxRequest.fromProto(removeProto.toBuilder().clearSignatureV2().build()));
     }
 
-    // Without signature V2, version 0 still parses. The receiver uses the registered MetaData and the policy value.
+    // A remove request of nodes up to 2.1.13 has version 1 and no signature V2. The receiver uses the registered
+    // MetaData and the policy value.
     @Test
-    void removeRequestOfVersion0WithoutSignatureV2UsesTheRegisteredMetaData()
+    void removeRequestOfAnEarlierVersionUsesTheRegisteredMetaData()
             throws GeneralSecurityException, UnresolvableProtobufException {
         //noinspection deprecation
         RemoveMailboxRequest removeRequest = RemoveMailboxRequest.fromProto(createRemoveMailboxRequest()
                 .toValueProto(false).toBuilder()
-                .setVersion(0)
+                .setVersion(1)
                 .clearSignatureV2()
                 .setMetaData(FORGED_META_DATA.toProto(false))
                 .build());

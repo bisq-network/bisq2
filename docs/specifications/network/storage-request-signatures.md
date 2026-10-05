@@ -51,11 +51,13 @@ signature was defined.
    layout is a protocol change.
 5. Request version 2 is the first version with signature V2. The add requests carry a `version` field since v2.1.14.
    A request of an earlier version has version 0 (add requests) or 1 (remove and refresh requests).
-6. A request with signature V2 must not have version 0, and an `AddMailboxRequest` with signature V2 must not contain
-   `MailboxData` of version 0. Parsing rejects such a request.
+6. A request with signature V2 must not have version 0. The remove and refresh requests and `MailboxData` must have
+   version 1 or higher, also without signature V2. Parsing rejects a request which breaks this rule.
 
-   Reason: version 0 is the format of releases before the version field existed. Every node which signs with
-   signature V2 sets version 2, so such a request comes from no supported sender.
+   Reason: version 0 is the format of releases before the version field existed. Since v2.1.0, nodes send version 1
+   for the remove and refresh requests and for `MailboxData`, without signature V2. The add requests carry a version
+   since v2.1.14. Every node which signs with signature V2 sets version 2. So such a request comes from no supported
+   sender.
 
 | Request | Fields which signature V2 covers, besides the tag |
 | --- | --- |

@@ -113,8 +113,10 @@ requests as well, so these removals give it no further way to fill the store.
 
   Reason: `metaData` is derived from the class name; it carries no information of its own. Versions 1 to 3, which
   supported nodes send, already left it out of the hash. Version 0 is the format of releases before the version field
-  existed and is no longer in use, and versions above 3 are not used. Leaving the field out of the hash in every version
-  means that no version lets a relay change a hash input without changing the request's signed content.
+  existed, and parsing rejects it (rule 6 of
+  [`storage-request-signatures.md`](storage-request-signatures.md#requirements-for-signature-v2)). Leaving the field
+  out of the hash in every version means that no version lets a relay change a hash input without changing the
+  request's signed content.
 - The class name of `metaData` must equal `className`. Parsing rejects a message which breaks this rule. For a
   registered class name the replacement above guarantees it; the rule matters for class names which this node does not
   know.
