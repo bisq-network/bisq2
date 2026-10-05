@@ -12,8 +12,9 @@ The mediator accepts a request only when:
 - the requester and the peer are the maker and the taker of the contract, in either order, by network ID;
 - the contract's mediator is the receiving mediator, and neither trader is the mediator;
 - the requester has fewer than ten open cases for other trades, counting cases the requester is on record for as the other trader;
-- while the mediator keeps a case of the trade, each trader may request once, whether or not the mediator's channel still exists, and a request must name the same two traders as the trade's cases;
-- when the mediator's channel for the trade exists, it must hold the two traders; the channel's offer is not compared.
+- while the mediator keeps a case of the trade, each trader may request once, whether or not the mediator's channel still exists, and a request must name the same two traders as the trade's cases.
+
+The checks do not look at the mediator's channel of the trade. The chat service decides which channel the mediator uses, see the section "Channel on the mediator's node" in [trade chat channel binding](../trade/chat-channel-binding.md). When the chat service keeps the channel of another identity of the mediator's node, the mediator ignores the request.
 
 ## Forwarded messages
 
