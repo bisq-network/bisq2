@@ -69,6 +69,8 @@ the key which signed the message, the sender key. Before it asks the Bisq 1 brid
 1. The profile ID of the request is the hash of the sender key. So only the owner of a profile can register or cancel
    a role of the profile.
 2. The key of the network ID of the request is the sender key. The role data contains this network ID.
+3. The authorized public key of the request is the sender key, hex encoded. The role data contains this key, and it
+   authorizes the data of the role, for example the alerts of a security manager.
 
 Reasons:
 
@@ -78,9 +80,14 @@ Reasons:
   owner of a profile could send one registration with the network IDs of other keys, and each of them would become a
   separate role record. Rule 2 limits the network IDs of a registration to the key of the profile. See
   [Open points](#open-points) for the variants which remain.
+- Rule 3: the identity of a registration contains the authorized key, and the Bisq 1 bond signature covers only the
+  profile ID. Without rule 3, the holder of a role could register the same bond again with another authorized key and
+  get another role record. A ban names one exact record, so a banned security manager or moderator could come back
+  with a new key, and the holder of a bond for an oracle node role could name another key in its role record.
 
-Compatibility: released clients (since 2.0.0) send a registration with the key pair of the selected profile, and the
-network ID of the request is the network ID of this key pair. So oracle nodes accept their requests.
+Compatibility: released clients (since 2.0.0) send a registration with the key pair of the selected profile. The
+network ID of the request is the network ID of this key pair, and the authorized public key is the key of this profile
+(`BondedRolesRegistrationController`, also for node roles). So oracle nodes accept their requests.
 
 ## Addresses of node roles
 
@@ -299,8 +306,9 @@ responsible for removing that invalid registration.
 - **One registration, several role records.** The identity of a registration leaves out the network ID and the
   addresses of a node. The oracle node still persists and publishes each request with other addresses as a separate
   registration and role record. The selection of a mediator counts each record, and a ban names one exact record, so
-  a banned role can come back with other addresses. Rule 2 of [Sender of a registration](#sender-of-a-registration)
-  limits the variants to the key of the profile, but not their addresses.
+  a banned role can come back with other addresses. Rules 2 and 3 of
+  [Sender of a registration](#sender-of-a-registration) limit the variants to the key of the profile, but not their
+  addresses.
   - What would remove it: the oracle node keeps one record per registration identity. A new variant replaces the
     published record of the earlier one, and the oracle node publishes no variant of a banned record.
   - Decision needed: which identity a ban covers, and whether a new variant replaces the earlier record.
