@@ -46,6 +46,8 @@ message, so they cannot limit the memory which these steps need.
      is the store of witness bindings of the oracle node, which must not lose a binding (see
      [`../reputation/account-age.md`](../reputation/account-age.md#persisted-request-compatibility)).
    - A connection drops a message which the node cannot parse, and keeps the connection open (rule 6).
+   - A peer exchange message skips a peer which the node cannot parse, and keeps the other peers (see
+     [`peer-exchange.md`](peer-exchange.md)). The peers are reports of other nodes, which the sender only relays.
    - A mediation request, an arbitration request and a message with the data of a dispute case skip a chat message
      which the node cannot parse, and keep the other chat messages. The trade peers created these chat messages. A
      node of an earlier version does not check the rules of this version when it receives a chat message, and it puts
