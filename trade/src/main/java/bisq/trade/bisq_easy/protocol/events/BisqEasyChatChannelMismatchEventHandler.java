@@ -52,7 +52,7 @@ public class BisqEasyChatChannelMismatchEventHandler extends BisqEasyTradeEventH
         send(new BisqEasyReportErrorMessage(createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 truncate(errorMessage, MAX_LENGTH_ERROR_MESSAGE),
                 "",

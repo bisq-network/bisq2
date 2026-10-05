@@ -37,6 +37,7 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.beans.InvalidationListener;
 import javafx.collections.transformation.SortedList;
 import javafx.stage.Stage;
@@ -48,7 +49,6 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 import static bisq.chat.ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqEasyMediatorController implements Controller {
@@ -122,13 +122,9 @@ public class BisqEasyMediatorController implements Controller {
                         // In case we found an existing channel at mediatorFindOrCreatesChannel the mediator field could be empty
                         return false;
                     }
-                    try {
-                        checkArgument(channel.getTraders().size() == 2);
-                        checkArgument(channel.getBisqEasyOffer().equals(contract.getOffer()));
-                        checkArgument(channel.getMediator().orElseThrow().equals(contract.getMediator().orElseThrow()));
-                    } catch (IllegalArgumentException e) {
+                    if (!isChannelMatchingContract(channel, contract)) {
                         log.error("Validation of channel properties and contract properties failed. " +
-                                "channel={}; contract={}", channel, contract, e);
+                                "channel={}; contract={}", channel, contract);
                         return false;
                     }
                     return true;
@@ -268,6 +264,18 @@ public class BisqEasyMediatorController implements Controller {
                 selectionService.selectChannel(model.getListItems().getSortedList().get(0).getChannel());
             }
         });
+    }
+
+    // The case list shows a mediation case only if the mediator's channel of the trade matches the contract of the
+    // mediation request. The caller has checked that both have a mediator. The mediator's node creates the channel with
+    // the mediator's current profile, while the contract holds the profile which the taker saw when it took the offer.
+    // A profile can change its terms, its statement and the addresses of its network ID, so the mediators are compared
+    // by their profile IDs, the hash of their key. See docs/specifications/user/identity-by-key.md.
+    @VisibleForTesting
+    static boolean isChannelMatchingContract(BisqEasyOpenTradeChannel channel, BisqEasyContract contract) {
+        return channel.getTraders().size() == 2 &&
+                channel.getBisqEasyOffer().equals(contract.getOffer()) &&
+                channel.getMediator().map(UserProfile::getId).equals(contract.getMediator().map(UserProfile::getId));
     }
 
     private BisqEasyOpenTradeChannel findOrCreateChannel(BisqEasyMediationRequest bisqEasyMediationRequest,

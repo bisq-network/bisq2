@@ -77,6 +77,7 @@ import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -120,6 +121,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     private final PendingTradeMessages<BisqEasyTradeMessage> pendingMessages = new PendingTradeMessages<>();
+    // The network layer delivers messages on several threads. The lock makes the check for an existing trade and the
+    // adding of a new trade of a take offer request one step.
+    @Getter(AccessLevel.NONE)
+    private final Object tradeCreationLock = new Object();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
@@ -232,9 +237,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
 
     private void handleBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
-        BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
-        BisqEasyProtocol protocol = makerCreatesProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
-        handleBisqEasyTradeMessage(message, protocol);
+        makerCreatesProtocol(message).ifPresent(protocol -> handleBisqEasyTradeMessage(message, protocol));
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
@@ -466,23 +469,49 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private BisqEasyProtocol makerCreatesProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
-        // We only create the data required for the protocol creation.
-        // Verification will happen in the BisqEasyTakeOfferRequestHandler
+    // We only create the data required for the protocol creation. The BisqEasyTakeOfferRequestHandler verifies the
+    // request and answers a rejection with an error report to the taker. A request which cannot create a trade of ours
+    // is dropped here without an answer: the sender controls the conditions, so they must not throw.
+    private Optional<BisqEasyProtocol> makerCreatesProtocol(BisqEasyTakeOfferRequest message) {
+        BisqEasyContract contract = message.getBisqEasyContract();
         BisqEasyOffer offer = contract.getOffer();
-        boolean isBuyer = offer.getMakersDirection().isBuy();
-        Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
-        String tradeId = bisqEasyTrade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
-        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
+        NetworkId sender = message.getSender();
+        NetworkId receiver = message.getReceiver();
+        // A party is identified by its key. The addresses of our network ID can have changed since we published the
+        // offer, for example when we added a transport. The layer for confidential messages has bound the key of the
+        // receiver to the key with which we decrypted the request, so the request reached the key of the offer's maker.
+        String makerId = offer.getMakerNetworkId().getId();
+        if (!receiver.getId().equals(makerId)) {
+            logDroppedTakeOfferRequest(message, "it is not addressed to the maker of its offer", message.getTradeId());
+            return Optional.empty();
+        }
+        Optional<Identity> myIdentity = identityService.findAnyIdentityById(makerId);
+        if (myIdentity.isEmpty()) {
+            logDroppedTakeOfferRequest(message, "its offer is not one of our offers", message.getTradeId());
+            return Optional.empty();
+        }
 
-        persistableStore.addTrade(bisqEasyTrade);
+        boolean isBuyer = offer.getMakersDirection().isBuy();
+        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity.get(), offer, sender, receiver);
+        String tradeId = bisqEasyTrade.getId();
+        synchronized (tradeCreationLock) {
+            if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
+                logDroppedTakeOfferRequest(message, "a trade with its trade ID exists already", tradeId);
+                return Optional.empty();
+            }
+            persistableStore.addTrade(bisqEasyTrade);
+        }
         persist();
 
-        maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
+        maybeAddPeerToContactList(sender.getId(), myIdentity.get().getId());
 
-        return createAndAddTradeProtocol(bisqEasyTrade);
+        return Optional.of(createAndAddTradeProtocol(bisqEasyTrade));
+    }
+
+    // The request is data of its sender, so the log names only the message type and the sanitized trade ID.
+    private static void logDroppedTakeOfferRequest(BisqEasyTakeOfferRequest message, String reason, String tradeId) {
+        log.warn("We drop a {} because {}. tradeId={}",
+                message.getClass().getSimpleName(), reason, StringUtils.sanitizeForLog(tradeId));
     }
 
     private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade) {
