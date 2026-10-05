@@ -36,8 +36,10 @@ The sender also chooses the channel ID of a message. Private chats between two u
 (`CommonPublicChatMessage`) migrate the channel IDs of older versions to current channels when they
 read the ID (`TwoPartyPrivateChatChannel.Migration`, `SubDomain`). A received message whose channel
 ID cannot be migrated is ignored in the same place as a message of an unsupported type
-(`ChatChannelService.isValid`, check `ChatMessage.hasValidChannelId`). The chat never reads the
-channel ID of such a message, also not when the message expires, so the message does not stop the
+(`ChatChannelService.isValid`, check `ChatMessage.hasValidChannelId`). Reading the channel ID of
+such a message does not fail: the message keeps the ID which it carries. Code which handles a
+message before the chat checks it reads the channel ID as well, for example the network layer when
+it copies its set of received messages into a hash-based set. So the message does not stop the
 processing of other messages, for example when a client starts. The message is not rejected at
 parsing, because a newer version can add channels whose IDs this version cannot migrate.
 
