@@ -23,7 +23,15 @@ oracle must persist a witness binding before publishing the corresponding author
 a restart could forget the binding and allow the same witness to authorize another profile.
 
 Failure messages identify the store path and cause. They must not print the store contents, which
-can include private keys and account data.
+can include private keys and account data. The node logs a failed write where it happens, once, as
+an error with the store path. For a file system error the log contains its message, which names a
+path and the error of the operating system. For another cause, for example a failed serialization,
+it contains only the type and the stack trace, because the message can contain values of the store.
+
+Reason: a persistence client reports a failed asynchronous write only as the result `false`, without
+the cause, and most callers do not read the result. Without the log entry, a node with a full disk
+runs on with data which it does not save, and nothing shows why the data is missing after the next
+start.
 
 These rules do not change the persisted format. They describe completion of a write, not a
 guarantee of durability against loss of power or storage hardware failure.

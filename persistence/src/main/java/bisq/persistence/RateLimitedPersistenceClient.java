@@ -76,7 +76,12 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     private void persistOnShutdown() {
         if (dropped) {
             dropped = false;
-            getPersistence().persist(getPersistableStore().getClone());
+            try {
+                getPersistence().persist(getPersistableStore().getClone());
+            } catch (RuntimeException e) {
+                // Persistence.persist has logged the failure without store content. The default handler of the
+                // shutdown hook thread would print the messages of all causes.
+            }
         }
     }
 }
