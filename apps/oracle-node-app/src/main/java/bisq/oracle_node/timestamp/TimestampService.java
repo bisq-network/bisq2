@@ -77,7 +77,7 @@ public class TimestampService extends RateLimitedPersistenceClient<TimestampStor
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        networkService.addConfidentialMessageListenerAndDeliverProcessedMessages(this);
+        networkService.subscribeToConfidentialMessages(this);
         authorizedBondedRolesService.addListener(this);
 
         // We do not republish the AuthorizedTimestampData we have in our store as we rely on the user to request again

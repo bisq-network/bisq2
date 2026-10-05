@@ -162,7 +162,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             }
         });
 
-        networkService.addConfidentialMessageListenerAndDeliverProcessedMessages(this);
+        networkService.subscribeToConfidentialMessages(this);
 
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 

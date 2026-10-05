@@ -68,7 +68,7 @@ final class ProcessedConfidentialMessages {
                                     List<ReceivedMessage> receivedMessages) throws Exception {
         ConfidentialMessageService confidentialMessageService = decrypt(receiver, receivedMessages);
         when(networkService.getConfidentialMessageServices()).thenReturn(Set.of(confidentialMessageService));
-        doCallRealMethod().when(networkService).addConfidentialMessageListenerAndDeliverProcessedMessages(any());
+        doCallRealMethod().when(networkService).subscribeToConfidentialMessages(any());
         // The service nodes add the listener to the confidential message services as well
         doAnswer(invocation -> {
             confidentialMessageService.addListener(invocation.getArgument(0));

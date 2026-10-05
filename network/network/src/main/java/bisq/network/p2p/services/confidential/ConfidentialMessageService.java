@@ -97,7 +97,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<EnvelopePayloadMessageAndPublicKey> processedEnvelopePayloadMessagesAndPublicKeys = new CopyOnWriteArraySet<>();
     // Held while a decrypted message is added to the processed messages and passed to the listeners, and while
-    // addListenerAndDeliverProcessedMessages adds a listener and copies the processed messages. So such a listener
+    // subscribe adds a listener and copies the processed messages. So such a listener
     // receives each processed message exactly once: in the copy or as a new message.
     private final Object processedMessagesLock = new Object();
     private volatile boolean isShutdownInProgress;
@@ -406,7 +406,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
      * is logged, and the other calls still happen. If the listener was added before, nothing happens.
      * See docs/specifications/network/startup-replay.md.
      */
-    public void addListenerAndDeliverProcessedMessages(Listener listener) {
+    public void subscribe(Listener listener) {
         List<EnvelopePayloadMessageAndPublicKey> processedMessages;
         synchronized (processedMessagesLock) {
             if (!listeners.add(listener)) {
@@ -422,9 +422,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         listeners.remove(listener);
     }
 
-    // Services which start use NetworkService.addConfidentialMessageListenerAndDeliverProcessedMessages instead of
-    // this copy. The copy is hash-based, so a message whose hashCode throws makes it fail. A message which the node
-    // processes between this copy and the registration of a listener is lost for the listener or reaches it twice.
+    // Services which start use NetworkService.subscribeToConfidentialMessages instead of this copy. The copy is
+    // hash-based, so a message whose hashCode throws makes it fail. A message which the node processes between this
+    // copy and the registration of a listener is lost for the listener or reaches it twice.
     public Set<EnvelopePayloadMessage> getProcessedEnvelopePayloadMessages() {
         return processedEnvelopePayloadMessagesAndPublicKeys.stream()
                 .map(EnvelopePayloadMessageAndPublicKey::envelopePayloadMessage)
