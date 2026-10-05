@@ -55,8 +55,10 @@ public final class BisqEasyMediationContractIdentityChecks {
     }
 
     // A forged message from the mediator's own profile would render as the mediator's own words, without any mark.
+    // By key, as for the parties: a copy of the mediator's profile can carry other addresses.
     public static boolean isMediatorAParty(UserProfile requester, UserProfile peer, NetworkId receiver) {
-        return requester.getNetworkId().equals(receiver) || peer.getNetworkId().equals(receiver);
+        String mediatorId = receiver.getId();
+        return requester.getNetworkId().getId().equals(mediatorId) || peer.getNetworkId().getId().equals(mediatorId);
     }
 
     public static boolean hasMatchingContractMediator(Optional<UserProfile> mediator,
