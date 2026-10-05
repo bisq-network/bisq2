@@ -22,6 +22,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Set;
+
 @Getter
 @EqualsAndHashCode
 @ToString
@@ -30,12 +32,15 @@ public final class TransactionOutput {
     private final long value;
     private final String address;
     private final byte[] scriptPubKey;
+    private final boolean mine;
 
-    public static TransactionOutput fromProto(bisq.wallet.protobuf.TransactionOutput output) {
+    public static TransactionOutput fromProto(bisq.wallet.protobuf.TransactionOutput output, Set<String> ownAddresses) {
+        String address = output.getAddress();
         return new TransactionOutput(
                 output.getValue(),
-                output.getAddress(),
-                output.getScriptPubKey().toByteArray()
+                address,
+                output.getScriptPubKey().toByteArray(),
+                !address.isEmpty() && ownAddresses.contains(address)
         );
     }
 }
