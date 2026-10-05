@@ -39,7 +39,7 @@ public class TorControlReader implements AutoCloseable {
                 String line;
                 while (!isStopped && (line = bufferedReader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
 
-                    log.info("Received reply from Tor control server: {}", line);
+                    log.info("Received reply from Tor control server: {}", TorControlLogFormat.toLoggableReply(line));
                     if (isEventWithCode_650(line)) {
                         String[] parts = line.split(" ");
 
@@ -66,7 +66,7 @@ public class TorControlReader implements AutoCloseable {
                         }
 
                         if (!parsedEvent) {
-                            log.info("Unknown Tor event: {}", line);
+                            log.info("Unknown Tor event: {}", TorControlLogFormat.toLoggableReply(line));
                         }
 
                     } else {
