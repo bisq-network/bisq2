@@ -307,16 +307,7 @@ class ReceivedChatMessageTypeTest {
             service.initialize();
         }
 
-        // EXPIRED_MESSAGES_INDICATOR has no protobuf value, so no message of this type can be serialized or received
-        @ParameterizedTest
-        @EnumSource(value = ChatMessageType.class, names = {"TEXT", "EXPIRED_MESSAGES_INDICATOR"},
-                mode = EnumSource.Mode.EXCLUDE)
-        void messageOfUnsupportedTypeIsNotAdded(ChatMessageType type) {
-            service.onAuthenticatedDataAdded(new DefaultAuthenticatedData(message(type)));
-
-            assertTrue(channel.getChatMessages().isEmpty());
-        }
-
+        // A public message of another type fails at parsing (PublicChatMessageTypeTest)
         @Test
         void textMessageIsAdded() {
             CommonPublicChatMessage message = message(TEXT);

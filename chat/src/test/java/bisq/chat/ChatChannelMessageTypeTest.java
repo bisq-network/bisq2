@@ -95,8 +95,9 @@ class ChatChannelMessageTypeTest {
         assertAddedOnlyIfSupported(EnumSet.of(TEXT, LEAVE, PROTOCOL_LOG_MESSAGE), channel, muSigTradeMessage(channel, type));
     }
 
+    // A public message of another type cannot be created (PublicChatMessageTypeTest)
     @ParameterizedTest
-    @EnumSource(ChatMessageType.class)
+    @EnumSource(value = ChatMessageType.class, names = {"TEXT", "EXPIRED_MESSAGES_INDICATOR"})
     void publicChannelHoldsOnlyText(ChatMessageType type) {
         CommonPublicChatChannel channel = new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, SubDomain.DISCUSSION_BISQ);
 
@@ -104,7 +105,7 @@ class ChatChannelMessageTypeTest {
     }
 
     @ParameterizedTest
-    @EnumSource(ChatMessageType.class)
+    @EnumSource(value = ChatMessageType.class, names = {"TEXT", "EXPIRED_MESSAGES_INDICATOR"})
     void offerbookChannelHoldsOnlyText(ChatMessageType type) {
         BisqEasyOfferbookChannel channel = new BisqEasyOfferbookChannel(new Market("BTC", "EUR", "Bitcoin", "Euro"));
 
