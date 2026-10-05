@@ -86,15 +86,37 @@ class DependencyVerificationTest(unittest.TestCase):
         with (self.root / "build.gradle").open("a") as script:
             script.write(f'tasks.register("cleanAll", Delete) {{ delete({build_dirs}) }}\n')
         ET.ElementTree(metadata).write(self.metadata, encoding="utf-8", xml_declaration=True)
-        self.write_allowlist("1")
+        self.extra_allowlist_lines = []
+        self.write_allowlist()
 
-    def write_allowlist(self, version):
-        lines = []
+    def write_allowlist(self):
+        lines = list(self.extra_allowlist_lines)
         for build in BUILDS:
             name = build.replace("/", "_") or "root"
-            for extension in ("jar", "pom"):
-                lines.append(f"fixture:{name}:{version}\t{name}-{version}.{extension}\tLocal test fixture")
+            for version in ("1", "2"):
+                for extension in ("jar", "pom"):
+                    lines.append(f"fixture:{name}:{version}\t{name}-{version}.{extension}\tLocal test fixture")
         (self.gradle / "dependency-checksum-fallback-allowlist.tsv").write_text("\n".join(sorted(lines)) + "\n")
+
+    def add_metadata_artifact(self, name, artifact, reason=None, pgp=None, checksum="sha256"):
+        tree = ET.parse(self.metadata)
+        components = tree.getroot().find("components")
+        component = ET.SubElement(components, "component", group="fixture", name=name, version="1")
+        entry = ET.SubElement(component, "artifact", name=artifact)
+        if pgp:
+            ET.SubElement(entry, "pgp", value=pgp)
+        attributes = {"value": "0" * {"md5": 32, "sha1": 40, "sha256": 64, "sha512": 128}[checksum]}
+        if reason:
+            attributes["reason"] = reason
+        ET.SubElement(entry, checksum, **attributes)
+        tree.write(self.metadata, encoding="utf-8", xml_declaration=True)
+
+    def set_reason(self, artifact, reason):
+        tree = ET.parse(self.metadata)
+        for entry in tree.getroot().iter("artifact"):
+            if entry.get("name") == artifact:
+                entry.find("sha256").set("reason", reason)
+        tree.write(self.metadata, encoding="utf-8", xml_declaration=True)
 
     def run_gradle(self, *arguments, success=True):
         wrapper = REPOSITORY / ("gradlew.bat" if os.name == "nt" else "gradlew")
@@ -146,11 +168,10 @@ class DependencyVerificationTest(unittest.TestCase):
         failure = self.run_gradle("check", "-x", ":apps:desktop:" + RESOLVER, success=False)
         self.assertIn("Missing dependency verification inventory", failure)
 
-        output = self.run_gradle("check", "-PauditVersion=2", success=False)
-        self.assertIn("Dependency signature policy failed", output)
+        output = self.run_gradle("check", "-PauditVersion=2")
+        self.assertEqual(output.count("Resolved and verified"), len(BUILDS), output)
         for name, inventory in self.inventory_files.items():
             self.assertIn(f"direct\tfixture:{name}:2\n", inventory.read_text())
-        self.write_allowlist("2")
         self.assert_all_reused(self.run_gradle("check", "-PauditVersion=2"))
 
         for option in ("--refresh-dependencies", "--rerun-tasks", "--write-verification-metadata=sha256"):
@@ -165,6 +186,74 @@ class DependencyVerificationTest(unittest.TestCase):
             {(component.get("name"), component.get("version")) for component in components},
             {(build.replace("/", "_") or "root", "2") for build in BUILDS},
         )
+
+    def test_checksum_fallback_of_unresolved_component_requires_approval(self):
+        # Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms against the metadata.
+        self.add_metadata_artifact("parent", "parent-1.pom", reason="Artifact is not signed")
+        output = self.run_gradle("check", success=False)
+        self.assertIn("Unapproved checksum-only dependency artifacts", output)
+        self.assertIn("fixture:parent:1\tparent-1.pom", output)
+
+        self.extra_allowlist_lines.append("fixture:parent:1\tparent-1.pom\tLocal test fixture")
+        self.write_allowlist()
+        self.run_gradle("check")
+
+    def test_checksum_fallback_for_missing_key_requires_approval(self):
+        self.set_reason("root-1.jar", "A key couldn't be downloaded")
+        self.run_gradle("check")
+
+        self.extra_allowlist_lines.append("fixture:key:1\tkey-1.jar\tLocal test fixture")
+        self.add_metadata_artifact("key", "key-1.jar", reason="A key couldn't be downloaded")
+        self.add_metadata_artifact("failed", "failed-1.jar", reason="PGP signature verification failed!")
+        self.write_allowlist()
+        output = self.run_gradle("check", success=False)
+        self.assertIn("fixture:failed:1\tfailed-1.jar", output)
+        self.assertNotIn("fixture:key:1\tkey-1.jar", output)
+
+    def test_checksum_without_reason_requires_approval_when_no_key_can_verify_it(self):
+        self.add_metadata_artifact("unsigned", "unsigned-1.jar")
+        self.add_metadata_artifact("signed", "signed-1.jar", pgp="0123456789ABCDEF0123456789ABCDEF01234567")
+        self.add_metadata_artifact("trusted", "trusted-1.jar")
+        self.add_metadata_artifact("ignored", "ignored-1.jar", pgp="FEDCBA9876543210FEDCBA9876543210FEDCBA98")
+        self.add_metadata_artifact("other", "other-1.jar")
+        tree = ET.parse(self.metadata)
+        configuration = tree.getroot().find("configuration")
+        ignored_keys = ET.SubElement(configuration, "ignored-keys")
+        ET.SubElement(ignored_keys, "ignored-key", id="76543210FEDCBA98")
+        trusted_keys = ET.SubElement(configuration, "trusted-keys")
+        ET.SubElement(trusted_keys, "trusted-key", id="0123456789ABCDEF0123456789ABCDEF01234567", group="fixture",
+                      name="trusted")
+        ET.SubElement(trusted_keys, "trusted-key", id="0123456789ABCDEF0123456789ABCDEF01234567", group="fixture",
+                      name="other", file="other-1.pom")
+        tree.write(self.metadata, encoding="utf-8", xml_declaration=True)
+        output = self.run_gradle("check", success=False)
+        self.assertIn("fixture:unsigned:1\tunsigned-1.jar", output)
+        self.assertIn("fixture:ignored:1\tignored-1.jar", output)
+        self.assertIn("fixture:other:1\tother-1.jar", output)
+        self.assertNotIn("fixture:signed:1\tsigned-1.jar", output)
+        self.assertNotIn("fixture:trusted:1\ttrusted-1.jar", output)
+
+    def test_checksum_of_any_kind_without_usable_key_requires_approval(self):
+        # Gradle also verifies md5, sha1 and sha512 checksums. An artifact which only such a checksum pins is verified
+        # by that checksum only, as one which a sha256 checksum pins.
+        self.add_metadata_artifact("sha1", "sha1-1.jar", checksum="sha1")
+        self.add_metadata_artifact("md5", "md5-1.jar", checksum="md5")
+        self.add_metadata_artifact("sha512", "sha512-1.jar", checksum="sha512")
+        self.add_metadata_artifact("reason", "reason-1.jar", reason="Artifact is not signed", checksum="sha1",
+                                   pgp="0123456789ABCDEF0123456789ABCDEF01234567")
+        output = self.run_gradle("check", success=False)
+        self.assertIn("fixture:sha1:1\tsha1-1.jar", output)
+        self.assertIn("fixture:md5:1\tmd5-1.jar", output)
+        self.assertIn("fixture:sha512:1\tsha512-1.jar", output)
+        self.assertIn("fixture:reason:1\treason-1.jar", output)
+
+    def test_allowlist_entry_for_signed_artifact_is_stale(self):
+        self.add_metadata_artifact("signed", "signed-1.jar", pgp="0123456789ABCDEF0123456789ABCDEF01234567")
+        self.extra_allowlist_lines.append("fixture:signed:1\tsigned-1.jar\tLocal test fixture")
+        self.write_allowlist()
+        output = self.run_gradle("check", success=False)
+        self.assertIn("Allowlist entries that are no longer checksum-only artifacts", output)
+        self.assertIn("fixture:signed:1\tsigned-1.jar", output)
 
     def test_verification_failure_after_successful_audit(self):
         self.run_gradle("check")
