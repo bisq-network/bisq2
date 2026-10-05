@@ -157,6 +157,27 @@ class AuthenticatedDataSignatureV2Test {
         assertThrows(UnresolvableProtobufException.class, () -> RefreshAuthenticatedDataRequest.fromProto(refreshProto));
     }
 
+    // Version 2 is the first version with signature V2. Add requests of nodes up to 2.1.13 have version 0, the other
+    // requests version 1, all without signature V2.
+    @Test
+    void requestsWithSignatureV2AndVersion1AreRejected() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        assertThrows(IllegalArgumentException.class,
+                () -> fromProto(addRequest.toValueProto(false).toBuilder().setVersion(1).build(), addRequest));
+
+        bisq.network.protobuf.RemoveAuthenticatedDataRequest removeProto = RemoveAuthenticatedDataRequest
+                .from(store, authenticatedData, ownerKeyPair).toValueProto(false).toBuilder()
+                .setVersion(1)
+                .build();
+        assertThrows(UnresolvableProtobufException.class, () -> RemoveAuthenticatedDataRequest.fromProto(removeProto));
+
+        bisq.network.protobuf.RefreshAuthenticatedDataRequest refreshProto = RefreshAuthenticatedDataRequest
+                .from(store, authenticatedData, ownerKeyPair).toValueProto(false).toBuilder()
+                .setVersion(1)
+                .build();
+        assertThrows(UnresolvableProtobufException.class, () -> RefreshAuthenticatedDataRequest.fromProto(refreshProto));
+    }
+
     @Test
     void cutoffDateOfSignatureV1IsTheStartOf2027InUtc() {
         assertEquals(Instant.parse("2027-01-01T00:00:00Z").toEpochMilli(),

@@ -111,6 +111,29 @@ public final class MetaData implements NetworkProto, Canonical {
         }
     }
 
+    // Remove requests, refresh requests and mailbox data carry the deprecated metaData and a version. Since v2.1.0 they
+    // have version 1. Version 0 is the format of releases before the version field existed (see rule 6 of
+    // docs/specifications/network/storage-request-signatures.md).
+    public static void validateVersionOfMetaDataHolder(int version) {
+        if (version < 1) {
+            throw new IllegalArgumentException("The version of data with the deprecated metaData must be at least 1");
+        }
+    }
+
+    // MailboxData, RemoveMailboxRequest and RemoveAuthenticatedDataRequest: nodes up to version 2.1.13 leave metaData
+    // out of serializeForHash() only in versions 1 to 3, and this node in every version. In another version the two
+    // kinds of nodes would compute a different proof of work payload, storage key and preimage of signature V1 for the
+    // same message, and each would close the connection to a relay of the other. Any key pair can create such a
+    // message, also with signature V2, so the rule does not depend on the signatures. From the cutoff date of signature
+    // V1 on, nodes up to 2.1.13 cannot publish data anymore, signature V2 covers the version, and a later release can
+    // raise the version of these classes (see docs/specifications/network/storage-metadata.md).
+    public static void validateVersionForHashOfEarlierVersions(int version) {
+        if (version > 3 && !SignedRequest.isSignatureV2Required(System.currentTimeMillis())) {
+            throw new IllegalArgumentException("Before the cutoff date of signature V1, the version of data with " +
+                    "the deprecated metaData must be at most 3");
+        }
+    }
+
     @Override
     public bisq.network.protobuf.MetaData toProto(boolean serializeForHash) {
         return unsafeToProto(serializeForHash);

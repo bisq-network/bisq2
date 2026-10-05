@@ -49,10 +49,11 @@ public class SignatureValidation {
         }
     }
 
-    // Version 0 is the format of releases before the version field existed. Version 2 is the first version with
-    // signature V2, and every node which signs with signature V2 sets its version. A request with signature V2 and
-    // version 0 therefore comes from no supported sender.
+    // Version 2 is the first version with signature V2, and every node which signs with signature V2 sets version 2.
+    // Add requests of earlier versions have version 0, the other requests version 1. A request with signature V2 and a
+    // version below 2 therefore comes from no supported sender.
     public static void validateVersionOfSignatureV2(byte[] signatureV2, int version) {
-        checkArgument(signatureV2.length == 0 || version != 0, "A request with signature V2 must not have version 0");
+        checkArgument(signatureV2.length == 0 || version >= 2,
+                "A request with signature V2 must have version 2 or higher");
     }
 }

@@ -120,6 +120,7 @@ public final class RefreshAuthenticatedDataRequest implements AuthenticatedDataR
         NetworkDataValidation.validateDate(created);
         SignatureValidation.validateSignatures(signature, signatureV2);
         SignatureValidation.validateVersionOfSignatureV2(signatureV2, version);
+        MetaData.validateVersionOfMetaDataHolder(version);
         MetaData.validateClassName(className);
         // Nodes of earlier versions select the store by the className of metaData
         checkArgument(metaData.getClassName().equals(className), "className of metaData must equal className");
