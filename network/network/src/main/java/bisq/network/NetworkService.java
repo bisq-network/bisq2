@@ -438,6 +438,20 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
         serviceNodesByTransport.addConfidentialMessageListener(listener);
     }
 
+    /**
+     * Adds the listener as addConfidentialMessageListener does, and passes to it the confidential messages which the
+     * node processed before. The listener receives each processed message exactly once, and an exception for one
+     * message does not stop the others (see docs/specifications/network/startup-replay.md). A service uses it when it
+     * starts, because messages, for example from its mailbox, can arrive before it starts.
+     */
+    public void subscribeToConfidentialMessages(ConfidentialMessageService.Listener listener) {
+        // The confidential message services must add the listener first: a service which knows the listener already
+        // does not pass the processed messages to it. The service nodes add the listener to the services again, which
+        // has no effect, and they keep it for removeConfidentialMessageListener.
+        getConfidentialMessageServices().forEach(service -> service.subscribe(listener));
+        addConfidentialMessageListener(listener);
+    }
+
     public void removeConfidentialMessageListener(ConfidentialMessageService.Listener listener) {
         serviceNodesByTransport.removeConfidentialMessageListener(listener);
     }

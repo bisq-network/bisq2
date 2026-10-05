@@ -16,6 +16,36 @@ The service processes each replayed item on its own (`StartupReplay.forEach`). W
 runtime exception, the node logs the type of the item and the exception and continues with the next item. The start of
 the service does not fail because of one item. An `Error`, for example an out of memory error, is not caught.
 
+## Registration of a confidential message listener
+
+A processed message is a confidential message which the node decrypted and checked in this run (rule 4 of
+[Confidential messages](confidential-messages.md)). The node keeps the processed messages in memory until it shuts
+down.
+
+A confidential message listener registers and receives the replay of the processed messages in one step. The private
+chat, the Bisq Easy trade, the Bisq Easy mediator, the mediation request, the moderation and the timestamp service of
+the oracle node do so. For them, these rules apply in addition to the rule above:
+
+- Exactly once: the listener receives each processed message exactly once. It receives the messages which the node
+  processed before the registration in the replay, and each later message as a new message. A message which the node
+  processes while the listener registers reaches the listener either in the replay or as a new message.
+- Same calls as a new message: the replay passes each message in the same way as a new message, to the listener method
+  for the message alone and to the listener method for the message with the public key of its sender. Each of these
+  calls is processed on its own, as each replayed item in the rule above.
+- Order: the replay passes the messages one after the other, in the order in which the node processed them. It runs in
+  the thread of the registration and ends before the registration returns. A new message can reach the listener at the
+  same time in another thread.
+- No hash codes: the replay copies the processed messages without computing their hash codes.
+
+## Delivery of new messages
+
+The node passes each new confidential message to each confidential message listener (see
+[Confidential messages](confidential-messages.md)) in tasks of its own. A task is a unit of work which the node runs in
+a thread pool. There is one task for the message alone, and one task for the message with the public key of its sender.
+When a listener fails with an exception, only this task is affected. The node logs the exception of the failed task
+with its stack trace. The log entry does not contain the message. The same holds for the other notifications of the
+network layer, for example of new connections.
+
 ## Reasons
 
 - The data comes from other users. A runtime exception while one item is processed, for example from a defect or from
@@ -27,11 +57,55 @@ the service does not fail because of one item. An `Error`, for example an out of
 - Checks of single items stay. For example the chat ignores a message whose channel ID cannot be migrated before it
   reads the ID (see `../chat/message-types.md`). This rule covers what such checks do not cover, for example a reader
   which a later change adds before the check.
+- Exactly once: messages arrive before the services start. The node processes the mailbox messages of its first
+  inventory responses while it starts, and peers can send messages directly. When the node decrypted a mailbox message,
+  it removes the message from the network, and it acknowledges a message which requests an acknowledgement. The sender
+  does not send the message again, so a listener which misses a message never receives it. If the node replayed the
+  earlier messages first and registered the listener after that, a message which the node processes between the two
+  steps would be lost for the listener or reach it twice. With the registration in one step, a listener does not have
+  to recognize a second copy of a message.
+- Same calls as a new message: some services decide with the key of the sender, for example the moderator with the key
+  of the reporter.
+- No hash codes: the hash code of a message from another user runs code of the message class. For example, the hash
+  code of a two party chat message reads its channel ID, and reading a channel ID which cannot be migrated threw until
+  the reading was made total (see `../chat/message-types.md`). A copy into a hash-based set computes the hash codes of
+  all messages before the replay processes the first one. So one such message stopped the replay of all messages and
+  the start of the service, before the rule above could isolate the item. A copy without hashing keeps the replay
+  independent of the hash codes of the received types.
+- Log of a failed task: the task keeps the exception of the listener, and nobody reads it. Without the log entry, a
+  message which a service could not process disappears without a trace. The log entry does not contain the message,
+  because messages carry private data of other users, for example chat texts and payment account data, and users share
+  their log files with support. The message of an exception does not contain received values (rule 7 of
+  [Validation at parsing](validation-at-parsing.md)).
 
 ## Compatibility
 
 The rule does not change the protocol or the storage. An item whose processing failed is not removed. It fails again at
 the next start and is logged again.
+
+The other rules of this specification do not change the protocol or the storage either. They change only how a node
+passes what it received to its services.
+
+A listener which registers in one step receives the earlier messages in the order of processing. Before, the hash-based
+copy defined no order. A new message can now reach such a listener while it still receives the earlier messages. New
+messages already reach the listeners in parallel tasks, so this adds no new kind of concurrency.
+
+## Known limitations
+
+- **Listeners which do not register in one step.** The MuSig trade, mediation and arbitration services replay a
+  hash-based copy of the processed messages and register after the replay. For them, a message which the node
+  processes between the two steps is lost or arrives twice, and a message whose hash code throws stops their whole
+  replay.
+  - Why it remains: the work on MuSig is deferred.
+  - What would remove it: the registration in one step, as for the other services.
+  - Who decides: the developers.
+- **The service of the oracle node for requests of Bisq 1 data receives no replay.** It registers after its connections
+  to the Bisq 1 node are ready. A request which the oracle node processed before that moment is lost for this service.
+  The sender does not send it again: a direct send succeeded, and the node removed a decrypted mailbox message from
+  the network.
+  - Why it remains: receiving these requests changes what the oracle node does at its start, which needs a decision.
+  - What would remove it: the registration in one step, as for the other services.
+  - Who decides: the developers.
 
 ## Not covered
 
