@@ -76,7 +76,8 @@ reputation, account age, signed witness and profile age. A source assigns the da
 derives from the profile ID. The total score of a profile is the sum of the scores of the sources.
 
 1. When the store removes a publication of reputation data, the source removes the data, unless another stored
-   publication carries equal data, for example the publication of another oracle node. A publication which the source
+   publication carries equal data, for example the publication of another oracle node (for the other types of
+   authorized data, see rule 18 of [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md)). A publication which the source
    did not accept, for example one of a key without the oracle node role, removes no data.
 2. After a removal, the source computes the data and the score of the profile again from the data which is still
    published, as a node which starts with this data would. For example, when the oldest profile age of a profile is

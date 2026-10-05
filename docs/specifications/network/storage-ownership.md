@@ -175,6 +175,10 @@ failure therefore affects only a peer which sends a request that no released nod
     entries, the removal or expiry of one of them would remove the data of the owner from the applications. A copy
     would also make data available again which the owner removed.
 
+    Several keys can authorize the same data, for example several oracle nodes the same bonded role. Their entries are
+    separate, and each has its own owner. Applications keep the data while one of these publications remains (rule 18
+    of [`../bonded-roles/authorized-data.md`](../bonded-roles/authorized-data.md#several-publications-of-the-same-data)).
+
 ## Transition
 
 Oracle and seed nodes of earlier versions published data of the following types with the key pair of their network
@@ -323,11 +327,6 @@ Who decides on steps 2 and 3: the developers, together with the operators of the
     is possible.
   - Who decides: the developers, together with the operators of oracle and seed nodes.
 - **Nodes of earlier versions** stay affected by the problem until they update.
-- **Several publications of the same data.** Several oracle nodes can authorize the same data with different authorized
-  keys. Their entries are separate, and each has its own owner. Most applications still remove the data when one of
-  the entries is removed or expires. This is not a question of ownership. It needs applications which keep track of
-  each publication. The bonded role service does this: it keeps a role while another publication of it remains (see
-  [`../bonded-roles/registration.md`](../bonded-roles/registration.md#several-oracle-nodes)).
 
 ## Verification
 

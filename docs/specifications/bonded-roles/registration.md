@@ -61,6 +61,50 @@ mapping checks to an unknown future network-data version. It may continue consum
 understands when the oracle-authorized hash remains compatible; hash-incompatible data fails the
 oracle signature check.
 
+## Addresses of node roles
+
+A **node role** is a bonded role of a node type: seed node, oracle node, explorer node or market price node.
+
+1. The role data of a node role (`AuthorizedBondedRole`) contains the addresses of the node. Role data of a node role
+   without addresses is invalid. A node rejects it when it constructs or decodes it (rule 1 of
+   [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md)). The role data of another role type
+   may leave the addresses out.
+2. The registration request is not checked for this rule at parsing. An oracle node accepts a registration only if it
+   can create valid role data from it. It checks this before it asks the Bisq 1 bridge to verify the bond. So it
+   neither persists nor publishes the registration of a node without addresses. A cancellation needs no role data.
+3. An oracle node of an earlier version could persist the registration of a node without addresses. When the bridge
+   reports such a registration as invalid, or when its holder cancels it, the oracle node removes the persisted
+   registration. It cannot create the removal of the role data, and nodes of this version do not hold such role data.
+
+Reasons:
+
+- Nodes reach a node at the addresses of its role. A node adds the addresses of every seed node role to its seed
+  nodes, and the role list and the node monitor show the addresses of all node roles. Without rule 1, the processing
+  of a seed node role without addresses fails when a node adds or removes the role. It fails after the node listed the
+  role, so the node lists a seed node which it cannot reach. Nodes of v2.1.13 do not process each item of their startup
+  replay on its own (see [`../network/startup-replay.md`](../network/startup-replay.md)), so such a role stops their
+  start.
+- Rule 1 is an integrity rule which a node can decide from the role data alone, so the role data checks it in
+  `verify()`. A node of this version then never stores, relays or uses such role data, also if an oracle node of an
+  earlier version published it. An oracle node of this version does not load such role data from its store either, so
+  it does not publish it again.
+- Rule 2: the store of the persisted registrations of an oracle node fails to load as a whole if one entry cannot be
+  parsed (see [`../reputation/account-age.md`](../reputation/account-age.md#persisted-request-compatibility)). A check
+  of the registration request at parsing would make this store fail if an oracle node of an earlier version persisted
+  such a registration.
+- Rule 3: without it, one such registration would stop the deactivation of the registrations after it in the same
+  revalidation.
+
+Compatibility:
+
+- Released clients send the addresses of a node with its registration. The registration form of the desktop requires
+  an address file for every node type, and oracle and seed nodes publish their own role with the addresses of their
+  network ID. So nodes of this version drop no role data which an oracle node created for the registration of a
+  released client with a valid address file.
+- Nodes of v2.1.13 and earlier accept a node role without addresses, and a seed node role without addresses stops them
+  at startup. Updated oracle nodes no longer publish such role data, and updated nodes do not relay it. Role data which
+  an oracle node of an earlier version published stays in the stores of nodes of earlier versions until it expires.
+
 ## Persistence and publication
 
 Before publishing a successful registration, each oracle persists the complete non-cancellation

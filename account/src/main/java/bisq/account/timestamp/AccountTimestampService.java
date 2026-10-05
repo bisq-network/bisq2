@@ -249,19 +249,9 @@ public class AccountTimestampService implements Service, AuthorizedBondedRolesSe
     }
 
     private Stream<AuthorizedAccountTimestamp> findAuthorizedAccountTimestamp(byte[] hash) {
-        String storageKey = AuthorizedAccountTimestamp.class.getSimpleName();
-        return networkService.getDataService()
-                .stream()
-                .flatMap(dataService ->
-                        dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
-                                .filter(AuthorizedData.class::isInstance)
-                                .map(AuthorizedData.class::cast)
-                                .filter(authorizedData ->
-                                        authorizedData.getDistributedData() instanceof AuthorizedAccountTimestamp)
-                                .filter(this::isAuthorizedPublication)
-                                .map(authorizedData -> (AuthorizedAccountTimestamp) authorizedData.getDistributedData())
-                )
-                .filter(e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
+        return authorizedBondedRolesService.getAuthorizedPublishedData(AuthorizedAccountTimestamp.class,
+                BondedRoleType.ORACLE_NODE,
+                e -> Arrays.equals(hash, e.getAccountTimestamp().getHash()));
     }
 
     private static byte[] createHash(Account<? extends PaymentMethod<?>, ?> account) {
