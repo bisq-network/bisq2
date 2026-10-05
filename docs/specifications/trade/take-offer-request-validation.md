@@ -1,12 +1,13 @@
 # Take Offer Request Validation
 
-The maker verifies a take offer request before signing the contract. A trade is created from the taker's contract and stored before this verification, and a rejected trade stays in the store, so nothing downstream may treat the presence of a trade as proof that the maker agreed to it. Only a trade carrying the maker's contract signature proves that.
+The maker verifies a take offer request before it creates the trade and signs the contract. A rejected request leaves no trade and does not add the taker to the maker's contacts, and the maker reports the rejection to the taker. Earlier versions stored the trade before this verification, so a stored trade of a rejected request can remain, and nothing downstream may treat the presence of a trade as proof that the maker agreed to it. Only a trade carrying the maker's contract signature proves that.
 
-Before it creates the trade, the maker checks that the request can create a trade of its own. It drops the request when one of these conditions fails. A dropped request creates no trade, and the maker sends nothing to the taker. The maker logs the message type and the trade ID, and no content of the request.
+Before this verification, the maker checks that the request can create a trade of its own. It drops the request when one of these conditions fails. A dropped request creates no trade, and the maker sends nothing to the taker. The maker logs the message type and the trade ID, and no content of the request.
 
 - The request is addressed to the key of the offer's maker: the ID of the receiver's network ID is the ID of the maker's network ID in the offer. The layer for confidential messages binds the receiver's key to the key with which the maker decrypted the request.
 - One of the maker's identities (the default identity, an active or a retired identity) has this key. The maker finds it by the ID of the key, not by the whole network ID: the addresses of the maker's network ID can have changed since it published the offer, see [identity by key](../user/identity-by-key.md). The trade uses this identity, and the maker sends its trade messages under the network ID to which the taker addressed the request.
-- No trade and no protocol with the trade ID exist. The check and the creation of the trade are one step, because the maker can process two requests at the same time.
+- The trade ID of the request is the ID of the trade which the maker creates from it (see `trade-id.md`). A report of a rejection would otherwise carry the ID of a trade which the taker does not have.
+- No trade and no protocol with the trade ID exist. The check, the verification and the creation of the trade are one step, because the maker can process two requests at the same time. The maker checks this before it verifies the request: a rejection of a copy of a request which it has handled would fail the trade at the taker.
 
 The sender of the request controls these conditions. So the maker drops a request which fails them, and it does not throw an exception: at startup an exception would also end the processing of the other messages which arrived before the start. An honest request fails these conditions only when it is delivered a second time, for example when a mailbox message is processed again after the maker processed the first delivery.
 

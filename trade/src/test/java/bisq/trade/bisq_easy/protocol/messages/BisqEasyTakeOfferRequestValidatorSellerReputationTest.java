@@ -30,13 +30,13 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.reputation.ReputationScore;
@@ -50,6 +50,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validateTakersReputation;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -62,19 +64,18 @@ import static org.mockito.Mockito.when;
 /**
  * The maker as buyer accepts only a taker whose reputation covers the trade amount.
  */
-class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
+class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
     private static final Market USD_MARKET = MarketRepository.getUSDBitcoinMarket();
     private static final Market EUR_MARKET = new Market("BTC", "EUR", "Bitcoin", "Euro");
     // MarketPrice treats a price older than 12 hours as outdated
     private static final long OUTDATED_AGE = TimeUnit.HOURS.toMillis(12) + TimeUnit.MINUTES.toMillis(1);
 
     private ServiceProvider serviceProvider;
-    private BisqEasyTrade trade;
     private MarketPriceService marketPriceService;
     private ReputationService reputationService;
     private BisqEasyOffer offer;
     private BisqEasyContract contract;
-    private BisqEasyTakeOfferRequestHandler handler;
+    private Identity myIdentity;
     private long now;
     private final ObservableHashMap<Market, MarketPrice> marketPriceByMarket = new ObservableHashMap<>();
 
@@ -90,14 +91,14 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
 
         offer = mock(BisqEasyOffer.class);
         when(offer.getMarket()).thenReturn(USD_MARKET);
+        when(offer.getMakersDirection()).thenReturn(Direction.BUY);
         when(offer.getTakersDirection()).thenReturn(Direction.SELL);
         contract = mock(BisqEasyContract.class, RETURNS_DEEP_STUBS);
         // 100 USD at 200 score per USD requires a score of 20_000
         when(contract.getQuoteSideMonetary()).thenReturn(Fiat.fromFaceValue(100, "USD"));
         when(contract.getTaker().getNetworkId().getId()).thenReturn("taker-profile");
 
-        trade = mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS);
-        handler = new BisqEasyTakeOfferRequestHandler(serviceProvider, trade);
+        myIdentity = mock(Identity.class, RETURNS_DEEP_STUBS);
     }
 
     private void setUpMarketPrice(Market market, double price, long timestamp) {
@@ -127,7 +128,6 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         when(serviceProvider.getSettingsService().getMaxTradePriceDeviation().get()).thenReturn(0.05);
         when(serviceProvider.getSupportService().getBisqEasyMediationRequestService().selectMediator(any(), any(), any()))
                 .thenReturn(Optional.empty());
-        when(trade.isBuyer()).thenReturn(true);
 
         when(offer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(1_000_000));
         FixPriceSpec priceSpec = new FixPriceSpec(PriceQuote.fromFiatPrice(60_000, "USD"));
@@ -167,7 +167,8 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation();
         setUpTakersReputationScore(0);
 
-        TradeProtocolException exception = assertThrows(TradeProtocolException.class, () -> handler.verify(message));
+        TradeProtocolException exception = assertThrows(TradeProtocolException.class,
+                () -> validate(serviceProvider, myIdentity, message));
 
         assertEquals(TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW, exception.getTradeProtocolFailure());
     }
@@ -177,7 +178,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation();
         setUpTakersReputationScore(20_000);
 
-        assertDoesNotThrow(() -> handler.verify(message));
+        assertDoesNotThrow(() -> validate(serviceProvider, myIdentity, message));
     }
 
     private void setUpTakersReputationScore(long totalScore) {
@@ -188,7 +189,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
     void doesNotCheckReputationOfTakerAsBuyer() {
         when(offer.getTakersDirection()).thenReturn(Direction.BUY);
 
-        assertDoesNotThrow(() -> handler.validateTakersReputation(offer, contract));
+        assertDoesNotThrow(() -> validateTakersReputation(serviceProvider, offer, contract));
 
         verifyNoInteractions(reputationService);
     }
@@ -198,7 +199,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpTakersReputationScore(0);
 
         TradeProtocolException exception = assertThrows(TradeProtocolException.class,
-                () -> handler.validateTakersReputation(offer, contract));
+                () -> validateTakersReputation(serviceProvider, offer, contract));
 
         assertEquals(TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW, exception.getTradeProtocolFailure());
     }
@@ -208,7 +209,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpTakersReputationScore(19_000);
 
         TradeProtocolException exception = assertThrows(TradeProtocolException.class,
-                () -> handler.validateTakersReputation(offer, contract));
+                () -> validateTakersReputation(serviceProvider, offer, contract));
 
         assertEquals(TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW, exception.getTradeProtocolFailure());
     }
@@ -217,14 +218,14 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
     void acceptsTakerWithReputationCoveringTradeAmount() {
         setUpTakersReputationScore(20_000);
 
-        assertDoesNotThrow(() -> handler.validateTakersReputation(offer, contract));
+        assertDoesNotThrow(() -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
     void acceptsTakerWithReputationWithinTolerance() {
         setUpTakersReputationScore(19_048);
 
-        assertDoesNotThrow(() -> handler.validateTakersReputation(offer, contract));
+        assertDoesNotThrow(() -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -232,7 +233,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpTakersReputationScore(20_000);
         when(marketPriceService.findMarketPrice(USD_MARKET)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> handler.validateTakersReputation(offer, contract));
+        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -240,7 +241,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpTakersReputationScore(20_000);
         setUpMarketPrice(USD_MARKET, 60_000, now - OUTDATED_AGE);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.validateTakersReputation(offer, contract));
+        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -248,7 +249,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpEurOffer(now);
         setUpTakersReputationScore(120_000);
 
-        assertDoesNotThrow(() -> handler.validateTakersReputation(offer, contract));
+        assertDoesNotThrow(() -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -258,7 +259,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpTakersReputationScore(100_000);
 
         TradeProtocolException exception = assertThrows(TradeProtocolException.class,
-                () -> handler.validateTakersReputation(offer, contract));
+                () -> validateTakersReputation(serviceProvider, offer, contract));
 
         assertEquals(TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW, exception.getTradeProtocolFailure());
     }
@@ -268,7 +269,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpEurOffer(now - MarketPrice.STALE_AGE);
         setUpTakersReputationScore(120_000);
 
-        assertDoesNotThrow(() -> handler.validateTakersReputation(offer, contract));
+        assertDoesNotThrow(() -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -276,7 +277,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpEurOffer(now - MarketPrice.STALE_AGE - 1);
         setUpTakersReputationScore(120_000);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.validateTakersReputation(offer, contract));
+        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -287,7 +288,7 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         setUpMarketPrice(USD_MARKET, 60_000, eurPriceTimestamp + MarketPrice.STALE_AGE);
         setUpTakersReputationScore(120_000);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.validateTakersReputation(offer, contract));
+        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -296,6 +297,6 @@ class BisqEasyTakeOfferRequestHandlerSellerReputationTest {
         when(marketPriceService.findMarketPrice(USD_MARKET)).thenReturn(Optional.empty());
         setUpTakersReputationScore(120_000);
 
-        assertThrows(IllegalArgumentException.class, () -> handler.validateTakersReputation(offer, contract));
+        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 }
