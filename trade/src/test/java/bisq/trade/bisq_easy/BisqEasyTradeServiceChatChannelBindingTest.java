@@ -22,28 +22,24 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.common.util.StringUtils;
-import bisq.contract.ContractService;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.security.SecurityService;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
-import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.security.GeneralSecurityException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
 
+import static bisq.trade.bisq_easy.BisqEasyTakeOfferRequestTestFixtures.makerAcceptsTakeOfferRequests;
+import static bisq.trade.bisq_easy.BisqEasyTakeOfferRequestTestFixtures.takeOfferRequest;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.buyerAsTakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.channel;
@@ -188,8 +184,8 @@ class BisqEasyTradeServiceChatChannelBindingTest {
     }
 
     @Test
-    void mismatchingChannelExistingWhenMakerTradeIsCreatedFailsTrade() throws GeneralSecurityException {
-        when(serviceProvider.getIdentityService().findAnyIdentityById(makerIdentity.getId())).thenReturn(Optional.of(makerIdentity));
+    void mismatchingChannelExistingWhenMakerTradeIsCreatedFailsTrade() {
+        makerAcceptsTakeOfferRequests(serviceProvider, makerIdentity, offer);
         service.initialize();
         BisqEasyContract contract = trade.getContract();
         // The taker's first chat message arrived before the take offer request and created the maker's channel.
@@ -198,7 +194,7 @@ class BisqEasyTradeServiceChatChannelBindingTest {
                 userProfile(takerIdentity.getNetworkId()),
                 Optional.empty()));
 
-        service.onMessage(takeOfferRequest(contract));
+        service.onMessage(takeOfferRequest(trade.getId(), takerIdentity, contract));
 
         BisqEasyTrade makerTrade = service.findTrade(trade.getId()).orElseThrow();
         assertEquals(BisqEasyTradeState.FAILED, makerTrade.getState());
@@ -220,9 +216,9 @@ class BisqEasyTradeServiceChatChannelBindingTest {
     }
 
     @Test
-    void pendingChatMessagesAreProcessedWhenMakerTradeIsCreated() throws GeneralSecurityException {
+    void pendingChatMessagesAreProcessedWhenMakerTradeIsCreated() {
         BisqEasyOpenTradeChannelService channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
-        when(serviceProvider.getIdentityService().findAnyIdentityById(makerIdentity.getId())).thenReturn(Optional.of(makerIdentity));
+        makerAcceptsTakeOfferRequests(serviceProvider, makerIdentity, offer);
         service.initialize();
         AtomicBoolean tradeStoredWhenProcessing = new AtomicBoolean();
         doAnswer(invocation -> {
@@ -230,19 +226,10 @@ class BisqEasyTradeServiceChatChannelBindingTest {
             return null;
         }).when(channelService).processPendingMessages(anyString());
 
-        service.onMessage(takeOfferRequest(trade.getContract()));
+        service.onMessage(takeOfferRequest(trade.getId(), takerIdentity, trade.getContract()));
 
         verify(channelService).processPendingMessages(trade.getId());
         assertTrue(tradeStoredWhenProcessing.get());
     }
 
-    private BisqEasyTakeOfferRequest takeOfferRequest(BisqEasyContract contract) throws GeneralSecurityException {
-        return new BisqEasyTakeOfferRequest(StringUtils.createUid(),
-                trade.getId(),
-                BisqEasyProtocol.VERSION,
-                takerIdentity.getNetworkId(),
-                makerNetworkId,
-                contract,
-                new ContractService(mock(SecurityService.class)).signContract(contract, takerIdentity.getKeyBundle().getKeyPair()));
-    }
 }
