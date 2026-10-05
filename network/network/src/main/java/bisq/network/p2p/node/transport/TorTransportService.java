@@ -95,7 +95,7 @@ public class TorTransportService implements TransportService {
         if (address instanceof TorAddress torAddress) {
             long ts = System.currentTimeMillis();
             log.info("Start creating tor socket to {}", torAddress);
-            Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
+            Socket socket = torService.getSocket(); // Blocking call. Takes 5-15 sec usually.
             socket.setSoTimeout(socketTimeout);
             InetSocketAddress inetSocketAddress = InetSocketAddress.createUnresolved(torAddress.getHost(), torAddress.getPort());
             try {
@@ -122,7 +122,7 @@ public class TorTransportService implements TransportService {
 
     @Override
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
-        return Optional.of(torService.getSocks5Proxy(null));
+        return Optional.of(torService.getSocks5Proxy());
     }
 
     public Observable<Boolean> getUseExternalTor() {

@@ -283,14 +283,14 @@ public class TorService implements Service {
                 .orTimeout(1, TimeUnit.MINUTES);
     }
 
-    public Socket getSocket(String streamId) throws IOException {
+    public Socket getSocket() throws IOException {
         TorSocksProxyFactory socksProxyFactory = torSocksProxyFactory.orElseThrow();
-        return socksProxyFactory.getSocket(streamId);
+        return socksProxyFactory.getSocket();
     }
 
-    public Socks5Proxy getSocks5Proxy(String streamId) throws IOException {
+    public Socks5Proxy getSocks5Proxy() throws IOException {
         TorSocksProxyFactory socksProxyFactory = torSocksProxyFactory.orElseThrow();
-        return socksProxyFactory.getSocks5Proxy(streamId);
+        return socksProxyFactory.getSocks5Proxy();
     }
 
     private boolean connectedToExternalTor(Map<String, String> torConfigMap) {
