@@ -34,6 +34,7 @@ import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.RequestedAmountValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
@@ -354,7 +355,11 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         applyUserTradeAction(trade, new BisqEasyConfirmFiatSentEvent());
     }
 
+    // The seller's node fails the trade when the data requests another amount than the trade amount
+    // (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md)
     public void buyerSendBitcoinPaymentData(BisqEasyTrade trade, String buyersBitcoinPaymentData) {
+        long tradeAmount = trade.getContract().getBaseSideAmount();
+        RequestedAmountValidation.checkRequestsOnlyAmount(buyersBitcoinPaymentData, tradeAmount);
         applyUserTradeAction(trade, new BisqEasySendBtcAddressEvent(buyersBitcoinPaymentData));
     }
 
