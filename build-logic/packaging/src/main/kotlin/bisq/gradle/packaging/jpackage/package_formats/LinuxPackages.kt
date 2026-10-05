@@ -6,11 +6,16 @@ import java.util.*
 class LinuxPackages(private val resourcesPath: Path, private val appName: String) : JPackagePackageFormatConfigs {
     override val packageFormats = setOf(PackageFormat.DEB, PackageFormat.RPM)
 
+    private val iconPath: String
+        get() = resourcesPath.resolve("icon.png").toAbsolutePath().toString()
+
+    override val appImageArguments: List<String>
+        get() = listOf("--icon", iconPath)
+
     override fun createArgumentsForJPackage(packageFormat: PackageFormat): List<String> {
         val arguments = mutableListOf(
                 "--icon",
-                resourcesPath.resolve("icon.png")
-                        .toAbsolutePath().toString(),
+                iconPath,
 
                 "--linux-package-name", appName.lowercase(Locale.ROOT).replace(" ", ""),
                 "--linux-app-release", "1",
