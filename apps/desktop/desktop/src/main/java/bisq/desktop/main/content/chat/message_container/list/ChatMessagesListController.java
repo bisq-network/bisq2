@@ -743,8 +743,12 @@ public class ChatMessagesListController implements Controller {
         // but as we have a contains() check there it will not have any effect.
         int bindingGeneration = ++channelBindingGeneration;
 
+        // The messages first, then the unverified keys: the mediator service retains a request before it imports its
+        // messages, so the keys cover every message read here. A message added later reaches maybeAddChatMessage,
+        // which reads the keys per message.
+        List<M> chatMessages = List.copyOf(channel.getChatMessages());
         Set<String> unverifiedMessageKeys = getUnverifiedForwardedMessageKeys(channel);
-        Set<ChatMessageListItem<M, C>> items = channel.getChatMessages().stream()
+        Set<ChatMessageListItem<M, C>> items = chatMessages.stream()
                 .filter(chatMessage -> chatMessage.getChatMessageType() != TAKE_BISQ_EASY_OFFER)
                 .filter(chatMessage -> !(chatMessage instanceof BisqEasyOfferbookMessage bisqEasyOfferbookMessage) ||
                         bisqEasyOfferbookMessageService.isValid(bisqEasyOfferbookMessage))
