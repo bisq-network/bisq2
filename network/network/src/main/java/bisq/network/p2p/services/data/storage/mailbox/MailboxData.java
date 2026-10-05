@@ -90,6 +90,7 @@ public final class MailboxData implements StorageData, Canonical {
         // Nodes of earlier versions select the store by the className of metaData
         checkArgument(metaData.getClassName().equals(className), "className of metaData must equal className");
         MetaData.validateVersionOfMetaDataHolder(version);
+        MetaData.validateVersionForHashOfEarlierVersions(version);
     }
 
     @Override

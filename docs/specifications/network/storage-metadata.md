@@ -117,6 +117,32 @@ requests as well, so these removals give it no further way to fill the store.
   [`storage-request-signatures.md`](storage-request-signatures.md#requirements-for-signature-v2)). Leaving the field
   out of the hash in every version means that no version lets a relay change a hash input without changing the
   request's signed content.
+- Before the cutoff date of signature V1 (see
+  [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)), `MailboxData`,
+  `RemoveMailboxRequest` and `RemoveAuthenticatedDataRequest` must not have a version above 3, with or without
+  signature V2. Parsing rejects such data. The node compares the cutoff date with its own time.
+  `RefreshAuthenticatedDataRequest` has no upper bound.
+
+  Reason: nodes up to version 2.1.13 leave `metaData` out of `serializeForHash()` of these three classes only in
+  versions 1 to 3. In versions above 3 they include it, so they compute another proof of work payload, storage key and
+  preimage of signature V1 than a node of this version, and each closes the connection to a relay of the other (see
+  [Message cost](message-cost.md)). Nodes of both kinds store and relay a removal for which they hold no entry. So
+  one such message, which any key pair can create, also with signature V2, would separate the two kinds of nodes
+  until it expires. Signature V1 of the remove requests does not cover the version, so a relay can also change the
+  version of a removal of an unmodified node. A message which fails at parsing is dropped, and the connection stays
+  open (rule 6 of [validation at parsing](validation-at-parsing.md)). Nodes up to 2.1.13 leave `metaData` of the
+  refresh request out of the hash in every version.
+
+  Reason for the time limit: a later release must be able to raise the version of these classes. From the cutoff date
+  on, the stores reject requests without signature V2, so nodes up to 2.1.13 cannot publish data anymore. Signature V2
+  covers the version, so a relay cannot change it.
+
+  Consequences:
+  - A release before the cutoff date must not raise the version of these classes above 3. Version 3 is not used yet.
+  - From the cutoff date on, a message with a version above 3 again makes nodes up to 2.1.13 and nodes of this version
+    close their connections to each other. Nodes up to 2.1.13 cannot publish data from that date on.
+  - Around the cutoff date, nodes whose clocks differ can disagree about a message with a version above 3. The node
+    whose clock is behind drops the message, and the connection stays open.
 - The class name of `metaData` must equal `className`. Parsing rejects a message which breaks this rule. For a
   registered class name the replacement above guarantees it; the rule matters for class names which this node does not
   know.

@@ -134,7 +134,8 @@ class MailboxSignatureV2Test {
         assertTrue(AddMailboxRequest.fromProto(changedClassName.build()).isSignatureInvalid());
 
         bisq.network.protobuf.AddMailboxRequest.Builder changedDataVersion = proto.toBuilder();
-        changedDataVersion.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setVersion(4);
+        // Another version which parses (MetaData.validateVersionForHashOfEarlierVersions)
+        changedDataVersion.getMailboxSequentialDataBuilder().getMailboxDataBuilder().setVersion(3);
         assertTrue(AddMailboxRequest.fromProto(changedDataVersion.build()).isSignatureInvalid());
 
         assertTrue(AddMailboxRequest.fromProto(proto.toBuilder().setVersion(3).build()).isSignatureInvalid());
