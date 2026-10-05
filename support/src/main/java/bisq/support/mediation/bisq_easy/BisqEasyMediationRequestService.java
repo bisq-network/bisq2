@@ -204,8 +204,8 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
     // Private
     /* --------------------------------------------------------------------- */
 
-    // A response is applied only if its sender is the mediator of the trade channel. Responses of other senders for the
-    // same trade are processed and dropped one by one, so they cannot keep the mediator's response out.
+    // A response is applied only if its sender is the mediator of the trade channel. Responses of other mediators for
+    // the same trade are processed and dropped one by one, so they cannot keep the mediator's response out.
     private void processMediationResponse(BisqEasyMediatorsResponse bisqEasyMediatorsResponse) {
         bisqEasyOpenTradeChannelService.findChannelByTradeId(bisqEasyMediatorsResponse.getTradeId())
                 .ifPresentOrElse(channel -> {
@@ -229,6 +229,13 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
                         () -> {
                             // This handles an edge case that the BisqEasyMediatorsResponse arrives before the take offer request was
                             // processed (in case we are the maker and have been offline at take offer).
+                            if (!isMediator(bisqEasyMediatorsResponse.getSenderNetworkId())) {
+                                log.warn("We drop a BisqEasyMediatorsResponse for an unknown trade channel, as its " +
+                                                "sender is not a mediator. tradeId={}",
+                                        StringUtils.sanitizeForLog(bisqEasyMediatorsResponse.getTradeId()));
+                                pendingMediatorsResponses.remove(bisqEasyMediatorsResponse);
+                                return;
+                            }
                             log.warn("We received a BisqEasyMediatorsResponse but did not find a matching bisqEasyOpenTradeChannel for trade ID {}.\n" +
                                             "We add it to the pending responses and reprocess it once a new trade channel has been added.",
                                     StringUtils.sanitizeForLog(bisqEasyMediatorsResponse.getTradeId()));
@@ -283,6 +290,14 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         }
 
         return true;
+    }
+
+    // Only a mediator sends a response, and every node knows the mediators, so a response of another sender is not kept
+    // as pending and cannot push the response of the mediator out of the pending responses
+    private boolean isMediator(NetworkId networkId) {
+        return authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                .anyMatch(role -> role.getBondedRoleType() == BondedRoleType.MEDIATOR &&
+                        role.getProfileId().equals(networkId.getId()));
     }
 
     private void maybeProcessPendingMediatorsResponseMessages() {
