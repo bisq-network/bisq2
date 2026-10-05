@@ -22,6 +22,12 @@ user of a two-party chat, or the traders and dispute agents of a trade, without 
    `MuSigOpenTradeChannel.createId`) and whose sender is one of the two traders, because the mediator ignores a request
    with any other message (`BisqEasyMediationRequestService.requestMediation`,
    `MuSigTraderMediationService.requestMediation`).
+7. The receiver is the receiver profile ID of the message or reaction. A message or reaction names its receiver twice:
+   by the receiver profile ID and by the receiver network ID. The node decrypts it only with the key of the receiver
+   network ID. A node ignores a received message or reaction whose receiver profile ID is not the ID of its receiver
+   network ID (both IDs are the hash of the public key). It checks this before it acts on the message or reaction. So
+   such a message creates no channel and no contact, and the node keeps neither such a message nor such a reaction as
+   pending.
 
 ## Reason
 
@@ -34,12 +40,19 @@ request with such a message, so one message would block the mediation of the tra
 already hold such a message, and the messages of the dispute agents, which the channel holds after a dispute agent
 responded to a request.
 
+The sender also chooses both receiver fields. Without rule 7, a sender could encrypt a message to one identity of a
+node and name another identity of the same node as receiver. The node would add the message to a conversation of the
+other identity, or open one. If the user answered, the sender would learn that both identities belong to one node.
+
 ## Compatibility
 
 Unmodified nodes send messages only to channels in which they are a peer, and they take the trade ID and the channel ID
 of a trade chat message from the channel, so their messages pass rules 1 and 5. Rule 6 leaves out only messages of the
 dispute agents and messages with a channel ID with a dotless i (see "Not covered"), with which the mediator ignores a request
 as well.
+
+Unmodified nodes of version 2.1.13 and of this version take the receiver profile ID and the receiver network ID of a
+message or reaction from the same user profile, so their messages and reactions pass rule 7.
 
 ## Not covered
 
