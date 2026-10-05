@@ -172,7 +172,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         synchronized (notificationIdsPrunedBeforeInitialize) {
             initializeCalled = true;
         }
-        removeNotificationsPrunedBeforeInitialize();
+        flushPrunedNotifications();
 
         ignoredUserProfileIdsPin = userProfileService.getIgnoredUserProfileIds()
                 .addObserver(this::consumeNotificationsFromIgnoredUsers);
@@ -224,7 +224,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         prunedAndExpiredDataRequestPins.clear();
 
         predicateByChatChannelDomain.clear();
-        removeNotificationsPrunedBeforeInitialize();
+        flushPrunedNotifications();
 
         changedNotification.set(null);
         return CompletableFuture.completedFuture(true);
@@ -356,7 +356,8 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         removeNotification(notificationId);
     }
 
-    private void removeNotificationsPrunedBeforeInitialize() {
+    // Empties the buffer of notification IDs which were pruned before initialize, and removes these notifications
+    private void flushPrunedNotifications() {
         Set<String> notificationIds;
         synchronized (notificationIdsPrunedBeforeInitialize) {
             notificationIds = Set.copyOf(notificationIdsPrunedBeforeInitialize);
