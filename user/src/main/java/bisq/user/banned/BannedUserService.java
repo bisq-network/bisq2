@@ -38,6 +38,15 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class BannedUserService extends RateLimitedPersistenceClient<BannedUserStore> implements Service, AuthorizedBondedRolesService.Listener {
+    // Limits of public chat messages and reactions per author (user profile ID)
+    static final int MAX_MESSAGES_PER_SECOND = 3;
+    static final int MAX_MESSAGES_PER_MINUTE = 30;
+    static final int MAX_MESSAGES_PER_HOUR = 120;
+    static final int MAX_MESSAGES_PER_DAY = 300;
+    // Far more than the authors of honest chat traffic of one day. At the limit, an author with the newest events takes
+    // at most about 7 KB, so the rate limiter takes at most about 70 MB.
+    static final int MAX_RATE_LIMITED_AUTHORS = 10_000;
+
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
     private final BannedUserStore persistableStore = new BannedUserStore();
@@ -51,7 +60,14 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     public BannedUserService(PersistenceService persistenceService,
                              AuthorizedBondedRolesService authorizedBondedRolesService,
                              boolean rateLimitEnabled) {
-        this(persistenceService, authorizedBondedRolesService, new RateLimiter(), rateLimitEnabled);
+        this(persistenceService,
+                authorizedBondedRolesService,
+                new RateLimiter(MAX_MESSAGES_PER_SECOND,
+                        MAX_MESSAGES_PER_MINUTE,
+                        MAX_MESSAGES_PER_HOUR,
+                        MAX_MESSAGES_PER_DAY,
+                        MAX_RATE_LIMITED_AUTHORS),
+                rateLimitEnabled);
     }
 
     BannedUserService(PersistenceService persistenceService,
@@ -65,7 +81,7 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
         if (rateLimitEnabled) {
             // A profile stays flagged at most while the rate limiter keeps its events. Otherwise the flag of a profile
             // which sends nothing more would stay until shutdown.
-            rateLimiter.addRemovedUserProfileIdListener(rateLimitExceedingUserProfiles::remove);
+            rateLimiter.addRemovedKeyListener(rateLimitExceedingUserProfiles::remove);
         } else {
             log.warn("Chat profile rate limiting disabled. Use only for local/dev testing.");
         }
