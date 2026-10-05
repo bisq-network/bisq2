@@ -251,8 +251,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + "\n" + result;
     }
 
+    // A message which reached us only in the request of another trader is not ours, also when one of our profiles is
+    // its author (docs/specifications/support/mediation-request-validation.md)
     public boolean isMyMessage() {
-        return chatMessage.isMyMessage(userIdentityService);
+        return !unverifiedForwardedMessage && chatMessage.isMyMessage(userIdentityService);
     }
 
     public boolean canEditMessage() {
