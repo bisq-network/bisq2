@@ -20,13 +20,13 @@ Refresh the metadata before regenerating this report:
 | Metric | Count |
 | --- | ---: |
 | Resolved external modules | 225 |
-| Modules with PGP-signed artifacts only | 221 |
-| Modules using checksum-only artifacts only | 4 |
+| Modules with PGP-signed artifacts only | 218 |
+| Modules using checksum-only artifacts only | 7 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
 | Verified artifacts | 330 |
-| PGP-signed artifacts | 324 |
-| Checksum-only artifacts | 6 |
+| PGP-signed artifacts | 314 |
+| Checksum-only artifacts | 16 |
 | Resolved executable artifacts missing explicit metadata | 0 |
 | Stale executable metadata entries for unresolved versions | 0 |
 | Signer keys found in exported keyring | 82 / 82 |
@@ -45,6 +45,17 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0` | direct | `org.gradle.kotlin.kotlin-dsl.gradle.plugin-4.4.0.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
 | `org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0` | direct | `org.openjfx.javafxplugin.gradle.plugin-0.1.0.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | `javafx-plugin-0.1.0-sources.jar`<br>Publisher does not provide a detached PGP signature for this Gradle plugin source artifact; source artifact is pinned by SHA-256.<br><br>`javafx-plugin-0.1.0.jar`<br>Publisher does not provide a detached PGP signature for this Gradle plugin artifact; artifact is pinned by SHA-256.<br><br>`javafx-plugin-0.1.0.module`<br>Publisher does not provide a detached PGP signature for this Gradle module metadata; module metadata is pinned by SHA-256. |
+| `org.testfx:openjfx-monocle:21.0.2` | direct | `openjfx-monocle-21.0.2-javadoc.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`openjfx-monocle-21.0.2-sources.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`openjfx-monocle-21.0.2.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`openjfx-monocle-21.0.2.pom`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256. |
+| `org.testfx:testfx-core:4.0.18` | transitive | `testfx-core-4.0.18-sources.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`testfx-core-4.0.18.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`testfx-core-4.0.18.pom`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256. |
+| `org.testfx:testfx-junit5:4.0.18` | direct | `testfx-junit5-4.0.18-sources.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`testfx-junit5-4.0.18.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`testfx-junit5-4.0.18.pom`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256. |
+
+## Checksum-Only Metadata Outside the Resolved Graph
+
+Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms against the metadata. These checksum-only entries are not part of the resolved dependency graph.
+
+| Dependency | Artifact and review rationale |
+| --- | --- |
+| `org.sonatype.oss:oss-parent:7` | `oss-parent-7.pom`<br>Parent POM has no detached signature on Maven Central; POM is pinned by SHA-256. |
 
 ## Full Resolved Dependency Inventory
 
@@ -269,9 +280,9 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | `org.projectlombok:lombok:1.18.46` | direct | PGP signed | 1 signed / 0 checksum | `D421D1DF4570BFB13E485D0BF95ADD0A28D2F139`<br>created 2011-03-08 |
 | `org.reactfx:reactfx:2.0-M5` | transitive | PGP signed | 2 signed / 0 checksum | `5E13B520F0BCBB359C6ED54A4A23006A8E767508`<br>Tomas Mikula<br>`tomas.mikula@gmail.com`<br>created 2014-03-05 |
 | `org.slf4j:slf4j-api:2.0.18` | direct | PGP signed | 1 signed / 0 checksum | `475F3B8E59E6E63AA78067482C7B12F2A511E325`<br>created 2012-04-26<br><br>`60200AC4AE761F1614D6C46766D68DAA073BE985`<br>Ceki Gulcu<br>`ceki@qos.ch`<br>created 2022-08-08 |
-| `org.testfx:openjfx-monocle:21.0.2` | direct | PGP signed | 4 signed / 0 checksum | `8756C4F765C9AC3CB6B85D62379CE192D401AB61`<br>Bintray (by JFrog)<br>`bintray@bintray.com`<br>created 2015-02-17 |
-| `org.testfx:testfx-core:4.0.18` | transitive | PGP signed | 3 signed / 0 checksum | `8756C4F765C9AC3CB6B85D62379CE192D401AB61`<br>Bintray (by JFrog)<br>`bintray@bintray.com`<br>created 2015-02-17 |
-| `org.testfx:testfx-junit5:4.0.18` | direct | PGP signed | 3 signed / 0 checksum | `8756C4F765C9AC3CB6B85D62379CE192D401AB61`<br>Bintray (by JFrog)<br>`bintray@bintray.com`<br>created 2015-02-17 |
+| `org.testfx:openjfx-monocle:21.0.2` | direct | checksum fallback | 0 signed / 4 checksum | - |
+| `org.testfx:testfx-core:4.0.18` | transitive | checksum fallback | 0 signed / 3 checksum | - |
+| `org.testfx:testfx-junit5:4.0.18` | direct | checksum fallback | 0 signed / 3 checksum | - |
 | `org.tukaani:xz:1.12` | direct | PGP signed | 1 signed / 0 checksum | `3690C240CE51B4670D30AD1C38EE757D69184620`<br>Lasse Collin<br>`lasse.collin@tukaani.org`<br>created 2010-10-24 |
 | `org.vafer:jdependency:2.15` | transitive | PGP signed | 1 signed / 0 checksum | `79156E0351AF8604DE9B186B09A79E1E15A04694`<br>Torsten Curdt (Code Signing Key)<br>`tcurdt@vafer.org`<br>created 2021-02-10 |
 | `org.yaml:snakeyaml:2.6` | transitive | PGP signed | 1 signed / 0 checksum | `2FC53E6B1F681184F4CCD637F5C81DE10A0B8ECC`<br>created 2024-05-11 |
