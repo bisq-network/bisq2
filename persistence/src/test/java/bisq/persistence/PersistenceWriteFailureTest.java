@@ -20,20 +20,27 @@ package bisq.persistence;
 import bisq.common.file.FileMutatorUtils;
 import bisq.persistence.backup.MaxBackupSize;
 import bisq.persistence.backup.RestoreService;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
@@ -120,6 +127,52 @@ class PersistenceWriteFailureTest {
 
         TimestampStore read = readerWriter.read().orElseThrow();
         assertEquals(1L, read.getTimestampsByProfileId().get("A"));
+    }
+
+    // The clients turn a failed write into false and drop the cause, and most callers ignore the result. Without a log
+    // entry where the write fails, the node ran on with unsaved data and nobody could see why.
+    @Test
+    void failedWriteIsLoggedWithTheStorePath() throws Exception {
+        TestClient client = new TestClient(new PersistenceService(tempDir));
+        blockTemporaryFile(client.persistence);
+
+        List<ILoggingEvent> events = captureErrors(() -> assertFalse(client.persist().join()));
+
+        assertEquals(1, events.size());
+        assertTrue(events.get(0).getFormattedMessage().contains(client.persistence.getStorePath().toString()));
+    }
+
+    // The message of a serialization failure can contain values of the store, which can be private
+    @Test
+    void failedSerializationIsLoggedWithoutTheMessageOfItsCause() {
+        TimestampStore store = spy(new TimestampStore());
+        doThrow(new IllegalArgumentException("private value")).when(store).toAny();
+        Persistence<TimestampStore> persistence = new Persistence<>(tempDir.resolve("db/private"),
+                "TestStore", MaxBackupSize.ZERO, new RestoreService());
+
+        List<ILoggingEvent> events = captureErrors(() ->
+                assertThrows(CompletionException.class, () -> persistence.persistAsync(store).join()));
+
+        assertEquals(1, events.size());
+        assertTrue(events.get(0).getFormattedMessage().contains(persistence.getStorePath().toString()));
+        assertFalse(events.get(0).getFormattedMessage().contains("private value"));
+        assertTrue(events.get(0).getThrowableProxy() == null);
+    }
+
+    private static List<ILoggingEvent> captureErrors(Runnable runnable) {
+        Logger logger = (Logger) LoggerFactory.getLogger(Persistence.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            runnable.run();
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+        return appender.list.stream()
+                .filter(event -> event.getLevel() == Level.ERROR)
+                .toList();
     }
 
     private static void blockTemporaryFile(Persistence<?> persistence) throws Exception {
