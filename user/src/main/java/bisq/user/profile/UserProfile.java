@@ -33,6 +33,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.security.DigestUtil;
+import bisq.security.keys.PubKey;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
 import com.google.common.base.Charsets;
@@ -245,29 +246,55 @@ public final class UserProfile implements OwnershipVerifiableData, PublishDateAw
 
     public ByteArray getProofOfBurnKey() {
         if (proofOfBurnHash == null) {
-            // Must be compatible with Bisq 1 proofOfBurn input
-            proofOfBurnHash = new ByteArray(DigestUtil.hash(getId().getBytes(Charsets.UTF_8)));
+            proofOfBurnHash = getProofOfBurnKey(getId());
         }
         return proofOfBurnHash;
     }
 
     public ByteArray getBondedReputationKey() {
         if (bondedReputationHash == null) {
-            bondedReputationHash = new ByteArray(DigestUtil.hash(getPubKeyHash()));
+            bondedReputationHash = getBondedReputationKey(getPubKeyHash());
         }
         return bondedReputationHash;
     }
 
     public ByteArray getAccountAgeKey() {
-        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
+        return getAccountAgeKey(getId());
     }
 
     public ByteArray getProfileAgeKey() {
-        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
+        return getProfileAgeKey(getId());
     }
 
     public ByteArray getSignedWitnessKey() {
-        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
+        return getSignedWitnessKey(getId());
+    }
+
+    // The following methods return the same keys as the methods above, for a service which knows only the ID of a
+    // profile, for example after the profile was removed.
+    public static ByteArray getProofOfBurnKey(String userProfileId) {
+        // Must be compatible with Bisq 1 proofOfBurn input
+        return new ByteArray(DigestUtil.hash(userProfileId.getBytes(Charsets.UTF_8)));
+    }
+
+    public static ByteArray getBondedReputationKey(String userProfileId) {
+        return getBondedReputationKey(PubKey.getHashFromId(userProfileId));
+    }
+
+    public static ByteArray getAccountAgeKey(String userProfileId) {
+        return new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static ByteArray getProfileAgeKey(String userProfileId) {
+        return new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static ByteArray getSignedWitnessKey(String userProfileId) {
+        return new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static ByteArray getBondedReputationKey(byte[] pubKeyHash) {
+        return new ByteArray(DigestUtil.hash(pubKeyHash));
     }
 
     public String getTooltipString() {

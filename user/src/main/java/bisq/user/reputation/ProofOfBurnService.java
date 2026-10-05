@@ -79,6 +79,11 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     }
 
     @Override
+    protected ByteArray getUserProfileKey(String userProfileId) {
+        return UserProfile.getProofOfBurnKey(userProfileId);
+    }
+
+    @Override
     public long calculateScore(AuthorizedProofOfBurnData data) {
         return doCalculateScore(data.getAmount(), data.getBlockTime());
     }
