@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -277,12 +278,14 @@ public class TwoPartyPrivateChatChannelServiceTest {
     }
 
     // The network layer decrypted the message with the key of its receiver network ID. A message which names another
-    // of our identities as receiver must not open a conversation of that identity.
+    // of our identities as receiver must not open a conversation of that identity. Such a message or reaction fails at
+    // parsing (PrivateChatMessage.verify, PrivateChatMessageReaction.verify), so it never reaches the service.
     @Test
     void messageWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdOpensNoChannel() {
         when(userIdentityService.findUserIdentity(OTHER_OWN_PROFILE_ID)).thenReturn(Optional.of(mock(UserIdentity.class)));
 
-        service.onMessage(textMessageFrom(peer, "messageId", networkIdOf(OTHER_OWN_PROFILE_ID)));
+        assertThrows(IllegalArgumentException.class,
+                () -> textMessageFrom(peer, "messageId", networkIdOf(OTHER_OWN_PROFILE_ID)));
 
         assertTrue(service.getChannels().isEmpty());
     }
@@ -292,7 +295,8 @@ public class TwoPartyPrivateChatChannelServiceTest {
         when(userIdentityService.getSelectedUserIdentity()).thenReturn(myUserIdentity);
         TwoPartyPrivateChatChannel channel = service.findOrCreateChannel(ChatChannelDomain.DISCUSSION, peer).orElseThrow();
 
-        service.onMessage(textMessageFrom(peer, "messageId", networkIdOf(OTHER_OWN_PROFILE_ID)));
+        assertThrows(IllegalArgumentException.class,
+                () -> textMessageFrom(peer, "messageId", networkIdOf(OTHER_OWN_PROFILE_ID)));
 
         assertTrue(channel.getChatMessages().isEmpty());
     }
@@ -302,7 +306,8 @@ public class TwoPartyPrivateChatChannelServiceTest {
         TwoPartyPrivateChatMessage message = textMessageFromPeer();
         service.onMessage(message);
 
-        service.onMessage(reactionFromPeer(message, networkIdOf(OTHER_OWN_PROFILE_ID)));
+        assertThrows(IllegalArgumentException.class,
+                () -> reactionFromPeer(message, networkIdOf(OTHER_OWN_PROFILE_ID)));
 
         assertTrue(message.getChatMessageReactions().isEmpty());
     }
@@ -310,8 +315,8 @@ public class TwoPartyPrivateChatChannelServiceTest {
     // Such a reaction is ignored when it arrives, so it is not applied when its message arrives later
     @Test
     void reactionWhoseReceiverProfileIdIsNotTheIdOfItsReceiverNetworkIdIsNotKeptAsPending() {
-        service.onMessage(reactionFrom(peer, "reaction", "messageId", peerChannelId(), System.currentTimeMillis(),
-                networkIdOf(OTHER_OWN_PROFILE_ID)));
+        assertThrows(IllegalArgumentException.class, () -> reactionFrom(peer, "reaction", "messageId", peerChannelId(),
+                System.currentTimeMillis(), networkIdOf(OTHER_OWN_PROFILE_ID)));
 
         service.onMessage(textMessageFromPeer());
 
