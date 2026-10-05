@@ -9,7 +9,7 @@ A Bisq Easy mediation request is signed by the trader who sends it. It carries t
 The mediator accepts a request only when:
 
 - the requester is not banned;
-- the requester and the peer are the maker and the taker of the contract, in either order, by network ID;
+- the requester and the peer are the two parties of the contract, see [parties of a mediation request](mediation-request-parties.md);
 - the contract's mediator is the receiving mediator, and neither trader is the mediator;
 - the requester has fewer than ten open cases for other trades, counting cases the requester is on record for as the other trader;
 - while the mediator keeps a case of the trade, each trader may request once, whether or not the mediator's channel still exists, and a request must name the same two traders as the trade's cases.
