@@ -52,61 +52,12 @@ public class TorSocksProxyFactory {
     // Connects to host and port through the SOCKS port of Tor. Tor isolates streams by the SOCKS username and password,
     // so streams with different stream IDs do not share a circuit (see tor-stream-isolation.md).
     public Socket getSocket(String host, int port, String streamId, int socketTimeout) throws IOException {
-        checkNotNull(streamId, "streamId must not be null");
-        checkArgument(StandardCharsets.US_ASCII.newEncoder().canEncode(host) && !host.isEmpty() && host.length() <= 255,
-                "Invalid host name");
-        checkArgument(port > 0 && port <= 0xFFFF, "Invalid port %s", port);
+        checkArguments(host, port, streamId);
         Socket socket = new Socket();
         try {
             socket.setSoTimeout(socketTimeout);
             socket.connect(new InetSocketAddress("127.0.0.1", socksPort), socketTimeout);
-            DataInputStream inputStream = new DataInputStream(socket.getInputStream());
-            OutputStream outputStream = socket.getOutputStream();
-
-            outputStream.write(new byte[]{SOCKS_VERSION, 1, USERNAME_PASSWORD_METHOD});
-            outputStream.flush();
-            if (inputStream.readByte() != SOCKS_VERSION || inputStream.readByte() != USERNAME_PASSWORD_METHOD) {
-                throw new SocketException("The SOCKS proxy did not accept username and password authentication");
-            }
-
-            byte[] username = toUsername(streamId);
-            ByteArrayOutputStream authentication = new ByteArrayOutputStream();
-            authentication.write(USERNAME_PASSWORD_VERSION);
-            authentication.write(username.length);
-            authentication.write(username);
-            authentication.write(PASSWORD.length);
-            authentication.write(PASSWORD);
-            outputStream.write(authentication.toByteArray());
-            outputStream.flush();
-            if (inputStream.readByte() != USERNAME_PASSWORD_VERSION || inputStream.readByte() != 0) {
-                throw new SocketException("The SOCKS proxy rejected the username and password");
-            }
-
-            byte[] hostBytes = host.getBytes(StandardCharsets.US_ASCII);
-            ByteArrayOutputStream connect = new ByteArrayOutputStream();
-            connect.write(new byte[]{SOCKS_VERSION, CONNECT_COMMAND, 0, DOMAIN_NAME_ADDRESS_TYPE,
-                    (byte) hostBytes.length});
-            connect.write(hostBytes);
-            connect.write(port >> 8);
-            connect.write(port & 0xFF);
-            outputStream.write(connect.toByteArray());
-            outputStream.flush();
-
-            if (inputStream.readByte() != SOCKS_VERSION) {
-                throw new SocketException("Invalid SOCKS reply");
-            }
-            int reply = inputStream.readUnsignedByte();
-            if (reply != 0) {
-                throw new ConnectException("SOCKS: " + toReplyName(reply));
-            }
-            inputStream.readByte();
-            int addressLength = switch (inputStream.readUnsignedByte()) {
-                case 1 -> 4;
-                case 3 -> inputStream.readUnsignedByte();
-                case 4 -> 16;
-                default -> throw new SocketException("Invalid address type in SOCKS reply");
-            };
-            inputStream.readFully(new byte[addressLength + 2]);
+            performHandshake(socket, host, port, streamId);
             return socket;
         } catch (IOException | RuntimeException e) {
             try {
@@ -116,6 +67,66 @@ public class TorSocksProxyFactory {
             }
             throw e;
         }
+    }
+
+    // Performs the SOCKS5 handshake on a socket which is connected to the SOCKS port of Tor. Afterwards, the socket is
+    // connected to host and port. The socket timeout limits each read. The caller closes the socket if this fails.
+    public static void performHandshake(Socket socket, String host, int port, String streamId) throws IOException {
+        checkArguments(host, port, streamId);
+        DataInputStream inputStream = new DataInputStream(socket.getInputStream());
+        OutputStream outputStream = socket.getOutputStream();
+
+        outputStream.write(new byte[]{SOCKS_VERSION, 1, USERNAME_PASSWORD_METHOD});
+        outputStream.flush();
+        if (inputStream.readByte() != SOCKS_VERSION || inputStream.readByte() != USERNAME_PASSWORD_METHOD) {
+            throw new SocketException("The SOCKS proxy did not accept username and password authentication");
+        }
+
+        byte[] username = toUsername(streamId);
+        ByteArrayOutputStream authentication = new ByteArrayOutputStream();
+        authentication.write(USERNAME_PASSWORD_VERSION);
+        authentication.write(username.length);
+        authentication.write(username);
+        authentication.write(PASSWORD.length);
+        authentication.write(PASSWORD);
+        outputStream.write(authentication.toByteArray());
+        outputStream.flush();
+        if (inputStream.readByte() != USERNAME_PASSWORD_VERSION || inputStream.readByte() != 0) {
+            throw new SocketException("The SOCKS proxy rejected the username and password");
+        }
+
+        byte[] hostBytes = host.getBytes(StandardCharsets.US_ASCII);
+        ByteArrayOutputStream connect = new ByteArrayOutputStream();
+        connect.write(new byte[]{SOCKS_VERSION, CONNECT_COMMAND, 0, DOMAIN_NAME_ADDRESS_TYPE,
+                (byte) hostBytes.length});
+        connect.write(hostBytes);
+        connect.write(port >> 8);
+        connect.write(port & 0xFF);
+        outputStream.write(connect.toByteArray());
+        outputStream.flush();
+
+        if (inputStream.readByte() != SOCKS_VERSION) {
+            throw new SocketException("Invalid SOCKS reply");
+        }
+        int reply = inputStream.readUnsignedByte();
+        if (reply != 0) {
+            throw new ConnectException("SOCKS: " + toReplyName(reply));
+        }
+        inputStream.readByte();
+        int addressLength = switch (inputStream.readUnsignedByte()) {
+            case 1 -> 4;
+            case 3 -> inputStream.readUnsignedByte();
+            case 4 -> 16;
+            default -> throw new SocketException("Invalid address type in SOCKS reply");
+        };
+        inputStream.readFully(new byte[addressLength + 2]);
+    }
+
+    private static void checkArguments(String host, int port, String streamId) {
+        checkNotNull(streamId, "streamId must not be null");
+        checkArgument(StandardCharsets.US_ASCII.newEncoder().canEncode(host) && !host.isEmpty() && host.length() <= 255,
+                "Invalid host name");
+        checkArgument(port > 0 && port <= 0xFFFF, "Invalid port %s", port);
     }
 
     private static String toReplyName(int reply) {
