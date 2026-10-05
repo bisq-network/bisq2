@@ -5,8 +5,9 @@
 At startup a service replays data which the node received from other users before the service was initialized:
 
 1. the confidential messages which the node processed before, for example from the mailbox. The private chat, the
-   Bisq Easy and MuSig trades, mediation, arbitration, moderation and the timestamp service of the oracle node replay
-   them;
+   Bisq Easy and MuSig trades, mediation, arbitration, moderation, and in the oracle node the timestamp service and the
+   request service of the Bisq 1 bridge (bonded role registrations, account age, signed witness and account timestamp
+   requests) replay them;
 2. the data of the network store which a service handles: public chat messages, user profiles, MuSig offers, the
    authorized data which `AuthorizedBondedRolesService` applies at its start, processes again after a failure and
    replays to a listener added after its initialization, and in the oracle node the registration requests which it
@@ -23,8 +24,8 @@ A processed message is a confidential message which the node decrypted and check
 down.
 
 A confidential message listener registers and receives the replay of the processed messages in one step. The private
-chat, the Bisq Easy trade, the Bisq Easy mediator, the mediation request, the moderation and the timestamp service of
-the oracle node do so. For them, these rules apply in addition to the rule above:
+chat, the Bisq Easy trade, the Bisq Easy mediator, the mediation request, the moderation, and in the oracle node the
+timestamp service and the request service of the Bisq 1 bridge do so. For them, these rules apply in addition to the rule above:
 
 - Exactly once: the listener receives each processed message exactly once. It receives the messages which the node
   processed before the registration in the replay, and each later message as a new message. A message which the node
@@ -48,6 +49,10 @@ network layer, for example of new connections.
 
 ## Reasons
 
+- Item 1: a message can arrive before the service which handles it starts, for example from the mailbox while the node
+  starts. When the node decrypted a mailbox message, it removes the message from the network, so the message does not
+  arrive again. Without the replay, the service never processes it. The request service of the Bisq 1 bridge lost its
+  replay when it was rewritten for the gRPC bridge, so the oracle node did not process the requests from the mailbox.
 - The data comes from other users. A runtime exception while one item is processed, for example from a defect or from
   a check which a later version adds, must not stop the start of the node. Before this rule such an item made
   `initialize()` of the service throw, and the application start ended in the FAILED state, without trades, mediation
@@ -97,13 +102,6 @@ messages already reach the listeners in parallel tasks, so this adds no new kind
   processes between the two steps is lost or arrives twice, and a message whose hash code throws stops their whole
   replay.
   - Why it remains: the work on MuSig is deferred.
-  - What would remove it: the registration in one step, as for the other services.
-  - Who decides: the developers.
-- **The service of the oracle node for requests of Bisq 1 data receives no replay.** It registers after its connections
-  to the Bisq 1 node are ready. A request which the oracle node processed before that moment is lost for this service.
-  The sender does not send it again: a direct send succeeded, and the node removed a decrypted mailbox message from
-  the network.
-  - Why it remains: receiving these requests changes what the oracle node does at its start, which needs a decision.
   - What would remove it: the registration in one step, as for the other services.
   - Who decides: the developers.
 

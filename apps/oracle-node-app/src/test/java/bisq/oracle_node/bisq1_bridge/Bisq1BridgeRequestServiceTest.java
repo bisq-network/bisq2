@@ -17,6 +17,9 @@
 
 package bisq.oracle_node.bisq1_bridge;
 
+import bisq.account.timestamp.AuthorizeAccountTimestampV2Payload;
+import bisq.account.timestamp.AuthorizeAccountTimestampV2Request;
+import bisq.account.timestamp.AuthorizedAccountTimestamp;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -25,7 +28,10 @@ import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.common.util.ByteArrayUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -41,6 +47,7 @@ import bisq.oracle_node.bisq1_bridge.grpc.services.SignedWitnessGrpcService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
+import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
 import bisq.user.reputation.requests.AuthorizeSignedWitnessRequest;
@@ -51,7 +58,10 @@ import com.typesafe.config.ConfigFactory;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -65,8 +75,10 @@ import static bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRolesVerificatio
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -161,6 +173,53 @@ class Bisq1BridgeRequestServiceTest {
                     assertThat(data.getDateBucket()).isEqualTo(signedWitnessBucket);
                     assertThat(data.getWitnessNullifier()).containsExactly(witnessNullifier);
                 });
+    }
+
+    // A request which the node processed before the service started, for example from the mailbox, reaches the service
+    // with its sender key (see docs/specifications/network/startup-replay.md)
+    @Test
+    void accountAgeRequestWhichTheNodeProcessedBeforeTheStartIsProcessed() {
+        AccountAgeWitnessGrpcService accountAgeGrpcService = mock(AccountAgeWitnessGrpcService.class);
+        when(accountAgeGrpcService.verifyAndRequestAuthorization(any()))
+                .thenReturn(new AccountAgeWitnessOwnershipResponse(dateBucket(1_700_000_123_456L), new byte[32]));
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.publishAuthorizedData(any(), any()))
+                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
+        KeyPair sender = KeyGeneration.generateDefaultEcKeyPair();
+        processedBeforeTheStart(networkService, accountAgeRequest(profileId(sender)), sender.getPublic());
+        Bisq1BridgeRequestService service = createStartableService(networkService, accountAgeGrpcService);
+
+        service.initialize().join();
+        try {
+            // The service asks the bridge only if the profile of the request is the profile of the sender key
+            verify(accountAgeGrpcService, timeout(5000)).verifyAndRequestAuthorization(any());
+            verify(networkService).subscribeToConfidentialMessages(service);
+        } finally {
+            service.shutdown().join();
+        }
+    }
+
+    // The service handles the account timestamp requests in onMessage, without the sender key. The replay passes the
+    // processed messages to it as well, as for a new message.
+    @Test
+    void accountTimestampRequestWhichTheNodeProcessedBeforeTheStartIsProcessed() throws GeneralSecurityException {
+        NetworkService networkService = mock(NetworkService.class);
+        when(networkService.publishAuthorizedData(any(), any()))
+                .thenReturn(CompletableFuture.completedFuture(new BroadcastResult()));
+        processedBeforeTheStart(networkService,
+                accountTimestampV2Request(),
+                KeyGeneration.generateDefaultEcKeyPair().getPublic());
+        Bisq1BridgeRequestService service = createStartableService(networkService,
+                mock(AccountAgeWitnessGrpcService.class));
+
+        service.initialize().join();
+        try {
+            verify(networkService, timeout(5000)).publishAuthorizedData(
+                    argThat(data -> data instanceof AuthorizedAccountTimestamp), any());
+            verify(networkService).subscribeToConfidentialMessages(service);
+        } finally {
+            service.shutdown().join();
+        }
     }
 
     @Test
@@ -810,6 +869,24 @@ class Bisq1BridgeRequestServiceTest {
                 "");
     }
 
+    // An account timestamp request of an account created in Bisq 2, as AccountTimestampService creates it
+    private static AuthorizeAccountTimestampV2Request accountTimestampV2Request() throws GeneralSecurityException {
+        KeyPair accountKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        byte[] publicKey = accountKeyPair.getPublic().getEncoded();
+        byte[] fingerprintHash = DigestUtil.hash("fingerprint".getBytes(StandardCharsets.UTF_8));
+        byte[] saltedFingerprintHash = DigestUtil.hash(ByteArrayUtils.concat(fingerprintHash, new byte[32]));
+        byte[] hash = DigestUtil.hash(ByteArrayUtils.concat(saltedFingerprintHash, publicKey));
+        AuthorizeAccountTimestampV2Payload payload = new AuthorizeAccountTimestampV2Payload(System.currentTimeMillis(),
+                hash,
+                fingerprintHash,
+                saltedFingerprintHash,
+                publicKey);
+        byte[] signature = SignatureUtil.sign(payload.toProto(true).toByteArray(),
+                accountKeyPair.getPrivate(),
+                SignatureUtil.SHA256withECDSA);
+        return new AuthorizeAccountTimestampV2Request(payload, signature);
+    }
+
     private static AuthorizeAccountAgeRequest accountAgeRequest(String profileId) {
         return new AuthorizeAccountAgeRequest(profileId,
                 "56".repeat(20),
@@ -846,6 +923,51 @@ class Bisq1BridgeRequestServiceTest {
 
     private static void useDirectExecutor(Bisq1BridgeRequestService service) {
         service.setExecutor(MoreExecutors.newDirectExecutorService());
+    }
+
+    // A service whose initialize() completes: the gRPC services of the bridge start and stop at once
+    private static Bisq1BridgeRequestService createStartableService(NetworkService networkService,
+                                                                    AccountAgeWitnessGrpcService accountAgeWitnessGrpcService) {
+        when(accountAgeWitnessGrpcService.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        when(accountAgeWitnessGrpcService.shutdown()).thenReturn(CompletableFuture.completedFuture(true));
+        SignedWitnessGrpcService signedWitnessGrpcService = mock(SignedWitnessGrpcService.class);
+        when(signedWitnessGrpcService.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        when(signedWitnessGrpcService.shutdown()).thenReturn(CompletableFuture.completedFuture(true));
+        BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
+        when(bondedRoleGrpcService.initialize()).thenReturn(CompletableFuture.completedFuture(true));
+        when(bondedRoleGrpcService.shutdown()).thenReturn(CompletableFuture.completedFuture(true));
+        PersistenceService persistenceService = mock(PersistenceService.class);
+        @SuppressWarnings("unchecked")
+        Persistence<Bisq1BridgeRequestStore> persistence = mock(Persistence.class);
+        when(persistenceService.<Bisq1BridgeRequestStore>getOrCreatePersistence(any(), any(), any()))
+                .thenReturn(persistence);
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+        KeyPair authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        return new Bisq1BridgeRequestService(persistenceService,
+                networkService,
+                mock(AuthorizedBondedRolesService.class),
+                authorizedKeyPair.getPrivate(),
+                authorizedKeyPair.getPublic(),
+                false,
+                true,
+                mock(AuthorizedOracleNode.class),
+                mock(GrpcClient.class),
+                bondedRoleGrpcService,
+                accountAgeWitnessGrpcService,
+                signedWitnessGrpcService);
+    }
+
+    // The node processed the message before the service started. The subscription passes it to the service as a new
+    // message is passed: to onMessage and to onConfidentialMessage with the sender key.
+    private static void processedBeforeTheStart(NetworkService networkService,
+                                                EnvelopePayloadMessage message,
+                                                PublicKey senderPublicKey) {
+        doAnswer(invocation -> {
+            ConfidentialMessageService.Listener listener = invocation.getArgument(0);
+            listener.onMessage(message);
+            listener.onConfidentialMessage(message, senderPublicKey);
+            return null;
+        }).when(networkService).subscribeToConfidentialMessages(any());
     }
 
     private static Bisq1BridgeRequestService createServiceWithBondedRoleGrpcService(
