@@ -18,15 +18,26 @@
 package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
+import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
+import bisq.bridge.protobuf.BondedRoleGrpcServiceGrpc;
+import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationRequest;
+import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationResponse;
 import bisq.security.keys.KeyGeneration;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
+
+import java.security.KeyPair;
 
 import static bisq.oracle_node.TestBondedRoleRegistrations.LOCKUP_TX_ID;
 import static bisq.oracle_node.TestBondedRoleRegistrations.PROPOSAL_TX_ID;
 import static bisq.oracle_node.TestBondedRoleRegistrations.createCurrentRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class BondedRoleGrpcServiceTest {
     @Test
@@ -51,5 +62,40 @@ class BondedRoleGrpcServiceTest {
                 .cause()
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("not matching the profile ID");
+    }
+
+    // The role data contains the network ID of the request. Released clients send their network ID with the key of
+    // their profile (finding D1, see docs/specifications/bonded-roles/registration.md).
+    @Test
+    void senderWhoDoesNotOwnTheNetworkIdIsRejectedBeforeAnyBridgeCall() {
+        // The null gRPC client guarantees that a bypassed ownership check would fail differently.
+        BondedRoleGrpcService service = new BondedRoleGrpcService(null);
+        KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+        BondedRoleRegistrationRequest request = createCurrentRequest(senderKeyPair,
+                KeyGeneration.generateDefaultEcKeyPair());
+
+        assertThatThrownBy(() -> service.requestBondedRoleVerification(request, senderKeyPair.getPublic()))
+                .isInstanceOf(RuntimeException.class)
+                .cause()
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not matching the key of the network ID");
+    }
+
+    @Test
+    void senderWhoOwnsTheProfileAndTheNetworkIdIsVerifiedByTheBridge() {
+        GrpcClient grpcClient = mock(GrpcClient.class);
+        BondedRoleGrpcServiceGrpc.BondedRoleGrpcServiceBlockingStub blockingStub =
+                mock(BondedRoleGrpcServiceGrpc.BondedRoleGrpcServiceBlockingStub.class, Answers.RETURNS_SELF);
+        when(grpcClient.getBondedRoleBlockingStub()).thenReturn(blockingStub);
+        when(blockingStub.requestBondedRoleVerification(any()))
+                .thenReturn(bisq.bridge.protobuf.BondedRoleVerificationResponse.getDefaultInstance());
+        BondedRoleGrpcService service = new BondedRoleGrpcService(grpcClient);
+        KeyPair senderKeyPair = KeyGeneration.generateDefaultEcKeyPair();
+
+        BondedRoleVerificationResponse response = service.requestBondedRoleVerification(
+                createCurrentRequest(senderKeyPair, senderKeyPair), senderKeyPair.getPublic());
+
+        assertThat(response.getErrorMessage()).isEmpty();
+        verify(blockingStub).requestBondedRoleVerification(any());
     }
 }

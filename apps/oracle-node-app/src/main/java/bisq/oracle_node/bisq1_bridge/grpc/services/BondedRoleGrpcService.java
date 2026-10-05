@@ -31,6 +31,7 @@ import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -52,6 +53,11 @@ public class BondedRoleGrpcService implements Service {
             // Verify if message sender is owner of the profileId
             String sendersProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
             checkArgument(profileId.equals(sendersProfileId), "Senders pub key is not matching the profile ID");
+            // The role data contains the network ID of the request, and nodes reach the role at it. Only the owner of
+            // the network ID may name it (see docs/specifications/bonded-roles/registration.md).
+            checkArgument(Arrays.equals(request.getNetworkId().getPubKey().getPublicKey().getEncoded(),
+                            senderPublicKey.getEncoded()),
+                    "Senders pub key is not matching the key of the network ID");
 
             var protoRequest = toVerificationRequest(request).completeProto();
             var protoResponse = GrpcClient.withInteractiveRequestDeadline(grpcClient.getBondedRoleBlockingStub())

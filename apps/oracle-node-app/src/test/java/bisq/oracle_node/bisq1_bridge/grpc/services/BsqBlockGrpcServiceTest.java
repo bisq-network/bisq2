@@ -113,6 +113,58 @@ class BsqBlockGrpcServiceTest {
         verify(service, times(2)).requestAsync();
     }
 
+    // A proof of burn with the amount 0 breaks a rule of AuthorizedProofOfBurnData. The node skips the transaction and
+    // keeps the cursor moving (see docs/specifications/network/bisq1-bridge-block-continuity.md).
+    @Test
+    void invalidTransactionOfTheSnapshotIsSkippedAndTheCursorMoves() {
+        GrpcClient grpcClient = mock(GrpcClient.class);
+        BsqBlockGrpcServiceGrpc.BsqBlockGrpcServiceBlockingStub blockingStub =
+                mock(BsqBlockGrpcServiceGrpc.BsqBlockGrpcServiceBlockingStub.class, Answers.RETURNS_SELF);
+        when(grpcClient.getBsqBlockBlockingStub()).thenReturn(blockingStub);
+        List<Integer> notifiedHeights = new ArrayList<>();
+        BsqBlockGrpcService service = new BsqBlockGrpcService(false, grpcClient, notifiedHeights::add);
+        int height = service.getStartBlockHeight();
+        TxDto invalidTx = new TxDto("d".repeat(64),
+                Optional.of(new ProofOfBurnDto(0, new byte[20])),
+                Optional.empty());
+        TxDto validTx = new TxDto("e".repeat(64),
+                Optional.of(new ProofOfBurnDto(1, new byte[20])),
+                Optional.empty());
+        BsqBlockDto block = new BsqBlockDto(height, System.currentTimeMillis(), List.of(invalidTx, validTx));
+        when(blockingStub.requestBsqBlocks(any()))
+                .thenReturn(new BsqBlocksResponse(List.of(block), height).toProto(false));
+
+        service.request();
+
+        assertThat(service.getAuthorizedProofOfBurnDataQueue())
+                .extracting(data -> data.getTxId())
+                .containsExactly(validTx.getTxId());
+        assertThat(service.getStartBlockHeight()).isEqualTo(height + 1);
+        assertThat(notifiedHeights).containsExactly(height);
+        service.shutdown();
+    }
+
+    @Test
+    void invalidTransactionOfALiveBlockIsSkippedAndTheCursorMoves() {
+        List<Integer> notifiedHeights = new ArrayList<>();
+        BsqBlockGrpcService service = new BsqBlockGrpcService(false, mock(GrpcClient.class), notifiedHeights::add);
+        int height = service.getStartBlockHeight();
+        TxDto invalidTx = new TxDto("d".repeat(64),
+                Optional.of(new ProofOfBurnDto(0, new byte[20])),
+                Optional.empty());
+        TxDto validTx = new TxDto("e".repeat(64),
+                Optional.of(new ProofOfBurnDto(1, new byte[20])),
+                Optional.empty());
+
+        service.handleLiveResponse(new BsqBlockDto(height, System.currentTimeMillis(), List.of(invalidTx, validTx)));
+
+        assertThat(service.getAuthorizedProofOfBurnDataQueue())
+                .extracting(data -> data.getTxId())
+                .containsExactly(validTx.getTxId());
+        assertThat(service.getStartBlockHeight()).isEqualTo(height + 1);
+        assertThat(notifiedHeights).containsExactly(height);
+    }
+
     @Test
     void duplicateLiveBlockDoesNotTriggerRegistrationRevalidationAgain() {
         AtomicInteger notificationCount = new AtomicInteger();

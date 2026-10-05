@@ -104,6 +104,7 @@ public class Bisq1BridgeRequestService implements Service,
     private final AtomicBoolean revalidationRequested = new AtomicBoolean();
 
     private ExecutorService executor;
+    private ExecutorService accountTimestampExecutor;
     private ExecutorService revalidationExecutor;
 
     public Bisq1BridgeRequestService(PersistenceService persistenceService,
@@ -198,16 +199,11 @@ public class Bisq1BridgeRequestService implements Service,
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        int maxPoolSize = 5;
-        String name = "Bisq1BridgeRequestService";
-        int queueCapacity = 20;
-        executor = ExecutorFactory.boundedCachedPool(name,
-                1,
-                maxPoolSize,
-                10,
-                queueCapacity,
-                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize)
-        );
+        executor = createRequestExecutor("Bisq1BridgeRequestService");
+        // Anybody can send many account timestamp requests, and a full queue drops its oldest request. So they have their
+        // own queue, and they cannot drop the requests of the other types (see
+        // docs/specifications/bonded-roles/oracle-requests.md).
+        accountTimestampExecutor = createRequestExecutor("AccountTimestampRequests");
         revalidationExecutor = ExecutorFactory.newSingleThreadExecutor("BondedRoleRevalidation");
 
         return accountAgeWitnessGrpcService.initialize()
@@ -216,7 +212,11 @@ public class Bisq1BridgeRequestService implements Service,
                 .thenCompose(result -> bondedRoleGrpcService.initialize())
                 .thenApply(result -> {
                     authorizedBondedRolesService.addListener(this);
-                    networkService.addConfidentialMessageListener(this);
+                    // Requests can arrive before this service starts, for example from the mailbox. The node
+                    // removes a mailbox message from the network when it decrypted it, so without the delivery of
+                    // the processed messages no service would process such a request (see
+                    // docs/specifications/network/startup-replay.md).
+                    networkService.subscribeToConfidentialMessages(this);
                     recoverRegistrationRequestsFromLoadedData();
                     revalidateBondedRoles();
                     return result;
@@ -234,6 +234,8 @@ public class Bisq1BridgeRequestService implements Service,
         revalidationInProgress.set(false);
         ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
         executor = null;
+        ExecutorFactory.shutdownAndAwaitTermination(accountTimestampExecutor, 100);
+        accountTimestampExecutor = null;
         return bondedRoleGrpcService.shutdown()
                 .thenCompose(result -> accountTimestampGrpcService.shutdown())
                 .thenCompose(result -> signedWitnessGrpcService.shutdown())
@@ -356,6 +358,19 @@ public class Bisq1BridgeRequestService implements Service,
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
+
+    // Up to 5 threads and 20 waiting requests. If the queue is full, the oldest waiting request is dropped.
+    private static ExecutorService createRequestExecutor(String name) {
+        int maxPoolSize = 5;
+        int queueCapacity = 20;
+        return ExecutorFactory.boundedCachedPool(name,
+                1,
+                maxPoolSize,
+                10,
+                queueCapacity,
+                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize)
+        );
+    }
 
     @VisibleForTesting
     void recoverRegistrationRequestsFromLoadedData() {
@@ -803,7 +818,7 @@ public class Bisq1BridgeRequestService implements Service,
             } catch (Exception e) {
                 log.warn("AuthorizeAccountTimestampV1Request is invalid", e);
             }
-        }, executor);
+        }, accountTimestampExecutor);
     }
 
 
@@ -839,7 +854,7 @@ public class Bisq1BridgeRequestService implements Service,
             } catch (Exception e) {
                 log.warn("AuthorizeAccountTimestampV2Request is invalid", e);
             }
-        }, executor);
+        }, accountTimestampExecutor);
     }
 
     private void persistAccountTimestamp(AccountTimestamp accountTimestamp) {

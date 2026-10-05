@@ -61,6 +61,27 @@ mapping checks to an unknown future network-data version. It may continue consum
 understands when the oracle-authorized hash remains compatible; hash-incompatible data fails the
 oracle signature check.
 
+## Sender of a registration
+
+A user sends a registration or a cancellation as a confidential message to each oracle node. The oracle node knows
+the key which signed the message, the sender key. Before it asks the Bisq 1 bridge to verify the bond, it checks:
+
+1. The profile ID of the request is the hash of the sender key. So only the owner of a profile can register or cancel
+   a role of the profile.
+2. The key of the network ID of the request is the sender key. The role data contains this network ID.
+
+Reasons:
+
+- The bond proves who holds the role in the DAO. The sender key proves who holds the Bisq 2 profile.
+- Rule 2: the identity of a registration leaves out the network ID (see
+  [Persistence and publication](#persistence-and-publication)), but the role data contains it. Without rule 2, the
+  owner of a profile could send one registration with the network IDs of other keys, and each of them would become a
+  separate role record. Rule 2 limits the network IDs of a registration to the key of the profile. See
+  [Open points](#open-points) for the variants which remain.
+
+Compatibility: released clients (since 2.0.0) send a registration with the key pair of the selected profile, and the
+network ID of the request is the network ID of this key pair. So oracle nodes accept their requests.
+
 ## Addresses of node roles
 
 A **node role** is a bonded role of a node type: seed node, oracle node, explorer node or market price node.
@@ -272,3 +293,19 @@ The bond user name and signature are required in both cases.
 Cancellation is verified against the current DAO state before removal. If the bond has already left
 its confirmed and unspent state, the cancellation request fails verification; DAO revalidation is
 responsible for removing that invalid registration.
+
+## Open points
+
+- **One registration, several role records.** The identity of a registration leaves out the network ID and the
+  addresses of a node. The oracle node still persists and publishes each request with other addresses as a separate
+  registration and role record. The selection of a mediator counts each record, and a ban names one exact record, so
+  a banned role can come back with other addresses. Rule 2 of [Sender of a registration](#sender-of-a-registration)
+  limits the variants to the key of the profile, but not their addresses.
+  - What would remove it: the oracle node keeps one record per registration identity. A new variant replaces the
+    published record of the earlier one, and the oracle node publishes no variant of a banned record.
+  - Decision needed: which identity a ban covers, and whether a new variant replaces the earlier record.
+  - Who decides: the developers.
+- **More than 1 000 registrations.** The batch revalidation sends at most 1 000 registrations to the Bisq 1 bridge.
+  Above this number, the oracle node revalidates no registration.
+  - Decision needed: a policy for more registrations, for example several batches of one DAO snapshot.
+  - Who decides: the developers.
