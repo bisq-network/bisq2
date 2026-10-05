@@ -120,6 +120,14 @@ public class NetworkIdService extends RateLimitedPersistenceClient<NetworkIdStor
         return persistableStore.findNetworkId(tag);
     }
 
+    /**
+     * Our own NetworkId for the key with the given key ID. Every identity of this node, also the default identity, has
+     * its NetworkId in this service.
+     */
+    public Optional<NetworkId> findNetworkIdByKeyId(String keyId) {
+        return persistableStore.findNetworkIdByKeyId(keyId);
+    }
+
     public void migrateFromDeprecatedStore(Map<String, NetworkId> fromDeprecatedStore) {
         Map<String, NetworkId> persistedMap = persistableStore.getNetworkIdByTag();
         AtomicBoolean anyChange = new AtomicBoolean();
