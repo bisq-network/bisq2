@@ -21,7 +21,6 @@ import bisq.common.network.Address;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.timer.Scheduler;
-import bisq.common.util.StringUtils;
 import bisq.network.NetworkExecutors;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -38,9 +37,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -299,8 +296,6 @@ public class PeerGroupManager implements Node.Listener {
             maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
             maybeCreateConnectionsScheduler = Optional.empty();
             maybeCreateConnections();
-            maybeRemoveReportedPeers();
-            maybeRemovePersistedPeers();
         } catch (InterruptedException e) {
             log.warn("Thread got interrupted at doHouseKeeping method", e);
             Thread.currentThread().interrupt(); // Restore interrupted state
@@ -406,44 +401,6 @@ public class PeerGroupManager implements Node.Listener {
         log.info("We have not sufficient connections and call peerExchangeService.extendPeerGroup");
         // It is an async call. We do not wait for the result.
         peerExchangeService.extendPeerGroup();
-    }
-
-    private void maybeRemoveReportedPeers() {
-        List<Peer> reportedPeers = new ArrayList<>(peerGroupService.getReportedPeers());
-        int exceeding = reportedPeers.size() - config.getMaxReported();
-        if (exceeding > 0) {
-            reportedPeers.sort(Comparator.comparing(Peer::getDate));
-            List<Peer> outDated = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
-            log.info("Remove {} reported peers: {}", outDated.size(), StringUtils.truncate(outDated.toString(), 500));
-            peerGroupService.removeReportedPeers(outDated);
-        }
-    }
-
-    private void maybeRemovePersistedPeers() {
-        List<Peer> outDated = peerGroupService.getPersistedPeers().stream()
-                .sorted()
-                .skip(config.getMaxPersisted())
-                .collect(Collectors.toList());
-        List<Peer> outDatedTorPeers = outDated.stream().filter(e -> e.getAddress().isTorAddress()).collect(Collectors.toList());
-        if (!outDatedTorPeers.isEmpty()) {
-            /*log.info("Remove {} persisted Tor peers: {}",
-                    outDatedTorPeers.size(),
-                    outDatedTorPeers.stream()
-                            .sorted()
-                            .map(e -> "Age: " + StringUtils.formatTime(e.getAge()) + "; " + e.getAddress())
-                            .collect(Collectors.joining("\n")));*/
-            peerGroupService.removePersistedPeers(outDatedTorPeers);
-        }
-        List<Peer> outDatedI2PPeers = outDated.stream().filter(e -> e.getAddress().isI2pAddress()).collect(Collectors.toList());
-        if (!outDatedI2PPeers.isEmpty()) {
-            /*log.info("Remove {} persisted I2P peers: {}",
-                    outDatedI2PPeers.size(),
-                    outDatedI2PPeers.stream()
-                            .sorted()
-                            .map(e -> "Age: " + StringUtils.formatTime(e.getAge()) + "; " + e.getAddress())
-                            .collect(Collectors.joining("\n")));*/
-            peerGroupService.removePersistedPeers(outDatedI2PPeers);
-        }
     }
 
     public void addListener(PeerGroupManager.Listener listener) {

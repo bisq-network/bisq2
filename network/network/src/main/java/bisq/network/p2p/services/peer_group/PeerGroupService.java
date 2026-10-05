@@ -27,6 +27,7 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,16 +43,22 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Maintains different collections of peers and connections
+ * Maintains different collections of peers and connections.
+ * The reported and the persisted peers come from other nodes. This service keeps only peers of its own transport, and
+ * keeps at most the configured number of peers in each collection. See docs/specifications/network/peer-exchange.md.
  */
 @Slf4j
 public class PeerGroupService extends RateLimitedPersistenceClient<PeerGroupStore> {
     private static final long MIN_PRINT_INTERVAL = TimeUnit.MINUTES.toMillis(10);
+    // A reporter dates the peer of a connection with the creation date of the connection plus up to 3 seconds, so a
+    // date can be a little in our future, also because the clocks differ. The limits keep the newest peers, so a peer
+    // dated further in the future would rank above all honest peers. We do not keep such peers.
+    @VisibleForTesting
+    static final long MAX_DATE_IN_FUTURE = TimeUnit.MINUTES.toMillis(1);
 
     @Getter
     public static class Config {
@@ -108,24 +115,61 @@ public class PeerGroupService extends RateLimitedPersistenceClient<PeerGroupStor
     @Getter
     private final Set<Address> seedNodeAddresses;
     private final BanList banList;
+    private final TransportType transportType;
+    private final int maxReportedPeers;
+    private final int maxPersistedPeers;
     private final Map<Address, Peer> reportedPeersByAddress = new ConcurrentHashMap<>();
     private long lastReportTs;
+    private volatile boolean persistAfterLoad;
 
     public PeerGroupService(PersistenceService persistenceService,
                             TransportType transportType,
                             Config config,
                             Set<Address> seedNodeAddresses,
-                            BanList banList) {
+                            BanList banList,
+                            int maxReportedPeers,
+                            int maxPersistedPeers) {
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(CopyOnWriteArraySet::new));
         this.banList = banList;
+        this.transportType = transportType;
+        this.maxReportedPeers = maxReportedPeers;
+        this.maxPersistedPeers = maxPersistedPeers;
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 DbSubDirectory.SETTINGS,
                 transportType.name().toLowerCase(Locale.ROOT) + persistableStore.getClass().getSimpleName(),
                 persistableStore);
+    }
+
+    // Earlier versions kept peers of all transports and did not limit the number of persisted clearnet peers. So the
+    // persisted store can be larger than the limit, and we apply the rules when we load it.
+    @Override
+    public PeerGroupStore prunePersisted(PeerGroupStore persisted) {
+        Map<Address, Peer> persistedPeersByAddress = persisted.getPersistedPeersByAddress();
+        Map<Address, Peer> prunedPeersByAddress = persistedPeersByAddress.values().stream()
+                .filter(this::isStorable)
+                .sorted()
+                .limit(maxPersistedPeers)
+                .collect(Collectors.toMap(Peer::getAddress, peer -> peer));
+        int numRemoved = persistedPeersByAddress.size() - prunedPeersByAddress.size();
+        if (numRemoved > 0) {
+            log.info("We removed {} of {} persisted {} peers which are not of our transport, are dated in the future " +
+                    "or exceed the limit of {} peers", numRemoved, persistedPeersByAddress.size(), transportType, maxPersistedPeers);
+            persistAfterLoad = true;
+        }
+        return new PeerGroupStore(prunedPeersByAddress);
+    }
+
+    @Override
+    public void onPersistedApplied(PeerGroupStore persisted) {
+        // We write the pruned store, so that the file does not keep the removed peers until the next change
+        if (persistAfterLoad) {
+            persistAfterLoad = false;
+            persist();
+        }
     }
 
     /* --------------------------------------------------------------------- */
@@ -141,15 +185,34 @@ public class PeerGroupService extends RateLimitedPersistenceClient<PeerGroupStor
     }
 
     public boolean addPersistedPeer(Peer peer) {
-        boolean wasAdded = doAddPersistedPeer(peer);
-        if (wasAdded) {
-            persist();
-        }
-        return wasAdded;
+        return addPersistedPeers(Set.of(peer));
     }
 
-    private boolean doAddPersistedPeer(Peer peer) {
-        return doAddPeer(peer, getPersistedPeersByAddress());
+    // Adds the peers which we can store, and keeps the newest maxSize peers of the map
+    private boolean addPeers(Set<Peer> peers, Map<Address, Peer> map, int maxSize) {
+        synchronized (map) {
+            boolean wasAdded = false;
+            for (Peer peer : peers) {
+                if (isStorable(peer) && doAddPeer(peer, map)) {
+                    wasAdded = true;
+                }
+            }
+            if (map.size() > maxSize) {
+                map.values().stream()
+                        .sorted()
+                        .skip(maxSize)
+                        .toList()
+                        .forEach(oldest -> map.remove(oldest.getAddress()));
+            }
+            return wasAdded;
+        }
+    }
+
+    // A peer of another transport is useless for the nodes of our transport. A peer dated in the future could push
+    // out honest peers, because the limits keep the newest peers.
+    private boolean isStorable(Peer peer) {
+        return peer.getAddress().getTransportType() == transportType &&
+                peer.getCreated() <= System.currentTimeMillis() + MAX_DATE_IN_FUTURE;
     }
 
     private boolean doAddPeer(Peer peerToAdd, Map<Address, Peer> map) {
@@ -168,13 +231,12 @@ public class PeerGroupService extends RateLimitedPersistenceClient<PeerGroupStor
     }
 
     public boolean addPersistedPeers(Set<Peer> peers) {
-        AtomicBoolean wasAdded = new AtomicBoolean();
-        peers.forEach(peer -> wasAdded.set(doAddPersistedPeer(peer) || wasAdded.get()));
-        if (wasAdded.get()) {
+        boolean wasAdded = addPeers(peers, getPersistedPeersByAddress(), maxPersistedPeers);
+        if (wasAdded) {
             maybePrintReportedPeers(getPersistedPeersByAddress(), "Persisted");
             persist();
         }
-        return wasAdded.get();
+        return wasAdded;
     }
 
     public void removePersistedPeers(Collection<Peer> peers) {
@@ -199,18 +261,12 @@ public class PeerGroupService extends RateLimitedPersistenceClient<PeerGroupStor
         return new HashSet<>(reportedPeersByAddress.values());
     }
 
-    private boolean addReportedPeer(Peer peer) {
-        return doAddPeer(peer, reportedPeersByAddress);
-    }
-
     public boolean addReportedPeers(Set<Peer> peers) {
-        AtomicBoolean wasAdded = new AtomicBoolean();
-        peers.forEach(peer -> wasAdded.set(addReportedPeer(peer) || wasAdded.get()));
-        boolean result = wasAdded.get();
-        if (result) {
+        boolean wasAdded = addPeers(peers, reportedPeersByAddress, maxReportedPeers);
+        if (wasAdded) {
             maybePrintReportedPeers(reportedPeersByAddress, "Reported");
         }
-        return result;
+        return wasAdded;
     }
 
     public void removeReportedPeers(Collection<Peer> peers) {
