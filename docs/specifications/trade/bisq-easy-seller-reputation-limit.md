@@ -33,7 +33,7 @@ The seller's client also shows the seller's maximum and warns when the seller's 
 
 ## Market Prices at the Maker
 
-The maker's check uses its BTC price in the offer's currency and its BTC price in USD. Both prices must be younger than 12 hours, and their timestamps must not be more than 5 minutes apart. 5 minutes is the age after which the client shows a market price as stale. A USD value computed from two prices of very different times could understate the trade value. In a USD market both prices are the same price.
+The maker's check uses its BTC price in the offer's currency and its BTC price in USD. Both prices are positive, because a node uses only positive market prices (see [Market prices](../bonded-roles/market-prices.md)). Both prices must be younger than 12 hours, and their timestamps must not be more than 5 minutes apart. 5 minutes is the age after which the client shows a market price as stale. A USD value computed from two prices of very different times could understate the trade value. In a USD market both prices are the same price.
 
 ## Fail-Closed Cases
 
