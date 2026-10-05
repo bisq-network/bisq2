@@ -27,7 +27,8 @@ user of a two-party chat, or the traders and dispute agents of a trade, without 
    network ID. A node ignores a received message or reaction whose receiver profile ID is not the ID of its receiver
    network ID (both IDs are the hash of the public key). It checks this before it acts on the message or reaction. So
    such a message creates no channel and no contact, and the node keeps neither such a message nor such a reaction as
-   pending.
+   pending. Such a message or reaction already fails at parsing (`PrivateChatMessage.verify`,
+   `PrivateChatMessageReaction.verify`, see `../network/validation-at-parsing.md`).
 
 ## Reason
 
@@ -51,8 +52,9 @@ of a trade chat message from the channel, so their messages pass rules 1 and 5. 
 dispute agents and messages with a channel ID with a dotless i (see "Not covered"), with which the mediator ignores a request
 as well.
 
-Unmodified nodes of version 2.1.13 and of this version take the receiver profile ID and the receiver network ID of a
-message or reaction from the same user profile, so their messages and reactions pass rule 7.
+Unmodified nodes of all versions (checked for 2.0.0 to 2.1.13 and this version) take the receiver profile ID and the
+receiver network ID of a message or reaction from the same user profile, and the ID of a user profile is the ID of the
+key of its network ID, so their messages and reactions pass rule 7.
 
 ## Not covered
 
