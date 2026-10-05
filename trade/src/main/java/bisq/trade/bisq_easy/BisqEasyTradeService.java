@@ -524,7 +524,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     }
 
     // A rejected take offer request creates no trade, so no state machine reports the rejection to the taker. We
-    // report it with the data which BisqEasyFsmErrorEventHandler reports for a failed trade.
+    // report it with the data which BisqEasyFsmErrorEventHandler reports for a failed trade. Like the trade messages,
+    // the report names us by the network ID to which the taker addressed the request, not by the current addresses of
+    // our identity (docs/specifications/user/identity-by-key.md, rule 3).
     private void reportTakeOfferRejection(BisqEasyTrade bisqEasyTrade, RuntimeException exception) {
         TradeProtocolFailure tradeProtocolFailure = exception instanceof TradeProtocolException tradeProtocolException ?
                 tradeProtocolException.getTradeProtocolFailure() :
@@ -534,7 +536,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         BisqEasyReportErrorMessage report = new BisqEasyReportErrorMessage(StringUtils.createUid(),
                 bisqEasyTrade.getId(),
                 BisqEasyProtocol.VERSION,
-                myIdentity.getNetworkId(),
+                bisqEasyTrade.getMyself().getNetworkId(),
                 takerNetworkId,
                 StringUtils.truncate(ExceptionUtil.getRootCauseMessage(exception), MAX_LENGTH_ERROR_MESSAGE),
                 StringUtils.truncate(ExceptionUtil.getSafeStackTraceAsString(exception), MAX_LENGTH_STACKTRACE),
