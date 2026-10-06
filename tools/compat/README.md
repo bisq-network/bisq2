@@ -193,6 +193,12 @@ which uses the code of Bisq. The tests cover:
   messages of both traders, and mediates a new case. The security manager bans one mediator: makers and takers of both
   versions select the other one, also nodes which start after the ban, and both again after its removal. Closing and
   opening a case again need the screens of the mediator and stay manual.
+- `OracleMigrationAcrossVersionsTest`: the authorized data publisher acts as a root oracle node of the baseline, which
+  publishes its data and the roles of two mediators with the key of its network ID. The baseline uses these roles, and
+  nodes of this checkout do not (rule 11 of `docs/specifications/network/storage-ownership.md`), so a trade between two
+  nodes of this checkout has no mediator. After the publisher migration of this checkout, both versions select the
+  same mediators, also nodes which start after the migration, and the removal of a role with the authorized key applies
+  on both versions.
 - `DifficultyAdjustmentAcrossVersionsTest`: the security manager publishes a difficulty adjustment of 100, as during a
   spam attack. Nodes which ran before the adjustment and nodes which start after it trade between the versions in both
   directions, also through the mailbox of an offline maker, and again after the removal of the adjustment. A

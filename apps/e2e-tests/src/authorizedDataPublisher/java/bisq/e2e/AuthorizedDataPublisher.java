@@ -30,6 +30,7 @@ import bisq.common.encoding.Hex;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.user.profile.UserProfile;
@@ -65,6 +66,13 @@ import static com.google.common.base.Preconditions.checkState;
  *     which this oracle node authorizes, as the oracle node of this checkout publishes it for a registration request
  *     with this protocol version. Needs the command {@code oracle} before.</li>
  *     <li>{@code remove-mediator <profile ID>}: removes the role of this mediator</li>
+ *     <li>{@code oracle-legacy} and {@code mediator-legacy <profile ID> <registration protocol version>}: the same data
+ *     as {@code oracle} and {@code mediator}, which the key pair of the network ID of the oracle node publishes, as an
+ *     oracle node of version 2.1.13 did. The dev key still signs the data.</li>
+ *     <li>{@code migrate}: the migration of the publisher of the data of the oracle node of this checkout, which
+ *     publishes the data of {@code oracle-legacy} and {@code mediator-legacy} again with the dev key and removes the
+ *     entries of the key pair of the network ID (rule 14 of docs/specifications/network/storage-ownership.md). The
+ *     command returns when the migration queued its requests, which it broadcasts one at a time.</li>
  * </ul>
  * Each command returns when its broadcast is done.
  */
@@ -119,11 +127,14 @@ final class AuthorizedDataPublisher {
                 publishDifficultyAdjustment(Double.parseDouble(parts[1]));
             }
             case "remove-difficulty" -> removeDifficultyAdjustment();
-            case "oracle" -> publishOracleNode();
-            case "mediator" -> {
-                checkArgument(parts.length == 3, "mediator needs a profile ID and a registration protocol version");
-                publishMediatorRole(parts[1], Integer.parseInt(parts[2]));
+            case "oracle" -> publishOracleNode(devKeyPair);
+            case "oracle-legacy" -> publishOracleNode(networkIdKeyPair());
+            case "mediator", "mediator-legacy" -> {
+                checkArgument(parts.length == 3, "%s needs a profile ID and a registration protocol version", parts[0]);
+                publishMediatorRole(parts[1], Integer.parseInt(parts[2]),
+                        parts[0].equals("mediator") ? devKeyPair : networkIdKeyPair());
             }
+            case "migrate" -> networkService().migratePublisherOfAuthorizedData(networkIdKeyPair(), devKeyPair);
             case "remove-mediator" -> {
                 checkArgument(parts.length == 2, "remove-mediator needs a profile ID");
                 removeMediatorRole(parts[1]);
@@ -195,8 +206,9 @@ final class AuthorizedDataPublisher {
 
     // As OracleNodeService of a root oracle node, whose key is a static key. Nodes of version 2.1.13 accept the
     // AuthorizedOracleNode only from the key of the network ID of the oracle node, so this key publishes it, and the
-    // dev key signs it.
-    private void publishOracleNode() {
+    // dev key signs it. The publisher of the role of the oracle node is the dev key, or the key of the network ID as
+    // at an oracle node of version 2.1.13.
+    private void publishOracleNode(KeyPair publisherOfRole) {
         Identity identity = applicationService.getIdentityService().getOrCreateDefaultIdentity();
         NetworkId networkId = identity.getNetworkId();
         String authorizedPublicKey = Hex.encode(devKeyPair.getPublic().getEncoded());
@@ -215,17 +227,14 @@ final class AuthorizedDataPublisher {
                 networkId,
                 Optional.of(myOracleNode),
                 true);
-        networkService().publishAuthorizedData(myRole, devKeyPair).join();
-        networkService().publishAuthorizedData(myOracleNode,
-                identity.getNetworkIdWithKeyPair().getKeyPair(),
-                devKeyPair.getPrivate(),
-                devKeyPair.getPublic()).join();
+        publish(myRole, publisherOfRole);
+        publish(myOracleNode, identity.getNetworkIdWithKeyPair().getKeyPair());
         oracleNode = Optional.of(myOracleNode);
     }
 
     // As Bisq1BridgeRequestService.toAuthorizedBondedRole for a registration request of a mediator. A request of
     // version 2.1.13 has no protocol version, which counts as the legacy version.
-    private void publishMediatorRole(String profileId, int registrationProtocolVersion) {
+    private void publishMediatorRole(String profileId, int registrationProtocolVersion, KeyPair publisher) {
         AuthorizedOracleNode myOracleNode = oracleNode
                 .orElseThrow(() -> new IllegalStateException("The command oracle must come first"));
         UserProfile mediator = applicationService.getUserService().getUserProfileService().findUserProfile(profileId)
@@ -243,7 +252,7 @@ final class AuthorizedDataPublisher {
                 registrationProtocolVersion,
                 hasProposal ? transactionId(profileId, "proposal") : "",
                 hasProposal ? transactionId(profileId, "lockup") : "");
-        networkService().publishAuthorizedData(role, devKeyPair).join();
+        publish(role, publisher);
         mediatorRolesByProfileId.put(profileId, role);
     }
 
@@ -251,6 +260,17 @@ final class AuthorizedDataPublisher {
         AuthorizedBondedRole role = mediatorRolesByProfileId.remove(profileId);
         checkState(role != null, "No role of mediator %s to remove", profileId);
         networkService().removeAuthorizedData(role, devKeyPair).join();
+    }
+
+    // The dev key signs the data as its authorized key, and the publisher signs the add request
+    private void publish(AuthorizedDistributedData data, KeyPair publisher) {
+        networkService().publishAuthorizedData(data, publisher, devKeyPair.getPrivate(), devKeyPair.getPublic())
+                .join();
+    }
+
+    private KeyPair networkIdKeyPair() {
+        return applicationService.getIdentityService().getOrCreateDefaultIdentity().getNetworkIdWithKeyPair()
+                .getKeyPair();
     }
 
     // A Bitcoin transaction ID in its format, 64 hex characters, which differs for each profile and purpose
