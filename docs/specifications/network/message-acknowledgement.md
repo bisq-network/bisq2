@@ -35,9 +35,9 @@ ACK-requesting message), and how it applies a received `AckMessage` to the deliv
    purpose than messaging, such as the API access.
 5. **Each identity acknowledges on its own.** Each identity of a node acknowledges a message as a separate node would
    do. The node processes a decrypted message once for each decrypting key. It remembers the messages which it
-   acknowledged by decrypting key and message ID, and sends no second `AckMessage` for a second copy of a message, for
-   example the copy which arrives over the second transport. It remembers at most 10 000 acknowledged messages and
-   drops the oldest entry when it adds a new one beyond this limit.
+   acknowledged by decrypting key, sender and message ID, and sends no second `AckMessage` for a second copy of a
+   message, for example the copy which arrives over the second transport. It remembers at most 10 000 acknowledged
+   messages and drops the oldest entry when it adds a new one beyond this limit.
 6. **AckMessages only for our own messages.** The node creates the delivery status of its own ACK-requesting message
    before it sends the message. It applies an `AckMessage` only to a delivery status which exists. An `AckMessage` for
    an unknown message ID changes nothing and creates no state, also no stored state.
@@ -61,6 +61,11 @@ ACK-requesting message), and how it applies a received `AckMessage` to the deliv
 - Rule 5: a second `AckMessage` for a message is harmless, because the sender ignores an `AckMessage` for a message
   which it already marked as received. The limit only bounds the memory which peers can make the node use. 10 000
   entries cover far more messages than a node receives between two copies of one message.
+- Rule 5, sender: two senders can send different messages with the same message ID. Both traders of a trade send a
+  mediation request whose message ID is derived from the trade ID only. Without the sender, the mediator acknowledged
+  only the request which arrived first, and the client of the other trader showed its request as not delivered and
+  sent it again. The message ID cannot include the sender, because nodes of earlier versions derive it from the trade
+  ID and would acknowledge under another ID. A sender gets no more `AckMessage`s than it sends messages.
 - Rule 6: an `AckMessage` for an unknown ID created a stored delivery status in earlier versions. Anybody who knows a
   user profile could grow this store without a limit, and the node loads the store completely at every start.
 
