@@ -46,6 +46,8 @@ Contract signatures of both traders and signed chat messages are not part of the
 
 The other trader sends no request when the mediator joins, so a differing contract shows only when both traders requested.
 
+Removing a case leaves the channel which all cases of the trade share, and the forwarded messages of the remaining cases go with it: their requests stay on record, but the mediator view creates their channel again without them. Until the mediator view opens again, the row of another case of the trade keeps the left channel, and the forwarded messages which only the removed case carried show there without their unverified mark.
+
 The first accepted request fixes the trade's two traders. A later request for that trade from or naming another profile is rejected, so until contracts are signed, a party can lock its counterparty out of mediation by naming another profile first.
 
 A mark on a message already displayed is updated when the mediator opens the channel again. Until then, a message can keep a mark that a later request of its author cleared. A displayed message cannot miss a mark it needs: an unmarked message is either in a request of its author, which stays on record, or was received live, and a live message has the mediator as receiver, so it never matches a forwarded copy.
