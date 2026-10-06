@@ -19,10 +19,14 @@ dependencies {
     "authorizedDataPublisherImplementation"("bisq:application")
     "authorizedDataPublisherImplementation"("bisq:bonded-roles")
     "authorizedDataPublisherImplementation"("bisq:common")
+    "authorizedDataPublisherImplementation"("bisq:identity")
     "authorizedDataPublisherImplementation"("bisq:java-se")
     "authorizedDataPublisherImplementation"("bisq:persistence")
     "authorizedDataPublisherImplementation"("bisq:security")
+    "authorizedDataPublisherImplementation"("bisq:user")
     "authorizedDataPublisherImplementation"("network:network")
+    "authorizedDataPublisherImplementation"("network:network-identity")
+    "authorizedDataPublisherImplementation"(libs.google.guava)
     "authorizedDataPublisherImplementation"(libs.slf4j.api)
 }
 

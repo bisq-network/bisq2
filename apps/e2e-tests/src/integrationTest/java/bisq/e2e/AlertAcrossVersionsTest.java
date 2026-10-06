@@ -51,9 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AlertAcrossVersionsTest {
     private static final String SECURITY_MANAGER = "security-manager";
     private static final String REQUIRED_VERSION = "2.1.14";
-    // The lines which AuthorizedDataPublisherApp logs when the broadcast of a command is done
-    private static final String PUBLISHED = "E2E alert published";
-    private static final String REMOVED = "E2E alert removed";
     // The lines which nodes in dev mode log when their store of alerts added or removed an entry
     private static final String ALERT_ADDED = "Method: add success; map entry: AuthorizedAlertData";
     private static final String ALERT_REMOVED = "Method: remove success; map entry: AuthorizedAlertData";
@@ -88,8 +85,7 @@ class AlertAcrossVersionsTest {
         OffersAcrossVersionsTest.awaitOffers(securityManager, List.of(offerOfNewMaker), "the new node sees the offer");
         OffersAcrossVersionsTest.awaitOffers(network.newApi, List.of(offerOfOldMaker), "the new node sees the offer");
 
-        network.sendCommand(SECURITY_MANAGER, "require " + REQUIRED_VERSION);
-        awaitLogLine(SECURITY_MANAGER, PUBLISHED, "the security manager publishes the alert");
+        network.runPublisherCommand(SECURITY_MANAGER, "require " + REQUIRED_VERSION);
         awaitLogLine(network.oldNode.getName(), ALERT_ADDED, "the old node stores the alert");
         MixedVersionNetwork.await("the new node knows the alert", Trades.STEP_TIMEOUT,
                 () -> network.newApi.tradeRestrictingAlert().path("minVersion").asText().equals(REQUIRED_VERSION));
@@ -124,8 +120,7 @@ class AlertAcrossVersionsTest {
                 Trades.BTC_ADDRESS);
 
         // After the removal of the alert, the old node trades again
-        network.sendCommand(SECURITY_MANAGER, "remove");
-        awaitLogLine(SECURITY_MANAGER, REMOVED, "the security manager removes the alert");
+        network.runPublisherCommand(SECURITY_MANAGER, "remove");
         awaitLogLine(network.oldNode.getName(), ALERT_REMOVED, "the old node removes the alert");
         MixedVersionNetwork.await("the new node removes the alert", Trades.STEP_TIMEOUT,
                 () -> network.newApi.tradeRestrictingAlert().isNull());
