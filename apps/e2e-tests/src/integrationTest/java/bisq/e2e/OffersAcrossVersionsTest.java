@@ -140,6 +140,21 @@ class OffersAcrossVersionsTest {
         throw new IllegalStateException("No market price for " + currencyCode + ": " + quotes);
     }
 
+    // A fixed price as a price quote of the API. It copies the market quote of the node and replaces the price of one
+    // Bitcoin. Both versions build the price quote from its value and its two monetary values.
+    static ObjectNode fixedPrice(ApiClient api, long price) {
+        ObjectNode priceQuote = marketQuote(api, "USD").deepCopy();
+        priceQuote.put("value", price);
+        ((ObjectNode) priceQuote.path("quoteSideMonetary")).put("value", price);
+        JsonNode baseSideMonetary = priceQuote.path("baseSideMonetary");
+        if (baseSideMonetary.path("value").asLong() != 100_000_000L) {
+            throw new IllegalStateException("The market quote is not for one Bitcoin: " + priceQuote);
+        }
+        ObjectNode priceSpec = JSON.createObjectNode().put("type", "FixPriceSpec");
+        priceSpec.set("priceQuote", priceQuote);
+        return priceSpec;
+    }
+
     static Optional<JsonNode> findOffer(ApiClient api, String offerId) {
         return api.offers("USD").stream()
                 .map(item -> item.path("bisqEasyOffer"))

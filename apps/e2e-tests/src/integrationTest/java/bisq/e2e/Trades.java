@@ -55,6 +55,11 @@ final class Trades {
         return Math.round(QUOTE_AMOUNT * 1e8 / (priceServer.getPrice("USD") * 1e4));
     }
 
+    // The Bitcoin amount for a fiat amount at a price, rounded to a satoshi
+    static long baseAmountFor(long quoteAmount, long price) {
+        return Math.round(quoteAmount * 100_000_000.0 / price);
+    }
+
     static Optional<JsonNode> findTrade(ApiClient api, String tradeId) {
         return api.openTrades().stream()
                 .filter(item -> item.path("trade").path("id").asText().equals(tradeId))
