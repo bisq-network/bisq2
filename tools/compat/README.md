@@ -172,7 +172,9 @@ which uses the code of Bisq. The tests cover:
   version 2.1.14 for trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A maker of the
   baseline gets the take offer request of a taker of this checkout, but it does not create the trade and does not
   answer, so the trade of the taker stays in its first state. Nodes of this checkout know the alert and trade with each
-  other. After the security manager removes the alert, the baseline trades again.
+  other. After the security manager removes the alert, the baseline trades again. An alert which halts trading stops
+  the takes and the steps of an open trade on both versions. After its removal, the open trade completes, and both
+  versions take offers again.
 - `MediationAcrossVersionsTest`: the authorized data publisher acts as a root oracle node with a dev key. It publishes
   the roles of two mediators, one of each version, as the oracle node of this checkout publishes them. A trader of the
   baseline requests mediation, and the mediator of this checkout answers both traders and gets the chat of the trade.
