@@ -133,12 +133,47 @@ final class MixedVersionNetwork implements AutoCloseable {
         return api;
     }
 
+    /**
+     * Starts one more api-app node with the security settings of its version, as a user of Bisq Connect runs it. The
+     * returned client pairs with the node through the pairing code of the node, as the app does with its QR code, and
+     * then gets a user identity like the other api-app nodes.
+     */
+    ApiClient startExtraApiNodeForPairedClient(String name, boolean ofNewVersion, List<Integer> seedPorts,
+                                               String clientName) throws Exception {
+        NodeProcess node = newExtraApiNode(name, ofNewVersion, seedPorts).useDefaultApiSecurity();
+        node.start();
+        node.awaitReady(START_TIMEOUT);
+        String[] pairingCodeId = new String[1];
+        await("the node writes its pairing code", START_TIMEOUT, () -> {
+            try {
+                pairingCodeId[0] = node.pairingCodeId().orElse(null);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+            return pairingCodeId[0] != null;
+        });
+        ApiClient api = node.apiClient().orElseThrow();
+        api.pair(pairingCodeId[0], clientName);
+        api.createUserIdentity("e2e-" + name);
+        api.acceptTermsAndConditions();
+        return api;
+    }
+
     private NodeProcess newExtraApiNode(String name, boolean ofNewVersion, List<Integer> seedPorts) throws IOException {
         NodeProcess node = new NodeProcess(name, NodeProcess.Kind.API, ofNewVersion ? newVersion : oldVersion,
                 ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl(),
                 clockOffset);
         extraNodes.add(node);
         return node;
+    }
+
+    /** Stops an extra node and starts it again with its version and the given JVM options. */
+    void restartExtraNode(String name, List<String> extraJvmOptions) throws Exception {
+        NodeProcess node = extraNode(name);
+        node.stop();
+        node.setExtraJvmOptions(extraJvmOptions);
+        node.start();
+        node.awaitReady(START_TIMEOUT);
     }
 
     private NodeProcess extraNode(String name) {

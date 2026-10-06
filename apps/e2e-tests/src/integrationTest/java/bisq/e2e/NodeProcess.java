@@ -17,6 +17,8 @@
 
 package bisq.e2e;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -26,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +63,11 @@ final class NodeProcess implements AutoCloseable {
     private final String priceNodeUrl;
     // The time which the clock of the node runs ahead of the real time. Zero means the real clock.
     private final Duration clockOffset;
+    // Whether an api-app node keeps the security settings of its version, which require a paired client. The harness
+    // otherwise turns off authorization and sessions.
+    private boolean defaultApiSecurity;
+    // JVM options for the next start, for example a shorter time to live of sessions
+    private final List<String> extraJvmOptions = new ArrayList<>();
     private Process process;
 
     NodeProcess(String name,
@@ -108,8 +116,44 @@ final class NodeProcess implements AutoCloseable {
      * directory and the ports, so the node keeps its address and its peers reach it as before.
      */
     NodeProcess withTree(Path otherTree, String otherVersion) {
-        return new NodeProcess(name, kind, otherVersion, otherTree, dataDir, p2pPort, apiPort, seedPorts, priceNodeUrl,
-                clockOffset);
+        NodeProcess node = new NodeProcess(name, kind, otherVersion, otherTree, dataDir, p2pPort, apiPort, seedPorts,
+                priceNodeUrl, clockOffset);
+        node.defaultApiSecurity = defaultApiSecurity;
+        node.extraJvmOptions.addAll(extraJvmOptions);
+        return node;
+    }
+
+    /** Keeps the security settings of the version of this api-app node, so a client must pair with it. */
+    NodeProcess useDefaultApiSecurity() {
+        defaultApiSecurity = true;
+        return this;
+    }
+
+    void setExtraJvmOptions(List<String> options) {
+        extraJvmOptions.clear();
+        extraJvmOptions.addAll(options);
+    }
+
+    /**
+     * The ID of the pairing code which the node writes to pairing_qr_code.txt. The first line of the file is the QR code
+     * in Base64 (PairingQrCodeEncoder of both versions): a version byte, then the pairing code with a length of 16 bits,
+     * which has a version byte and then the ID as text with a length of 16 bits.
+     */
+    Optional<String> pairingCodeId() throws IOException {
+        Path file = dataDir.resolve("pairing_qr_code.txt");
+        if (!Files.isRegularFile(file)) {
+            return Optional.empty();
+        }
+        String qrCode = Files.readString(file, StandardCharsets.UTF_8).lines().findFirst().orElse("").trim();
+        if (qrCode.isEmpty()) {
+            return Optional.empty();
+        }
+        DataInputStream in = new DataInputStream(new ByteArrayInputStream(Base64.getUrlDecoder().decode(qrCode)));
+        in.readByte();
+        byte[] pairingCode = in.readNBytes(in.readUnsignedShort());
+        DataInputStream code = new DataInputStream(new ByteArrayInputStream(pairingCode));
+        code.readByte();
+        return Optional.of(new String(code.readNBytes(code.readUnsignedShort()), StandardCharsets.UTF_8));
     }
 
     String getName() {
@@ -173,12 +217,18 @@ final class NodeProcess implements AutoCloseable {
                 throw new IllegalStateException(name + " (" + version + ") stopped with exit code " + process.exitValue() +
                         ". See " + dataDir.resolve("stdout.log"));
             }
-            if (isPortOpen(port) && (kind != Kind.API || new ApiClient(apiPort).isReady())) {
+            if (isPortOpen(port) && (kind != Kind.API || isApiReady())) {
                 return;
             }
             Thread.sleep(500);
         }
         throw new IllegalStateException(name + " (" + version + ") was not ready after " + timeout);
+    }
+
+    // A node which requires a paired client answers only the routes of pairing and sessions without it
+    private boolean isApiReady() {
+        ApiClient api = new ApiClient(apiPort);
+        return defaultApiSecurity ? api.isServing() : api.isReady();
     }
 
     // Stops the node with its shutdown hook, as a user who quits the app does
@@ -220,9 +270,12 @@ final class NodeProcess implements AutoCloseable {
             options.add("-Dapplication.api.server.websocketEnabled=true");
             options.add("-Dapplication.api.server.bind.host=127.0.0.1");
             options.add("-Dapplication.api.server.bind.port=" + apiPort);
-            options.add("-Dapplication.api.server.security.supportSessionHandling=false");
-            options.add("-Dapplication.api.server.security.authorizationRequired=false");
+            if (!defaultApiSecurity) {
+                options.add("-Dapplication.api.server.security.supportSessionHandling=false");
+                options.add("-Dapplication.api.server.security.authorizationRequired=false");
+            }
         }
+        options.addAll(extraJvmOptions);
         return options;
     }
 
