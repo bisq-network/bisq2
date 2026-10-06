@@ -85,6 +85,16 @@ class BisqEasySellerReputationValidatorTest {
                 usdMarketPrice(now)));
     }
 
+    // Yadio publishes its rates about every 5 minutes. A live price node response had a PYG price 310 seconds
+    // older than the USD price.
+    @Test
+    void acceptsYadioPriceBehindUsdPriceByMoreThanOnePublicationInterval() {
+        long now = System.currentTimeMillis();
+        assertDoesNotThrow(() -> BisqEasySellerReputationValidator.validateMarketPrices(
+                eurMarketPrice(now - TimeUnit.SECONDS.toMillis(310)),
+                usdMarketPrice(now)));
+    }
+
     @Test
     void rejectsMarketPricesNotFromTheSameTime() {
         long now = System.currentTimeMillis();

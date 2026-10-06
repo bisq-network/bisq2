@@ -34,8 +34,11 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Specified in docs/specifications/trade/bisq-easy-seller-reputation-limit.md.
  */
 public final class BisqEasySellerReputationValidator {
-    // The 5 minute age after which the UI shows a market price as stale.
-    public static final long MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE = TimeUnit.MINUTES.toMillis(5);
+    // The price node takes each fiat price from one provider. Yadio (for example BOB, EGP, ETB, PYG) publishes
+    // its rates about every 5 minutes, and the price node polls it every minute. A Yadio price can therefore be
+    // about 6 minutes older than the USD price of the same price node response. We allow twice that difference.
+    // The 5 minute age after which the UI shows a market price as stale is too small for this check.
+    public static final long MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE = TimeUnit.MINUTES.toMillis(12);
 
     private BisqEasySellerReputationValidator() {
     }
