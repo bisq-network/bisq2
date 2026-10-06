@@ -31,6 +31,7 @@ import java.net.http.WebSocket;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -53,6 +54,12 @@ final class ApiClient {
     private final String baseUrl;
     private final URI webSocketUri;
     private long lastPublication;
+    // The credentials of a client which paired with the node, like the mobile app of Bisq Connect, and its current
+    // session. A node with the default security of its version requires them. The nodes of a test network run
+    // without authorization, and then the client sends no access headers.
+    private volatile String clientId;
+    private volatile String clientSecret;
+    private volatile String sessionId;
     // HTTP/1.1, because the client of the JDK otherwise asks for an upgrade to HTTP/2, which makes the server of v2.1.13
     // fail to read the body of a POST request (EOFException)
     private final HttpClient http = HttpClient.newBuilder()
@@ -81,6 +88,44 @@ final class ApiClient {
         } catch (RuntimeException e) {
             return false;
         }
+    }
+
+    // Whether the API server answers. The route of sessions needs no authorization, and it rejects an empty request.
+    boolean isServing() {
+        try {
+            post("/access/session", JSON.createObjectNode());
+            return true;
+        } catch (ApiException e) {
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** Pairs this client with the node, with the pairing code which the node shows as QR code. */
+    void pair(String pairingCodeId, String clientName) {
+        JsonNode response = post("/access/pairing", JSON.createObjectNode()
+                .put("version", 1)
+                .put("pairingCodeId", pairingCodeId)
+                .put("clientName", clientName));
+        clientId = response.path("clientId").asText();
+        clientSecret = response.path("clientSecret").asText();
+        sessionId = response.path("sessionId").asText();
+    }
+
+    /** Requests a new session with the credentials of the pairing, as the app does when its session is not valid. */
+    void renewSession() {
+        sessionId = requestSession(clientId, clientSecret).path("sessionId").asText();
+    }
+
+    JsonNode requestSession(String clientId, String clientSecret) {
+        return post("/access/session", JSON.createObjectNode()
+                .put("clientId", clientId)
+                .put("clientSecret", clientSecret));
+    }
+
+    String clientId() {
+        return clientId;
     }
 
     String version() {
@@ -283,8 +328,9 @@ final class ApiClient {
     private JsonNode subscriptionSnapshot(String topic) {
         String requestId = UUID.randomUUID().toString();
         CompletableFuture<String> response = new CompletableFuture<>();
-        WebSocket webSocket = http.newWebSocketBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
+        WebSocket.Builder webSocketBuilder = http.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(5));
+        accessHeaders().forEach(webSocketBuilder::header);
+        WebSocket webSocket = webSocketBuilder
                 .buildAsync(webSocketUri, new SubscriptionResponseListener(requestId, response))
                 .orTimeout(10, TimeUnit.SECONDS)
                 .join();
@@ -328,8 +374,21 @@ final class ApiClient {
         return send("DELETE " + path, HttpRequest.newBuilder(URI.create(baseUrl + path)).DELETE());
     }
 
+    // The headers with which a paired client authenticates its requests (Headers of the API)
+    private Map<String, String> accessHeaders() {
+        Map<String, String> headers = new LinkedHashMap<>();
+        if (clientId != null) {
+            headers.put("Bisq-Client-Id", clientId);
+        }
+        if (sessionId != null) {
+            headers.put("Bisq-Session-Id", sessionId);
+        }
+        return headers;
+    }
+
     private JsonNode send(String description, HttpRequest.Builder builder) {
         try {
+            accessHeaders().forEach(builder::header);
             HttpResponse<String> response = http.send(builder.timeout(Duration.ofSeconds(30)).build(),
                     HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
