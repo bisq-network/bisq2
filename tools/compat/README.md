@@ -139,7 +139,8 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   does not get the request again, because it removed the mailbox entry in the network. The trade continues to the end.
 - `TradePricesAcrossVersionsTest`: trades with a float price and a range over Lightning, with a fixed price with
   decimals and a range, where the taker enters the Bitcoin amount, and with a fixed price and a fixed amount. Makers of
-  both versions take part. For a fixed price, the maker of this checkout allows only the rounding difference.
+  both versions take part. For a fixed price, the maker of this checkout allows only the rounding difference. A
+  range whose minimum equals its maximum is takeable on the baseline.
 - `PaymentDataAmountAcrossVersionsTest`: a buyer of the baseline sends payment data which requests another amount, a
   Lightning invoice and a bitcoin URI. A seller of this checkout fails the trade, and the buyer gets the reason. A
   bitcoin URI without amount works. A buyer of this checkout refuses to send such data (HTTP 400).
