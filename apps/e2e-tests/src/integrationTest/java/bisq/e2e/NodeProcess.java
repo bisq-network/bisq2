@@ -30,8 +30,11 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -56,6 +59,12 @@ final class NodeProcess implements AutoCloseable {
     // The main class and the classpath of a program which runs as a node with the JVM options of its kind
     record Program(String mainClass, String classpath) {
     }
+
+    private static final int FIRST_PORT = 20_000;
+    private static final int LAST_PORT = 32_000;
+    private static final Set<Integer> HANDED_OUT_PORTS = new HashSet<>();
+    // A random start, so that the test JVMs of runs shortly after each other use different ports
+    private static int nextPort = FIRST_PORT + new Random().nextInt(LAST_PORT - FIRST_PORT);
 
     private final String name;
     private final Kind kind;
@@ -341,10 +350,34 @@ final class NodeProcess implements AutoCloseable {
         }
     }
 
-    static int freePort() throws IOException {
-        try (ServerSocket socket = new ServerSocket(0)) {
-            socket.setReuseAddress(true);
-            return socket.getLocalPort();
+    /**
+     * A port which no other node of this JVM got, and which is free at the moment. A port from ServerSocket(0) caused
+     * two failures: it lies in the range of the ephemeral ports, from which the operating system also takes the local
+     * port of an outgoing connection, and a later call can return the same port again, because the probe releases it.
+     * Once two nodes got the same API port, and the client of one node talked to the other node. So the ports lie below
+     * the ephemeral ports of Linux (from 32768) and macOS (from 49152), and the JVM remembers each port which it handed
+     * out.
+     */
+    static synchronized int freePort() throws IOException {
+        for (int attempt = 0; attempt <= LAST_PORT - FIRST_PORT; attempt++) {
+            int port = nextPort;
+            nextPort = nextPort == LAST_PORT ? FIRST_PORT : nextPort + 1;
+            if (!HANDED_OUT_PORTS.contains(port) && isFree(port)) {
+                HANDED_OUT_PORTS.add(port);
+                return port;
+            }
+        }
+        throw new IOException("No free port between " + FIRST_PORT + " and " + LAST_PORT);
+    }
+
+    // Without SO_REUSEADDR, a port which a closed connection still holds counts as used
+    private static boolean isFree(int port) {
+        try (ServerSocket socket = new ServerSocket()) {
+            socket.setReuseAddress(false);
+            socket.bind(new InetSocketAddress(port));
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 
