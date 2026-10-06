@@ -46,7 +46,7 @@ final class MixedVersionNetwork implements AutoCloseable {
     final NodeProcess newNode;
     final ApiClient oldApi;
     final ApiClient newApi;
-    private final List<NodeProcess> nodes = new ArrayList<>();
+    private final List<NodeProcess> extraNodes = new ArrayList<>();
     private NodeProcess upgradedOldNode;
 
     MixedVersionNetwork(String name) throws Exception {
@@ -60,7 +60,6 @@ final class MixedVersionNetwork implements AutoCloseable {
         newSeed = NodeProcess.seed("seed-new", newVersion, E2eSettings.newTree(), dir, seedPorts.get(1), seedPorts, priceServer.getUrl());
         oldNode = new NodeProcess("node-old", NodeProcess.Kind.API, oldVersion, E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl());
         newNode = new NodeProcess("node-new", NodeProcess.Kind.API, newVersion, E2eSettings.newTree(), dir, seedPorts, priceServer.getUrl());
-        nodes.addAll(List.of(oldSeed, newSeed, oldNode, newNode));
         oldApi = oldNode.apiClient().orElseThrow();
         newApi = newNode.apiClient().orElseThrow();
 
@@ -90,6 +89,22 @@ final class MixedVersionNetwork implements AutoCloseable {
             }
             throw e;
         }
+    }
+
+    /**
+     * Starts one more api-app node, which knows only the given seed nodes, for example a node which joins the network
+     * later. It gets a user identity like the other api-app nodes.
+     */
+    ApiClient startExtraApiNode(String name, boolean ofNewVersion, List<Integer> seedPorts) throws Exception {
+        NodeProcess node = new NodeProcess(name, NodeProcess.Kind.API, ofNewVersion ? newVersion : oldVersion,
+                ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl());
+        extraNodes.add(node);
+        node.start();
+        node.awaitReady(START_TIMEOUT);
+        ApiClient api = node.apiClient().orElseThrow();
+        api.createUserIdentity("e2e-" + name);
+        api.acceptTermsAndConditions();
+        return api;
     }
 
     /** Stops the node of the old version, as a user who quits the app before an update does. */
@@ -131,7 +146,7 @@ final class MixedVersionNetwork implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
-        List<NodeProcess> nodesToStop = new ArrayList<>();
+        List<NodeProcess> nodesToStop = new ArrayList<>(extraNodes);
         nodesToStop.add(newNode);
         if (upgradedOldNode != null) {
             nodesToStop.add(upgradedOldNode);
