@@ -22,6 +22,8 @@ import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
@@ -32,6 +34,7 @@ import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.trade.ServiceProvider;
 import bisq.trade.exceptions.TradeProtocolException;
@@ -42,6 +45,7 @@ import java.security.PublicKey;
 import java.util.Optional;
 import java.util.Set;
 
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.getMaxRoundingDifference;
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
 import static bisq.trade.bisq_easy.protocol.messages.OfferbookTestData.offerbookChannel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -138,6 +142,66 @@ class BisqEasyTakeOfferRequestValidatorTest {
         assertAmountAccepted(fixedPriceRequest(Direction.SELL, 100_000, 1_000_000, 100_000));
         // The taker asks for 20 % more Bitcoin
         assertPriceDeviation(fixedPriceRequest(Direction.SELL, 100_000, 1_000_000, 120_000));
+    }
+
+    // The Bitcoin value of one cent at the fixed price, plus one satoshi
+    @Test
+    void maxRoundingDifferenceIsTheBitcoinValueOfOneCentPlusOneSatoshi() {
+        assertEquals(11, getMaxRoundingDifference(PriceQuote.fromFiatPrice(100_000, "USD")));
+        assertEquals(78, getMaxRoundingDifference(PriceQuote.fromFiatPrice(13_000, "USD")));
+    }
+
+    // Both traders compute the amounts at the fixed price. The maximum trade price deviation of the maker (5 % in the
+    // fixture) let a taker ask for up to 5 % more Bitcoin.
+    @Test
+    void fixedPriceRequestWithAnotherPriceIsRejected() {
+        // 100 USD at 100 000 USD/BTC are 100 000 sat. The taker asks for 1 % more, or offers 1 % less.
+        assertPriceDeviation(fixedPriceRequest(Direction.SELL, 100_000, 1_000_000, 101_000));
+        assertPriceDeviation(fixedPriceRequest(Direction.BUY, 100_000, 1_000_000, 99_000));
+    }
+
+    // The rounding difference at 100 000 USD/BTC is 11 sat
+    @Test
+    void fixedPriceRequestBeyondTheRoundingDifferenceIsRejected() {
+        assertAmountAccepted(fixedPriceRequest(Direction.SELL, 100_000, 1_000_000, 100_011));
+        assertPriceDeviation(fixedPriceRequest(Direction.SELL, 100_000, 1_000_000, 100_012));
+        assertAmountAccepted(fixedPriceRequest(Direction.BUY, 100_000, 1_000_000, 99_989));
+        assertPriceDeviation(fixedPriceRequest(Direction.BUY, 100_000, 1_000_000, 99_988));
+    }
+
+    // The desktop computes the Bitcoin amount from the fiat amount, or the fiat amount from the Bitcoin amount
+    // (PriceQuote.toBaseSideMonetary and toQuoteSideMonetary). Another client can round the fiat amount to cents.
+    @Test
+    void fixedPriceRequestsOfHonestTakersAreAccepted() {
+        PriceQuote price = PriceQuote.fromFiatPrice(13_000, "USD");
+
+        // The taker enters the fiat amount
+        long quote = 1_234_567;
+        long base = price.toBaseSideMonetary(Monetary.from(quote, "USD")).getValue();
+        assertAmountAccepted(fixedPriceRequest(Direction.SELL, 13_000, quote, base));
+        assertAmountAccepted(fixedPriceRequest(Direction.BUY, 13_000, quote, base));
+
+        // The taker enters the Bitcoin amount. The maker computes 1 sat less from the truncated fiat amount.
+        long takersBase = 100_003;
+        long takersQuote = price.toQuoteSideMonetary(Coin.asBtcFromValue(takersBase)).getValue();
+        assertEquals(takersBase - 1, price.toBaseSideMonetary(Monetary.from(takersQuote, "USD")).getValue());
+        assertAmountAccepted(fixedPriceRequest(Direction.SELL, 13_000, takersQuote, takersBase));
+        assertAmountAccepted(fixedPriceRequest(Direction.BUY, 13_000, takersQuote, takersBase));
+
+        // The client of the taker rounds the fiat amount to cents
+        long roundedQuote = Math.round(takersQuote / 100d) * 100;
+        assertAmountAccepted(fixedPriceRequest(Direction.SELL, 13_000, roundedQuote, takersBase));
+        assertAmountAccepted(fixedPriceRequest(Direction.BUY, 13_000, roundedQuote, takersBase));
+    }
+
+    // For a market based price the traders can have different market prices, so the maker keeps its maximum trade
+    // price deviation (5 % in the fixture)
+    @Test
+    void marketPriceRequestKeepsTheMaximumTradePriceDeviation() {
+        Optional<PriceQuote> marketPrice = Optional.of(PriceQuote.fromFiatPrice(100_000, "USD"));
+        // 100 USD at 100 000 USD/BTC are 100 000 sat. The market price of the taker was about 4 % lower.
+        assertAmountAccepted(request(Direction.SELL, new MarketPriceSpec(), marketPrice, 1_000_000, 104_000));
+        assertPriceDeviation(request(Direction.SELL, new MarketPriceSpec(), marketPrice, 1_000_000, 106_000));
     }
 
     // The request passed the checks of the amount if validate() fails at the next check: the payment methods, which

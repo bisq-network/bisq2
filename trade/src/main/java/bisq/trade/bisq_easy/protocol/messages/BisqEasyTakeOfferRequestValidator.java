@@ -30,6 +30,7 @@ import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.trade.bisq_easy.validation.BisqEasyPriceSpecValidator;
@@ -39,6 +40,7 @@ import bisq.user.profile.UserProfile;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.List;
@@ -203,46 +205,55 @@ public final class BisqEasyTakeOfferRequestValidator {
         long takersAmount = takersContract.getBaseSideAmount();
         long myAmount = amount.get().getValue(); // I am maker
 
-        double maxTradePriceDeviation = serviceProvider.getSettingsService().getMaxTradePriceDeviation().get();
-        double warnDeviation = maxTradePriceDeviation / 2;
+        boolean isMakerBuyer = takersOffer.getMakersDirection().isBuy();
         double warnThreshold, errorThreshold;
+        String reason;
+        if (takersOffer.getPriceSpec() instanceof FixPriceSpec) {
+            // Both traders convert at the same price, so the amounts differ only by rounding. The maximum trade price
+            // deviation of the maker covers different market prices of the traders, which a fixed price does not
+            // have; it would only give the taker the difference.
+            long maxRoundingDifference = getMaxRoundingDifference(priceQuote.get());
+            errorThreshold = isMakerBuyer ? myAmount - maxRoundingDifference : myAmount + maxRoundingDifference;
+            warnThreshold = errorThreshold;
+            reason = "The amounts do not match the fixed price of the offer.";
+        } else {
+            double maxTradePriceDeviation = serviceProvider.getSettingsService().getMaxTradePriceDeviation().get();
+            double warnDeviation = maxTradePriceDeviation / 2;
+            warnThreshold = isMakerBuyer ? myAmount * (1 - warnDeviation) : myAmount * (1 + warnDeviation);
+            errorThreshold = isMakerBuyer
+                    ? myAmount * (1 - maxTradePriceDeviation)
+                    : myAmount * (1 + maxTradePriceDeviation);
+            reason = "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
+                    "to manipulate the price.";
+        }
+
         boolean showWarning = false;
         boolean throwException = false;
         String message = "";
         TradeProtocolFailure tradeProtocolFailure = TradeProtocolFailure.UNKNOWN;
-        if (takersOffer.getMakersDirection().isBuy()) {
+        if (isMakerBuyer) {
             // If I am buyer I accept if takers amount is larger than my expected amount (good for me as I receive more BTC).
-            // If takers amount is below my maxTradePriceDeviation the trade fails.
-            warnThreshold = myAmount * (1 - warnDeviation);
-            errorThreshold = myAmount * (1 - maxTradePriceDeviation);
+            // If takers amount is below the error threshold the trade fails.
             if (takersAmount < errorThreshold) {
                 throwException = true;
-                message = "Takers (sellers) Bitcoin amount is too low. " +
-                        "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
-                        "to manipulate the price.";
+                message = "Takers (sellers) Bitcoin amount is too low. " + reason;
                 tradeProtocolFailure = TradeProtocolFailure.PRICE_DEVIATION;
             } else if (takersAmount < warnThreshold) {
                 showWarning = true;
-                message = "Takers (sellers) Bitcoin amount is lower than expected. " +
-                        "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
-                        "to manipulate the price. We still tolerate that deviation.";
+                message = "Takers (sellers) Bitcoin amount is lower than expected. " + reason +
+                        " We still tolerate that deviation.";
             }
         } else {
             // If I am seller I accept if takers amount is smaller than my expected amount (good for me as I need to send less BTC).
-            // If takers amount is above my maxTradePriceDeviation the trade fails.
-            warnThreshold = myAmount * (1 + warnDeviation);
-            errorThreshold = myAmount * (1 + maxTradePriceDeviation);
+            // If takers amount is above the error threshold the trade fails.
             if (takersAmount > errorThreshold) {
                 throwException = true;
-                message = "Takers (buyers) Bitcoin amount is too high. " +
-                        "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
-                        "to manipulate the price.";
+                message = "Takers (buyers) Bitcoin amount is too high. " + reason;
                 tradeProtocolFailure = TradeProtocolFailure.PRICE_DEVIATION;
             } else if (takersAmount > warnThreshold) {
                 showWarning = true;
-                message = "Takers (buyers) Bitcoin amount is higher than expected. " +
-                        "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
-                        "to manipulate the price. We still tolerate that deviation.";
+                message = "Takers (buyers) Bitcoin amount is higher than expected. " + reason +
+                        " We still tolerate that deviation.";
             }
         }
 
@@ -261,9 +272,23 @@ public final class BisqEasyTakeOfferRequestValidator {
         } else if (showWarning) {
             log.warn("message={}\ndetails={}", message, details);
         } else if (myAmount != takersAmount) {
-            log.info("My amount and the amount set by the taker are not the same. This is expected if the offer used a " +
-                    "market based price and the taker had a different market price.\n" +
+            log.info("My amount and the amount set by the taker are not the same. This is expected from rounding, " +
+                    "and if the offer used a market based price and the taker had a different market price.\n" +
                     "{}", details);
         }
+    }
+
+    // For a fixed price the maker and the taker compute the amounts at the same price. A client computes the Bitcoin
+    // amount from the fiat amount, or the fiat amount from the Bitcoin amount, and it can round the fiat amount to its
+    // display precision (2 decimals for fiat). So the maker accepts a difference of up to the Bitcoin value of one unit
+    // of that precision, plus one unit of the Bitcoin amount for its own rounding. A taker who uses this difference
+    // gains at most one such unit of the fiat amount, for example one cent.
+    @VisibleForTesting
+    static long getMaxRoundingDifference(PriceQuote fixedPrice) {
+        long smallestDisplayedQuoteUnit = BigDecimal.ONE
+                .movePointRight(fixedPrice.getPrecision() - fixedPrice.getLowPrecision())
+                .longValueExact();
+        Monetary quoteUnit = Monetary.from(smallestDisplayedQuoteUnit, fixedPrice.getQuoteSideMonetary().getCode());
+        return fixedPrice.toBaseSideMonetary(quoteUnit).getValue() + 1;
     }
 }
