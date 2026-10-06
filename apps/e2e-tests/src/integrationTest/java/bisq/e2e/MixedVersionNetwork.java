@@ -199,6 +199,19 @@ final class MixedVersionNetwork implements AutoCloseable {
         expectedLogFindings.add(new ExpectedLogFinding(nodeName, ruleId, text));
     }
 
+    /** The lines of the log of the node since its last start. */
+    List<String> logOfLastSession(String nodeName) throws IOException {
+        String log = new String(Files.readAllBytes(dir.resolve(nodeName).resolve("bisq.log")), StandardCharsets.UTF_8);
+        List<String> lines = List.of(log.split("\n"));
+        int lastStart = 0;
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains("ApplicationService: Version: v")) {
+                lastStart = i;
+            }
+        }
+        return lines.subList(lastStart, lines.size());
+    }
+
     /** Waits until the condition holds. The nodes deliver data asynchronously. */
     static void await(String description, Duration timeout, BooleanSupplier condition) throws InterruptedException {
         long deadline = System.nanoTime() + timeout.toNanos();
