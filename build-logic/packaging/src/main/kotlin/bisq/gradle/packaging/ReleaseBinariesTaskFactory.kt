@@ -1,5 +1,6 @@
 package bisq.gradle.packaging
 
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
@@ -71,9 +72,24 @@ class ReleaseBinariesTaskFactory(private val project: Project) {
     fun registerCopyActiveSigningKeyIdMarkerTask() {
         val activeSigningKeyIdMarker = project.layout.projectDirectory
                 .file("$MAINTAINER_PUBLIC_KEY_DIRECTORY/signingkey.asc")
-        project.tasks.register<Copy>("copyActiveSigningKeyIdMarker") {
-            from(activeSigningKeyIdMarker)
-            into(releaseDir)
+        val releaseMarker = releaseDir.map { it.file("signingkey.asc") }
+        project.tasks.register("copyActiveSigningKeyIdMarker") {
+            inputs.file(activeSigningKeyIdMarker)
+            outputs.file(releaseMarker)
+            doLast {
+                // The updater reads the whole release asset and compares it with its key ids (UpdaterUtils.getSigningKeyId
+                // and DownloadedFilesVerification.verify, also in v2.1.13). A line break in the asset makes the
+                // verification of every download fail. So the asset contains only the key id, also if the file in the
+                // repository ends with a line break.
+                val keyId = activeSigningKeyIdMarker.asFile.readText(Charsets.UTF_8).trim()
+                if (!Regex("^[0-9A-F]{8}$").matches(keyId)) {
+                    throw GradleException("${activeSigningKeyIdMarker.asFile} must contain a key id of 8 upper case " +
+                            "hex digits, found '$keyId'")
+                }
+                val outputFile = releaseMarker.get().asFile
+                outputFile.parentFile.mkdirs()
+                outputFile.writeText(keyId, Charsets.UTF_8)
+            }
         }
     }
 

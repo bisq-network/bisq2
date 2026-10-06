@@ -950,9 +950,26 @@ tasks.register("verifyReleaseReadiness") {
                 addResult(results, "FAIL", "signingkey.asc GitHub asset", "Missing signingkey.asc from GitHub release")
             } else {
                 try {
-                    val githubSigningKeyId = String(httpGetBytes(browserDownloadUrl), StandardCharsets.UTF_8)
-                        .trim()
-                        .uppercase(Locale.ROOT)
+                    val githubSigningKeyBytes = httpGetBytes(browserDownloadUrl)
+                    val githubSigningKeyContent = String(githubSigningKeyBytes, StandardCharsets.UTF_8)
+                    val githubSigningKeyId = githubSigningKeyContent.trim().uppercase(Locale.ROOT)
+                    // The updater compares the whole content with its key ids (UpdaterUtils.getSigningKeyId and
+                    // DownloadedFilesVerification.verify, also in v2.1.13). A line break makes every download fail.
+                    if (githubSigningKeyContent == githubSigningKeyId) {
+                        addResult(results, "PASS", "signingkey.asc exact content", "GitHub asset contains exactly $githubSigningKeyId")
+                    } else {
+                        val visibleContent = githubSigningKeyContent
+                            .replace("\r", "\\r")
+                            .replace("\n", "\\n")
+                            .replace("\t", "\\t")
+                        addResult(
+                            results,
+                            "FAIL",
+                            "signingkey.asc exact content",
+                            "GitHub asset has ${githubSigningKeyBytes.size} byte(s): '$visibleContent'. The updater compares " +
+                                "the whole content with its key ids, so the asset must contain exactly '$githubSigningKeyId'"
+                        )
+                    }
                     if (githubSigningKeyId == activeSigningKeyId && bisq2ReleaseKeyIds.contains(githubSigningKeyId)) {
                         addResult(results, "PASS", "signingkey.asc marker", "GitHub release points to active key $githubSigningKeyId")
                     } else {
