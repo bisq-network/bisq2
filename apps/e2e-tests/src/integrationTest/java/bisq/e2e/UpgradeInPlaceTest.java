@@ -84,7 +84,7 @@ class UpgradeInPlaceTest {
         upgradedNode.acceptTermsAndConditions();
         Trades.awaitTradeState(upgradedNode, tradeId, "the upgraded node gets the fiat confirmation from its mailbox",
                 state -> state.equals("SELLER_RECEIVED_FIAT_SENT_CONFIRMATION"));
-        TradeAcrossVersionsTest.completeAfterFiatSent(peer, upgradedNode, tradeId, baseAmount);
+        Trades.completeAfterFiatSent(peer, upgradedNode, tradeId, baseAmount);
 
         assertTrue(OffersAcrossVersionsTest.findOffer(upgradedNode, keptOffer).isPresent(),
                 "The upgraded node lost its own offer");
