@@ -230,8 +230,10 @@ Reasons:
   the higher sequence number, they replace the entry of the network identity with the one of the authorized key, in
   any order of arrival. Then they also apply later remove requests of the authorized key, so oracle nodes remove data
   only with their authorized key pair. The remove request of the network identity stays in the stores, so a replay of
-  the removed entry is rejected, and nodes of earlier versions which missed the migration receive it with the
-  inventory.
+  the removed entry is rejected, and updated nodes which missed the migration receive it with the inventory. Nodes of
+  earlier versions which missed the migration receive the entry of the authorized key with the inventory, which
+  replaces the entry of the network identity. They do not receive the remove request, because they could not store it
+  (rule 11 of [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md)).
 - Rule 14, broadcast: an oracle node can have thousands of entries to migrate, and for some types (timestamps,
   account age, signed witness and account timestamps) the migration is their only source. A connection sends with a
   queue of 100 messages; if more messages wait, it rejects the message and closes, and the messages in its queue are

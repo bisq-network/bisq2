@@ -64,6 +64,14 @@ public abstract class FilterService<T extends InventoryFilter> {
     abstract protected boolean isAddAppendOnlyDataRequestMissing(T filter,
                                                                  Map.Entry<ByteArray, AddAppendOnlyDataRequest> entry);
 
+    // The removals of authenticated data which the requester misses and which it can store. A filter type can exclude
+    // removals which the requester cannot store, because its filter never lists them and every response would contain
+    // them again.
+    protected List<RemoveAuthenticatedDataRequest> getStorableRemovals(
+            List<RemoveAuthenticatedDataRequest> missingRemovals) {
+        return missingRemovals;
+    }
+
     public Inventory createInventory(InventoryFilter inventoryFilter) {
         final AtomicInteger accumulatedSize = new AtomicInteger();
         final AtomicBoolean maxSizeReached = new AtomicBoolean();
@@ -118,7 +126,7 @@ public abstract class FilterService<T extends InventoryFilter> {
 
 
         if (!maxSizeReached.get()) {
-            sortedAndFilteredRequests.addAll(removeRequests.stream()
+            sortedAndFilteredRequests.addAll(getStorableRemovals(removeRequests).stream()
                     .sorted((o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()))
                     .filter(request -> {
                         if (!maxSizeReached.get()) {
