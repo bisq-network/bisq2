@@ -200,6 +200,12 @@ which uses the code of Bisq. The tests cover:
   nodes of this checkout has no mediator. After the publisher migration of this checkout, both versions select the
   same mediators, also nodes which start after the migration, and the removal of a role with the authorized key applies
   on both versions.
+- `OfflineBuyerMakerAcrossVersionsTest`: a buyer maker of this checkout is offline while sellers of both versions, with
+  a score of 30000, take its offers through the mailbox. The USD price falls by 8 % before the maker starts. The maker
+  checks the takes with its own current price and rejects both with PRICE_DEVIATION. Each taker sees the failure with
+  the reason, the offers stay, and the retakes at the new price complete. The test moves the price instead of the
+  clocks, because the age of a take does not matter for the maker. It takes about 3 minutes, because the nodes request
+  the prices every 180 seconds.
 - `ReputationAcrossVersionsTest`: a network without the reputation score of dev mode. The authorized data publisher
   publishes a proof of burn which gives a seller of the baseline a score of 1300, and both versions show this score.
   The seller takes the USD buy offer of a maker of this checkout: at 8 USD, which requires 1600, the maker rejects the
