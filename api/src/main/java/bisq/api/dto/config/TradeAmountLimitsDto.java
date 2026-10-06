@@ -23,9 +23,12 @@ import bisq.api.dto.common.monetary.FiatDto;
  * Static Bisq Easy trade-amount limits, mirrored from bisq2 core's {@code BisqEasyTradeAmountLimits}.
  * These are fixed for a given core/api version and identical across the P2P network, so clients can
  * fetch them once instead of hardcoding them. Served by {@code ConfigRestApi}.
+ * For a positive score, use the larger of the relative tolerance and the minimum extra reputation points.
+ * A zero score gets no tolerance.
  */
 public record TradeAmountLimitsDto(FiatDto defaultMinUsdTradeAmount,
                                    FiatDto maxUsdTradeAmount,
                                    double tolerance,
-                                   double requiredReputationScorePerUsd) {
+                                   double requiredReputationScorePerUsd,
+                                   long minimumReputationScoreTolerance) {
 }
