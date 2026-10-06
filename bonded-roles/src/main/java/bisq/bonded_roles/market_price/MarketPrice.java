@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 public final class MarketPrice implements NetworkProto {
     private static final long INVALID_AGE = TimeUnit.HOURS.toMillis(12);
-    public static final long STALE_AGE = TimeUnit.MINUTES.toMillis(5);
+    private static final long STALE_AGE = TimeUnit.MINUTES.toMillis(5);
 
     public enum Source {
         PERSISTED,

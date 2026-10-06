@@ -22,6 +22,8 @@ import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 
+import java.util.concurrent.TimeUnit;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -32,6 +34,12 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Specified in docs/specifications/trade/bisq-easy-seller-reputation-limit.md.
  */
 public final class BisqEasySellerReputationValidator {
+    // The price node takes each fiat price from one provider. Yadio (for example BOB, EGP, ETB, PYG) publishes
+    // its rates about every 5 minutes, and the price node polls it every minute. A Yadio price can therefore be
+    // about 6 minutes older than the USD price of the same price node response. We allow twice that difference.
+    // The 5 minute age after which the UI shows a market price as stale is too small for this check.
+    public static final long MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE = TimeUnit.MINUTES.toMillis(12);
+
     private BisqEasySellerReputationValidator() {
     }
 
@@ -51,7 +59,7 @@ public final class BisqEasySellerReputationValidator {
         checkArgument(fiatMarketPrice.isValidDate(), "Market price is outdated. marketPrice=%s", fiatMarketPrice);
         checkArgument(usdMarketPrice.isValidDate(), "USD market price is outdated. marketPrice=%s", usdMarketPrice);
         long timestampDifference = Math.abs(fiatMarketPrice.getTimestamp() - usdMarketPrice.getTimestamp());
-        checkArgument(timestampDifference <= MarketPrice.STALE_AGE,
+        checkArgument(timestampDifference <= MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE,
                 "Market prices are not from the same time. fiatMarketPrice=%s; usdMarketPrice=%s",
                 fiatMarketPrice, usdMarketPrice);
     }
