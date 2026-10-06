@@ -178,6 +178,11 @@ final class ApiClient {
     }
 
     // The node must know the user profile, else the API returns HTTP 404
+    /** Whether the node knows the user profile. Only nodes of this checkout have this route. */
+    boolean knowsUserProfile(String userProfileId) {
+        return get("/user-profiles?ids=" + userProfileId).size() > 0;
+    }
+
     void ignoreUserProfile(String userProfileId) {
         post("/user-profiles/ignore/" + userProfileId, JSON.createObjectNode());
     }
@@ -294,6 +299,11 @@ final class ApiClient {
         request.put("bitcoinPaymentMethod", bitcoinPaymentMethod);
         request.put("fiatPaymentMethod", fiatPaymentMethod);
         return post("/trades", request).path("tradeId").asText();
+    }
+
+    /** Requests mediation for the trade. Both versions have this route. */
+    void requestMediation(String tradeId) {
+        post("/trades/" + tradeId + "/mediation", JSON.createObjectNode());
     }
 
     void tradeEvent(String tradeId, String tradeEventType, String data) {
