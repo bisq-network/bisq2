@@ -57,6 +57,8 @@ public abstract class PrivateChatMessage<R extends ChatMessageReaction> extends 
     protected final UserProfile senderUserProfile;
     @EqualsAndHashCode.Exclude
     protected final NetworkId receiverNetworkId;
+    // Reactions get added to the stored message, so a copy delivered again must still be equal to it
+    @EqualsAndHashCode.Exclude
     protected final ObservableSet<R> chatMessageReactions = new ObservableSet<>();
 
     protected PrivateChatMessage(String messageId,

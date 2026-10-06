@@ -27,8 +27,9 @@ of a trade message also applies to MuSig.
      [sender of a trade message](../trade/trade-message-sender.md));
    - an offer in the offerbook is one of the maker's own offers (see
      [take offer request validation](../trade/take-offer-request-validation.md));
-   - the requester and the peer of a mediation request are the two parties of the contract, and the receiver of the
-     request is the mediator of the contract;
+   - the requester and the peer of a mediation request are the two parties of the contract, the receiver of the
+     request is the mediator of the contract, and neither party has the key of the mediator (see
+     [mediation request validation](../support/mediation-request-validation.md));
    - the mediator shows a mediation case only if the mediator of its trade chat channel is the mediator of the
      contract;
    - a user cannot delete a profile while a private chat channel uses the identity of this profile;

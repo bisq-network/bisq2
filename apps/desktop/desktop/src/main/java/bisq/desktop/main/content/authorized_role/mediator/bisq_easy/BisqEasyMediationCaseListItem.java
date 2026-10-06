@@ -93,7 +93,8 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
             maker = trader2;
             taker = trader1;
         }
-        isMakerRequester = bisqEasyMediationCase.getBisqEasyMediationRequest().getRequester().equals(maker.userProfile);
+        // By ID, as a trader may have edited the profile since the request.
+        isMakerRequester = bisqEasyMediationCase.getBisqEasyMediationRequest().getRequester().getId().equals(maker.userProfile.getId());
 
         tradeId = channel.getTradeId();
         shortTradeId = tradeId.substring(0, 8);

@@ -59,6 +59,7 @@ class MessageDeliveryStatusServiceTest {
     // A key of ours which belongs to no network identity, for example the key of the API access
     private static final String KEY_ID_WITHOUT_NETWORK_ID = "cccccccccccccccccccccccccccccccccccccccc";
     private static final String KEY_ID_PEER = "dddddddddddddddddddddddddddddddddddddddd";
+    private static final String KEY_ID_OTHER_PEER = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 
     private final KeyPair keyPairA = KeyGeneration.generateDefaultEcKeyPair();
     private final KeyPair keyPairB = KeyGeneration.generateDefaultEcKeyPair();
@@ -154,6 +155,19 @@ class MessageDeliveryStatusServiceTest {
         verify(networkService, times(2)).confidentialSend(eq(new AckMessage("message1")), eq(peerNetworkId), senders.capture());
         assertEquals(List.of(myNetworkIdA, myNetworkIdB),
                 senders.getAllValues().stream().map(NetworkIdWithKeyPair::getNetworkId).toList());
+    }
+
+    // Both traders of a trade send a mediation request with the ID of the trade. Each of them waits for its own
+    // AckMessage, so the mediator acknowledges both requests.
+    @Test
+    void eachSenderGetsAnAckForAMessageWithTheSameId() {
+        NetworkId otherPeerNetworkId = networkId(2001, KeyGeneration.generateDefaultEcKeyPair(), KEY_ID_OTHER_PEER);
+        service.onDecryptedMessage(new TestAckRequestingMessage("message1", peerNetworkId, myNetworkIdA), KEY_ID_A);
+        service.onDecryptedMessage(new TestAckRequestingMessage("message1", otherPeerNetworkId, myNetworkIdA),
+                KEY_ID_A);
+
+        verify(networkService).confidentialSend(eq(new AckMessage("message1")), eq(peerNetworkId), any());
+        verify(networkService).confidentialSend(eq(new AckMessage("message1")), eq(otherPeerNetworkId), any());
     }
 
     @Test
