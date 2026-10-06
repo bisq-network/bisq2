@@ -69,7 +69,8 @@ public class ConfigRestApi extends RestApiBase {
     @Path("/trade-amount-limits")
     @Operation(
             summary = "Get Bisq Easy trade-amount limits",
-            description = "Static min/max USD trade amounts, tolerance and required reputation-per-USD, "
+            description = "Static min/max USD trade amounts, relative tolerance, minimum rounding allowance "
+                    + "and required reputation-per-USD, "
                     + "mirrored from bisq2 core. Fixed per core/api version.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Trade-amount limits retrieved successfully",
@@ -83,7 +84,8 @@ public class ConfigRestApi extends RestApiBase {
                     DtoMappings.FiatMapping.fromBisq2Model(BisqEasyTradeAmountLimits.DEFAULT_MIN_USD_TRADE_AMOUNT),
                     DtoMappings.FiatMapping.fromBisq2Model(BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT),
                     BisqEasyTradeAmountLimits.TOLERANCE,
-                    BisqEasyTradeAmountLimits.getRequiredReputationScorePerUsd());
+                    BisqEasyTradeAmountLimits.getRequiredReputationScorePerUsd(),
+                    BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TOLERANCE);
             return buildOkResponse(dto);
         } catch (Exception e) {
             log.error("Failed to retrieve trade-amount limits", e);
