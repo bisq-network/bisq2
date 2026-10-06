@@ -135,6 +135,9 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   with a citation, and reactions, one of which is removed again. Each message arrives exactly once on both nodes.
 - `OfflineMakerAcrossVersionsTest`: a taker takes the offer of a maker which is offline, in both directions. The take
   offer request goes to the mailbox of the maker, which gets it when it starts again. The trade continues to the end.
+- `TradePricesAcrossVersionsTest`: trades with a float price and a range over Lightning, with a fixed price with
+  decimals and a range, where the taker enters the Bitcoin amount, and with a fixed price and a fixed amount. Makers of
+  both versions take part. For a fixed price, the maker of this checkout allows only the rounding difference.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
