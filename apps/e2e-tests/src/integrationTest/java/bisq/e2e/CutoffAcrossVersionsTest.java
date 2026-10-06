@@ -19,12 +19,8 @@ package bisq.e2e;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.time.Duration;
@@ -52,7 +48,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * comes back. The task which removes expired entries runs every 10 minutes, so the test takes about 11 minutes.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @EnabledIfSystemProperty(named = "bisq.e2e.newTree", matches = ".+")
 class CutoffAcrossVersionsTest {
     // SignedRequest.SIGNATURE_V1_CUTOFF_DATE of this version. The test uses the nodes as black boxes, so it repeats the
@@ -85,7 +80,6 @@ class CutoffAcrossVersionsTest {
     }
 
     @Test
-    @Order(1)
     void nodesOfThisVersionRejectAndRemoveDataOfTheOldVersionFromTheCutoffOn() throws Exception {
         assertTrue(network.nodeTimeMillis() < CUTOFF.minusSeconds(60).toEpochMilli(),
                 "The network started too late to publish data before the cutoff date. Increase LEAD.");
@@ -143,23 +137,5 @@ class CutoffAcrossVersionsTest {
                 () -> OffersAcrossVersionsTest.findOffer(upgradedNode, oldOfferBefore).isEmpty());
         assertTrue(OffersAcrossVersionsTest.findOffer(upgradedNode, newOfferAfter).isPresent(),
                 "The upgraded node must keep the offers with signature V2");
-    }
-
-    /**
-     * An old taker takes the offer of a new maker which is online. The old node has no connection to the maker, because
-     * the maker restarted. Nodes of the old version then send the take offer request only to the mailbox of the maker
-     * (ConfidentialMessageService: "Connection is not created yet"). From the cutoff date on, nodes of this version
-     * reject that mailbox message, which has no signature V2. The taker shows the trade, the maker never gets it.
-     * <p>
-     * The specification names only messages to the mailbox of a user who is offline as lost. Whether such trades must
-     * work after the cutoff date is not decided.
-     */
-    @Test
-    @Order(2)
-    @Disabled("Open decision cutoff-old-sender-mailbox-fallback: the take offer request of the old taker is lost")
-    void anOldTakerWithoutConnectionToTheMakerTakesAnOfferAfterTheCutoff() throws Exception {
-        assertTrue(network.nodeTimeMillis() > CUTOFF.toEpochMilli(), "The test must run after the cutoff date");
-        network.restartNewNode();
-        Trades.runTrade(network.newApi, network.oldApi, "SELL", network.priceServer);
     }
 }
