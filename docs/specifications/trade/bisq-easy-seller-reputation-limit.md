@@ -33,7 +33,11 @@ The seller's client also shows the seller's maximum and warns when the seller's 
 
 ## Market Prices at the Maker
 
-The maker's check uses its BTC price in the offer's currency and its BTC price in USD. Both prices are positive, because a node uses only positive market prices (see [Market prices](../bonded-roles/market-prices.md)). Both prices must be younger than 12 hours, and their timestamps must not be more than 5 minutes apart. 5 minutes is the age after which the client shows a market price as stale. A USD value computed from two prices of very different times could understate the trade value. In a USD market both prices are the same price.
+The maker's check uses its BTC price in the offer's currency and its BTC price in USD. Both prices are positive, because a node uses only positive market prices (see [Market prices](../bonded-roles/market-prices.md)). Both prices must be younger than 12 hours, and their timestamps must not be more than 12 minutes apart. A USD value computed from two prices of very different times could understate the trade value. In a USD market both prices are the same price.
+
+The limit of 12 minutes comes from the slowest price provider. The price node takes each fiat price from one provider and keeps that provider's timestamp. Yadio, the provider for some markets such as BOB, EGP, ETB, and PYG, publishes new rates about every 5 minutes, and the price node polls it every minute. A Yadio price can therefore be about 6 minutes older than the USD price of the same price node response. The limit is twice that difference, so that one delayed provider update does not block a market. A sample of a production price node over 20 minutes on 2026-10-06 showed a largest difference of 310 seconds for Yadio prices and 60 seconds for other providers. The 5 minute age after which the client shows a market price as stale is not suitable as this limit: Yadio prices regularly exceed it, and a buyer as maker would then reject every seller taker in these markets.
+
+Within 12 minutes the BTC price can change. The USD value of the trade can then be wrong by that change. This error can understate or overstate the trade value; the 5% tolerance does not cover it in all cases.
 
 ## Fail-Closed Cases
 
@@ -41,7 +45,7 @@ The maker rejects the take offer request, before it signs the contract and befor
 
 - it has no market price for the offer's currency or for USD;
 - one of the two prices is 12 hours old or older;
-- the two prices are more than 5 minutes apart;
+- the two prices are more than 12 minutes apart;
 - the taker's score does not cover the amount.
 
 The maker knows the taker's score only after it has received the taker's user profile and the taker's reputation data from the network. Until then the taker's score is 0. Right after the maker has started, for example while it processes take offer requests that arrived while it was offline, this data may not have arrived yet, and its stored market prices may be older than 12 hours until it receives current prices. Such requests are rejected. A rejected request does not remove the offer.
