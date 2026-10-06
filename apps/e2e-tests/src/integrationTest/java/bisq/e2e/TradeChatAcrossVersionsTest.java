@@ -18,7 +18,6 @@
 package bisq.e2e;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,12 +25,14 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
-import static bisq.e2e.ApiClient.JSON;
+import static bisq.e2e.TradeChats.HEART;
+import static bisq.e2e.TradeChats.LAUGH;
+import static bisq.e2e.TradeChats.THUMBS_UP;
+import static bisq.e2e.TradeChats.awaitActiveReactions;
+import static bisq.e2e.TradeChats.awaitMessage;
+import static bisq.e2e.TradeChats.citation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -42,10 +43,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @EnabledIfSystemProperty(named = "bisq.e2e.newTree", matches = ".+")
 class TradeChatAcrossVersionsTest {
-    private static final int THUMBS_UP = 0;
-    private static final int LAUGH = 3;
-    private static final int HEART = 4;
-
     private MixedVersionNetwork network;
 
     @BeforeAll
@@ -69,9 +66,8 @@ class TradeChatAcrossVersionsTest {
         String tradeId = oldTaker.takeOffer(offerId, Trades.baseAmount(network.priceServer), Trades.QUOTE_AMOUNT,
                 "MAIN_CHAIN", "ZELLE");
         Trades.awaitTradeState(newMaker, tradeId, "the new maker has the trade", state -> true);
-        String channelId = Trades.findTrade(oldTaker, tradeId).orElseThrow().path("channel").path("id").asText();
-        assertEquals(channelId, Trades.findTrade(newMaker, tradeId).orElseThrow().path("channel").path("id").asText(),
-                "Both nodes must use the same trade chat channel");
+        String channelId = TradeChats.channelId(oldTaker, tradeId);
+        assertEquals(channelId, TradeChats.channelId(newMaker, tradeId), "Both nodes must use the same trade chat channel");
 
         String textOfOld = "A message of " + network.oldVersion + "\nwith a second line and an emoji \uD83D\uDE42";
         String textOfNew = "A message of the new version";
@@ -112,58 +108,8 @@ class TradeChatAcrossVersionsTest {
 
         for (ApiClient api : List.of(newMaker, oldTaker)) {
             for (String text : List.of(textOfOld, textOfNew, replyOfNew, replyOfOld)) {
-                long count = messages(api, channelId).stream().filter(message -> text.equals(textOf(message))).count();
-                assertEquals(1, count, "The message '" + text + "' must exist exactly once");
+                assertEquals(1, TradeChats.count(api, channelId, text), "The message '" + text + "' must exist exactly once");
             }
         }
-    }
-
-    private static ObjectNode citation(String authorUserProfileId, String text, JsonNode citedMessage) {
-        ObjectNode citation = JSON.createObjectNode();
-        citation.put("authorUserProfileId", authorUserProfileId);
-        citation.put("text", text);
-        citation.put("chatMessageId", citedMessage.path("messageId").asText());
-        return citation;
-    }
-
-    private static List<JsonNode> messages(ApiClient api, String channelId) {
-        return api.tradeChatMessages().stream()
-                .filter(message -> message.path("channelId").asText().equals(channelId))
-                .toList();
-    }
-
-    private static String textOf(JsonNode message) {
-        JsonNode text = message.path("text");
-        return text.isTextual() ? text.asText() : null;
-    }
-
-    private static JsonNode awaitMessage(ApiClient api, String channelId, String text, String description)
-            throws InterruptedException {
-        JsonNode[] found = new JsonNode[1];
-        MixedVersionNetwork.await(description, Trades.STEP_TIMEOUT, () -> {
-            Optional<JsonNode> message = messages(api, channelId).stream()
-                    .filter(candidate -> text.equals(textOf(candidate)))
-                    .findFirst();
-            message.ifPresent(value -> found[0] = value);
-            return message.isPresent();
-        });
-        return found[0];
-    }
-
-    private static void awaitActiveReactions(ApiClient api, String channelId, String text, Set<Integer> expected,
-                                             String description) throws InterruptedException {
-        MixedVersionNetwork.await(description, Trades.STEP_TIMEOUT, () -> {
-            Optional<JsonNode> message = messages(api, channelId).stream()
-                    .filter(candidate -> text.equals(textOf(candidate)))
-                    .findFirst();
-            if (message.isEmpty()) {
-                return false;
-            }
-            Set<Integer> active = StreamSupport.stream(message.get().path("chatMessageReactions").spliterator(), false)
-                    .filter(reaction -> !reaction.path("isRemoved").asBoolean(false))
-                    .map(reaction -> reaction.path("reactionId").asInt())
-                    .collect(Collectors.toSet());
-            return active.equals(expected);
-        });
     }
 }
