@@ -34,6 +34,7 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import bisq.security.DigestUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.data.AuthorizedProofOfBurnData;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -69,6 +70,8 @@ import static com.google.common.base.Preconditions.checkState;
  *     <li>{@code oracle-legacy} and {@code mediator-legacy <profile ID> <registration protocol version>}: the same data
  *     as {@code oracle} and {@code mediator}, which the key pair of the network ID of the oracle node publishes, as an
  *     oracle node of version 2.1.13 did. The dev key still signs the data.</li>
+ *     <li>{@code burn <profile ID> <amount>}: a proof of burn of this amount of BSQ satoshis for this user profile,
+ *     from a block of now, as a root oracle node publishes it. It gives the profile a score of about this amount.</li>
  *     <li>{@code migrate}: the migration of the publisher of the data of the oracle node of this checkout, which
  *     publishes the data of {@code oracle-legacy} and {@code mediator-legacy} again with the dev key and removes the
  *     entries of the key pair of the network ID (rule 14 of docs/specifications/network/storage-ownership.md). The
@@ -135,6 +138,10 @@ final class AuthorizedDataPublisher {
                         parts[0].equals("mediator") ? devKeyPair : networkIdKeyPair());
             }
             case "migrate" -> networkService().migratePublisherOfAuthorizedData(networkIdKeyPair(), devKeyPair);
+            case "burn" -> {
+                checkArgument(parts.length == 3, "burn needs a profile ID and an amount");
+                publishProofOfBurn(parts[1], Long.parseLong(parts[2]));
+            }
             case "remove-mediator" -> {
                 checkArgument(parts.length == 2, "remove-mediator needs a profile ID");
                 removeMediatorRole(parts[1]);
@@ -260,6 +267,18 @@ final class AuthorizedDataPublisher {
         AuthorizedBondedRole role = mediatorRolesByProfileId.remove(profileId);
         checkState(role != null, "No role of mediator %s to remove", profileId);
         networkService().removeAuthorizedData(role, devKeyPair).join();
+    }
+
+    // As BsqBlockGrpcService.toAuthorizedProofOfBurnData of a root oracle node. The score of a proof of burn is its
+    // amount, multiplied by an age factor between 1 and 2, which is 1 for a block of now.
+    private void publishProofOfBurn(String profileId, long amount) {
+        AuthorizedProofOfBurnData proofOfBurn = new AuthorizedProofOfBurnData(System.currentTimeMillis(),
+                amount,
+                UserProfile.getProofOfBurnKey(profileId).getBytes(),
+                1,
+                transactionId(profileId, "burn" + amount),
+                true);
+        publish(proofOfBurn, devKeyPair);
     }
 
     // The dev key signs the data as its authorized key, and the publisher signs the add request

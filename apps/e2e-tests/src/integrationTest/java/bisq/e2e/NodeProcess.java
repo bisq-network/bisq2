@@ -84,6 +84,8 @@ final class NodeProcess implements AutoCloseable {
     private final List<String> extraJvmOptions = new ArrayList<>();
     // A program which runs instead of the start script of the distribution, for example the authorized data publisher
     private Optional<Program> program = Optional.empty();
+    // Whether the node uses the scores of the reputation data instead of the score of dev mode for every profile
+    private boolean realReputation;
     private Process process;
 
     NodeProcess(String name,
@@ -136,7 +138,14 @@ final class NodeProcess implements AutoCloseable {
                 priceNodeUrl, clockOffset);
         node.defaultApiSecurity = defaultApiSecurity;
         node.extraJvmOptions.addAll(extraJvmOptions);
+        node.realReputation = realReputation;
         return node;
+    }
+
+    /** Uses the scores of the reputation data, so that sellers need reputation as in the real network. */
+    NodeProcess useRealReputation() {
+        realReputation = true;
+        return this;
     }
 
     /** Keeps the security settings of the version of this api-app node, so a client must pair with it. */
@@ -303,8 +312,11 @@ final class NodeProcess implements AutoCloseable {
         options.add("-Xmx" + kind.maxHeap);
         options.add("-Dapplication.devMode=true");
         // Sellers need reputation. Without an oracle node, the network has no reputation data, so dev mode provides a
-        // score for every profile. This hides the check of the reputation of a seller.
-        options.add("-Dapplication.devModeReputationScore=50000");
+        // score for every profile. This hides the check of the reputation of a seller. A network with real reputation
+        // gets its reputation data from the authorized data publisher.
+        if (!realReputation) {
+            options.add("-Dapplication.devModeReputationScore=50000");
+        }
         // The harness starts each node on a data directory of its own, and stops it before it starts it again. v2.1.13
         // binds its instance lock to a port which it derives from the path of the data directory. A closed connection
         // can still hold that port (TIME_WAIT), and then the node does not start.

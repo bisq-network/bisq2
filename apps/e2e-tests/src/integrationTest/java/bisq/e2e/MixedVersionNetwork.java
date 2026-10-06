@@ -53,6 +53,7 @@ final class MixedVersionNetwork implements AutoCloseable {
     final ApiClient newApi;
     // The time which the clocks of all nodes and of the fake price node run ahead of the real time
     final Duration clockOffset;
+    private final boolean realReputation;
     private final List<NodeProcess> extraNodes = new ArrayList<>();
     private final List<ExpectedLogFinding> expectedLogFindings = new ArrayList<>();
     private NodeProcess upgradedOldNode;
@@ -69,7 +70,20 @@ final class MixedVersionNetwork implements AutoCloseable {
      * libfaketime (see E2eSettings.libfaketime).
      */
     MixedVersionNetwork(String name, Duration clockOffset) throws Exception {
+        this(name, clockOffset, false);
+    }
+
+    /**
+     * A network whose nodes use the scores of the reputation data instead of the score of dev mode, which replaces the
+     * score of every profile and hides the check of the reputation of sellers.
+     */
+    static MixedVersionNetwork withRealReputation(String name) throws Exception {
+        return new MixedVersionNetwork(name, Duration.ZERO, true);
+    }
+
+    private MixedVersionNetwork(String name, Duration clockOffset, boolean realReputation) throws Exception {
         this.clockOffset = clockOffset;
+        this.realReputation = realReputation;
         dir = E2eSettings.workDir().resolve(name);
         deleteRecursively(dir);
         Files.createDirectories(dir);
@@ -84,6 +98,9 @@ final class MixedVersionNetwork implements AutoCloseable {
                 priceServer.getUrl(), clockOffset);
         newNode = new NodeProcess("node-new", NodeProcess.Kind.API, newVersion, E2eSettings.newTree(), dir, seedPorts,
                 priceServer.getUrl(), clockOffset);
+        if (realReputation) {
+            List.of(oldSeed, newSeed, oldNode, newNode).forEach(NodeProcess::useRealReputation);
+        }
         oldApi = oldNode.apiClient().orElseThrow();
         newApi = newNode.apiClient().orElseThrow();
         expectClosedSnapshotConnections(oldNode.getName());
@@ -214,6 +231,9 @@ final class MixedVersionNetwork implements AutoCloseable {
                 ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl(),
                 clockOffset);
         expectClosedSnapshotConnections(name);
+        if (realReputation) {
+            node.useRealReputation();
+        }
         extraNodes.add(node);
         return node;
     }

@@ -118,7 +118,8 @@ of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Ea
 
 - a seed node of each version and an api-app node of each version, which know both seed nodes;
 - a fake price node in the test JVM, which all nodes use instead of the real price nodes;
-- dev mode on all nodes, without authentication of the API, except the nodes of `ConnectPairingAcrossUpgradeTest`.
+- dev mode on all nodes, without authentication of the API, except the nodes of `ConnectPairingAcrossUpgradeTest`,
+  and with a reputation score of 50000 for every profile, except in `ReputationAcrossVersionsTest`.
 
 The baseline can also be an older release, for users who skipped versions (upgrade-from-older-release of the release
 test plan). With `v2.1.10` as the baseline, `UpgradeInPlaceTest`, `UpgradeKeepsUserDataTest`, `TradeAcrossVersionsTest`,
@@ -199,6 +200,11 @@ which uses the code of Bisq. The tests cover:
   nodes of this checkout has no mediator. After the publisher migration of this checkout, both versions select the
   same mediators, also nodes which start after the migration, and the removal of a role with the authorized key applies
   on both versions.
+- `ReputationAcrossVersionsTest`: a network without the reputation score of dev mode. The authorized data publisher
+  publishes a proof of burn which gives a seller of the baseline a score of 1300, and both versions show this score.
+  The seller takes the USD buy offer of a maker of this checkout: at 8 USD, which requires 1600, the maker rejects the
+  take, and the API of the baseline answers with HTTP 400 and the reason. At 7 USD, the maximum of the baseline, which
+  requires 1400 and lies within the allowance of 1500, the retake works and the trade completes.
 - `DifficultyAdjustmentAcrossVersionsTest`: the security manager publishes a difficulty adjustment of 100, as during a
   spam attack. Nodes which ran before the adjustment and nodes which start after it trade between the versions in both
   directions, also through the mailbox of an offline maker, and again after the removal of the adjustment. A
