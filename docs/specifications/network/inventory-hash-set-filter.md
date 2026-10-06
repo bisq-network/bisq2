@@ -173,6 +173,39 @@ of [`validation-at-parsing.md`](validation-at-parsing.md#rules)). If the request
 message, they close the connection (see [`message-framing.md`](message-framing.md#compatibility)). Such a filter needs
 a node with more than 100 000 stored requests.
 
+## Removals which a requester of an earlier version cannot store
+
+11. For a `HASH_SET` filter, the responder does not send a removal of authenticated data if it holds an add request
+    with the same storage key V1 and a higher sequence number. For a `HASH_SET_V2` filter, it sends such a removal.
+
+Reasons:
+
+- A requester of an earlier version holds one request per storage key V1 and accepts for it only a higher sequence
+  number. If the responder holds an add request `(K1, m)` and a removal `(K1, n)` with `n < m`, the requester either
+  holds `(K1, m)`, or it receives it in the same response, because the responder selects add requests before
+  removals. In both cases it ends with `(K1, m)` and cannot keep the removal. Its filter therefore never lists the
+  removal, and without rule 11 the responder would send it in every response. This assumes that the requester accepts
+  the add request. If it rejects it, the removal could replace an older entry `(K1, k)` with `k < n` which the
+  requester holds; with rule 11 that entry stays until it expires. For the migration of rule 14 of
+  [`storage-ownership.md`](storage-ownership.md), nodes of earlier versions accept the add request of the authorized
+  key.
+- This is the normal case after the migration of the publisher of authorized data (rule 14 of
+  [`storage-ownership.md`](storage-ownership.md)): the responder holds the removal of the network identity with
+  sequence number `n + 1` and the entry of the authorized key with `n + 2`, both with storage key V1 `K1`. A requester
+  which missed the migration holds `(K1, n)`. It receives `(K1, n + 2)`, which replaces its entry, so it does not need
+  the removal either.
+- On 2026-10-06, the oracle nodes held 4,760 entries which the migration would replace, 4,732 of them profile age
+  timestamps. Their removals have about 1.58 MB, 79 % of the default size limit of a response (2,000 KB). With both
+  oracle nodes publishing, they reach about 98 %. Without rule 11, every response to a requester of an earlier
+  version would carry them for the time to live of the data (30 days for timestamps). With a few more entries, the
+  removals alone would fill every response. A requester of an earlier version then repeats its request without end
+  and receives no mailbox data from responders of this version, because it does not follow rule 6.
+- A requester of this version stores requests under storage key V2. It needs the removal, because the removal and the
+  add request have different storage keys V2.
+
+Rule 11 compares only with add requests. A removal is not suppressed because of another removal with a higher
+sequence number: the responder cannot know which one the requester holds.
+
 ## Limitations
 
 - **Requests of this version with `HASH_SET`.** Against a responder of an earlier version, a node of this version
@@ -195,21 +228,19 @@ a node with more than 100 000 stored requests.
   request again with the next response. If such requests fill a response up to the size limit, repeated requests do
   not make progress. A requester of this version stops such requests ([rule 6](#repeated-requests)); a requester of an
   earlier version does not.
-  - This is the normal case after the migration of the publisher of authorized data (rule 14 of
-    [`storage-ownership.md`](storage-ownership.md)): a responder of this version holds the remove request of the
-    network identity with sequence number `n + 1` and the entry of the authorized key with `n + 2`, both with storage
-    key V1 `K1`. A requester of an earlier version which holds `(K1, n + 2)` gets the remove request with every response
-    and rejects it, until the remove request expires (20 to 100 days). The review 2026-09-29_16-18-18-fable-5.1 found
-    this by reading the code (finding F8, case A); the number of such requests depends on the number of migrated
-    entries.
+  - The removals of the migration of the publisher of authorized data are the main case. Rule 11 removes it
+    ([removals which a requester of an earlier version cannot store](#removals-which-a-requester-of-an-earlier-version-cannot-store)).
+    The review 2026-09-29_16-18-18-fable-5.1 found it by reading the code (finding F8, case A).
+  - Remaining case: the responder holds a removal of another owner and no add request with a higher sequence number
+    for the same storage key V1, while the requester holds an add request which that removal cannot replace.
   - Why it cannot be removed now: the filter of a node of an earlier version contains no owner, and its code cannot be
-    changed. The responder cannot know which owner's request the requester holds.
+    changed. In the remaining case the responder cannot know which owner's request the requester holds.
   - What removes it: ending the support of `HASH_SET` when nodes of earlier versions are no longer supported.
   - Who decides: the developers. Until then, nodes of earlier versions get the inventory with the ownership semantics
     of storage key V1, not those of V2.
 - **Cost of `HASH_SET` responses.** The stores hold the requests under storage key V2. For a `HASH_SET` filter the
-  responder computes storage key V1 of every request for every such response. A cache is possible if measurements show
-  a need.
+  responder computes storage key V1 of every request for every such response. If the response contains removals, rule
+  11 computes storage key V1 of every add request once more. A cache is possible if measurements show a need.
 - **Requesters with more requests than the filter limit.** The filter of such a requester does not list all of its
   requests ([rule 10](#size-of-the-filter)). The responder therefore also sends requests which the requester already
   holds, and the requester receives them again. Each filter is a new random sample of the requests which the requester
