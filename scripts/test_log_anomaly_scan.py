@@ -189,6 +189,37 @@ class LogAnomalyScanTests(unittest.TestCase):
         self.assertEqual(0, exit_code)
         self.assertEqual({"error-line": 1}, report["nodes"][0]["sessions"][0]["allowed"])
 
+    def test_connection_reset_during_an_outbound_handshake_is_allowed(self):
+        directory = self.write_log("node", "bisq.log", [
+            start("2.1.13"),
+            line("ERROR", "Starting outbound handshake to 127.0.0.1:26073 failed. java.net.SocketException: "
+                          "Connection reset", logger="b.n.p.node.Node"),
+            line("ERROR", "Unspecified connectionException reason. Exception: bisq.network.p2p.node."
+                          "ConnectionException: java.net.SocketException: Connection reset", logger="b.n.p.node.Node"),
+            "\tat bisq.network.p2p.node.handshake.ConnectionHandshake.start(ConnectionHandshake.java:290)",
+            line("ERROR", "Unhandled connectionException reason. Exception: bisq.network.p2p.node.ConnectionException: "
+                          "bisq.network.p2p.node.ConnectionException: java.net.SocketException: Connection reset",
+                 logger="b.n.p.node.Node"),
+            "\tat bisq.network.p2p.node.Node.startConnectionHandshake(Node.java:567)",
+        ])
+
+        exit_code, report = self.scan_json(directory)
+
+        self.assertEqual(0, exit_code)
+        self.assertEqual({"error-line": 3}, report["nodes"][0]["sessions"][0]["allowed"])
+
+    def test_other_failure_of_an_outbound_handshake_is_reported(self):
+        directory = self.write_log("node", "bisq.log", [
+            start("2.1.14"),
+            line("ERROR", "Starting outbound handshake to 127.0.0.1:26073 failed. Peer rejected our authorization "
+                          "token", logger="b.n.p.node.Node"),
+        ])
+
+        exit_code, report = self.scan_json(directory)
+
+        self.assertEqual(1, exit_code)
+        self.assertEqual(["error-line"], [f["ruleId"] for f in report["nodes"][0]["sessions"][0]["findings"]])
+
     def test_rejected_send_on_another_path_is_reported(self):
         directory = self.write_log("node", "bisq.log", [
             start("2.1.14"),

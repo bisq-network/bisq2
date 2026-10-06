@@ -199,6 +199,17 @@ ALLOW_RULES: List[AllowRule] = [
               "A node sent an inventory response over a connection which the peer had closed, in the same race of two "
               "connections. The requester cancels its request when the connection closes and asks on another "
               "connection (docs/specifications/network/inventory-request-lifecycle.md)."),
+    # A peer which stops or restarts closes the connections of its handshakes. v2.1.13 and v2.1.14 log three error lines
+    # for each such outbound handshake and try other peers.
+    AllowRule("error-line",
+              re.compile(r"Starting outbound handshake to \S+ failed\. java\.net\.SocketException: Connection reset"),
+              "A peer closed the connection during the handshake of an outbound connection, for example because it "
+              "stopped. The node tries other peers."),
+    AllowRule("error-line",
+              re.compile(r"(Unspecified|Unhandled) connectionException reason\. Exception: [^\n]*"
+                         r"java\.net\.SocketException: Connection reset.*"
+                         r"(ConnectionHandshake\.start|Node\.startConnectionHandshake)", re.DOTALL),
+              "The same closed connection during the handshake of an outbound connection, with its stack trace."),
 ]
 
 
