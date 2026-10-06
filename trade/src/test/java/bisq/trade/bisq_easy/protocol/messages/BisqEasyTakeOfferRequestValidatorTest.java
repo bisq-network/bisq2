@@ -151,6 +151,13 @@ class BisqEasyTakeOfferRequestValidatorTest {
         assertEquals(78, getMaxRoundingDifference(PriceQuote.fromFiatPrice(13_000, "USD")));
     }
 
+    // In an altcoin market the quote is Bitcoin. Its display precision of 4 decimals is not a rounding of the clients.
+    @Test
+    void maxRoundingDifferenceIsOnlyDefinedForBitcoinFiatMarkets() {
+        assertThrows(IllegalArgumentException.class,
+                () -> getMaxRoundingDifference(PriceQuote.fromAltCoinPrice(0.003, "XMR")));
+    }
+
     // Both traders compute the amounts at the fixed price. The maximum trade price deviation of the maker (5 % in the
     // fixture) let a taker ask for up to 5 % more Bitcoin.
     @Test

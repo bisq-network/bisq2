@@ -280,11 +280,16 @@ public final class BisqEasyTakeOfferRequestValidator {
 
     // For a fixed price the maker and the taker compute the amounts at the same price. A client computes the Bitcoin
     // amount from the fiat amount, or the fiat amount from the Bitcoin amount, and it can round the fiat amount to its
-    // display precision (2 decimals for fiat). So the maker accepts a difference of up to the Bitcoin value of one unit
-    // of that precision, plus one unit of the Bitcoin amount for its own rounding. A taker who uses this difference
-    // gains at most one such unit of the fiat amount, for example one cent.
+    // display precision (2 decimals). So the maker accepts a difference of up to the Bitcoin value of one unit of that
+    // precision, plus one satoshi for its own rounding. A taker who uses this difference gains at most one such unit of
+    // the fiat amount, for example one cent.
+    // Bisq Easy has only markets with Bitcoin as base and a fiat currency as quote. In an altcoin market base and quote
+    // are inverted: the quote is Bitcoin, whose display precision is 4 decimals, so the method would accept the altcoin
+    // value of 0.0001 BTC. It therefore requires a Bitcoin/fiat market.
     @VisibleForTesting
     static long getMaxRoundingDifference(PriceQuote fixedPrice) {
+        checkArgument(fixedPrice.getMarket().isBtcFiatMarket(),
+                "The rounding difference is defined for Bitcoin/fiat markets. market=" + fixedPrice.getMarket());
         long smallestDisplayedQuoteUnit = BigDecimal.ONE
                 .movePointRight(fixedPrice.getPrecision() - fixedPrice.getLowPrecision())
                 .longValueExact();

@@ -19,7 +19,7 @@ The maker verifies, in this order:
 - the message sender is the taker of the contract and the sender's public key matches the taker's network ID;
 - the amounts are positive and within the offer's amount specification (equal to its fixed amount or within its range);
 - the Bitcoin amount does not deviate, to the maker's disadvantage, from the amount the maker calculates for the quote amount at the price it derives itself from the offer's price specification by more than (`PRICE_DEVIATION` otherwise):
-  - for a fixed price, the rounding difference: the Bitcoin value of one unit of the display precision of the quote currency (0.01 for fiat) at the fixed price, plus one satoshi;
+  - for a fixed price, the rounding difference: the Bitcoin value of 0.01 of the fiat currency at the fixed price, plus one satoshi. Bisq Easy offers have Bitcoin as base and a fiat currency as quote;
   - for a market based price, the maker's maximum trade price deviation;
 - the payment method specifications of the contract are ones the offer lists;
 - the contract mediator equals, by its whole network ID including the addresses, the mediator the maker selects deterministically for the two traders and the offer (`MEDIATORS_NOT_MATCHING` otherwise). The maker sends its mediation request and its chat messages for the mediator to the addresses of the copies of the mediator's profile which the taker supplies in the contract and in its first chat message. This check binds these addresses to the profile which the mediator published, see rule 4 of [identity by key](../user/identity-by-key.md);
