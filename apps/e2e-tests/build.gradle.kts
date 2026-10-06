@@ -11,7 +11,7 @@ dependencies {
 }
 
 tasks.named<Test>("integrationTest") {
-    listOf("bisq.e2e.newTree", "bisq.e2e.oldTree", "bisq.e2e.oldVersion", "bisq.e2e.workDir").forEach { name ->
+    listOf("bisq.e2e.newTree", "bisq.e2e.oldTree", "bisq.e2e.oldVersion", "bisq.e2e.workDir", "bisq.e2e.libfaketime").forEach { name ->
         val value = providers.gradleProperty(name)
         inputs.property(name, value.orElse(""))
         systemProperty(name, value.orElse("").get())

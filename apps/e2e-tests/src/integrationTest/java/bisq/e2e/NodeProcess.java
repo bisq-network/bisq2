@@ -58,6 +58,8 @@ final class NodeProcess implements AutoCloseable {
     private final int apiPort;
     private final List<Integer> seedPorts;
     private final String priceNodeUrl;
+    // The time which the clock of the node runs ahead of the real time. Zero means the real clock.
+    private final Duration clockOffset;
     private Process process;
 
     NodeProcess(String name,
@@ -66,9 +68,10 @@ final class NodeProcess implements AutoCloseable {
                 Path tree,
                 Path networkDir,
                 List<Integer> seedPorts,
-                String priceNodeUrl) throws IOException {
+                String priceNodeUrl,
+                Duration clockOffset) throws IOException {
         this(name, kind, version, tree, networkDir.resolve(name), freePort(), kind == Kind.API ? freePort() : -1,
-                seedPorts, priceNodeUrl);
+                seedPorts, priceNodeUrl, clockOffset);
     }
 
     private NodeProcess(String name,
@@ -79,7 +82,8 @@ final class NodeProcess implements AutoCloseable {
                         int p2pPort,
                         int apiPort,
                         List<Integer> seedPorts,
-                        String priceNodeUrl) {
+                        String priceNodeUrl,
+                        Duration clockOffset) {
         this.name = name;
         this.kind = kind;
         this.version = version;
@@ -89,12 +93,14 @@ final class NodeProcess implements AutoCloseable {
         this.apiPort = apiPort;
         this.seedPorts = seedPorts;
         this.priceNodeUrl = priceNodeUrl;
+        this.clockOffset = clockOffset;
     }
 
     // A seed node which uses a given port, because the other nodes need the ports of the seeds before they start
     static NodeProcess seed(String name, String version, Path tree, Path networkDir, int port, List<Integer> seedPorts,
-                            String priceNodeUrl) {
-        return new NodeProcess(name, Kind.SEED, version, tree, networkDir.resolve(name), port, -1, seedPorts, priceNodeUrl);
+                            String priceNodeUrl, Duration clockOffset) {
+        return new NodeProcess(name, Kind.SEED, version, tree, networkDir.resolve(name), port, -1, seedPorts, priceNodeUrl,
+                clockOffset);
     }
 
     /**
@@ -102,7 +108,8 @@ final class NodeProcess implements AutoCloseable {
      * directory and the ports, so the node keeps its address and its peers reach it as before.
      */
     NodeProcess withTree(Path otherTree, String otherVersion) {
-        return new NodeProcess(name, kind, otherVersion, otherTree, dataDir, p2pPort, apiPort, seedPorts, priceNodeUrl);
+        return new NodeProcess(name, kind, otherVersion, otherTree, dataDir, p2pPort, apiPort, seedPorts, priceNodeUrl,
+                clockOffset);
     }
 
     String getName() {
@@ -142,6 +149,16 @@ final class NodeProcess implements AutoCloseable {
         }
         ProcessBuilder builder = new ProcessBuilder(startScript.toString(), "--data-dir=" + dataDir, "--app-name=" + name);
         builder.environment().put("JAVA_OPTS", String.join(" ", jvmOptions()));
+        if (!clockOffset.isZero()) {
+            // libfaketime moves the clock of the whole process, also System.currentTimeMillis() of the JVM. The offset
+            // is relative to the real time, so all nodes with the same offset show the same time. The monotonic clock
+            // stays real, because the JVM uses it for timers.
+            Path libfaketime = E2eSettings.libfaketime()
+                    .orElseThrow(() -> new IllegalStateException("A fake clock needs libfaketime. See tools/compat/README.md."));
+            builder.environment().put("LD_PRELOAD", libfaketime.toString());
+            builder.environment().put("FAKETIME", (clockOffset.isNegative() ? "" : "+") + clockOffset.toSeconds());
+            builder.environment().put("FAKETIME_DONT_FAKE_MONOTONIC", "1");
+        }
         builder.redirectErrorStream(true);
         builder.redirectOutput(ProcessBuilder.Redirect.appendTo(dataDir.resolve("stdout.log").toFile()));
         process = builder.start();

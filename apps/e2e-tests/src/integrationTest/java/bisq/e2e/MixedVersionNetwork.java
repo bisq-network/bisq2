@@ -46,20 +46,35 @@ final class MixedVersionNetwork implements AutoCloseable {
     final NodeProcess newNode;
     final ApiClient oldApi;
     final ApiClient newApi;
+    // The time which the clocks of all nodes and of the fake price node run ahead of the real time
+    final Duration clockOffset;
     private final List<NodeProcess> extraNodes = new ArrayList<>();
     private NodeProcess upgradedOldNode;
 
     MixedVersionNetwork(String name) throws Exception {
+        this(name, Duration.ZERO);
+    }
+
+    /**
+     * A network whose nodes have a fake clock, which runs ahead of the real time by the given offset. It needs
+     * libfaketime (see E2eSettings.libfaketime).
+     */
+    MixedVersionNetwork(String name, Duration clockOffset) throws Exception {
+        this.clockOffset = clockOffset;
         dir = E2eSettings.workDir().resolve(name);
         deleteRecursively(dir);
         Files.createDirectories(dir);
-        priceServer = new FakePriceServer();
+        priceServer = new FakePriceServer(clockOffset);
 
         List<Integer> seedPorts = List.of(NodeProcess.freePort(), NodeProcess.freePort());
-        oldSeed = NodeProcess.seed("seed-old", oldVersion, E2eSettings.oldTree(), dir, seedPorts.get(0), seedPorts, priceServer.getUrl());
-        newSeed = NodeProcess.seed("seed-new", newVersion, E2eSettings.newTree(), dir, seedPorts.get(1), seedPorts, priceServer.getUrl());
-        oldNode = new NodeProcess("node-old", NodeProcess.Kind.API, oldVersion, E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl());
-        newNode = new NodeProcess("node-new", NodeProcess.Kind.API, newVersion, E2eSettings.newTree(), dir, seedPorts, priceServer.getUrl());
+        oldSeed = NodeProcess.seed("seed-old", oldVersion, E2eSettings.oldTree(), dir, seedPorts.get(0), seedPorts,
+                priceServer.getUrl(), clockOffset);
+        newSeed = NodeProcess.seed("seed-new", newVersion, E2eSettings.newTree(), dir, seedPorts.get(1), seedPorts,
+                priceServer.getUrl(), clockOffset);
+        oldNode = new NodeProcess("node-old", NodeProcess.Kind.API, oldVersion, E2eSettings.oldTree(), dir, seedPorts,
+                priceServer.getUrl(), clockOffset);
+        newNode = new NodeProcess("node-new", NodeProcess.Kind.API, newVersion, E2eSettings.newTree(), dir, seedPorts,
+                priceServer.getUrl(), clockOffset);
         oldApi = oldNode.apiClient().orElseThrow();
         newApi = newNode.apiClient().orElseThrow();
 
@@ -91,13 +106,19 @@ final class MixedVersionNetwork implements AutoCloseable {
         }
     }
 
+    /** The current time of the clocks of the nodes. */
+    long nodeTimeMillis() {
+        return System.currentTimeMillis() + clockOffset.toMillis();
+    }
+
     /**
      * Starts one more api-app node, which knows only the given seed nodes, for example a node which joins the network
      * later. It gets a user identity like the other api-app nodes.
      */
     ApiClient startExtraApiNode(String name, boolean ofNewVersion, List<Integer> seedPorts) throws Exception {
         NodeProcess node = new NodeProcess(name, NodeProcess.Kind.API, ofNewVersion ? newVersion : oldVersion,
-                ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl());
+                ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl(),
+                clockOffset);
         extraNodes.add(node);
         node.start();
         node.awaitReady(START_TIMEOUT);
@@ -105,6 +126,29 @@ final class MixedVersionNetwork implements AutoCloseable {
         api.createUserIdentity("e2e-" + name);
         api.acceptTermsAndConditions();
         return api;
+    }
+
+    /**
+     * Stops an extra node of the old version and starts the distribution of this checkout on its data directory, as a
+     * user who upgrades. The node keeps its ports, so its ApiClient reaches the upgraded node.
+     */
+    void upgradeExtraNode(String name) throws Exception {
+        NodeProcess nodeOfOldVersion = extraNodes.stream()
+                .filter(node -> node.getName().equals(name))
+                .findFirst()
+                .orElseThrow();
+        nodeOfOldVersion.stop();
+        NodeProcess upgradedNode = nodeOfOldVersion.withTree(E2eSettings.newTree(), newVersion);
+        extraNodes.set(extraNodes.indexOf(nodeOfOldVersion), upgradedNode);
+        upgradedNode.start();
+        upgradedNode.awaitReady(START_TIMEOUT);
+    }
+
+    /** Stops and starts the node of this checkout on its data directory, as a user who restarts the app. */
+    void restartNewNode() throws Exception {
+        newNode.stop();
+        newNode.start();
+        newNode.awaitReady(START_TIMEOUT);
     }
 
     /** Stops the node of the old version, as a user who quits the app before an update does. */
