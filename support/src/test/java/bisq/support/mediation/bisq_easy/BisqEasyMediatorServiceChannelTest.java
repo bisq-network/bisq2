@@ -57,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -67,7 +68,8 @@ import static org.mockito.Mockito.when;
  * The chat service decides which trade channel the mediator uses for an accepted mediation request
  * (docs/specifications/trade/chat-channel-binding.md, section "Channel on the mediator's node"). The mediator service
  * does not ignore a request because of an existing channel of the trade, unless the channel belongs to another
- * identity of the mediator's node.
+ * identity of the mediator's node. Only the first request of a trade gets the mediator's responses
+ * (docs/specifications/support/mediation-request-validation.md).
  */
 class BisqEasyMediatorServiceChannelTest {
     private UserIdentityService userIdentityService;
@@ -158,6 +160,40 @@ class BisqEasyMediatorServiceChannelTest {
         assertEquals(tradersIdentity.getId(), channel.getMyUserIdentity().getId());
         assertFalse(channel.isInMediation());
         verify(networkService, never()).confidentialSend(isA(BisqEasyMediatorsResponse.class), any(), any());
+    }
+
+    // The responses to the first request tell both traders that the mediator joined
+    @Test
+    void requestOfTheOtherTraderGetsNoResponse() {
+        BisqEasyContract contract = TestContracts.contract(maker, taker, mediator);
+
+        mediatorService.onMessage(mediationRequest(contract, maker, taker));
+        mediatorService.onMessage(mediationRequest(contract, taker, maker));
+
+        assertEquals(1, mediatorService.getMediationCases().size());
+        assertEquals(2, mediatorService.getMediationCases().iterator().next().getMediationRequests().size());
+        assertOneResponseToEachTrader(TradeId.fromContract(contract));
+    }
+
+    @Test
+    void requestWithAnotherContractGetsNoResponse() {
+        BisqEasyContract contract = TestContracts.contract(maker, taker, mediator);
+        BisqEasyContract otherContract = TestContracts.contract(maker, taker, mediator, List.of("en", "de"));
+
+        mediatorService.onMessage(mediationRequest(contract, maker, taker));
+        mediatorService.onMessage(mediationRequest(otherContract, taker, maker));
+
+        assertEquals(2, mediatorService.getMediationCases().size());
+        assertOneResponseToEachTrader(TradeId.fromContract(contract));
+    }
+
+    private void assertOneResponseToEachTrader(String tradeId) {
+        verify(networkService).confidentialSend(isA(BisqEasyMediatorsResponse.class), eq(maker.getNetworkId()), any());
+        verify(networkService).confidentialSend(isA(BisqEasyMediatorsResponse.class), eq(taker.getNetworkId()), any());
+        long numResponseMessages = findChannel(tradeId).getChatMessages().stream()
+                .filter(message -> message.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE)
+                .count();
+        assertEquals(2, numResponseMessages);
     }
 
     // The predicate which holds for any trade lets the message create the channel, as older versions did without a

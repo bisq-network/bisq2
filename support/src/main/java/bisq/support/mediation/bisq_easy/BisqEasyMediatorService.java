@@ -194,6 +194,11 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
 
             bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
 
+            // The responses to the first request of a trade tell both traders that the mediator joined. A later request
+            // of the trade gets none: its responses would add the response messages to the channel again, and a
+            // trader's client could show the join message again (mediation-request-validation.md).
+            boolean isFirstRequestOfTrade = getRequestsForTrade(tradeId, getMediationCases()).isEmpty();
+
             // We apply the bisqEasyMediationCase after the channel is set up as clients will expect a channel.
             // The other trader's request for the same contract is kept on the existing case.
             BisqEasyMediationCase bisqEasyMediationCase = new BisqEasyMediationCase(bisqEasyMediationRequest);
@@ -213,6 +218,9 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
             getMessagesToImport(bisqEasyMediationRequest, channel.getChatMessages())
                     .forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
 
+            if (!isFirstRequestOfTrade) {
+                return;
+            }
             NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
 
             // Send to requester
