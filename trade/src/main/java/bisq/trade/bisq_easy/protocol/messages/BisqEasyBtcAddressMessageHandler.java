@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.BitcoinAddressValidation;
 import bisq.common.validation.LightningInvoiceValidation;
+import bisq.common.validation.RequestedAmountValidation;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
@@ -54,6 +55,9 @@ public class BisqEasyBtcAddressMessageHandler extends BisqEasyTradeMessageHandle
             checkArgument(bitcoinPaymentData.length() <= LightningInvoiceValidation.MAX_LENGTH,
                     "Lightning invoice length must not be longer than " + LightningInvoiceValidation.MAX_LENGTH);
         }
+        // The seller's wallet pays the amount which the data requests, for example from its QR code
+        // (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md)
+        RequestedAmountValidation.checkRequestsOnlyAmount(bitcoinPaymentData, trade.getContract().getBaseSideAmount());
 
         checkNotNull(message.getBisqEasyOffer(), "BisqEasyOffer must not be null");
     }

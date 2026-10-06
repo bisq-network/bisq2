@@ -124,6 +124,45 @@ class TradeRestApiTest {
         verify(openTradeChannelService, never()).sendTradeLogMessage(any(), any());
     }
 
+    @Test
+    void processTradeEventReturns400ForRefusedBitcoinPaymentDataAndSkipsTradeLogMessage() {
+        BisqEasyOpenTradeChannelService openTradeChannelService = mock(BisqEasyOpenTradeChannelService.class);
+        BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
+        TradeRestApi restApi = newTradeRestApi(openTradeChannelService, bisqEasyTradeService);
+
+        String tradeId = "trade-1";
+        BisqEasyOpenTradeChannel channel = mock(BisqEasyOpenTradeChannel.class, RETURNS_DEEP_STUBS);
+        BisqEasyTrade trade = mock(BisqEasyTrade.class);
+        BisqEasyContract contract = mock(BisqEasyContract.class);
+        BitcoinPaymentMethodSpec paymentMethodSpec = mock(BitcoinPaymentMethodSpec.class);
+        BitcoinPaymentMethod paymentMethod = mock(BitcoinPaymentMethod.class);
+        when(openTradeChannelService.findChannelByTradeId(tradeId)).thenReturn(Optional.of(channel));
+        when(bisqEasyTradeService.findTrade(tradeId)).thenReturn(Optional.of(trade));
+        when(trade.getContract()).thenReturn(contract);
+        when(contract.getBaseSidePaymentMethodSpec()).thenReturn(paymentMethodSpec);
+        when(paymentMethodSpec.getPaymentMethod()).thenReturn(paymentMethod);
+        when(paymentMethod.getPaymentRail()).thenReturn(BitcoinPaymentRail.MAIN_CHAIN);
+
+        // The buyer's node refuses data which requests another amount than the trade amount.
+        String bitcoinPaymentData = "bitcoin:bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4?amount=0.01";
+        String refusal = "Bitcoin payment data must not request another amount than the trade amount";
+        doThrow(new IllegalArgumentException(refusal))
+                .when(bisqEasyTradeService).buyerSendBitcoinPaymentData(trade, bitcoinPaymentData);
+
+        AsyncResponse asyncResponse = mock(AsyncResponse.class);
+        TradeEventDto event = new TradeEventDto(TradeEventTypeDto.BUYER_SEND_BITCOIN_PAYMENT_DATA, bitcoinPaymentData);
+
+        restApi.processTradeEvent(tradeId, event, asyncResponse);
+
+        // The refusal surfaces as invalid input (not a generic 500), as at taking an offer.
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(asyncResponse).resume(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        assertThat(captor.getValue().getEntity()).isEqualTo("Invalid input: " + refusal);
+
+        verify(openTradeChannelService, never()).sendTradeLogMessage(any(), any());
+    }
+
     private TradeRestApi newTradeRestApi(BisqEasyOpenTradeChannelService openTradeChannelService,
                                          BisqEasyTradeService bisqEasyTradeService) {
         ChatService chatService = mock(ChatService.class);
