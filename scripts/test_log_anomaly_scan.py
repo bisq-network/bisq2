@@ -145,6 +145,19 @@ class LogAnomalyScanTests(unittest.TestCase):
         self.assertEqual(["feature-list-unresolved"], [f["ruleId"] for f in new_session["findings"]])
         self.assertEqual(1, exit_code)
 
+    def test_missing_notification_icon_of_the_api_app_is_allowed(self):
+        directory = self.write_log("node", "bisq.log", [
+            start("2.1.14"),
+            line("ERROR", "Copying notificationIcon from resources failed java.io.IOException: Could not load "
+                          "linux-notification-icon.png", logger="b.o.n.l.LinuxNotificationService"),
+            "\tat bisq.common.file.FileReaderUtils.getResourceAsStream(FileReaderUtils.java:134)",
+        ])
+
+        exit_code, report = self.scan_json(directory)
+
+        self.assertEqual(0, exit_code)
+        self.assertEqual({"error-line": 1}, report["nodes"][0]["sessions"][0]["allowed"])
+
     def test_unresolved_enum_of_another_type_is_reported_in_old_sessions(self):
         directory = self.write_log("node", "bisq.log", [
             start("2.1.13"),
