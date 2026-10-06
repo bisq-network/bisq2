@@ -138,10 +138,10 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
   task which removes expired entries. The running node is a node which a user upgraded from the baseline before the
   date. It also removes the offer of this checkout which it stored with the baseline, without signature V2. The test
-  does not check whether this offer comes back. The baseline still gets the offers of this checkout. The test takes about 11 minutes, because that task runs every 10 minutes. It needs libfaketime (see
-  [Fake clock](#fake-clock)). Without libfaketime, Gradle reports the test as skipped. A second test, a trade of an old
-  taker after the cutoff date, is disabled: the take offer request of the baseline is lost (open decision
-  `cutoff-old-sender-mailbox-fallback`).
+  does not check whether this offer comes back. The baseline still gets the offers of this checkout. The test takes
+  about 11 minutes, because that task runs every 10 minutes. It needs libfaketime (see [Fake clock](#fake-clock)).
+  Without libfaketime, Gradle reports the test as skipped. Nodes of the baseline are not supported from the cutoff date
+  on, so the test does not trade with them after that date.
 
 At the end, each test class stops its nodes and scans their logs with `scripts/log_anomaly_scan.py`. A finding of
 level warning or error fails the test class. The data directories and logs stay in `build/e2e/<tag>/<test class>`.
