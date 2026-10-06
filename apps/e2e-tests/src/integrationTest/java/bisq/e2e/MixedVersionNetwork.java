@@ -17,6 +17,8 @@
 
 package bisq.e2e;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,6 +29,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Stream;
+
+import static bisq.e2e.ApiClient.JSON;
 
 /**
  * A test network on 127.0.0.1 with nodes of two versions: a seed node of each version, and an api-app node of each
@@ -49,7 +53,11 @@ final class MixedVersionNetwork implements AutoCloseable {
     // The time which the clocks of all nodes and of the fake price node run ahead of the real time
     final Duration clockOffset;
     private final List<NodeProcess> extraNodes = new ArrayList<>();
+    private final List<ExpectedLogFinding> expectedLogFindings = new ArrayList<>();
     private NodeProcess upgradedOldNode;
+
+    private record ExpectedLogFinding(String nodeName, String ruleId, String textPart) {
+    }
 
     MixedVersionNetwork(String name) throws Exception {
         this(name, Duration.ZERO);
@@ -182,6 +190,15 @@ final class MixedVersionNetwork implements AutoCloseable {
         upgradedOldNode.awaitReady(START_TIMEOUT);
     }
 
+    /**
+     * Declares a finding of the log scan which the test causes on purpose, for example the log lines of a take which
+     * the maker rejects. The scan then accepts the findings of this rule on this node if each of their lines contains
+     * the text. All other findings still fail the test class.
+     */
+    void expectLogFinding(String nodeName, String ruleId, String text) {
+        expectedLogFindings.add(new ExpectedLogFinding(nodeName, ruleId, text));
+    }
+
     /** Waits until the condition holds. The nodes deliver data asynchronously. */
     static void await(String description, Duration timeout, BooleanSupplier condition) throws InterruptedException {
         long deadline = System.nanoTime() + timeout.toNanos();
@@ -229,10 +246,46 @@ final class MixedVersionNetwork implements AutoCloseable {
                 .redirectOutput(report.toFile())
                 .start();
         int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            throw new AssertionError("The logs of the nodes contain unexpected lines (exit code " + exitCode + "). " +
-                    "Report " + report + ":\n" + Files.readString(report, StandardCharsets.UTF_8));
+        boolean onlyExpectedFindings = exitCode == 1 && !expectedLogFindings.isEmpty() &&
+                unexpectedLogFindings(script).isEmpty();
+        if (exitCode == 0 || onlyExpectedFindings) {
+            return;
         }
+        throw new AssertionError("The logs of the nodes contain unexpected lines (exit code " + exitCode + "). " +
+                "Report " + report + ":\n" + Files.readString(report, StandardCharsets.UTF_8));
+    }
+
+    // The findings of the scan which no test declared. The JSON report lists every line of a finding.
+    private List<String> unexpectedLogFindings(Path script) throws IOException, InterruptedException {
+        Path jsonReport = dir.resolve("log-anomaly-report.json");
+        Process process = new ProcessBuilder("python3", script.toString(), "--json", "--max-examples", "100000",
+                dir.toString())
+                .redirectOutput(jsonReport.toFile())
+                .start();
+        process.waitFor();
+        List<String> unexpected = new ArrayList<>();
+        for (JsonNode node : JSON.readTree(jsonReport.toFile()).path("nodes")) {
+            String nodeName = node.path("name").asText();
+            for (JsonNode session : node.path("sessions")) {
+                for (JsonNode finding : session.path("findings")) {
+                    String ruleId = finding.path("ruleId").asText();
+                    boolean isExpected = finding.path("severity").asText().equals("notice") ||
+                            expectedLogFindings.stream().anyMatch(expected -> expected.nodeName().equals(nodeName) &&
+                                    expected.ruleId().equals(ruleId) &&
+                                    linesOf(finding).stream().allMatch(line -> line.contains(expected.textPart())));
+                    if (!isExpected) {
+                        unexpected.add(nodeName + ": " + ruleId);
+                    }
+                }
+            }
+        }
+        return unexpected;
+    }
+
+    private static List<String> linesOf(JsonNode finding) {
+        List<String> lines = new ArrayList<>();
+        finding.path("examples").forEach(example -> lines.add(example.path("text").asText()));
+        return lines;
     }
 
     private static void deleteRecursively(Path path) throws IOException {
