@@ -47,8 +47,8 @@ class TorSocksProxyFactoryTest {
     private static final int TIMEOUT = 5000;
     private static final byte[] IPV4_ADDRESS = {1, 0, 0, 0, 0};
 
-    private final ServerSocket serverSocket = new ServerSocket(0, 1, InetAddress.getLoopbackAddress());
-    private final TorSocksProxyFactory factory = new TorSocksProxyFactory(serverSocket.getLocalPort());
+    private final ServerSocket serverSocket;
+    private final TorSocksProxyFactory factory;
 
     // What the fake proxy received. clientClosed is true if the client closed the connection after the last reply.
     private record Request(String username, String host, int port, boolean clientClosed) {
@@ -62,6 +62,8 @@ class TorSocksProxyFactoryTest {
     }
 
     TorSocksProxyFactoryTest() throws IOException {
+        serverSocket = new ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"));
+        factory = new TorSocksProxyFactory(serverSocket.getLocalPort());
     }
 
     @AfterEach
