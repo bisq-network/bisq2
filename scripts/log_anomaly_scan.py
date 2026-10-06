@@ -186,6 +186,13 @@ ALLOW_RULES: List[AllowRule] = [
     AllowRule("enum-unresolved", re.compile(r"Enum type= Feature; name=UNRECOGNIZED"),
               "Nodes of version 2.1.13 and older do not know the feature INVENTORY_HASH_SET_V2 of newer peers.",
               only_before_version=(2, 1, 14)),
+    # Only the confidential send path is allowed: it stores the message in the mailbox of the peer when the send fails.
+    # The same error on another path can lose data, so it stays a finding.
+    AllowRule("error-line",
+              re.compile(r"Send executor rejected task.*ConfidentialMessageService\.trySendAsync", re.DOTALL),
+              "A node sent a confidential message over a connection which the peer had closed. When two nodes open "
+              "connections to each other at the same time, both connections can close (a known race of v2.1.13 and "
+              "v2.1.14). The node then stores the message in the mailbox of the peer."),
 ]
 
 
