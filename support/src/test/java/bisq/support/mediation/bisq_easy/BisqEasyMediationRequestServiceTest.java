@@ -57,6 +57,7 @@ import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 
 import java.security.KeyPair;
 import java.util.HashSet;
@@ -71,6 +72,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -175,6 +177,19 @@ class BisqEasyMediationRequestServiceTest {
         service.requestMediation(channel, contract);
 
         verify(openTradeChannelService).setIsInMediation(channel, true);
+    }
+
+    // The mediator can respond before the request call returns, for example over a fast connection. The response must
+    // find the channel in mediation, else the requester's client shows the message for the trader who did not request.
+    @Test
+    void requestPutsTheChannelInMediationBeforeItSendsTheRequest() {
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(mediator));
+
+        service.requestMediation(channel, contract);
+
+        InOrder order = inOrder(openTradeChannelService, networkService);
+        order.verify(openTradeChannelService).setIsInMediation(channel, true);
+        order.verify(networkService).confidentialSend(any(), eq(mediator.getNetworkId()), any());
     }
 
     @Test

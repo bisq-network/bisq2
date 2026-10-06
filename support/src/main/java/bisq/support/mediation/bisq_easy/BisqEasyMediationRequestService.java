@@ -155,12 +155,13 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
                         peer,
                         chatMessages,
                         mediatorNetworkId));
+        // From its request on, the requester's messages go to the mediator as well, whether or not a response of the
+        // mediator arrives (mediation-request-validation.md). The channel is in mediation before the request leaves,
+        // because the response can arrive before confidentialSend returns.
+        bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
         networkService.confidentialSend(bisqEasyMediationRequest,
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
-        // From its request on, the requester's messages go to the mediator as well, whether or not a response of the
-        // mediator arrives (mediation-request-validation.md)
-        bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
     }
 
     // A request is refused while the channel does not match the contract: the chat routes messages to the channel's
