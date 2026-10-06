@@ -155,6 +155,11 @@ Bisq. The tests cover:
   cannot cause reliably through the API. The taker gets the reason.
 - `UpgradeKeepsUserDataTest`: a node of the baseline with two open trades in different states, a closed trade, changed
   settings and an ignored user is upgraded in place. All of it stays, and the open trades continue to the end.
+- `FixedPriceAcrossUpgradeTest`: the API of the baseline creates offers with a fixed price. With a canonical price,
+  the open offer and the open trade stay after the upgrade in place, and both trades complete. With a price whose value
+  does not match its amounts, which the API of the baseline accepts, nodes of this checkout do not show the offer.
+  After the upgrade, the node skips the offer, the trade and the chat of the trade with this price, and the peer of the
+  baseline keeps the trade and still shows the offer.
 - `ConnectPairingAcrossUpgradeTest`: a client pairs with a node of the baseline, which runs with the API security of
   its version, as the mobile app of Bisq Connect does with the QR code. The user of the client has an open trade and
   chats in it. The node is upgraded in place. The old session of the client gets HTTP 401. The client gets a new
