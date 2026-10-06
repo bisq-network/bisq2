@@ -118,7 +118,7 @@ of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Ea
 
 - a seed node of each version and an api-app node of each version, which know both seed nodes;
 - a fake price node in the test JVM, which all nodes use instead of the real price nodes;
-- dev mode on all nodes, without authentication of the API.
+- dev mode on all nodes, without authentication of the API, except the node of `ConnectPairingAcrossUpgradeTest`.
 
 The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. They cover:
 
@@ -152,6 +152,12 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   cannot cause reliably through the API. The taker gets the reason.
 - `UpgradeKeepsUserDataTest`: a node of the baseline with two open trades in different states, a closed trade, changed
   settings and an ignored user is upgraded in place. All of it stays, and the open trades continue to the end.
+- `ConnectPairingAcrossUpgradeTest`: a client pairs with a node of the baseline, which runs with the API security of
+  its version, as the mobile app of Bisq Connect does with the QR code. The user of the client has an open trade and
+  chats in it. The node is upgraded in place. The old session of the client gets HTTP 401. The client gets a new
+  session with the credentials of its pairing and continues the chat and the trade without pairing again. The upgraded
+  node promotes the permissions of the client once. It refuses a session for an empty client secret. With a session
+  time to live of one minute, an expired session gets HTTP 401, and the client gets a new one.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
