@@ -118,7 +118,14 @@ of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Ea
 
 - a seed node of each version and an api-app node of each version, which know both seed nodes;
 - a fake price node in the test JVM, which all nodes use instead of the real price nodes;
-- dev mode on all nodes, without authentication of the API, except the node of `ConnectPairingAcrossUpgradeTest`.
+- dev mode on all nodes, without authentication of the API, except the nodes of `ConnectPairingAcrossUpgradeTest`.
+
+The baseline can also be an older release, for users who skipped versions (upgrade-from-older-release of the release
+test plan). With `v2.1.10` as the baseline, `UpgradeInPlaceTest`, `UpgradeKeepsUserDataTest`, `TradeAcrossVersionsTest`,
+`OffersAcrossVersionsTest`, `InventoryAcrossVersionsTest`, `TradeChatAcrossVersionsTest` and
+`OfflineMakerAcrossVersionsTest` passed on 2026-10-07. The api-app exists from v2.1.9 on. With `v2.1.9`, the upgrade
+works as well, but its seed node logs an error about the fake price node at its start, which the log scan reports.
+Other tests check behavior of v2.1.13 itself, for example its API, which builds a fixed price without a check.
 
 The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. No API publishes
 the authorized data of a security manager, such as an alert, so some tests start the authorized data publisher of the
