@@ -73,7 +73,7 @@ final class NodeProcess implements AutoCloseable {
     private boolean defaultApiSecurity;
     // JVM options for the next start, for example a shorter time to live of sessions
     private final List<String> extraJvmOptions = new ArrayList<>();
-    // A program which runs instead of the start script of the distribution, for example the alert publisher
+    // A program which runs instead of the start script of the distribution, for example the authorized data publisher
     private Optional<Program> program = Optional.empty();
     private Process process;
 
@@ -147,7 +147,7 @@ final class NodeProcess implements AutoCloseable {
         return this;
     }
 
-    /** Writes a line to the standard input of the node, which a program such as the alert publisher reads. */
+    /** Writes a line to the standard input of the node, which a program such as the authorized data publisher reads. */
     void sendCommand(String command) throws IOException {
         if (process == null || !process.isAlive()) {
             throw new IllegalStateException(name + " does not run");
