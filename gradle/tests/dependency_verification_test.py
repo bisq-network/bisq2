@@ -247,6 +247,35 @@ class DependencyVerificationTest(unittest.TestCase):
         self.assertIn("fixture:sha512:1\tsha512-1.jar", output)
         self.assertIn("fixture:reason:1\treason-1.jar", output)
 
+    def test_ignored_key_in_keyring_fails_policy(self):
+        tree = ET.parse(self.metadata)
+        configuration = tree.getroot().find("configuration")
+        ignored_keys = ET.SubElement(configuration, "ignored-keys")
+        ET.SubElement(ignored_keys, "ignored-key", id="76543210FEDCBA98")
+        component = ET.SubElement(tree.getroot().find("components"), "component", group="fixture", name="artifact",
+                                  version="1")
+        artifact = ET.SubElement(component, "artifact", name="artifact-1.jar")
+        artifact_ignored_keys = ET.SubElement(artifact, "ignored-keys")
+        ET.SubElement(artifact_ignored_keys, "ignored-key", id="0123456789ABCDEF")
+        ET.SubElement(artifact, "sha256", value="0" * 64, reason="A key couldn't be downloaded")
+        tree.write(self.metadata, encoding="utf-8", xml_declaration=True)
+        self.extra_allowlist_lines.append("fixture:artifact:1\tartifact-1.jar\tLocal test fixture")
+        self.write_allowlist()
+        keyring = self.gradle / "verification-keyring.keys"
+        keyring.write_text("pub    1111111111111111\nsub    2222222222222222\n")
+        self.run_gradle("check")
+
+        # A key is found by its primary key id or by one of its subkey ids.
+        for keyring_text, ignored_key in (
+            ("pub    FEDCBA9876543210FEDCBA9876543210FEDCBA98\n", "76543210FEDCBA98"),
+            ("pub    1111111111111111\nsub    0123456789ABCDEF\n", "0123456789ABCDEF"),
+        ):
+            with self.subTest(ignored_key=ignored_key):
+                keyring.write_text(keyring_text)
+                output = self.run_gradle("check", success=False)
+                self.assertIn("Ignored signing keys that are present in", output)
+                self.assertIn(f" - {ignored_key}", output)
+
     def test_allowlist_entry_for_signed_artifact_is_stale(self):
         self.add_metadata_artifact("signed", "signed-1.jar", pgp="0123456789ABCDEF0123456789ABCDEF01234567")
         self.extra_allowlist_lines.append("fixture:signed:1\tsigned-1.jar\tLocal test fixture")
