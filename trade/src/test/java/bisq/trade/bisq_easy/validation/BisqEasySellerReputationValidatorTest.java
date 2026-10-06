@@ -48,6 +48,18 @@ class BisqEasySellerReputationValidatorTest {
     }
 
     @Test
+    void acceptsLowScoreWithinOneUsdRoundingTolerance() {
+        assertDoesNotThrow(() -> BisqEasySellerReputationValidator.validateSellersReputation(1_200, 1_400));
+    }
+
+    @Test
+    void rejectsLowScoreBelowOneUsdRoundingTolerance() {
+        TradeProtocolException exception = assertThrows(TradeProtocolException.class,
+                () -> BisqEasySellerReputationValidator.validateSellersReputation(1_199, 1_400));
+        assertEquals(TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW, exception.getTradeProtocolFailure());
+    }
+
+    @Test
     void rejectsScoreBelowTolerance() {
         // 19_047 * 1.05 = 19_999.35
         TradeProtocolException exception = assertThrows(TradeProtocolException.class,

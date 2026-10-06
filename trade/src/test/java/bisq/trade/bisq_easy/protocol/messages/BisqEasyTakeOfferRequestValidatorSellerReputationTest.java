@@ -111,9 +111,9 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         marketPriceByMarket.put(market, marketPrice);
     }
 
-    // A take offer request for 100 USD at a fixed price of 60000 USD, which passes all checks of verify()
+    // A take offer request at a fixed price of 60000 USD, which passes all checks of verify()
     // that run before the reputation check.
-    private BisqEasyTakeOfferRequest setUpRequestPassingChecksBeforeReputation() {
+    private BisqEasyTakeOfferRequest setUpRequestPassingChecksBeforeReputation(long usdAmount) {
         when(marketPriceService.getMarketPriceByCurrencyMap()).thenReturn(marketPriceByMarket);
         // The offer is in an offerbook message of ours
         NetworkId myNetworkId = mock(NetworkId.class);
@@ -136,7 +136,8 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         when(serviceProvider.getSupportService().getBisqEasyMediationRequestService().selectMediator(any(), any(), any()))
                 .thenReturn(Optional.empty());
 
-        when(offer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(1_000_000));
+        Fiat fiatAmount = Fiat.fromFaceValue(usdAmount, "USD");
+        when(offer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(fiatAmount.getValue()));
         FixPriceSpec priceSpec = new FixPriceSpec(PriceQuote.fromFiatPrice(60_000, "USD"));
         when(offer.getPriceSpec()).thenReturn(priceSpec);
         BitcoinPaymentMethodSpec baseSidePaymentMethodSpec = mock(BitcoinPaymentMethodSpec.class);
@@ -145,9 +146,9 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         when(offer.getQuoteSidePaymentMethodSpecs()).thenReturn(List.of(quoteSidePaymentMethodSpec));
 
         when(contract.getOffer()).thenReturn(offer);
-        when(contract.getQuoteSideAmount()).thenReturn(1_000_000L);
-        // 100 USD at 60000 USD are 166667 satoshi
-        when(contract.getBaseSideAmount()).thenReturn(166_667L);
+        when(contract.getQuoteSideMonetary()).thenReturn(fiatAmount);
+        when(contract.getQuoteSideAmount()).thenReturn(fiatAmount.getValue());
+        when(contract.getBaseSideAmount()).thenReturn(priceSpec.getPriceQuote().toBaseSideMonetary(fiatAmount).getValue());
         when(contract.getPriceSpec()).thenReturn(priceSpec);
         when(contract.getBaseSidePaymentMethodSpec()).thenReturn(baseSidePaymentMethodSpec);
         when(contract.getQuoteSidePaymentMethodSpec()).thenReturn(quoteSidePaymentMethodSpec);
@@ -171,7 +172,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
 
     @Test
     void verifyRejectsTakeOfferRequestOfTakerWithoutReputation() {
-        BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation();
+        BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation(100);
         setUpTakersReputationScore(0);
 
         TradeProtocolException exception = assertThrows(TradeProtocolException.class,
@@ -182,10 +183,28 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
 
     @Test
     void verifyAcceptsTakeOfferRequestOfTakerWithReputationCoveringTradeAmount() {
-        BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation();
+        BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation(100);
         setUpTakersReputationScore(20_000);
 
         assertDoesNotThrow(() -> validate(serviceProvider, myIdentity, message));
+    }
+
+    @Test
+    void verifyAcceptsLegacyUsdMaximumForLowScore() {
+        BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation(7);
+        setUpTakersReputationScore(1_300);
+
+        assertDoesNotThrow(() -> validate(serviceProvider, myIdentity, message));
+    }
+
+    @Test
+    void verifyRejectsAmountAboveLowScoreRoundingTolerance() {
+        BisqEasyTakeOfferRequest message = setUpRequestPassingChecksBeforeReputation(8);
+        setUpTakersReputationScore(1_300);
+
+        TradeProtocolException exception = assertThrows(TradeProtocolException.class,
+                () -> validate(serviceProvider, myIdentity, message));
+        assertEquals(TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW, exception.getTradeProtocolFailure());
     }
 
     private void setUpTakersReputationScore(long totalScore) {

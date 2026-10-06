@@ -23,6 +23,7 @@ import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -77,9 +78,53 @@ class BisqEasyTradeAmountLimitsTest {
     }
 
     @Test
-    void toleranceIsFivePercent() {
+    void toleranceIsFivePercentForHighScores() {
         assertEquals(20_000, BisqEasyTradeAmountLimits.withTolerance(19_048));
         assertEquals(19_999, BisqEasyTradeAmountLimits.withTolerance(19_047));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "0, 0",
+            "1200, 1400",
+            "1300, 1500",
+            "2400, 2600",
+            "3999, 4199",
+            "4000, 4200",
+            "4010, 4211"
+    })
+    void toleranceCoversOneUsdForPositiveLowScores(long score, long toleratedScore) {
+        assertEquals(toleratedScore, BisqEasyTradeAmountLimits.withTolerance(score));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"60000", "83875.1546"})
+    void acceptsLegacyUsdMaximumForLowScores(double btcUsdPrice) {
+        PriceQuote usdPriceQuote = PriceQuote.fromFiatPrice(btcUsdPrice, "USD");
+        for (long score = BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER; score <= 4_000; score++) {
+            // v2.1.13 rounds score / 200 half up, converts through BTC, then rounds to whole quote units.
+            Monetary legacyUsdMaximum = Fiat.fromFaceValue(MathUtils.roundDoubleToLong(score / 200d), "USD");
+            Monetary btcAmount = usdPriceQuote.toBaseSideMonetary(legacyUsdMaximum);
+            Monetary amount = usdPriceQuote.toQuoteSideMonetary(btcAmount).round(0);
+            long requiredScore = BisqEasyTradeAmountLimits.getRequiredReputationScore(usdPriceQuote, usdPriceQuote, amount);
+            long sellersScore = score;
+
+            assertDoesNotThrow(() -> validateSellersReputation(sellersScore, requiredScore),
+                    "score=" + score + " amount=" + amount.getValue() + " requiredScore=" + requiredScore);
+        }
+    }
+
+    @Test
+    void acceptsLowScoreMaximumAcrossUsdRoundingBoundaryWithSlightPriceDifference() {
+        PriceQuote usdPriceQuote = PriceQuote.fromFiatPrice(83_875.15, "USD");
+        Monetary amount = BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(
+                PriceQuote.fromFiatPrice(73_808.56, "EUR"), usdPriceQuote, 2_400);
+        assertEquals(Fiat.fromFaceValue(11, "EUR"), amount);
+
+        long requiredScore = BisqEasyTradeAmountLimits.getRequiredReputationScore(
+                PriceQuote.fromFiatPrice(73_771.66, "EUR"), usdPriceQuote, amount);
+        assertEquals(2_600, requiredScore);
+        assertDoesNotThrow(() -> validateSellersReputation(2_400, requiredScore));
     }
 
     @Test

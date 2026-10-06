@@ -39,8 +39,10 @@ public final class BisqEasySellerReputationValidator {
         if (BisqEasyTradeAmountLimits.withTolerance(sellersReputationScore) < requiredReputationScore) {
             throw new TradeProtocolException(String.format("The seller's reputation score of %d is too low for " +
                             "the trade amount. The trade amount requires a reputation score of %d, " +
-                            "the seller's score is below that even with the %d%% tolerance.",
-                    sellersReputationScore, requiredReputationScore, Math.round(BisqEasyTradeAmountLimits.TOLERANCE * 100)),
+                            "the seller's score is below that even with the %d%% tolerance " +
+                            "(at least %d extra reputation points for a positive score).",
+                    sellersReputationScore, requiredReputationScore, Math.round(BisqEasyTradeAmountLimits.TOLERANCE * 100),
+                    BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TOLERANCE),
                     TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW);
         }
     }
