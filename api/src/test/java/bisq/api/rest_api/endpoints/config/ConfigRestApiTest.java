@@ -76,6 +76,8 @@ class ConfigRestApiTest {
         assertThat(dto.tolerance()).isEqualTo(BisqEasyTradeAmountLimits.TOLERANCE);
         assertThat(dto.requiredReputationScorePerUsd())
                 .isEqualTo(BisqEasyTradeAmountLimits.getRequiredReputationScorePerUsd());
+        assertThat(dto.minimumReputationScoreTolerance())
+                .isEqualTo(BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TOLERANCE);
     }
 
     @Test

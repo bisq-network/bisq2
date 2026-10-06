@@ -58,6 +58,8 @@ public class BisqEasyTradeAmountLimits {
     // Checked by BisqEasyTradeAmountLimitsTest.minSellOfferScoreCoversMinUsdAmount.
     private static final double REQUIRED_REPUTATION_SCORE_PER_USD = 200d;
     public static final double TOLERANCE = 0.05;
+    // At low scores, 5% does not cover rounding to the next whole USD.
+    public static final long MIN_REPUTATION_SCORE_TOLERANCE = (long) REQUIRED_REPUTATION_SCORE_PER_USD;
     public static final long MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER = 1200;
     private static final Set<String> SELL_OFFERS_WITH_INSUFFICIENT_REPUTATION = new HashSet<>();
 
@@ -221,7 +223,11 @@ public class BisqEasyTradeAmountLimits {
     }
 
     public static long withTolerance(long makersReputationScore) {
-        return MathUtils.roundDoubleToLong(makersReputationScore * (1 + TOLERANCE));
+        long scoreWithRelativeTolerance = MathUtils.roundDoubleToLong(makersReputationScore * (1 + TOLERANCE));
+        if (makersReputationScore <= 0) {
+            return scoreWithRelativeTolerance;
+        }
+        return Math.max(scoreWithRelativeTolerance, makersReputationScore + MIN_REPUTATION_SCORE_TOLERANCE);
     }
 
     public static Pair<Optional<Monetary>, Optional<Monetary>> getLowestAndHighestAmountInAvailableOffers(

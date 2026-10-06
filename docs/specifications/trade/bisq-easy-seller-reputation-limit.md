@@ -6,7 +6,8 @@ In a Bisq Easy trade the buyer sends the fiat payment first, and the seller send
 
 - A trade amount requires a reputation score of 200 per USD of its value. 200 equals the score required to create a sell offer (1200) divided by the minimum trade amount (6 USD), so a seller who can create a sell offer can also trade the minimum amount.
 - The USD value of an amount is computed with two market prices: the amount is converted to BTC with the BTC price in the offer's currency, and the BTC amount is converted to USD with the BTC price in USD. The USD value is rounded half up to whole USD before it is multiplied by 200. Example: with BTC at 50000 EUR and at 60000 USD, 500 EUR are 600 USD and require a score of 120000.
-- The seller's score is accepted with a tolerance of 5%: the score is multiplied by 1.05 and rounded to a whole number, and the amount is allowed if the result is at least the required score. The effective limit is therefore 1.05 times the score. The tolerance exists because the two traders' nodes can have slightly different market prices and then compute slightly different USD values for the same amount. A modified client can use the full tolerance, so a seller can trade up to 1.05 times the amount the score covers.
+- For a positive seller score, the amount is allowed when its required score is no greater than the larger of the score multiplied by 1.05 and rounded to a whole number, or the score plus 200. The allowance is therefore 5% of the score, with a minimum of 200 reputation points, equivalent to 1 USD. The allowances are not added together. A score of 0 gets no allowance and cannot cover a positive required score.
+- The relative allowance covers small differences between the two traders' market prices. The minimum allowance covers whole-USD rounding, which can exceed 5% of a low score. A modified client can use the full allowance, so the buyer's exposure can exceed the amount covered by the score by 5% or 1 USD, whichever is larger, before the rule's whole-USD rounding.
 - The seller's maximum amount, derived as described below, starts from at most 600 USD, which a score of 120000 reaches. The client's amount range for new offers also ends at the equivalent of 600 USD. The maker's check described below does not apply this cap itself: it compares the taker's score with the amount of the take offer request, and that amount must be within the maker's own offer.
 - Creating a sell offer requires a score of at least 1200. The client checks this when the user creates an offer.
 
@@ -16,7 +17,7 @@ The client derives the seller's maximum amount from the score in a way that the 
 
 1. The score is divided by 200 and rounded down to whole USD, with at most 600 USD.
 2. This USD amount is converted through BTC to the offer's currency with the client's own market prices, and rounded to whole units of that currency.
-3. The amount is lowered by one whole unit at a time until the rule requires at most the score for it. The tolerance is not used here, because it is left for price differences between the two traders' nodes.
+3. The amount is lowered by one whole unit at a time until the rule requires at most the score for it. The tolerance is not used here, because it is left for price differences and rounding when validating the other trader's amount.
 
 Step 2 rounds to the nearest unit and not down, because the conversion through BTC can end slightly below a whole unit: with BTC at 83875.15 USD, 6 USD come back as 5.9995 USD, which rounding down would turn into 5 USD. Step 3 is needed because rounding up in step 2 can raise the USD value enough for the rule to round it to the next USD. Example: with BTC at 55200 EUR and at 60000 USD, a score of 1200 allows 6 USD, which are 5.52 EUR; 6 EUR would be 6.52 USD, count as 7 USD and require 1400, so the maximum is 5 EUR.
 
@@ -58,11 +59,16 @@ A rejection because of the score is reported to the taker with the failure reaso
 
 - A maker with an older version does not check the taker's score.
 - A taker with an older version does not know the failure reason `SELLER_REPUTATION_TOO_LOW`, reads it as `UNKNOWN` and shows an unexpected error.
-- A taker with an older version derives its maximum with the USD amount of step 1 rounded half up instead of down, and without step 3. An updated maker rejects that maximum for some low scores, also in the USD market. Example: a score of 1300 gives 7 USD, which requires 1400, more than the 1365 that the tolerance allows. The rejection happens at the take offer request, before any payment.
+- A taker with version 2.1.13 derives its maximum with the USD amount of step 1 rounded half up instead of down, and without step 3. The minimum rounding allowance lets an updated maker accept that USD maximum for low scores. Example: a score of 1300 gives 7 USD, which requires 1400; the maker allows up to 1500. A percentage-only allowance of 5% would allow only 1365 and reject the request.
+- The allowance remains bounded by the rule above. An older client's rounding to whole units of a foreign currency can exceed 1 USD, especially when one unit of that currency is worth several USD. Such a maximum is not guaranteed to fit the allowance. Version 2.1.13 is already released; accepting every such maximum would require a larger allowance that depends on the currency. Updated clients use step 3 to keep their maximum covered by their score.
 
-## Known Limitation
+## Rounding Across Different Market Prices
 
-Below a score of 4000, the tolerance of 5% of the score is less than 200, the score for one USD. If the maker's prices value an amount slightly higher than the taker's prices, the USD value of an amount just below a half USD at the taker can be just above it at the maker, and the maker then rounds it to the next USD. The maker then requires 200 more than the taker computed, which the tolerance does not cover. Example: with BTC at 73808.56 EUR and at 83875.15 USD at the taker's node, the maximum for a score of 2400 is 11 EUR, which are 12.4999 USD and require 2400. At a maker with the same USD price and a EUR price that is 0.05% lower, 73771.66 EUR, 11 EUR are 12.5066 USD, which count as 13 USD and require 2600, more than the 2520 that the tolerance allows.
+Below a score of 4000, the tolerance of 5% of the score is less than 200, the score for one USD. A small price difference can move an amount across a whole-USD rounding boundary and increase the required score by 200. The minimum allowance covers this step. Example: with BTC at 73808.56 EUR and at 83875.15 USD at the taker's node, the maximum for a score of 2400 is 11 EUR, which are 12.4999 USD and require 2400. At a maker with the same USD price and a EUR price that is 0.05% lower, 73771.66 EUR, 11 EUR are 12.5066 USD, which count as 13 USD and require 2600. The maker allows 2600 and accepts the request.
+
+## Configuration API
+
+The trade amount limits endpoint exposes the relative allowance as `tolerance` and the minimum extra reputation points as `minimumReputationScoreTolerance`. Clients apply the larger allowance only to positive scores. The new minimum field adds configuration metadata; it does not change network messages or persisted data.
 
 ## Not Covered
 
