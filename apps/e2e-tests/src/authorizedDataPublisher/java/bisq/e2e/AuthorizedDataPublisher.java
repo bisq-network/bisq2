@@ -54,6 +54,8 @@ import static com.google.common.base.Preconditions.checkState;
  *     <li>{@code require <version>}: an emergency alert for the desktop app which requires this version for trading,
  *     with the fields which the security manager tab of the desktop app sets</li>
  *     <li>{@code halt}: an emergency alert for the desktop app which halts trading</li>
+ *     <li>{@code ban-mediator <profile ID>}: an alert which bans the role of this mediator, as the security manager tab
+ *     of the desktop app publishes it. Needs the command {@code mediator} for this profile before.</li>
  *     <li>{@code remove}: removes the alert which the last of these commands published</li>
  *     <li>{@code difficulty <factor>}: a difficulty adjustment of the security manager</li>
  *     <li>{@code remove-difficulty}: removes the difficulty adjustment</li>
@@ -107,6 +109,10 @@ final class AuthorizedDataPublisher {
                 publishAlert(false, Optional.of(parts[1]));
             }
             case "halt" -> publishAlert(true, Optional.empty());
+            case "ban-mediator" -> {
+                checkArgument(parts.length == 2, "ban-mediator needs a profile ID");
+                publishBanOfMediator(parts[1]);
+            }
             case "remove" -> removeAlert();
             case "difficulty" -> {
                 checkArgument(parts.length == 2, "difficulty needs a factor");
@@ -143,6 +149,26 @@ final class AuthorizedDataPublisher {
                 AppType.DESKTOP);
         networkService().publishAuthorizedData(alert, devKeyPair).join();
         lastAlert = Optional.of(alert);
+    }
+
+    private void publishBanOfMediator(String profileId) {
+        AuthorizedBondedRole role = mediatorRolesByProfileId.get(profileId);
+        checkState(role != null, "No role of mediator %s to ban", profileId);
+        AuthorizedAlertData ban = new AuthorizedAlertData(UUID.randomUUID().toString(),
+                System.currentTimeMillis(),
+                AlertType.BAN,
+                Optional.of("E2E ban"),
+                Optional.of("The mediator " + profileId + " is banned"),
+                false,
+                false,
+                Optional.empty(),
+                Optional.of(role),
+                devProfileId,
+                true,
+                Optional.empty(),
+                AppType.DESKTOP);
+        networkService().publishAuthorizedData(ban, devKeyPair).join();
+        lastAlert = Optional.of(ban);
     }
 
     private void removeAlert() {
