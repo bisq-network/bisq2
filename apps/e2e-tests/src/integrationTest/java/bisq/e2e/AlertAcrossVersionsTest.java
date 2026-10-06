@@ -36,8 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * A security manager publishes an emergency alert which requires this version for trading (alert-enforcement-v2113 of
  * the release test plan). With this alert, the security manager moves the users to this version before the cutoff date
  * of signature V1. The alert is for the desktop app, as the security manager tab of the desktop app publishes it. The
- * api-app uses the app type of the desktop app as well. The alert publisher of the source set alertPublisher publishes
- * the alert as a node of this checkout.
+ * api-app uses the app type of the desktop app as well. The authorized data publisher of the source set
+ * authorizedDataPublisher publishes the alert as a node of this checkout.
  * <ul>
  *     <li>A node of the released version does not take an offer while the alert exists. Its API answers with 400.</li>
  *     <li>A maker of the released version gets the take offer request of a taker of this checkout, but it does not
@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AlertAcrossVersionsTest {
     private static final String SECURITY_MANAGER = "security-manager";
     private static final String REQUIRED_VERSION = "2.1.14";
-    // The lines which AlertPublisherApp logs when the broadcast of a command is done
+    // The lines which AuthorizedDataPublisherApp logs when the broadcast of a command is done
     private static final String PUBLISHED = "E2E alert published";
     private static final String REMOVED = "E2E alert removed";
     // The lines which nodes in dev mode log when their store of alerts added or removed an entry
@@ -78,7 +78,7 @@ class AlertAcrossVersionsTest {
 
     @Test
     void alertWhichRequiresThisVersionStopsTradingOnlyOnTheReleasedVersion() throws Exception {
-        ApiClient securityManager = network.startAlertPublisher(SECURITY_MANAGER);
+        ApiClient securityManager = network.startAuthorizedDataPublisher(SECURITY_MANAGER);
         long baseAmount = Trades.baseAmount(network.priceServer);
 
         // The offers exist before the alert, so that only the alert can stop the takes

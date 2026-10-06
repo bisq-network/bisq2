@@ -38,9 +38,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * An api-app node of this checkout which publishes and removes an emergency alert of a security manager. No API of the
- * nodes publishes alerts, so the e2e test AlertAcrossVersionsTest starts this program instead of the api-app. The test
- * sends one command per line to the standard input of the program:
+ * An api-app node of this checkout which publishes and removes authorized data with a dev key, as a security manager
+ * does. No API of the nodes publishes such data, so e2e tests start this program instead of the api-app. A test sends
+ * one command per line to the standard input of the program:
  * <ul>
  *     <li>{@code require <version>}: publishes an alert for the desktop app which requires this version for trading,
  *     with the fields which the security manager tab of the desktop app sets</li>
@@ -51,11 +51,11 @@ import java.util.UUID;
  * authorized data (docs/specifications/network/storage-ownership.md). The program logs {@link #PUBLISHED} and
  * {@link #REMOVED} when the broadcast of a command is done.
  */
-public class AlertPublisherApp extends ApiApp {
+public class AuthorizedDataPublisherApp extends ApiApp {
     private static final String PUBLISHED = "E2E alert published";
     private static final String REMOVED = "E2E alert removed";
 
-    private static final Logger log = LoggerFactory.getLogger(AlertPublisherApp.class);
+    private static final Logger log = LoggerFactory.getLogger(AuthorizedDataPublisherApp.class);
     // privatekey1 and publicKey1 of the Javadoc of AuthorizedPubKeys
     private static final String DEV_PRIVATE_KEY = "30818d020100301006072a8648ce3d020106052b8104000a047630740201010420" +
             "5b4479d165652fe5410419b1d03c937956be0e1c4f46e9fbe86c66776529d81ca00706052b8104000aa144034200043dd1f2" +
@@ -70,11 +70,11 @@ public class AlertPublisherApp extends ApiApp {
     private volatile AuthorizedAlertData publishedAlert;
 
     public static void main(String[] args) {
-        Thread.currentThread().setName("AlertPublisherApp.main");
-        new AlertPublisherApp(args);
+        Thread.currentThread().setName("AuthorizedDataPublisherApp.main");
+        new AuthorizedDataPublisherApp(args);
     }
 
-    public AlertPublisherApp(String[] args) {
+    public AuthorizedDataPublisherApp(String[] args) {
         super(args);
     }
 
@@ -82,11 +82,11 @@ public class AlertPublisherApp extends ApiApp {
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         super.onApplicationServiceInitialized(result, throwable);
         if (throwable == null && Boolean.TRUE.equals(result)) {
-            Thread commandReader = new Thread(this::readCommands, "AlertPublisherApp.commands");
+            Thread commandReader = new Thread(this::readCommands, "AuthorizedDataPublisherApp.commands");
             commandReader.setDaemon(true);
             commandReader.start();
         } else {
-            log.error("The alert publisher did not start", throwable);
+            log.error("The authorized data publisher did not start", throwable);
         }
     }
 
@@ -100,11 +100,11 @@ public class AlertPublisherApp extends ApiApp {
                 } else if (command[0].equals("remove") && command.length == 1) {
                     removeAlert();
                 } else {
-                    log.error("Unknown command of the alert publisher: {}", line);
+                    log.error("Unknown command of the authorized data publisher: {}", line);
                 }
             }
         } catch (IOException e) {
-            log.error("The alert publisher cannot read its commands", e);
+            log.error("The authorized data publisher cannot read its commands", e);
         }
     }
 
@@ -131,7 +131,7 @@ public class AlertPublisherApp extends ApiApp {
     private void removeAlert() {
         AuthorizedAlertData alert = publishedAlert;
         if (alert == null) {
-            log.error("The alert publisher has no alert to remove");
+            log.error("The authorized data publisher has no alert to remove");
             return;
         }
         networkService().removeAuthorizedData(alert, devKeyPair()).join();

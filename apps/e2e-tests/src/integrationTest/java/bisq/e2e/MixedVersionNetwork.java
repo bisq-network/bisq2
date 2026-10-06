@@ -160,15 +160,15 @@ final class MixedVersionNetwork implements AutoCloseable {
     }
 
     /**
-     * Starts the alert publisher of the source set alertPublisher as one more api-app node of this checkout, which
-     * knows both seed nodes. The node also has an API and a user identity like the other api-app nodes. The test
-     * controls the alert with {@link #sendCommand}.
+     * Starts the authorized data publisher of the source set authorizedDataPublisher as one more api-app node of this
+     * checkout, which knows both seed nodes. The node also has an API and a user identity like the other api-app nodes.
+     * The test controls the publisher with {@link #sendCommand}.
      */
-    ApiClient startAlertPublisher(String name) throws Exception {
-        NodeProcess.Program alertPublisher = new NodeProcess.Program("bisq.e2e.AlertPublisherApp",
-                E2eSettings.alertPublisherClasspath());
+    ApiClient startAuthorizedDataPublisher(String name) throws Exception {
+        NodeProcess.Program publisher = new NodeProcess.Program("bisq.e2e.AuthorizedDataPublisherApp",
+                E2eSettings.authorizedDataPublisherClasspath());
         NodeProcess node = newExtraApiNode(name, true, List.of(oldSeed.getP2pPort(), newSeed.getP2pPort()))
-                .runProgram(alertPublisher);
+                .runProgram(publisher);
         node.start();
         node.awaitReady(START_TIMEOUT);
         ApiClient api = node.apiClient().orElseThrow();
@@ -177,7 +177,7 @@ final class MixedVersionNetwork implements AutoCloseable {
         return api;
     }
 
-    /** Sends a command to the standard input of an extra node, for example to the alert publisher. */
+    /** Sends a command to the standard input of an extra node, for example to the authorized data publisher. */
     void sendCommand(String name, String command) throws IOException {
         extraNode(name).sendCommand(command);
     }

@@ -56,13 +56,13 @@ final class E2eSettings {
     }
 
     /**
-     * The classpath of the alert publisher of the source set alertPublisher, which the build sets for the task
-     * integrationTest.
+     * The classpath of the authorized data publisher of the source set authorizedDataPublisher, which the build sets
+     * for the task integrationTest.
      */
-    static String alertPublisherClasspath() {
-        String value = System.getProperty("bisq.e2e.alertPublisherClasspath", "");
+    static String authorizedDataPublisherClasspath() {
+        String value = System.getProperty("bisq.e2e.authorizedDataPublisherClasspath", "");
         if (value.isEmpty()) {
-            throw new IllegalStateException("bisq.e2e.alertPublisherClasspath is not set. " +
+            throw new IllegalStateException("bisq.e2e.authorizedDataPublisherClasspath is not set. " +
                     "Run tools/compat/run-mixed-network.sh.");
         }
         return value;

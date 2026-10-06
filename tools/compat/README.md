@@ -121,9 +121,9 @@ of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Ea
 - dev mode on all nodes, without authentication of the API, except the node of `ConnectPairingAcrossUpgradeTest`.
 
 The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. No API publishes
-the alerts of a security manager, so `AlertAcrossVersionsTest` starts the alert publisher of the source set
-`alertPublisher` of `apps/e2e-tests` as a node of this checkout. It is the only code of the tests which uses the code of
-Bisq. The tests cover:
+the authorized data of a security manager, such as an alert, so some tests start the authorized data publisher of the
+source set `authorizedDataPublisher` of `apps/e2e-tests` as a node of this checkout. It is the only code of the tests
+which uses the code of Bisq. The tests cover:
 
 - `OffersAcrossVersionsTest`: offers with market, float and fixed price, with fixed and range amounts, reach the other
   version with the same terms. A removed offer disappears on the other version.
