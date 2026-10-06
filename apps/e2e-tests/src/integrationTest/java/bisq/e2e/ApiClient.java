@@ -201,6 +201,47 @@ final class ApiClient {
 
     // The market in the format of a create offer request (MarketDto). The list of markets has more fields, which the
     // request does not accept.
+    /**
+     * Adds a user-defined payment account with the route of v2.1.13, the only kind of account which its API creates.
+     * The API of this checkout takes another request for this route.
+     */
+    void addUserDefinedAccountWithOldApi(String accountName, String accountData) {
+        post("/payment-accounts", JSON.createObjectNode()
+                .put("accountName", accountName)
+                .put("accountData", accountData));
+    }
+
+    /** Selects a user-defined payment account with the route of v2.1.13. */
+    void selectUserDefinedAccountWithOldApi(String accountName, String accountData) {
+        ObjectNode account = JSON.createObjectNode().put("accountName", accountName);
+        account.putObject("accountPayload").put("accountData", accountData);
+        ObjectNode request = JSON.createObjectNode();
+        request.set("selectedAccount", account);
+        patch("/payment-accounts/selected", request);
+    }
+
+    /**
+     * The data of each user-defined payment account by its name. Both versions list them with this route. v2.1.13 lists
+     * only user-defined accounts, without a payment rail. This checkout lists all accounts with their payment rail.
+     */
+    Map<String, String> userDefinedAccounts() {
+        Map<String, String> dataByName = new LinkedHashMap<>();
+        for (JsonNode account : get("/payment-accounts")) {
+            JsonNode paymentRail = account.path("paymentRail");
+            if (paymentRail.isMissingNode() || paymentRail.asText().equals("CUSTOM")) {
+                dataByName.put(account.path("accountName").asText(),
+                        account.path("accountPayload").path("accountData").asText());
+            }
+        }
+        return dataByName;
+    }
+
+    /** The name of the selected user-defined payment account, which both versions show with this route. */
+    Optional<String> selectedUserDefinedAccountName() {
+        JsonNode account = get("/payment-accounts/fiat/selected");
+        return account.isNull() ? Optional.empty() : Optional.of(account.path("accountName").asText());
+    }
+
     JsonNode market(String quoteCurrencyCode) {
         for (JsonNode market : get("/offerbook/markets")) {
             if (market.path("baseCurrencyCode").asText().equals("BTC") &&
