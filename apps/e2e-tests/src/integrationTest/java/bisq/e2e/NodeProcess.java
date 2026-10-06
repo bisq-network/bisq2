@@ -186,12 +186,8 @@ final class NodeProcess implements AutoCloseable {
         }
         Files.createDirectories(dataDir);
         Files.writeString(dataDir.resolve("bisq.conf"), bisqConf(), StandardCharsets.UTF_8);
-        Path startScript = tree.resolve("apps").resolve(kind.distribution)
-                .resolve("build/install").resolve(kind.distribution).resolve("bin").resolve(kind.distribution);
-        if (!Files.isExecutable(startScript)) {
-            throw new IllegalStateException("Missing distribution " + startScript + ". Run tools/compat/run-mixed-network.sh.");
-        }
-        ProcessBuilder builder = new ProcessBuilder(startScript.toString(), "--data-dir=" + dataDir, "--app-name=" + name);
+        ProcessBuilder builder = new ProcessBuilder(command());
+        // The start script of the distribution passes them to the JVM
         builder.environment().put("JAVA_OPTS", String.join(" ", jvmOptions()));
         if (!clockOffset.isZero()) {
             // libfaketime moves the clock of the whole process, also System.currentTimeMillis() of the JVM. The offset
@@ -246,6 +242,20 @@ final class NodeProcess implements AutoCloseable {
     @Override
     public void close() throws InterruptedException {
         stop();
+    }
+
+    private List<String> command() {
+        List<String> command = new ArrayList<>();
+        Path startScript = tree.resolve("apps").resolve(kind.distribution)
+                .resolve("build/install").resolve(kind.distribution).resolve("bin").resolve(kind.distribution);
+        if (!Files.isExecutable(startScript)) {
+            throw new IllegalStateException("Missing distribution " + startScript +
+                    ". Run tools/compat/run-mixed-network.sh.");
+        }
+        command.add(startScript.toString());
+        command.add("--data-dir=" + dataDir);
+        command.add("--app-name=" + name);
+        return command;
     }
 
     private List<String> jvmOptions() {
