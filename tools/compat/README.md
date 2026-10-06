@@ -118,9 +118,12 @@ of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Ea
 
 - a seed node of each version and an api-app node of each version, which know both seed nodes;
 - a fake price node in the test JVM, which all nodes use instead of the real price nodes;
-- dev mode on all nodes, without authentication of the API.
+- dev mode on all nodes, without authentication of the API, except the node of `ConnectPairingAcrossUpgradeTest`.
 
-The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. They cover:
+The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. No API publishes
+the alerts of a security manager, so `AlertAcrossVersionsTest` starts the alert publisher of the source set
+`alertPublisher` of `apps/e2e-tests` as a node of this checkout. It is the only code of the tests which uses the code of
+Bisq. The tests cover:
 
 - `OffersAcrossVersionsTest`: offers with market, float and fixed price, with fixed and range amounts, reach the other
   version with the same terms. A removed offer disappears on the other version.
@@ -128,10 +131,57 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   sides must reach the final state and agree on the contract.
 - `UpgradeInPlaceTest`: a node of the baseline with an open trade and an open offer stops. Its peer sends a trade
   message to its mailbox. The version of this checkout starts on the same data directory with the same ports. The trade
-  continues to the end, the offer stays, and the log scan covers the session of each version of the node.
+  continues to the end, the offer stays, and the log scan covers the session of each version of the node. The chat of
+  the trade keeps its messages, the citation and the reactions, and it continues in both directions.
+- `InventoryAcrossVersionsTest`: a node of each version joins later and knows only the seed node of the other version.
+  It gets the existing offers of both versions with an inventory request, and the offers which are published later.
+- `TradeChatAcrossVersionsTest`: the chat of a trade between the versions. Text with a line break and an emoji, replies
+  with a citation, and reactions, one of which is removed again. Each message arrives exactly once on both nodes.
+- `OfflineMakerAcrossVersionsTest`: a taker takes the offer of a maker which is offline, in both directions. The take
+  offer request goes to the mailbox of the maker, which gets it when it starts again. After one more restart the maker
+  does not get the request again, because it removed the mailbox entry in the network. The trade continues to the end.
+- `TradePricesAcrossVersionsTest`: trades with a float price and a range over Lightning, with a fixed price with
+  decimals and a range, where the taker enters the Bitcoin amount, and with a fixed price and a fixed amount. Makers of
+  both versions take part. For a fixed price, the maker of this checkout allows only the rounding difference. A
+  range whose minimum equals its maximum is takeable on the baseline.
+- `PaymentDataAmountAcrossVersionsTest`: a buyer of the baseline sends payment data which requests another amount, a
+  Lightning invoice and a bitcoin URI. A seller of this checkout fails the trade, and the buyer gets the reason. A
+  bitcoin URI without amount works. A buyer of this checkout refuses to send such data (HTTP 400).
+- `MakerIdentityAcrossVersionsTest`: a maker of this checkout publishes an offer with its second identity and selects
+  the first one again. A taker of the baseline takes the offer, and the trade runs under the second identity to the end.
+- `OfferClosingAcrossVersionsTest`: with "close my offer when taken", a taken offer disappears on both versions, with a
+  maker of each version. A maker of this checkout rejects the take of a taker of the baseline whom it ignores, with
+  "Could not find matching offer". This is the same rejection as for a second take of a closed offer, which the test
+  cannot cause reliably through the API. The taker gets the reason.
+- `UpgradeKeepsUserDataTest`: a node of the baseline with two open trades in different states, a closed trade, changed
+  settings and an ignored user is upgraded in place. All of it stays, and the open trades continue to the end.
+- `ConnectPairingAcrossUpgradeTest`: a client pairs with a node of the baseline, which runs with the API security of
+  its version, as the mobile app of Bisq Connect does with the QR code. The user of the client has an open trade and
+  chats in it. The node is upgraded in place. The old session of the client gets HTTP 401. The client gets a new
+  session with the credentials of its pairing and continues the chat and the trade without pairing again. The upgraded
+  node promotes the permissions of the client once. It refuses a session for an empty client secret. With a session
+  time to live of one minute, an expired session gets HTTP 401, and the client gets a new one.
+- `AlertAcrossVersionsTest`: a security manager publishes an emergency alert for the desktop app which requires
+  version 2.1.14 for trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A maker of the
+  baseline gets the take offer request of a taker of this checkout, but it does not create the trade and does not
+  answer, so the trade of the taker stays in its first state. Nodes of this checkout know the alert and trade with each
+  other. After the security manager removes the alert, the baseline trades again.
+- `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
+  on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
+  before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
+  task which removes expired entries. The running node is a node which a user upgraded from the baseline before the
+  date. It also removes the offer of this checkout which it stored with the baseline, without signature V2. The test
+  does not check whether this offer comes back. The baseline still gets the offers of this checkout. After the date,
+  two nodes of this checkout trade while the take offer request goes through the mailbox. An offer which a node of this
+  checkout removes after the date disappears on both versions. The test takes about 11 minutes, because that task runs
+  every 10 minutes. It needs libfaketime (see [Fake clock](#fake-clock)).
+  Without libfaketime, Gradle reports the test as skipped. Nodes of the baseline are not supported from the cutoff date
+  on, so the test does not trade with them after that date.
 
 At the end, each test class stops its nodes and scans their logs with `scripts/log_anomaly_scan.py`. A finding of
-level warning or error fails the test class. The data directories and logs stay in `build/e2e/<tag>/<test class>`.
+level warning or error fails the test class. A test can declare a finding which it causes on purpose, for example the
+log of a rejected take (`MixedVersionNetwork.expectLogFinding`). The data directories and logs stay in
+`build/e2e/<tag>/<test class>`.
 
 Limits of the first version:
 
@@ -140,7 +190,22 @@ Limits of the first version:
   reputation of a seller.
 - Both versions limit the publications of an author to 3 per second and 30 per minute. The client keeps 2.1 seconds
   between its publications.
-- Four node JVMs need about 1.5 GB of memory.
+- A network has four to six node JVMs, which need 1.5 to 2.5 GB of memory.
+
+#### Fake clock
+
+`CutoffAcrossVersionsTest` moves the clocks of the nodes to a few minutes before the cutoff date. The nodes get the fake
+clock from libfaketime. The fake price node adds the same offset to its timestamps. The test JVM keeps the real time.
+The harness takes the first library which it finds:
+
+1. the Gradle property `bisq.e2e.libfaketime`, or the environment variable `BISQ_E2E_LIBFAKETIME`;
+2. the file of the Debian and Ubuntu package `libfaketime`, for example
+   `/usr/lib/x86_64-linux-gnu/faketime/libfaketimeMT.so.1`;
+3. the same path below `~/.cache/bisq2/tools/faketime`. A developer can unpack the package there without root rights:
+   `cd "$(mktemp -d)" && apt-get download libfaketime && dpkg-deb -x libfaketime_*.deb ~/.cache/bisq2/tools/faketime`.
+
+The nodes load the library with `LD_PRELOAD`, so the test runs only on Linux. The nightly workflow installs the
+package.
 
 ## Layout
 

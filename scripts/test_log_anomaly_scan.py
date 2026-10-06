@@ -158,6 +158,37 @@ class LogAnomalyScanTests(unittest.TestCase):
         self.assertEqual(0, exit_code)
         self.assertEqual({"error-line": 1}, report["nodes"][0]["sessions"][0]["allowed"])
 
+    def test_rejected_send_of_a_confidential_message_is_allowed(self):
+        directory = self.write_log("node", "bisq.log", [
+            start("2.1.13"),
+            line("ERROR", "Send executor rejected task java.util.concurrent.RejectedExecutionException: Task "
+                          "AsyncSupply rejected from java.util.concurrent.ThreadPoolExecutor[Terminated]",
+                 logger="b.n.p.n.Connection"),
+            "\tat bisq.network.p2p.node.Node.sendAsync(Node.java:410)",
+            "\tat bisq.network.p2p.services.confidential.ConfidentialMessageService.trySendAsync"
+            "(ConfidentialMessageService.java:300)",
+        ])
+
+        exit_code, report = self.scan_json(directory)
+
+        self.assertEqual(0, exit_code)
+        self.assertEqual({"error-line": 1}, report["nodes"][0]["sessions"][0]["allowed"])
+
+    def test_rejected_send_on_another_path_is_reported(self):
+        directory = self.write_log("node", "bisq.log", [
+            start("2.1.14"),
+            line("ERROR", "Send executor rejected task java.util.concurrent.RejectedExecutionException: Task "
+                          "AsyncSupply rejected from java.util.concurrent.ThreadPoolExecutor[Terminated]",
+                 logger="b.n.p.n.Connection"),
+            "\tat bisq.network.p2p.node.Node.sendAsync(Node.java:410)",
+            "\tat bisq.network.p2p.services.data.broadcast.Broadcaster.broadcast(Broadcaster.java:80)",
+        ])
+
+        exit_code, report = self.scan_json(directory)
+
+        self.assertEqual(1, exit_code)
+        self.assertEqual(["error-line"], [f["ruleId"] for f in report["nodes"][0]["sessions"][0]["findings"]])
+
     def test_unresolved_enum_of_another_type_is_reported_in_old_sessions(self):
         directory = self.write_log("node", "bisq.log", [
             start("2.1.13"),

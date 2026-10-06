@@ -200,8 +200,8 @@ release. Nodes which stay on this version keep the date. So the following must h
 - Security managers, moderators and release managers have published their data again with this version. This is the
   data with a time to live of 100 days which no migration publishes again: alerts, banned user profiles, release
   notifications, the difficulty adjustment and the minimum reputation score.
-- Most users run this version. A node of an earlier version cannot publish data to nodes of this version from the
-  cutoff date on (see [Compatibility](#compatibility)).
+- Most users run this version. Nodes of earlier versions are not supported from the cutoff date on. They cannot publish
+  data to nodes of this version, and their messages through the mailbox are lost (see [Compatibility](#compatibility)).
 
 ### After the cutoff date
 
@@ -224,10 +224,13 @@ reject a request without signature V1.
   nodes of this version.
 - Nodes of earlier versions ignore `signatureV2` and verify signature V1. Nodes of this version still create signature
   V1 for them.
-- From the cutoff date of signature V1 on, nodes of this version do not accept the requests which nodes of earlier
-  versions create. Applications of nodes of this version then do not get the data of these nodes: user profiles,
-  offers, chat messages, and messages which they send to the mailbox of a user who is offline. Nodes of earlier
-  versions still accept the requests of nodes of this version.
+- From the cutoff date of signature V1 on, nodes of earlier versions are not supported. Nodes of this version do not
+  accept the requests which nodes of earlier versions create. Applications of nodes of this version then do not get the
+  data of these nodes: user profiles, offers, chat messages, and the messages which they send to a mailbox. Nodes of
+  v2.1.13 send a confidential message only to the mailbox when they have no connection to the receiver yet, also when
+  the receiver is online. Such a message is lost too, for example the take offer request of a taker of v2.1.13, or a
+  message of a trade which is open across the cutoff date. Nodes of earlier versions still accept the requests of
+  nodes of this version.
 - Nodes of earlier versions do not know `signatureV2`. They remove it when they relay, persist or serve a request.
   From the cutoff date on, a node of this version therefore accepts a request only if it got the request from its
   owner, or if all nodes which relayed it are nodes of this version. For the same reason, it no longer requests

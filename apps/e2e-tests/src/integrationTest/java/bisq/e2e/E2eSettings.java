@@ -19,6 +19,9 @@ package bisq.e2e;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * The settings of a run, as system properties which tools/compat/run-mixed-network.sh sets:
@@ -28,6 +31,7 @@ import java.nio.file.Path;
  *     <li>bisq.e2e.oldTree: the source tree of the released version, built by tools/compat/baseline.sh</li>
  *     <li>bisq.e2e.oldVersion: the tag of the released version, for example v2.1.13</li>
  *     <li>bisq.e2e.workDir: the directory for the data directories and logs of the nodes</li>
+ *     <li>bisq.e2e.libfaketime: optional, the library for a fake clock of the nodes (see {@link #libfaketime()})</li>
  * </ul>
  */
 final class E2eSettings {
@@ -51,9 +55,47 @@ final class E2eSettings {
         return System.getProperty("bisq.e2e.oldVersion", "old");
     }
 
+    /**
+     * The classpath of the alert publisher of the source set alertPublisher, which the build sets for the task
+     * integrationTest.
+     */
+    static String alertPublisherClasspath() {
+        String value = System.getProperty("bisq.e2e.alertPublisherClasspath", "");
+        if (value.isEmpty()) {
+            throw new IllegalStateException("bisq.e2e.alertPublisherClasspath is not set. " +
+                    "Run tools/compat/run-mixed-network.sh.");
+        }
+        return value;
+    }
+
     static Path workDir() {
         String value = System.getProperty("bisq.e2e.workDir", "");
         return value.isEmpty() ? Path.of("build", "e2e") : Path.of(value);
+    }
+
+    /**
+     * The multi-threaded library of libfaketime, which gives a node a fake clock. It is set with
+     * bisq.e2e.libfaketime or BISQ_E2E_LIBFAKETIME, or found in the paths of the Debian and Ubuntu package
+     * libfaketime, or in ~/.cache/bisq2/tools/faketime, where a developer can unpack that package without installing it.
+     * The nodes load it with LD_PRELOAD, which only Linux supports. On other systems the result is empty.
+     */
+    static Optional<Path> libfaketime() {
+        if (!System.getProperty("os.name", "").toLowerCase().contains("linux")) {
+            return Optional.empty();
+        }
+        List<String> candidates = new ArrayList<>();
+        candidates.add(System.getProperty("bisq.e2e.libfaketime", ""));
+        candidates.add(Optional.ofNullable(System.getenv("BISQ_E2E_LIBFAKETIME")).orElse(""));
+        for (String architecture : List.of("x86_64-linux-gnu", "aarch64-linux-gnu")) {
+            candidates.add("/usr/lib/" + architecture + "/faketime/libfaketimeMT.so.1");
+            candidates.add(System.getProperty("user.home") + "/.cache/bisq2/tools/faketime/usr/lib/" + architecture +
+                    "/faketime/libfaketimeMT.so.1");
+        }
+        return candidates.stream()
+                .filter(candidate -> !candidate.isEmpty())
+                .map(Path::of)
+                .filter(Files::isRegularFile)
+                .findFirst();
     }
 
     private static Path existingDir(String property) {
