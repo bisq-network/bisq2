@@ -41,7 +41,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * (rule 3). A buyer of this checkout does not send such data, and its API answers with 400 (rule 4).
  * <p>
  * The test does not send a bitcoin URI with the trade amount, which rule 1 allows: the sellers of both versions fail a
- * main chain trade whose payment data is longer than 62 characters, and such a URI with a bech32 address always is.
+ * main chain trade whose payment data is longer than 62 characters. Such a URI with a bech32 address of 42 characters
+ * is longer, unless the amount has at most four characters, such as 0.01. The trade amount of this test, 0.00230769,
+ * gives 68 characters.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
