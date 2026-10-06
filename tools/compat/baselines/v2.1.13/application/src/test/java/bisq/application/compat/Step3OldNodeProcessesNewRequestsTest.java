@@ -29,6 +29,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -68,14 +69,12 @@ class Step3OldNodeProcessesNewRequestsTest {
             "refreshedAddUserProfile", "addUserProfile",
             "removeChat3", "addChat4", "removeChat4",
             "removeMailbox1", "addMailbox4", "removeMailbox4");
-    // The requests of v2.1.13 from step 1 in the order of their creation, without the refresh request and the refreshed
-    // add request, which nodes of v2.1.13 do not relay to each other as received requests
-    private static final List<String> OLD_REQUESTS = List.of(
-            "addUserProfile",
-            "addChat1", "addChat2", "addChat3", "removeChat2",
-            "addRole1", "addRole2", "addRole3", "addTimestamp",
-            "addMailbox1", "addMailbox2", "addMailbox3", "removeMailbox2");
+    // Nodes of v2.1.13 do not relay received refresh requests to each other, and the refreshed add request of step 1 is
+    // the content of a store, not a request which the owner sent
+    private static final Set<String> OLD_REFRESH_REQUESTS = Set.of("refreshUserProfile", "refreshedAddUserProfile");
 
+    // The requests of step 1 in the order of their creation, without the refresh requests
+    private static List<String> oldRequests;
     private static Properties old;
     private static Properties updated;
 
@@ -85,6 +84,9 @@ class Step3OldNodeProcessesNewRequestsTest {
         ResolverConfig.config();
         old = OldCompatSupport.read(OLD_REQUESTS_FILE);
         updated = OldCompatSupport.read(NEW_REQUESTS_FILE);
+        oldRequests = Arrays.stream(old.getProperty("order").split(","))
+                .filter(name -> !OLD_REFRESH_REQUESTS.contains(name))
+                .toList();
     }
 
     @Test
@@ -119,8 +121,10 @@ class Step3OldNodeProcessesNewRequestsTest {
         for (String name : USER_REQUESTS) {
             assertTrue(process(storageService, newRequest(name)).contains("success"), name);
         }
-        assertEquals(List.of("AuthorizedBondedRole", "AuthorizedTimestampData", "CommonPublicChatMessage", "UserProfile"),
-                applicationData(node));
+        // The data of step 1 without chat3, which the updated user removed. chat4 was added and removed.
+        List<String> expected = new ArrayList<>(oldApplicationData());
+        assertTrue(expected.remove("CommonPublicChatMessage"));
+        assertEquals(expected, applicationData(node));
         node.shutdown();
     }
 
@@ -161,14 +165,12 @@ class Step3OldNodeProcessesNewRequestsTest {
         DataService node = freshNode("step3-fresh-node-relayed-by-new", new ArrayList<>());
         StorageService storageService = node.getStorageService();
 
-        for (String name : OLD_REQUESTS) {
+        for (String name : oldRequests) {
             EnvelopePayloadMessage relayedCopy = parse(updated.getProperty("relayedByNewNode." + name));
             assertEquals(old.getProperty("pow." + name), proofOfWorkPayloadHash(relayedCopy), name);
             assertTrue(process(storageService, relayedCopy).contains("success"), name);
         }
-        assertEquals(List.of("AuthorizedBondedRole", "AuthorizedTimestampData", "CommonPublicChatMessage",
-                        "CommonPublicChatMessage", "UserProfile"),
-                applicationData(node));
+        assertEquals(oldApplicationData(), applicationData(node));
         node.shutdown();
     }
 
@@ -185,6 +187,10 @@ class Step3OldNodeProcessesNewRequestsTest {
         }
         OldCompatSupport.write(RELAYED_COPIES_FILE, out,
                 "Requests of the new version as a node of v2.1.13 relays them (step 3 of the compatibility chain)");
+    }
+
+    private static List<String> oldApplicationData() {
+        return List.of(old.getProperty("applicationData").split(","));
     }
 
     private static Set<String> process(StorageService storageService, EnvelopePayloadMessage message) {

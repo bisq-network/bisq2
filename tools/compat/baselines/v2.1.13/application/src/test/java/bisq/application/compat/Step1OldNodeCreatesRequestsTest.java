@@ -17,16 +17,29 @@
 
 package bisq.application.compat;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodUtil;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.application.ResolverConfig;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.chat.ChatChannelDomain;
+import bisq.chat.Citation;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.reactions.BisqEasyOfferbookMessageReaction;
+import bisq.chat.reactions.CommonPublicChatMessageReaction;
+import bisq.chat.reactions.Reaction;
 import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
+import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessage;
@@ -44,6 +57,15 @@ import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxDataStorageService;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
+import bisq.offer.Direction;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.offer.price.spec.FloatPriceSpec;
+import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.PersistenceService;
 import bisq.security.ConfidentialData;
 import bisq.security.HybridEncryption;
@@ -51,6 +73,7 @@ import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import bisq.security.pow.ProofOfWork;
+import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.data.AuthorizedTimestampData;
 import org.junit.jupiter.api.Test;
@@ -59,10 +82,12 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import static bisq.application.compat.OldCompatSupport.OLD_DATA_DIR;
 import static bisq.application.compat.OldCompatSupport.OLD_REQUESTS_FILE;
@@ -94,6 +119,8 @@ class Step1OldNodeCreatesRequestsTest {
     private static final String DEV_PUBLIC_KEY_1 = "3056301006072a8648ce3d020106052b8104000a034200043dd1f2f56593e62670282c245cb71d50b43985b308dd1c977632c3cde155427e4fad0899d7e7af110584182f7e55547d6e1469705567124a02ae2e8afa8e8091";
 
     private final Map<String, String> out = new TreeMap<>();
+    // The names of the requests in the order of their creation. Later steps process them in this order.
+    private final List<String> order = new ArrayList<>();
 
     @Test
     void oldNodeCreatesAndStoresTheRequestsOfAnHonestNode() throws Exception {
@@ -128,16 +155,93 @@ class Step1OldNodeCreatesRequestsTest {
 
         // Public chat messages of U: chat1 stays, U removes chat2 with v2.1.13, and the updated U removes chat3 in step 2
         AuthenticatedDataStorageService chatStore = storageService.getOrCreateAuthenticatedDataStore("CommonPublicChatMessage").join();
+        CommonPublicChatMessage chat1 = null;
         CommonPublicChatMessage chat2 = null;
         for (int i = 1; i <= 3; i++) {
             CommonPublicChatMessage chat = chat(userProfile.getId(), "message " + i + " of v2.1.13");
-            if (i == 2) {
+            if (i == 1) {
+                chat1 = chat;
+            } else if (i == 2) {
                 chat2 = chat;
             }
             out.put("data.chat" + i, base64(chat.serialize()));
             put("addChat" + i, AddAuthenticatedDataRequest.from(chatStore, new DefaultAuthenticatedData(chat), userKeyPair), chatStore::add);
         }
         put("removeChat2", RemoveAuthenticatedDataRequest.from(chatStore, new DefaultAuthenticatedData(chat2), userKeyPair), chatStore::remove);
+
+        // A reply to chat1 with a citation, two lines, a mention and an emoji
+        CommonPublicChatMessage replyChat = new CommonPublicChatMessage(ChatChannelDomain.DISCUSSION,
+                "discussion.bisq",
+                userProfile.getId(),
+                "A reply of v2.1.13\nwith a second line, a mention @compat-user and an emoji \uD83D\uDE42",
+                Optional.of(new Citation(userProfile.getId(), "message 1 of v2.1.13", Optional.of(chat1.getId()))),
+                System.currentTimeMillis(),
+                false);
+        out.put("data.replyChat", base64(replyChat.serialize()));
+        put("addReplyChat", AddAuthenticatedDataRequest.from(chatStore, new DefaultAuthenticatedData(replyChat), userKeyPair), chatStore::add);
+
+        // An edit as in PublicChatChannelService.publishEditedChatMessage of v2.1.13: remove the original, and publish
+        // a new message with the date of the original and wasEdited
+        CommonPublicChatMessage chatToEdit = chat(userProfile.getId(), "a message of v2.1.13 before the edit");
+        put("addChatToEdit", AddAuthenticatedDataRequest.from(chatStore, new DefaultAuthenticatedData(chatToEdit), userKeyPair), chatStore::add);
+        put("removeChatToEdit", RemoveAuthenticatedDataRequest.from(chatStore, new DefaultAuthenticatedData(chatToEdit), userKeyPair), chatStore::remove);
+        CommonPublicChatMessage editedChat = new CommonPublicChatMessage(chatToEdit.getChatChannelDomain(),
+                chatToEdit.getChannelId(),
+                userProfile.getId(),
+                "a message of v2.1.13 after the edit",
+                chatToEdit.getCitation(),
+                chatToEdit.getDate(),
+                true);
+        put("addEditedChat", AddAuthenticatedDataRequest.from(chatStore, new DefaultAuthenticatedData(editedChat), userKeyPair), chatStore::add);
+
+        // All reactions on chat1, as in CommonPublicChatChannelService.createChatMessageReaction of v2.1.13. U removes
+        // the reaction HEART again.
+        AuthenticatedDataStorageService chatReactionStore = storageService.getOrCreateAuthenticatedDataStore("CommonPublicChatMessageReaction").join();
+        for (Reaction reaction : Reaction.values()) {
+            CommonPublicChatMessageReaction chatReaction = new CommonPublicChatMessageReaction(StringUtils.createUid(),
+                    userProfile.getId(),
+                    chat1.getChannelId(),
+                    chat1.getChatChannelDomain(),
+                    chat1.getId(),
+                    reaction.ordinal(),
+                    System.currentTimeMillis());
+            put("addChatReaction" + reaction.name(), AddAuthenticatedDataRequest.from(chatReactionStore, new DefaultAuthenticatedData(chatReaction), userKeyPair), chatReactionStore::add);
+            if (reaction == Reaction.HEART) {
+                put("removeChatReactionHEART", RemoveAuthenticatedDataRequest.from(chatReactionStore, new DefaultAuthenticatedData(chatReaction), userKeyPair), chatReactionStore::remove);
+            }
+        }
+
+        // Offers of U in the offerbook channel of BTC/USD, built as OfferbookRestApi.createOffer of v2.1.13 builds them:
+        // market price with a range, float price with a fixed amount, and a fixed price with a range and a custom
+        // payment method. U removes the second offer.
+        Market usdMarket = MarketRepository.getUSDBitcoinMarket();
+        String offerChannelId = "bisq_easy_offerbook." + usdMarket.getBaseCurrencyCode() + "-" + usdMarket.getQuoteCurrencyCode();
+        AuthenticatedDataStorageService offerStore = storageService.getOrCreateAuthenticatedDataStore("BisqEasyOfferbookMessage").join();
+        List<BisqEasyOfferbookMessage> offers = List.of(
+                offerMessage(offerChannelId, userProfile, Direction.BUY, usdMarket,
+                        new QuoteSideRangeAmountSpec(1_000_000, 2_000_000), new MarketPriceSpec(),
+                        List.of("MAIN_CHAIN", "LN"), List.of("ZELLE", "STRIKE")),
+                offerMessage(offerChannelId, userProfile, Direction.SELL, usdMarket,
+                        new QuoteSideFixedAmountSpec(1_500_000), new FloatPriceSpec(0.01),
+                        List.of("LN"), List.of("ZELLE")),
+                offerMessage(offerChannelId, userProfile, Direction.BUY, usdMarket,
+                        new QuoteSideRangeAmountSpec(500_000, 5_000_000), new FixPriceSpec(PriceQuote.fromFiatPrice(65000.5, "USD")),
+                        List.of("MAIN_CHAIN"), List.of("Cash by mail")));
+        for (int i = 0; i < offers.size(); i++) {
+            out.put("data.offer" + (i + 1), base64(offers.get(i).serialize()));
+            put("addOffer" + (i + 1), AddAuthenticatedDataRequest.from(offerStore, new DefaultAuthenticatedData(offers.get(i)), userKeyPair), offerStore::add);
+        }
+        put("removeOffer2", RemoveAuthenticatedDataRequest.from(offerStore, new DefaultAuthenticatedData(offers.get(1)), userKeyPair), offerStore::remove);
+        AuthenticatedDataStorageService offerReactionStore = storageService.getOrCreateAuthenticatedDataStore("BisqEasyOfferbookMessageReaction").join();
+        BisqEasyOfferbookMessage offer1 = offers.get(0);
+        BisqEasyOfferbookMessageReaction offerReaction = new BisqEasyOfferbookMessageReaction(StringUtils.createUid(),
+                userProfile.getId(),
+                offer1.getChannelId(),
+                offer1.getChatChannelDomain(),
+                offer1.getId(),
+                Reaction.THUMBS_UP.ordinal(),
+                System.currentTimeMillis());
+        put("addOfferReaction", AddAuthenticatedDataRequest.from(offerReactionStore, new DefaultAuthenticatedData(offerReaction), userKeyPair), offerReactionStore::add);
 
         // Authorized data of the oracle node. v2.1.13 publishes it with the network identity A, signed by B. An oracle
         // with static keys marks its data with staticPublicKeysProvided. The oracle republished the role twice, so its
@@ -189,10 +293,11 @@ class Step1OldNodeCreatesRequestsTest {
                 .getMap().values().iterator().next();
         put("refreshedAddUserProfile", refreshedAdd, null);
 
-        for (var store : List.of(userProfileStore, chatStore, roleStore, timestampStore)) {
+        for (var store : List.of(userProfileStore, chatStore, chatReactionStore, offerStore, offerReactionStore, roleStore, timestampStore)) {
             store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
         }
         mailboxStore.getPersistence().persistAsync(mailboxStore.getPersistableStore().getClone()).join();
+        out.put("order", String.join(",", order));
 
         List<String> storedEntries = describeStores(storageService);
         out.put("storedEntries", String.join(";", storedEntries));
@@ -206,16 +311,29 @@ class Step1OldNodeCreatesRequestsTest {
                 assertTrue(entry.getValue().contains("success"), entry.getKey() + "=" + entry.getValue());
             }
         }
-        assertEquals(List.of(
+        assertEquals(Stream.of(
                         "AckMessage|addMailbox|1",
                         "AckMessage|addMailbox|1",
                         "AckMessage|removeMailbox|" + Integer.MAX_VALUE,
                         "AuthorizedBondedRole|add|3",
                         "AuthorizedTimestampData|add|1",
+                        "BisqEasyOfferbookMessage|add|1",
+                        "BisqEasyOfferbookMessage|add|1",
+                        "BisqEasyOfferbookMessage|remove|2",
+                        "BisqEasyOfferbookMessageReaction|add|1",
+                        "CommonPublicChatMessage|add|1",
+                        "CommonPublicChatMessage|add|1",
                         "CommonPublicChatMessage|add|1",
                         "CommonPublicChatMessage|add|1",
                         "CommonPublicChatMessage|remove|2",
-                        "UserProfile|add|2"),
+                        "CommonPublicChatMessage|remove|2",
+                        "CommonPublicChatMessageReaction|add|1",
+                        "CommonPublicChatMessageReaction|add|1",
+                        "CommonPublicChatMessageReaction|add|1",
+                        "CommonPublicChatMessageReaction|add|1",
+                        "CommonPublicChatMessageReaction|add|1",
+                        "CommonPublicChatMessageReaction|remove|2",
+                        "UserProfile|add|2").sorted().toList(),
                 storedEntries);
     }
 
@@ -224,6 +342,7 @@ class Step1OldNodeCreatesRequestsTest {
     }
 
     private <T extends EnvelopePayloadMessage> void put(String name, T request, Processor<? super T> processor) {
+        order.add(name);
         out.put("request." + name, base64(request.serialize()));
         out.put("pow." + name, proofOfWorkPayloadHash(request));
         out.put("cost." + name, String.valueOf(request.getCostFactor()));
@@ -248,6 +367,41 @@ class Step1OldNodeCreatesRequestsTest {
                 "discussion.bisq",
                 profileId,
                 text,
+                Optional.empty(),
+                System.currentTimeMillis(),
+                false);
+    }
+
+    // As OfferbookRestApi.createOffer of v2.1.13, with a fixed text instead of the text which it derives from the market
+    // price
+    private static BisqEasyOfferbookMessage offerMessage(String channelId,
+                                                         UserProfile userProfile,
+                                                         Direction direction,
+                                                         Market market,
+                                                         AmountSpec amountSpec,
+                                                         PriceSpec priceSpec,
+                                                         List<String> bitcoinPaymentMethodNames,
+                                                         List<String> fiatPaymentMethodNames) {
+        List<BitcoinPaymentMethod> bitcoinPaymentMethods = bitcoinPaymentMethodNames.stream()
+                .map(BitcoinPaymentMethodUtil::getPaymentMethod)
+                .toList();
+        List<FiatPaymentMethod> fiatPaymentMethods = fiatPaymentMethodNames.stream()
+                .map(FiatPaymentMethodUtil::getPaymentMethod)
+                .toList();
+        BisqEasyOffer offer = new BisqEasyOffer(userProfile.getNetworkId(),
+                direction,
+                market,
+                amountSpec,
+                priceSpec,
+                bitcoinPaymentMethods,
+                fiatPaymentMethods,
+                userProfile.getTerms(),
+                List.of("en"),
+                BisqEasyProtocol.VERSION);
+        return new BisqEasyOfferbookMessage(channelId,
+                userProfile.getId(),
+                Optional.of(offer),
+                Optional.of("compat-user wants to " + direction.name().toLowerCase() + " Bitcoin"),
                 Optional.empty(),
                 System.currentTimeMillis(),
                 false);
