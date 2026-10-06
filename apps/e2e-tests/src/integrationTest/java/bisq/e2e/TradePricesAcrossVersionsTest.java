@@ -106,6 +106,16 @@ class TradePricesAcrossVersionsTest {
                 Trades.BTC_ADDRESS);
     }
 
+    // A range whose minimum equals its maximum, which this checkout creates (trade matrix of the release test plan)
+    @Test
+    void oldTakerBuysWithinARangeWhoseMinimumEqualsItsMaximum() throws Exception {
+        ObjectNode priceSpec = JSON.createObjectNode().put("type", "MarketPriceSpec");
+        String offerId = createOffer(network.newApi, "SELL", rangeAmount(Trades.QUOTE_AMOUNT, Trades.QUOTE_AMOUNT),
+                priceSpec, List.of("MAIN_CHAIN"));
+        take(network.newApi, network.oldApi, "SELL", offerId, priceSpec, Trades.baseAmount(network.priceServer),
+                Trades.QUOTE_AMOUNT, "MAIN_CHAIN", Trades.BTC_ADDRESS);
+    }
+
     private static String createOffer(ApiClient maker,
                                       String direction,
                                       ObjectNode amountSpec,
