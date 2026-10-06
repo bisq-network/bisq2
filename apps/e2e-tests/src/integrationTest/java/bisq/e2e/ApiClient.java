@@ -322,6 +322,14 @@ final class ApiClient {
         return propertiesByTradeId;
     }
 
+    /**
+     * The alert which restricts trading of the desktop app on the node, or a JSON null without such an alert. The
+     * api-app uses the app type of the desktop app. Only nodes of this checkout have this topic.
+     */
+    JsonNode tradeRestrictingAlert() {
+        return subscriptionSnapshot("TRADE_RESTRICTING_ALERT", Optional.of("DESKTOP"));
+    }
+
     private JsonNode subscriptionSnapshot(String topic) {
         return subscriptionSnapshot(topic, Optional.empty());
     }

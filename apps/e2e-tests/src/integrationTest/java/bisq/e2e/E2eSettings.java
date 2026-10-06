@@ -55,6 +55,19 @@ final class E2eSettings {
         return System.getProperty("bisq.e2e.oldVersion", "old");
     }
 
+    /**
+     * The classpath of the alert publisher of the source set alertPublisher, which the build sets for the task
+     * integrationTest.
+     */
+    static String alertPublisherClasspath() {
+        String value = System.getProperty("bisq.e2e.alertPublisherClasspath", "");
+        if (value.isEmpty()) {
+            throw new IllegalStateException("bisq.e2e.alertPublisherClasspath is not set. " +
+                    "Run tools/compat/run-mixed-network.sh.");
+        }
+        return value;
+    }
+
     static Path workDir() {
         String value = System.getProperty("bisq.e2e.workDir", "");
         return value.isEmpty() ? Path.of("build", "e2e") : Path.of(value);

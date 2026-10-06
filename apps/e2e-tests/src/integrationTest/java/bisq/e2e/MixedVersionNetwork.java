@@ -159,6 +159,29 @@ final class MixedVersionNetwork implements AutoCloseable {
         return api;
     }
 
+    /**
+     * Starts the alert publisher of the source set alertPublisher as one more api-app node of this checkout, which
+     * knows both seed nodes. The node also has an API and a user identity like the other api-app nodes. The test
+     * controls the alert with {@link #sendCommand}.
+     */
+    ApiClient startAlertPublisher(String name) throws Exception {
+        NodeProcess.Program alertPublisher = new NodeProcess.Program("bisq.e2e.AlertPublisherApp",
+                E2eSettings.alertPublisherClasspath());
+        NodeProcess node = newExtraApiNode(name, true, List.of(oldSeed.getP2pPort(), newSeed.getP2pPort()))
+                .runProgram(alertPublisher);
+        node.start();
+        node.awaitReady(START_TIMEOUT);
+        ApiClient api = node.apiClient().orElseThrow();
+        api.createUserIdentity("e2e-" + name);
+        api.acceptTermsAndConditions();
+        return api;
+    }
+
+    /** Sends a command to the standard input of an extra node, for example to the alert publisher. */
+    void sendCommand(String name, String command) throws IOException {
+        extraNode(name).sendCommand(command);
+    }
+
     private NodeProcess newExtraApiNode(String name, boolean ofNewVersion, List<Integer> seedPorts) throws IOException {
         NodeProcess node = new NodeProcess(name, NodeProcess.Kind.API, ofNewVersion ? newVersion : oldVersion,
                 ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl(),

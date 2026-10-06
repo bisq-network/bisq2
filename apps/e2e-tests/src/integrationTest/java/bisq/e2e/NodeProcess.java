@@ -20,6 +20,7 @@ package bisq.e2e;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -52,6 +53,10 @@ final class NodeProcess implements AutoCloseable {
         }
     }
 
+    // The main class and the classpath of a program which runs as a node with the JVM options of its kind
+    record Program(String mainClass, String classpath) {
+    }
+
     private final String name;
     private final Kind kind;
     private final String version;
@@ -68,6 +73,8 @@ final class NodeProcess implements AutoCloseable {
     private boolean defaultApiSecurity;
     // JVM options for the next start, for example a shorter time to live of sessions
     private final List<String> extraJvmOptions = new ArrayList<>();
+    // A program which runs instead of the start script of the distribution, for example the alert publisher
+    private Optional<Program> program = Optional.empty();
     private Process process;
 
     NodeProcess(String name,
@@ -134,6 +141,22 @@ final class NodeProcess implements AutoCloseable {
         extraJvmOptions.addAll(options);
     }
 
+    /** Runs the given program instead of the start script of the distribution. */
+    NodeProcess runProgram(Program program) {
+        this.program = Optional.of(program);
+        return this;
+    }
+
+    /** Writes a line to the standard input of the node, which a program such as the alert publisher reads. */
+    void sendCommand(String command) throws IOException {
+        if (process == null || !process.isAlive()) {
+            throw new IllegalStateException(name + " does not run");
+        }
+        OutputStream input = process.getOutputStream();
+        input.write((command + "\n").getBytes(StandardCharsets.UTF_8));
+        input.flush();
+    }
+
     /**
      * The ID of the pairing code which the node writes to pairing_qr_code.txt. The first line of the file is the QR code
      * in Base64 (PairingQrCodeEncoder of both versions): a version byte, then the pairing code with a length of 16 bits,
@@ -187,8 +210,10 @@ final class NodeProcess implements AutoCloseable {
         Files.createDirectories(dataDir);
         Files.writeString(dataDir.resolve("bisq.conf"), bisqConf(), StandardCharsets.UTF_8);
         ProcessBuilder builder = new ProcessBuilder(command());
-        // The start script of the distribution passes them to the JVM
-        builder.environment().put("JAVA_OPTS", String.join(" ", jvmOptions()));
+        if (program.isEmpty()) {
+            // The start script of the distribution passes them to the JVM
+            builder.environment().put("JAVA_OPTS", String.join(" ", jvmOptions()));
+        }
         if (!clockOffset.isZero()) {
             // libfaketime moves the clock of the whole process, also System.currentTimeMillis() of the JVM. The offset
             // is relative to the real time, so all nodes with the same offset show the same time. The monotonic clock
@@ -246,13 +271,19 @@ final class NodeProcess implements AutoCloseable {
 
     private List<String> command() {
         List<String> command = new ArrayList<>();
-        Path startScript = tree.resolve("apps").resolve(kind.distribution)
-                .resolve("build/install").resolve(kind.distribution).resolve("bin").resolve(kind.distribution);
-        if (!Files.isExecutable(startScript)) {
-            throw new IllegalStateException("Missing distribution " + startScript +
-                    ". Run tools/compat/run-mixed-network.sh.");
+        if (program.isPresent()) {
+            command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
+            command.addAll(jvmOptions());
+            command.addAll(List.of("-cp", program.get().classpath(), program.get().mainClass()));
+        } else {
+            Path startScript = tree.resolve("apps").resolve(kind.distribution)
+                    .resolve("build/install").resolve(kind.distribution).resolve("bin").resolve(kind.distribution);
+            if (!Files.isExecutable(startScript)) {
+                throw new IllegalStateException("Missing distribution " + startScript +
+                        ". Run tools/compat/run-mixed-network.sh.");
+            }
+            command.add(startScript.toString());
         }
-        command.add(startScript.toString());
         command.add("--data-dir=" + dataDir);
         command.add("--app-name=" + name);
         return command;
