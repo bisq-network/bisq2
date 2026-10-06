@@ -129,3 +129,9 @@ Regardless of the chosen strategy, it's important to test well and make sure it 
 * A relative safe way is to copy the IDE project and run one node there and the other in the to-be-tested version.
    This avoids that changes are hotswapped to running apps. Also, it's best to run the seed on the old version to see if there are issues.
 * Another option is to disable hotswap.
+
+The compatibility chain in `tools/compat` runs the real code of the last release and of the current checkout without a
+network. Each version processes the requests and the persisted stores of the other version, before and after the
+cutoff date of signature V1. `tools/compat/old-updater-replay.sh` checks the keys and the assets of a new release with
+the updater code of the last release. See [tools/compat/README.md](../../tools/compat/README.md). A nightly workflow
+runs the chain.

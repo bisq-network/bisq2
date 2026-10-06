@@ -1,0 +1,42 @@
+// Init script for the baseline v2.1.13. tools/compat/baseline.sh passes it together with -Pbisq.compat.overlayDir.
+//
+// For each project of the root build of the baseline, it adds <overlayDir>/<project name>/src/test/java to the test
+// sources, if that directory exists. The exported tree of the baseline stays unchanged. The tests of the overlay get
+// the Gradle properties bisq.compat.* as system properties, and Gradle never considers their results up to date.
+
+// Gradle runs init scripts also for the included builds, such as build-logic. Their start parameters do not contain the
+// properties of the command line, so the script does nothing there.
+def overlayDirPath = startParameter.projectProperties['bisq.compat.overlayDir']
+if (overlayDirPath == null) {
+    return
+}
+def overlayDir = new File(overlayDirPath)
+def compatProperties = startParameter.projectProperties.findAll { key, value -> key.startsWith('bisq.compat.') }
+
+allprojects { project ->
+    project.afterEvaluate {
+        // The init script also applies to the included builds apps and network. Their projects have no overlay.
+        if (project.rootProject.name != 'bisq') {
+            return
+        }
+        def overlaySources = new File(overlayDir, "${project.name}/src/test/java")
+        if (!overlaySources.isDirectory()) {
+            return
+        }
+        project.sourceSets.test.java.srcDir(overlaySources)
+
+        // The overlay tests use classes which the test classpath of v2.1.13 lacks
+        def libs = project.extensions.getByType(VersionCatalogsExtension).named('libs')
+        if (project.name == 'application') {
+            project.dependencies.add('testImplementation', libs.findLibrary('protobuf-java').get())
+            project.dependencies.add('testImplementation', "network:network-identity:${project.version}")
+        } else if (project.name == 'evolution') {
+            project.dependencies.add('testImplementation', libs.findLibrary('bouncycastle-pg').get())
+        }
+
+        project.tasks.withType(Test).configureEach { task ->
+            compatProperties.each { key, value -> task.systemProperty(key, value) }
+            task.outputs.upToDateWhen { false }
+        }
+    }
+}

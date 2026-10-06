@@ -30,4 +30,23 @@ tasks.test {
     inputs.file("src/main/java/bisq/application/ResolverConfig.java")
         .withPropertyName("resolverConfigSource")
         .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    // The steps of the compatibility chain need the files which the code of a released version creates.
+    // tools/compat/run-chain.sh runs them with the task compatTest.
+    exclude("bisq/application/compat/**")
+}
+
+val compatExchangeDir = providers.gradleProperty("bisq.compat.exchangeDir")
+
+tasks.register<Test>("compatTest") {
+    description = "Runs the steps of the compatibility chain with the released version. See tools/compat/README.md."
+    group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform()
+    include("bisq/application/compat/**")
+    inputs.property("exchangeDir", compatExchangeDir.orElse(""))
+    systemProperty("bisq.compat.exchangeDir", compatExchangeDir.orElse("").get())
+    // The result depends on the files in the exchange directory, which Gradle does not track
+    outputs.upToDateWhen { false }
 }
