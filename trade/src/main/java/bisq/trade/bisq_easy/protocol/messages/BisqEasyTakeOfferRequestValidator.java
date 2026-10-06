@@ -246,10 +246,13 @@ public final class BisqEasyTakeOfferRequestValidator {
             }
         }
 
+        // A fixed price offer needs no market price, so the maker can have none for the market
         String details = "takersAmount=" + takersAmount + "\n" +
                 "myAmount=" + myAmount + "\n" +
                 "errorThreshold=" + errorThreshold + "\n" +
-                "marketPrice=" + marketPrice.getPriceQuote().getValue() + "\n" +
+                "marketPrice=" + Optional.ofNullable(marketPrice)
+                .map(price -> String.valueOf(price.getPriceQuote().getValue()))
+                .orElse("none") + "\n" +
                 "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L) + "\n" +
                 "takersContract=" + takersContract;
         if (throwException) {
