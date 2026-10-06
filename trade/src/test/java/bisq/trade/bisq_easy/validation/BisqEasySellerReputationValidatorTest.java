@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
 
+import static bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator.MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -77,10 +78,10 @@ class BisqEasySellerReputationValidatorTest {
     }
 
     @Test
-    void acceptsMarketPricesWithinStaleAgeOfEachOther() {
+    void acceptsMarketPricesWithinMaxTimestampDifference() {
         long now = System.currentTimeMillis();
         assertDoesNotThrow(() -> BisqEasySellerReputationValidator.validateMarketPrices(
-                eurMarketPrice(now - MarketPrice.STALE_AGE),
+                eurMarketPrice(now - MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE),
                 usdMarketPrice(now)));
     }
 
@@ -88,7 +89,7 @@ class BisqEasySellerReputationValidatorTest {
     void rejectsMarketPricesNotFromTheSameTime() {
         long now = System.currentTimeMillis();
         assertThrows(IllegalArgumentException.class, () -> BisqEasySellerReputationValidator.validateMarketPrices(
-                eurMarketPrice(now - MarketPrice.STALE_AGE - 1),
+                eurMarketPrice(now - MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE - 1),
                 usdMarketPrice(now)));
     }
 
@@ -97,14 +98,14 @@ class BisqEasySellerReputationValidatorTest {
         long outdatedTimestamp = System.currentTimeMillis() - OUTDATED_AGE;
         assertThrows(IllegalArgumentException.class, () -> BisqEasySellerReputationValidator.validateMarketPrices(
                 eurMarketPrice(outdatedTimestamp),
-                usdMarketPrice(outdatedTimestamp + MarketPrice.STALE_AGE)));
+                usdMarketPrice(outdatedTimestamp + MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE)));
     }
 
     @Test
     void rejectsOutdatedUsdMarketPrice() {
         long outdatedTimestamp = System.currentTimeMillis() - OUTDATED_AGE;
         assertThrows(IllegalArgumentException.class, () -> BisqEasySellerReputationValidator.validateMarketPrices(
-                eurMarketPrice(outdatedTimestamp + MarketPrice.STALE_AGE),
+                eurMarketPrice(outdatedTimestamp + MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE),
                 usdMarketPrice(outdatedTimestamp)));
     }
 }

@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validate;
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator.validateTakersReputation;
 import static bisq.trade.bisq_easy.protocol.messages.OfferbookTestData.offerbookChannel;
+import static bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator.MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -273,7 +274,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
 
     @Test
     void acceptsEurAndUsdMarketPricesWithinTimeLimitOfEachOther() {
-        setUpEurOffer(now - MarketPrice.STALE_AGE);
+        setUpEurOffer(now - MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE);
         setUpTakersReputationScore(120_000);
 
         assertDoesNotThrow(() -> validateTakersReputation(serviceProvider, offer, contract));
@@ -281,7 +282,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
 
     @Test
     void rejectsEurAndUsdMarketPricesTooFarApart() {
-        setUpEurOffer(now - MarketPrice.STALE_AGE - 1);
+        setUpEurOffer(now - MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE - 1);
         setUpTakersReputationScore(120_000);
 
         assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
@@ -292,7 +293,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         long eurPriceTimestamp = now - OUTDATED_AGE;
         setUpEurOffer(eurPriceTimestamp);
         // The USD price is not outdated and not too far from the EUR price.
-        setUpMarketPrice(USD_MARKET, 60_000, eurPriceTimestamp + MarketPrice.STALE_AGE);
+        setUpMarketPrice(USD_MARKET, 60_000, eurPriceTimestamp + MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE);
         setUpTakersReputationScore(120_000);
 
         assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
