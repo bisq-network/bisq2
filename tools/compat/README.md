@@ -173,6 +173,12 @@ which uses the code of Bisq. The tests cover:
   baseline gets the take offer request of a taker of this checkout, but it does not create the trade and does not
   answer, so the trade of the taker stays in its first state. Nodes of this checkout know the alert and trade with each
   other. After the security manager removes the alert, the baseline trades again.
+- `MediationAcrossVersionsTest`: the authorized data publisher acts as a root oracle node with a dev key. It publishes
+  the roles of two mediators, one of each version, as the oracle node of this checkout publishes them. A trader of the
+  baseline requests mediation, and the mediator of this checkout answers both traders and gets the chat of the trade.
+  With both mediators, makers and takers of both versions select the same mediator for each take. After the oracle
+  removes one role, a trader of this checkout requests mediation with a long chat, and the mediator of the baseline
+  answers. Closing and opening a case again need the screens of the mediator and stay manual.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
