@@ -44,6 +44,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +53,9 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BisqEasyMediationCaseListItem implements ActivatableTableItem, DateTableItem {
+    public static final Comparator<BisqEasyMediationCaseListItem> BY_LAST_MESSAGE_DATE =
+            Comparator.comparingLong(BisqEasyMediationCaseListItem::getLastMessageDate);
+
     @EqualsAndHashCode.Include
     private final BisqEasyMediationCase bisqEasyMediationCase;
     @EqualsAndHashCode.Include
@@ -66,7 +70,11 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
     private final boolean isMakerRequester;
     private final Badge makersBadge = new Badge();
     private final Badge takersBadge = new Badge();
+    private long lastMessageDate;
+    private final StringProperty lastMessageDateString = new SimpleStringProperty("");
+    private final StringProperty lastMessageTimeString = new SimpleStringProperty("");
     private Pin changedChatNotificationPin;
+    private Pin chatMessagesPin;
     private Pin isClosedPin;
     private Long closeCaseDate = 0L;
     private final StringProperty closeCaseDateString = new SimpleStringProperty("");
@@ -120,6 +128,9 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
+
+        updateLastMessageDate();
+        chatMessagesPin = channel.getChatMessages().addObserver(() -> UIThread.run(this::updateLastMessageDate));
     }
 
     @Override
@@ -129,6 +140,10 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
             isClosedPin = null;
         }
         changedChatNotificationPin.unbind();
+        if (chatMessagesPin != null) {
+            chatMessagesPin.unbind();
+            chatMessagesPin = null;
+        }
     }
 
     public String getCloseCaseDateString() {
@@ -137,6 +152,22 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
 
     public StringProperty getCloseCaseDateStringProperty() {
         return closeCaseDateString;
+    }
+
+    public String getLastMessageDateString() {
+        return lastMessageDateString.get();
+    }
+
+    public StringProperty getLastMessageDateStringProperty() {
+        return lastMessageDateString;
+    }
+
+    public String getLastMessageTimeString() {
+        return lastMessageTimeString.get();
+    }
+
+    public StringProperty getLastMessageTimeStringProperty() {
+        return lastMessageTimeString;
     }
 
     public String getCloseCaseTimeString() {
@@ -167,6 +198,15 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
                     String.valueOf(numNotificationsFromTaker) :
                     "");
         });
+    }
+
+    private void updateLastMessageDate() {
+        lastMessageDate = channel.getChatMessages().stream()
+                .mapToLong(message -> message.getDate())
+                .max()
+                .orElse(date);
+        lastMessageDateString.set(DateFormatter.formatDate(lastMessageDate));
+        lastMessageTimeString.set(DateFormatter.formatTime(lastMessageDate));
     }
 
     private long getNumNotifications(UserProfile userProfile) {
