@@ -143,6 +143,8 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
 - `PaymentDataAmountAcrossVersionsTest`: a buyer of the baseline sends payment data which requests another amount, a
   Lightning invoice and a bitcoin URI. A seller of this checkout fails the trade, and the buyer gets the reason. A
   bitcoin URI without amount works. A buyer of this checkout refuses to send such data (HTTP 400).
+- `MakerIdentityAcrossVersionsTest`: a maker of this checkout publishes an offer with its second identity and selects
+  the first one again. A taker of the baseline takes the offer, and the trade runs under the second identity to the end.
 - `OfferClosingAcrossVersionsTest`: with "close my offer when taken", a taken offer disappears on both versions, with a
   maker of each version. A maker of this checkout rejects the take of a taker of the baseline whom it ignores, with
   "Could not find matching offer". This is the same rejection as for a second take of a closed offer, which the test

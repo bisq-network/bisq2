@@ -119,6 +119,18 @@ final class ApiClient {
         return get("/user-identities/selected/user-profile").path("networkId").path("pubKey").path("id").asText();
     }
 
+    // The user profiles of the identities of the node
+    List<JsonNode> ownedUserProfiles() {
+        List<JsonNode> profiles = new ArrayList<>();
+        get("/user-identities/owned-profiles").forEach(profiles::add);
+        return profiles;
+    }
+
+    // Selects the identity of the user profile. New offers and chat messages use the selected identity.
+    void selectUserProfile(String userProfileId) {
+        post("/user-identities/select", JSON.createObjectNode().put("userProfileId", userProfileId));
+    }
+
     // The node must know the user profile, else the API returns HTTP 404
     void ignoreUserProfile(String userProfileId) {
         post("/user-profiles/ignore/" + userProfileId, JSON.createObjectNode());
