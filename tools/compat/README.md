@@ -128,7 +128,8 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   sides must reach the final state and agree on the contract.
 - `UpgradeInPlaceTest`: a node of the baseline with an open trade and an open offer stops. Its peer sends a trade
   message to its mailbox. The version of this checkout starts on the same data directory with the same ports. The trade
-  continues to the end, the offer stays, and the log scan covers the session of each version of the node.
+  continues to the end, the offer stays, and the log scan covers the session of each version of the node. The chat of
+  the trade keeps its messages, the citation and the reactions, and it continues in both directions.
 - `InventoryAcrossVersionsTest`: a node of each version joins later and knows only the seed node of the other version.
   It gets the existing offers of both versions with an inventory request, and the offers which are published later.
 - `TradeChatAcrossVersionsTest`: the chat of a trade between the versions. Text with a line break and an emoji, replies
