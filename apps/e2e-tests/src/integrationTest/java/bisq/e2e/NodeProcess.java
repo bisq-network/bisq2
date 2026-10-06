@@ -97,6 +97,14 @@ final class NodeProcess implements AutoCloseable {
         return new NodeProcess(name, Kind.SEED, version, tree, networkDir.resolve(name), port, -1, seedPorts, priceNodeUrl);
     }
 
+    /**
+     * The same node with the distribution of another source tree, for an upgrade in place. It keeps the data
+     * directory and the ports, so the node keeps its address and its peers reach it as before.
+     */
+    NodeProcess withTree(Path otherTree, String otherVersion) {
+        return new NodeProcess(name, kind, otherVersion, otherTree, dataDir, p2pPort, apiPort, seedPorts, priceNodeUrl);
+    }
+
     String getName() {
         return name;
     }

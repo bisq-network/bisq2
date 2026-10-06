@@ -126,6 +126,9 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   version with the same terms. A removed offer disappears on the other version.
 - `TradeAcrossVersionsTest`: a trade runs to the end in all four combinations of maker version and direction. Both
   sides must reach the final state and agree on the contract.
+- `UpgradeInPlaceTest`: a node of the baseline with an open trade and an open offer stops. Its peer sends a trade
+  message to its mailbox. The version of this checkout starts on the same data directory with the same ports. The trade
+  continues to the end, the offer stays, and the log scan covers the session of each version of the node.
 
 At the end, each test class stops its nodes and scans their logs with `scripts/log_anomaly_scan.py`. A finding of
 level warning or error fails the test class. The data directories and logs stay in `build/e2e/<tag>/<test class>`.

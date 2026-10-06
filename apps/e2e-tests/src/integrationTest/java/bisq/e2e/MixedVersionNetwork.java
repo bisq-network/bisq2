@@ -47,6 +47,7 @@ final class MixedVersionNetwork implements AutoCloseable {
     final ApiClient oldApi;
     final ApiClient newApi;
     private final List<NodeProcess> nodes = new ArrayList<>();
+    private NodeProcess upgradedOldNode;
 
     MixedVersionNetwork(String name) throws Exception {
         dir = E2eSettings.workDir().resolve(name);
@@ -91,6 +92,21 @@ final class MixedVersionNetwork implements AutoCloseable {
         }
     }
 
+    /** Stops the node of the old version, as a user who quits the app before an update does. */
+    void stopOldNode() throws InterruptedException {
+        oldNode.stop();
+    }
+
+    /**
+     * Starts the distribution of this checkout on the data directory of the stopped node of the old version: an upgrade
+     * in place. The node keeps its ports, so oldApi reaches the upgraded node.
+     */
+    void startOldNodeWithNewVersion() throws Exception {
+        upgradedOldNode = oldNode.withTree(E2eSettings.newTree(), newVersion);
+        upgradedOldNode.start();
+        upgradedOldNode.awaitReady(START_TIMEOUT);
+    }
+
     /** Waits until the condition holds. The nodes deliver data asynchronously. */
     static void await(String description, Duration timeout, BooleanSupplier condition) throws InterruptedException {
         long deadline = System.nanoTime() + timeout.toNanos();
@@ -115,7 +131,13 @@ final class MixedVersionNetwork implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
-        for (NodeProcess node : List.of(newNode, oldNode, newSeed, oldSeed)) {
+        List<NodeProcess> nodesToStop = new ArrayList<>();
+        nodesToStop.add(newNode);
+        if (upgradedOldNode != null) {
+            nodesToStop.add(upgradedOldNode);
+        }
+        nodesToStop.addAll(List.of(oldNode, newSeed, oldSeed));
+        for (NodeProcess node : nodesToStop) {
             if (node != null) {
                 node.stop();
             }
