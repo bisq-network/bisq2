@@ -72,3 +72,28 @@ network access, or processes started by test code. See the
 - Be mindful of parallel execution.
 - Isolate or lock shared resources when required.
 - Avoid race-prone and timing-sensitive test logic.
+
+## Checking Logs After Manual or Network Tests
+
+Some failures appear only in the log: a store skips an entry at load, a node rejects network data of a peer, or a
+node drops a message. The screen shows no error, so a tester easily overlooks them. This matters most in tests with
+nodes of different versions.
+
+After such a test, scan the log files of every node:
+
+```sh
+python3 scripts/log_anomaly_scan.py <data directory> [<data directory> ...]
+```
+
+- A path can be a data directory, a log file, or a directory whose subdirectories are data directories.
+- The report lists the findings of each node and of each application session, together with the version of the
+  session. So a data directory which an old version and then a new version used shows the findings of each version.
+- An allowlist removes lines which are expected and harmless, for example the warning of a node of version 2.1.13
+  about the unknown feature of newer peers. The report still counts these lines. A line which has a harmless cause and
+  also a harmful one stays a finding, and its description names the known cause.
+- `--last-session` limits the report to the last start, `--include-warnings` adds all other `WARN` lines, and
+  `--json` prints a report for scripts. The exit code is 1 when a finding of level `warning` or `error` remains.
+
+The rules and the allowlist are at the top of the script. Add a rule when a new log line marks a silent failure, and
+extend `scripts/test_log_anomaly_scan.py` with it. Run its tests with
+`python3 -m unittest scripts/test_log_anomaly_scan.py`.
