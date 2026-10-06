@@ -208,6 +208,20 @@ class LogAnomalyScanTests(unittest.TestCase):
         self.assertEqual(0, exit_code)
         self.assertEqual({"error-line": 3}, report["nodes"][0]["sessions"][0]["allowed"])
 
+    def test_closed_socket_before_the_streams_of_a_connection_is_allowed(self):
+        directory = self.write_log("node", "bisq.log", [
+            start("2.1.13"),
+            line("ERROR", "Could not create objectOutputStream/objectInputStream for socket Socket[addr=/127.0.0.1,"
+                          "port=38053,localport=48056] java.net.SocketException: Socket is closed",
+                 logger="b.n.p.n.Connection"),
+            "\tat java.base/java.net.Socket.getInputStream(Socket.java:1070)",
+        ])
+
+        exit_code, report = self.scan_json(directory)
+
+        self.assertEqual(0, exit_code)
+        self.assertEqual({"error-line": 1}, report["nodes"][0]["sessions"][0]["allowed"])
+
     def test_other_failure_of_an_outbound_handshake_is_reported(self):
         directory = self.write_log("node", "bisq.log", [
             start("2.1.14"),
