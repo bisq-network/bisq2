@@ -192,8 +192,9 @@ which uses the code of Bisq. The tests cover:
   removes one role, a trader of this checkout requests mediation with a long chat, and the mediator of the baseline
   answers. The mediator of the baseline is then upgraded in place with this open case: it keeps the chat, gets the
   messages of both traders, and mediates a new case. The security manager bans one mediator: makers and takers of both
-  versions select the other one, also nodes which start after the ban, and both again after its removal. Closing and
-  opening a case again need the screens of the mediator and stay manual.
+  versions select the other one, also nodes which start after the ban, and both again after its removal. Then the
+  trader of the baseline in the open case is upgraded in place: it keeps the chat of the case, and its messages reach
+  the mediator and the other trader. Closing and opening a case again need the screens of the mediator and stay manual.
 - `OracleMigrationAcrossVersionsTest`: the authorized data publisher acts as a root oracle node of the baseline, which
   publishes its data and the roles of two mediators with the key of its network ID. The baseline uses these roles, and
   nodes of this checkout do not (rule 11 of `docs/specifications/network/storage-ownership.md`), so a trade between two
