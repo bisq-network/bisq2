@@ -157,8 +157,10 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
   task which removes expired entries. The running node is a node which a user upgraded from the baseline before the
   date. It also removes the offer of this checkout which it stored with the baseline, without signature V2. The test
-  does not check whether this offer comes back. The baseline still gets the offers of this checkout. The test takes
-  about 11 minutes, because that task runs every 10 minutes. It needs libfaketime (see [Fake clock](#fake-clock)).
+  does not check whether this offer comes back. The baseline still gets the offers of this checkout. After the date,
+  two nodes of this checkout trade while the take offer request goes through the mailbox. An offer which a node of this
+  checkout removes after the date disappears on both versions. The test takes about 11 minutes, because that task runs
+  every 10 minutes. It needs libfaketime (see [Fake clock](#fake-clock)).
   Without libfaketime, Gradle reports the test as skipped. Nodes of the baseline are not supported from the cutoff date
   on, so the test does not trade with them after that date.
 
