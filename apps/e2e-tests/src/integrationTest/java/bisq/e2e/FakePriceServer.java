@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -40,8 +41,16 @@ final class FakePriceServer implements AutoCloseable {
 
     private final HttpServer server;
     private final Map<String, Double> pricesByCurrency = new LinkedHashMap<>();
+    // The nodes reject prices older than 12 hours and use the timestamps as reference time. With a fake clock of the
+    // nodes, the price node uses the same offset.
+    private final long clockOffsetMillis;
 
     FakePriceServer() throws IOException {
+        this(Duration.ZERO);
+    }
+
+    FakePriceServer(Duration clockOffset) throws IOException {
+        clockOffsetMillis = clockOffset.toMillis();
         pricesByCurrency.put("USD", 65_000.0);
         pricesByCurrency.put("EUR", 60_000.0);
         pricesByCurrency.put("GBP", 52_000.0);
@@ -70,7 +79,7 @@ final class FakePriceServer implements AutoCloseable {
     }
 
     private String response() {
-        long now = System.currentTimeMillis();
+        long now = System.currentTimeMillis() + clockOffsetMillis;
         ObjectNode root = JSON.createObjectNode();
         ArrayNode data = root.putArray("data");
         pricesByCurrency.forEach((currencyCode, price) -> data.addObject()

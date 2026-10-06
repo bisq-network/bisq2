@@ -140,6 +140,15 @@ jobs:
         with:
           cache-provider: basic
 
+      # CutoffAcrossVersionsTest gives the nodes a fake clock with libfaketime. Without the library, the test is skipped.
+      - name: Install libfaketime
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libfaketime
+          library=$(dpkg -L libfaketime | grep '/libfaketimeMT\.so\.1$')
+          echo "BISQ_E2E_LIBFAKETIME=$library" >> "$GITHUB_ENV"
+
       - name: Run the tests with nodes of both versions
         shell: bash
         env:

@@ -133,6 +133,15 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   It gets the existing offers of both versions with an inventory request, and the offers which are published later.
 - `TradeChatAcrossVersionsTest`: the chat of a trade between the versions. Text with a line break and an emoji, replies
   with a citation, and reactions, one of which is removed again. Each message arrives exactly once on both nodes.
+- `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
+  on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
+  before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
+  task which removes expired entries. The running node is a node which a user upgraded from the baseline before the
+  date. It also removes the offer of this checkout which it stored with the baseline, without signature V2. The test
+  does not check whether this offer comes back. The baseline still gets the offers of this checkout. The test takes about 11 minutes, because that task runs every 10 minutes. It needs libfaketime (see
+  [Fake clock](#fake-clock)). Without libfaketime, Gradle reports the test as skipped. A second test, a trade of an old
+  taker after the cutoff date, is disabled: the take offer request of the baseline is lost (open decision
+  `cutoff-old-sender-mailbox-fallback`).
 
 At the end, each test class stops its nodes and scans their logs with `scripts/log_anomaly_scan.py`. A finding of
 level warning or error fails the test class. The data directories and logs stay in `build/e2e/<tag>/<test class>`.
@@ -145,6 +154,21 @@ Limits of the first version:
 - Both versions limit the publications of an author to 3 per second and 30 per minute. The client keeps 2.1 seconds
   between its publications.
 - A network has four to six node JVMs, which need 1.5 to 2.5 GB of memory.
+
+#### Fake clock
+
+`CutoffAcrossVersionsTest` moves the clocks of the nodes to a few minutes before the cutoff date. The nodes get the fake
+clock from libfaketime. The fake price node adds the same offset to its timestamps. The test JVM keeps the real time.
+The harness takes the first library which it finds:
+
+1. the Gradle property `bisq.e2e.libfaketime`, or the environment variable `BISQ_E2E_LIBFAKETIME`;
+2. the file of the Debian and Ubuntu package `libfaketime`, for example
+   `/usr/lib/x86_64-linux-gnu/faketime/libfaketimeMT.so.1`;
+3. the same path below `~/.cache/bisq2/tools/faketime`. A developer can unpack the package there without root rights:
+   `cd "$(mktemp -d)" && apt-get download libfaketime && dpkg-deb -x libfaketime_*.deb ~/.cache/bisq2/tools/faketime`.
+
+The nodes load the library with `LD_PRELOAD`, so the test runs only on Linux. The nightly workflow installs the
+package.
 
 ## Layout
 
