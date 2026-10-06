@@ -19,13 +19,13 @@ Refresh the metadata before regenerating this report:
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 225 |
-| Modules with PGP-signed artifacts only | 218 |
+| Resolved external modules | 224 |
+| Modules with PGP-signed artifacts only | 217 |
 | Modules using checksum-only artifacts only | 7 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 330 |
-| PGP-signed artifacts | 314 |
+| Verified artifacts | 329 |
+| PGP-signed artifacts | 313 |
 | Checksum-only artifacts | 16 |
 | Resolved executable artifacts missing explicit metadata | 0 |
 | Stale executable metadata entries for unresolved versions | 0 |
@@ -147,7 +147,6 @@ Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
 | `org.apache.commons:commons-lang3:3.20.0` | direct | PGP signed | 1 signed / 0 checksum | `2DB4F1EF0FA761ECC4EA935C86FDC7E2A11262CB`<br>Gary David Gregory (Code signing key)<br>`ggregory@apache.org`<br>created 2011-04-12<br><br>`F4DD59C90148BDC52BEB90A4530AA5F25C25011F`<br>created 2025-10-27 |
 | `org.apache.httpcomponents.client5:httpclient5:5.6.1` | direct | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
 | `org.apache.httpcomponents.core5:httpcore5-h2:5.4` | transitive | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
-| `org.apache.httpcomponents.core5:httpcore5:5.4` | transitive | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
 | `org.apache.httpcomponents.core5:httpcore5:5.4.3` | direct | PGP signed | 1 signed / 0 checksum | `0785B3EFF60B1B1BEA94E0BB7C25280EAE63EBE5`<br>Oleg Kalnichevski<br>`oleg@ural.ru`<br>created 2006-02-07 |
 | `org.apache.logging.log4j:log4j-api:2.25.4` | transitive | PGP signed | 1 signed / 0 checksum | `077E8893A6DCC33DD4A4D5B256E73BA9A0B592D0`<br>ASF Logging Services RM<br>`private@logging.apache.org`<br>created 2023-01-10 |
 | `org.apache.logging.log4j:log4j-core:2.25.4` | direct | PGP signed | 1 signed / 0 checksum | `077E8893A6DCC33DD4A4D5B256E73BA9A0B592D0`<br>ASF Logging Services RM<br>`private@logging.apache.org`<br>created 2023-01-10 |
