@@ -27,7 +27,9 @@ import bisq.network.p2p.services.data.storage.Sequential;
 import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -102,6 +104,34 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
     @Override
     protected boolean isAuthenticatedDataRequestMissing(HashSetFilter filter, Map.Entry<ByteArray, AuthenticatedDataRequest> mapEntry) {
         return !filter.getFilterEntriesAsSet().contains(toFilterEntry(mapEntry));
+    }
+
+    // A requester of an earlier version (HASH_SET) holds one request per storage key V1 and accepts for it only a higher
+    // sequence number. It cannot store a removal for which this node holds an add request with the same storage key V1
+    // and a higher sequence number: it holds that add request, or receives it in the same response, because add
+    // requests are selected before removals. In both cases the add request replaces the removal. After the migration
+    // of the publisher of authorized data, this applies to every removal of the migration (rule 11 of
+    // docs/specifications/network/inventory-hash-set-filter.md).
+    @Override
+    protected List<RemoveAuthenticatedDataRequest> getStorableRemovals(
+            List<RemoveAuthenticatedDataRequest> missingRemovals) {
+        if (inventoryFilterType != InventoryFilterType.HASH_SET || missingRemovals.isEmpty()) {
+            return missingRemovals;
+        }
+        Map<ByteArray, Integer> highestAddSequenceNumberByStorageKeyV1 = storageService.getAuthenticatedDataStoreMaps()
+                .flatMap(map -> map.values().stream())
+                .filter(AddAuthenticatedDataRequest.class::isInstance)
+                .map(AddAuthenticatedDataRequest.class::cast)
+                .collect(Collectors.toMap(AddAuthenticatedDataRequest::getStorageKeyV1,
+                        AddAuthenticatedDataRequest::getSequenceNumber,
+                        Math::max));
+        return missingRemovals.stream()
+                .filter(removal -> {
+                    Integer highestAddSequenceNumber =
+                            highestAddSequenceNumberByStorageKeyV1.get(removal.getStorageKeyV1());
+                    return highestAddSequenceNumber == null || highestAddSequenceNumber <= removal.getSequenceNumber();
+                })
+                .toList();
     }
 
     @Override
