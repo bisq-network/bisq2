@@ -120,7 +120,10 @@ of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Ea
 - a fake price node in the test JVM, which all nodes use instead of the real price nodes;
 - dev mode on all nodes, without authentication of the API, except the node of `ConnectPairingAcrossUpgradeTest`.
 
-The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. They cover:
+The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. No API publishes
+the alerts of a security manager, so `AlertAcrossVersionsTest` starts the alert publisher of the source set
+`alertPublisher` of `apps/e2e-tests` as a node of this checkout. It is the only code of the tests which uses the code of
+Bisq. The tests cover:
 
 - `OffersAcrossVersionsTest`: offers with market, float and fixed price, with fixed and range amounts, reach the other
   version with the same terms. A removed offer disappears on the other version.
@@ -158,6 +161,11 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   session with the credentials of its pairing and continues the chat and the trade without pairing again. The upgraded
   node promotes the permissions of the client once. It refuses a session for an empty client secret. With a session
   time to live of one minute, an expired session gets HTTP 401, and the client gets a new one.
+- `AlertAcrossVersionsTest`: a security manager publishes an emergency alert for the desktop app which requires
+  version 2.1.14 for trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A maker of the
+  baseline gets the take offer request of a taker of this checkout, but it does not create the trade and does not
+  answer, so the trade of the taker stays in its first state. Nodes of this checkout know the alert and trade with each
+  other. After the security manager removes the alert, the baseline trades again.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
