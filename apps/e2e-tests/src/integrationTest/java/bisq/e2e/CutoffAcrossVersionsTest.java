@@ -42,6 +42,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *     a node which starts after the date when it loads its stores, and a node which runs across the date with the task
  *     which removes expired entries. Here this node is a node which a user upgraded from the old version before the
  *     date.</li>
+ *     <li>After the date, a trade between two nodes of this version works also when the take offer request goes
+ *     through the mailbox, and an offer which a node of this version removes disappears on the nodes of both
+ *     versions.</li>
  * </ul>
  * The upgraded node also removes the data of this version which it stored with the old version, without signature V2
  * (open point "Copies without signature V2 of requests of this version"). The test does not check whether this data
@@ -84,10 +87,10 @@ class CutoffAcrossVersionsTest {
         assertTrue(network.nodeTimeMillis() < CUTOFF.minusSeconds(60).toEpochMilli(),
                 "The network started too late to publish data before the cutoff date. Increase LEAD.");
 
-        // Before the cutoff date, the data of both versions reaches all nodes. A user of the old version gets the offers
-        // and upgrades to this version before the cutoff date. The stores of the old version hold all data without
-        // signature V2, also the offer of this version. The upgraded node runs across the cutoff date. Its task which
-        // removes expired entries runs again one period after the upgrade.
+        // Before the cutoff date, the data of both versions reaches all nodes. A user of the old version gets the
+        // offers and upgrades to this version before the cutoff date. The stores of the old version hold all data
+        // without signature V2, also the offer of this version. The upgraded node runs across the cutoff date. Its task
+        // which removes expired entries runs again one period after the upgrade.
         String oldOfferBefore = Trades.createOffer(network.oldApi, "SELL");
         String newOfferBefore = Trades.createOffer(network.newApi, "BUY");
         ApiClient upgradedNode = network.startExtraApiNode("upgraded", false,
@@ -118,8 +121,19 @@ class CutoffAcrossVersionsTest {
                     "A node of this version must not accept an offer without signature V2 after the cutoff date");
         }
 
+        // A trade between two nodes of this version works after the cutoff date also through the mailbox, which is the
+        // usual path of a take offer request: the maker is offline when the upgraded node takes its offer, and gets the
+        // request with signature V2 from its mailbox when it starts again.
+        String offerToTake = Trades.createOffer(network.newApi, "SELL");
+        OffersAcrossVersionsTest.awaitOffers(upgradedNode, List.of(offerToTake),
+                "the upgraded node sees the offer to take");
+        network.stopNewNode();
+        long baseAmount = Trades.baseAmount(network.priceServer);
+        String tradeId = upgradedNode.takeOffer(offerToTake, baseAmount, Trades.QUOTE_AMOUNT, "MAIN_CHAIN", "ZELLE");
+        Trades.awaitTradeState(upgradedNode, tradeId, "the upgraded taker has the trade", state -> true);
+        network.startNewNode();
+
         // Rule 9 when a node loads its stores. The own offers of the node have signature V2 and stay.
-        network.restartNewNode();
         OffersAcrossVersionsTest.awaitOffers(network.newApi, List.of(newOfferBefore, newOfferAfter),
                 "the restarted new node keeps its own offers");
         Thread.sleep(PROPAGATION.toMillis());
@@ -127,6 +141,20 @@ class CutoffAcrossVersionsTest {
                 "The restarted node must remove the offer without signature V2 which it stored before the cutoff date");
         assertTrue(OffersAcrossVersionsTest.findOffer(network.newApi, oldOfferAfter).isEmpty(),
                 "The restarted node must not get the new offer of the old node with an inventory response");
+
+        Trades.completeAfterTake(network.newApi, upgradedNode, "SELL", tradeId, baseAmount, Trades.QUOTE_AMOUNT,
+                Trades.BTC_ADDRESS);
+
+        // An offer which a node of this version removes after the cutoff date disappears on the nodes of both versions
+        String offerToRemove = Trades.createOffer(network.newApi, "BUY");
+        for (ApiClient api : List.of(network.oldApi, upgradedNode)) {
+            OffersAcrossVersionsTest.awaitOffers(api, List.of(offerToRemove), "the node sees the offer to remove");
+        }
+        network.newApi.removeOffer(offerToRemove);
+        for (ApiClient api : List.of(network.oldApi, upgradedNode)) {
+            MixedVersionNetwork.await("the removed offer disappears on the node", Trades.STEP_TIMEOUT,
+                    () -> OffersAcrossVersionsTest.findOffer(api, offerToRemove).isEmpty());
+        }
 
         // Rule 9 while a node runs: the task which removes expired entries removes the offer, and the offerbook of the
         // node drops it. The node got the new offer after the cutoff date, so this offer has signature V2 and stays.
