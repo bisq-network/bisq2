@@ -170,6 +170,42 @@ final class ApiClient {
         patch("/trades/" + tradeId + "/event", request);
     }
 
+    /** Sends a text message in the chat of a trade, optionally as a reply to a cited message. */
+    void sendTradeChatMessage(String channelId, String text, ObjectNode citation) {
+        ObjectNode request = JSON.createObjectNode();
+        request.put("text", text);
+        if (citation == null) {
+            request.putNull("citation");
+        } else {
+            request.set("citation", citation);
+        }
+        post("/trade-chat-channels/" + channelId + "/messages", request);
+    }
+
+    /**
+     * Adds a reaction to a message of a trade chat. To remove an own reaction again, isRemoved is true, and the API needs
+     * the profile id of the sender of the reaction.
+     */
+    void sendTradeChatReaction(String channelId, String messageId, int reactionId, boolean isRemoved,
+                               String senderUserProfileId) {
+        ObjectNode request = JSON.createObjectNode();
+        request.put("reactionId", reactionId);
+        request.put("isRemoved", isRemoved);
+        if (senderUserProfileId == null) {
+            request.putNull("senderUserProfileId");
+        } else {
+            request.put("senderUserProfileId", senderUserProfileId);
+        }
+        post("/trade-chat-channels/" + channelId + "/" + messageId + "/reactions", request);
+    }
+
+    /** The messages of all trade chats of the node, each with its reactions. */
+    List<JsonNode> tradeChatMessages() {
+        List<JsonNode> messages = new ArrayList<>();
+        subscriptionSnapshot("TRADE_CHAT_MESSAGES").forEach(messages::add);
+        return messages;
+    }
+
     /**
      * The open trades of the node, with their contract. v2.1.13 provides them only over WebSocket. The trade state in
      * these items is the state at the time when the item was created. {@link #tradeProperties()} has the current state.
