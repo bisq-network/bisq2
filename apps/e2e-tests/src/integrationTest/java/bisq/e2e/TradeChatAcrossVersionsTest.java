@@ -73,7 +73,7 @@ class TradeChatAcrossVersionsTest {
         assertEquals(channelId, Trades.findTrade(newMaker, tradeId).orElseThrow().path("channel").path("id").asText(),
                 "Both nodes must use the same trade chat channel");
 
-        String textOfOld = "A message of " + network.oldVersion + "\nwith a second line and an emoji 🙂";
+        String textOfOld = "A message of " + network.oldVersion + "\nwith a second line and an emoji \uD83D\uDE42";
         String textOfNew = "A message of the new version";
         oldTaker.sendTradeChatMessage(channelId, textOfOld, null);
         newMaker.sendTradeChatMessage(channelId, textOfNew, null);
