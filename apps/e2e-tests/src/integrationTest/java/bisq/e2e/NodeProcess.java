@@ -205,6 +205,10 @@ final class NodeProcess implements AutoCloseable {
         // Sellers need reputation. Without an oracle node, the network has no reputation data, so dev mode provides a
         // score for every profile. This hides the check of the reputation of a seller.
         options.add("-Dapplication.devModeReputationScore=50000");
+        // The harness starts each node on a data directory of its own, and stops it before it starts it again. v2.1.13
+        // binds its instance lock to a port which it derives from the path of the data directory. A closed connection
+        // can still hold that port (TIME_WAIT), and then the node does not start.
+        options.add("-Dapplication.checkInstanceLock=false");
         options.add("-Dapplication.network.supportedTransportTypes.0=CLEAR");
         options.add("-Dapplication.network.configByTransportType.clear.defaultNodePort=" + p2pPort);
         for (int i = 0; i < seedPorts.size(); i++) {
