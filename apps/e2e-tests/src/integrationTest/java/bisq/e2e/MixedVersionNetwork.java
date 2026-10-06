@@ -124,10 +124,7 @@ final class MixedVersionNetwork implements AutoCloseable {
      * later. It gets a user identity like the other api-app nodes.
      */
     ApiClient startExtraApiNode(String name, boolean ofNewVersion, List<Integer> seedPorts) throws Exception {
-        NodeProcess node = new NodeProcess(name, NodeProcess.Kind.API, ofNewVersion ? newVersion : oldVersion,
-                ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl(),
-                clockOffset);
-        extraNodes.add(node);
+        NodeProcess node = newExtraApiNode(name, ofNewVersion, seedPorts);
         node.start();
         node.awaitReady(START_TIMEOUT);
         ApiClient api = node.apiClient().orElseThrow();
@@ -136,15 +133,27 @@ final class MixedVersionNetwork implements AutoCloseable {
         return api;
     }
 
+    private NodeProcess newExtraApiNode(String name, boolean ofNewVersion, List<Integer> seedPorts) throws IOException {
+        NodeProcess node = new NodeProcess(name, NodeProcess.Kind.API, ofNewVersion ? newVersion : oldVersion,
+                ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl(),
+                clockOffset);
+        extraNodes.add(node);
+        return node;
+    }
+
+    private NodeProcess extraNode(String name) {
+        return extraNodes.stream()
+                .filter(node -> node.getName().equals(name))
+                .findFirst()
+                .orElseThrow();
+    }
+
     /**
      * Stops an extra node of the old version and starts the distribution of this checkout on its data directory, as a
      * user who upgrades. The node keeps its ports, so its ApiClient reaches the upgraded node.
      */
     void upgradeExtraNode(String name) throws Exception {
-        NodeProcess nodeOfOldVersion = extraNodes.stream()
-                .filter(node -> node.getName().equals(name))
-                .findFirst()
-                .orElseThrow();
+        NodeProcess nodeOfOldVersion = extraNode(name);
         nodeOfOldVersion.stop();
         NodeProcess upgradedNode = nodeOfOldVersion.withTree(E2eSettings.newTree(), newVersion);
         extraNodes.set(extraNodes.indexOf(nodeOfOldVersion), upgradedNode);
