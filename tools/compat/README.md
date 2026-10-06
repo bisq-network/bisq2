@@ -150,7 +150,9 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   on, so the test does not trade with them after that date.
 
 At the end, each test class stops its nodes and scans their logs with `scripts/log_anomaly_scan.py`. A finding of
-level warning or error fails the test class. The data directories and logs stay in `build/e2e/<tag>/<test class>`.
+level warning or error fails the test class. A test can declare a finding which it causes on purpose, for example the
+log of a rejected take (`MixedVersionNetwork.expectLogFinding`). The data directories and logs stay in
+`build/e2e/<tag>/<test class>`.
 
 Limits of the first version:
 
