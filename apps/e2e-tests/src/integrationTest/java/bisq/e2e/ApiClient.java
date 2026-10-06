@@ -31,8 +31,10 @@ import java.net.http.WebSocket;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -53,6 +55,12 @@ final class ApiClient {
     private final String baseUrl;
     private final URI webSocketUri;
     private long lastPublication;
+    // The credentials of a client which paired with the node, like the mobile app of Bisq Connect, and its current
+    // session. A node with the default security of its version requires them. The nodes of a test network run
+    // without authorization, and then the client sends no access headers.
+    private volatile String clientId;
+    private volatile String clientSecret;
+    private volatile String sessionId;
     // HTTP/1.1, because the client of the JDK otherwise asks for an upgrade to HTTP/2, which makes the server of v2.1.13
     // fail to read the body of a POST request (EOFException)
     private final HttpClient http = HttpClient.newBuilder()
@@ -83,6 +91,44 @@ final class ApiClient {
         }
     }
 
+    // Whether the API server answers. The route of sessions needs no authorization, and it rejects an empty request.
+    boolean isServing() {
+        try {
+            post("/access/session", JSON.createObjectNode());
+            return true;
+        } catch (ApiException e) {
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** Pairs this client with the node, with the pairing code which the node shows as QR code. */
+    void pair(String pairingCodeId, String clientName) {
+        JsonNode response = post("/access/pairing", JSON.createObjectNode()
+                .put("version", 1)
+                .put("pairingCodeId", pairingCodeId)
+                .put("clientName", clientName));
+        clientId = response.path("clientId").asText();
+        clientSecret = response.path("clientSecret").asText();
+        sessionId = response.path("sessionId").asText();
+    }
+
+    /** Requests a new session with the credentials of the pairing, as the app does when its session is not valid. */
+    void renewSession() {
+        sessionId = requestSession(clientId, clientSecret).path("sessionId").asText();
+    }
+
+    JsonNode requestSession(String clientId, String clientSecret) {
+        return post("/access/session", JSON.createObjectNode()
+                .put("clientId", clientId)
+                .put("clientSecret", clientSecret));
+    }
+
+    String clientId() {
+        return clientId;
+    }
+
     String version() {
         JsonNode version = get("/settings/version");
         return version.isTextual() ? version.asText() : version.path("version").asText();
@@ -101,6 +147,56 @@ final class ApiClient {
 
     void acceptTermsAndConditions() {
         patch("/settings", JSON.createObjectNode().put("isTacAccepted", true));
+    }
+
+    JsonNode settings() {
+        return get("/settings");
+    }
+
+    // The API of v2.1.13 applies only one field of a settings change request, so each change is a request of its own
+    void changeSetting(String field, JsonNode value) {
+        ObjectNode request = JSON.createObjectNode();
+        request.set(field, value);
+        patch("/settings", request);
+    }
+
+    // The ID of the selected user profile: the ID of the public key of its network ID
+    String userProfileId() {
+        return get("/user-identities/selected/user-profile").path("networkId").path("pubKey").path("id").asText();
+    }
+
+    // The user profiles of the identities of the node
+    List<JsonNode> ownedUserProfiles() {
+        List<JsonNode> profiles = new ArrayList<>();
+        get("/user-identities/owned-profiles").forEach(profiles::add);
+        return profiles;
+    }
+
+    // Selects the identity of the user profile. New offers and chat messages use the selected identity.
+    void selectUserProfile(String userProfileId) {
+        post("/user-identities/select", JSON.createObjectNode().put("userProfileId", userProfileId));
+    }
+
+    // The node must know the user profile, else the API returns HTTP 404
+    void ignoreUserProfile(String userProfileId) {
+        post("/user-profiles/ignore/" + userProfileId, JSON.createObjectNode());
+    }
+
+    void undoIgnoreUserProfile(String userProfileId) {
+        delete("/user-profiles/ignore/" + userProfileId);
+    }
+
+    List<String> ignoredUserProfileIds() {
+        List<String> ids = new ArrayList<>();
+        get("/user-profiles/ignored").forEach(id -> ids.add(id.asText()));
+        return ids;
+    }
+
+    // The closed trades of the node, at most 100. Only this version has this route.
+    List<JsonNode> closedTrades() {
+        List<JsonNode> trades = new ArrayList<>();
+        get("/trades/closed?page=1&pageSize=100").path("items").forEach(trades::add);
+        return trades;
     }
 
     // The market in the format of a create offer request (MarketDto). The list of markets has more fields, which the
@@ -170,6 +266,42 @@ final class ApiClient {
         patch("/trades/" + tradeId + "/event", request);
     }
 
+    /** Sends a text message in the chat of a trade, optionally as a reply to a cited message. */
+    void sendTradeChatMessage(String channelId, String text, ObjectNode citation) {
+        ObjectNode request = JSON.createObjectNode();
+        request.put("text", text);
+        if (citation == null) {
+            request.putNull("citation");
+        } else {
+            request.set("citation", citation);
+        }
+        post("/trade-chat-channels/" + channelId + "/messages", request);
+    }
+
+    /**
+     * Adds a reaction to a message of a trade chat. To remove an own reaction again, isRemoved is true, and the API needs
+     * the profile id of the sender of the reaction.
+     */
+    void sendTradeChatReaction(String channelId, String messageId, int reactionId, boolean isRemoved,
+                               String senderUserProfileId) {
+        ObjectNode request = JSON.createObjectNode();
+        request.put("reactionId", reactionId);
+        request.put("isRemoved", isRemoved);
+        if (senderUserProfileId == null) {
+            request.putNull("senderUserProfileId");
+        } else {
+            request.put("senderUserProfileId", senderUserProfileId);
+        }
+        post("/trade-chat-channels/" + channelId + "/" + messageId + "/reactions", request);
+    }
+
+    /** The messages of all trade chats of the node, each with its reactions. */
+    List<JsonNode> tradeChatMessages() {
+        List<JsonNode> messages = new ArrayList<>();
+        subscriptionSnapshot("TRADE_CHAT_MESSAGES").forEach(messages::add);
+        return messages;
+    }
+
     /**
      * The open trades of the node, with their contract. v2.1.13 provides them only over WebSocket. The trade state in
      * these items is the state at the time when the item was created. {@link #tradeProperties()} has the current state.
@@ -191,14 +323,27 @@ final class ApiClient {
     }
 
     /**
+     * The alert which restricts trading of the desktop app on the node, or a JSON null without such an alert. The
+     * api-app uses the app type of the desktop app. Only nodes of this checkout have this topic.
+     */
+    JsonNode tradeRestrictingAlert() {
+        return subscriptionSnapshot("TRADE_RESTRICTING_ALERT", Optional.of("DESKTOP"));
+    }
+
+    private JsonNode subscriptionSnapshot(String topic) {
+        return subscriptionSnapshot(topic, Optional.empty());
+    }
+
+    /**
      * Subscribes to a topic on a new connection, reads the first answer, which contains the whole current data of the
      * topic, and closes the connection. Closing removes the subscription again.
      */
-    private JsonNode subscriptionSnapshot(String topic) {
+    private JsonNode subscriptionSnapshot(String topic, Optional<String> parameter) {
         String requestId = UUID.randomUUID().toString();
         CompletableFuture<String> response = new CompletableFuture<>();
-        WebSocket webSocket = http.newWebSocketBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
+        WebSocket.Builder webSocketBuilder = http.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(5));
+        accessHeaders().forEach(webSocketBuilder::header);
+        WebSocket webSocket = webSocketBuilder
                 .buildAsync(webSocketUri, new SubscriptionResponseListener(requestId, response))
                 .orTimeout(10, TimeUnit.SECONDS)
                 .join();
@@ -207,7 +352,7 @@ final class ApiClient {
             request.put("type", "SubscriptionRequest");
             request.put("requestId", requestId);
             request.put("topic", topic);
-            request.putNull("parameter");
+            parameter.ifPresentOrElse(value -> request.put("parameter", value), () -> request.putNull("parameter"));
             webSocket.sendText(request.toString(), true).join();
             JsonNode subscriptionResponse = JSON.readTree(response.orTimeout(10, TimeUnit.SECONDS).join());
             JsonNode errorMessage = subscriptionResponse.path("errorMessage");
@@ -242,8 +387,21 @@ final class ApiClient {
         return send("DELETE " + path, HttpRequest.newBuilder(URI.create(baseUrl + path)).DELETE());
     }
 
+    // The headers with which a paired client authenticates its requests (Headers of the API)
+    private Map<String, String> accessHeaders() {
+        Map<String, String> headers = new LinkedHashMap<>();
+        if (clientId != null) {
+            headers.put("Bisq-Client-Id", clientId);
+        }
+        if (sessionId != null) {
+            headers.put("Bisq-Session-Id", sessionId);
+        }
+        return headers;
+    }
+
     private JsonNode send(String description, HttpRequest.Builder builder) {
         try {
+            accessHeaders().forEach(builder::header);
             HttpResponse<String> response = http.send(builder.timeout(Duration.ofSeconds(30)).build(),
                     HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
