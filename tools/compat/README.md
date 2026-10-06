@@ -161,9 +161,10 @@ which uses the code of Bisq. The tests cover:
   "Could not find matching offer". This is the same rejection as for a second take of a closed offer, which the test
   cannot cause reliably through the API. The taker gets the reason.
 - `UpgradeKeepsUserDataTest`: a node of the baseline with two open trades in different states, a closed trade, changed
-  settings, an ignored user, and user-defined payment accounts with the selected one is upgraded in place. One account
-  has data of the maximum length with line breaks and characters outside ASCII. All of it stays, and the open trades
-  continue to the end. The API of the baseline creates only user-defined accounts.
+  settings, an ignored user, user-defined payment accounts with the selected one, and a trade chat message of the
+  maximum length (10,000 characters) is upgraded in place. One account has data of the maximum length with line breaks
+  and characters outside ASCII. All of it stays, and the open trades continue to the end. The API of the baseline
+  creates only user-defined accounts.
 - `FixedPriceAcrossUpgradeTest`: the API of the baseline creates offers with a fixed price. With a canonical price,
   the open offer and the open trade stay after the upgrade in place, and both trades complete. With a price whose value
   does not match its amounts, which the API of the baseline accepts, nodes of this checkout do not show the offer.
