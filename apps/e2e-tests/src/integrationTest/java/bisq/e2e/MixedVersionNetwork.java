@@ -39,6 +39,7 @@ import static bisq.e2e.ApiClient.JSON;
  */
 final class MixedVersionNetwork implements AutoCloseable {
     static final Duration START_TIMEOUT = Duration.ofMinutes(3);
+    private static final Duration PUBLISHER_COMMAND_TIMEOUT = Duration.ofMinutes(2);
 
     final String oldVersion = E2eSettings.oldVersion();
     final String newVersion = "checkout";
@@ -182,6 +183,30 @@ final class MixedVersionNetwork implements AutoCloseable {
     /** Sends a command to the standard input of an extra node, for example to the authorized data publisher. */
     void sendCommand(String name, String command) throws IOException {
         extraNode(name).sendCommand(command);
+    }
+
+    /**
+     * Sends a command to the authorized data publisher and waits until it logs that the broadcast of the command is
+     * done. The publisher logs the same line again when a test repeats a command, so this counts the lines.
+     */
+    void runPublisherCommand(String publisherName, String command) throws Exception {
+        long doneBefore = countLogLines(publisherName, "E2E done: " + command);
+        sendCommand(publisherName, command);
+        await("the publisher runs: " + command, PUBLISHER_COMMAND_TIMEOUT, () -> {
+            if (countLogLines(publisherName, "E2E failed: " + command) > 0) {
+                throw new IllegalStateException("The publisher failed to run: " + command + ". See its log.");
+            }
+            return countLogLines(publisherName, "E2E done: " + command) > doneBefore;
+        });
+    }
+
+    /** How many lines of the log of the node since its last start contain the text. */
+    long countLogLines(String nodeName, String text) {
+        try {
+            return logOfLastSession(nodeName).stream().filter(line -> line.contains(text)).count();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private NodeProcess newExtraApiNode(String name, boolean ofNewVersion, List<Integer> seedPorts) throws IOException {
