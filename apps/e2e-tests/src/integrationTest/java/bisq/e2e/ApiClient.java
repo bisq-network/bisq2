@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -321,11 +322,15 @@ final class ApiClient {
         return propertiesByTradeId;
     }
 
+    private JsonNode subscriptionSnapshot(String topic) {
+        return subscriptionSnapshot(topic, Optional.empty());
+    }
+
     /**
      * Subscribes to a topic on a new connection, reads the first answer, which contains the whole current data of the
      * topic, and closes the connection. Closing removes the subscription again.
      */
-    private JsonNode subscriptionSnapshot(String topic) {
+    private JsonNode subscriptionSnapshot(String topic, Optional<String> parameter) {
         String requestId = UUID.randomUUID().toString();
         CompletableFuture<String> response = new CompletableFuture<>();
         WebSocket.Builder webSocketBuilder = http.newWebSocketBuilder().connectTimeout(Duration.ofSeconds(5));
@@ -339,7 +344,7 @@ final class ApiClient {
             request.put("type", "SubscriptionRequest");
             request.put("requestId", requestId);
             request.put("topic", topic);
-            request.putNull("parameter");
+            parameter.ifPresentOrElse(value -> request.put("parameter", value), () -> request.putNull("parameter"));
             webSocket.sendText(request.toString(), true).join();
             JsonNode subscriptionResponse = JSON.readTree(response.orTimeout(10, TimeUnit.SECONDS).join());
             JsonNode errorMessage = subscriptionResponse.path("errorMessage");
