@@ -90,13 +90,8 @@ class Step2NewNodeProcessesOldRequestsTest {
     private static final long BEFORE_CUTOFF = SIGNATURE_V1_CUTOFF_DATE.getTime() - 1;
     private static final long AT_CUTOFF = SIGNATURE_V1_CUTOFF_DATE.getTime();
 
-    // The order in which the node of v2.1.13 created and processed the requests in step 1
-    private static final List<String> OLD_REQUESTS = List.of(
-            "addUserProfile",
-            "addChat1", "addChat2", "addChat3", "removeChat2",
-            "addRole1", "addRole2", "addRole3", "addTimestamp",
-            "addMailbox1", "addMailbox2", "addMailbox3", "removeMailbox2",
-            "refreshUserProfile", "refreshedAddUserProfile");
+    // The requests of step 1, in the order in which the node of v2.1.13 created and processed them
+    private static List<String> oldRequests;
     // A node of v2.1.13 signs only the hash of the data in a refresh request, and its refreshed add request keeps the
     // signature of the previous add request (storage-refresh-requests.md, compatibility)
     private static final Set<String> OLD_REFRESH_REQUESTS = Set.of("refreshUserProfile", "refreshedAddUserProfile");
@@ -110,13 +105,15 @@ class Step2NewNodeProcessesOldRequestsTest {
         DevMode.setDevMode(true);
         ResolverConfig.config();
         old = CompatSupport.read(OLD_REQUESTS_FILE);
-        assertEquals(Set.copyOf(OLD_REQUESTS), Set.copyOf(CompatSupport.namesWithPrefix(old, "request.")),
-                "Step 1 must create the requests which this step expects");
+        oldRequests = List.of(old.getProperty("order").split(","));
+        assertEquals(Set.copyOf(oldRequests), Set.copyOf(CompatSupport.namesWithPrefix(old, "request.")),
+                "The order of step 1 must name each of its requests");
+        assertTrue(oldRequests.containsAll(OLD_REFRESH_REQUESTS), oldRequests.toString());
     }
 
     @Test
     void proofOfWorkPayloadAndCostOfTheOldRequestsAreUnchanged() throws Exception {
-        for (String name : OLD_REQUESTS) {
+        for (String name : oldRequests) {
             EnvelopePayloadMessage message = oldRequest(name);
             assertEquals(old.getProperty("pow." + name), proofOfWorkPayloadHash(message),
                     name + ": the proof of work payload differs, so the proof of work of v2.1.13 would fail");
@@ -131,7 +128,7 @@ class Step2NewNodeProcessesOldRequestsTest {
         DataService node = newNode("step2-fresh-node-before-cutoff", BEFORE_CUTOFF, events);
         Map<String, Set<String>> results = processOldRequests(node.getStorageService());
 
-        for (String name : OLD_REQUESTS) {
+        for (String name : oldRequests) {
             if (!OLD_REFRESH_REQUESTS.contains(name)) {
                 assertTrue(results.get(name).contains("success"), name + ": " + results.get(name));
             }
@@ -142,21 +139,17 @@ class Step2NewNodeProcessesOldRequestsTest {
         // signature of the previous add request
         assertTrue(results.get("refreshedAddUserProfile").contains("signatureInvalid"), results.get("refreshedAddUserProfile").toString());
 
-        assertEquals(List.of(
-                        "AckMessage|addMailbox|1",
-                        "AckMessage|addMailbox|1",
-                        "AckMessage|removeMailbox|" + Integer.MAX_VALUE,
-                        "AuthorizedBondedRole|add|3",
-                        "AuthorizedTimestampData|add|1",
-                        "CommonPublicChatMessage|add|1",
-                        "CommonPublicChatMessage|add|1",
-                        "CommonPublicChatMessage|remove|2",
-                        "UserProfile|add|1"),
+        // The same entries as in the store of v2.1.13, except the user profile. The refresh of v2.1.13 does not apply,
+        // so the store keeps the first add request.
+        assertEquals(oldStoredEntries().stream()
+                        .map(entry -> entry.equals("UserProfile|add|2") ? "UserProfile|add|1" : entry)
+                        .sorted()
+                        .toList(),
                 describeStores(node.getStorageService()));
         // The oracle of v2.1.13 published its authorized data with its network identity, which is not the owner of the
         // data. Stores keep and relay such entries, but applications get only data which the owner published
         // (storage-ownership.md).
-        assertEquals(List.of("CommonPublicChatMessage", "CommonPublicChatMessage", "UserProfile"), applicationData(node));
+        assertEquals(oldApplicationDataWithoutAuthorizedData(), applicationData(node));
         assertFalse(events.stream().anyMatch(event -> event.startsWith("authorized")), events.toString());
         node.shutdown();
     }
@@ -166,7 +159,7 @@ class Step2NewNodeProcessesOldRequestsTest {
         DataService node = newNode("step2-fresh-node-at-cutoff", AT_CUTOFF, new ArrayList<>());
         Map<String, Set<String>> results = processOldRequests(node.getStorageService());
 
-        for (String name : OLD_REQUESTS) {
+        for (String name : oldRequests) {
             assertTrue(results.get(name).contains("signatureV2Missing"), name + ": " + results.get(name));
             assertFalse(results.get(name).contains("success"), name + ": " + results.get(name));
         }
@@ -180,9 +173,8 @@ class Step2NewNodeProcessesOldRequestsTest {
         DataService node = new DataService(persistenceService, () -> BEFORE_CUTOFF);
         assertTrue(persistenceService.readAllPersisted().join());
 
-        List<String> oldEntries = Arrays.asList(old.getProperty("storedEntries").split(";"));
-        assertEquals(oldEntries, describeStores(node.getStorageService()), "Entries of v2.1.13 were lost at load");
-        assertEquals(List.of("CommonPublicChatMessage", "CommonPublicChatMessage", "UserProfile"), applicationData(node));
+        assertEquals(oldStoredEntries(), describeStores(node.getStorageService()), "Entries of v2.1.13 were lost at load");
+        assertEquals(oldApplicationDataWithoutAuthorizedData(), applicationData(node));
         node.shutdown();
     }
 
@@ -290,12 +282,22 @@ class Step2NewNodeProcessesOldRequestsTest {
 
         // A node of this version relays the requests of v2.1.13 with its own serialization. Step 3 checks that nodes of
         // v2.1.13 accept these copies.
-        for (String name : OLD_REQUESTS) {
+        for (String name : oldRequests) {
             out.put("relayedByNewNode." + name, base64(oldRequest(name).serialize()));
         }
 
         node.shutdown();
         CompatSupport.write(NEW_REQUESTS_FILE, out, "Requests of an updated node (step 2 of the compatibility chain)");
+    }
+
+    private static List<String> oldStoredEntries() {
+        return List.of(old.getProperty("storedEntries").split(";"));
+    }
+
+    private static List<String> oldApplicationDataWithoutAuthorizedData() {
+        return Arrays.stream(old.getProperty("applicationData").split(","))
+                .filter(className -> !AUTHORIZED_TYPES.contains(className))
+                .toList();
     }
 
     private static void put(Map<String, String> out, String name, EnvelopePayloadMessage request) {
@@ -314,7 +316,7 @@ class Step2NewNodeProcessesOldRequestsTest {
 
     private static Map<String, Set<String>> processOldRequests(StorageService storageService) throws Exception {
         Map<String, Set<String>> results = new LinkedHashMap<>();
-        for (String name : OLD_REQUESTS) {
+        for (String name : oldRequests) {
             results.put(name, flags(CompatSupport.process(storageService, oldRequest(name))));
         }
         return results;

@@ -50,8 +50,12 @@ before it from the exchange directory, by default `build/compat/<tag>`.
 | 3 | baseline | Processes and relays them |
 | 4 | this checkout | Processes the relayed copies |
 
-Step 1 creates what an honest node of the baseline creates: a user profile, public chat messages and a removal,
-authorized data of an oracle node, mailbox messages and a removal, and a refresh request. It persists the stores.
+Step 1 creates what an honest node of the baseline creates, as its services and its REST API create it: a user profile
+and its refresh, public chat messages with a reply, a citation, a mention, an emoji, an edit and a removal, all six
+reactions and the removal of one, offers with market price, float price and fixed price, fixed and range amounts and a
+custom payment method, the removal of an offer and a reaction to an offer, authorized data of an oracle node, and
+mailbox messages with a removal. It persists the stores and records the order of the requests, so that the later steps
+can derive their expected results from it.
 
 Step 2 checks with the code of this checkout:
 
