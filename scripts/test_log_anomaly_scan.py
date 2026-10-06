@@ -174,6 +174,21 @@ class LogAnomalyScanTests(unittest.TestCase):
         self.assertEqual(0, exit_code)
         self.assertEqual({"error-line": 1}, report["nodes"][0]["sessions"][0]["allowed"])
 
+    def test_rejected_send_of_an_inventory_response_is_allowed(self):
+        directory = self.write_log("node", "bisq.log", [
+            start("2.1.13"),
+            line("ERROR", "Send executor rejected task java.util.concurrent.RejectedExecutionException: Task "
+                          "AsyncSupply rejected from java.util.concurrent.ThreadPoolExecutor[Terminated]",
+                 logger="b.n.p.n.Connection"),
+            "\tat bisq.network.p2p.node.Node.sendAsync(Node.java:359)",
+            "\tat bisq.network.p2p.services.data.inventory.InventoryService.processRequest(InventoryService.java:192)",
+        ])
+
+        exit_code, report = self.scan_json(directory)
+
+        self.assertEqual(0, exit_code)
+        self.assertEqual({"error-line": 1}, report["nodes"][0]["sessions"][0]["allowed"])
+
     def test_rejected_send_on_another_path_is_reported(self):
         directory = self.write_log("node", "bisq.log", [
             start("2.1.14"),
