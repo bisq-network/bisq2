@@ -129,6 +129,8 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
 - `UpgradeInPlaceTest`: a node of the baseline with an open trade and an open offer stops. Its peer sends a trade
   message to its mailbox. The version of this checkout starts on the same data directory with the same ports. The trade
   continues to the end, the offer stays, and the log scan covers the session of each version of the node.
+- `InventoryAcrossVersionsTest`: a node of each version joins later and knows only the seed node of the other version.
+  It gets the existing offers of both versions with an inventory request, and the offers which are published later.
 
 At the end, each test class stops its nodes and scans their logs with `scripts/log_anomaly_scan.py`. A finding of
 level warning or error fails the test class. The data directories and logs stay in `build/e2e/<tag>/<test class>`.
@@ -140,7 +142,7 @@ Limits of the first version:
   reputation of a seller.
 - Both versions limit the publications of an author to 3 per second and 30 per minute. The client keeps 2.1 seconds
   between its publications.
-- Four node JVMs need about 1.5 GB of memory.
+- A network has four to six node JVMs, which need 1.5 to 2.5 GB of memory.
 
 ## Layout
 
