@@ -22,6 +22,7 @@ the project instructions on backward compatibility).
 | `baseline.sh` | Builds a release tag and runs Gradle in it |
 | `run-chain.sh` | Runs the compatibility chain |
 | `old-updater-replay.sh` | Checks a release with the old updater |
+| `run-mixed-network.sh` | Runs nodes of both versions together |
 
 ### `baseline.sh`
 
@@ -109,6 +110,35 @@ Users of the last release update with its in-app updater. The script runs the ve
 `./gradlew verifyReleaseReadiness` checks the release with `gpg`. This script adds the check with the code of the old
 version, which reads the key files with its own version of Bouncy Castle.
 
+### `run-mixed-network.sh`
+
+`tools/compat/run-mixed-network.sh [<tag>] [<test filter>]` builds the distributions of `api-app` and `seed-node-app`
+of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Each test class starts its own network on
+127.0.0.1:
+
+- a seed node of each version and an api-app node of each version, which know both seed nodes;
+- a fake price node in the test JVM, which all nodes use instead of the real price nodes;
+- dev mode on all nodes, without authentication of the API.
+
+The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. They cover:
+
+- `OffersAcrossVersionsTest`: offers with market, float and fixed price, with fixed and range amounts, reach the other
+  version with the same terms. A removed offer disappears on the other version.
+- `TradeAcrossVersionsTest`: a trade runs to the end in all four combinations of maker version and direction. Both
+  sides must reach the final state and agree on the contract.
+
+At the end, each test class stops its nodes and scans their logs with `scripts/log_anomaly_scan.py`. A finding of
+level warning or error fails the test class. The data directories and logs stay in `build/e2e/<tag>/<test class>`.
+
+Limits of the first version:
+
+- No Tor and no mediator. The trades run without a mediator, which dev mode allows.
+- All nodes use `devModeReputationScore`, because the network has no oracle node. This hides the check of the
+  reputation of a seller.
+- Both versions limit the publications of an author to 3 per second and 30 per minute. The client keeps 2.1 seconds
+  between its publications.
+- Four node JVMs need about 1.5 GB of memory.
+
 ## Layout
 
 | Path | Content |
@@ -117,6 +147,7 @@ version, which reads the key files with its own version of Bouncy Castle.
 | `baselines/<tag>/application/...` | Steps 1 and 3 |
 | `baselines/<tag>/evolution/...` | Replay of the updater |
 | `application/src/test/java/bisq/application/compat/<package>` | Steps 2 and 4 |
+| `apps/e2e-tests/src/integrationTest/java/bisq/e2e` | Tests with nodes of both versions |
 
 The package of steps 2 and 4 is the tag with `_` instead of `.`, for example `v2_1_13`. The task
 `:application:compatTest` runs them. The task `test` excludes them, because they need the files of the steps before
