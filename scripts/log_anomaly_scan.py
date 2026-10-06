@@ -210,6 +210,11 @@ ALLOW_RULES: List[AllowRule] = [
                          r"java\.net\.SocketException: Connection reset.*"
                          r"(ConnectionHandshake\.start|Node\.startConnectionHandshake)", re.DOTALL),
               "The same closed connection during the handshake of an outbound connection, with its stack trace."),
+    AllowRule("error-line",
+              re.compile(r"Could not create objectOutputStream/objectInputStream for socket .*"
+                         r"java\.net\.SocketException: Socket is closed"),
+              "A connection closed before its streams existed, so it carried no message, for example in the race of "
+              "two connections between the same nodes. The node uses another connection."),
 ]
 
 
