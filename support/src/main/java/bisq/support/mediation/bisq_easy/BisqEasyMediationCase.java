@@ -21,14 +21,15 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufException;
-import lombok.EqualsAndHashCode;
+import bisq.contract.bisq_easy.BisqEasyContract;
 import lombok.Getter;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BisqEasyMediationCase implements PersistableProto {
-    @EqualsAndHashCode.Include
     @Getter
     private final BisqEasyMediationRequest bisqEasyMediationRequest;
     @Getter
@@ -36,19 +37,24 @@ public class BisqEasyMediationCase implements PersistableProto {
     private final Observable<Boolean> isClosed = new Observable<>();
     @Getter
     private Optional<Long> closeCaseDate;
+    // Request of the other trader for the same contract, kept so that both transcripts are on record. Set on the
+    // network thread and read on the UI thread.
+    private volatile Optional<BisqEasyMediationRequest> peersMediationRequest;
 
     public BisqEasyMediationCase(BisqEasyMediationRequest bisqEasyMediationRequest) {
-        this(bisqEasyMediationRequest, System.currentTimeMillis(), false, Optional.empty());
+        this(bisqEasyMediationRequest, System.currentTimeMillis(), false, Optional.empty(), Optional.empty());
     }
 
     private BisqEasyMediationCase(BisqEasyMediationRequest bisqEasyMediationRequest,
                                   long requestDate,
                                   boolean isClosed,
-                                  Optional<Long> closeCaseDate) {
+                                  Optional<Long> closeCaseDate,
+                                  Optional<BisqEasyMediationRequest> peersMediationRequest) {
         this.bisqEasyMediationRequest = bisqEasyMediationRequest;
         this.requestDate = requestDate;
         this.isClosed.set(isClosed);
         this.closeCaseDate = closeCaseDate;
+        this.peersMediationRequest = peersMediationRequest;
     }
 
     /**
@@ -62,6 +68,7 @@ public class BisqEasyMediationCase implements PersistableProto {
                 .setRequestDate(requestDate)
                 .setIsClosed(isClosed.get());
         closeCaseDate.ifPresent(builder::setCloseCaseDate);
+        peersMediationRequest.ifPresent(request -> builder.setPeersMediationRequest(request.toValueProto(serializeForHash)));
         return builder;
     }
 
@@ -77,10 +84,24 @@ public class BisqEasyMediationCase implements PersistableProto {
             return new BisqEasyMediationCase(BisqEasyMediationRequest.fromProto(proto.getMediationRequest()),
                     proto.getRequestDate(),
                     proto.getIsClosed(),
-                    proto.hasCloseCaseDate() ? Optional.of(proto.getCloseCaseDate()) : Optional.empty());
+                    proto.hasCloseCaseDate() ? Optional.of(proto.getCloseCaseDate()) : Optional.empty(),
+                    proto.hasPeersMediationRequest() ? Optional.of(BisqEasyMediationRequest.fromProto(proto.getPeersMediationRequest())) : Optional.empty());
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }
+    }
+
+    List<BisqEasyMediationRequest> getMediationRequests() {
+        return Stream.concat(Stream.of(bisqEasyMediationRequest), peersMediationRequest.stream()).toList();
+    }
+
+    boolean setPeersMediationRequest(BisqEasyMediationRequest request) {
+        boolean isFromPeer = !request.getRequester().getId().equals(bisqEasyMediationRequest.getRequester().getId());
+        if (!isFromPeer || peersMediationRequest.isPresent()) {
+            return false;
+        }
+        peersMediationRequest = Optional.of(request);
+        return true;
     }
 
     public boolean isClosed() {
@@ -89,6 +110,31 @@ public class BisqEasyMediationCase implements PersistableProto {
 
     public ReadOnlyObservable<Boolean> isClosedObservable() {
         return isClosed;
+    }
+
+    private String getTradeId() {
+        return bisqEasyMediationRequest.getTradeId();
+    }
+
+    private BisqEasyContract getContract() {
+        return bisqEasyMediationRequest.getContract();
+    }
+
+    // A case is identified by the trade and the contract, whichever trader requested it.
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof BisqEasyMediationCase other)) {
+            return false;
+        }
+        return getTradeId().equals(other.getTradeId()) && getContract().equals(other.getContract());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTradeId(), getContract());
     }
 
     public boolean setClosed(boolean closed) {

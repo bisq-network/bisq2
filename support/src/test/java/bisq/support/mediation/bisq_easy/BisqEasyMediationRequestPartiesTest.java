@@ -136,7 +136,7 @@ class BisqEasyMediationRequestPartiesTest {
         assertDoesNotThrow(() -> mediatorService.onMessage(request));
         assertTrue(mediatorService.getMediationCases().isEmpty());
         assertTrue(openTradeChannelService.getChannels().isEmpty());
-        assertTrue(BisqEasyMediatorService.verifyMediationRequest(request, bannedUserService).isEmpty());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(request, bannedUserService, List.of()).isEmpty());
     }
 
     @Test

@@ -25,6 +25,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.application.Service;
+import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
@@ -36,27 +37,37 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractMediator;
 import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractParties;
+import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.isMediatorAParty;
 
 /**
  * Service used by mediators
  */
 @Slf4j
 public class BisqEasyMediatorService extends RateLimitedPersistenceClient<MediatorStore> implements Service, ConfidentialMessageService.Listener {
+    @VisibleForTesting
+    static final int MAX_OPEN_CASES_PER_REQUESTER = 10;
+
     @Getter
     private final MediatorStore persistableStore = new MediatorStore();
     @Getter
@@ -66,6 +77,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
+    private final UnverifiedChatMessageKeysByTrade unverifiedChatMessageKeysByTrade;
 
     public BisqEasyMediatorService(PersistenceService persistenceService,
                                    NetworkService networkService,
@@ -78,6 +90,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         bannedUserService = userService.getBannedUserService();
         authorizedBondedRolesService = bondedRolesService.getAuthorizedBondedRolesService();
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
+        unverifiedChatMessageKeysByTrade = new UnverifiedChatMessageKeysByTrade(getMediationCases());
     }
 
     /* --------------------------------------------------------------------- */
@@ -150,8 +163,11 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     // Private
     /* --------------------------------------------------------------------- */
 
-    private void processMediationRequest(BisqEasyMediationRequest bisqEasyMediationRequest) {
-        Optional<UserProfile> optionalRequester = verifyMediationRequest(bisqEasyMediationRequest, bannedUserService);
+    private synchronized void processMediationRequest(BisqEasyMediationRequest bisqEasyMediationRequest) {
+        String tradeId = bisqEasyMediationRequest.getTradeId();
+        Optional<UserProfile> optionalRequester = verifyMediationRequest(bisqEasyMediationRequest,
+                bannedUserService,
+                getMediationCases());
         if (optionalRequester.isEmpty()) {
             return;
         }
@@ -159,9 +175,7 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         UserProfile requester = optionalRequester.orElseThrow();
         BisqEasyContract contract = bisqEasyMediationRequest.getContract();
         findMyMediatorUserIdentity(contract.getMediator()).ifPresent(myUserIdentity -> {
-            String tradeId = bisqEasyMediationRequest.getTradeId();
             UserProfile peer = bisqEasyMediationRequest.getPeer();
-            List<BisqEasyOpenTradeMessage> chatMessages = bisqEasyMediationRequest.getChatMessages();
             BisqEasyOpenTradeChannel channel = bisqEasyOpenTradeChannelService.mediatorFindOrCreatesChannel(
                     tradeId,
                     contract.getOffer(),
@@ -169,16 +183,44 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                     requester,
                     peer
             );
+            // The chat service keeps the channel of another identity of this node, which can trade in this trade
+            // (rule 3 of "Channel on the mediator's node" in chat-channel-binding.md). The case does not go into that
+            // channel.
+            if (!channel.getMyUserIdentity().getId().equals(myUserIdentity.getId())) {
+                log.warn("Ignoring BisqEasyMediationRequest for trade {} because another identity of this node holds " +
+                        "its channel.", tradeId);
+                return;
+            }
 
             bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
 
-            chatMessages.forEach(chatMessage ->
-                    bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
+            // The responses to the first request of a trade tell both traders that the mediator joined. A later request
+            // of the trade gets none: its responses would add the response messages to the channel again, and a
+            // trader's client could show the join message again (mediation-request-validation.md).
+            boolean isFirstRequestOfTrade = getRequestsForTrade(tradeId, getMediationCases()).isEmpty();
 
             // We apply the bisqEasyMediationCase after the channel is set up as clients will expect a channel.
+            // The other trader's request for the same contract is kept on the existing case.
             BisqEasyMediationCase bisqEasyMediationCase = new BisqEasyMediationCase(bisqEasyMediationRequest);
-            addNewMediationCase(bisqEasyMediationCase);
+            getMediationCases().stream()
+                    .filter(bisqEasyMediationCase::equals)
+                    .findAny()
+                    .ifPresentOrElse(existingCase -> retainRequest(existingCase, bisqEasyMediationRequest),
+                            () -> addNewMediationCase(bisqEasyMediationCase));
 
+            int numSkippedMessages = bisqEasyMediationRequest.getChatMessages().size() -
+                    getAcceptedChatMessages(bisqEasyMediationRequest).size();
+            if (numSkippedMessages > 0) {
+                log.warn("Skipping {} chat messages of BisqEasyMediationRequest for trade {} which do not belong to " +
+                        "the trade, its channel or its traders, or have a type a trader's channel does not hold.",
+                        numSkippedMessages, tradeId);
+            }
+            getMessagesToImport(bisqEasyMediationRequest, channel.getChatMessages())
+                    .forEach(chatMessage -> bisqEasyOpenTradeChannelService.addMessage(chatMessage, channel));
+
+            if (!isFirstRequestOfTrade) {
+                return;
+            }
             NetworkIdWithKeyPair networkIdWithKeyPair = myUserIdentity.getNetworkIdWithKeyPair();
 
             // Send to requester
@@ -195,8 +237,10 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
         });
     }
 
+    @VisibleForTesting
     static Optional<UserProfile> verifyMediationRequest(BisqEasyMediationRequest bisqEasyMediationRequest,
-                                                        BannedUserService bannedUserService) {
+                                                        BannedUserService bannedUserService,
+                                                        Collection<BisqEasyMediationCase> existingCases) {
         UserProfile requester = bisqEasyMediationRequest.getRequester();
         if (bannedUserService.isUserProfileBanned(requester)) {
             log.warn("Message ignored as sender is banned");
@@ -210,44 +254,172 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                     bisqEasyMediationRequest.getTradeId(), requester.getId(), peer.getId());
             return Optional.empty();
         }
-
         if (!hasMatchingContractMediator(contract.getMediator(), bisqEasyMediationRequest.getReceiver())) {
             log.warn("Ignoring BisqEasyMediationRequest for trade {} because mediator does not match contract mediator.",
                     bisqEasyMediationRequest.getTradeId());
             return Optional.empty();
         }
-        if (!hasValidChatMessages(bisqEasyMediationRequest, requester, peer)) {
+        if (isMediatorAParty(requester, peer, bisqEasyMediationRequest.getReceiver())) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because it names the mediator as a trader.",
+                    bisqEasyMediationRequest.getTradeId());
             return Optional.empty();
         }
-
+        if (!hasTradersOnRecord(bisqEasyMediationRequest, existingCases)) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because it names other traders than the cases of that trade.",
+                    bisqEasyMediationRequest.getTradeId());
+            return Optional.empty();
+        }
+        if (!isWithinCaseLimits(bisqEasyMediationRequest, existingCases)) {
+            return Optional.empty();
+        }
         return Optional.of(requester);
     }
 
-    private static boolean hasValidChatMessages(BisqEasyMediationRequest bisqEasyMediationRequest,
-                                                UserProfile requester,
-                                                UserProfile peer) {
+    // The traders of a trade are the ones of its first accepted request. The cases are the mediator's record of a
+    // trade. The channel is not, as leaving removes it and the mediator view creates it again.
+    private static boolean hasTradersOnRecord(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                              Collection<BisqEasyMediationCase> existingCases) {
+        Set<String> traderIds = getTraderIds(bisqEasyMediationRequest);
+        return getRequestsForTrade(bisqEasyMediationRequest.getTradeId(), existingCases).stream()
+                .allMatch(request -> getTraderIds(request).equals(traderIds));
+    }
+
+    // One request per requester and trade. The peer of a known trade may send its own request; it does not take a
+    // new open case slot.
+    @VisibleForTesting
+    static boolean isWithinCaseLimits(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                      Collection<BisqEasyMediationCase> existingCases) {
+        String tradeId = bisqEasyMediationRequest.getTradeId();
+        String requesterId = bisqEasyMediationRequest.getRequester().getId();
+        List<BisqEasyMediationRequest> requestsForTrade = getRequestsForTrade(tradeId, existingCases);
+        boolean alreadyRequested = requestsForTrade.stream()
+                .anyMatch(request -> request.getRequester().getId().equals(requesterId));
+        if (alreadyRequested) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because requester {} already requested mediation for it.",
+                    tradeId, requesterId);
+            return false;
+        }
+        // Open cases of other trades the requester is on record for, as requester or as the other trader.
+        long numOpenCases = existingCases.stream()
+                .filter(mediationCase -> !mediationCase.isClosed())
+                .filter(mediationCase -> !mediationCase.getBisqEasyMediationRequest().getTradeId().equals(tradeId))
+                .filter(mediationCase -> mediationCase.getMediationRequests().stream()
+                        .anyMatch(request -> request.getRequester().getId().equals(requesterId)))
+                .count();
+        if (numOpenCases >= MAX_OPEN_CASES_PER_REQUESTER) {
+            log.warn("Ignoring BisqEasyMediationRequest for trade {} because requester {} has {} open cases.",
+                    tradeId, requesterId, numOpenCases);
+            return false;
+        }
+        return true;
+    }
+
+    private static Set<String> getTraderIds(BisqEasyMediationRequest request) {
+        return Stream.of(request.getRequester().getId(), request.getPeer().getId())
+                .collect(Collectors.toSet());
+    }
+
+    static List<BisqEasyMediationRequest> getRequestsForTrade(String tradeId,
+                                                              Collection<BisqEasyMediationCase> existingCases) {
+        return existingCases.stream()
+                .filter(mediationCase -> mediationCase.getBisqEasyMediationRequest().getTradeId().equals(tradeId))
+                .flatMap(mediationCase -> mediationCase.getMediationRequests().stream())
+                .collect(Collectors.toList());
+    }
+
+    // A message is unverified when it reached the mediator only inside a request of somebody else than its
+    // author. Provenance is bound to the exact message content and author, not to the message ID, so a
+    // second message under the same ID cannot clear the mark. The mediator UI marks such messages.
+    // Each key is a hash over a message, so the result is kept per trade until the trade's retained requests change.
+    public Set<String> getUnverifiedChatMessageKeys(String tradeId) {
+        return unverifiedChatMessageKeysByTrade.get(tradeId);
+    }
+
+    @VisibleForTesting
+    static Set<String> getUnverifiedChatMessageKeys(String tradeId, Collection<BisqEasyMediationCase> existingCases) {
+        return getUnverifiedChatMessageKeys(getRequestsForTrade(tradeId, existingCases));
+    }
+
+    static Set<String> getUnverifiedChatMessageKeys(List<BisqEasyMediationRequest> requestsForTrade) {
+        Set<String> ownMessageKeys = requestsForTrade.stream()
+                .flatMap(request -> getAcceptedChatMessages(request).stream()
+                        .filter(message -> isOwnMessage(message, request)))
+                .map(BisqEasyMediatorService::getProvenanceKey)
+                .collect(Collectors.toSet());
+        return requestsForTrade.stream()
+                .flatMap(request -> getAcceptedChatMessages(request).stream()
+                        .filter(message -> !isOwnMessage(message, request)))
+                .map(BisqEasyMediatorService::getProvenanceKey)
+                .filter(key -> !ownMessageKeys.contains(key))
+                .collect(Collectors.toSet());
+    }
+
+    // Import by exact message, so a trader's own version of a message is kept next to a differing copy the other
+    // trader forwarded under the same ID. Reactions are not imported: nothing shows who added a reaction in a
+    // transcript, so it could be attributed to the other trader without a mark. The traders' live reactions are not
+    // sent to the mediator.
+    @VisibleForTesting
+    static List<BisqEasyOpenTradeMessage> getMessagesToImport(BisqEasyMediationRequest bisqEasyMediationRequest,
+                                                              Collection<BisqEasyOpenTradeMessage> channelMessages) {
+        Set<String> existingMessageKeys = channelMessages.stream()
+                .map(BisqEasyMediatorService::getProvenanceKey)
+                .collect(Collectors.toSet());
+        return getAcceptedChatMessages(bisqEasyMediationRequest).stream()
+                .map(BisqEasyMediatorService::withoutReactions)
+                .filter(chatMessage -> !existingMessageKeys.contains(getProvenanceKey(chatMessage)))
+                .toList();
+    }
+
+    // Hash of the message without reactions. Reactions get added later in the channel and must not change the key.
+    public static String getProvenanceKey(BisqEasyOpenTradeMessage message) {
+        return Hex.encode(DigestUtil.hash(withoutReactions(message).serializeForHash()));
+    }
+
+    private static BisqEasyOpenTradeMessage withoutReactions(BisqEasyOpenTradeMessage message) {
+        return new BisqEasyOpenTradeMessage(message.getTradeId(),
+                message.getId(),
+                message.getChannelId(),
+                message.getSenderUserProfile(),
+                message.getReceiverUserProfileId(),
+                message.getReceiverNetworkId(),
+                message.getText().orElse(null),
+                message.getCitation(),
+                message.getDate(),
+                message.isWasEdited(),
+                message.getMediator(),
+                message.getChatMessageType(),
+                message.getBisqEasyOffer(),
+                new HashSet<>());
+    }
+
+    private static boolean isOwnMessage(BisqEasyOpenTradeMessage message, BisqEasyMediationRequest request) {
+        return message.getSenderUserProfile().getId().equals(request.getRequester().getId());
+    }
+
+    // The forwarded messages the mediator imports: the ones of the trade and its channel, authored by one of the two
+    // traders and of a type a trader's channel holds. Chat rules warnings and expired messages indicators are local UI
+    // notices, their renderers show no provenance. Other messages are skipped, not the request, as the requester's
+    // channel can hold messages the requester did not choose: the peer chooses the IDs of its messages, and the
+    // channel holds the mediator's messages once the mediator joined.
+    @VisibleForTesting
+    static List<BisqEasyOpenTradeMessage> getAcceptedChatMessages(BisqEasyMediationRequest bisqEasyMediationRequest) {
         String tradeId = bisqEasyMediationRequest.getTradeId();
         String channelId = BisqEasyOpenTradeChannel.createId(tradeId);
+        Set<String> traderIds = getTraderIds(bisqEasyMediationRequest);
         return bisqEasyMediationRequest.getChatMessages().stream()
-                .allMatch(chatMessage -> {
-                    if (!chatMessage.getTradeId().equals(tradeId)) {
-                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has trade ID {}.",
-                                tradeId, chatMessage.getId(), chatMessage.getTradeId());
-                        return false;
-                    }
-                    if (!chatMessage.getChannelId().equals(channelId)) {
-                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has channel ID {}.",
-                                tradeId, chatMessage.getId(), chatMessage.getChannelId());
-                        return false;
-                    }
-                    String senderUserProfileId = chatMessage.getSenderUserProfile().getId();
-                    if (!senderUserProfileId.equals(requester.getId()) && !senderUserProfileId.equals(peer.getId())) {
-                        log.warn("Ignoring BisqEasyMediationRequest for trade {} because embedded chat message {} has unexpected sender {}.",
-                                tradeId, chatMessage.getId(), senderUserProfileId);
-                        return false;
-                    }
-                    return true;
-                });
+                .filter(chatMessage -> chatMessage.hasSupportedChatMessageType() &&
+                        chatMessage.getTradeId().equals(tradeId) &&
+                        chatMessage.getChannelId().equals(channelId) &&
+                        traderIds.contains(chatMessage.getSenderUserProfile().getId()))
+                .toList();
+    }
+
+    // Every accepted request is retained before its messages get imported, so that the provenance of each
+    // message in the channel is on record. A known case is reached only by the other trader's first request.
+    private void retainRequest(BisqEasyMediationCase existingCase, BisqEasyMediationRequest request) {
+        if (existingCase.setPeersMediationRequest(request)) {
+            persist();
+        }
     }
 
     private void addNewMediationCase(BisqEasyMediationCase bisqEasyMediationCase) {
