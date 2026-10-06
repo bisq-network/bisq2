@@ -38,8 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * User data of a node of the released version survives its upgrade in place to this checkout: open trades in two
- * states, a closed trade, settings, the list of ignored users, and user-defined payment accounts with the selected one
- * (upgrade-payment-accounts-from-api). This version skips stored entries which fail a new check, without telling the
+ * states, a closed trade, settings, the list of ignored users, user-defined payment accounts with the selected one
+ * (upgrade-payment-accounts-from-api), and a trade chat message of the maximum length (upgrade-api-created-data of the
+ * release test plan). This version skips stored entries which fail a new check, without telling the
  * user, so a lost entry shows only here. After the upgrade, the open trades continue to the end. This is the part of
  * trade-upgrade-open-trades of the release test plan which the API of v2.1.13 can create. Its API creates only
  * user-defined accounts, the accounts of Bisq Connect users.
@@ -62,6 +63,8 @@ class UpgradeKeepsUserDataTest {
 
     // An account whose data has the maximum length of both versions, with line breaks and characters outside ASCII
     private static final int MAX_ACCOUNT_DATA_LENGTH = 1000;
+    // ChatMessage.MAX_TEXT_LENGTH of both versions, with a line break and characters outside ASCII
+    private static final String LONG_CHAT_MESSAGE = longChatMessage();
     private static final String LONG_ACCOUNT_NAME = "e2e account for long data";
     private static final String LONG_ACCOUNT_DATA = longAccountData();
     private static final String SHORT_ACCOUNT_NAME = "e2e Konto Z\u00fcrich \u20ac";
@@ -99,6 +102,10 @@ class UpgradeKeepsUserDataTest {
         Trades.awaitTradeState(peer, tradeAfterTake, "the peer has the trade", state -> true);
         Trades.awaitTradeState(upgradedNode, tradeAfterTake, "the old node gets the response of the maker",
                 state -> state.startsWith("TAKER_RECEIVED_TAKE_OFFER_RESPONSE"));
+        // A message of the maximum length of both versions in the chat of this trade
+        String channelId = TradeChats.channelId(upgradedNode, tradeAfterTake);
+        upgradedNode.sendTradeChatMessage(channelId, LONG_CHAT_MESSAGE, null);
+        TradeChats.awaitMessage(peer, channelId, LONG_CHAT_MESSAGE, "the peer gets the long message");
 
         // An open trade in which the old node is the seller maker, and the buyer confirmed the fiat payment
         String offerOfOld = Trades.createOffer(upgradedNode, "SELL");
@@ -164,6 +171,8 @@ class UpgradeKeepsUserDataTest {
         assertEquals(new HashSet<>(ignoredBefore), new HashSet<>(upgradedNode.ignoredUserProfileIds()),
                 "ignored users");
         assertEquals(accountsBefore, upgradedNode.userDefinedAccounts(), "user-defined payment accounts");
+        assertEquals(1, TradeChats.count(upgradedNode, channelId, LONG_CHAT_MESSAGE),
+                "The upgraded node must keep the message of the maximum length");
         assertEquals(Optional.of(SHORT_ACCOUNT_NAME), upgradedNode.selectedUserDefinedAccountName(),
                 "selected payment account");
 
@@ -171,6 +180,11 @@ class UpgradeKeepsUserDataTest {
         Trades.completeAfterTake(peer, upgradedNode, "SELL", tradeAfterTake, baseAmount, Trades.QUOTE_AMOUNT,
                 Trades.BTC_ADDRESS);
         Trades.completeAfterFiatSent(peer, upgradedNode, tradeAfterFiatSent, baseAmount, Trades.QUOTE_AMOUNT);
+    }
+
+    private static String longChatMessage() {
+        String start = "A long message of the old node \uD83D\uDE42\nZ\u00fcrich: ";
+        return start + "z".repeat(10_000 - start.length());
     }
 
     private static String longAccountData() {
