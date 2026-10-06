@@ -158,6 +158,9 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         networkService.confidentialSend(bisqEasyMediationRequest,
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
+        // From its request on, the requester's messages go to the mediator as well, whether or not a response of the
+        // mediator arrives (mediation-request-validation.md)
+        bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
     }
 
     // A request is refused while the channel does not match the contract: the chat routes messages to the channel's

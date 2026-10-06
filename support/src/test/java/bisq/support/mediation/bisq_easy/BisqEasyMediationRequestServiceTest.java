@@ -28,6 +28,7 @@ import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.market.MarketRepository;
 import bisq.common.network.Address;
@@ -68,6 +69,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -82,6 +84,7 @@ import static org.mockito.Mockito.when;
  */
 class BisqEasyMediationRequestServiceTest {
     private NetworkService networkService;
+    private BisqEasyOpenTradeChannelService openTradeChannelService;
     private BisqEasyMediationRequestService service;
     private UserIdentity makerIdentity;
     private UserProfile taker;
@@ -94,8 +97,11 @@ class BisqEasyMediationRequestServiceTest {
         networkService = mock(NetworkService.class);
         UserService userService = mock(UserService.class);
         when(userService.getBannedUserService()).thenReturn(mock(BannedUserService.class));
+        openTradeChannelService = mock(BisqEasyOpenTradeChannelService.class);
+        ChatService chatService = mock(ChatService.class);
+        when(chatService.getBisqEasyOpenTradeChannelService()).thenReturn(openTradeChannelService);
         service = new BisqEasyMediationRequestService(networkService,
-                mock(ChatService.class),
+                chatService,
                 userService,
                 mock(BondedRolesService.class));
 
@@ -158,6 +164,26 @@ class BisqEasyMediationRequestServiceTest {
         ArgumentCaptor<BisqEasyMediationRequest> request = ArgumentCaptor.forClass(BisqEasyMediationRequest.class);
         verify(networkService).confidentialSend(request.capture(), eq(mediator.getNetworkId()), any());
         assertEquals(List.of(messageOfTrade), request.getValue().getChatMessages());
+    }
+
+    // The API sends the request through the service as the desktop does. The requester's messages go to the mediator
+    // from the request on.
+    @Test
+    void requestPutsTheChannelInMediation() {
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(mediator));
+
+        service.requestMediation(channel, contract);
+
+        verify(openTradeChannelService).setIsInMediation(channel, true);
+    }
+
+    @Test
+    void refusedRequestDoesNotPutTheChannelInMediation() {
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
+
+        verify(openTradeChannelService, never()).setIsInMediation(any(), anyBoolean());
     }
 
     @Test

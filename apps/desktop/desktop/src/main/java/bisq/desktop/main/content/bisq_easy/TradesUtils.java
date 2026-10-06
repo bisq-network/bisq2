@@ -151,8 +151,6 @@ public class TradesUtils {
                         String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendTradeLogMessage(encoded, channel);
                         bisqEasyMediationRequestService.requestMediation(channel, contract);
-                        channel.setIsInMediation(true);
-                        channelService.persist();
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                 .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
                                 .show();

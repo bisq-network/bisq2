@@ -4,6 +4,10 @@
 
 A Bisq Easy mediation request is signed by the trader who sends it. It carries the trade contract, both traders' profiles and the requester's copy of the trade chat. The contract carries no signatures of the two traders and the chat messages carry no signatures of their authors, so the request proves who sent it and nothing about the contract or the forwarded messages. The mediator UI and the mediator service treat them accordingly.
 
+## Requester
+
+A trader's node puts its trade channel in mediation when it sends a request, so that its messages go to the mediator as well, whether or not a response of the mediator arrives. The desktop and the API send the request through the same service.
+
 ## Accepted requests
 
 The mediator accepts a request only when:
