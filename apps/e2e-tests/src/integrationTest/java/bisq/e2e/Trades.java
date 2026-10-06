@@ -98,14 +98,28 @@ final class Trades {
 
         long baseAmount = baseAmount(priceServer);
         String tradeId = taker.takeOffer(offerId, baseAmount, QUOTE_AMOUNT, "MAIN_CHAIN", "ZELLE");
+        completeAfterTake(maker, taker, makerDirection, tradeId, baseAmount, QUOTE_AMOUNT, BTC_ADDRESS);
+    }
 
+    /**
+     * The steps from the take to the closure: both sides get the trade, the seller sends its account data, the buyer its
+     * Bitcoin address or Lightning invoice, and the buyer confirms the fiat payment. Then {@link #completeAfterFiatSent}
+     * follows.
+     */
+    static void completeAfterTake(ApiClient maker,
+                                  ApiClient taker,
+                                  String makerDirection,
+                                  String tradeId,
+                                  long baseAmount,
+                                  long quoteAmount,
+                                  String bitcoinPaymentData) throws Exception {
         ApiClient seller = makerDirection.equals("SELL") ? maker : taker;
         ApiClient buyer = seller == maker ? taker : maker;
         awaitTradeState(maker, tradeId, "the maker has the trade", state -> true);
         awaitTradeState(taker, tradeId, "the taker has the trade", state -> true);
 
         seller.tradeEvent(tradeId, "SELLER_SENDS_PAYMENT_ACCOUNT", "e2e payment account of the seller");
-        buyer.tradeEvent(tradeId, "BUYER_SEND_BITCOIN_PAYMENT_DATA", BTC_ADDRESS);
+        buyer.tradeEvent(tradeId, "BUYER_SEND_BITCOIN_PAYMENT_DATA", bitcoinPaymentData);
         awaitTradeState(buyer, tradeId, "the buyer receives the account data",
                 state -> state.contains("BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA"));
         awaitTradeState(seller, tradeId, "the seller receives the Bitcoin address",
@@ -115,11 +129,12 @@ final class Trades {
         awaitTradeState(seller, tradeId, "the seller learns that the fiat was sent",
                 state -> state.equals("SELLER_RECEIVED_FIAT_SENT_CONFIRMATION"));
 
-        completeAfterFiatSent(buyer, seller, tradeId, baseAmount);
+        completeAfterFiatSent(buyer, seller, tradeId, baseAmount, quoteAmount);
     }
 
     // The steps from the confirmation of the fiat receipt to the closure, and the comparison of the contract
-    static void completeAfterFiatSent(ApiClient buyer, ApiClient seller, String tradeId, long baseAmount) throws Exception {
+    static void completeAfterFiatSent(ApiClient buyer, ApiClient seller, String tradeId, long baseAmount, long quoteAmount)
+            throws Exception {
         seller.tradeEvent(tradeId, "SELLER_CONFIRM_FIAT_RECEIPT", null);
         awaitTradeState(buyer, tradeId, "the buyer learns that the fiat was received",
                 state -> state.equals("BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION"));
@@ -147,7 +162,7 @@ final class Trades {
             assertEquals(contractOfBuyer.path(field), contractOfSeller.path(field), "contract field " + field + " differs");
         }
         assertEquals(baseAmount, contractOfBuyer.path("baseSideAmount").asLong(), "Bitcoin amount of the contract");
-        assertEquals(QUOTE_AMOUNT, contractOfBuyer.path("quoteSideAmount").asLong(), "fiat amount of the contract");
+        assertEquals(quoteAmount, contractOfBuyer.path("quoteSideAmount").asLong(), "fiat amount of the contract");
 
         buyer.tradeEvent(tradeId, "CLOSE_TRADE", null);
         seller.tradeEvent(tradeId, "CLOSE_TRADE", null);
