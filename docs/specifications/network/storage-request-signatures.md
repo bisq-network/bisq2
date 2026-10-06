@@ -200,8 +200,8 @@ release. Nodes which stay on this version keep the date. So the following must h
 - Security managers, moderators and release managers have published their data again with this version. This is the
   data with a time to live of 100 days which no migration publishes again: alerts, banned user profiles, release
   notifications, the difficulty adjustment and the minimum reputation score.
-- Most users run this version. A node of an earlier version cannot publish data to nodes of this version from the
-  cutoff date on (see [Compatibility](#compatibility)).
+- Most users run this version. Nodes of earlier versions are not supported from the cutoff date on. They cannot publish
+  data to nodes of this version, and their messages through the mailbox are lost (see [Compatibility](#compatibility)).
 
 ### After the cutoff date
 
