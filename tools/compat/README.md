@@ -135,7 +135,8 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
 - `TradeChatAcrossVersionsTest`: the chat of a trade between the versions. Text with a line break and an emoji, replies
   with a citation, and reactions, one of which is removed again. Each message arrives exactly once on both nodes.
 - `OfflineMakerAcrossVersionsTest`: a taker takes the offer of a maker which is offline, in both directions. The take
-  offer request goes to the mailbox of the maker, which gets it when it starts again. The trade continues to the end.
+  offer request goes to the mailbox of the maker, which gets it when it starts again. After one more restart the maker
+  does not get the request again, because it removed the mailbox entry in the network. The trade continues to the end.
 - `TradePricesAcrossVersionsTest`: trades with a float price and a range over Lightning, with a fixed price with
   decimals and a range, where the taker enters the Bitcoin amount, and with a fixed price and a fixed amount. Makers of
   both versions take part. For a fixed price, the maker of this checkout allows only the rounding difference.
