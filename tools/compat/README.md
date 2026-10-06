@@ -181,6 +181,11 @@ which uses the code of Bisq. The tests cover:
   With both mediators, makers and takers of both versions select the same mediator for each take. After the oracle
   removes one role, a trader of this checkout requests mediation with a long chat, and the mediator of the baseline
   answers. Closing and opening a case again need the screens of the mediator and stay manual.
+- `DifficultyAdjustmentAcrossVersionsTest`: the security manager publishes a difficulty adjustment of 100, as during a
+  spam attack. Nodes which ran before the adjustment and nodes which start after it trade between the versions in both
+  directions, also through the mailbox of an offline maker, and again after the removal of the adjustment. A
+  difference of the message cost between the versions would make a receiver reject messages. The test does not observe
+  the difficulty of a single proof of work, because no API or log line shows it.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
