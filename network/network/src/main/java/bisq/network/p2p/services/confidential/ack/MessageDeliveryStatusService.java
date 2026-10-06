@@ -61,7 +61,7 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
     // The set only prevents a second AckMessage for a message which arrives twice, for example over two transports.
     // A second AckMessage is harmless, so the set keeps only the most recent entries. 10 000 entries cover far more
-    // messages than a node receives between two copies of one message, and need about 3 MB at most.
+    // messages than a node receives between two copies of one message, and need about 4 MB at most.
     @VisibleForTesting
     static final int MAX_ACKED_MESSAGES = 10_000;
 
@@ -79,7 +79,9 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
 
     // Each of our identities acknowledges a message on its own, as a separate node would do. Otherwise a peer could
     // learn from the number of AckMessages whether two user profiles belong to the same node.
-    private record AckedMessage(String receiverKeyId, String messageId) {
+    // Two senders can send different messages with the same message ID, and each of them waits for its own
+    // AckMessage. For example, both traders of a trade send a mediation request with the ID of the trade.
+    private record AckedMessage(String receiverKeyId, String senderId, String messageId) {
     }
 
     public MessageDeliveryStatusService(PersistenceService persistenceService,
@@ -233,7 +235,7 @@ public class MessageDeliveryStatusService extends RateLimitedPersistenceClient<M
         }
 
         String messageId = message.getAckRequestingMessageId();
-        if (!addAckedMessage(new AckedMessage(receiverKeyId, messageId))) {
+        if (!addAckedMessage(new AckedMessage(receiverKeyId, message.getSender().getId(), messageId))) {
             log.debug("We have already sent the AckMessage for that {}", message.getClass().getSimpleName());
             return;
         }
