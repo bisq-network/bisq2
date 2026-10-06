@@ -187,7 +187,10 @@ which uses the code of Bisq. The tests cover:
   baseline requests mediation, and the mediator of this checkout answers both traders and gets the chat of the trade.
   With both mediators, makers and takers of both versions select the same mediator for each take. After the oracle
   removes one role, a trader of this checkout requests mediation with a long chat, and the mediator of the baseline
-  answers. Closing and opening a case again need the screens of the mediator and stay manual.
+  answers. The mediator of the baseline is then upgraded in place with this open case: it keeps the chat, gets the
+  messages of both traders, and mediates a new case. The security manager bans one mediator: makers and takers of both
+  versions select the other one, also nodes which start after the ban, and both again after its removal. Closing and
+  opening a case again need the screens of the mediator and stay manual.
 - `DifficultyAdjustmentAcrossVersionsTest`: the security manager publishes a difficulty adjustment of 100, as during a
   spam attack. Nodes which ran before the adjustment and nodes which start after it trade between the versions in both
   directions, also through the mailbox of an offline maker, and again after the removal of the adjustment. A
