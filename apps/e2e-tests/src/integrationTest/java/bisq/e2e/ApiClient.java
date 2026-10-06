@@ -103,6 +103,10 @@ final class ApiClient {
         patch("/settings", JSON.createObjectNode().put("isTacAccepted", true));
     }
 
+    JsonNode settings() {
+        return get("/settings");
+    }
+
     // The API of v2.1.13 applies only one field of a settings change request, so each change is a request of its own
     void changeSetting(String field, JsonNode value) {
         ObjectNode request = JSON.createObjectNode();
@@ -122,6 +126,19 @@ final class ApiClient {
 
     void undoIgnoreUserProfile(String userProfileId) {
         delete("/user-profiles/ignore/" + userProfileId);
+    }
+
+    List<String> ignoredUserProfileIds() {
+        List<String> ids = new ArrayList<>();
+        get("/user-profiles/ignored").forEach(id -> ids.add(id.asText()));
+        return ids;
+    }
+
+    // The closed trades of the node, at most 100. Only this version has this route.
+    List<JsonNode> closedTrades() {
+        List<JsonNode> trades = new ArrayList<>();
+        get("/trades/closed?page=1&pageSize=100").path("items").forEach(trades::add);
+        return trades;
     }
 
     // The market in the format of a create offer request (MarketDto). The list of markets has more fields, which the

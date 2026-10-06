@@ -143,6 +143,8 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   maker of each version. A maker of this checkout rejects the take of a taker of the baseline whom it ignores, with
   "Could not find matching offer". This is the same rejection as for a second take of a closed offer, which the test
   cannot cause reliably through the API. The taker gets the reason.
+- `UpgradeKeepsUserDataTest`: a node of the baseline with two open trades in different states, a closed trade, changed
+  settings and an ignored user is upgraded in place. All of it stays, and the open trades continue to the end.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the

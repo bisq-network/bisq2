@@ -89,9 +89,9 @@ final class Trades {
     /**
      * Runs a trade from the offer to its closure: the maker publishes an offer with market price and a fixed amount, the
      * taker takes it, and both sides go through all steps until BTC_CONFIRMED. Then both sides must agree on the
-     * contract, and both close the trade.
+     * contract, and both close the trade. Returns the ID of the trade.
      */
-    static void runTrade(ApiClient maker, ApiClient taker, String makerDirection, FakePriceServer priceServer)
+    static String runTrade(ApiClient maker, ApiClient taker, String makerDirection, FakePriceServer priceServer)
             throws Exception {
         String offerId = createOffer(maker, makerDirection);
         OffersAcrossVersionsTest.awaitOffers(taker, List.of(offerId), "the taker sees the offer of the maker");
@@ -99,6 +99,7 @@ final class Trades {
         long baseAmount = baseAmount(priceServer);
         String tradeId = taker.takeOffer(offerId, baseAmount, QUOTE_AMOUNT, "MAIN_CHAIN", "ZELLE");
         completeAfterTake(maker, taker, makerDirection, tradeId, baseAmount, QUOTE_AMOUNT, BTC_ADDRESS);
+        return tradeId;
     }
 
     /**
