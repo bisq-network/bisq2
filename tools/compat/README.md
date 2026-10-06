@@ -133,6 +133,8 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   It gets the existing offers of both versions with an inventory request, and the offers which are published later.
 - `TradeChatAcrossVersionsTest`: the chat of a trade between the versions. Text with a line break and an emoji, replies
   with a citation, and reactions, one of which is removed again. Each message arrives exactly once on both nodes.
+- `OfflineMakerAcrossVersionsTest`: a taker takes the offer of a maker which is offline, in both directions. The take
+  offer request goes to the mailbox of the maker, which gets it when it starts again. The trade continues to the end.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the

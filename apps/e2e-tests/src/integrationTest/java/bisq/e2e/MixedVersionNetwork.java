@@ -146,7 +146,17 @@ final class MixedVersionNetwork implements AutoCloseable {
 
     /** Stops and starts the node of this checkout on its data directory, as a user who restarts the app. */
     void restartNewNode() throws Exception {
+        stopNewNode();
+        startNewNode();
+    }
+
+    /** Stops the node of this checkout, as a user who quits the app. */
+    void stopNewNode() throws InterruptedException {
         newNode.stop();
+    }
+
+    /** Starts the stopped node of this checkout again on its data directory. */
+    void startNewNode() throws Exception {
         newNode.start();
         newNode.awaitReady(START_TIMEOUT);
     }
@@ -154,6 +164,12 @@ final class MixedVersionNetwork implements AutoCloseable {
     /** Stops the node of the old version, as a user who quits the app before an update does. */
     void stopOldNode() throws InterruptedException {
         oldNode.stop();
+    }
+
+    /** Starts the stopped node of the old version again on its data directory, with the old version. */
+    void startOldNode() throws Exception {
+        oldNode.start();
+        oldNode.awaitReady(START_TIMEOUT);
     }
 
     /**
