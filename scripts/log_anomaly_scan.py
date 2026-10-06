@@ -177,6 +177,9 @@ INVENTORY_REPEATS_DESCRIPTION = ("Inventory responses reached the size limit man
 # and harmless. Lines which have a harmless cause and also a harmful one stay findings and explain the known cause in
 # their description.
 ALLOW_RULES: List[AllowRule] = [
+    AllowRule("error-line", re.compile(r"LinuxNotificationService: Copying notificationIcon from resources failed"),
+              "The api-app has no notification icon in its resources (v2.1.13 and v2.1.14 on Linux). It affects only "
+              "the icon of a desktop notification."),
     AllowRule("feature-list-unresolved", re.compile(r"resolved feature list"),
               "Nodes of version 2.1.13 and older do not know the feature INVENTORY_HASH_SET_V2 of newer peers.",
               only_before_version=(2, 1, 14)),
