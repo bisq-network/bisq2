@@ -175,7 +175,8 @@ which uses the code of Bisq. The tests cover:
   chats in it. The node is upgraded in place. The old session of the client gets HTTP 401. The client gets a new
   session with the credentials of its pairing and continues the chat and the trade without pairing again. The upgraded
   node promotes the permissions of the client once. It refuses a session for an empty client secret. With a session
-  time to live of one minute, an expired session gets HTTP 401, and the client gets a new one.
+  time to live of one minute, an expired session gets HTTP 401, and the client gets a new one. A second client pairs
+  with a node of this checkout, which promotes nothing, and trades with the baseline as maker and as taker.
 - `AlertAcrossVersionsTest`: a security manager publishes an emergency alert for the desktop app which requires
   version 2.1.14 for trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A maker of the
   baseline gets the take offer request of a taker of this checkout, but it does not create the trade and does not
