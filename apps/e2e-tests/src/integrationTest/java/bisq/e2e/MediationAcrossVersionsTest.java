@@ -51,6 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *     <li>The security manager bans the role of one mediator. Makers and takers of both versions then select the
  *     other mediator, also nodes which start after the ban. After the removal of the ban, they select both mediators
  *     again.</li>
+ *     <li>The trader of the released version in the open case upgrades in place (the trade in mediation of
+ *     trade-upgrade-open-trades of the release test plan). Its trade and the chat of the case stay, and its messages
+ *     still reach the mediator and the other trader.</li>
  * </ul>
  * Closing and opening a case again need the screens of the mediator, so they stay a manual test.
  */
@@ -201,6 +204,23 @@ class MediationAcrossVersionsTest {
         awaitLogLinesOnTraders(ALERT_REMOVED, removedBefore + 1, "removes the ban");
         Thread.sleep(ROLE_APPLIED.toMillis());
         assertEachMediatorIsSelected(network.oldApi, network.newApi);
+    }
+
+    @Test
+    @Order(4)
+    void traderOfTheOldVersionKeepsItsCaseAfterItsUpgrade() throws Exception {
+        // The old node is the peer in the open case of the first test. Its user upgrades it in place.
+        network.stopOldNode();
+        network.startOldNodeWithNewVersion();
+        ApiClient upgradedTrader = network.oldApi;
+        upgradedTrader.acceptTermsAndConditions();
+        for (String text : caseMessages) {
+            TradeChats.awaitMessage(upgradedTrader, caseChannelId, text, "the upgraded trader keeps the chat");
+        }
+        String afterUpgrade = "A message of the upgraded trader to the mediator";
+        upgradedTrader.sendTradeChatMessage(caseChannelId, afterUpgrade, null);
+        TradeChats.awaitMessage(mediatorOld, caseChannelId, afterUpgrade, "the mediator gets the upgraded trader");
+        TradeChats.awaitMessage(network.newApi, caseChannelId, afterUpgrade, "the other trader gets the message");
     }
 
     private List<Integer> seedPorts() {
