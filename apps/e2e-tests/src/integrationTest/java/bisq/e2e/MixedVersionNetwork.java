@@ -85,6 +85,8 @@ final class MixedVersionNetwork implements AutoCloseable {
                 priceServer.getUrl(), clockOffset);
         oldApi = oldNode.apiClient().orElseThrow();
         newApi = newNode.apiClient().orElseThrow();
+        expectClosedSnapshotConnections(oldNode.getName());
+        expectClosedSnapshotConnections(newNode.getName());
 
         try {
             for (NodeProcess node : List.of(oldSeed, newSeed)) {
@@ -186,6 +188,7 @@ final class MixedVersionNetwork implements AutoCloseable {
         NodeProcess node = new NodeProcess(name, NodeProcess.Kind.API, ofNewVersion ? newVersion : oldVersion,
                 ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl(),
                 clockOffset);
+        expectClosedSnapshotConnections(name);
         extraNodes.add(node);
         return node;
     }
@@ -259,11 +262,18 @@ final class MixedVersionNetwork implements AutoCloseable {
 
     /**
      * Declares a finding of the log scan which the test causes on purpose, for example the log lines of a take which
-     * the maker rejects. The scan then accepts the findings of this rule on this node if each of their lines contains
-     * the text. All other findings still fail the test class.
+     * the maker rejects. The scan then accepts a finding of this rule on this node if each of its lines contains the
+     * text of one of the declarations for this rule and node. All other findings still fail the test class.
      */
     void expectLogFinding(String nodeName, String ruleId, String text) {
         expectedLogFindings.add(new ExpectedLogFinding(nodeName, ruleId, text));
+    }
+
+    // The harness reads a topic of the WebSocket API with a connection of its own and closes the connection after the
+    // first answer. A node which sends an event of the topic at that moment logs an error. Both versions do this.
+    private void expectClosedSnapshotConnections(String nodeName) {
+        expectLogFinding(nodeName, "error-line",
+                "Sending webSocketEvent failed java.lang.RuntimeException: Socket is not connected");
     }
 
     /** The lines of the log of the node since its last start. */
@@ -349,10 +359,13 @@ final class MixedVersionNetwork implements AutoCloseable {
             for (JsonNode session : node.path("sessions")) {
                 for (JsonNode finding : session.path("findings")) {
                     String ruleId = finding.path("ruleId").asText();
+                    List<String> texts = expectedLogFindings.stream()
+                            .filter(expected -> expected.nodeName().equals(nodeName) &&
+                                    expected.ruleId().equals(ruleId))
+                            .map(ExpectedLogFinding::textPart)
+                            .toList();
                     boolean isExpected = finding.path("severity").asText().equals("notice") ||
-                            expectedLogFindings.stream().anyMatch(expected -> expected.nodeName().equals(nodeName) &&
-                                    expected.ruleId().equals(ruleId) &&
-                                    linesOf(finding).stream().allMatch(line -> line.contains(expected.textPart())));
+                            linesOf(finding).stream().allMatch(line -> texts.stream().anyMatch(line::contains));
                     if (!isExpected) {
                         unexpected.add(nodeName + ": " + ruleId);
                     }
