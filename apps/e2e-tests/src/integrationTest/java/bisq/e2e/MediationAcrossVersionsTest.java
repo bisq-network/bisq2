@@ -28,7 +28,6 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -65,8 +64,8 @@ class MediationAcrossVersionsTest {
     private static final int LEGACY_REGISTRATION = 1;
     private static final int PROPOSAL_KEY_REGISTRATION = 2;
     // Nodes in dev mode log each new entry of their stores of roles and alerts
-    private static final String ROLE_ADDED = "Method: add success; map entry: AuthorizedBondedRole";
-    private static final String ROLE_REMOVED = "Method: remove success; map entry: AuthorizedBondedRole";
+    private static final String ROLE_ADDED = Mediators.ROLE_ADDED;
+    private static final String ROLE_REMOVED = Mediators.ROLE_REMOVED;
     private static final String ALERT_ADDED = "Method: add success; map entry: AuthorizedAlertData";
     private static final String ALERT_REMOVED = "Method: remove success; map entry: AuthorizedAlertData";
     // A node logs the change of its store before it notifies the service of the roles
@@ -76,11 +75,6 @@ class MediationAcrossVersionsTest {
     // a requester of v2.1.13 shows the text for the peer.
     private static final String ANSWER_TO_REQUESTER = "authorizedRole.mediator.message.toRequester";
     private static final String ANSWER_TO_PEER = "authorizedRole.mediator.message.toNonRequester";
-    // Each take selects one of two mediators by the hash of the IDs. The chance that 12 takes miss one is below 0.1 %.
-    private static final int MAX_TAKES_FOR_BOTH_MEDIATORS = 12;
-    // A node which ignored the ban would select the banned mediator in half of the takes. 4 takes show it with a chance
-    // of 94 %.
-    private static final int TAKES_WITH_BAN = 4;
 
     private MixedVersionNetwork network;
     private ApiClient mediatorOld;
@@ -213,31 +207,13 @@ class MediationAcrossVersionsTest {
         return List.of(network.oldSeed.getP2pPort(), network.newSeed.getP2pPort());
     }
 
-    // Takes in all directions between the two nodes, until each of the two mediators was selected once
     private void assertEachMediatorIsSelected(ApiClient oneNode, ApiClient otherNode) throws Exception {
-        Set<String> selectedMediators = new HashSet<>();
-        for (int take = 0; take < MAX_TAKES_FOR_BOTH_MEDIATORS && selectedMediators.size() < 2; take++) {
-            String tradeId = takeInDirection(take, oneNode, otherNode);
-            selectedMediators.add(mediatorOf(take % 2 == 0 ? oneNode : otherNode, tradeId));
-        }
-        assertEquals(Set.of(mediatorOldId, mediatorNewId), selectedMediators,
-                "The takes must select each mediator at least once");
+        Mediators.assertEachMediatorIsSelected(network, Set.of(mediatorOldId, mediatorNewId), oneNode, otherNode);
     }
 
     private void assertOnlyMediatorIsSelected(String mediatorId, ApiClient oneNode, ApiClient otherNode)
             throws Exception {
-        for (int take = 0; take < TAKES_WITH_BAN; take++) {
-            String tradeId = takeInDirection(take, oneNode, otherNode);
-            assertEquals(mediatorId, mediatorOf(take % 2 == 0 ? oneNode : otherNode, tradeId),
-                    "The take must select the mediator which is not banned");
-        }
-    }
-
-    // The makers alternate between the nodes, and the directions alternate after two takes
-    private String takeInDirection(int take, ApiClient oneNode, ApiClient otherNode) throws Exception {
-        ApiClient maker = take % 2 == 0 ? oneNode : otherNode;
-        ApiClient taker = take % 2 == 0 ? otherNode : oneNode;
-        return takeAndCompareMediators(maker, taker, (take / 2) % 2 == 0 ? "SELL" : "BUY");
+        Mediators.assertOnlyMediatorIsSelected(network, mediatorId, oneNode, otherNode);
     }
 
     private void awaitLogLinesOnTraders(String text, long count, String description) throws InterruptedException {
@@ -257,25 +233,15 @@ class MediationAcrossVersionsTest {
 
     private void awaitLogLines(String nodeName, String text, long count, String description)
             throws InterruptedException {
-        MixedVersionNetwork.await(description, Trades.STEP_TIMEOUT,
-                () -> network.countLogLines(nodeName, text) >= count);
+        Mediators.awaitLogLines(network, nodeName, text, count, description);
     }
 
-    // The maker accepts the take only if it selected the same mediator as the taker
     private String takeAndCompareMediators(ApiClient maker, ApiClient taker, String direction) throws Exception {
-        String offerId = Trades.createOffer(maker, direction);
-        OffersAcrossVersionsTest.awaitOffers(taker, List.of(offerId), "the taker sees the offer");
-        String tradeId = taker.takeOffer(offerId, Trades.baseAmount(network.priceServer), Trades.QUOTE_AMOUNT,
-                "MAIN_CHAIN", "ZELLE");
-        Trades.awaitTradeState(taker, tradeId, "the maker accepts the take", state -> state.contains("RECEIVED"));
-        Trades.awaitTradeState(maker, tradeId, "the maker has the trade", state -> true);
-        assertEquals(mediatorOf(taker, tradeId), mediatorOf(maker, tradeId), "mediator of maker and taker");
-        return tradeId;
+        return Mediators.takeAndCompareMediators(network, maker, taker, direction);
     }
 
     private static String mediatorOf(ApiClient api, String tradeId) {
-        return Trades.findTrade(api, tradeId).orElseThrow()
-                .path("mediatorUserProfile").path("networkId").path("pubKey").path("id").asText();
+        return Mediators.mediatorOf(api, tradeId);
     }
 
     // The requester sends the messages, then requests mediation. The mediator answers both traders, gets the messages,
