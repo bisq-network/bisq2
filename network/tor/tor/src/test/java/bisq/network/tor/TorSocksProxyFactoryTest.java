@@ -20,6 +20,7 @@ package bisq.network.tor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -198,6 +199,18 @@ class TorSocksProxyFactoryTest {
         return data;
     }
 
+    // A client which closes its socket before it has read all bytes of the proxy, for example after an error reply,
+    // can reset the connection instead of ending the stream. On macOS the proxy then reads "Connection reset", on
+    // Linux it reads the end of the stream. Both mean that the client closed the connection. A read timeout is not a
+    // SocketException and still fails the request.
+    private static boolean awaitClientClose(DataInputStream in) throws IOException {
+        try {
+            return in.read() == -1;
+        } catch (SocketException e) {
+            return true;
+        }
+    }
+
     private static byte[] connectReply(byte reply, byte[] boundAddress) {
         byte[] bytes = new byte[3 + boundAddress.length + 2];
         bytes[0] = 5;
@@ -251,17 +264,20 @@ class TorSocksProxyFactoryTest {
                                 request.complete(new Request(username, host, port, false));
                                 return;
                             }
-                            out.write(answers.reply());
+                            // Writes the reply and the data after it at once. The client can close the connection
+                            // as soon as it has read the reply, and a later write would then fail.
+                            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                            bytes.write(answers.reply());
                             if (answers.reply()[0] == 5 && answers.reply()[1] == 0) {
-                                out.write("ok".getBytes(StandardCharsets.US_ASCII));
+                                bytes.write("ok".getBytes(StandardCharsets.US_ASCII));
                             }
+                            out.write(bytes.toByteArray());
                             out.flush();
                         }
                     }
                 }
                 // Waits until the client closes the connection, or until the read times out
-                boolean clientClosed = in.read() == -1;
-                request.complete(new Request(username, host, port, clientClosed));
+                request.complete(new Request(username, host, port, awaitClientClose(in)));
             } catch (IOException | AssertionError e) {
                 request.completeExceptionally(e);
             }
