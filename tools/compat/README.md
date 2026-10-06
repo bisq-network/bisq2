@@ -10,6 +10,7 @@ They find failures which a tester easily overlooks, because the screen shows no 
   release when it loads them.
 - The two versions compute another proof of work payload or another cost factor for the same request.
 - A node of the last release does not accept a request of this version, or the copy which it relays.
+- The updater of the last release does not accept the new release.
 
 The last release is called the baseline. It is the newest release tag (see `docs/dev/backward-compatibility.md` and
 the project instructions on backward compatibility).
@@ -20,6 +21,7 @@ the project instructions on backward compatibility).
 |---|---|
 | `baseline.sh` | Builds a release tag and runs Gradle in it |
 | `run-chain.sh` | Runs the compatibility chain |
+| `old-updater-replay.sh` | Checks a release with the old updater |
 
 ### `baseline.sh`
 
@@ -84,12 +86,32 @@ of `AuthorizedPubKeys`, because nodes of this version accept authorized data onl
 A run takes about 10 seconds when the builds of both versions are up to date. The first run exports and compiles the
 baseline, which takes a few minutes.
 
+### `old-updater-replay.sh`
+
+Users of the last release update with its in-app updater. The script runs the verification code of that updater
+(`DownloadItem`, `UpdaterService.download` and `DownloadedFilesVerification` of v2.1.13):
+
+- `tools/compat/old-updater-replay.sh keys [<key dir>]` checks that the old code reads the key files of this checkout,
+  for example after a key renewal.
+- `tools/compat/old-updater-replay.sh signature <file> [<key id>]` verifies a detached signature of a test file with
+  the key file of this checkout and with the key file which the old version has in its resources. The release manager
+  creates the signature with `gpg --local-user <key id> --detach-sign --armor <file>`.
+- `tools/compat/old-updater-replay.sh release <version> [<staging dir>] [<extensions>]` downloads each installer like
+  the old updater and verifies it. Without a staging directory it uses the GitHub release and
+  `https://bisq.network/pubkey/`. A staging directory contains the release assets, and the web page keys in the
+  subdirectory `pubkey`. A local HTTP server serves it, so the release can be checked before the upload.
+  Extensions default to `.dmg,.exe,.deb,.rpm`.
+
+`./gradlew verifyReleaseReadiness` checks the release with `gpg`. This script adds the check with the code of the old
+version, which reads the key files with its own version of Bouncy Castle.
+
 ## Layout
 
 | Path | Content |
 |---|---|
 | `baselines/<tag>/init.gradle` | Adds the overlay to the baseline build |
 | `baselines/<tag>/application/...` | Steps 1 and 3 |
+| `baselines/<tag>/evolution/...` | Replay of the updater |
 | `application/src/test/java/bisq/application/compat/<package>` | Steps 2 and 4 |
 
 The package of steps 2 and 4 is the tag with `_` instead of `.`, for example `v2_1_13`. The task
