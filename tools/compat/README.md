@@ -131,6 +131,8 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
   continues to the end, the offer stays, and the log scan covers the session of each version of the node.
 - `InventoryAcrossVersionsTest`: a node of each version joins later and knows only the seed node of the other version.
   It gets the existing offers of both versions with an inventory request, and the offers which are published later.
+- `TradeChatAcrossVersionsTest`: the chat of a trade between the versions. Text with a line break and an emoji, replies
+  with a citation, and reactions, one of which is removed again. Each message arrives exactly once on both nodes.
 
 At the end, each test class stops its nodes and scans their logs with `scripts/log_anomaly_scan.py`. A finding of
 level warning or error fails the test class. The data directories and logs stay in `build/e2e/<tag>/<test class>`.
