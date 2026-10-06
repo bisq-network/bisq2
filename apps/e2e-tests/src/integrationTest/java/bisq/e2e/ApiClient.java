@@ -103,6 +103,27 @@ final class ApiClient {
         patch("/settings", JSON.createObjectNode().put("isTacAccepted", true));
     }
 
+    // The API of v2.1.13 applies only one field of a settings change request, so each change is a request of its own
+    void changeSetting(String field, JsonNode value) {
+        ObjectNode request = JSON.createObjectNode();
+        request.set(field, value);
+        patch("/settings", request);
+    }
+
+    // The ID of the selected user profile: the ID of the public key of its network ID
+    String userProfileId() {
+        return get("/user-identities/selected/user-profile").path("networkId").path("pubKey").path("id").asText();
+    }
+
+    // The node must know the user profile, else the API returns HTTP 404
+    void ignoreUserProfile(String userProfileId) {
+        post("/user-profiles/ignore/" + userProfileId, JSON.createObjectNode());
+    }
+
+    void undoIgnoreUserProfile(String userProfileId) {
+        delete("/user-profiles/ignore/" + userProfileId);
+    }
+
     // The market in the format of a create offer request (MarketDto). The list of markets has more fields, which the
     // request does not accept.
     JsonNode market(String quoteCurrencyCode) {

@@ -139,6 +139,10 @@ The tests use only the REST and WebSocket API of the nodes, with the routes whic
 - `TradePricesAcrossVersionsTest`: trades with a float price and a range over Lightning, with a fixed price with
   decimals and a range, where the taker enters the Bitcoin amount, and with a fixed price and a fixed amount. Makers of
   both versions take part. For a fixed price, the maker of this checkout allows only the rounding difference.
+- `OfferClosingAcrossVersionsTest`: with "close my offer when taken", a taken offer disappears on both versions, with a
+  maker of each version. A maker of this checkout rejects the take of a taker of the baseline whom it ignores, with
+  "Could not find matching offer". This is the same rejection as for a second take of a closed offer, which the test
+  cannot cause reliably through the API. The taker gets the reason.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the
