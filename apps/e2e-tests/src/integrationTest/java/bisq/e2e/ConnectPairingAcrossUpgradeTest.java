@@ -43,12 +43,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *     <li>The node refuses a session for an empty secret (api-app-data-from-mobile-build).</li>
  *     <li>With a time to live of one minute, an expired session gets HTTP 401, and the client gets a new one.</li>
  * </ul>
+ * A client which pairs with a node of this checkout trades with a node of the released version in both directions
+ * (connect-new-pairing-and-trade of the release test plan).
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @EnabledIfSystemProperty(named = "bisq.e2e.newTree", matches = ".+")
 class ConnectPairingAcrossUpgradeTest {
     private static final String NODE = "connect";
     private static final String CLIENT_NAME = "e2e-mobile-app";
+    private static final String NODE_OF_THIS_VERSION = "connect-new";
     private static final String TEXT_BEFORE = "A message of the app before the upgrade";
     private static final String TEXT_AFTER = "A message of the app after the upgrade";
 
@@ -118,6 +121,19 @@ class ConnectPairingAcrossUpgradeTest {
         assertEquals(401, expiredSession.status, expiredSession.getMessage());
         app.renewSession();
         app.settings();
+    }
+
+    @Test
+    void clientWhichPairedWithThisVersionTradesWithTheReleasedVersion() throws Exception {
+        ApiClient app = network.startExtraApiNodeForPairedClient(NODE_OF_THIS_VERSION, true,
+                List.of(network.oldSeed.getP2pPort(), network.newSeed.getP2pPort()), CLIENT_NAME);
+        // The node of this version grants the full standard permission set at the pairing, so it promotes nothing
+        assertEquals(0, network.countLogLines(NODE_OF_THIS_VERSION, "Promoting full standard permission set"),
+                "The node must not promote the permissions of a client which paired with this version");
+
+        // The user of the app is the maker, then the taker of an offer of the released version
+        Trades.runTrade(app, network.oldApi, "SELL", network.priceServer);
+        Trades.runTrade(network.oldApi, app, "SELL", network.priceServer);
     }
 
     // How often the node logged the promotion of the permission set of the client since its last start

@@ -186,13 +186,35 @@ ALLOW_RULES: List[AllowRule] = [
     AllowRule("enum-unresolved", re.compile(r"Enum type= Feature; name=UNRECOGNIZED"),
               "Nodes of version 2.1.13 and older do not know the feature INVENTORY_HASH_SET_V2 of newer peers.",
               only_before_version=(2, 1, 14)),
-    # Only the confidential send path is allowed: it stores the message in the mailbox of the peer when the send fails.
-    # The same error on another path can lose data, so it stays a finding.
+    # Only the paths which recover from the failed send are allowed: the confidential send path stores the message in
+    # the mailbox of the peer, and the requester of an inventory asks again. The same error on another path can lose
+    # data, so it stays a finding.
     AllowRule("error-line",
               re.compile(r"Send executor rejected task.*ConfidentialMessageService\.trySendAsync", re.DOTALL),
               "A node sent a confidential message over a connection which the peer had closed. When two nodes open "
               "connections to each other at the same time, both connections can close (a known race of v2.1.13 and "
               "v2.1.14). The node then stores the message in the mailbox of the peer."),
+    AllowRule("error-line",
+              re.compile(r"Send executor rejected task.*InventoryService\.processRequest", re.DOTALL),
+              "A node sent an inventory response over a connection which the peer had closed, in the same race of two "
+              "connections. The requester cancels its request when the connection closes and asks on another "
+              "connection (docs/specifications/network/inventory-request-lifecycle.md)."),
+    # A peer which stops or restarts closes the connections of its handshakes. v2.1.13 and v2.1.14 log three error lines
+    # for each such outbound handshake and try other peers.
+    AllowRule("error-line",
+              re.compile(r"Starting outbound handshake to \S+ failed\. java\.net\.SocketException: Connection reset"),
+              "A peer closed the connection during the handshake of an outbound connection, for example because it "
+              "stopped. The node tries other peers."),
+    AllowRule("error-line",
+              re.compile(r"(Unspecified|Unhandled) connectionException reason\. Exception: [^\n]*"
+                         r"java\.net\.SocketException: Connection reset.*"
+                         r"(ConnectionHandshake\.start|Node\.startConnectionHandshake)", re.DOTALL),
+              "The same closed connection during the handshake of an outbound connection, with its stack trace."),
+    AllowRule("error-line",
+              re.compile(r"Could not create objectOutputStream/objectInputStream for socket .*"
+                         r"java\.net\.SocketException: Socket is closed"),
+              "A connection closed before its streams existed, so it carried no message, for example in the race of "
+              "two connections between the same nodes. The node uses another connection."),
 ]
 
 

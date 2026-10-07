@@ -70,13 +70,13 @@ class TradePricesAcrossVersionsTest {
         String offerId = createOffer(network.newApi, "SELL", rangeAmount(500_000, 2_000_000), priceSpec,
                 List.of("LN", "MAIN_CHAIN"));
         long quoteAmount = 1_200_000;
-        long baseAmount = baseAmountFor(quoteAmount, Math.round(marketPrice() * 1.01));
+        long baseAmount = Trades.baseAmountFor(quoteAmount, Math.round(marketPrice() * 1.01));
         take(network.newApi, network.oldApi, "SELL", offerId, priceSpec, baseAmount, quoteAmount, "LN", LN_INVOICE);
     }
 
     @Test
     void oldTakerBuysAtFixedPriceEnteringTheBitcoinAmount() throws Exception {
-        ObjectNode priceSpec = fixedPrice(network.newApi, FIXED_PRICE);
+        ObjectNode priceSpec = OffersAcrossVersionsTest.fixedPrice(network.newApi, FIXED_PRICE);
         String offerId = createOffer(network.newApi, "SELL", rangeAmount(500_000, 5_000_000), priceSpec,
                 List.of("MAIN_CHAIN"));
         long baseAmount = 251_234;
@@ -87,10 +87,10 @@ class TradePricesAcrossVersionsTest {
 
     @Test
     void newTakerSellsAtFixedPriceToAnOldMaker() throws Exception {
-        ObjectNode priceSpec = fixedPrice(network.oldApi, FIXED_PRICE);
+        ObjectNode priceSpec = OffersAcrossVersionsTest.fixedPrice(network.oldApi, FIXED_PRICE);
         String offerId = createOffer(network.oldApi, "BUY", fixedAmount(Trades.QUOTE_AMOUNT), priceSpec,
                 List.of("MAIN_CHAIN"));
-        long baseAmount = baseAmountFor(Trades.QUOTE_AMOUNT, FIXED_PRICE);
+        long baseAmount = Trades.baseAmountFor(Trades.QUOTE_AMOUNT, FIXED_PRICE);
         take(network.oldApi, network.newApi, "BUY", offerId, priceSpec, baseAmount, Trades.QUOTE_AMOUNT, "MAIN_CHAIN",
                 Trades.BTC_ADDRESS);
     }
@@ -101,7 +101,7 @@ class TradePricesAcrossVersionsTest {
         String offerId = createOffer(network.oldApi, "BUY", rangeAmount(500_000, 2_000_000), priceSpec,
                 List.of("MAIN_CHAIN", "LN"));
         long quoteAmount = 800_000;
-        long baseAmount = baseAmountFor(quoteAmount, Math.round(marketPrice() * 0.98));
+        long baseAmount = Trades.baseAmountFor(quoteAmount, Math.round(marketPrice() * 0.98));
         take(network.oldApi, network.newApi, "BUY", offerId, priceSpec, baseAmount, quoteAmount, "MAIN_CHAIN",
                 Trades.BTC_ADDRESS);
     }
@@ -151,11 +151,6 @@ class TradePricesAcrossVersionsTest {
         return Math.round(network.priceServer.getPrice("USD") * 1e4);
     }
 
-    // The Bitcoin amount for a fiat amount at a price, rounded to a satoshi
-    private static long baseAmountFor(long quoteAmount, long price) {
-        return Math.round(quoteAmount * 100_000_000.0 / price);
-    }
-
     // The fiat amount for a Bitcoin amount at a price, truncated to 0.0001 of the currency
     private static long quoteAmountFor(long baseAmount, long price) {
         return Math.floorDiv(baseAmount * price, 100_000_000L);
@@ -173,20 +168,5 @@ class TradePricesAcrossVersionsTest {
 
     private static ObjectNode floatPrice(double percentage) {
         return JSON.createObjectNode().put("type", "FloatPriceSpec").put("percentage", percentage);
-    }
-
-    // A fixed price as a price quote of the API. It copies the market quote of the node and replaces the price of one
-    // Bitcoin. Both versions build the price quote from its value and its two monetary values.
-    private static ObjectNode fixedPrice(ApiClient api, long price) {
-        ObjectNode priceQuote = OffersAcrossVersionsTest.marketQuote(api, "USD").deepCopy();
-        priceQuote.put("value", price);
-        ((ObjectNode) priceQuote.path("quoteSideMonetary")).put("value", price);
-        JsonNode baseSideMonetary = priceQuote.path("baseSideMonetary");
-        if (baseSideMonetary.path("value").asLong() != 100_000_000L) {
-            throw new IllegalStateException("The market quote is not for one Bitcoin: " + priceQuote);
-        }
-        ObjectNode priceSpec = JSON.createObjectNode().put("type", "FixPriceSpec");
-        priceSpec.set("priceQuote", priceQuote);
-        return priceSpec;
     }
 }
