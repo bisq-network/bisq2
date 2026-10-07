@@ -118,12 +118,20 @@ of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Ea
 
 - a seed node of each version and an api-app node of each version, which know both seed nodes;
 - a fake price node in the test JVM, which all nodes use instead of the real price nodes;
-- dev mode on all nodes, without authentication of the API, except the node of `ConnectPairingAcrossUpgradeTest`.
+- dev mode on all nodes, without authentication of the API, except the nodes of `ConnectPairingAcrossUpgradeTest`,
+  and with a reputation score of 50000 for every profile, except in `ReputationAcrossVersionsTest`.
+
+The baseline can also be an older release, for users who skipped versions (upgrade-from-older-release of the release
+test plan). With `v2.1.10` as the baseline, `UpgradeInPlaceTest`, `UpgradeKeepsUserDataTest`, `TradeAcrossVersionsTest`,
+`OffersAcrossVersionsTest`, `InventoryAcrossVersionsTest`, `TradeChatAcrossVersionsTest` and
+`OfflineMakerAcrossVersionsTest` passed on 2026-10-07. The api-app exists from v2.1.9 on. With `v2.1.9`, the upgrade
+works as well, but its seed node logs an error about the fake price node at its start, which the log scan reports.
+Other tests check behavior of v2.1.13 itself, for example its API, which builds a fixed price without a check.
 
 The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. No API publishes
-the alerts of a security manager, so `AlertAcrossVersionsTest` starts the alert publisher of the source set
-`alertPublisher` of `apps/e2e-tests` as a node of this checkout. It is the only code of the tests which uses the code of
-Bisq. The tests cover:
+the authorized data of a security manager, such as an alert, so some tests start the authorized data publisher of the
+source set `authorizedDataPublisher` of `apps/e2e-tests` as a node of this checkout. It is the only code of the tests
+which uses the code of Bisq. The tests cover:
 
 - `OffersAcrossVersionsTest`: offers with market, float and fixed price, with fixed and range amounts, reach the other
   version with the same terms. A removed offer disappears on the other version.
@@ -154,18 +162,61 @@ Bisq. The tests cover:
   "Could not find matching offer". This is the same rejection as for a second take of a closed offer, which the test
   cannot cause reliably through the API. The taker gets the reason.
 - `UpgradeKeepsUserDataTest`: a node of the baseline with two open trades in different states, a closed trade, changed
-  settings and an ignored user is upgraded in place. All of it stays, and the open trades continue to the end.
+  settings, an ignored user, user-defined payment accounts with the selected one, and a trade chat message of the
+  maximum length (10,000 characters) is upgraded in place. One account has data of the maximum length with line breaks
+  and characters outside ASCII. All of it stays, and the open trades continue to the end. The API of the baseline
+  creates only user-defined accounts.
+- `FixedPriceAcrossUpgradeTest`: the API of the baseline creates offers with a fixed price. With a canonical price,
+  the open offer and the open trade stay after the upgrade in place, and both trades complete. With a price whose value
+  does not match its amounts, which the API of the baseline accepts, nodes of this checkout do not show the offer.
+  After the upgrade, the node skips the offer, the trade and the chat of the trade with this price, and the peer of the
+  baseline keeps the trade and still shows the offer.
 - `ConnectPairingAcrossUpgradeTest`: a client pairs with a node of the baseline, which runs with the API security of
   its version, as the mobile app of Bisq Connect does with the QR code. The user of the client has an open trade and
   chats in it. The node is upgraded in place. The old session of the client gets HTTP 401. The client gets a new
   session with the credentials of its pairing and continues the chat and the trade without pairing again. The upgraded
   node promotes the permissions of the client once. It refuses a session for an empty client secret. With a session
-  time to live of one minute, an expired session gets HTTP 401, and the client gets a new one.
+  time to live of one minute, an expired session gets HTTP 401, and the client gets a new one. A second client pairs
+  with a node of this checkout, which promotes nothing, and trades with the baseline as maker and as taker.
 - `AlertAcrossVersionsTest`: a security manager publishes an emergency alert for the desktop app which requires
   version 2.1.14 for trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A maker of the
   baseline gets the take offer request of a taker of this checkout, but it does not create the trade and does not
   answer, so the trade of the taker stays in its first state. Nodes of this checkout know the alert and trade with each
-  other. After the security manager removes the alert, the baseline trades again.
+  other. After the security manager removes the alert, the baseline trades again. An alert which halts trading stops
+  the takes and the steps of an open trade on both versions. After its removal, the open trade completes, and both
+  versions take offers again.
+- `MediationAcrossVersionsTest`: the authorized data publisher acts as a root oracle node with a dev key. It publishes
+  the roles of two mediators, one of each version, as the oracle node of this checkout publishes them. A trader of the
+  baseline requests mediation, and the mediator of this checkout answers both traders and gets the chat of the trade.
+  With both mediators, makers and takers of both versions select the same mediator for each take. After the oracle
+  removes one role, a trader of this checkout requests mediation with a long chat, and the mediator of the baseline
+  answers. The mediator of the baseline is then upgraded in place with this open case: it keeps the chat, gets the
+  messages of both traders, and mediates a new case. The security manager bans one mediator: makers and takers of both
+  versions select the other one, also nodes which start after the ban, and both again after its removal. Then the
+  trader of the baseline in the open case is upgraded in place: it keeps the chat of the case, and its messages reach
+  the mediator and the other trader. Closing and opening a case again need the screens of the mediator and stay manual.
+- `OracleMigrationAcrossVersionsTest`: the authorized data publisher acts as a root oracle node of the baseline, which
+  publishes its data and the roles of two mediators with the key of its network ID. The baseline uses these roles, and
+  nodes of this checkout do not (rule 11 of `docs/specifications/network/storage-ownership.md`), so a trade between two
+  nodes of this checkout has no mediator. After the publisher migration of this checkout, both versions select the
+  same mediators, also nodes which start after the migration, and the removal of a role with the authorized key applies
+  on both versions.
+- `OfflineBuyerMakerAcrossVersionsTest`: a buyer maker of this checkout is offline while sellers of both versions, with
+  a score of 30000, take its offers through the mailbox. The USD price falls by 8 % before the maker starts. The maker
+  checks the takes with its own current price and rejects both with PRICE_DEVIATION. Each taker sees the failure with
+  the reason, the offers stay, and the retakes at the new price complete. The test moves the price instead of the
+  clocks, because the age of a take does not matter for the maker. It takes about 3 minutes, because the nodes request
+  the prices every 180 seconds.
+- `ReputationAcrossVersionsTest`: a network without the reputation score of dev mode. The authorized data publisher
+  publishes a proof of burn which gives a seller of the baseline a score of 1300, and both versions show this score.
+  The seller takes the USD buy offer of a maker of this checkout: at 8 USD, which requires 1600, the maker rejects the
+  take, and the API of the baseline answers with HTTP 400 and the reason. At 7 USD, the maximum of the baseline, which
+  requires 1400 and lies within the allowance of 1500, the retake works and the trade completes.
+- `DifficultyAdjustmentAcrossVersionsTest`: the security manager publishes a difficulty adjustment of 100, as during a
+  spam attack. Nodes which ran before the adjustment and nodes which start after it trade between the versions in both
+  directions, also through the mailbox of an offline maker, and again after the removal of the adjustment. A
+  difference of the message cost between the versions would make a receiver reject messages. The test does not observe
+  the difficulty of a single proof of work, because no API or log line shows it.
 - `CutoffAcrossVersionsTest`: the network passes the cutoff date of signature V1 with a fake clock. From the cutoff date
   on, nodes of this checkout reject new offers of the baseline. They remove the offers of the baseline which they stored
   before: a node which starts after the date when it loads its stores, and a node which runs across the date with the

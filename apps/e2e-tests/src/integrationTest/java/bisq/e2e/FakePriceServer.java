@@ -74,11 +74,17 @@ final class FakePriceServer implements AutoCloseable {
         return "http://127.0.0.1:" + getPort();
     }
 
-    double getPrice(String currencyCode) {
+    synchronized double getPrice(String currencyCode) {
         return pricesByCurrency.get(currencyCode);
     }
 
-    private String response() {
+    // A test moves a price, for example to show what a maker does with a take after the market moved. The nodes get it
+    // with their next request of the prices.
+    synchronized void setPrice(String currencyCode, double price) {
+        pricesByCurrency.put(currencyCode, price);
+    }
+
+    private synchronized String response() {
         long now = System.currentTimeMillis() + clockOffsetMillis;
         ObjectNode root = JSON.createObjectNode();
         ArrayNode data = root.putArray("data");

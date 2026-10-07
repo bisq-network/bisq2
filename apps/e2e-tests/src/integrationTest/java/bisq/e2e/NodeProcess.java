@@ -30,8 +30,11 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,6 +60,12 @@ final class NodeProcess implements AutoCloseable {
     record Program(String mainClass, String classpath) {
     }
 
+    private static final int FIRST_PORT = 20_000;
+    private static final int LAST_PORT = 32_000;
+    private static final Set<Integer> HANDED_OUT_PORTS = new HashSet<>();
+    // A random start, so that the test JVMs of runs shortly after each other use different ports
+    private static int nextPort = FIRST_PORT + new Random().nextInt(LAST_PORT - FIRST_PORT);
+
     private final String name;
     private final Kind kind;
     private final String version;
@@ -73,8 +82,10 @@ final class NodeProcess implements AutoCloseable {
     private boolean defaultApiSecurity;
     // JVM options for the next start, for example a shorter time to live of sessions
     private final List<String> extraJvmOptions = new ArrayList<>();
-    // A program which runs instead of the start script of the distribution, for example the alert publisher
+    // A program which runs instead of the start script of the distribution, for example the authorized data publisher
     private Optional<Program> program = Optional.empty();
+    // Whether the node uses the scores of the reputation data instead of the score of dev mode for every profile
+    private boolean realReputation;
     private Process process;
 
     NodeProcess(String name,
@@ -127,7 +138,14 @@ final class NodeProcess implements AutoCloseable {
                 priceNodeUrl, clockOffset);
         node.defaultApiSecurity = defaultApiSecurity;
         node.extraJvmOptions.addAll(extraJvmOptions);
+        node.realReputation = realReputation;
         return node;
+    }
+
+    /** Uses the scores of the reputation data, so that sellers need reputation as in the real network. */
+    NodeProcess useRealReputation() {
+        realReputation = true;
+        return this;
     }
 
     /** Keeps the security settings of the version of this api-app node, so a client must pair with it. */
@@ -147,7 +165,7 @@ final class NodeProcess implements AutoCloseable {
         return this;
     }
 
-    /** Writes a line to the standard input of the node, which a program such as the alert publisher reads. */
+    /** Writes a line to the standard input of the node, which a program such as the authorized data publisher reads. */
     void sendCommand(String command) throws IOException {
         if (process == null || !process.isAlive()) {
             throw new IllegalStateException(name + " does not run");
@@ -294,8 +312,11 @@ final class NodeProcess implements AutoCloseable {
         options.add("-Xmx" + kind.maxHeap);
         options.add("-Dapplication.devMode=true");
         // Sellers need reputation. Without an oracle node, the network has no reputation data, so dev mode provides a
-        // score for every profile. This hides the check of the reputation of a seller.
-        options.add("-Dapplication.devModeReputationScore=50000");
+        // score for every profile. This hides the check of the reputation of a seller. A network with real reputation
+        // gets its reputation data from the authorized data publisher.
+        if (!realReputation) {
+            options.add("-Dapplication.devModeReputationScore=50000");
+        }
         // The harness starts each node on a data directory of its own, and stops it before it starts it again. v2.1.13
         // binds its instance lock to a port which it derives from the path of the data directory. A closed connection
         // can still hold that port (TIME_WAIT), and then the node does not start.
@@ -341,10 +362,34 @@ final class NodeProcess implements AutoCloseable {
         }
     }
 
-    static int freePort() throws IOException {
-        try (ServerSocket socket = new ServerSocket(0)) {
-            socket.setReuseAddress(true);
-            return socket.getLocalPort();
+    /**
+     * A port which no other node of this JVM got, and which is free at the moment. A port from ServerSocket(0) caused
+     * two failures: it lies in the range of the ephemeral ports, from which the operating system also takes the local
+     * port of an outgoing connection, and a later call can return the same port again, because the probe releases it.
+     * Once two nodes got the same API port, and the client of one node talked to the other node. So the ports lie below
+     * the ephemeral ports of Linux (from 32768) and macOS (from 49152), and the JVM remembers each port which it handed
+     * out.
+     */
+    static synchronized int freePort() throws IOException {
+        for (int attempt = 0; attempt <= LAST_PORT - FIRST_PORT; attempt++) {
+            int port = nextPort;
+            nextPort = nextPort == LAST_PORT ? FIRST_PORT : nextPort + 1;
+            if (!HANDED_OUT_PORTS.contains(port) && isFree(port)) {
+                HANDED_OUT_PORTS.add(port);
+                return port;
+            }
+        }
+        throw new IOException("No free port between " + FIRST_PORT + " and " + LAST_PORT);
+    }
+
+    // Without SO_REUSEADDR, a port which a closed connection still holds counts as used
+    private static boolean isFree(int port) {
+        try (ServerSocket socket = new ServerSocket()) {
+            socket.setReuseAddress(false);
+            socket.bind(new InetSocketAddress(port));
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 

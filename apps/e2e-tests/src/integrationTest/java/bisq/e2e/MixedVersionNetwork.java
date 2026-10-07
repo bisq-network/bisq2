@@ -39,6 +39,7 @@ import static bisq.e2e.ApiClient.JSON;
  */
 final class MixedVersionNetwork implements AutoCloseable {
     static final Duration START_TIMEOUT = Duration.ofMinutes(3);
+    private static final Duration PUBLISHER_COMMAND_TIMEOUT = Duration.ofMinutes(2);
 
     final String oldVersion = E2eSettings.oldVersion();
     final String newVersion = "checkout";
@@ -52,6 +53,7 @@ final class MixedVersionNetwork implements AutoCloseable {
     final ApiClient newApi;
     // The time which the clocks of all nodes and of the fake price node run ahead of the real time
     final Duration clockOffset;
+    private final boolean realReputation;
     private final List<NodeProcess> extraNodes = new ArrayList<>();
     private final List<ExpectedLogFinding> expectedLogFindings = new ArrayList<>();
     private NodeProcess upgradedOldNode;
@@ -68,7 +70,20 @@ final class MixedVersionNetwork implements AutoCloseable {
      * libfaketime (see E2eSettings.libfaketime).
      */
     MixedVersionNetwork(String name, Duration clockOffset) throws Exception {
+        this(name, clockOffset, false);
+    }
+
+    /**
+     * A network whose nodes use the scores of the reputation data instead of the score of dev mode, which replaces the
+     * score of every profile and hides the check of the reputation of sellers.
+     */
+    static MixedVersionNetwork withRealReputation(String name) throws Exception {
+        return new MixedVersionNetwork(name, Duration.ZERO, true);
+    }
+
+    private MixedVersionNetwork(String name, Duration clockOffset, boolean realReputation) throws Exception {
         this.clockOffset = clockOffset;
+        this.realReputation = realReputation;
         dir = E2eSettings.workDir().resolve(name);
         deleteRecursively(dir);
         Files.createDirectories(dir);
@@ -83,8 +98,13 @@ final class MixedVersionNetwork implements AutoCloseable {
                 priceServer.getUrl(), clockOffset);
         newNode = new NodeProcess("node-new", NodeProcess.Kind.API, newVersion, E2eSettings.newTree(), dir, seedPorts,
                 priceServer.getUrl(), clockOffset);
+        if (realReputation) {
+            List.of(oldSeed, newSeed, oldNode, newNode).forEach(NodeProcess::useRealReputation);
+        }
         oldApi = oldNode.apiClient().orElseThrow();
         newApi = newNode.apiClient().orElseThrow();
+        expectClosedSnapshotConnections(oldNode.getName());
+        expectClosedSnapshotConnections(newNode.getName());
 
         try {
             for (NodeProcess node : List.of(oldSeed, newSeed)) {
@@ -160,15 +180,15 @@ final class MixedVersionNetwork implements AutoCloseable {
     }
 
     /**
-     * Starts the alert publisher of the source set alertPublisher as one more api-app node of this checkout, which
-     * knows both seed nodes. The node also has an API and a user identity like the other api-app nodes. The test
-     * controls the alert with {@link #sendCommand}.
+     * Starts the authorized data publisher of the source set authorizedDataPublisher as one more api-app node of this
+     * checkout, which knows both seed nodes. The node also has an API and a user identity like the other api-app nodes.
+     * The test controls the publisher with {@link #sendCommand}.
      */
-    ApiClient startAlertPublisher(String name) throws Exception {
-        NodeProcess.Program alertPublisher = new NodeProcess.Program("bisq.e2e.AlertPublisherApp",
-                E2eSettings.alertPublisherClasspath());
+    ApiClient startAuthorizedDataPublisher(String name) throws Exception {
+        NodeProcess.Program publisher = new NodeProcess.Program("bisq.e2e.AuthorizedDataPublisherApp",
+                E2eSettings.authorizedDataPublisherClasspath());
         NodeProcess node = newExtraApiNode(name, true, List.of(oldSeed.getP2pPort(), newSeed.getP2pPort()))
-                .runProgram(alertPublisher);
+                .runProgram(publisher);
         node.start();
         node.awaitReady(START_TIMEOUT);
         ApiClient api = node.apiClient().orElseThrow();
@@ -177,15 +197,43 @@ final class MixedVersionNetwork implements AutoCloseable {
         return api;
     }
 
-    /** Sends a command to the standard input of an extra node, for example to the alert publisher. */
+    /** Sends a command to the standard input of an extra node, for example to the authorized data publisher. */
     void sendCommand(String name, String command) throws IOException {
         extraNode(name).sendCommand(command);
+    }
+
+    /**
+     * Sends a command to the authorized data publisher and waits until it logs that the broadcast of the command is
+     * done. The publisher logs the same line again when a test repeats a command, so this counts the lines.
+     */
+    void runPublisherCommand(String publisherName, String command) throws Exception {
+        long doneBefore = countLogLines(publisherName, "E2E done: " + command);
+        sendCommand(publisherName, command);
+        await("the publisher runs: " + command, PUBLISHER_COMMAND_TIMEOUT, () -> {
+            if (countLogLines(publisherName, "E2E failed: " + command) > 0) {
+                throw new IllegalStateException("The publisher failed to run: " + command + ". See its log.");
+            }
+            return countLogLines(publisherName, "E2E done: " + command) > doneBefore;
+        });
+    }
+
+    /** How many lines of the log of the node since its last start contain the text. */
+    long countLogLines(String nodeName, String text) {
+        try {
+            return logOfLastSession(nodeName).stream().filter(line -> line.contains(text)).count();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private NodeProcess newExtraApiNode(String name, boolean ofNewVersion, List<Integer> seedPorts) throws IOException {
         NodeProcess node = new NodeProcess(name, NodeProcess.Kind.API, ofNewVersion ? newVersion : oldVersion,
                 ofNewVersion ? E2eSettings.newTree() : E2eSettings.oldTree(), dir, seedPorts, priceServer.getUrl(),
                 clockOffset);
+        expectClosedSnapshotConnections(name);
+        if (realReputation) {
+            node.useRealReputation();
+        }
         extraNodes.add(node);
         return node;
     }
@@ -259,11 +307,18 @@ final class MixedVersionNetwork implements AutoCloseable {
 
     /**
      * Declares a finding of the log scan which the test causes on purpose, for example the log lines of a take which
-     * the maker rejects. The scan then accepts the findings of this rule on this node if each of their lines contains
-     * the text. All other findings still fail the test class.
+     * the maker rejects. The scan then accepts a finding of this rule on this node if each of its lines contains the
+     * text of one of the declarations for this rule and node. All other findings still fail the test class.
      */
     void expectLogFinding(String nodeName, String ruleId, String text) {
         expectedLogFindings.add(new ExpectedLogFinding(nodeName, ruleId, text));
+    }
+
+    // The harness reads a topic of the WebSocket API with a connection of its own and closes the connection after the
+    // first answer. A node which sends an event of the topic at that moment logs an error. Both versions do this.
+    private void expectClosedSnapshotConnections(String nodeName) {
+        expectLogFinding(nodeName, "error-line",
+                "Sending webSocketEvent failed java.lang.RuntimeException: Socket is not connected");
     }
 
     /** The lines of the log of the node since its last start. */
@@ -349,10 +404,13 @@ final class MixedVersionNetwork implements AutoCloseable {
             for (JsonNode session : node.path("sessions")) {
                 for (JsonNode finding : session.path("findings")) {
                     String ruleId = finding.path("ruleId").asText();
+                    List<String> texts = expectedLogFindings.stream()
+                            .filter(expected -> expected.nodeName().equals(nodeName) &&
+                                    expected.ruleId().equals(ruleId))
+                            .map(ExpectedLogFinding::textPart)
+                            .toList();
                     boolean isExpected = finding.path("severity").asText().equals("notice") ||
-                            expectedLogFindings.stream().anyMatch(expected -> expected.nodeName().equals(nodeName) &&
-                                    expected.ruleId().equals(ruleId) &&
-                                    linesOf(finding).stream().allMatch(line -> line.contains(expected.textPart())));
+                            linesOf(finding).stream().allMatch(line -> texts.stream().anyMatch(line::contains));
                     if (!isExpected) {
                         unexpected.add(nodeName + ": " + ruleId);
                     }
