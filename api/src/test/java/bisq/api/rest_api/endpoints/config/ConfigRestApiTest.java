@@ -29,6 +29,7 @@ import bisq.api.rest_api.endpoints.trades.TradeRestApi;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.domain.network.NetworkInfoWebSocketService;
+import bisq.api.web_socket.domain.release_notifications.ReleaseNotificationsWebSocketService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.api.web_socket.subscription.Topic;
 import bisq.bisq_easy.BisqEasyService;
@@ -109,6 +110,7 @@ class ConfigRestApiTest {
         assertThat(ApiFeature.PUBLIC_CHAT.getKey()).isEqualTo("public-chat");
         assertThat(ApiFeature.CLIENT_MANAGEMENT.getKey()).isEqualTo("client-management");
         assertThat(ApiFeature.BANNED_ACCOUNT_DATA.getKey()).isEqualTo("banned-account-data");
+        assertThat(ApiFeature.RELEASE_NOTIFICATIONS.getKey()).isEqualTo("release-notifications");
     }
 
     /**
@@ -192,6 +194,16 @@ class ConfigRestApiTest {
                     assertThat(hasEndpoint(TradeRestApi.class, "/trades", "/{tradeId}/account-data-banned"))
                             .as("banned-account-data must expose GET /trades/{tradeId}/account-data-banned")
                             .isTrue();
+                    yield true;
+                }
+                case RELEASE_NOTIFICATIONS -> {
+                    BaseWebSocketService service = routeTopic(Topic.RELEASE_NOTIFICATIONS);
+                    assertThat(service)
+                            .as("SubscriptionService must route RELEASE_NOTIFICATIONS to a live ReleaseNotificationsWebSocketService")
+                            .isInstanceOf(ReleaseNotificationsWebSocketService.class);
+                    assertThat(topicOf(service))
+                            .as("release-notifications must be backed by a service bound to Topic.RELEASE_NOTIFICATIONS")
+                            .isEqualTo(Topic.RELEASE_NOTIFICATIONS);
                     yield true;
                 }
             };

@@ -31,8 +31,13 @@ import bisq.api.access.permissions.Permission;
  * something each author has to remember.
  * <p>
  * Every row asks for the permission that already guards the same data over REST, so a client cannot
- * reach through a subscription what a request would refuse it. {@code NETWORK_INFO} is the one row
- * with no REST route to mirror; see {@link Permission#NETWORK_INFO}.
+ * reach through a subscription what a request would refuse it. Two rows have no REST route to
+ * mirror. {@code NETWORK_INFO} has a permission of its own; see {@link Permission#NETWORK_INFO}.
+ * {@code RELEASE_NOTIFICATIONS} serves only public data, release announcements signed by a release
+ * manager and received by every node, so its row protects nothing. It asks for
+ * {@link Permission#SETTINGS} because every topic must name a permission, and SETTINGS already
+ * guards the same kind of data in {@code TRADE_RESTRICTING_ALERT}. Revisit it if grants become
+ * granular: a client without SETTINGS would then miss update notices.
  */
 public final class SubscriptionPermissionMapping {
     public Permission getRequiredPermission(Topic topic) {
@@ -48,6 +53,7 @@ public final class SubscriptionPermissionMapping {
             case NETWORK_INFO -> Permission.NETWORK_INFO;
             case CONTACTS -> Permission.CONTACTS;
             case PUBLIC_CHAT_CHANNELS, PUBLIC_CHAT_MESSAGES, PUBLIC_CHAT_REACTIONS -> Permission.PUBLIC_CHAT_CHANNELS;
+            case RELEASE_NOTIFICATIONS -> Permission.SETTINGS;
         };
     }
 }
