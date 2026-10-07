@@ -43,7 +43,8 @@ public enum ApiFeature {
     CONTACTS("contacts"),
     PUBLIC_CHAT("public-chat"),
     CLIENT_MANAGEMENT("client-management"),
-    BANNED_ACCOUNT_DATA("banned-account-data");
+    BANNED_ACCOUNT_DATA("banned-account-data"),
+    RELEASE_NOTIFICATIONS("release-notifications");
 
     private final String key;
 
