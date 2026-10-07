@@ -27,6 +27,7 @@ public class FileReaderUtilsTest {
     public void hasResourceFile() {
         assertTrue(FileReaderUtils.hasResourceFile("logback.xml"));
         assertFalse(FileReaderUtils.hasResourceFile("logback.xml1"));
+        assertFalse(FileReaderUtils.hasResourceFile("nonexistent.xml"));
     }
 
     @Test
@@ -109,12 +110,6 @@ public class FileReaderUtilsTest {
         assertTrue(dirs.contains("subdir1"), "subdir1 should be listed");
         assertTrue(dirs.contains("subdir2"), "subdir2 should be listed");
         assertFalse(dirs.contains("file.txt"), "Files should not be listed");
-    }
-
-    @Test
-    void testHasResourceFile() {
-        assertTrue(FileReaderUtils.hasResourceFile("logback.xml"));
-        assertFalse(FileReaderUtils.hasResourceFile("nonexistent.xml"));
     }
 
     @Test
