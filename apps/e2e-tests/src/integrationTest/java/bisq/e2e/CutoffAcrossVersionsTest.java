@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class CutoffAcrossVersionsTest {
     // SignedRequest.SIGNATURE_V1_CUTOFF_DATE of this version. The test uses the nodes as black boxes, so it repeats the
     // date here.
-    private static final Instant CUTOFF = Instant.parse("2027-01-01T00:00:00Z");
+    private static final Instant CUTOFF = Instant.parse("2026-11-25T00:00:00Z");
     // The clocks of the nodes start this long before the cutoff date: time to start the network and to publish data
     private static final Duration LEAD = Duration.ofMinutes(3);
     // Time for a broadcast to reach all nodes of the network on localhost

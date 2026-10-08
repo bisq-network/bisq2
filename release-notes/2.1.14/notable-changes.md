@@ -45,7 +45,7 @@ Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `ddebe75934e190
 
 ## Upgrade Requirements
 
-- **Upgrade before 2027-01-01 00:00 UTC.** Updated nodes require V2 storage signatures from that date. Oracle and seed operators must migrate publications; security managers, moderators, and release managers must republish their long-lived data with the updated version.
+- **Upgrade before 2026-11-25 00:00 UTC.** Updated nodes require V2 storage signatures from that date. Oracle and seed operators must migrate publications; security managers, moderators, and release managers must republish their long-lived data with the updated version.
 - `application.bondedRoles.onlyStaticOracleNodes=true` is the default. Networks must use a consistent setting, and non-static oracle operators cannot start with that default.
 - External SOCKS proxies must support username/password authentication. API consumers must account for default session handling and changed account/identity models.
 - An unsupported bridge subscription requires upgrading the bridge and restarting the oracle.

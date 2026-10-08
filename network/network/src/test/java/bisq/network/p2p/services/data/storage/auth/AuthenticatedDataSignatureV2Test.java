@@ -179,8 +179,8 @@ class AuthenticatedDataSignatureV2Test {
     }
 
     @Test
-    void cutoffDateOfSignatureV1IsTheStartOf2027InUtc() {
-        assertEquals(Instant.parse("2027-01-01T00:00:00Z").toEpochMilli(),
+    void cutoffDateOfSignatureV1IsNovember25InUtc() {
+        assertEquals(Instant.parse("2026-11-25T00:00:00Z").toEpochMilli(),
                 SignedRequest.SIGNATURE_V1_CUTOFF_DATE.getTime());
         assertFalse(SignedRequest.isSignatureV2Required(BEFORE_CUTOFF));
         assertTrue(SignedRequest.isSignatureV2Required(AT_CUTOFF));
