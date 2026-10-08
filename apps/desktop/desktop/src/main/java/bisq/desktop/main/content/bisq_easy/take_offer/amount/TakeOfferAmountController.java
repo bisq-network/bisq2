@@ -177,25 +177,34 @@ public class TakeOfferAmountController implements Controller {
         // Don't round the offer's exact min/max bounds, else a fractional bound is rejected by the validator.
         Monetary offersQuoteSideMaxOrFixedAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer).orElseThrow();
         Monetary minRangeValue = OptionalQuoteSideMinAmount.get();
-        Monetary maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
-                ? reputationBasedQuoteSideAmount
-                : offersQuoteSideMaxOrFixedAmount;
+        boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
+        Monetary maxAmount;
+        if (isBuyer) {
+            // The buyer could take the offer because the rule with its tolerance covers the offer's minimum (see
+            // ChatMessagesListController.doTakeOffer), so the buyer's maximum is not below the minimum.
+            maxAmount = BisqEasyTradeAmountLimits.getBuyersMaxQuoteSideAmount(minRangeValue,
+                    offersQuoteSideMaxOrFixedAmount,
+                    reputationBasedQuoteSideAmount);
+        } else {
+            maxAmount = reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)
+                    ? reputationBasedQuoteSideAmount
+                    : offersQuoteSideMaxOrFixedAmount;
+        }
 
         amountSelectionController.setMaxAllowedLimitation(offersQuoteSideMaxOrFixedAmount);
         amountSelectionController.setRightMarkerQuoteSideValue(maxAmount);
         amountSelectionController.setMinMaxRange(minRangeValue, maxAmount);
 
-        boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
         if (isBuyer) {
             // Buyer case
             model.setAmountLimitInfoLink(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.learnMore"));
             model.setLinkToWikiText(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.overlay.linkToWikiText"));
 
-            if (reputationBasedQuoteSideAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)) {
+            if (maxAmount.isLessThan(offersQuoteSideMaxOrFixedAmount)) {
                 // Max amount not covered by security from reputation score
                 model.getIsAmountLimitInfoVisible().set(true);
                 model.getAmountLimitInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.minAmountCovered", sellersReputationScore));
-                String formattedAmount = AmountFormatter.formatQuoteAmountWithCode(reputationBasedQuoteSideAmount);
+                String formattedAmount = AmountFormatter.formatQuoteAmountWithCode(maxAmount);
                 model.getAmountLimitInfoAmount().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfoAmount", formattedAmount));
                 model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.takeOffer.amount.buyer.limitInfo.minAmountCovered.overlay.info", sellersReputationScore, formattedAmount) + "\n\n");
             } else {

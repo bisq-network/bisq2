@@ -106,6 +106,22 @@ public class BisqEasyTradeAmountLimits {
         return quoteSideAmount;
     }
 
+    /**
+     * The largest amount which a buyer can take from a range offer of a seller: the maximum of the offer, limited to
+     * the seller's maximum (see {@link #getReputationBasedQuoteSideAmount}), but not below the minimum of the offer. A
+     * buyer takes the offer only if the rule with its tolerance covers the minimum. The seller's maximum is in whole
+     * units and does not use the tolerance, so it can be below such a minimum, for example a minimum with a fraction of
+     * a unit, or the minimum of an offer of a maker of version 2.1.13, which rounded its maximum up.
+     */
+    public static Monetary getBuyersMaxQuoteSideAmount(Monetary offersMinQuoteSideAmount,
+                                                      Monetary offersMaxQuoteSideAmount,
+                                                      Monetary sellersMaxQuoteSideAmount) {
+        Monetary maxAmount = sellersMaxQuoteSideAmount.isLessThan(offersMaxQuoteSideAmount)
+                ? sellersMaxQuoteSideAmount
+                : offersMaxQuoteSideAmount;
+        return maxAmount.isLessThan(offersMinQuoteSideAmount) ? offersMinQuoteSideAmount : maxAmount;
+    }
+
     // TODO add BSQ/USD price into calculation to take into account the value of the investment (at burn time)
     public static Fiat getMaxUsdTradeAmount(long totalScore) {
         // A reputation score of 30k gives a max trade amount of 150 USD
