@@ -36,9 +36,11 @@ import bisq.user.UserService;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -57,6 +59,8 @@ class TradeRestApiTest {
     private final ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
     private final BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
     private final BisqEasyService bisqEasyService = mock(BisqEasyService.class);
+    private final BisqEasyOpenTradeChannel channel = mock(BisqEasyOpenTradeChannel.class, RETURNS_DEEP_STUBS);
+    private final BisqEasyTrade openTrade = mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS);
 
     @Test
     void accountDataBannedReturnsTrueWhenTheSellersAccountDataIsBanned() {
@@ -115,35 +119,89 @@ class TradeRestApiTest {
 
     @Test
     void cancelTradeEventSendsTheCancelledTradeLogMessage() {
-        BisqEasyOpenTradeChannel channel = givenOpenTradeWithChannel();
+        givenOpenTradeWithChannel();
 
-        restApi().processTradeEvent(TRADE_ID, new TradeEventDto(TradeEventTypeDto.CANCEL_TRADE, null), mock(AsyncResponse.class));
+        processTradeEvent(TradeEventTypeDto.CANCEL_TRADE);
 
         verify(openTradeChannelService()).sendTradeLogMessage(
                 Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", USER_NAME), channel);
     }
 
     @Test
-    void rejectTradeEventSendsTheRejectedTradeLogMessage() {
-        BisqEasyOpenTradeChannel channel = givenOpenTradeWithChannel();
+    void cancelTradeEventCancelsTheTrade() {
+        givenOpenTradeWithChannel();
 
-        restApi().processTradeEvent(TRADE_ID, new TradeEventDto(TradeEventTypeDto.REJECT_TRADE, null), mock(AsyncResponse.class));
+        Response response = processTradeEvent(TradeEventTypeDto.CANCEL_TRADE);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
+        verify(bisqEasyTradeService).cancelTrade(openTrade);
+        verify(bisqEasyTradeService, never()).rejectTrade(any());
+    }
+
+    @Test
+    void cancelTradeEventCancelsTheTradeWhenTheTradeLogMessageFails() {
+        givenOpenTradeWithChannel();
+        givenTradeLogMessageFails();
+
+        Response response = processTradeEvent(TradeEventTypeDto.CANCEL_TRADE);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
+        verify(bisqEasyTradeService).cancelTrade(openTrade);
+    }
+
+    @Test
+    void rejectTradeEventSendsTheRejectedTradeLogMessage() {
+        givenOpenTradeWithChannel();
+
+        processTradeEvent(TradeEventTypeDto.REJECT_TRADE);
 
         verify(openTradeChannelService()).sendTradeLogMessage(
                 Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", USER_NAME), channel);
     }
 
-    private BisqEasyOpenTradeChannel givenOpenTradeWithChannel() {
-        BisqEasyOpenTradeChannel channel = mock(BisqEasyOpenTradeChannel.class, RETURNS_DEEP_STUBS);
+    @Test
+    void rejectTradeEventRejectsTheTrade() {
+        givenOpenTradeWithChannel();
+
+        Response response = processTradeEvent(TradeEventTypeDto.REJECT_TRADE);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
+        verify(bisqEasyTradeService).rejectTrade(openTrade);
+        verify(bisqEasyTradeService, never()).cancelTrade(any());
+    }
+
+    @Test
+    void rejectTradeEventRejectsTheTradeWhenTheTradeLogMessageFails() {
+        givenOpenTradeWithChannel();
+        givenTradeLogMessageFails();
+
+        Response response = processTradeEvent(TradeEventTypeDto.REJECT_TRADE);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
+        verify(bisqEasyTradeService).rejectTrade(openTrade);
+    }
+
+    private void givenOpenTradeWithChannel() {
         when(channel.getMyUserIdentity().getUserName()).thenReturn(USER_NAME);
         when(openTradeChannelService().findChannelByTradeId(TRADE_ID)).thenReturn(Optional.of(channel));
         // Deep stubs cannot provide the payment rail enum
         BitcoinPaymentMethod paymentMethod = mock(BitcoinPaymentMethod.class);
         doReturn(BitcoinPaymentRail.MAIN_CHAIN).when(paymentMethod).getPaymentRail();
-        BisqEasyTrade trade = mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS);
-        when(trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod()).thenReturn(paymentMethod);
-        when(bisqEasyTradeService.findTrade(TRADE_ID)).thenReturn(Optional.of(trade));
-        return channel;
+        when(openTrade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod()).thenReturn(paymentMethod);
+        when(bisqEasyTradeService.findTrade(TRADE_ID)).thenReturn(Optional.of(openTrade));
+    }
+
+    private void givenTradeLogMessageFails() {
+        when(openTradeChannelService().sendTradeLogMessage(any(), any()))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("PEER_BANNED")));
+    }
+
+    private Response processTradeEvent(TradeEventTypeDto tradeEventType) {
+        AsyncResponse asyncResponse = mock(AsyncResponse.class);
+        restApi().processTradeEvent(TRADE_ID, new TradeEventDto(tradeEventType, null), asyncResponse);
+        ArgumentCaptor<Response> response = ArgumentCaptor.forClass(Response.class);
+        verify(asyncResponse).resume(response.capture());
+        return response.getValue();
     }
 
     private BisqEasyOpenTradeChannelService openTradeChannelService() {

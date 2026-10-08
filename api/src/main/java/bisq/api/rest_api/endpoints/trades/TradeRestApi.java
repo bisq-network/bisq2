@@ -403,7 +403,7 @@ public class TradeRestApi extends RestApiBase {
                                    BisqEasyTrade trade,
                                    String userName) throws Exception {
         String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
-        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
+        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         bisqEasyTradeService.rejectTrade(trade);
     }
 
@@ -411,7 +411,7 @@ public class TradeRestApi extends RestApiBase {
                                    BisqEasyTrade trade,
                                    String userName) throws Exception {
         String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", userName);
-        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
+        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         bisqEasyTradeService.cancelTrade(trade);
     }
 
