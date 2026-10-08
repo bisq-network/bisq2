@@ -185,8 +185,8 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
      * for the first, which is the one arriving in the same release as grantAll itself.
      * <p>
      * KNOWN RESIDUAL (not reachable today — no live path persists a genuinely restricted
-     * non-grantAll grant; every pairing grants the full standard set, folded to grantAll at
-     * write time by {@code PermissionService#putPermissions}). A deliberately restricted grant is
+     * non-grantAll grant; every pairing grants the full standard set, folded to grantAll by
+     * {@code PermissionService#toPermissionSet} before it is stored). A deliberately restricted grant is
      * indistinguishable from a full grant that happens to equal it, on either branch. Running-set
      * branch: read by an OLDER binary whose standard set equals the restriction, it is promoted
      * (and persisted) as grantAll, then re-expands on upgrade — regaining a standard permission it
