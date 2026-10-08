@@ -23,9 +23,9 @@
 - Store replacement preserves the previous file until the new file is ready, and write failures report failure.
 - Invalid records no longer interrupt the remaining startup replay or bonded-role revalidation.
 
-## Update Before January 2027
+## Update Before November 25, 2026
 
-Updated nodes require V2 storage signatures from **2027-01-01 00:00 UTC**. Oracle and seed operators must upgrade and migrate publications; security managers, moderators, and release managers must republish long-lived data with this version. API clients must support default session authentication and the revised DTOs.
+Updated nodes require V2 storage signatures from **2026-11-25 00:00 UTC**. Oracle and seed operators must upgrade and migrate publications; security managers, moderators, and release managers must republish long-lived data with this version. API clients must support default session authentication and the revised DTOs.
 
 MuSig and integrated wallet improvements remain available only through developer-mode MuSig activation.
 

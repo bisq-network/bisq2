@@ -30,7 +30,7 @@ public interface SignedRequest {
     // this date, a node accepts requests without signature V2. The node compares the date with its own time, not with
     // the creation date of the request: signature V1 of the remove requests does not cover the creation date, so a
     // relay could set an earlier one (see docs/specifications/network/storage-request-signatures.md).
-    Date SIGNATURE_V1_CUTOFF_DATE = DateUtils.getUTCDate(2027, GregorianCalendar.JANUARY, 1);
+    Date SIGNATURE_V1_CUTOFF_DATE = DateUtils.getUTCDate(2026, GregorianCalendar.NOVEMBER, 25);
 
     // now: the time of the node which verifies the request
     static boolean isSignatureV2Required(long now) {
