@@ -20,7 +20,6 @@ package bisq.api.access.permissions;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -30,9 +29,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PermissionServiceTest {
@@ -46,24 +43,18 @@ class PermissionServiceTest {
     }
 
     @Test
-    void grantCoveringAllPermissionsIsStoredAsGrantAll() {
-        permissionService.putPermissions("client-1", Permission.autoGrantable());
-
-        ArgumentCaptor<PermissionSet> captor = ArgumentCaptor.forClass(PermissionSet.class);
-        verify(apiAccessStoreService).putPermissions(eq("client-1"), captor.capture());
-        assertTrue(captor.getValue().isGrantAll());
+    void grantCoveringAllPermissionsIsFoldedToGrantAll() {
+        assertTrue(permissionService.toPermissionSet(Permission.autoGrantable()).isGrantAll());
     }
 
     @Test
-    void partialGrantIsStoredExplicitly() {
+    void partialGrantStaysExplicit() {
         Set<Permission> subset = Set.of(Permission.OFFERBOOK, Permission.MARKET_PRICE);
 
-        permissionService.putPermissions("client-1", subset);
+        PermissionSet permissionSet = permissionService.toPermissionSet(subset);
 
-        ArgumentCaptor<PermissionSet> captor = ArgumentCaptor.forClass(PermissionSet.class);
-        verify(apiAccessStoreService).putPermissions(eq("client-1"), captor.capture());
-        assertFalse(captor.getValue().isGrantAll());
-        assertEquals(subset, captor.getValue().getPermissions());
+        assertFalse(permissionSet.isGrantAll());
+        assertEquals(subset, permissionSet.getPermissions());
     }
 
     @Test
