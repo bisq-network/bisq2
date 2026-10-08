@@ -19,29 +19,43 @@ package bisq.api.rest_api.endpoints.access;
 
 import bisq.api.access.AllowUnauthenticated;
 import bisq.api.access.ApiAccessService;
+import bisq.api.access.ClientRevocationResult;
+import bisq.api.access.identity.ClientManagementId;
 import bisq.api.access.pairing.InvalidPairingRequestException;
 import bisq.api.access.pairing.PairingResponse;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.InvalidSessionRequestException;
 import bisq.api.access.session.SessionResponse;
+import bisq.api.dto.access.identity.PairedClientDto;
 import bisq.api.dto.access.pairing.PairingRequestDto;
 import bisq.api.dto.access.pairing.PairingResponseDto;
 import bisq.api.dto.access.session.SessionRequestDto;
 import bisq.api.dto.access.session.SessionResponseDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
+import bisq.api.rest_api.pagination.PaginatedResponse;
+import bisq.api.rest_api.pagination.PaginationParams;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Path("/access")
@@ -94,7 +108,8 @@ public class AccessApi extends RestApiBase {
         try {
             if (request == null ||
                     request.pairingCodeId() == null ||
-                    request.clientName() == null) {
+                    request.clientName() == null ||
+                    request.clientName().isBlank()) {
                 throw new IllegalArgumentException("Missing required pairing fields");
             }
             if (request.version() != PairingService.VERSION) {
@@ -189,6 +204,102 @@ public class AccessApi extends RestApiBase {
         } catch (Exception e) {
             log.error("Unexpected error during session request", e);
             return buildErrorResponse("Session request failed");
+        }
+    }
+
+    @GET
+    @Path("/clients")
+    @Operation(
+            summary = "List paired clients",
+            description = """
+                    Returns the currently paired API clients, ordered by client name.
+                    Paginated. Query params: 'page' (1-indexed, default 1), 'pageSize'
+                    (default 20, max 100).
+
+                    Clients are named by a management ID, which identifies a client for this
+                    endpoint and cannot be used to authenticate. Neither the client ID nor the
+                    client secret is returned.
+                    """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Paired clients retrieved successfully. PaginatedResponse whose 'items' are " +
+                    "PairedClientDto (generic binding not expressible in the schema annotation since " +
+                    "PaginatedResponse is a record).",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = PaginatedResponse.class)
+            )
+    )
+    @ApiResponse(responseCode = "400", description = "Invalid query parameters")
+    @ApiResponse(responseCode = "500", description = "Unexpected internal server error")
+    public Response getClients(@QueryParam("page") Integer page,
+                               @QueryParam("pageSize") Integer pageSize) {
+        try {
+            // Mapped to the DTO before paging, not via the mapping overload of
+            // buildPaginatedResponse: nothing that reaches the response body is then a
+            // ClientProfile, so no later edit can serialize a client secret or a client ID by
+            // accident. Clients are named by their management ID, which carries no credential
+            // value; see ClientManagementId.
+            // Sorted because the profiles come from a map, and paging an unspecified order
+            // would let one client appear on two pages and another on none.
+            List<PairedClientDto> clients = apiAccessService.getClientProfiles().stream()
+                    .map(clientProfile -> new PairedClientDto(ClientManagementId.of(clientProfile),
+                            clientProfile.getClientName()))
+                    .sorted(Comparator.comparing(PairedClientDto::getClientName)
+                            .thenComparing(PairedClientDto::getManagementId))
+                    .toList();
+            return buildPaginatedResponse(clients,
+                    PaginationParams.of(Optional.ofNullable(page), Optional.ofNullable(pageSize)));
+        } catch (IllegalArgumentException e) {
+            return buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error at listing clients", e);
+            return buildErrorResponse("Listing clients failed");
+        }
+    }
+
+    @DELETE
+    @Path("/clients/{managementId}")
+    @Operation(
+            summary = "Revoke a paired client",
+            description = """
+                    Revokes a previously paired API client.
+
+                    The client is named by the management ID returned by the listing endpoint,
+                    not by its client ID.
+
+                    The client's access is withdrawn at once: its permissions are removed, its
+                    sessions are invalidated, it can no longer obtain a new one, any live WebSocket
+                    connection is closed and any push notification registration is dropped. The
+                    client must pair again via QR code to regain access.
+
+                    A 500 means the cleanup did not complete. The client has no access either way,
+                    and it stays listed so the request can be retried.
+                    """
+    )
+    @ApiResponse(responseCode = "204", description = "Client successfully revoked")
+    @ApiResponse(responseCode = "404", description = "Client not found")
+    @ApiResponse(responseCode = "500", description = "Revocation incomplete or unexpected error")
+    public Response revokeClient(
+            @Parameter(description = "The management ID of the client to revoke", required = true)
+            @PathParam("managementId") String managementId
+    ) {
+        try {
+            ClientRevocationResult result = apiAccessService.revokeClientByManagementId(managementId);
+            if (result == ClientRevocationResult.CLEANUP_FAILED) {
+                // Answering 204 here would report a revocation that did not fully happen: the
+                // client can still hold a connection or receive push notifications. Revocation is
+                // idempotent, so the caller can retry.
+                return buildErrorResponse("Client revocation incomplete, retry");
+            }
+            if (result == ClientRevocationResult.NOT_FOUND) {
+                return buildNotFoundResponse("Client not found: " + managementId);
+            }
+            return buildNoContentResponse();
+        } catch (Exception e) {
+            log.error("Unexpected error during client revocation for management id={}", managementId, e);
+            return buildErrorResponse("Client revocation failed");
         }
     }
 }

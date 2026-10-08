@@ -18,6 +18,9 @@
 package bisq.api.access.pairing;
 
 import bisq.api.ApiConfig;
+import bisq.api.access.identity.ClientProfile;
+import bisq.api.access.permissions.Permission;
+import bisq.api.access.permissions.PermissionSet;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.common.file.FileReaderUtils;
@@ -30,21 +33,38 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 class PairingServiceTest {
     private PairingService pairingService(Path appDataDir) {
-        return new PairingService(mock(ApiConfig.class),
-                appDataDir,
-                mock(ApiAccessStoreService.class),
-                mock(PermissionService.class));
+        return pairingService(appDataDir, 0);
+    }
+
+    private PairingService pairingService(Path appDataDir, int pairingCodeTtlInSeconds) {
+        return pairingService(appDataDir, pairingCodeTtlInSeconds, mock(ApiAccessStoreService.class), mock(PermissionService.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    private PairingService pairingService(Path appDataDir,
+                                          int pairingCodeTtlInSeconds,
+                                          ApiAccessStoreService apiAccessStoreService,
+                                          PermissionService permissionService) {
+        ApiConfig apiConfig = mock(ApiConfig.class);
+        when(apiConfig.getPairingCodeTtlInSeconds()).thenReturn(pairingCodeTtlInSeconds);
+        return new PairingService(apiConfig, appDataDir, apiAccessStoreService, permissionService);
     }
 
     @Test
@@ -104,5 +124,78 @@ class PairingServiceTest {
         Path file = tempDir.resolve("pairing_qr_code.txt");
         assertTrue(FileReaderUtils.readUTF8String(file).startsWith("second-payload"));
         assertFalse(Files.exists(tempDir.resolve("pairing_qr_code.txt.tmp")));
+    }
+
+    @Test
+    void clientNameIsCappedInsteadOfRejected(@TempDir Path tempDir) throws InvalidPairingRequestException {
+        // The name is client supplied free text rendered in the host UI. Capping keeps pairing
+        // working for clients deriving the name from a long device model string.
+        PairingService service = pairingService(tempDir, 60);
+        PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
+        String clientName = "a".repeat(PairingService.MAX_CLIENT_NAME_LENGTH + 50);
+
+        ClientProfile clientProfile = service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName);
+
+        assertEquals(PairingService.MAX_CLIENT_NAME_LENGTH, clientProfile.getClientName().length());
+    }
+
+    @Test
+    void clientNameCapDoesNotSplitASurrogatePair(@TempDir Path tempDir) throws InvalidPairingRequestException {
+        // Cutting mid pair would leave a lone surrogate, which renders as a replacement char.
+        PairingService service = pairingService(tempDir, 60);
+        PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
+        String clientName = "a".repeat(PairingService.MAX_CLIENT_NAME_LENGTH - 1) + "\uD83D\uDE00".repeat(5);
+
+        ClientProfile clientProfile = service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName);
+
+        String cappedClientName = clientProfile.getClientName();
+        assertEquals(PairingService.MAX_CLIENT_NAME_LENGTH - 1, cappedClientName.length());
+        assertFalse(Character.isHighSurrogate(cappedClientName.charAt(cappedClientName.length() - 1)));
+    }
+
+    @Test
+    void aNameWhoseFirstCharactersAreWhitespaceIsStrippedRatherThanStoredBlank(@TempDir Path tempDir) {
+        // Capping a name whose first characters are all whitespace would store a blank one for an
+        // input that passed the blank check.
+        PairingService service = pairingService(tempDir, 60);
+        PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
+        String clientName = " ".repeat(PairingService.MAX_CLIENT_NAME_LENGTH + 10) + "Pixel";
+
+        assertDoesNotThrow(() -> {
+            ClientProfile clientProfile =
+                    service.requestPairing(PairingService.VERSION, pairingCode.getId(), clientName);
+            assertEquals("Pixel", clientProfile.getClientName());
+        });
+    }
+
+    @Test
+    void blankClientNameIsRejectedWithoutBurningThePairingCode(@TempDir Path tempDir) {
+        PairingService service = pairingService(tempDir, 60);
+        PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
+
+        assertThrows(InvalidPairingRequestException.class,
+                () -> service.requestPairing(PairingService.VERSION, pairingCode.getId(), "  "));
+
+        assertTrue(service.findPairingCode(pairingCode.getId()).isPresent());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void pairingStoresTheProfileAndItsFoldedGrantTogether(@TempDir Path tempDir) throws InvalidPairingRequestException {
+        // One write, so a revocation landing mid-pairing cannot leave a grant behind for a profile
+        // it has already removed. The grant is stored as PermissionService folds it, not raw.
+        ApiAccessStoreService apiAccessStoreService = mock(ApiAccessStoreService.class);
+        PermissionService permissionService = mock(PermissionService.class);
+        PermissionSet grantAll = PermissionSet.grantAll();
+        when(permissionService.toPermissionSet(any())).thenReturn(grantAll);
+        PairingService service = pairingService(tempDir, 60, apiAccessStoreService, permissionService);
+        PairingCode pairingCode = service.createPairingCode(Set.of(Permission.SETTINGS));
+
+        ClientProfile clientProfile =
+                service.requestPairing(PairingService.VERSION, pairingCode.getId(), "Pixel 8");
+
+        verify(apiAccessStoreService).putClientProfileAndPermissions(clientProfile.getClientId(),
+                clientProfile,
+                grantAll);
     }
 }
