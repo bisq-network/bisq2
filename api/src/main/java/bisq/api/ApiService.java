@@ -217,7 +217,8 @@ public class ApiService implements Service {
                 userService,
                 supportedService,
                 tradeService,
-                closedTradeItemsService);
+                closedTradeItemsService,
+                bisqEasyService);
         TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
         PrivateChatRestApi privateChatRestApi = new PrivateChatRestApi(chatService, userService);
         PublicChatRestApi publicChatRestApi = new PublicChatRestApi(chatService, userService);

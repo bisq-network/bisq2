@@ -31,6 +31,7 @@ import bisq.api.rest_api.pagination.PaginatedResponse;
 import bisq.api.rest_api.pagination.PaginationParams;
 import bisq.api.rest_api.pagination.SortDirection;
 import bisq.api.web_socket.domain.ClosedTradeItemsService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
@@ -107,13 +108,15 @@ public class TradeRestApi extends RestApiBase {
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final ChatChannelSelectionService offerbookChannelSelectionService;
     private final ClosedTradeItemsService closedTradeItemsService;
+    private final BisqEasyService bisqEasyService;
 
     public TradeRestApi(ChatService chatService,
                         MarketPriceService marketPriceService,
                         UserService userService,
                         SupportService supportedService,
                         TradeService tradeService,
-                        ClosedTradeItemsService closedTradeItemsService) {
+                        ClosedTradeItemsService closedTradeItemsService,
+                        BisqEasyService bisqEasyService) {
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         offerbookChannelSelectionService = chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
         bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
@@ -124,6 +127,42 @@ public class TradeRestApi extends RestApiBase {
         bisqEasyMediationRequestService = supportedService.getBisqEasyMediationRequestService();
         bisqEasyTradeService = tradeService.getBisqEasyTradeService();
         this.closedTradeItemsService = closedTradeItemsService;
+        this.bisqEasyService = bisqEasyService;
+    }
+
+    @GET
+    @Path("/{tradeId}/account-data-banned")
+    @Operation(
+            summary = "Check the seller's payment account data against the banned account data",
+            description = "Returns whether the seller's account data for this trade matches data banned by " +
+                    "the security manager. " +
+                    "Only meaningful on the buyer's side: on the seller's node it checks the seller's own data. " +
+                    "Read-only: reporting the seller to the moderators, cancelling the trade and blocking " +
+                    "the payment confirmation are left to the client. Desktop does all three. " +
+                    "False is not final, since the seller's data or the node's banned list may not have " +
+                    "arrived yet: check again right before the buyer confirms the payment.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Check performed",
+                            content = @Content(schema = @Schema(implementation = AccountDataBannedResponse.class))),
+                    @ApiResponse(responseCode = "404",
+                            description = "No trade with this ID, or the trade has already been closed"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response isAccountDataBanned(@PathParam("tradeId") String tradeId) {
+        try {
+            Optional<BisqEasyTrade> optionalTrade = bisqEasyTradeService.findTrade(tradeId);
+            if (optionalTrade.isEmpty()) {
+                return buildResponse(Response.Status.NOT_FOUND, "Trade not found for ID " + tradeId);
+            }
+            boolean banned = Optional.ofNullable(optionalTrade.get().getPaymentAccountData().get())
+                    .map(bisqEasyService::isAccountDataBanned)
+                    .orElse(false);
+            return buildOkResponse(new AccountDataBannedResponse(banned));
+        } catch (Exception e) {
+            log.error("Error checking banned account data for trade {}", tradeId, e);
+            return buildErrorResponse("An unexpected error occurred");
+        }
     }
 
     @GET
@@ -364,15 +403,15 @@ public class TradeRestApi extends RestApiBase {
                                    BisqEasyTrade trade,
                                    String userName) throws Exception {
         String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
-        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
+        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         bisqEasyTradeService.rejectTrade(trade);
     }
 
     private void handleCancelTrade(BisqEasyOpenTradeChannel channel,
                                    BisqEasyTrade trade,
                                    String userName) throws Exception {
-        String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
-        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
+        String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", userName);
+        bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel);
         bisqEasyTradeService.cancelTrade(trade);
     }
 
