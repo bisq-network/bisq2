@@ -98,6 +98,19 @@ class BisqEasyTradeAmountLimitsTest {
     }
 
     @ParameterizedTest
+    @CsvSource({
+            "0, 0, true",
+            "0, 1, false",
+            "1300, 1500, true",
+            "1300, 1501, false",
+            "100000, 105000, true",
+            "100000, 105001, false"
+    })
+    void requiredScoreIsCoveredUpToTheScoreWithTolerance(long score, long requiredScore, boolean isCovered) {
+        assertEquals(isCovered, BisqEasyTradeAmountLimits.isCoveredWithTolerance(score, requiredScore));
+    }
+
+    @ParameterizedTest
     @CsvSource({"60000", "83875.1546"})
     void acceptsLegacyUsdMaximumForLowScores(double btcUsdPrice) {
         PriceQuote usdPriceQuote = PriceQuote.fromFiatPrice(btcUsdPrice, "USD");
@@ -112,6 +125,63 @@ class BisqEasyTradeAmountLimitsTest {
             assertDoesNotThrow(() -> validateSellersReputation(sellersScore, requiredScore),
                     "score=" + score + " amount=" + amount.getValue() + " requiredScore=" + requiredScore);
         }
+    }
+
+    @Test
+    void coversLegacyMaximumOfSellerMakerWhichNeedsMoreThanTheScore() {
+        // v2.1.13 rounds 79902 / 200 = 399.51 half up to 400 USD, which require 80000. This version derives 399 USD.
+        long requiredScore = BisqEasyTradeAmountLimits.getRequiredReputationScore(USD_QUOTE, USD_QUOTE,
+                Fiat.fromFaceValue(400, "USD"));
+
+        assertEquals(80_000, requiredScore);
+        assertTrue(BisqEasyTradeAmountLimits.isCoveredWithTolerance(79_902, requiredScore));
+        assertEquals(Fiat.fromFaceValue(399, "USD"),
+                BisqEasyTradeAmountLimits.getReputationBasedQuoteSideAmount(USD_QUOTE, USD_QUOTE, 79_902));
+    }
+
+    // A buyer applies the tolerance when taking a sell offer, so every maximum of a v2.1.13 seller maker in a USD market
+    // can be taken. Up to 600 USD that maximum requires at most 100 points more than the score.
+    @ParameterizedTest
+    @CsvSource({"60000", "83875.1546"})
+    void coversLegacyUsdMaximumOfSellerMakers(double btcUsdPrice) {
+        PriceQuote usdPriceQuote = PriceQuote.fromFiatPrice(btcUsdPrice, "USD");
+        long scoreForMaxUsdTradeAmount = BisqEasyTradeAmountLimits.getRequiredReputationScoreByUsdAmount(
+                BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT);
+        for (long score = BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER;
+             score <= scoreForMaxUsdTradeAmount;
+             score++) {
+            // v2.1.13 rounds score / 200 half up, limits it to 600 USD, converts through BTC, then rounds to whole
+            // quote units.
+            long legacyUsdMaximum = Math.min(600, MathUtils.roundDoubleToLong(score / 200d));
+            Monetary btcAmount = usdPriceQuote.toBaseSideMonetary(Fiat.fromFaceValue(legacyUsdMaximum, "USD"));
+            Monetary amount = usdPriceQuote.toQuoteSideMonetary(btcAmount).round(0);
+            long requiredScore = BisqEasyTradeAmountLimits.getRequiredReputationScore(usdPriceQuote, usdPriceQuote, amount);
+            String context = "score=" + score + " amount=" + amount.getValue() + " requiredScore=" + requiredScore;
+
+            assertTrue(requiredScore <= score + 100, context);
+            assertTrue(BisqEasyTradeAmountLimits.isCoveredWithTolerance(score, requiredScore), context);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            // The seller's maximum limits the offer
+            "50, 400, 399, 399",
+            // The offer's maximum is below the seller's maximum
+            "50, 300, 399, 300",
+            // The seller's maximum is below the offer's minimum, which the tolerance covers. Score 79902: the seller's
+            // maximum is 399 USD, the minimum of 399.6 USD requires 80000.
+            "399.6, 400, 399, 399.6"
+    })
+    void buyersMaxAmountIsTheSellersMaximumButNotBelowTheOffersMinimum(double offersMin,
+                                                                       double offersMax,
+                                                                       double sellersMax,
+                                                                       double buyersMax) {
+        Monetary amount = BisqEasyTradeAmountLimits.getBuyersMaxQuoteSideAmount(Fiat.fromFaceValue(offersMin, "USD"),
+                Fiat.fromFaceValue(offersMax, "USD"),
+                Fiat.fromFaceValue(sellersMax, "USD"));
+
+        assertEquals(Fiat.fromFaceValue(buyersMax, "USD"), amount);
     }
 
     @Test

@@ -36,9 +36,12 @@ import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.settings.ChatMessageType;
@@ -46,6 +49,7 @@ import bisq.settings.SettingsService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +61,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,15 +87,18 @@ class ChatMessagesListControllerTest {
     private ChatMessagesListController controller;
     private BisqEasyOfferbookChannel channel;
     private BisqEasyOfferbookMessage message;
+    private MarketPriceService marketPriceService;
+    private ReputationService reputationService;
+    private UserProfile authorUserProfile;
 
     @BeforeEach
     void setUp() {
-        MarketPriceService marketPriceService = mock(MarketPriceService.class);
+        marketPriceService = mock(MarketPriceService.class);
         when(marketPriceService.getMarketPriceByCurrencyMap()).thenReturn(marketPriceByCurrencyMap);
         when(marketPriceService.findMarketPrice(MARKET))
                 .thenAnswer(invocation -> Optional.ofNullable(marketPriceByCurrencyMap.get(MARKET)));
 
-        UserProfile authorUserProfile = mock(UserProfile.class);
+        authorUserProfile = mock(UserProfile.class);
         when(authorUserProfile.getId()).thenReturn("author-id");
         when(authorUserProfile.getNickName()).thenReturn("alice");
         UserService userService = mock(UserService.class, RETURNS_DEEP_STUBS);
@@ -102,7 +110,7 @@ class ChatMessagesListControllerTest {
         when(selectedUserIdentity.getUserProfile()).thenReturn(selectedUserProfile);
         when(userService.getUserIdentityService().getSelectedUserIdentity()).thenReturn(selectedUserIdentity);
         when(userService.getUserIdentityService().getSelectedUserIdentityObservable()).thenReturn(new Observable<>(selectedUserIdentity));
-        ReputationService reputationService = mock(ReputationService.class);
+        reputationService = mock(ReputationService.class);
         when(reputationService.findReputationScore(any(UserProfile.class))).thenReturn(Optional.empty());
         when(reputationService.getUserProfileIdWithScoreChange()).thenReturn(new Observable<>());
         when(reputationService.getScoreByUserProfileId()).thenReturn(new ObservableHashMap<>());
@@ -255,6 +263,31 @@ class ChatMessagesListControllerTest {
 
         assertThat(displayedMessageIds()).contains("offer-message-id", "later-message-id");
         assertThat(displayedMessageIds()).doesNotContain("failing-message-id");
+    }
+
+    // A maker of v2.1.13 rounds its maximum half up to whole USD: a score of 79902 gives 400 USD, which require 80000.
+    // Like the offerbook filter, which lists the offer, the buyer's take check applies the tolerance of the rule.
+    @Test
+    @ResourceLock(value = "Navigation", mode = ResourceAccessMode.READ_WRITE)
+    void buyerCanTakeFixedSellOfferWhoseAmountTheToleranceCovers() throws Exception {
+        when(marketPriceService.findMarketPriceQuote(MARKET)).thenReturn(Optional.of(PriceQuote.fromFiatPrice(60_000, "USD")));
+        when(reputationService.getReputationScore(authorUserProfile)).thenReturn(new ReputationScore(79_902, 0, 1));
+        BisqEasyOffer sellOffer = mock(BisqEasyOffer.class);
+        when(sellOffer.getId()).thenReturn("sell-offer-id");
+        when(sellOffer.getMarket()).thenReturn(MARKET);
+        when(sellOffer.getDirection()).thenReturn(Direction.SELL);
+        when(sellOffer.getTakersDisplayDirection()).thenReturn(Direction.BUY);
+        when(sellOffer.getMakersUserProfileId()).thenReturn("author-id");
+        when(sellOffer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(4_000_000));
+        when(sellOffer.getPriceSpec()).thenReturn(new MarketPriceSpec());
+        BisqEasyOfferbookMessage sellOfferMessage = mock(BisqEasyOfferbookMessage.class);
+        when(sellOfferMessage.getAuthorUserProfileId()).thenReturn("author-id");
+        when(sellOfferMessage.getBisqEasyOffer()).thenReturn(Optional.of(sellOffer));
+        Navigation.getCurrentNavigationTarget().set(null);
+
+        WaitForAsyncUtils.asyncFx(() -> controller.onTakeOffer(sellOfferMessage)).get(10, TimeUnit.SECONDS);
+
+        assertThat(Navigation.getCurrentNavigationTarget().get()).isEqualTo(NavigationTarget.BISQ_EASY_TAKE_OFFER);
     }
 
     private void putMarketPrice(double price) {

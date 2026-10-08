@@ -44,7 +44,7 @@ public final class BisqEasySellerReputationValidator {
     }
 
     public static void validateSellersReputation(long sellersReputationScore, long requiredReputationScore) {
-        if (BisqEasyTradeAmountLimits.withTolerance(sellersReputationScore) < requiredReputationScore) {
+        if (!BisqEasyTradeAmountLimits.isCoveredWithTolerance(sellersReputationScore, requiredReputationScore)) {
             throw new TradeProtocolException(String.format("The seller's reputation score of %d is too low for " +
                             "the trade amount. The trade amount requires a reputation score of %d, " +
                             "the seller's score is below that even with the %d%% tolerance " +
