@@ -185,7 +185,7 @@ requests as well, so these removals give it no further way to fill the store.
   [`storage-request-signatures.md`](storage-request-signatures.md#known-limitations)). Until then, a relay can change
   `className` to the class name of another registered type of the same store type (rule 9). The data then goes into
   the store of that type and uses its MetaData. A remove request then does not find its add entry and is stored in the
-  other store without an add entry. The cutoff date of signature V1 removes this: from 2027-01-01 on, nodes accept
+  other store without an add entry. The cutoff date of signature V1 removes this: from 2026-11-25 on, nodes accept
   only requests with signature V2 (see
   [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 - Nodes of earlier versions still use the MetaData from the network until they update.

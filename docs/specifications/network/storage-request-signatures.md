@@ -15,7 +15,7 @@ Both signatures are created with the key of the owner (for mailbox add requests 
 the receiver). The canonical encoding that produces the preimage of signature V2 is defined in
 [`../encoding/canonical-encoding.md`](../encoding/canonical-encoding.md).
 
-Nodes accept a request without signature V2 only before the cutoff date of signature V1, 2027-01-01 (see
+Nodes accept a request without signature V2 only before the cutoff date of signature V1, 2026-11-25 (see
 [Cutoff date of signature V1](#cutoff-date-of-signature-v1)).
 
 ## Preimage of signature V1
@@ -149,7 +149,7 @@ low-S form.
 
 ## Cutoff date of signature V1
 
-The cutoff date is 2027-01-01 00:00 UTC (`SignedRequest.SIGNATURE_V1_CUTOFF_DATE`). Until this date, nodes accept
+The cutoff date is 2026-11-25 00:00 UTC (`SignedRequest.SIGNATURE_V1_CUTOFF_DATE`). Until this date, nodes accept
 requests without signature V2, so that nodes of earlier versions can take part in the network.
 
 5. From the cutoff date on, a node accepts a request only if it has signature V2. The node rejects a request without
