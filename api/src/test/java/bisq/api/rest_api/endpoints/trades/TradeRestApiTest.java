@@ -36,6 +36,7 @@ import bisq.chat.priv.LeavePrivateChatManager;
 import bisq.common.market.MarketRepository;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.support.SupportService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
@@ -62,6 +63,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -71,7 +73,9 @@ import static org.mockito.Mockito.when;
 class TradeRestApiTest {
     private static final String TRADE_ID = "trade-1";
     private static final String ACCOUNT_DATA = "Peter Tosh, 123456789";
+    private static final String USER_NAME = "alice";
 
+    private final ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
     private final BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
     private final BisqEasyService bisqEasyService = mock(BisqEasyService.class);
 
@@ -130,6 +134,43 @@ class TradeRestApiTest {
         assertThat(response.getEntity()).isEqualTo("Trade not found for ID " + TRADE_ID);
     }
 
+    @Test
+    void cancelTradeEventSendsTheCancelledTradeLogMessage() {
+        BisqEasyOpenTradeChannel channel = givenOpenTradeWithChannel();
+
+        restApi().processTradeEvent(TRADE_ID, new TradeEventDto(TradeEventTypeDto.CANCEL_TRADE, null), mock(AsyncResponse.class));
+
+        verify(openTradeChannelService()).sendTradeLogMessage(
+                Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", USER_NAME), channel);
+    }
+
+    @Test
+    void rejectTradeEventSendsTheRejectedTradeLogMessage() {
+        BisqEasyOpenTradeChannel channel = givenOpenTradeWithChannel();
+
+        restApi().processTradeEvent(TRADE_ID, new TradeEventDto(TradeEventTypeDto.REJECT_TRADE, null), mock(AsyncResponse.class));
+
+        verify(openTradeChannelService()).sendTradeLogMessage(
+                Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", USER_NAME), channel);
+    }
+
+    private BisqEasyOpenTradeChannel givenOpenTradeWithChannel() {
+        BisqEasyOpenTradeChannel channel = mock(BisqEasyOpenTradeChannel.class, RETURNS_DEEP_STUBS);
+        when(channel.getMyUserIdentity().getUserName()).thenReturn(USER_NAME);
+        when(openTradeChannelService().findChannelByTradeId(TRADE_ID)).thenReturn(Optional.of(channel));
+        // Deep stubs cannot provide the payment rail enum
+        BitcoinPaymentMethod paymentMethod = mock(BitcoinPaymentMethod.class);
+        doReturn(BitcoinPaymentRail.MAIN_CHAIN).when(paymentMethod).getPaymentRail();
+        BisqEasyTrade trade = mock(BisqEasyTrade.class, RETURNS_DEEP_STUBS);
+        when(trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod()).thenReturn(paymentMethod);
+        when(bisqEasyTradeService.findTrade(TRADE_ID)).thenReturn(Optional.of(trade));
+        return channel;
+    }
+
+    private BisqEasyOpenTradeChannelService openTradeChannelService() {
+        return chatService.getBisqEasyOpenTradeChannelService();
+    }
+
     private void givenTrade(String paymentAccountData) {
         BisqEasyTrade trade = mock(BisqEasyTrade.class);
         when(trade.getPaymentAccountData()).thenReturn(Optional.ofNullable(paymentAccountData));
@@ -139,7 +180,7 @@ class TradeRestApiTest {
     private TradeRestApi restApi() {
         TradeService tradeService = mock(TradeService.class);
         when(tradeService.getBisqEasyTradeService()).thenReturn(bisqEasyTradeService);
-        return new TradeRestApi(mock(ChatService.class, RETURNS_DEEP_STUBS),
+        return new TradeRestApi(chatService,
                 mock(MarketPriceService.class),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(SupportService.class, RETURNS_DEEP_STUBS),
