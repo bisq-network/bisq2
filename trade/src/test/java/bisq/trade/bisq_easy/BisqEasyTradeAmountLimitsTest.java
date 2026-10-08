@@ -163,6 +163,27 @@ class BisqEasyTradeAmountLimitsTest {
         }
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            // The seller's maximum limits the offer
+            "50, 400, 399, 399",
+            // The offer's maximum is below the seller's maximum
+            "50, 300, 399, 300",
+            // The seller's maximum is below the offer's minimum, which the tolerance covers. Score 79902: the seller's
+            // maximum is 399 USD, the minimum of 399.6 USD requires 80000.
+            "399.6, 400, 399, 399.6"
+    })
+    void buyersMaxAmountIsTheSellersMaximumButNotBelowTheOffersMinimum(double offersMin,
+                                                                       double offersMax,
+                                                                       double sellersMax,
+                                                                       double buyersMax) {
+        Monetary amount = BisqEasyTradeAmountLimits.getBuyersMaxQuoteSideAmount(Fiat.fromFaceValue(offersMin, "USD"),
+                Fiat.fromFaceValue(offersMax, "USD"),
+                Fiat.fromFaceValue(sellersMax, "USD"));
+
+        assertEquals(Fiat.fromFaceValue(buyersMax, "USD"), amount);
+    }
+
     @Test
     void acceptsLowScoreMaximumAcrossUsdRoundingBoundaryWithSlightPriceDifference() {
         PriceQuote usdPriceQuote = PriceQuote.fromFiatPrice(83_875.15, "USD");
