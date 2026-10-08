@@ -8,7 +8,9 @@ import bisq.account.accounts.fiat.AliPayAccount;
 import bisq.account.accounts.fiat.AmazonGiftCardAccount;
 import bisq.account.accounts.fiat.CashDepositAccount;
 import bisq.account.accounts.fiat.MoneyGramAccount;
+import bisq.account.accounts.fiat.NationalBankAccount;
 import bisq.account.accounts.fiat.RevolutAccount;
+import bisq.account.accounts.fiat.SameBankAccount;
 import bisq.account.accounts.fiat.SepaAccount;
 import bisq.account.accounts.fiat.SepaInstantAccount;
 import bisq.account.accounts.fiat.UserDefinedFiatAccount;
@@ -23,7 +25,9 @@ import bisq.api.dto.mappings.account.fiat.AliPayAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.AmazonGiftCardAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.CashDepositAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.MoneyGramAccountDtoMapping;
+import bisq.api.dto.mappings.account.fiat.NationalBankAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.RevolutAccountDtoMapping;
+import bisq.api.dto.mappings.account.fiat.SameBankAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.SepaAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.SepaInstantAccountDtoMapping;
 import bisq.api.dto.mappings.account.fiat.UserDefinedFiatAccountDtoMapping;
@@ -49,7 +53,7 @@ public class PaymentAccountDtoMapping {
     /**
      * Convert a Bisq2 Account model to a PaymentAccountDto.
      * Currently supports:
-     * - Fiat: UserDefinedFiatAccount, AchTransferAccount, AliPayAccount, AmazonGiftCardAccount, CashDepositAccount, MoneyGramAccount, RevolutAccount, SepaAccount, SepaInstantAccount, WiseAccount, ZelleAccount
+     * - Fiat: UserDefinedFiatAccount, AchTransferAccount, AliPayAccount, AmazonGiftCardAccount, CashDepositAccount, MoneyGramAccount, NationalBankAccount, RevolutAccount, SameBankAccount, SepaAccount, SepaInstantAccount, WiseAccount, ZelleAccount
      * - Crypto: MoneroAccount, OtherCryptoAssetAccount
      * TODO: Add support for additional account types as they are implemented.
      */
@@ -76,8 +80,14 @@ public class PaymentAccountDtoMapping {
         if (account instanceof MoneyGramAccount moneyGramAccount) {
             return MoneyGramAccountDtoMapping.fromBisq2Model(moneyGramAccount);
         }
+        if (account instanceof NationalBankAccount nationalBankAccount) {
+            return NationalBankAccountDtoMapping.fromBisq2Model(nationalBankAccount);
+        }
         if (account instanceof RevolutAccount revolutAccount) {
             return RevolutAccountDtoMapping.fromBisq2Model(revolutAccount);
+        }
+        if (account instanceof SameBankAccount sameBankAccount) {
+            return SameBankAccountDtoMapping.fromBisq2Model(sameBankAccount);
         }
         if (account instanceof SepaAccount sepaAccount) {
             return SepaAccountDtoMapping.fromBisq2Model(sepaAccount);
