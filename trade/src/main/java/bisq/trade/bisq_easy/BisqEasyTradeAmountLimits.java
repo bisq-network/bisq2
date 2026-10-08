@@ -175,7 +175,7 @@ public class BisqEasyTradeAmountLimits {
         Result result;
         if (sellersReputationScore >= requiredReputationScore) {
             result = Result.MATCH_SCORE;
-        } else if (withTolerance(sellersReputationScore) >= requiredReputationScore) {
+        } else if (isCoveredWithTolerance(sellersReputationScore, requiredReputationScore)) {
             result = Result.MATCH_TOLERATED_SCORE;
         } else {
             result = Result.SCORE_TOO_LOW;
@@ -228,6 +228,14 @@ public class BisqEasyTradeAmountLimits {
             return scoreWithRelativeTolerance;
         }
         return Math.max(scoreWithRelativeTolerance, makersReputationScore + MIN_REPUTATION_SCORE_TOLERANCE);
+    }
+
+    /**
+     * Whether the reputation score covers the required reputation score of an amount with the tolerance of the rule
+     * in docs/specifications/trade/bisq-easy-seller-reputation-limit.md (see {@link #withTolerance}).
+     */
+    public static boolean isCoveredWithTolerance(long reputationScore, long requiredReputationScore) {
+        return withTolerance(reputationScore) >= requiredReputationScore;
     }
 
     public static Pair<Optional<Monetary>, Optional<Monetary>> getLowestAndHighestAmountInAvailableOffers(

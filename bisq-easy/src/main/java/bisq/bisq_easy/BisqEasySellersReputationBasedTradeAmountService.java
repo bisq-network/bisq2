@@ -161,7 +161,7 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
                     .map(reputationService::getReputationScore)
                     .map(ReputationScore::getTotalScore)
                     .orElse(0L);
-            boolean hasInsufficientReputation = BisqEasyTradeAmountLimits.withTolerance(sellersScore) < requiredReputationScoreForMinOrFixed;
+            boolean hasInsufficientReputation = !BisqEasyTradeAmountLimits.isCoveredWithTolerance(sellersScore, requiredReputationScoreForMinOrFixed);
             if (hasInsufficientReputation) {
                 if (useCache) {
                     synchronized (cacheInvalidationLock) {

@@ -81,7 +81,7 @@ import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUN
 import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
 import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.Result;
 import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.getLowestAndHighestAmountInAvailableOffers;
-import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.withTolerance;
+import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.isCoveredWithTolerance;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -518,11 +518,11 @@ public class TradeWizardAmountController implements Controller {
         long requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, market, minQuoteSideAmount).orElse(0L);
         long numPotentialTakersForMaxOrFixedAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMaxOrFixedAmount)
+                .filter(e -> isCoveredWithTolerance(e.getValue(), requiredReputationScoreForMaxOrFixedAmount))
                 .count();
         long numPotentialTakersForMinAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMinAmount)
+                .filter(e -> isCoveredWithTolerance(e.getValue(), requiredReputationScoreForMinAmount))
                 .count();
         String formattedMaxOrFixedAmount = formatQuoteAmountWithCode(maxOrFixedQuoteSideAmount);
         model.getShouldShowWarningIcon().set(false);
