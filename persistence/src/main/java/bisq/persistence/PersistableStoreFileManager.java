@@ -89,6 +89,10 @@ public class PersistableStoreFileManager {
         backupService.prune();
     }
 
+    public void deleteBackups() {
+        backupService.deleteAll();
+    }
+
     public List<BackupFileInfo> getBackups() {
         return List.copyOf(backupService.getBackups());
     }
