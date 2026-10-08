@@ -161,6 +161,29 @@ class DeviceRegistrationServiceTest {
     }
 
     @Test
+    void pruneDeadRegistrationRemovesTheDeviceWhileItsRejectedTokenIsCurrent() {
+        register("device-1", CLIENT_ID);
+
+        assertTrue(service.pruneDeadRegistration("device-1", "a".repeat(64)));
+        assertTrue(service.getMobileDeviceProfiles().isEmpty());
+    }
+
+    @Test
+    void pruneDeadRegistrationKeepsADeviceThatReRegisteredWithAFreshToken() {
+        // Between the dispatch snapshot and the gateway's verdict the device may have
+        // re-registered; the verdict names the old token only, so the live registration stays.
+        register("device-1", CLIENT_ID);
+
+        assertFalse(service.pruneDeadRegistration("device-1", "stale-token-from-snapshot"));
+        assertEquals(1, service.getMobileDeviceProfiles().size());
+    }
+
+    @Test
+    void pruneDeadRegistrationReturnsFalseForUnknownDevice() {
+        assertFalse(service.pruneDeadRegistration("unknown-device", "some-token"));
+    }
+
+    @Test
     void unregisterReturnsFalseForUnknownDevice() {
         assertFalse(service.unregister("unknown-device", CLIENT_ID));
     }

@@ -20,19 +20,24 @@ package bisq.bonded_roles.mobile_notification_relay;
 import bisq.common.data.Pair;
 import bisq.common.json.JsonMapperProvider;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
 import bisq.network.http.HttpRequest;
 import bisq.network.http.HttpRequestService;
 import bisq.network.http.HttpRequestServiceConfig;
 import bisq.network.http.HttpRequestUrlProvider;
+import bisq.network.http.utils.HttpException;
+import bisq.network.http.utils.HttpLogSanitizer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
-public class MobileNotificationRelayClient extends HttpRequestService<MobileNotificationRelayClient.RequestData, Boolean> {
+public class MobileNotificationRelayClient extends HttpRequestService<MobileNotificationRelayClient.RequestData, MobileNotificationRelayResult> {
 
     private static ExecutorService getExecutorService() {
         return ExecutorFactory.newCachedThreadPool(MobileNotificationRelayClient.class.getSimpleName(),
@@ -48,17 +53,15 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
     }
 
     @Override
-    protected Boolean parseResult(String json) {
-        // The relay v1 endpoint signals success with a 2xx response — anything
-        // non-2xx surfaces as HttpException upstream, never reaches this method.
-        // TODO: if the relay starts returning structured JSON (e.g.
-        // {"success": false, "reason": "..."} with a 200), parse it here so we
-        // don't silently report success on a logical failure.
-        // Logged at DEBUG: relay responses are small acks today, but future
-        // relay versions may include diagnostic data referencing tokens or
-        // operator details — keep INFO output free of raw response bodies.
-        log.debug("Relay v1 response: {}", json);
-        return true;
+    protected MobileNotificationRelayResult parseResult(String json) {
+        // Only 2xx bodies reach this method; non-2xx surfaces as HttpException and is
+        // translated in sendToRelayServer. Current relays answer 2xx with a structured
+        // accepted result; older relays answer with a plain ack, mapped to accepted.
+        // Logged at DEBUG: response bodies may include diagnostic data referencing
+        // tokens or operator details — keep INFO output free of them.
+        log.debug("Relay v1 response: {}", HttpLogSanitizer.loggableBody(json));
+        return MobileNotificationRelayResult.fromJson(json)
+                .orElseGet(MobileNotificationRelayResult::accepted);
     }
 
     @Override
@@ -85,15 +88,64 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
     }
 
     /**
+     * The relay answers every gateway rejection with 400 plus a structured body — transient
+     * upstream failures (FCM {@code UNAVAILABLE}, APNs {@code ServiceUnavailable}, ...)
+     * included. Reclassify those as recoverable so provider failover still gets a chance;
+     * permanent verdicts (unregistered token, invalid payload) and unstructured 400s keep
+     * failing fast.
+     */
+    @Override
+    protected boolean isRecoverableClientError(HttpException httpException) {
+        return httpException.getResponseCode() == 400
+                && MobileNotificationRelayResult.fromJson(httpException.getMessage())
+                .map(MobileNotificationRelayResult::isRecoverable)
+                .orElse(false);
+    }
+
+    /**
      * Sends a push notification via the relay's v1 POST endpoint, using the
      * full {@link HttpRequestService} pipeline (provider failover, retry,
-     * timeout, lifecycle).
+     * timeout, lifecycle). Completes normally with a rejected result when the
+     * relay answered 400 with its structured body carrying a permanent verdict
+     * (e.g. an unregistered token); completes exceptionally for transient
+     * failures (5xx, timeout, transport, recoverable gateway rejections that
+     * exhausted all providers) and for rejections without a structured body.
      */
-    public CompletableFuture<Boolean> sendToRelayServer(boolean isAndroid,
-                                                        String deviceToken,
-                                                        String encryptedBase64,
-                                                        boolean mutableContent) {
-        return request(new RequestData(isAndroid, deviceToken, encryptedBase64, mutableContent));
+    public CompletableFuture<MobileNotificationRelayResult> sendToRelayServer(boolean isAndroid,
+                                                                              String deviceToken,
+                                                                              String encryptedBase64,
+                                                                              boolean mutableContent) {
+        return withRejectionTranslation(request(new RequestData(isAndroid, deviceToken, encryptedBase64, mutableContent)));
+    }
+
+    static CompletableFuture<MobileNotificationRelayResult> withRejectionTranslation(
+            CompletableFuture<MobileNotificationRelayResult> request) {
+        return request.handle((result, throwable) -> {
+            if (throwable == null) {
+                return result;
+            }
+            return structuredRejection(throwable)
+                    .orElseThrow(() -> throwable instanceof CompletionException completionException
+                            ? completionException
+                            : new CompletionException(throwable));
+        });
+    }
+
+    /**
+     * Recovers the relay's structured verdict from a 400 response. Only 400 carries one —
+     * the relay answers gateway rejections with 400 plus the serialized result, while its
+     * 5xx responses have an empty body — so any other failure is transient by contract.
+     * Only a permanent rejection is a verdict: an accepted body contradicting the 400 status
+     * (buggy or hostile relay) must not turn an error into a delivery, and a recoverable
+     * rejection stays exceptional so a transient failure is never mistaken for a final
+     * answer — regardless of how the retry pipeline wrapped it.
+     */
+    static Optional<MobileNotificationRelayResult> structuredRejection(Throwable throwable) {
+        return ExceptionUtil.getRootCause(throwable) instanceof HttpException httpException
+                && httpException.getResponseCode() == 400
+                ? MobileNotificationRelayResult.fromJson(httpException.getMessage())
+                        .filter(result -> !result.wasAccepted() && !result.isRecoverable())
+                : Optional.empty();
     }
 
     static String buildJsonBody(String encryptedBase64, boolean isUrgent, boolean isMutableContent) {
