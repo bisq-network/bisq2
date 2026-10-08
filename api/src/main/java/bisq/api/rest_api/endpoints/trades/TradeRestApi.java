@@ -410,7 +410,7 @@ public class TradeRestApi extends RestApiBase {
     private void handleCancelTrade(BisqEasyOpenTradeChannel channel,
                                    BisqEasyTrade trade,
                                    String userName) throws Exception {
-        String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.rejected", userName);
+        String encoded = Res.encode("bisqEasy.openTrades.tradeLogMessage.cancelled", userName);
         bisqEasyOpenTradeChannelService.sendTradeLogMessage(encoded, channel).get();
         bisqEasyTradeService.cancelTrade(trade);
     }
