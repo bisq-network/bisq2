@@ -98,6 +98,19 @@ class BisqEasyTradeAmountLimitsTest {
     }
 
     @ParameterizedTest
+    @CsvSource({
+            "0, 0, true",
+            "0, 1, false",
+            "1300, 1500, true",
+            "1300, 1501, false",
+            "100000, 105000, true",
+            "100000, 105001, false"
+    })
+    void requiredScoreIsCoveredUpToTheScoreWithTolerance(long score, long requiredScore, boolean isCovered) {
+        assertEquals(isCovered, BisqEasyTradeAmountLimits.isCoveredWithTolerance(score, requiredScore));
+    }
+
+    @ParameterizedTest
     @CsvSource({"60000", "83875.1546"})
     void acceptsLegacyUsdMaximumForLowScores(double btcUsdPrice) {
         PriceQuote usdPriceQuote = PriceQuote.fromFiatPrice(btcUsdPrice, "USD");
