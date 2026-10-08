@@ -29,6 +29,7 @@ import bisq.security.mobile_notifications.MobileNotificationEncryption;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,7 +51,12 @@ public class MobileNotificationService implements Service {
 
     public MobileNotificationService(PersistenceService persistenceService,
                                      MobileNotificationRelayClient mobileNotificationRelayClient) {
-        deviceRegistrationService = new DeviceRegistrationService(persistenceService);
+        this(new DeviceRegistrationService(persistenceService), mobileNotificationRelayClient);
+    }
+
+    MobileNotificationService(DeviceRegistrationService deviceRegistrationService,
+                              MobileNotificationRelayClient mobileNotificationRelayClient) {
+        this.deviceRegistrationService = deviceRegistrationService;
         this.mobileNotificationRelayClient = mobileNotificationRelayClient;
     }
 
@@ -136,18 +142,50 @@ public class MobileNotificationService implements Service {
                                         deviceToken,
                                         encryptedBase64,
                                         mutableContent)
-                                .whenComplete((success, throwable) -> {
+                                .whenComplete((result, throwable) -> {
                                     if (throwable != null) {
+                                        // Transient (5xx, timeout, transport) — the relay client only completes
+                                        // normally for delivered pushes and structured gateway verdicts.
                                         log.warn("Failed to send push notification to {} device", platform, throwable);
-                                    } else if (Boolean.TRUE.equals(success)) {
-                                        log.info("Push notification sent to {} device (token: {}...)", platform, deviceToken.substring(0, Math.min(8, deviceToken.length())));
+                                    } else if (result.wasAccepted()) {
+                                        // Device tokens are an installation identifier — keep them out of
+                                        // default-enabled log levels.
+                                        log.info("Push notification sent to {} device", platform);
+                                        log.debug("Push notification sent to {} device (token: {}...)",
+                                                platform, deviceToken.substring(0, Math.min(8, deviceToken.length())));
+                                    } else if (result.isUnregistered()) {
+                                        // The gateway's permanent verdict (app uninstalled, token rotated):
+                                        // every future dispatch to this registration would fail the same way.
+                                        boolean removed = deviceRegistrationService.pruneDeadRegistration(
+                                                mobileDeviceProfile.getDeviceId(), deviceToken);
+                                        log.warn("Gateway reported the {} device token as no longer valid ({}); {}",
+                                                platform,
+                                                loggableErrorCode(result.errorCode(), "unregistered"),
+                                                removed
+                                                        ? "removed its registration"
+                                                        : "its registration was already gone or re-registered — left untouched");
                                     } else {
-                                        log.warn("Push notification relay returned failure for {} device", platform);
+                                        log.warn("Push notification relay rejected the dispatch to the {} device ({}); keeping the registration",
+                                                platform, loggableErrorCode(result.errorCode(), "unknown"));
                                     }
                                 });
                     } catch (Exception e) {
                         log.error("Could not send notification to relay server for {} device", platform, e);
                     }
                 });
+    }
+
+    /**
+     * Relay-supplied error codes reach a default-enabled log level, and the relay is a
+     * less-trusted counterpart: strip anything that could forge log lines (CR/LF) or corrupt a
+     * followed console (escape sequences) and cap the length. Legitimate codes are short
+     * gateway identifiers (UNREGISTERED, BadDeviceToken, ...), which pass unchanged.
+     */
+    static String loggableErrorCode(Optional<String> errorCode, String fallback) {
+        return errorCode
+                .filter(code -> !code.isBlank())
+                .map(code -> code.replaceAll("[^A-Za-z0-9_.-]", "_"))
+                .map(code -> code.length() > 40 ? code.substring(0, 40) : code)
+                .orElse(fallback);
     }
 }
