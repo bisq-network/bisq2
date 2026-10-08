@@ -62,6 +62,11 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         return readStoreFromFileOrRestoreFromBackup();
     }
 
+    /**
+     * Throws if the store did not reach the disk, so callers that take follow-up steps on a
+     * completed write can tell: {@link CouldNotSerializePersistableStore} as is, anything else
+     * wrapped in an {@link IllegalStateException}.
+     */
     public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
         try {
@@ -78,6 +83,10 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     public void pruneBackups() {
         storeFileManager.pruneBackups();
+    }
+
+    public synchronized void deleteBackups() {
+        storeFileManager.deleteBackups();
     }
 
     public List<BackupFileInfo> getBackups() {

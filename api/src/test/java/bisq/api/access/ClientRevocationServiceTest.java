@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 
 import java.util.List;
+import java.util.Set;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,6 +56,24 @@ class ClientRevocationServiceTest {
         verify(sessionService).removeSessionByClientId(CLIENT_ID);
         verify(disconnectHandler).onClientRevoked(CLIENT_ID);
         verify(pushHandler).onClientRevoked(CLIENT_ID);
+    }
+
+    @Test
+    void startupRunsTheHandlersForClientsTheStoreDropped() {
+        // Profile and grant are already gone, so only what lives outside the store is left: a push
+        // registration still owned by the dropped client would keep notifying it and refuse the
+        // same device after it pairs again.
+        PairingService pairingService = mock(PairingService.class);
+        SessionService sessionService = mock(SessionService.class);
+        ClientRevocationHandler pushHandler = mock(ClientRevocationHandler.class);
+        when(pairingService.getClientProfiles()).thenReturn(List.of());
+        when(pairingService.getClientIdsDroppedDuringLoad()).thenReturn(Set.of(CLIENT_ID));
+
+        new ClientRevocationService(pairingService, sessionService, List.of(pushHandler))
+                .completeInterruptedRevocations();
+
+        verify(pushHandler).onClientRevoked(CLIENT_ID);
+        verify(sessionService).removeSessionByClientId(CLIENT_ID);
     }
 
     @Test
@@ -128,8 +147,8 @@ class ClientRevocationServiceTest {
         // would otherwise keep feeding a revoked client for good.
         PairingService pairingService = mock(PairingService.class);
         ClientRevocationHandler handler = mock(ClientRevocationHandler.class);
-        ClientProfile interrupted = new ClientProfile(CLIENT_ID, "secret", "Pixel 8");
-        ClientProfile paired = new ClientProfile("client-2", "other-secret", "iPhone");
+        ClientProfile interrupted = ClientProfile.fromSecret(CLIENT_ID, "secret", "Pixel 8");
+        ClientProfile paired = ClientProfile.fromSecret("client-2", "other-secret", "iPhone");
         when(pairingService.getClientProfiles()).thenReturn(List.of(interrupted, paired));
         when(pairingService.hasPermissions(CLIENT_ID)).thenReturn(false);
         when(pairingService.hasPermissions("client-2")).thenReturn(true);

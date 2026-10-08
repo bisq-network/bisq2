@@ -94,9 +94,9 @@ public class PairingService {
         return pairingCode;
     }
 
-    public ClientProfile requestPairing(byte version,
-                                        String pairingCodeId,
-                                        String clientName) throws InvalidPairingRequestException {
+    public NewPairing requestPairing(byte version,
+                                     String pairingCodeId,
+                                     String clientName) throws InvalidPairingRequestException {
         if (version != VERSION) {
             throw new InvalidPairingRequestException("Unsupported pairing protocol version: " + version);
         }
@@ -127,16 +127,15 @@ public class PairingService {
         String clientId = UUID.randomUUID().toString();
         byte[] secret = ByteArrayUtils.getRandomBytes(32);
         String clientSecret = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
-        ClientProfile clientProfile = new ClientProfile(clientId,
-                clientSecret,
-                cappedClientName);
+        // Only the hash is stored; the plaintext goes to the client once, in the pairing response.
+        ClientProfile clientProfile = ClientProfile.fromSecret(clientId, clientSecret, cappedClientName);
         // Profile and grant in one step: written separately, a revocation could land between them
         // and leave a grant behind that authorizes the client it had just revoked.
         apiAccessStoreService.putClientProfileAndPermissions(clientId,
                 clientProfile,
                 permissionService.toPermissionSet(pairingCode.getGrantedPermissions()));
 
-        return clientProfile;
+        return new NewPairing(clientProfile, clientSecret);
     }
 
     public Optional<PairingCode> findPairingCode(String id) {
@@ -159,6 +158,11 @@ public class PairingService {
      */
     public boolean revokeClientProfile(String clientId) {
         return apiAccessStoreService.removeClientProfile(clientId);
+    }
+
+    /** See {@link ApiAccessStoreService#getClientIdsDroppedDuringLoad()}. */
+    public Set<String> getClientIdsDroppedDuringLoad() {
+        return apiAccessStoreService.getClientIdsDroppedDuringLoad();
     }
 
     /** Ends a client's access without forgetting it, so a revocation can still address it. */

@@ -17,7 +17,6 @@
 
 package bisq.api.access.identity;
 
-import bisq.security.DigestUtil;
 import bisq.security.HmacUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,9 +34,9 @@ import java.util.Base64;
  * credential value.
  * <p>
  * Derived rather than stored, so no migration and no second identity to keep in sync: an HMAC over
- * the client id, keyed by a hash of that client's own secret. That makes it stable for the life of
- * the pairing, unique per client, unable to be turned back into the id, and not computable by anyone
- * who does not already hold the secret.
+ * the client id, keyed by the stored hash of that client's own secret. That makes it stable for the
+ * life of the pairing, unique per client, unable to be turned back into the id, and not computable
+ * by anyone who does not already hold the secret or the store.
  */
 @Slf4j
 public final class ClientManagementId {
@@ -50,9 +49,7 @@ public final class ClientManagementId {
 
     public static String of(ClientProfile clientProfile) {
         byte[] message = (DOMAIN_SEPARATOR + clientProfile.getClientId()).getBytes(StandardCharsets.UTF_8);
-        // Hashed into the key rather than used raw: HMAC keys have a minimum length here, and a
-        // profile with a shorter secret must not make the whole listing fail.
-        byte[] key = DigestUtil.sha256(clientProfile.getClientSecret().getBytes(StandardCharsets.UTF_8));
+        byte[] key = clientProfile.getClientSecretHash();
         try {
             byte[] hmac = HmacUtil.createHmac(message, HmacUtil.createHmacKeySpec(key));
             return Base64.getUrlEncoder().withoutPadding()
