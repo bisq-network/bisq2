@@ -417,12 +417,16 @@ public class ChatMessagesListController implements Controller {
             String learnMore = Res.get("chat.message.takeOffer.reputation.warning.learnMore");
             Direction takersDisplayDirection = bisqEasyOffer.getTakersDisplayDirection();
             if (takersDisplayDirection.isBuy()) {
-                // I am as taker the buyer. We check if seller has the required reputation
+                // I am as taker the buyer. We check if seller has the required reputation. Like the offerbook filter
+                // and the maker's check, we apply the tolerance of the rule: makers of version 2.1.13 rounded their
+                // maximum up to the next whole USD, and prices can differ from those of the maker (see
+                // docs/specifications/trade/bisq-easy-seller-reputation-limit.md).
                 sellersScore = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
                         .map(reputationService::getReputationScore)
                         .map(ReputationScore::getTotalScore)
                         .orElse(0L);
-                boolean canBuyerTakeOffer = sellersScore >= requiredReputationScoreForMinOrFixed;
+                boolean canBuyerTakeOffer = BisqEasyTradeAmountLimits.isCoveredWithTolerance(sellersScore,
+                        requiredReputationScoreForMinOrFixed);
                 if (!canBuyerTakeOffer) {
                     new Popup()
                             .headline(Res.get("chat.message.takeOffer.buyer.invalidOffer.headline"))
