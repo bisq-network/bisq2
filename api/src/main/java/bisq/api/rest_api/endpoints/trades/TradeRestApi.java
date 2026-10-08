@@ -134,17 +134,18 @@ public class TradeRestApi extends RestApiBase {
     @Path("/{tradeId}/account-data-banned")
     @Operation(
             summary = "Check the seller's payment account data against the banned account data",
-            description = "Returns whether the payment account data the seller sent for this trade matches " +
-                    "account data banned by the security manager. Returns false as long as the trade has " +
-                    "not received the seller's account data. " +
-                    "This is a read-only check without side effects: reporting the seller to the " +
-                    "moderators and cancelling the trade are left to the client. " +
-                    "The node does not block later trade events either, so the client must keep the " +
-                    "buyer from confirming the payment, as Desktop does.",
+            description = "Returns whether the seller's account data for this trade matches data banned by " +
+                    "the security manager. " +
+                    "Only meaningful on the buyer's side: on the seller's node it checks the seller's own data. " +
+                    "Read-only: reporting the seller to the moderators, cancelling the trade and blocking " +
+                    "the payment confirmation are left to the client. Desktop does all three. " +
+                    "False is not final, since the seller's data or the node's banned list may not have " +
+                    "arrived yet: check again right before the buyer confirms the payment.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Check performed",
                             content = @Content(schema = @Schema(implementation = AccountDataBannedResponse.class))),
-                    @ApiResponse(responseCode = "404", description = "No open trade with this ID"),
+                    @ApiResponse(responseCode = "404",
+                            description = "No trade with this ID, or the trade has already been closed"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
