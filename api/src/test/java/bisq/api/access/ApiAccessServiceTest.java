@@ -119,6 +119,26 @@ class ApiAccessServiceTest {
     }
 
     @Test
+    void anEmptySecretNeverGetsASession() {
+        // A store entry can lose its credential (a build without hashed secrets rewrote it, or the store was
+        // tampered with). The empty secret must be refused before any comparison, and without a lookup that
+        // would tell the caller whether the client exists.
+        PairingService pairingService = mock(PairingService.class);
+        SessionService sessionService = mock(SessionService.class);
+
+        ApiAccessService apiAccessService = new ApiAccessService(pairingService,
+                sessionService,
+                mock(ClientRevocationService.class));
+
+        for (String secret : new String[]{"", " ", null}) {
+            assertThrows(InvalidSessionRequestException.class,
+                    () -> apiAccessService.requestSession("client-1", secret));
+        }
+        verify(pairingService, never()).findClientProfile(anyString());
+        verify(sessionService, never()).createSession(anyString());
+    }
+
+    @Test
     void aPairedClientStillGetsASession() throws InvalidSessionRequestException {
         PairingService pairingService = mock(PairingService.class);
         SessionService sessionService = mock(SessionService.class);

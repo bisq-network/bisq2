@@ -109,6 +109,12 @@ public class ApiAccessService {
     }
 
     public SessionResponse requestSession(String clientId, String clientSecret) throws InvalidSessionRequestException {
+        // No stored credential is ever empty, so an empty secret cannot match. Refused before the lookup, so a
+        // profile that lost its credential (an entry a version without hashed secrets rewrote, or a corrupt store)
+        // can never authenticate on the comparison alone.
+        if (clientSecret == null || clientSecret.isBlank()) {
+            throw new InvalidSessionRequestException("Client secret is not matching");
+        }
         ClientProfile clientProfile = pairingService.findClientProfile(clientId)
                 .orElseThrow(() -> new InvalidSessionRequestException("No client profile found for Client ID"));
 
