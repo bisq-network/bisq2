@@ -55,9 +55,18 @@ public interface SignedRequest {
     // now: the time of the node which verifies the request
     default boolean isSignatureInvalid(long now) {
         if (isSignatureV2Present()) {
-            return isSignatureV2Invalid();
+            return isSignatureV2Invalid() || isSignatureV1InvalidForEarlierVersions(now);
         }
         return isSignatureV2Required(now) || isSignatureV1Invalid();
+    }
+
+    // Before the cutoff date, nodes of earlier versions take part in the network. They verify only signature V1, so a
+    // node must not accept, store or serve a request which they reject. Otherwise the owner could add requests with a
+    // valid signature V2 and an invalid signature V1, which every inventory response sends again to nodes of earlier
+    // versions (see docs/specifications/network/storage-request-signatures.md, verification rule 1).
+    // now: the time of the node which verifies the request
+    default boolean isSignatureV1InvalidForEarlierVersions(long now) {
+        return !isSignatureV2Required(now) && isSignatureV1Invalid();
     }
 
     default boolean isSignatureV2Present() {

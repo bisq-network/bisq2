@@ -23,8 +23,10 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.EcPublicKeyVariants;
 import bisq.network.p2p.services.data.storage.EcdsaSignatureVariants;
+import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.security.DigestUtil;
+import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
@@ -33,8 +35,10 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.List;
 
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.AT_CUTOFF;
 import static bisq.network.p2p.services.data.storage.SignatureV1CutoffTimes.BEFORE_CUTOFF;
@@ -77,6 +81,36 @@ class MailboxSignatureV2Test {
         assertFalse(received.isSignatureV2Invalid());
         assertFalse(received.isSignatureV1Invalid());
         assertFalse(received.isSignatureInvalid());
+    }
+
+    // Nodes of earlier versions verify only signature V1. Before the cutoff date, a node does not accept a request which
+    // they reject, also if signature V2 is valid. Otherwise it would send the request to them with every inventory
+    // response.
+    @Test
+    void mailboxRequestsWithValidSignatureV2AndInvalidSignatureV1AreInvalidOnlyBeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        bisq.network.protobuf.AddMailboxRequest.Builder addProto = createAddMailboxRequest().toValueProto(false)
+                .toBuilder()
+                .setSignature(signOtherData(senderKeyPair));
+        byte[] addPreImageV2 = AddMailboxRequest.fromProto(addProto.build()).getPreImageV2();
+        AddMailboxRequest addWithInvalidSignatureV1 = AddMailboxRequest.fromProto(addProto
+                .setSignatureV2(ByteString.copyFrom(SignatureUtil.sign(addPreImageV2, senderKeyPair.getPrivate())))
+                .build());
+
+        bisq.network.protobuf.RemoveMailboxRequest.Builder removeProto = createRemoveMailboxRequest().toValueProto(false)
+                .toBuilder()
+                .setSignature(signOtherData(receiverKeyPair));
+        byte[] removePreImageV2 = RemoveMailboxRequest.fromProto(removeProto.build()).getPreImageV2();
+        RemoveMailboxRequest removeWithInvalidSignatureV1 = RemoveMailboxRequest.fromProto(removeProto
+                .setSignatureV2(ByteString.copyFrom(SignatureUtil.sign(removePreImageV2, receiverKeyPair.getPrivate())))
+                .build());
+
+        for (SignedRequest request : List.of(addWithInvalidSignatureV1, removeWithInvalidSignatureV1)) {
+            assertFalse(request.isSignatureV2Invalid());
+            assertTrue(request.isSignatureV1Invalid());
+            assertTrue(request.isSignatureInvalid(BEFORE_CUTOFF));
+            assertFalse(request.isSignatureInvalid(AT_CUTOFF));
+        }
     }
 
     @Test
@@ -385,6 +419,10 @@ class MailboxSignatureV2Test {
     private AddMailboxRequest createAddMailboxRequest() throws GeneralSecurityException, UnresolvableProtobufException {
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(senderKeyPair));
         return AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+    }
+
+    private static ByteString signOtherData(KeyPair keyPair) throws GeneralSecurityException {
+        return ByteString.copyFrom(SignatureUtil.sign("other data".getBytes(StandardCharsets.UTF_8), keyPair.getPrivate()));
     }
 
     private RemoveMailboxRequest createRemoveMailboxRequest()
