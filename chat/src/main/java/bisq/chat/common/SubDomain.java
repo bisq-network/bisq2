@@ -60,7 +60,7 @@ public enum SubDomain {
     public static Optional<SubDomain> find(ChatChannelDomain chatChannelDomain, String channelTitle) {
         String name = chatChannelDomain.name().toUpperCase(Locale.ROOT) + "_" +
                 StringUtils.camelCaseToSnakeCase(channelTitle).toUpperCase(Locale.ROOT);
-        return Enums.getIfPresent(SubDomain.class, name).toJavaUtil();
+        return Optional.ofNullable(Enums.getIfPresent(SubDomain.class, name).orNull());
     }
 
     public static Optional<SubDomain> find(String channelId) {
@@ -69,7 +69,7 @@ public enum SubDomain {
             return Optional.empty();
         }
         String chatChannelDomainName = tokens[0].toUpperCase(Locale.ROOT);
-        return Enums.getIfPresent(ChatChannelDomain.class, chatChannelDomainName).toJavaUtil()
+        return Optional.ofNullable(Enums.getIfPresent(ChatChannelDomain.class, chatChannelDomainName).orNull())
                 .flatMap(chatChannelDomain -> find(chatChannelDomain, tokens[1]));
     }
 

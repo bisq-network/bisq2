@@ -146,7 +146,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                 return Optional.empty();
             }
             String chatChannelDomainName = tokens[0].toUpperCase(Locale.ROOT);
-            return Enums.getIfPresent(ChatChannelDomain.class, chatChannelDomainName).toJavaUtil()
+            return Optional.ofNullable(Enums.getIfPresent(ChatChannelDomain.class, chatChannelDomainName).orNull())
                     .map(chatChannelDomain -> createId(chatChannelDomain.migrate(), peers[0], peers[1]));
         }
     }
