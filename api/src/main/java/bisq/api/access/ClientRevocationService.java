@@ -62,15 +62,25 @@ public class ClientRevocationService {
      * client half revoked, and the failure is reported rather than only logged: the caller would
      * otherwise be told the client was revoked while it can still be connected or receive push
      * notifications.
+     * <p>
+     * A store write that fails is reported the same way. Its removal stays in effect in memory, so
+     * the client has no access while this node runs, but the disk still holds the grant the next
+     * start would load. The profile is kept for the retry, whose final write covers the whole
+     * store including the earlier grant removal.
      *
      * @param clientId The client ID to revoke
      * @return the outcome; see {@link ClientRevocationResult}
      */
     public ClientRevocationResult revokeClient(String clientId) {
-        pairingService.revokePermissions(clientId);
+        boolean cleanupFailed = false;
+        try {
+            pairingService.revokePermissions(clientId);
+        } catch (Exception e) {
+            cleanupFailed = true;
+            log.error("Writing the permission removal of client {} failed", clientId, e);
+        }
         sessionService.removeSessionByClientId(clientId);
 
-        boolean cleanupFailed = false;
         for (ClientRevocationHandler handler : revocationHandlers) {
             try {
                 handler.onClientRevoked(clientId);
@@ -86,7 +96,16 @@ public class ClientRevocationService {
             return ClientRevocationResult.CLEANUP_FAILED;
         }
 
-        if (pairingService.revokeClientProfile(clientId)) {
+        boolean profileRemoved;
+        try {
+            profileRemoved = pairingService.revokeClientProfile(clientId);
+        } catch (Exception e) {
+            log.error("Revocation of client {} is incomplete, writing the removal of its profile " +
+                    "failed. Its access is withdrawn until the next start and it stays listed so " +
+                    "the revocation can be retried", clientId, e);
+            return ClientRevocationResult.CLEANUP_FAILED;
+        }
+        if (profileRemoved) {
             log.info("Revoked client {}", clientId);
             return ClientRevocationResult.REVOKED;
         }

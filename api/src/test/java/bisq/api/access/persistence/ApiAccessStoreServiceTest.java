@@ -35,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -119,7 +120,7 @@ class ApiAccessStoreServiceTest {
 
         service.readPersisted();
 
-        // Written, backups deleted, written again so a hashed backup exists: every write moves the
+        // Written, backups deleted, written again so a hashed backup exists: every write copies the
         // previous file into the backups, so the first write alone would leave the plaintext there.
         ArgumentCaptor<ApiAccessStore> captor = ArgumentCaptor.forClass(ApiAccessStore.class);
         InOrder inOrder = inOrder(persistence);
@@ -255,5 +256,69 @@ class ApiAccessStoreServiceTest {
         service.removeClientProfile(CLIENT_ID);
 
         verify(persistence, times(3)).persistAsync(any());
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void aFailedWriteOfThePermissionRemovalIsThrownAndTheGrantStaysRemoved() {
+        // Putting the grant back would hand a client that is being revoked its access back.
+        Persistence persistence = mock(Persistence.class);
+        ApiAccessStoreService service = serviceWith(persistence);
+        service.putClientProfileAndPermissions(CLIENT_ID,
+                ClientProfile.fromSecret(CLIENT_ID, "secret", "Pixel 8"),
+                PermissionSet.grantAll());
+        failWrites(persistence);
+
+        assertThrows(IllegalStateException.class, () -> service.removePermissions(CLIENT_ID));
+
+        assertFalse(service.getPermissionsByClientId().containsKey(CLIENT_ID));
+        assertTrue(service.getClientProfileByIdMap().containsKey(CLIENT_ID));
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void aFailedWriteOfTheProfileRemovalIsThrownAndKeepsTheClientListedWithoutAccess() {
+        // Listed so the revocation can be retried, without the grant so it has no access meanwhile.
+        Persistence persistence = mock(Persistence.class);
+        ApiAccessStoreService service = serviceWith(persistence);
+        service.putClientProfileAndPermissions(CLIENT_ID,
+                ClientProfile.fromSecret(CLIENT_ID, "secret", "Pixel 8"),
+                PermissionSet.grantAll());
+        service.removePermissions(CLIENT_ID);
+        failWrites(persistence);
+
+        assertThrows(IllegalStateException.class, () -> service.removeClientProfile(CLIENT_ID));
+
+        assertTrue(service.getClientProfileByIdMap().containsKey(CLIENT_ID));
+        assertFalse(service.getPermissionsByClientId().containsKey(CLIENT_ID));
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void theProfileRemovalAlsoWritesAGrantRemovalWhoseOwnWriteFailed() {
+        // The grant removal no longer has anything to remove on a retry, so it writes nothing: the
+        // profile removal is the write that has to carry it to disk.
+        Persistence persistence = mock(Persistence.class);
+        ApiAccessStoreService service = serviceWith(persistence);
+        service.putClientProfileAndPermissions(CLIENT_ID,
+                ClientProfile.fromSecret(CLIENT_ID, "secret", "Pixel 8"),
+                PermissionSet.grantAll());
+        failWrites(persistence);
+        assertThrows(IllegalStateException.class, () -> service.removePermissions(CLIENT_ID));
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+
+        assertTrue(service.removeClientProfile(CLIENT_ID));
+
+        ArgumentCaptor<ApiAccessStore> captor = ArgumentCaptor.forClass(ApiAccessStore.class);
+        verify(persistence, times(3)).persistAsync(captor.capture());
+        ApiAccessStore written = captor.getValue();
+        assertFalse(written.getClientProfileByIdMap().containsKey(CLIENT_ID));
+        assertFalse(written.getPermissionsByClientId().containsKey(CLIENT_ID));
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void failWrites(Persistence persistence) {
+        when(persistence.persistAsync(any()))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("disk full")));
     }
 }
