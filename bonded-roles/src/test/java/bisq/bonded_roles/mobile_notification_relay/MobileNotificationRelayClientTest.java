@@ -178,9 +178,24 @@ class MobileNotificationRelayClientTest {
         assertThat(accepted.isUnregistered()).isFalse();
 
         MobileNotificationRelayResult rejected =
-                client.publicParseResult("{\"wasAccepted\":false,\"errorCode\":\"UNREGISTERED\",\"isUnregistered\":true}");
+                client.publicParseResult("{\"wasAccepted\":false,\"errorCode\":\"OTHER\"}");
         assertThat(rejected.wasAccepted()).isFalse();
-        assertThat(rejected.isUnregistered()).isTrue();
+        assertThat(rejected.errorCode()).contains("OTHER");
+        assertThat(rejected.isUnregistered()).isFalse();
+    }
+
+    @Test
+    void parseResult_ignoresAnUnregisteredVerdictOnA2xx() {
+        // The prune verdict is only trusted with the 400 the relay sends it with; a success status
+        // carrying it must not remove a live registration on the strength of a token alone.
+        TestableRelayClient client = newClient();
+
+        MobileNotificationRelayResult result =
+                client.publicParseResult("{\"wasAccepted\":false,\"errorCode\":\"UNREGISTERED\",\"isUnregistered\":true}");
+
+        assertThat(result.wasAccepted()).isFalse();
+        assertThat(result.isUnregistered()).isFalse();
+        assertThat(result.errorCode()).contains("UNREGISTERED");
     }
 
     @Test

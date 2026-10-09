@@ -165,7 +165,7 @@ public class TorHttpClient extends BaseHttpClient {
 
     /**
      * See {@link HttpLogSanitizer}: the shared sanitizer for bodies headed into a log line.
-     * The raw body keeps flowing to callers and into {@link #httpResponseFailure}.
+     * The raw body keeps flowing to callers through {@link HttpException#getBody()}.
      */
     static String loggableBody(String responseBody) {
         return HttpLogSanitizer.loggableBody(responseBody);
@@ -223,7 +223,7 @@ public class TorHttpClient extends BaseHttpClient {
     }
 
     /**
-     * Non-2xx responses surface with their status code and raw body in an {@link HttpException},
+     * Non-2xx responses surface with their status code and body in an {@link HttpException},
      * matching ClearNetHttpClient, so that {@link HttpRequestService} classifies them as
      * server-level (4xx fails fast, 5xx retry gated per request descriptor) rather than as a
      * retriable transport failure. HttpException is checked and Apache's response handler only

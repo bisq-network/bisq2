@@ -36,6 +36,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -244,5 +245,56 @@ class DeviceRegistrationServiceTest {
         service.unregister("device-1", CLIENT_ID);
 
         verify(persistence, times(2)).persistAsync(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aFailedWriteOfARevocationIsReportedAndTheRegistrationStays() {
+        // Otherwise the revocation reports success while the next start brings the registration
+        // back for a client that no longer exists, so nothing would ever remove it.
+        register("device-1", CLIENT_ID);
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.failedFuture(new RuntimeException("disk full")));
+
+        assertThrows(IllegalStateException.class, () -> service.unregisterByClientId(CLIENT_ID));
+
+        assertEquals(1, service.getMobileDeviceProfiles().size(), "memory must keep matching the disk");
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+        assertEquals(Set.of("device-1"), service.unregisterByClientId(CLIENT_ID), "the retry repeats the removal");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aFailedWriteOfARegistrationIsReportedAndNotKeptInMemory() {
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.failedFuture(new RuntimeException("disk full")));
+
+        assertThrows(IllegalStateException.class, () -> registerWithResult("device-1", CLIENT_ID));
+
+        assertTrue(service.getMobileDeviceProfiles().isEmpty());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aFailedWriteOfAPruneKeepsTheRegistration() {
+        register("device-1", CLIENT_ID);
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.failedFuture(new RuntimeException("disk full")));
+
+        assertThrows(IllegalStateException.class, () -> service.pruneDeadRegistration("device-1", "a".repeat(64)));
+
+        assertEquals(1, service.getMobileDeviceProfiles().size());
+    }
+
+    @Test
+    void anEmptyClientIdInAPersistedProfileIsNoOwner() throws Exception {
+        MobileDeviceProfile profile = MobileDeviceProfile.fromProto(
+                bisq.notifications.protobuf.MobileDeviceProfile.newBuilder()
+                        .setDeviceId("device-1")
+                        .setDeviceToken("a".repeat(64))
+                        .setPublicKeyBase64("publicKey")
+                        .setDeviceDescriptor("descriptor")
+                        .setPlatform(MobileDevicePlatform.ANDROID.toProtoEnum())
+                        .setClientId("")
+                        .build());
+
+        assertEquals(Optional.empty(), profile.getClientId());
     }
 }
