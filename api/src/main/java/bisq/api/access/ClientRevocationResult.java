@@ -27,7 +27,7 @@ public enum ClientRevocationResult {
     NOT_FOUND,
     /**
      * At least one cleanup step failed, so the client may still hold a connection or receive push
-     * notifications. Reported ahead of whether a profile existed, because it is the outcome the
+     * notifications, or a store write failed, so the next start could still load its access. Reported ahead of whether a profile existed, because it is the outcome the
      * caller has to act on: revocation is idempotent, so the answer is to retry.
      */
     CLEANUP_FAILED

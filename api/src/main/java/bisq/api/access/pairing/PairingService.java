@@ -155,6 +155,7 @@ public class PairingService {
      *
      * @param clientId The client ID to revoke
      * @return {@code true} if the profile was found and removed; {@code false} if not found
+     * @throws IllegalStateException if the removal could not be written
      */
     public boolean revokeClientProfile(String clientId) {
         return apiAccessStoreService.removeClientProfile(clientId);
@@ -165,7 +166,11 @@ public class PairingService {
         return apiAccessStoreService.getClientIdsDroppedDuringLoad();
     }
 
-    /** Ends a client's access without forgetting it, so a revocation can still address it. */
+    /**
+     * Ends a client's access without forgetting it, so a revocation can still address it.
+     *
+     * @throws IllegalStateException if the removal could not be written; access stays withdrawn in memory
+     */
     public void revokePermissions(String clientId) {
         apiAccessStoreService.removePermissions(clientId);
     }
