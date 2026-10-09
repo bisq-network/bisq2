@@ -80,8 +80,13 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
         };
     }
 
+    /**
+     * Synchronized on the same monitor as the mutators in {@link DeviceRegistrationService}, so a
+     * write started from outside them, such as the backup of all stores, does not snapshot a change
+     * that a failed write is about to undo.
+     */
     @Override
-    public DeviceRegistrationStore getClone() {
+    public synchronized DeviceRegistrationStore getClone() {
         return new DeviceRegistrationStore(Map.copyOf(deviceByDeviceId));
     }
 
