@@ -21,16 +21,19 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -296,5 +299,56 @@ class DeviceRegistrationServiceTest {
                         .build());
 
         assertEquals(Optional.empty(), profile.getClientId());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aWriteFromOutsideTheServiceDoesNotSnapshotAChangeThatAFailedWriteUndoes() throws Exception {
+        // The backup of all stores persists every client without the service's monitor. Taken
+        // between the removal and its undo, its snapshot would put the removal on disk while
+        // memory keeps the registration.
+        register("device-1", CLIENT_ID);
+        CompletableFuture<Void> revocationWrite = new CompletableFuture<>();
+        CountDownLatch revocationWriteStarted = new CountDownLatch(1);
+        AtomicInteger writes = new AtomicInteger();
+        when(persistence.persistAsync(any())).thenAnswer(invocation -> {
+            if (writes.getAndIncrement() == 0) {
+                revocationWriteStarted.countDown();
+                return revocationWrite;
+            }
+            return CompletableFuture.completedFuture(null);
+        });
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> revocation = executor.submit(() -> service.unregisterByClientId(CLIENT_ID));
+            assertTrue(revocationWriteStarted.await(5, TimeUnit.SECONDS));
+
+            CompletableFuture<Thread> backupThread = new CompletableFuture<>();
+            Future<Boolean> backup = executor.submit(() -> {
+                backupThread.complete(Thread.currentThread());
+                return service.persist().join();
+            });
+            Thread thread = backupThread.get(5, TimeUnit.SECONDS);
+            // Either the backup has taken its snapshot already, or it waits for the monitor.
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (writes.get() < 2 && thread.getState() != Thread.State.BLOCKED && System.nanoTime() < deadline) {
+                Thread.onSpinWait();
+            }
+
+            revocationWrite.completeExceptionally(new RuntimeException("disk full"));
+            ExecutionException failure = assertThrows(ExecutionException.class, () -> revocation.get(5, TimeUnit.SECONDS));
+            assertTrue(failure.getCause() instanceof IllegalStateException);
+            assertTrue(backup.get(5, TimeUnit.SECONDS));
+        } finally {
+            executor.shutdownNow();
+        }
+
+        ArgumentCaptor<DeviceRegistrationStore> written = ArgumentCaptor.forClass(DeviceRegistrationStore.class);
+        verify(persistence, times(3)).persistAsync(written.capture());
+        assertEquals(Set.of("device-1"), service.getMobileDeviceProfiles().stream()
+                .map(MobileDeviceProfile::getDeviceId)
+                .collect(Collectors.toSet()), "the failed revocation keeps the registration in memory");
+        assertTrue(written.getValue().getDeviceByDeviceId().containsKey("device-1"),
+                "the backup must write what memory holds, not the undone removal");
     }
 }
