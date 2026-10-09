@@ -23,6 +23,7 @@ import bisq.common.threading.MaxSizeAwareQueue;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -79,8 +80,16 @@ public class NetworkExecutors {
     // it. The log entry contains only the exception: the task does not know the message which it passed on. An
     // exception of a task which was passed to execute reaches the uncaught exception handler of the thread.
     private static void logExceptionOfFailedTask(Runnable runnable) {
-        if (runnable instanceof Future<?> future && future.state() == Future.State.FAILED) {
-            log.error("A task of the network notify executor failed", future.exceptionNow());
+        // Future.state() and exceptionNow() exist from Java 19, which Android has only from API 36; get() on a
+        // completed future does not block and reports the failure the same way on every platform.
+        if (runnable instanceof Future<?> future && future.isDone() && !future.isCancelled()) {
+            try {
+                future.get();
+            } catch (ExecutionException e) {
+                log.error("A task of the network notify executor failed", e.getCause());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 }
