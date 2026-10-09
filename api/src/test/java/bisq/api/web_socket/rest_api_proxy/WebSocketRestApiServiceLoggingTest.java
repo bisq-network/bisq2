@@ -20,11 +20,8 @@ package bisq.api.web_socket.rest_api_proxy;
 import bisq.api.ApiConfig;
 import bisq.api.access.transport.ApiAccessTransportType;
 import bisq.api.access.transport.TlsContextService;
+import bisq.api.util.LogCapture;
 import bisq.common.json.JsonMapperProvider;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.ThrowableProxyUtil;
-import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.net.httpserver.HttpServer;
@@ -33,9 +30,9 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.mockito.ArgumentCaptor;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -54,16 +51,15 @@ import static org.mockito.Mockito.when;
  * account data or chat messages. Users share their log files, so the proxy must not write a body to the log. The
  * reason of a failed call belongs in the log and not in the response.
  */
-@Isolated("Captures the log of the api module")
+@Isolated("Changes the level of the root logger")
 class WebSocketRestApiServiceLoggingTest {
     private static final String PRIVATE_VALUE = "private-sentinel-value";
     private static final String PATH = "/api/v1/user-identities/key-material";
     private static final String REQUEST_BODY = "{\"accountData\":\"" + PRIVATE_VALUE + "\"}";
     private static final String RESPONSE_BODY = "{\"keyPair\":{\"privateKey\":{\"encoded\":\"" + PRIVATE_VALUE + "\"}}}";
 
-    // The parent of all loggers of the api module, so that no class of the module can log the body unnoticed
-    private final Logger logger = (Logger) LoggerFactory.getLogger("bisq.api");
-    private final ListAppender<ILoggingEvent> appender = new ListAppender<>();
+    @RegisterExtension
+    final LogCapture logs = new LogCapture();
     private HttpServer restServer;
     private WebSocketRestApiService service;
 
@@ -80,14 +76,10 @@ class WebSocketRestApiServiceLoggingTest {
         restServer.start();
         service = new WebSocketRestApiService(apiConfig(restServer.getAddress().getPort()),
                 mock(TlsContextService.class));
-        appender.start();
-        logger.addAppender(appender);
     }
 
     @AfterEach
     void tearDown() {
-        logger.detachAppender(appender);
-        appender.stop();
         service.shutdown();
         restServer.stop(0);
     }
@@ -101,7 +93,7 @@ class WebSocketRestApiServiceLoggingTest {
         JsonNode response = sentMessage(webSocket);
         assertThat(response.get("statusCode").asInt()).isEqualTo(200);
         assertThat(response.get("body").asText()).isEqualTo(RESPONSE_BODY);
-        List<String> logLines = logLines();
+        List<String> logLines = logs.lines();
         assertThat(logLines).noneMatch(line -> line.contains(PRIVATE_VALUE));
         // The response is still logged, with its status code and the length of its body
         assertThat(logLines).anyMatch(line -> line.contains("statusCode=200")
@@ -116,7 +108,7 @@ class WebSocketRestApiServiceLoggingTest {
 
         service.onMessage(json, webSocket());
 
-        List<String> logLines = logLines();
+        List<String> logLines = logs.lines();
         assertThat(logLines).noneMatch(line -> line.contains(PRIVATE_VALUE));
         assertThat(logLines).anyMatch(line -> line.contains("Message length=" + json.length()));
     }
@@ -129,7 +121,7 @@ class WebSocketRestApiServiceLoggingTest {
         service.onMessage(requestNode("CONNECT", REQUEST_BODY).toString(), webSocket);
 
         assertThat(sentMessage(webSocket).get("statusCode").asInt()).isEqualTo(500);
-        List<String> logLines = logLines();
+        List<String> logLines = logs.lines();
         assertThat(logLines).noneMatch(line -> line.contains(PRIVATE_VALUE));
         // The failed request is still logged, with its ID and the length of its body
         assertThat(logLines).anyMatch(line -> line.contains("REST API call failed")
@@ -148,7 +140,7 @@ class WebSocketRestApiServiceLoggingTest {
         JsonNode response = sentMessage(webSocket);
         assertThat(response.get("statusCode").asInt()).isEqualTo(500);
         assertThat(response.get("body").asText()).isEqualTo("Request failed");
-        assertThat(logLines()).anyMatch(line -> line.contains("REST API call failed")
+        assertThat(logs.lines()).anyMatch(line -> line.contains("REST API call failed")
                 && line.contains(IllegalArgumentException.class.getName()));
     }
 
@@ -157,15 +149,6 @@ class WebSocketRestApiServiceLoggingTest {
         // The proxy writes its log lines before it sends the response
         verify(webSocket, timeout(10_000)).send(sentMessage.capture());
         return JsonMapperProvider.get().readTree(sentMessage.getValue());
-    }
-
-    // Each log event as the log file shows it: the message and the stack trace with the exception messages
-    private List<String> logLines() {
-        return List.copyOf(appender.list).stream()
-                .map(event -> event.getThrowableProxy() == null
-                        ? event.getFormattedMessage()
-                        : event.getFormattedMessage() + "\n" + ThrowableProxyUtil.asString(event.getThrowableProxy()))
-                .toList();
     }
 
     private static ObjectNode requestNode(String method, String body) {
