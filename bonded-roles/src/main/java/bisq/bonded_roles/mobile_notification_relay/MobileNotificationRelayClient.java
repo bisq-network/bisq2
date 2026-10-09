@@ -61,7 +61,22 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
         // tokens or operator details — keep INFO output free of them.
         log.debug("Relay v1 response: {}", HttpLogSanitizer.loggableBody(json));
         return MobileNotificationRelayResult.fromJson(json)
+                .map(MobileNotificationRelayClient::withoutPruneVerdictOnSuccess)
                 .orElseGet(MobileNotificationRelayResult::accepted);
+    }
+
+    /**
+     * The gateway's "unregistered" verdict is final and removes the registration, so it is only
+     * trusted together with the 400 the relay sends it with. On a 2xx the body contradicts the
+     * status, and a relay that answers success with a prune verdict must not be able to remove
+     * a live registration on the strength of a token alone.
+     */
+    static MobileNotificationRelayResult withoutPruneVerdictOnSuccess(MobileNotificationRelayResult result) {
+        if (!result.isUnregistered()) {
+            return result;
+        }
+        log.warn("Relay answered 2xx with an unregistered verdict; ignoring the verdict and keeping the registration");
+        return new MobileNotificationRelayResult(result.wasAccepted(), result.errorCode(), result.errorMessage(), false);
     }
 
     @Override
@@ -97,7 +112,7 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
     @Override
     protected boolean isRecoverableClientError(HttpException httpException) {
         return httpException.getResponseCode() == 400
-                && MobileNotificationRelayResult.fromJson(httpException.getMessage())
+                && MobileNotificationRelayResult.fromJson(httpException.getBody())
                 .map(MobileNotificationRelayResult::isRecoverable)
                 .orElse(false);
     }
@@ -143,7 +158,7 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
     static Optional<MobileNotificationRelayResult> structuredRejection(Throwable throwable) {
         return ExceptionUtil.getRootCause(throwable) instanceof HttpException httpException
                 && httpException.getResponseCode() == 400
-                ? MobileNotificationRelayResult.fromJson(httpException.getMessage())
+                ? MobileNotificationRelayResult.fromJson(httpException.getBody())
                         .filter(result -> !result.wasAccepted() && !result.isRecoverable())
                 : Optional.empty();
     }

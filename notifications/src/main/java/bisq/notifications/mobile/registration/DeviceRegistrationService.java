@@ -26,6 +26,7 @@ import bisq.persistence.PersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -101,7 +102,13 @@ public class DeviceRegistrationService implements PersistenceClient<DeviceRegist
 
             persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
             if (!mobileDeviceProfile.equals(existing)) {
-                persist();
+                persistOrRollback(() -> {
+                    if (existing == null) {
+                        persistableStore.getDeviceByDeviceId().remove(deviceId);
+                    } else {
+                        persistableStore.getDeviceByDeviceId().put(deviceId, existing);
+                    }
+                }, "a device registration");
             }
             return DeviceRegistrationResult.REGISTERED;
         }
@@ -136,7 +143,8 @@ public class DeviceRegistrationService implements PersistenceClient<DeviceRegist
             }
 
             persistableStore.getDeviceByDeviceId().remove(deviceId);
-            persist();
+            persistOrRollback(() -> persistableStore.getDeviceByDeviceId().put(deviceId, profile),
+                    "the removal of a device registration");
             return true;
         }
     }
@@ -165,7 +173,8 @@ public class DeviceRegistrationService implements PersistenceClient<DeviceRegist
                 return false;
             }
             persistableStore.getDeviceByDeviceId().remove(deviceId);
-            persist();
+            persistOrRollback(() -> persistableStore.getDeviceByDeviceId().put(deviceId, current),
+                    "the removal of a dead device registration");
             return true;
         }
     }
@@ -193,22 +202,45 @@ public class DeviceRegistrationService implements PersistenceClient<DeviceRegist
         checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
 
         synchronized (persistableStore) {
-            Set<String> deviceIds = persistableStore.getDeviceByDeviceId().values().stream()
+            Map<String, MobileDeviceProfile> removed = persistableStore.getDeviceByDeviceId().values().stream()
                     .filter(profile -> profile.getClientId()
                             .map(clientId::equals)
                             // Unattributable: cannot be excluded from being the revoked client's.
                             .orElse(true))
-                    .map(MobileDeviceProfile::getDeviceId)
-                    .collect(Collectors.toSet());
-            if (deviceIds.isEmpty()) {
+                    .collect(Collectors.toMap(MobileDeviceProfile::getDeviceId, profile -> profile, (first, second) -> first));
+            if (removed.isEmpty()) {
                 return Set.of();
             }
             // Selecting and removing under the same monitor, so a registration claimed by another
             // client in between is not removed on this client's behalf.
-            deviceIds.forEach(persistableStore.getDeviceByDeviceId()::remove);
-            persist();
-            log.info("Removed {} push registration(s) of revoked client {}", deviceIds.size(), clientId);
-            return deviceIds;
+            removed.keySet().forEach(persistableStore.getDeviceByDeviceId()::remove);
+            persistOrRollback(() -> persistableStore.getDeviceByDeviceId().putAll(removed),
+                    "the removal of the push registrations of a revoked client");
+            log.info("Removed {} push registration(s) of revoked client {}", removed.size(), clientId);
+            return removed.keySet();
+        }
+    }
+
+    /**
+     * Writes the store and reports a failed write instead of returning normally with a change that
+     * never reached the disk: the caller would otherwise confirm a registration or a revocation
+     * that the next start does not know about. The in-memory change is undone, so memory and disk
+     * keep agreeing and a retry repeats the work. Called under the store monitor; the write runs on
+     * the persistence executor from a clone, so waiting here holds up other mutators only for the
+     * duration of one small write.
+     */
+    private void persistOrRollback(Runnable rollback, String what) {
+        boolean persisted;
+        try {
+            persisted = persist().join();
+        } catch (RuntimeException e) {
+            // For example a rejected task at shutdown: the write never started.
+            rollback.run();
+            throw new IllegalStateException("Could not persist " + what, e);
+        }
+        if (!persisted) {
+            rollback.run();
+            throw new IllegalStateException("Could not persist " + what);
         }
     }
 
