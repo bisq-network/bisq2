@@ -85,7 +85,7 @@ public class ApiAccessStoreService implements PersistenceClient<ApiAccessStore> 
     }
 
     /**
-     * Hashing the secrets is only complete once the backups are gone too: every write moves the
+     * Hashing the secrets is only complete once the backups are gone too: every write copies the
      * previous store file into the backups, which are kept for up to a year, so the plaintext would
      * outlive the migration there. The order is load-bearing: the backups are deleted only once
      * the hashed store has been written, they are the recovery copies until then, and one more
@@ -154,29 +154,69 @@ public class ApiAccessStoreService implements PersistenceClient<ApiAccessStore> 
     /**
      * Removes only the permissions, leaving the profile. Used to end a client's access at the start
      * of a revocation, before the steps that can fail.
+     * <p>
+     * A failed write is not undone in memory: that would hand the client its access back. The
+     * grant stays removed and the failure is thrown, so the revocation is reported as incomplete
+     * and the profile stays listed for the retry.
+     *
+     * @throws IllegalStateException if the removal could not be written
      */
     public void removePermissions(String clientId) {
         synchronized (persistableStore) {
             if (persistableStore.getPermissionsByClientId().remove(clientId) != null) {
-                persist();
+                persistOrThrow("the removal of the permissions of client " + clientId);
             }
         }
     }
 
     /**
      * Removes the client profile and associated permissions for the given client ID.
-     * Both removals are applied atomically under a lock and persisted in a single
-     * {@link #persist()} call.
+     * Both removals are applied atomically under a lock and persisted in a single write.
+     * <p>
+     * The store is written even when nothing was removed, so a retry also writes a grant removal
+     * that an earlier failed write left in memory only. On a failed write the profile is put back
+     * but the permissions are not: the client stays listed so the revocation can be retried, and
+     * it has no access in the meantime. A later successful write then leaves a profile without
+     * permissions on disk, which {@code ClientRevocationService#completeInterruptedRevocations}
+     * finishes on the next start.
      *
      * @param clientId The client ID to remove
      * @return {@code true} if a profile was present and removed; {@code false} if the client was not found
+     * @throws IllegalStateException if the removal could not be written
      */
     public boolean removeClientProfile(String clientId) {
         synchronized (persistableStore) {
-            boolean removed = persistableStore.getClientProfileByIdMap().remove(clientId) != null;
+            ClientProfile removed = persistableStore.getClientProfileByIdMap().remove(clientId);
             persistableStore.getPermissionsByClientId().remove(clientId);
-            persist();
-            return removed;
+            try {
+                persistOrThrow("the removal of client " + clientId);
+            } catch (IllegalStateException e) {
+                if (removed != null) {
+                    persistableStore.getClientProfileByIdMap().put(clientId, removed);
+                }
+                throw e;
+            }
+            return removed != null;
+        }
+    }
+
+    /**
+     * Waits for the write and throws if it did not reach the disk, so a revocation is not
+     * confirmed while the next start would still load the client's access (see
+     * docs/specifications/persistence/store-write-results.md). Called under the store monitor; the
+     * write runs on the persistence executor from a clone, so waiting holds up other mutators only
+     * for the duration of one small write.
+     */
+    private void persistOrThrow(String what) {
+        boolean persisted;
+        try {
+            persisted = persist().join();
+        } catch (RuntimeException e) {
+            // For example a rejected task at shutdown: the write never started.
+            throw new IllegalStateException("Could not persist " + what, e);
+        }
+        if (!persisted) {
+            throw new IllegalStateException("Could not persist " + what);
         }
     }
 }
