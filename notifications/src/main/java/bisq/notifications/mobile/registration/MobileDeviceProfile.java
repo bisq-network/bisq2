@@ -35,13 +35,19 @@ public final class MobileDeviceProfile implements PersistableProto {
     private final String deviceDescriptor;
     private final MobileDevicePlatform platform;
     private final Optional<String> symmetricKeyBase64;
+    /**
+     * The API client this registration belongs to, so revoking the client also removes its push
+     * registration. Empty for registrations persisted before the link existed.
+     */
+    private final Optional<String> clientId;
 
     public MobileDeviceProfile(String deviceId,
                                String deviceToken,
                                String publicKeyBase64,
                                String deviceDescriptor,
                                MobileDevicePlatform platform,
-                               Optional<String> symmetricKeyBase64
+                               Optional<String> symmetricKeyBase64,
+                               Optional<String> clientId
     ) {
         this.deviceId = deviceId;
         this.deviceToken = deviceToken;
@@ -49,6 +55,7 @@ public final class MobileDeviceProfile implements PersistableProto {
         this.deviceDescriptor = deviceDescriptor;
         this.platform = platform;
         this.symmetricKeyBase64 = symmetricKeyBase64;
+        this.clientId = clientId;
     }
 
     public boolean hasSymmetricKey() {
@@ -69,6 +76,7 @@ public final class MobileDeviceProfile implements PersistableProto {
                 .setDeviceDescriptor(deviceDescriptor)
                 .setPlatform(platform.toProtoEnum());
         symmetricKeyBase64.ifPresent(builder::setSymmetricKeyBase64);
+        clientId.ifPresent(builder::setClientId);
         return builder;
     }
 
@@ -83,7 +91,8 @@ public final class MobileDeviceProfile implements PersistableProto {
                     proto.getPublicKeyBase64(),
                     proto.getDeviceDescriptor(),
                     MobileDevicePlatform.fromProto(proto.getPlatform()),
-                    symmetricKey);
+                    symmetricKey,
+                    proto.hasClientId() ? Optional.of(proto.getClientId()) : Optional.empty());
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }
