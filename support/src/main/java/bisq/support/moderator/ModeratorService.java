@@ -32,6 +32,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.SendMessageResult;
@@ -214,7 +215,9 @@ public class ModeratorService extends RateLimitedPersistenceClient<ModeratorStor
 
                     if (channel.getChatMessages().isEmpty() && isReportingUser) {
                         return twoPartyPrivateChatChannelService.sendTextMessage(Res.get("authorizedRole.moderator.replyMsg"),
-                                citationMessage.map(msg -> new Citation(userProfile.getId(), msg, Optional.empty())),
+                                citationMessage.map(msg -> new Citation(userProfile.getId(),
+                                        StringUtils.truncate(msg, Citation.MAX_TEXT_LENGTH),
+                                        Optional.empty())),
                                 channel);
                     } else {
                         return CompletableFuture.completedFuture(new SendMessageResult());
