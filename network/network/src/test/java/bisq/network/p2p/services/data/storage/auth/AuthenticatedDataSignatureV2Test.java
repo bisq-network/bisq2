@@ -26,6 +26,7 @@ import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
+import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -240,6 +242,41 @@ class AuthenticatedDataSignatureV2Test {
         assertFalse(changed.isSignatureV1Invalid());
         assertTrue(changed.isSignatureInvalid(BEFORE_CUTOFF));
         assertTrue(changed.isSignatureInvalid(AT_CUTOFF));
+    }
+
+    // Nodes of earlier versions verify only signature V1. Before the cutoff date, a node does not accept a request which
+    // they reject, also if signature V2 is valid. Otherwise it would send the request to them with every inventory
+    // response.
+    @Test
+    void requestsWithValidSignatureV2AndInvalidSignatureV1AreInvalidOnlyBeforeTheCutoffDate()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        ByteString invalidSignatureV1 = ByteString.copyFrom(
+                SignatureUtil.sign("other data".getBytes(StandardCharsets.UTF_8), ownerKeyPair.getPrivate()));
+
+        AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store, authenticatedData, ownerKeyPair);
+        bisq.network.protobuf.AddAuthenticatedDataRequest.Builder addProto = addRequest.toValueProto(false).toBuilder()
+                .setSignature(invalidSignatureV1);
+        byte[] addPreImageV2 = fromProto(addProto.build(), addRequest).getPreImageV2();
+        AddAuthenticatedDataRequest addWithInvalidSignatureV1 = fromProto(addProto
+                .setSignatureV2(ByteString.copyFrom(SignatureUtil.sign(addPreImageV2, ownerKeyPair.getPrivate())))
+                .build(), addRequest);
+
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store, authenticatedData,
+                ownerKeyPair);
+        bisq.network.protobuf.RemoveAuthenticatedDataRequest.Builder removeProto = removeRequest.toValueProto(false)
+                .toBuilder()
+                .setSignature(invalidSignatureV1);
+        byte[] removePreImageV2 = RemoveAuthenticatedDataRequest.fromProto(removeProto.build()).getPreImageV2();
+        RemoveAuthenticatedDataRequest removeWithInvalidSignatureV1 = RemoveAuthenticatedDataRequest.fromProto(removeProto
+                .setSignatureV2(ByteString.copyFrom(SignatureUtil.sign(removePreImageV2, ownerKeyPair.getPrivate())))
+                .build());
+
+        for (SignedRequest request : List.of(addWithInvalidSignatureV1, removeWithInvalidSignatureV1)) {
+            assertFalse(request.isSignatureV2Invalid());
+            assertTrue(request.isSignatureV1Invalid());
+            assertTrue(request.isSignatureInvalid(BEFORE_CUTOFF));
+            assertFalse(request.isSignatureInvalid(AT_CUTOFF));
+        }
     }
 
     @Test
