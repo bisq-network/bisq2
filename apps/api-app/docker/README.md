@@ -36,6 +36,16 @@ docker run --rm \
 The node uses its **own bundled Tor** by default, so this works standalone. The
 pairing QR code is written to `/data/pairing_qr_code.txt`.
 
+The node does not write the pairing code to its log or to `docker logs`. Read it from
+the data volume (the file also holds the QR code as text, which a terminal shows), or
+open the web UI sidecar (below):
+
+```bash
+docker exec <container> cat /data/pairing_qr_code.txt
+```
+
+Do not paste the content of this file into bug reports.
+
 On Linux bisq2 runs the system `tor` binary, so the image installs it from the Tor
 Project's apt repository rather than Ubuntu's (which lags Tor security releases) and
 the build fails if the installed version is older than the `TOR_MIN_VERSION` build

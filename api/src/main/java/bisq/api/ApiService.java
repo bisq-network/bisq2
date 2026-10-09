@@ -403,13 +403,6 @@ public class ApiService implements Service {
                     webSocketUrl,
                     tlsContextService.getTlsContext(),
                     apiAccessTransportService.getTorContext());
-
-            if (pairingService.getPairingQrCode().get() != null) {
-                log.info("Pairing QR code created. Code ID: {} (expires at: {})",
-                        pairingCode.getId(), pairingCode.getExpiresAt());
-            } else {
-                log.warn("Failed to create pairing QR code for Code ID: {}", pairingCode.getId());
-            }
         }
     }
 
