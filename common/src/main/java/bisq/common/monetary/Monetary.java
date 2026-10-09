@@ -46,6 +46,26 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         return BigDecimal.valueOf(faceValue).movePointRight(precision).longValue();
     }
 
+    /**
+     * Parses a face value string into the smallest unit by moving the decimal point by `precision` places.
+     * Rejects input with more fraction digits than `precision` and input outside the long range,
+     * instead of silently truncating or wrapping around.
+     */
+    static long parseToValue(String string, int precision) {
+        BigDecimal parsed = new BigDecimal(string);
+        // A long has at most 19 digits. Checking the digit count first also keeps movePointRight from
+        // building a huge number or overflowing the scale for input like "1E1000000000".
+        checkArgument((long) parsed.precision() - parsed.scale() + precision <= 19,
+                "Amount %s is out of range", string);
+        BigDecimal value = parsed.movePointRight(precision);
+        checkArgument(value.stripTrailingZeros().scale() <= 0,
+                "Amount %s has more than %s decimal places", string, precision);
+        checkArgument(value.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) <= 0 &&
+                        value.compareTo(BigDecimal.valueOf(Long.MIN_VALUE)) >= 0,
+                "Amount %s is out of range", string);
+        return value.longValueExact();
+    }
+
     public static double toFaceValue(Monetary monetary, int precision) {
         double fullPrecision = MathUtils.scaleDownByPowerOf10(monetary.getValue(), monetary.getPrecision());
         return MathUtils.roundDouble(fullPrecision, precision);

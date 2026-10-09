@@ -37,25 +37,25 @@ public final class Coin extends Monetary {
     }
 
     public static Coin parse(String string, String code, int precision) {
-        return Coin.fromValue(new BigDecimal(string).movePointRight(precision).longValue(),
+        return Coin.fromValue(parseToValue(string, precision),
                 code,
                 precision);
     }
 
     public static Coin parseBtc(String string) {
-        return Coin.fromValue(new BigDecimal(string).movePointRight(8).longValue(),
+        return Coin.fromValue(parseToValue(string, 8),
                 "BTC",
                 8);
     }
 
     public static Coin parseXmr(String string) {
-        return Coin.fromValue(new BigDecimal(string).movePointRight(12).longValue(),
+        return Coin.fromValue(parseToValue(string, 12),
                 "XMR",
                 12);
     }
 
     public static Coin parseBsq(String string) {
-        return Coin.fromValue(new BigDecimal(string).movePointRight(12).longValue(),
+        return Coin.fromValue(parseToValue(string, 12),
                 "BSQ",
                 2);
     }

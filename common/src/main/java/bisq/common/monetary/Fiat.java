@@ -32,13 +32,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Fiat extends Monetary {
 
     public static Fiat parse(String string, String code) {
-        return Fiat.fromValue(new BigDecimal(string).movePointRight(4).longValue(),
+        return Fiat.fromValue(parseToValue(string, 4),
                 code,
                 4);
     }
 
     public static Fiat parse(String string, String code, int precision) {
-        return Fiat.fromValue(new BigDecimal(string).movePointRight(precision).longValue(),
+        return Fiat.fromValue(parseToValue(string, precision),
                 code,
                 precision);
     }

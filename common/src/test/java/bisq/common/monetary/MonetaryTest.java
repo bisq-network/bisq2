@@ -21,6 +21,7 @@ import bisq.common.asset.FiatCurrencyRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -135,13 +136,11 @@ public class MonetaryTest {
     void testParse() {
         assertEquals(12345678, Coin.parse("0.12345678", "BTC", 8).getValue());
         assertEquals(12345678, Coin.parseBtc("0.12345678").getValue());
-        assertEquals(12345678, Coin.parseBtc("0.123456789").getValue());
         assertEquals(123456780000L, Coin.parse("0.12345678", "XMR", 12).getValue());
         assertEquals(123456780000L, Coin.parseXmr("0.12345678").getValue());
 
         assertEquals(1234, Fiat.parse("0.1234", "USD", 4).getValue());
         assertEquals(1234, Fiat.parse("0.1234", "USD").getValue());
-        assertEquals(1234, Fiat.parse("0.12341", "USD").getValue());
 
         FiatCurrencyRepository.setLocale(Locale.US);
         assertEquals(1234567800, Fiat.parse("123456.78 USD").getValue());
@@ -153,6 +152,48 @@ public class MonetaryTest {
         assertEquals(12345678, Coin.parse("0.12345678 UNDEFINED").getValue());
         assertEquals(123456780000L, Coin.parse("0.12345678 XMR").getValue());
         Assertions.assertThrows(IllegalArgumentException.class, () -> assertEquals(1234567800, Coin.parse("123456.78 USD").getValue()));
+    }
+
+    @Test
+    void testParseRejectsFractionBeyondPrecision() {
+        assertThrows(IllegalArgumentException.class, () -> Coin.parse("0.123456789", "BTC", 8));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parse("0.123456789", "BTC"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("0.123456789"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseXmr("0.1234567890123"));
+        assertThrows(IllegalArgumentException.class, () -> Fiat.parse("0.12341", "USD", 4));
+        assertThrows(IllegalArgumentException.class, () -> Fiat.parse("0.12341", "USD"));
+
+        // Trailing zeros beyond the precision do not lose value and are accepted
+        assertEquals(12345678, Coin.parseBtc("0.1234567800").getValue());
+        assertEquals(1234, Fiat.parse("0.123400", "USD").getValue());
+    }
+
+    @Test
+    void testParseRejectsOverflow() {
+        // 2^64 + 1 in the smallest unit, which wraps around to 1 if converted with BigDecimal.longValue()
+        assertThrows(IllegalArgumentException.class, () -> Coin.parse("184467440737.09551617", "BTC", 8));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parse("184467440737.09551617", "BTC"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("184467440737.09551617"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseXmr("18446744.073709551617"));
+        assertThrows(IllegalArgumentException.class, () -> Fiat.parse("1844674407370955.1617", "USD", 4));
+        assertThrows(IllegalArgumentException.class, () -> Fiat.parse("1844674407370955.1617", "USD"));
+
+        assertEquals(Long.MAX_VALUE, Coin.parseBtc("92233720368.54775807").getValue());
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("92233720368.54775808"));
+        assertEquals(Long.MIN_VALUE, Coin.parseBtc("-92233720368.54775808").getValue());
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("-92233720368.54775809"));
+        // Huge exponents are rejected before movePointRight, which would overflow the scale or build a huge number
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1E2147483647"));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1E100000000")));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("123456789012345678901234567890"));
+    }
+
+    @Test
+    void testParseRejectsMalformedInput() {
+        assertThrows(NumberFormatException.class, () -> Coin.parseBtc("abc"));
+        assertThrows(NumberFormatException.class, () -> Coin.parseBtc(""));
+        assertThrows(NumberFormatException.class, () -> Fiat.parse("1.2.3", "USD"));
     }
 
     @Test

@@ -23,6 +23,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.overlay.OverlayController;
+import bisq.i18n.Res;
 import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +69,14 @@ public class WalletSendController implements Controller {
     void onSend() {
         String value = model.getAmount().get();
         String address = model.getAddress().get();
-        var amount = Coin.parseBtc(value);
+        Coin amount;
+        try {
+            amount = Coin.parseBtc(value);
+        } catch (RuntimeException e) {
+            log.warn("Invalid send amount {}", value, e);
+            UIThread.run(() -> new Popup().warning(Res.get("validation.invalidNumber")).show());
+            return;
+        }
         walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount.getValue())
                 .whenComplete((response, throwable) -> {
                     if (throwable != null) {

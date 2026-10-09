@@ -54,6 +54,9 @@ public abstract class FormController<V extends FormView<?, ?>, M extends FormMod
 
     public boolean validate() {
         boolean isValid = model.getAddressValidator().validateAndGet();
+        if (model.getIsAutoConf().get()) {
+            isValid &= model.getAutoConfMaxTradeAmountValidator().validateAndGet();
+        }
         model.getRunValidation().set(true);
         return isValid;
     }

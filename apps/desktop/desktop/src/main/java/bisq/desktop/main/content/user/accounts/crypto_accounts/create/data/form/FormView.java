@@ -126,6 +126,9 @@ public abstract class FormView<M extends FormModel, C extends FormController<?, 
         runValidationPin = EasyBind.subscribe(model.getRunValidation(), runValidation -> {
             if (runValidation) {
                 address.validate();
+                if (model.getIsAutoConf().get()) {
+                    autoConfMaxTradeAmount.validate();
+                }
                 controller.onValidationDone();
             }
         });
