@@ -121,7 +121,8 @@ public class PairingService {
         }
 
         // Signal that the active code was consumed so observers can regenerate
-        log.info("Pairing code {} consumed, signalling observers for regeneration", pairingCodeId);
+        log.info("Pairing code which expires at {} consumed, signalling observers for regeneration",
+                pairingCode.getExpiresAt());
         this.pairingCode.set(null);
 
         String clientId = UUID.randomUUID().toString();
@@ -227,8 +228,11 @@ public class PairingService {
                 writePairingQrCodeToDataDir(qrCode);
             }
             pairingQrCode.set(qrCode);
+            // The ID of the pairing code and the QR code are credentials, so the log names the code by its expiry
+            log.info("Pairing QR code created. The pairing code expires at {}", pairingCode.getExpiresAt());
         } catch (Exception e) {
-            log.warn("Could not create QR code", e);
+            log.warn("Could not create the pairing QR code. The pairing code expires at {}",
+                    pairingCode.getExpiresAt(), e);
             pairingQrCode.set(null);
         }
     }
