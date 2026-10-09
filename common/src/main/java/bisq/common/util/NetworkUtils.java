@@ -27,11 +27,11 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -41,6 +41,7 @@ import static java.util.Comparator.naturalOrder;
 @Slf4j
 public class NetworkUtils {
     private static final Set<Integer> USED = new CopyOnWriteArraySet<>();
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public static int findFreeSystemPort() {
         try {
@@ -61,12 +62,12 @@ public class NetworkUtils {
                 return port;
             }
         } catch (IOException ignored) {
-            return new Random().nextInt(10000) + 50000;
+            return SECURE_RANDOM.nextInt(10000) + 50000;
         }
     }
 
     public static int selectRandomPort() {
-        return new Random().nextInt(65_536); // 2^16
+        return SECURE_RANDOM.nextInt(65_536); // 2^16
     }
 
     public static boolean isPortInUse(String host, int port) {

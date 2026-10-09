@@ -19,22 +19,25 @@ package bisq.common.util;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CollectionUtil {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     @Nullable
     public static <T> T getRandomElement(Collection<T> collection) {
         return collection.isEmpty() ?
                 null :
-                new ArrayList<>(collection).get(new Random().nextInt(collection.size()));
+                new ArrayList<>(collection).get(SECURE_RANDOM.nextInt(collection.size()));
     }
 
     public static <T> List<T> toShuffledList(List<T> list) {
         // List might be an unmodifiable list thus we create an ArrayList.
         ArrayList<T> arrayList = new ArrayList<>(list);
-        Collections.shuffle(arrayList);
+        Collections.shuffle(arrayList, SECURE_RANDOM);
         return arrayList;
     }
 
