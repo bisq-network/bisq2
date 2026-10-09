@@ -174,8 +174,13 @@ public class DevicesRestApi extends RestApiBase {
                 // leave that same window, and asked of the grant rather than the profile, which a
                 // revocation keeps until its cleanup succeeds. 401 rather than 403, so the app
                 // treats it as "pair again" instead of "permission missing".
-                deviceRegistrationService.unregister(deviceId, clientId);
-                log.warn("Removed a device registration of a client revoked during the request");
+                try {
+                    deviceRegistrationService.unregister(deviceId, clientId);
+                    log.warn("Removed a device registration of a client revoked during the request");
+                } catch (IllegalStateException e) {
+                    // The answer to the app stays the same: it has to pair again either way.
+                    log.error("Could not remove the device registration of a client revoked during the request", e);
+                }
                 return buildResponse(Response.Status.UNAUTHORIZED, "Client was revoked, pairing is required");
             }
 

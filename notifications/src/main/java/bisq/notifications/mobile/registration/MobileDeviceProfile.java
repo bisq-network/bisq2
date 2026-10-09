@@ -92,7 +92,9 @@ public final class MobileDeviceProfile implements PersistableProto {
                     proto.getDeviceDescriptor(),
                     MobileDevicePlatform.fromProto(proto.getPlatform()),
                     symmetricKey,
-                    proto.hasClientId() ? Optional.of(proto.getClientId()) : Optional.empty());
+                    // An empty id would make the device owned by a client that does not exist: nobody
+                    // could register over it or remove it on revocation.
+                    Optional.of(proto.getClientId()).filter(clientId -> !clientId.isEmpty()));
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }

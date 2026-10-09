@@ -28,7 +28,6 @@ import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.http.utils.HttpException;
-import bisq.network.http.utils.HttpLogSanitizer;
 import bisq.network.http.utils.HttpMethod;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
@@ -277,14 +276,14 @@ public abstract class HttpRequestService<T, R> implements Service {
                             }
 
                             Throwable rootCause = ExceptionUtil.getRootCause(e);
-                            // An HttpException message IS the raw response body — sanitize it for
-                            // the log; the exception itself keeps the raw body for classification.
-                            // Transport failures carry no body and keep their stack trace.
+                            // An HttpException message is the sanitized response body; the raw body stays
+                            // available to classifiers through getBody(). Transport failures carry no body
+                            // and keep their stack trace.
                             if (rootCause instanceof HttpException httpException) {
                                 log.warn("HTTP {} from provider {}: {}",
                                         httpException.getResponseCode(),
                                         providerForThisRequest.getBaseUrl(),
-                                        HttpLogSanitizer.loggableBody(httpException.getMessage()));
+                                        httpException.getMessage());
                             } else {
                                 log.warn("Encountered exception during HTTP request to provider {}", providerForThisRequest.getBaseUrl(), rootCause);
                             }
