@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.content.user.accounts.crypto_accounts.details;
 
-import bisq.account.accounts.crypto.MoneroAccount;
-import bisq.account.accounts.crypto.MoneroAccountPayload;
+import bisq.account.accounts.crypto.monero.MoneroAccount;
+import bisq.account.accounts.crypto.monero.MoneroAccountPayload;
 import bisq.account.timestamp.AccountTimestampService;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;

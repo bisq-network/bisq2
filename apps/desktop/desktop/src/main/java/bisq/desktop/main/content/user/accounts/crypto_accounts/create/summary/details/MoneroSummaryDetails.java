@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.content.user.accounts.crypto_accounts.create.summary.details;
 
-import bisq.account.accounts.crypto.MoneroAccountPayload;
+import bisq.account.accounts.crypto.monero.MoneroAccountPayload;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.BooleanFormatter;
 
