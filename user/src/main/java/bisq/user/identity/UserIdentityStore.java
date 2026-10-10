@@ -306,8 +306,10 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
 
     // We want to ensure that the selected object is the same as the one in the userIdentities set.
     void setSelectedUserIdentity(UserIdentity userIdentity) {
+        // UserIdentity.toString() contains the nickname, the terms, the statement and the network ID of the profile.
+        // Users share their log files, so we log neither user identities nor their IDs.
         if (userIdentities.isEmpty()) {
-            log.error("userIdentities must not be empty. userIdentity={}", userIdentity);
+            log.error("userIdentities must not be empty.");
             return;
         }
 
@@ -317,10 +319,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
         if (optionalUserIdentity.isPresent()) {
             selectedUserIdentityObservable.set(optionalUserIdentity.get());
         } else {
-            log.warn("Could not find user identity in userIdentities.\n" +
-                            "userIdentity={}\n" +
-                            "userIdentities={}",
-                    userIdentity, userIdentities);
+            log.warn("Could not find the given user identity among the {} user identities.", userIdentities.size());
             if (selectedUserIdentityObservable.get() == null) {
                 log.warn("As selectedUserIdentity is null we select the fist found userIdentity from userIdentities.");
                 selectedUserIdentityObservable.set(userIdentities.stream().findFirst().orElseThrow());
