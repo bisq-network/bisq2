@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -206,18 +205,39 @@ public class ProtobufUtils {
         }
     }
 
-    // Convert list of proto enums to a stream of Enums. If the enumFromProto fails we skip the enum.
+    // Convert list of proto enums to a stream of Enums. A value which cannot be resolved is skipped.
     public static <E extends Enum<E>, P> Stream<E> fromProtoEnumStream(Class<E> enumType, List<P> proto) {
-        return proto.stream()
-                .map(enumProto -> {
-                    try {
-                        return enumFromProto(enumType, ((Enum<?>) enumProto).name());
-                    } catch (Exception e) {
-                        log.warn("Could not resolve enum for proto {}. We skip that collection entry.", enumProto, e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull);
+        return resolveEnumNames(enumType, proto.stream().map(enumProto -> ((Enum<?>) enumProto).name()));
+    }
+
+    // Convert list of enum names (repeated string fields) to a list of Enums. A name which cannot be resolved is
+    // skipped.
+    public static <E extends Enum<E>> List<E> fromProtoEnumNameList(Class<E> enumType, List<String> names) {
+        return resolveEnumNames(enumType, names.stream()).collect(Collectors.toList());
+    }
+
+    // A peer of a later version can send values which this version does not know, so a value which cannot be resolved
+    // is expected and skipped. A list from a peer can hold millions of such values, for example the features of the
+    // peers of a peer exchange message. So the values are resolved without exceptions, and one log line without the
+    // values reports the number of skipped values (rule 8 of docs/specifications/network/validation-at-parsing.md).
+    private static <E extends Enum<E>> Stream<E> resolveEnumNames(Class<E> enumType, Stream<String> names) {
+        String prefix = ProtoEnum.getProtobufEnumPrefix(enumType);
+        List<E> resolved = new ArrayList<>();
+        int numSkipped = 0;
+        for (String name : (Iterable<String>) names::iterator) {
+            E result = name == null || name.endsWith("_UNSPECIFIED")
+                    ? null
+                    : Enums.getIfPresent(enumType, name.replace(prefix, "")).orNull();
+            if (result == null) {
+                numSkipped++;
+            } else {
+                resolved.add(result);
+            }
+        }
+        if (numSkipped > 0) {
+            log.debug("We skipped {} values of {} which could not be resolved.", numSkipped, enumType.getSimpleName());
+        }
+        return resolved.stream();
     }
 
     public static <E extends Enum<E>, P> List<E> fromProtoEnumList(Class<E> enumType, List<P> proto) {

@@ -73,6 +73,9 @@ message, so they cannot limit the memory which these steps need.
    value. It does not contain the rejected value. The callers log these messages, for example when a confidential
    message fails at parsing, and the rejected values come from other nodes: chat texts, payment account data, Bitcoin
    addresses, transaction IDs. Users share their log files with support.
+8. A list of enum values which the node cannot resolve, for example a feature or a transport type of a later version,
+   is not an integrity violation. The node skips each such value and keeps the other values. It logs the number of
+   skipped values once per list, at debug level, without the values and without a stack trace.
 
 ## Reasons
 
@@ -100,6 +103,10 @@ message, so they cannot limit the memory which these steps need.
   work. Checks before expensive parse steps limit this work (for example rule 5 of
   [`../security/ec-public-key-encoding.md`](../security/ec-public-key-encoding.md)). The difference is that the peer
   keeps the connection (see [Known limitations](#known-limitations)).
+- Rule 8: peers of later versions send values which this version does not know, so such values are expected. A peer
+  also controls how many values a list holds: one peer exchange message can hold about four million feature values.
+  A log line or an exception per value would let one message fill all log files and cost seconds of processor time
+  before any check of the message.
 
 ## Compatibility
 
