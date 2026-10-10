@@ -17,7 +17,7 @@
 
 package bisq.api.web_socket;
 
-import bisq.api.access.filter.Headers;
+import bisq.api.access.filter.Attributes;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -88,7 +88,7 @@ class WebSocketConnectionHandlerTest {
     private DefaultWebSocket connect(TestableHandler target, String clientId) {
         DefaultWebSocket webSocket = mock(DefaultWebSocket.class, RETURNS_DEEP_STUBS);
         HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getHeader(Headers.CLIENT_ID)).thenReturn(clientId);
+        when(request.getAttribute(Attributes.CLIENT_ID)).thenReturn(clientId);
         when(webSocket.getUpgradeRequest()).thenReturn(request);
         target.onConnect(webSocket);
         return webSocket;

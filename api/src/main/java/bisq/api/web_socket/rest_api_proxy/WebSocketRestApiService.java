@@ -28,7 +28,6 @@ import bisq.common.application.Service;
 import bisq.common.util.StringUtils;
 import bisq.security.tls.TlsException;
 import bisq.security.tls.TlsTrustManager;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -207,26 +206,21 @@ public class WebSocketRestApiService implements Service {
     }
 
     /**
-     * Copies the identity of the connection onto the forwarded request. A connection whose upgrade
-     * request cannot be resolved at all is a state we do not expect and refuse to forward for, whereas
-     * an upgrade request carrying no identity headers forwards none: with session handling enabled the
-     * handshake filter has already rejected such a connection, and with it disabled there is no
-     * identity to pass on and the REST API asks for none.
+     * Copies the identity of the connection (see {@link WebSocketIdentity}) onto the forwarded request,
+     * so that the REST filters authenticate and authorize the call with the session and the client of
+     * the WebSocket. A connection whose upgrade request cannot be resolved at all is a state we do not
+     * expect and refuse to forward for. A connection without a recorded session forwards none: with
+     * session handling enabled the handshake filter has already rejected such a connection, and with it
+     * disabled the REST API asks for none.
      */
     private static void forwardAuthenticatedIdentity(WebSocket webSocket, HttpRequest.Builder requestBuilder) {
-        HttpServletRequest upgradeRequest = WebSocketIdentity.findUpgradeRequest(webSocket)
+        WebSocketIdentity.findUpgradeRequest(webSocket)
                 .orElseThrow(() -> new IllegalStateException(
                         "Could not resolve the upgrade request of the WebSocket connection"));
-        copyHeader(upgradeRequest, requestBuilder, Headers.SESSION_ID);
-        copyHeader(upgradeRequest, requestBuilder, Headers.CLIENT_ID);
-    }
-
-    private static void copyHeader(HttpServletRequest upgradeRequest,
-                                   HttpRequest.Builder requestBuilder,
-                                   String name) {
-        Optional.ofNullable(upgradeRequest.getHeader(name))
-                .filter(StringUtils::isNotEmpty)
-                .ifPresent(value -> requestBuilder.header(name, value));
+        WebSocketIdentity.findSessionId(webSocket)
+                .ifPresent(sessionId -> requestBuilder.header(Headers.SESSION_ID, sessionId));
+        WebSocketIdentity.findClientId(webSocket)
+                .ifPresent(clientId -> requestBuilder.header(Headers.CLIENT_ID, clientId));
     }
 
     private HttpClient getOrCreateHttpClient() {
