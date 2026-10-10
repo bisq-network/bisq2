@@ -138,10 +138,13 @@ public class ReputationService implements Service {
         if (DevMode.isDevMode() && DevMode.devModeReputationScore() > 0) {
             score = DevMode.devModeReputationScore();
         } else {
-            if (!scoreByUserProfileId.containsKey(userProfileId)) {
+            // One read: the map loses the score of a removed profile while other threads read it (see
+            // docs/specifications/security/derived-state.md). Between a check and a second read, get returned null.
+            Long totalScore = scoreByUserProfileId.get(userProfileId);
+            if (totalScore == null) {
                 return Optional.empty();
             }
-            score = scoreByUserProfileId.get(userProfileId);
+            score = totalScore;
         }
 
         double fiveSystemScore = getFiveSystemScore(score);
