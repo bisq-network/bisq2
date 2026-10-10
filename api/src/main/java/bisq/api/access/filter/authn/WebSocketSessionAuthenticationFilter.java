@@ -52,31 +52,27 @@ public class WebSocketSessionAuthenticationFilter extends BaseFilter {
             return context.getInvokeAction();
         }
 
-        // Defensive guard: WebSocket authentication is connection-scoped and must be idempotent.
-        // Although a WebSocket handshake is logically performed once per connection,
-        // the Grizzly filter chain may deliver the HTTP upgrade request in multiple
-        // chunks or re-enter this filter before the protocol upgrade is finalized.
-        // If authentication has already been completed for this connection, we must
-        // skip re-authentication to avoid duplicate validation, false rejection, or
-        // rebinding of identity.
-        if (HttpRequestFilterUtils.hasConnectionAttribute(context, Attributes.IS_AUTHENTICATED)) {
+        HttpRequestPacket request = requestOpt.get();
+        // Grizzly passes each later chunk of the upgrade request, and after the upgrade every WebSocket frame, as
+        // content of the same request. They reach this filter with the request which was already authenticated.
+        // The mark is on the request and not on the connection: another request on the same connection is
+        // authenticated again. Only the value which this filter writes counts as the mark.
+        if (Boolean.TRUE.equals(request.getAttribute(Attributes.IS_AUTHENTICATED))) {
             return context.getInvokeAction();
         }
 
-        HttpRequestPacket request = requestOpt.get();
-        if (context.getConnection().getAttributes() == null) {
-            log.error("WebSocket auth rejected: missing connection attributes");
-            return HttpRequestFilterUtils.rejectAndClose(context, request, HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
         try {
             AuthenticatedSession session = sessionAuthenticationService.authenticate(
                     request.getHeader(Headers.CLIENT_ID),
                     request.getHeader(Headers.SESSION_ID)
             );
 
-            HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.IS_AUTHENTICATED, true);
-            HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.SESSION_ID, session.getSessionId());
-            HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.CLIENT_ID, session.getClientId());
+            // The identity of the WebSocket (see WebSocketIdentity). A client cannot set request attributes. The REST
+            // filter records its properties, which Jersey keeps as attributes of the same request objects, under
+            // other names (see Attributes).
+            request.setAttribute(Attributes.IS_AUTHENTICATED, true);
+            request.setAttribute(Attributes.SESSION_ID, session.getSessionId());
+            request.setAttribute(Attributes.CLIENT_ID, session.getClientId());
 
             return context.getInvokeAction();
         } catch (AuthenticationException e) {
