@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,10 +62,10 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     private final Persistence<BisqEasyOpenTradeChannelStore> persistence;
     private final PendingTradeChatMessages<BisqEasyOpenTradeMessage> pendingMessages =
             new PendingTradeChatMessages<>(BisqEasyOpenTradeMessage::getTradeId);
-    // Set by the trade service: whether we have a trade with the trade ID whose peer is the user profile. A received
-    // message creates a channel only for such a trade (see pending-trade-messages.md). Until it is set, received
-    // messages create no channel.
-    private volatile BiPredicate<String, String> isTradeWithPeer = (tradeId, userProfileId) -> false;
+    // Set by the trade service: whether we have a trade with the trade ID whose peer is the sender and whose own user
+    // profile is the receiver of a message. A received message creates a channel only for such a trade (see rule 6 of
+    // pending-trade-messages.md). Until it is set, received messages create no channel.
+    private volatile TradeWithPeerPredicate isTradeWithPeer = (tradeId, senderUserProfileId, receiverUserProfileId) -> false;
 
     public BisqEasyOpenTradeChannelService(PersistenceService persistenceService,
                                            NetworkService networkService,
@@ -358,7 +357,9 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
             return Optional.empty();
         }
         if (message.getBisqEasyOffer().isPresent() &&
-                isTradeWithPeer.test(message.getTradeId(), message.getSenderUserProfile().getId())) {
+                isTradeWithPeer.test(message.getTradeId(),
+                        message.getSenderUserProfile().getId(),
+                        message.getReceiverUserProfileId())) {
             return Optional.of(traderFindOrCreatesChannel(message.getTradeId(),
                     message.getBisqEasyOffer().get(),
                     myUserIdentity.get(),
@@ -372,8 +373,13 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         return Optional.empty();
     }
 
-    public void setIsTradeWithPeer(BiPredicate<String, String> isTradeWithPeer) {
+    public void setIsTradeWithPeer(TradeWithPeerPredicate isTradeWithPeer) {
         this.isTradeWithPeer = isTradeWithPeer;
+    }
+
+    @FunctionalInterface
+    public interface TradeWithPeerPredicate {
+        boolean test(String tradeId, String senderUserProfileId, String receiverUserProfileId);
     }
 
     // The taker's UI and the received take offer message can both create the channel, on different threads.
