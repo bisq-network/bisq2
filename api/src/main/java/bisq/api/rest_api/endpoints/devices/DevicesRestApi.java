@@ -162,25 +162,20 @@ public class DevicesRestApi extends RestApiBase {
                     deviceDescriptor,
                     platform,
                     symmetricKeyBase64,
-                    clientId
+                    clientId,
+                    // Authorization ran before this request, so the client can have been revoked
+                    // since. Checked by the service under the monitor the revocation's cleanup
+                    // takes, so the registration is either refused or removed by that cleanup.
+                    // Asked of the grant rather than the profile, which a revocation keeps until
+                    // its cleanup succeeds.
+                    clientAuthorizedCheck
             );
             if (result == DeviceRegistrationResult.DEVICE_OWNED_BY_ANOTHER_CLIENT) {
                 return buildResponse(Response.Status.FORBIDDEN, "Device is registered to another client");
             }
-            if (!clientAuthorizedCheck.test(clientId)) {
-                // Authorization ran before this request stored anything, so the client can have
-                // been revoked in between and the revocation's cleanup would have missed this
-                // registration. Checked afterwards rather than before, since a check before would
-                // leave that same window, and asked of the grant rather than the profile, which a
-                // revocation keeps until its cleanup succeeds. 401 rather than 403, so the app
-                // treats it as "pair again" instead of "permission missing".
-                try {
-                    deviceRegistrationService.unregister(deviceId, clientId);
-                    log.warn("Removed a device registration of a client revoked during the request");
-                } catch (IllegalStateException e) {
-                    // The answer to the app stays the same: it has to pair again either way.
-                    log.error("Could not remove the device registration of a client revoked during the request", e);
-                }
+            if (result == DeviceRegistrationResult.CLIENT_NOT_AUTHORIZED) {
+                // 401 rather than 403, so the app treats it as "pair again" instead of
+                // "permission missing".
                 return buildResponse(Response.Status.UNAUTHORIZED, "Client was revoked, pairing is required");
             }
 
