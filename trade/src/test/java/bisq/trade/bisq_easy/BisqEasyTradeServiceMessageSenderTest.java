@@ -102,6 +102,19 @@ class BisqEasyTradeServiceMessageSenderTest {
         assertThat(trade.getState()).isEqualTo(BisqEasyTradeState.FAILED_AT_PEER);
     }
 
+    // Our node hosts another identity, whose network ID the peer knows, for example from an offer. The reaction of the
+    // trade would tell the peer that both identities are hosted on one node.
+    @Test
+    void messageOfTheTradePeerToAnotherIdentityOfOurNodeDoesNotReachTheProtocol() {
+        startServiceWithTrade();
+
+        assertThatCode(() -> service.onMessage(errorReport(peer, networkId("my-other-identity", 1004))))
+                .doesNotThrowAnyException();
+
+        assertThat(trade.getState()).isEqualTo(BisqEasyTradeState.INIT);
+        assertThat(trade.getEventQueue()).isEmpty();
+    }
+
     @Test
     void queuedMessageOfAThirdPartyIsDroppedWhenItIsProcessed() {
         // The protocol of the trade does not exist yet, so the service keeps the message for later
@@ -126,11 +139,15 @@ class BisqEasyTradeServiceMessageSenderTest {
     }
 
     private BisqEasyReportErrorMessage errorReport(NetworkId sender) {
+        return errorReport(sender, me);
+    }
+
+    private BisqEasyReportErrorMessage errorReport(NetworkId sender, NetworkId receiver) {
         return new BisqEasyReportErrorMessage("message-of-" + sender.getPubKey().getKeyId(),
                 trade.getId(),
                 "1.0.0",
                 sender,
-                me,
+                receiver,
                 "error",
                 "",
                 TradeProtocolFailure.UNKNOWN);

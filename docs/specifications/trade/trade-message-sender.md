@@ -25,6 +25,9 @@ to MuSig.
    defines how the node keeps such messages.
 4. The take offer request creates the trade at the maker, so the maker has no trade peer to compare with. The checks
    of the take offer process apply to it instead.
+5. A node passes a trade message to the protocol of a trade only if the receiver of the message is the node's own
+   network ID of this trade. The node compares the ID of the receiver's network ID with the ID of the network ID which
+   it stored for itself as a trader of the trade. Rules 2 and 3 apply to a message which breaks this rule.
 
 ## Reasons
 
@@ -35,6 +38,11 @@ to MuSig.
   log files and trade exports.
 - Rule 3: the node cannot check a message before the trade exists. So the check must run when the message is
   processed, not only when it arrives.
+- Rule 5: a node can host several identities, and the trade peer knows the network IDs of other identities from their
+  offers and profiles. The layer for confidential messages binds the receiver of a message to the key which decrypted
+  it, but it does not know the trade. Without rule 5, the peer could send a message of the trade to another identity
+  of the node, and the reaction of the trade, for example its progress or an error report, would tell the peer that
+  both identities are hosted on one node.
 - Rule 1 compares keys because the layer for confidential messages binds the sender to its key, not to its addresses.
   The network ID which a node stored for its trade peer comes from the offer or from the take offer request. The peer
   can have added a transport since then, and its messages then carry its key with another address map.
@@ -42,7 +50,7 @@ to MuSig.
 ## Compatibility
 
 - The rules change no message and no persisted data. Unmodified nodes of all versions send trade messages only to
-  their trade peer, with their own network ID as sender. A node sends under the network ID which its trade peer stored
+  their trade peer, to the network ID which they stored for it, with their own network ID as sender. A node sends under the network ID which its trade peer stored
   for it (rule 3 of [identity by key](../user/identity-by-key.md)), because nodes of version 2.1.13 compare the whole
   network ID.
 - The message handlers keep their own check of the trade ID and the sender. It still applies to a caller which passes
