@@ -22,6 +22,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.bonded_roles.oracle.OnlyStaticOracleNodes;
 import bisq.common.application.Service;
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.timer.Scheduler;
@@ -31,12 +32,15 @@ import bisq.network.StartupReplay;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.security.DigestUtil;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -80,10 +84,12 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
     @Getter
     private final DataService.Listener initialDataServiceListener;
     // Data whose key is not the key of a bonded role yet. It is processed again when a bonded role arrives, because
-    // data can arrive before the role which authorizes it. The set holds only data which the stores still hold (see
-    // onAuthorizedDataRemoved), so the limits of the stores bound it. It is a hash set, because any key can publish
-    // such data: with a CopyOnWriteArraySet each add would copy all entries.
-    private final Set<AuthorizedData> failedAuthorizedData = ConcurrentHashMap.newKeySet();
+    // data can arrive before the role which authorizes it. The map holds only data which the stores still hold (see
+    // onAuthorizedDataRemoved), so the limits of the stores bound it. It is keyed like the stores: by the hash of the
+    // hash serialization, which leaves out the signature. A republication of the same data with a new signature
+    // replaces the stored data without a removal, so it replaces its entry here as well. It is a hash map, because any
+    // key can publish such data: with a CopyOnWriteArraySet each add would copy all entries.
+    private final Map<ByteArray, AuthorizedData> failedAuthorizedData = new ConcurrentHashMap<>();
     @Nullable
     private Scheduler initialDataScheduler, reprocessScheduler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
@@ -273,7 +279,7 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         // get data which the stores no longer hold, and the set would keep all such data until shutdown. We remove
         // it after the calls above, because hasAuthorizedPubKey adds data without an authorized key to the set, also
         // when it is called for removed data.
-        failedAuthorizedData.remove(authorizedData);
+        failedAuthorizedData.remove(getFailedAuthorizedDataKey(authorizedData));
     }
 
 
@@ -370,13 +376,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         if (isAuthorized) {
             log.debug("authorizedPublicKey provided by a bonded role. data={}", data.getClass().getSimpleName());
             // In case we are reprocessing previous failed authorizedData we clear it from the queue.
-            if (failedAuthorizedData.remove(authorizedData)) {
+            if (failedAuthorizedData.remove(getFailedAuthorizedDataKey(authorizedData)) != null) {
                 log.debug("We successfully reprocessed authorizedData.\n" +
                                 "AuthorizedDistributedData={}, {}",
                         data.getClass().getSimpleName(), data.toString().substring(0, 100));
             }
         } else {
-            failedAuthorizedData.add(authorizedData);
+            failedAuthorizedData.put(getFailedAuthorizedDataKey(authorizedData), authorizedData);
             // TODO Set log level for to debug for now, as too many logs are printed.
             //  Once the TTL has cleared the old data we can change back to warn level.
             log.debug("hasAuthorizedPubKey failed for AuthorizedDistributedData={}, {}",
@@ -449,9 +455,13 @@ public class AuthorizedBondedRolesService implements Service, DataService.Listen
         }
     }
 
+    private static ByteArray getFailedAuthorizedDataKey(AuthorizedData authorizedData) {
+        return new ByteArray(DigestUtil.hash(authorizedData.serializeForHash()));
+    }
+
     @VisibleForTesting
     void reprocess() {
-        Set<AuthorizedData> clone = new HashSet<>(failedAuthorizedData);
+        List<AuthorizedData> clone = new ArrayList<>(failedAuthorizedData.values());
         // As at startup, one failing item does not stop the others nor the stop of the scheduler below
         StartupReplay.forEach(clone.stream(), this::onAuthorizedDataAdded);
         if (reprocessScheduler != null) {
