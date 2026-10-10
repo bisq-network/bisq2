@@ -149,8 +149,8 @@ class BisqEasyMediatorServiceChannelTest {
         BisqEasyContract contract = TestContracts.contract(trader, taker, mediator);
         String tradeId = TradeId.fromContract(contract);
         // The node trades in this trade under the other identity
-        openTradeChannelService.setIsTradeWithPeer((id, userProfileId) -> id.equals(tradeId) &&
-                userProfileId.equals(taker.getId()));
+        openTradeChannelService.setIsTradeWithPeer((id, senderUserProfileId, receiverUserProfileId) ->
+                id.equals(tradeId) && senderUserProfileId.equals(taker.getId()));
         openTradeChannelService.onMessage(chatMessage(contract, taker, trader));
 
         mediatorService.onMessage(mediationRequest(contract, taker, trader));
@@ -199,9 +199,9 @@ class BisqEasyMediatorServiceChannelTest {
     // The predicate which holds for any trade lets the message create the channel, as older versions did without a
     // trade. Such a channel can be in the persisted store.
     private void channelCreatedByChatMessageOfOlderVersion(BisqEasyOpenTradeMessage message) {
-        openTradeChannelService.setIsTradeWithPeer((tradeId, userProfileId) -> true);
+        openTradeChannelService.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) -> true);
         openTradeChannelService.onMessage(message);
-        openTradeChannelService.setIsTradeWithPeer((tradeId, userProfileId) -> false);
+        openTradeChannelService.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) -> false);
     }
 
     private BisqEasyMediationRequest mediationRequest(BisqEasyContract contract,

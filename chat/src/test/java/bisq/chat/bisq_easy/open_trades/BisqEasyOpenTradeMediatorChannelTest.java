@@ -182,9 +182,9 @@ class BisqEasyOpenTradeMediatorChannelTest {
     // Older versions created a channel from a chat message with an offer without a trade, and such a channel can be in
     // the persisted store. The predicate which holds for any trade lets the message create it.
     private void channelCreatedByChatMessageOfOlderVersion() {
-        service.setIsTradeWithPeer((tradeId, userProfileId) -> true);
+        service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) -> true);
         service.onMessage(messageToMediator(peer, Optional.of(offer)));
-        service.setIsTradeWithPeer((tradeId, userProfileId) -> false);
+        service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) -> false);
     }
 
     private BisqEasyOpenTradeMessage messageToMediator(UserProfile sender, Optional<BisqEasyOffer> bisqEasyOffer) {

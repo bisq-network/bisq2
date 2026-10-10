@@ -35,7 +35,9 @@ import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -43,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -199,11 +202,29 @@ public class BisqEasyOpenTradeChannelServiceTest {
 
     @Test
     void takeOfferMessageFromAnotherUserThanTheTradePeerCreatesNoChannel() {
-        service.setIsTradeWithPeer((tradeId, userProfileId) -> userProfileId.equals(OTHER_PROFILE_ID));
+        service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) ->
+                senderUserProfileId.equals(OTHER_PROFILE_ID));
 
         service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis()));
 
         assertTrue(service.getChannels().isEmpty());
+    }
+
+    // The trade service decides with the receiver whether the trade is ours under this user profile (rule 6 of
+    // docs/specifications/trade/pending-trade-messages.md)
+    @Test
+    void tradeCheckGetsTheSenderAndTheReceiverOfTheMessage() {
+        List<String> checkedProfiles = new ArrayList<>();
+        service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) -> {
+            checkedProfiles.add(senderUserProfileId + " to " + receiverUserProfileId);
+            return false;
+        });
+
+        service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis()));
+
+        assertFalse(checkedProfiles.isEmpty());
+        assertTrue(checkedProfiles.stream().allMatch(profiles -> profiles.equals(TAKER_PROFILE_ID + " to " + MAKER_PROFILE_ID)),
+                checkedProfiles.toString());
     }
 
     @Test
@@ -226,7 +247,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
     @Test
     void tradeCreatedWhileTheMessageBecomesPendingCreatesChannel() {
         AtomicInteger checks = new AtomicInteger();
-        service.setIsTradeWithPeer((tradeId, userProfileId) -> checks.incrementAndGet() > 1);
+        service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) -> checks.incrementAndGet() > 1);
         BisqEasyOpenTradeMessage message = takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis());
 
         service.onMessage(message);
@@ -235,8 +256,8 @@ public class BisqEasyOpenTradeChannelServiceTest {
     }
 
     private void tradeWithTakerExists() {
-        service.setIsTradeWithPeer((tradeId, userProfileId) ->
-                tradeId.equals(TRADE_ID) && userProfileId.equals(TAKER_PROFILE_ID));
+        service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) ->
+                tradeId.equals(TRADE_ID) && senderUserProfileId.equals(TAKER_PROFILE_ID));
     }
 
     private BisqEasyOpenTradeMessage textMessage(String receiverUserProfileId, long date) {

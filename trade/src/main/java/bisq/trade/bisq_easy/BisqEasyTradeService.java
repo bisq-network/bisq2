@@ -155,9 +155,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
-        bisqEasyOpenTradeChannelService.setIsTradeWithPeer((tradeId, userProfileId) -> findTrade(tradeId)
-                .filter(trade -> trade.getPeer().getNetworkId().getId().equals(userProfileId))
-                .isPresent());
+        // A message for one of our trades which the peer sent to another of our user profiles must not create a channel
+        // (rule 6 of docs/specifications/trade/pending-trade-messages.md).
+        bisqEasyOpenTradeChannelService.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) ->
+                findTrade(tradeId)
+                        .filter(trade -> trade.getPeer().getNetworkId().getId().equals(senderUserProfileId) &&
+                                trade.getMyself().getNetworkId().getId().equals(receiverUserProfileId))
+                        .isPresent());
 
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
