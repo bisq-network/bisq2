@@ -56,11 +56,12 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
     }
 
     /**
-     * Whether the message carries the ID of the trade and was sent by the trade peer. These are the two conditions
-     * which {@link #verifyInternal} requires.
+     * Whether the message carries the ID of the trade, was sent by the trade peer, and was sent to our own network ID
+     * of the trade. The trade services pass a message to the protocol of a trade only if this holds. The first two
+     * conditions are those which {@link #verifyInternal} requires.
      */
     public static boolean isMessageOfTradePeer(TradeMessage message, Trade<?, ?, ?> trade) {
-        return hasTradeId(message, trade) && isSentByTradePeer(message, trade);
+        return hasTradeId(message, trade) && isSentByTradePeer(message, trade) && isSentToMyself(message, trade);
     }
 
     private static boolean hasTradeId(TradeMessage message, Trade<?, ?, ?> trade) {
@@ -72,5 +73,13 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
     // peer adds a transport, so the network ID which we stored for the peer can have other addresses.
     private static boolean isSentByTradePeer(TradeMessage message, Trade<?, ?, ?> trade) {
         return message.getSender().getId().equals(trade.getPeer().getNetworkId().getId());
+    }
+
+    // A node can host several identities. The confidential message layer has checked that the receiver of the message
+    // is the network ID whose key decrypted it. A message for this trade which the peer sent to another identity of our
+    // node must not reach this trade: the reaction of the trade would tell the peer that both identities are hosted on
+    // one node (rule 5 of docs/specifications/trade/trade-message-sender.md).
+    private static boolean isSentToMyself(TradeMessage message, Trade<?, ?, ?> trade) {
+        return message.getReceiver().getId().equals(trade.getMyself().getNetworkId().getId());
     }
 }
