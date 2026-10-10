@@ -174,7 +174,7 @@ public class TorHttpClient extends BaseHttpClient {
     /**
      * The status code is read before the body so a failed body read cannot demote a server
      * answer to a transport failure: a non-2xx whose body is unreadable still surfaces as an
-     * {@link HttpException} with its status, keeping 4xx fail-fast and 5xx behind the retry
+     * {@link HttpException} with its status, keeping its status-based classification and retry
      * gate. Only a 2xx with an unreadable body stays an IOException — there is no result to
      * return and the caller may treat it as transport-level.
      */
@@ -225,7 +225,7 @@ public class TorHttpClient extends BaseHttpClient {
     /**
      * Non-2xx responses surface with their status code and raw body in an {@link HttpException},
      * matching ClearNetHttpClient, so that {@link HttpRequestService} classifies them as
-     * server-level (4xx fails fast, 5xx retry gated per request descriptor) rather than as a
+     * server-level (by status code and request method, see its class Javadoc) rather than as a
      * retriable transport failure. HttpException is checked and Apache's response handler only
      * permits IOException, so it travels as the cause; root-cause extraction recovers it upstream.
      */

@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -149,14 +150,57 @@ class HttpRequestServiceTest {
         verify(client, times(1)).post(anyString(), any());
     }
 
+    @Test
+    void getFailsOverAfterClientError() throws IOException {
+        when(client.get(anyString(), any())).thenThrow(new IOException(new HttpException("Transaction not found", 404)))
+                .thenReturn("ok");
+        createService(HttpRequest.get("path"), false);
+
+        assertEquals("ok", service.request("request").join());
+
+        verify(client, times(2)).get(anyString(), any());
+    }
+
+    @Test
+    void laterGetSkipsProviderWhichAnsweredClientError() throws IOException {
+        // The only configured provider answers 404. Before, the service failed without asking the
+        // fallback provider and sent every later request to the same provider again.
+        BaseHttpClient fallbackClient = mock(BaseHttpClient.class);
+        when(fallbackClient.shutdown()).thenReturn(CompletableFuture.completedFuture(true));
+        when(fallbackClient.get(anyString(), any())).thenReturn("ok");
+        when(networkService.getHttpClient(startsWith("https://fallback.example"), anyString(), anyString(), any()))
+                .thenReturn(fallbackClient);
+        when(client.get(anyString(), any())).thenThrow(new IOException(new HttpException("Not found", 404)));
+        createService(HttpRequest.get("path"), false,
+                Set.of(provider("https://primary.example", "primary")),
+                Set.of(provider("https://fallback.example", "fallback")));
+
+        assertEquals("ok", service.request("request").join());
+        assertEquals("ok", service.request("request").join());
+
+        verify(client, times(1)).get(anyString(), any());
+        verify(fallbackClient, times(2)).get(anyString(), any());
+    }
+
     private static HttpRequest post(boolean retryOnServerError) {
         return HttpRequest.post("path", "body", new Pair<>("Content-Type", "application/json"), retryOnServerError);
     }
 
+    private static HttpRequestUrlProvider provider(String baseUrl, String operator) {
+        return new HttpRequestUrlProvider(baseUrl, operator, "", TransportType.CLEAR);
+    }
+
     private void createService(HttpRequest request, boolean failParsing) {
-        HttpRequestServiceConfig config = new HttpRequestServiceConfig(30, Set.of(
-                new HttpRequestUrlProvider("https://first.example", "first", "", TransportType.CLEAR),
-                new HttpRequestUrlProvider("https://second.example", "second", "", TransportType.CLEAR)), Set.of());
+        createService(request, failParsing,
+                Set.of(provider("https://first.example", "first"), provider("https://second.example", "second")),
+                Set.of());
+    }
+
+    private void createService(HttpRequest request,
+                               boolean failParsing,
+                               Set<HttpRequestUrlProvider> providers,
+                               Set<HttpRequestUrlProvider> fallbackProviders) {
+        HttpRequestServiceConfig config = new HttpRequestServiceConfig(30, providers, fallbackProviders);
         service = new HttpRequestService<>(config, networkService, Executors.newSingleThreadExecutor()) {
             @Override
             protected String parseResult(String json) {

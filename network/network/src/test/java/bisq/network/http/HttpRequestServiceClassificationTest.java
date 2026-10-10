@@ -46,7 +46,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Pins the retry/failover classification documented in {@link HttpRequestService}'s JavaDoc:
- * 4xx responses are never retried unless the subclass reclassifies them via
+ * 4xx responses to a POST are never retried unless the subclass reclassifies them via
  * {@code isRecoverableClientError}; every other failure once the client was called (5xx, I/O,
  * parsing) is gated on the request descriptor, because the server may already have applied
  * the request. Both transports must feed the same
