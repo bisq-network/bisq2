@@ -67,6 +67,17 @@ class PersistenceWriteFailureTest {
         assertFalse(client.persist().join());
     }
 
+    // A rate-limited client writes at shutdown only if it knows that its state is not on disk
+    @Test
+    void rateLimitedClientWritesAFailedStateAgain() throws Exception {
+        RateLimitedTestClient client = new RateLimitedTestClient(new PersistenceService(tempDir));
+        blockTemporaryFile(client.getPersistence());
+
+        assertFalse(client.persist().join());
+
+        assertTrue(client.isDropped());
+    }
+
     @Test
     void persistingAllClientsReportsAnyFailedWrite() throws Exception {
         PersistenceService service = new PersistenceService(tempDir);
@@ -180,6 +191,25 @@ class PersistenceWriteFailureTest {
         Files.createDirectories(storePath.getParent());
         Files.createDirectory(storePath.resolveSibling(PersistableStoreFileManager.TEMP_FILE_PREFIX +
                 storePath.getFileName()));
+    }
+
+    private static class RateLimitedTestClient extends RateLimitedPersistenceClient<TimestampStore> {
+        private final TimestampStore store = new TimestampStore();
+        private final Persistence<TimestampStore> persistence;
+
+        RateLimitedTestClient(PersistenceService service) {
+            persistence = service.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, "RateLimitedTestStore", store);
+        }
+
+        @Override
+        public Persistence<TimestampStore> getPersistence() {
+            return persistence;
+        }
+
+        @Override
+        public TimestampStore getPersistableStore() {
+            return store;
+        }
     }
 
     private static class TestClient implements PersistenceClient<TimestampStore> {

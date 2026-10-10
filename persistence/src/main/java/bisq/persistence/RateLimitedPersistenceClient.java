@@ -64,6 +64,11 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
                     .persistAsync(getPersistableStore().getClone())
                     .handle((nil, throwable) -> {
                         writeInProgress = false;
+                        if (throwable != null) {
+                            // The state is not on disk. The next call or the shutdown hook writes it again
+                            // (see docs/specifications/persistence/store-write-results.md).
+                            dropped = true;
+                        }
                         return throwable == null;
                     });
         }
