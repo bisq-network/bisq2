@@ -20,9 +20,12 @@ jobs:
     name: Compatibility chain with the last release
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    env:
-      BISQ_BASELINE_ROOT: ${{ runner.temp }}/bisq2-baselines
     steps:
+      # The runner context is not available in the env of a job, so a step sets the directory.
+      - name: Set the baseline directory
+        shell: bash
+        run: echo "BISQ_BASELINE_ROOT=$RUNNER_TEMP/bisq2-baselines" >> "$GITHUB_ENV"
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -97,9 +100,12 @@ jobs:
     name: Network with nodes of the last release and of the branch
     runs-on: ubuntu-24.04
     timeout-minutes: 90
-    env:
-      BISQ_BASELINE_ROOT: ${{ runner.temp }}/bisq2-baselines
     steps:
+      # The runner context is not available in the env of a job, so a step sets the directory.
+      - name: Set the baseline directory
+        shell: bash
+        run: echo "BISQ_BASELINE_ROOT=$RUNNER_TEMP/bisq2-baselines" >> "$GITHUB_ENV"
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
