@@ -37,14 +37,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * The trade services drop a message for which isMessageOfTradePeer is false, and the handlers throw for it in
- * verifyInternal. Both must decide in the same way: a message which passes the services must not fail the trade.
+ * The trade services drop a message for which isMessageOfTradePeer is false, and the handlers throw in verifyInternal
+ * for a message with another trade ID or sender. A message which passes the services must not fail the trade. The
+ * services also require that the message was sent to our own network ID of the trade (rule 5 of
+ * docs/specifications/trade/trade-message-sender.md).
  */
 class TradeMessageHandlerTest {
     private static final String TRADE_ID = "5a6c1a0c-30e0-3c33-a8a5-d1d0e2a3a7a1";
 
+    private final NetworkId me = networkId("me", 1001);
     private final NetworkId peer = networkId("peer", 1002);
     private final NetworkId thirdParty = networkId("third-party", 1003);
+    private final NetworkId myOtherIdentity = networkId("my-other-identity", 1004);
     private final Trade<?, ?, ?> trade = trade();
 
     @Test
@@ -74,6 +78,21 @@ class TradeMessageHandlerTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    // Our node hosts another identity, whose network ID the peer knows, for example from an offer
+    @Test
+    void messageOfTheTradePeerToAnotherIdentityOfOurNodeIsNotPassedToTheTrade() {
+        TradeMessage message = message(TRADE_ID, peer, myOtherIdentity);
+
+        assertThat(TradeMessageHandler.isMessageOfTradePeer(message, trade)).isFalse();
+    }
+
+    @Test
+    void messageOfTheTradePeerToOurNetworkIdUnderOtherAddressesIsAccepted() {
+        TradeMessage message = message(TRADE_ID, peer, withOtherAddress(me, 2001));
+
+        assertThat(TradeMessageHandler.isMessageOfTradePeer(message, trade)).isTrue();
+    }
+
     @Test
     void messageOfTheTradePeerWithAnotherTradeIdIsRejected() {
         TradeMessage message = message("another-trade-id", peer);
@@ -87,13 +106,19 @@ class TradeMessageHandlerTest {
         Trade<?, ?, ?> trade = mock(Trade.class, RETURNS_DEEP_STUBS);
         when(trade.getId()).thenReturn(TRADE_ID);
         when(trade.getPeer().getNetworkId()).thenReturn(peer);
+        when(trade.getMyself().getNetworkId()).thenReturn(me);
         return trade;
     }
 
-    private static TradeMessage message(String tradeId, NetworkId sender) {
+    private TradeMessage message(String tradeId, NetworkId sender) {
+        return message(tradeId, sender, me);
+    }
+
+    private static TradeMessage message(String tradeId, NetworkId sender, NetworkId receiver) {
         TradeMessage message = mock(TradeMessage.class);
         when(message.getTradeId()).thenReturn(tradeId);
         when(message.getSender()).thenReturn(sender);
+        when(message.getReceiver()).thenReturn(receiver);
         return message;
     }
 
