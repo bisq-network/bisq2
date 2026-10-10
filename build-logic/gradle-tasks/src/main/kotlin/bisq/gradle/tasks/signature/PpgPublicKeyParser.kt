@@ -41,6 +41,7 @@ class PpgPublicKeyParser(
 
                 checkNotNull(masterKey) { "Couldn't find master key." }
                 verifyMasterKeyFingerprint()
+                verifyMasterKeyNotRevoked()
 
                 if (subKeys.isNotEmpty()) {
                     verifySubKeySignatures()
@@ -74,6 +75,13 @@ class PpgPublicKeyParser(
         val fingerprint = Hex.toHexString(masterKey!!.fingerprint)
         if (fingerprint != primaryKeyFingerprint) {
             throw GradleException("$keyUrl has invalid fingerprint.")
+        }
+    }
+
+    // A revocation of the primary key retires all its subkeys, so no key of the file can be trusted (fail closed)
+    private fun verifyMasterKeyNotRevoked() {
+        if (masterKey!!.hasRevocation()) {
+            throw GradleException("$keyUrl contains a revocation of the primary key. We do not trust any of its keys.")
         }
     }
 
