@@ -24,9 +24,12 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
  * The wire carries the quote's value and both monetaries independently, while honest
@@ -35,6 +38,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 public class FixPriceSpecTest {
     private static final Monetary ONE_BTC = Coin.asBtcFromFaceValue(1.0);
+    // The bound takes milliseconds. Without it, the recomputation with the huge precision below
+    // takes about 44 s (measured in the Gradle test worker on JDK 21).
+    private static final Duration PRECISION_BOUND_TIME_LIMIT = Duration.ofSeconds(5);
+    private static final String HUGE_PRECISION_MESSAGE =
+            "The precision 100000000 of BTC is not the canonical precision 8";
 
     @Test
     public void honestFiatQuotePasses() {
@@ -88,9 +96,12 @@ public class FixPriceSpecTest {
 
     @Test
     public void forgedBaseSidePrecisionIsRejected() {
-        Monetary forgedBase = new Coin("BTC", 10_000L, "BTC", 4, 4);
+        // Canonical id, so that the precision comparison and not the id comparison rejects it.
+        Monetary forgedBase = new Coin("BTC [crypto]", 10_000L, "BTC", 4, 4);
         PriceQuote malformed = PriceQuote.from(forgedBase, Fiat.fromFaceValue(100_000, "USD"));
-        assertThrows(IllegalArgumentException.class, () -> new FixPriceSpec(malformed));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> new FixPriceSpec(malformed));
+        assertEquals("The precision 4 of BTC is not the canonical precision 8", exception.getMessage());
     }
 
     @Test
@@ -107,14 +118,39 @@ public class FixPriceSpecTest {
         assertThrows(IllegalArgumentException.class, () -> new FixPriceSpec(malformed));
     }
 
+    // Invariant: the node bounds a peer-supplied precision before any arithmetic whose cost grows
+    // with that precision. If the consistency recomputation ran first, movePointRight(100_000_000)
+    // would build a number of about 332 million bits, and the overflow check would then throw with
+    // another message. A change of the bound may update the expected message, but must keep the
+    // time limit.
     @Test
     public void hugeForgedPrecisionIsRejectedBeforeTheArithmetic() {
-        // A forged precision must be rejected by the canonical check, not fed into the
-        // consistency recomputation's movePointRight (which would expand to an enormous
-        // BigDecimal). The check completes quickly rather than exhausting memory.
-        Monetary forgedBase = new Coin("BTC", 1L, "BTC", 100_000_000, 4);
-        PriceQuote malformed = new PriceQuote(90_000_0000L, forgedBase, Fiat.fromFaceValue(90_000, "USD"));
-        assertThrows(IllegalArgumentException.class, () -> new FixPriceSpec(malformed));
+        PriceQuote malformed = quoteWithHugeBasePrecision();
+        IllegalArgumentException exception = assertTimeoutPreemptively(PRECISION_BOUND_TIME_LIMIT,
+                () -> assertThrows(IllegalArgumentException.class, () -> new FixPriceSpec(malformed)));
+        assertEquals(HUGE_PRECISION_MESSAGE, exception.getMessage());
+    }
+
+    @Test
+    public void hugeForgedPrecisionIsRejectedBeforeTheArithmeticAtProtoDeserialization() {
+        // Covers the whole parse path from the wire, so that precision-dependent work added
+        // before verify() also fails the time limit.
+        bisq.offer.protobuf.FixPrice proto = bisq.offer.protobuf.FixPrice.newBuilder()
+                .setPriceQuote(quoteWithHugeBasePrecision().toProto(false))
+                .build();
+        UnresolvableProtobufException exception = assertTimeoutPreemptively(PRECISION_BOUND_TIME_LIMIT,
+                () -> assertThrows(UnresolvableProtobufException.class, () -> FixPriceSpec.fromProto(proto)));
+        assertEquals(HUGE_PRECISION_MESSAGE,
+                assertInstanceOf(IllegalArgumentException.class, exception.getCause()).getMessage());
+    }
+
+    // Only the precision is forged. The id and the low precision are canonical and both values
+    // are positive, so the precision bound is the only check that can reject this quote. Keep
+    // 100_000_000: with 10_000_000 the unbounded path takes under 2 s, and from about 600_000_000
+    // BigInteger fails at once.
+    private static PriceQuote quoteWithHugeBasePrecision() {
+        Monetary forgedBase = new Coin("BTC [crypto]", 1L, "BTC", 100_000_000, 4);
+        return new PriceQuote(90_000_0000L, forgedBase, Fiat.fromFaceValue(90_000, "USD"));
     }
 
     @Test
