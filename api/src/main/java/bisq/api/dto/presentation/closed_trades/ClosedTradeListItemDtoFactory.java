@@ -81,9 +81,9 @@ public final class ClosedTradeListItemDtoFactory {
                 bitcoinSettlementMethod,
                 fiatPaymentMethod,
                 peersReputationScoreDto,
-                Optional.ofNullable(trade.getPaymentAccountData().get()),
-                Optional.ofNullable(trade.getBitcoinPaymentData().get()),
-                Optional.ofNullable(trade.getPaymentProof().get()),
+                trade.getPaymentAccountData(),
+                trade.getBitcoinPaymentData(),
+                trade.getPaymentProof(),
                 trade.getTradeCompletedDate()
         );
 
