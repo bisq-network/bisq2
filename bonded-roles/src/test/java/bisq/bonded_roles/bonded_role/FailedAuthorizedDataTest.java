@@ -103,6 +103,33 @@ class FailedAuthorizedDataTest {
         assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).doesNotContain(mediatorRole);
     }
 
+    // The store replaces the data with its republication, which has a new signature, without a removal. The removal of
+    // the republication then removes the data from the stores, so no copy of it may be processed again.
+    @Test
+    void republishedDataWhichWasRemovedIsNotProcessedAgain() throws GeneralSecurityException {
+        AuthorizedData republication = authorize(mediatorRole, laterOracleKeyPair);
+        assertThat(republication.getSignature().orElseThrow()).isNotEqualTo(mediatorRolePublication.getSignature().orElseThrow());
+        authorizedBondedRolesService.onAuthorizedDataAdded(mediatorRolePublication);
+        authorizedBondedRolesService.onAuthorizedDataAdded(republication);
+        authorizedBondedRolesService.onAuthorizedDataRemoved(republication);
+
+        addOracleNodeRoleOfLaterOracleKey();
+        authorizedBondedRolesService.reprocess();
+
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).doesNotContain(mediatorRole);
+    }
+
+    @Test
+    void republishedDataIsProcessedAgain() throws GeneralSecurityException {
+        authorizedBondedRolesService.onAuthorizedDataAdded(mediatorRolePublication);
+        authorizedBondedRolesService.onAuthorizedDataAdded(authorize(mediatorRole, laterOracleKeyPair));
+
+        addOracleNodeRoleOfLaterOracleKey();
+        authorizedBondedRolesService.reprocess();
+
+        assertThat(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).contains(mediatorRole);
+    }
+
     private void addOracleNodeRoleOfLaterOracleKey() {
         AuthorizedBondedRole oracleRole = new AuthorizedBondedRole("a".repeat(40),
                 Hex.encode(laterOracleKeyPair.getPublic().getEncoded()),
