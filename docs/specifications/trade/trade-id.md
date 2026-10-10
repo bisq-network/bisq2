@@ -37,8 +37,11 @@ contract.
   send a request with this ID and a contract of its own. Its chat messages would appear in the channel of the other
   case, and the mediator would get a second case with the same trade ID.
 - Rule 5 accepts the ID without the take offer date, because a trade which an earlier version created keeps this ID
-  (rule 3). Both forms are derived from the contract, so a sender cannot choose the ID of another trade with either
-  form.
+  (rule 3). Both forms are derived from the offer ID and the key of the taker, and the current form also from the take
+  offer date. The maker is not part of the derivation. So a user who knows the offer ID, the key of the taker and the
+  take offer date of another trade can build a contract with another maker and the same trade ID. Rule 5 binds a
+  request to the trade, not to its two traders. The mediator keeps the traders of the first accepted request of a trade
+  (see "Not covered" in [mediation request validation](../support/mediation-request-validation.md)).
 
 ## Compatibility
 
