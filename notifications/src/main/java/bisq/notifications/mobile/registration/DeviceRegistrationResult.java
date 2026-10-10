@@ -20,5 +20,7 @@ package bisq.notifications.mobile.registration;
 public enum DeviceRegistrationResult {
     REGISTERED,
     /** The device ID is already registered to a different client. */
-    DEVICE_OWNED_BY_ANOTHER_CLIENT
+    DEVICE_OWNED_BY_ANOTHER_CLIENT,
+    /** The client no longer has access, for example because it was revoked during the request. */
+    CLIENT_NOT_AUTHORIZED
 }

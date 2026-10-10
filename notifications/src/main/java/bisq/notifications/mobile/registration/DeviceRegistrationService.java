@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -39,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Not rate limited on purpose: dropping a write here is not recoverable. A revocation removes a
  * device's registration and then removes the client, so nothing afterwards knows the registration
  * should be gone, and the device keeps receiving notifications if the write never reached disk. A
- * registration refused for a revoked client writes twice in a row, which is what a rate limiter
+ * revocation's removal can follow a registration within microseconds, which is what a rate limiter
  * drops.
  */
 public class DeviceRegistrationService implements PersistenceClient<DeviceRegistrationStore>, Service {
@@ -59,7 +60,14 @@ public class DeviceRegistrationService implements PersistenceClient<DeviceRegist
      * another client's device ID, take ownership of the entry and redirect that device's push
      * notifications to its own token. Registrations without an owner predate the ownership link
      * and are claimable, which is how they gain one.
+     * <p>
+     * The client's access is checked under the same monitor that a revocation's removal of its
+     * registrations takes. A revocation withdraws the access before it removes the registrations,
+     * so either this registration is stored first and the revocation removes it, or the revocation
+     * ran first and this check refuses. A registration therefore never outlives a completed
+     * revocation, and no compensating removal, which could itself fail to be written, is needed.
      *
+     * @param clientAuthorizedCheck whether the client still has access, read from the access store
      * @return the outcome of the request; see {@link DeviceRegistrationResult}
      */
     public DeviceRegistrationResult register(String deviceId,
@@ -68,13 +76,15 @@ public class DeviceRegistrationService implements PersistenceClient<DeviceRegist
                             String deviceDescriptor,
                             MobileDevicePlatform platform,
                             Optional<String> symmetricKeyBase64,
-                            String clientId) {
+                            String clientId,
+                            Predicate<String> clientAuthorizedCheck) {
         checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(deviceToken), "deviceToken must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(publicKeyBase64), "publicKeyBase64 must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(deviceDescriptor), "deviceDescriptor must not be null or empty");
         checkNotNull(platform, "platform must not be null");
+        checkNotNull(clientAuthorizedCheck, "clientAuthorizedCheck must not be null");
 
         // Log at DEBUG level to avoid exposing sensitive device identifiers
         log.debug("Registering device - deviceId: {}, deviceDescriptor: {}, platform: {}, hasSymmetricKey: {}",
@@ -94,6 +104,10 @@ public class DeviceRegistrationService implements PersistenceClient<DeviceRegist
         // the same new device ID both pass the check and the later write silently takes the
         // device, which is the takeover the check exists to prevent.
         synchronized (persistableStore) {
+            if (!clientAuthorizedCheck.test(clientId)) {
+                log.warn("Refused a device registration of client {}, it no longer has access", clientId);
+                return DeviceRegistrationResult.CLIENT_NOT_AUTHORIZED;
+            }
             MobileDeviceProfile existing = persistableStore.getDeviceByDeviceId().get(deviceId);
             if (existing != null && existing.getClientId().filter(owner -> !owner.equals(clientId)).isPresent()) {
                 log.warn("Client {} tried to register a device ID owned by another client", clientId);
