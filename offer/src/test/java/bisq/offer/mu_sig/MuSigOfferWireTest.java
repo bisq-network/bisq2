@@ -60,7 +60,7 @@ class MuSigOfferWireTest {
     void validOfferSurvivesTheWireByteExact() throws Exception {
         MuSigOffer offer = createOffer(new CollateralOption(0.25, 0.25));
 
-        Offer<?, ?> roundTripped = Offer.fromProto(serializeAndParse(offer.toProto(true)));
+        Offer<?, ?> roundTripped = Offer.fromProto(serializeAndParse(offer.toProto(false)));
 
         assertThat(roundTripped).isEqualTo(offer);
     }
@@ -90,7 +90,7 @@ class MuSigOfferWireTest {
     @Test
     void offerWithoutCollateralOptionIsRejectedAtTheWire() throws Exception {
         MuSigOffer offer = createOffer(new CollateralOption(0.25, 0.25));
-        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(true).toBuilder();
+        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(false).toBuilder();
         int index = collateralOptionIndex(builder);
         builder.removeOfferOptions(index);
 
@@ -103,7 +103,7 @@ class MuSigOfferWireTest {
     @Test
     void offerWithDuplicateCollateralOptionsIsRejectedAtTheWire() throws Exception {
         MuSigOffer offer = createOffer(new CollateralOption(0.25, 0.25));
-        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(true).toBuilder();
+        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(false).toBuilder();
         int index = collateralOptionIndex(builder);
         builder.addOfferOptions(builder.getOfferOptions(index));
 
@@ -115,7 +115,7 @@ class MuSigOfferWireTest {
 
     private void assertRejectedAfterMutation(UnaryOperator<bisq.offer.protobuf.CollateralOption> mutation) throws Exception {
         MuSigOffer offer = createOffer(new CollateralOption(0.25, 0.25));
-        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(true).toBuilder();
+        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(false).toBuilder();
         int index = collateralOptionIndex(builder);
         bisq.offer.protobuf.OfferOption option = builder.getOfferOptions(index);
         builder.setOfferOptions(index, option.toBuilder()
