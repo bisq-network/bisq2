@@ -178,9 +178,11 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             }
         });
 
-        networkService.subscribeToConfidentialMessages(this);
-
+        // The subscription replays the processed messages of earlier sessions, so the trade restrictions of the stored
+        // alerts must be known before it (see docs/specifications/network/startup-replay.md).
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
+
+        networkService.subscribeToConfidentialMessages(this);
 
         numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                 .host(this)
