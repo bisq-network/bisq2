@@ -397,10 +397,10 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
     }
 
     // The forwarded messages the mediator imports: the ones of the trade and its channel, authored by one of the two
-    // traders and of a type a trader's channel holds. Chat rules warnings and expired messages indicators are local UI
-    // notices, their renderers show no provenance. Other messages are skipped, not the request, as the requester's
-    // channel can hold messages the requester did not choose: the peer chooses the IDs of its messages, and the
-    // channel holds the mediator's messages once the mediator joined.
+    // traders, of a type a trader's channel holds, and not a message of the peer to the mediator. Chat rules warnings
+    // and expired messages indicators are local UI notices, their renderers show no provenance. Other messages are
+    // skipped, not the request, as the requester's channel can hold messages the requester did not choose: the peer
+    // chooses the IDs of its messages, and the channel holds the mediator's messages once the mediator joined.
     @VisibleForTesting
     static List<BisqEasyOpenTradeMessage> getAcceptedChatMessages(BisqEasyMediationRequest bisqEasyMediationRequest) {
         String tradeId = bisqEasyMediationRequest.getTradeId();
@@ -411,6 +411,11 @@ public class BisqEasyMediatorService extends RateLimitedPersistenceClient<Mediat
                         chatMessage.getTradeId().equals(tradeId) &&
                         chatMessage.getChannelId().equals(channelId) &&
                         traderIds.contains(chatMessage.getSenderUserProfile().getId()))
+                // A trader receives only the copies of the peer's messages which are addressed to the trader. A copy
+                // of a message of the peer to the mediator would give the mediator's live message the unverified mark
+                // (see docs/specifications/support/mediation-request-validation.md).
+                .filter(chatMessage -> isOwnMessage(chatMessage, bisqEasyMediationRequest) ||
+                        !chatMessage.getReceiverUserProfileId().equals(bisqEasyMediationRequest.getReceiver().getId()))
                 .toList();
     }
 
