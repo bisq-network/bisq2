@@ -36,7 +36,6 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiPredicate;
 
 import static bisq.trade.bisq_easy.BisqEasyTakeOfferRequestTestFixtures.makerAcceptsTakeOfferRequests;
 import static bisq.trade.bisq_easy.BisqEasyTakeOfferRequestTestFixtures.takeOfferRequest;
@@ -201,17 +200,22 @@ class BisqEasyTradeServiceChatChannelBindingTest {
         assertEquals(TradeProtocolFailure.CHANNEL_DATA_MISMATCH, makerTrade.getTradeProtocolFailure());
     }
 
+    // A message for our trade which the peer sent to another of our user profiles must not create a channel, because
+    // the reaction of the trade to the channel would tell the peer that both profiles are hosted on one node.
     @Test
-    void chatChannelIsCreatedOnlyForATradeWithThatPeer() {
+    void chatChannelIsCreatedOnlyForATradeWithThatPeerAndOurUserProfileOfTheTrade() {
         BisqEasyOpenTradeChannelService channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
         service.getPersistableStore().addTrade(trade);
         service.initialize();
 
-        ArgumentCaptor<BiPredicate<String, String>> isTradeWithPeer = ArgumentCaptor.captor();
+        ArgumentCaptor<BisqEasyOpenTradeChannelService.TradeWithPeerPredicate> isTradeWithPeer = ArgumentCaptor.captor();
         verify(channelService).setIsTradeWithPeer(isTradeWithPeer.capture());
-        assertTrue(isTradeWithPeer.getValue().test(trade.getId(), makerNetworkId.getId()));
-        assertFalse(isTradeWithPeer.getValue().test(trade.getId(), takerIdentity.getNetworkId().getId()));
-        assertFalse(isTradeWithPeer.getValue().test("unknownTradeId", makerNetworkId.getId()));
+        String me = takerIdentity.getNetworkId().getId();
+        assertTrue(isTradeWithPeer.getValue().test(trade.getId(), makerNetworkId.getId(), me));
+        assertFalse(isTradeWithPeer.getValue().test(trade.getId(), me, me));
+        assertFalse(isTradeWithPeer.getValue().test("unknownTradeId", makerNetworkId.getId(), me));
+        assertFalse(isTradeWithPeer.getValue().test(trade.getId(), makerNetworkId.getId(),
+                identity("myOtherProfile").getNetworkId().getId()));
         verify(channelService).processPendingMessages(trade.getId());
     }
 
