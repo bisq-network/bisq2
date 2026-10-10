@@ -1506,15 +1506,28 @@ class AuthenticatedDataStorageServiceTest {
 
     // Before the cutoff date, the transition rule also accepts the refresh of an entry of another owner
     @Test
-    void refreshOfLegacyEntryOfAnotherOwnerIsAcceptedBeforeTheCutoffDate() throws GeneralSecurityException {
-        time = BEFORE_CUTOFF;
+    void refreshOfLegacyEntryOfAnotherOwnerIsAcceptedBeforeTheCutoffDate() throws GeneralSecurityException, UnresolvableProtobufException {
+        long created = Math.min(System.currentTimeMillis(),
+                Math.min(BEFORE_CUTOFF, AuthorizedData.LEGACY_OWNER_CUTOFF_DATE.getTime() - 1));
+        time = created;
         AuthorizedData legacyType = authorize(TestAuthorizedDistributedData.withLegacyOwners("content"));
         KeyPair identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
-        assertTrue(authorizedDataStore.add(AddAuthenticatedDataRequest.from(authorizedDataStore, legacyType,
-                identityKeyPair)).isSuccess());
+        AddAuthenticatedDataRequest add = requestWithCreationDate(legacyType, identityKeyPair, 1, created);
+        assertTrue(authorizedDataStore.add(add).isSuccess());
 
-        DataStorageResult result = authorizedDataStore.refresh(RefreshAuthenticatedDataRequest.from(authorizedDataStore,
-                legacyType, identityKeyPair));
+        AddAuthenticatedDataRequest refreshed = requestWithCreationDate(legacyType, identityKeyPair, 2, created);
+        bisq.network.protobuf.RefreshAuthenticatedDataRequest refreshProto = bisq.network.protobuf.RefreshAuthenticatedDataRequest.newBuilder()
+                .setVersion(refreshed.getVersion())
+                .setMetaData(refreshed.getMetaData().toProto(false))
+                .setHash(ByteString.copyFrom(AddAuthenticatedDataRequest.getAuthenticatedDataHash(legacyType)))
+                .setOwnerPublicKeyBytes(ByteString.copyFrom(refreshed.getSignaturePubKeyEncoded()))
+                .setSequenceNumber(refreshed.getSequenceNumber())
+                .setSignature(ByteString.copyFrom(refreshed.getSignatureV1()))
+                .setCreated(created)
+                .setClassName(refreshed.getClassName())
+                .setSignatureV2(ByteString.copyFrom(refreshed.getSignatureV2()))
+                .build();
+        DataStorageResult result = authorizedDataStore.refresh(RefreshAuthenticatedDataRequest.fromProto(refreshProto));
 
         assertTrue(result.isSuccess(), result.toString());
     }
@@ -1594,6 +1607,20 @@ class AuthenticatedDataStorageServiceTest {
 
         assertEquals(1, publishers.size());
         assertArrayEquals(DigestUtil.hash(publisherKeyPair.getPublic().getEncoded()), publishers.get(0));
+    }
+
+    private AddAuthenticatedDataRequest requestWithCreationDate(AuthenticatedData data,
+                                                                KeyPair keyPair,
+                                                                int sequenceNumber,
+                                                                long created) throws GeneralSecurityException {
+        AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(data, sequenceNumber,
+                DigestUtil.hash(keyPair.getPublic().getEncoded()), created);
+        byte[] signatureV1 = SignatureUtil.sign(sequentialData.serializeForHash(), keyPair.getPrivate());
+        AddAuthenticatedDataRequest requestToSign = new AddAuthenticatedDataRequest(sequentialData, signatureV1,
+                keyPair.getPublic().getEncoded(), keyPair.getPublic(), new byte[]{}, 2);
+        byte[] signatureV2 = SignatureUtil.sign(requestToSign.getPreImageV2(), keyPair.getPrivate());
+        return new AddAuthenticatedDataRequest(sequentialData, signatureV1, keyPair.getPublic().getEncoded(),
+                keyPair.getPublic(), signatureV2, 2);
     }
 
     private AuthenticatedDataStorageService createStoreOfAuthorizedDataWithOwner() {
