@@ -44,6 +44,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -188,6 +189,36 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(result.isSignatureV2Missing(), result.toString());
         assertSame(storedRequest, peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey()));
         assertTrue(peerStore.refresh(refreshRequest).isSuccess());
+    }
+
+    // Nodes of earlier versions get the refreshed add request with inventory responses, and verify only its signature
+    // V1. Before the cutoff date, a node does not apply a refresh request whose signature V1 they reject.
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void refreshWithValidSignatureV2AndInvalidSignatureV1IsRejectedOnlyBeforeTheCutoffDate(boolean beforeCutoffDate)
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = beforeCutoffDate ? BEFORE_CUTOFF : AT_CUTOFF;
+        addToOwnerAndPeer();
+        RefreshAuthenticatedDataRequest refreshRequest = RefreshAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        bisq.network.protobuf.RefreshAuthenticatedDataRequest.Builder proto = refreshRequest.toValueProto(false).toBuilder()
+                .setSignature(ByteString.copyFrom(SignatureUtil.sign("other data".getBytes(StandardCharsets.UTF_8),
+                        ownerKeyPair.getPrivate())));
+        AddAuthenticatedDataRequest storedRequest = (AddAuthenticatedDataRequest) peerStore.getPersistableStore().getMap()
+                .get(refreshRequest.getStorageKey());
+        byte[] preImageV2 = AddAuthenticatedDataRequest.from(storedRequest,
+                RefreshAuthenticatedDataRequest.fromProto(proto.build())).getPreImageV2();
+        RefreshAuthenticatedDataRequest withInvalidSignatureV1 = RefreshAuthenticatedDataRequest.fromProto(proto
+                .setSignatureV2(ByteString.copyFrom(SignatureUtil.sign(preImageV2, ownerKeyPair.getPrivate())))
+                .build());
+
+        DataStorageResult result = peerStore.refresh(withInvalidSignatureV1);
+
+        if (beforeCutoffDate) {
+            assertTrue(result.isSignatureInvalid(), result.toString());
+            assertSame(storedRequest, peerStore.getPersistableStore().getMap().get(refreshRequest.getStorageKey()));
+        } else {
+            assertTrue(result.isSuccess(), result.toString());
+        }
     }
 
     // Nodes of versions up to 2.1.13 sign only the hash of the data. This signature covers neither the sequence number

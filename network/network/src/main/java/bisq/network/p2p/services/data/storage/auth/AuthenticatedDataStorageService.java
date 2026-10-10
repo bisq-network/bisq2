@@ -293,6 +293,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             return DataStorageResult.failed().classNameInvalid();
         }
 
+        long now = clock.now();
         // A refresh request needs signature V2, also before the cutoff date of signature V1. Nodes of earlier versions
         // sign only the hash of the data, which covers neither the sequence number nor the creation date (see
         // docs/specifications/network/storage-request-signatures.md).
@@ -352,7 +353,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             // The signature of the RefreshAuthenticatedDataRequest is created with the full data of an
             // AddAuthenticatedDataRequest at the owner's side, thus the signature will match the new object.
             updatedAddRequest = AddAuthenticatedDataRequest.from(addRequestFromMap, refreshRequest);
-            if (updatedAddRequest.isSignatureV2Invalid()) {
+            if (updatedAddRequest.isSignatureV2Invalid() ||
+                    updatedAddRequest.isSignatureV1InvalidForEarlierVersions(now)) {
                 log.warn("Signature is invalid at refresh. request={}", refreshRequest);
                 return DataStorageResult.failed().signatureInvalid();
             }

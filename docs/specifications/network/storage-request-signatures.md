@@ -97,7 +97,8 @@ The `className` of a refresh request is not covered by a signature. It only sele
 has no entry with the hash of the request, so a changed value makes the refresh fail.
 
 A refresh request needs signature V2, also before the cutoff date of signature V1. The receiver verifies signature V2
-of the rebuilt request.
+of the rebuilt request, and before the cutoff date also its signature V1 (verification rule 1). Nodes of earlier
+versions get the rebuilt request with inventory responses and verify its signature V1.
 
 Reason: a node of a version up to 2.1.13 signs only the hash of the data in a refresh request. This signature covers
 neither the sequence number nor the creation date, and it does not verify for the rebuilt request. Nodes of these
@@ -110,7 +111,9 @@ The rules by which nodes apply and relay refresh requests are defined in
 
 ## Verification
 
-1. If `signatureV2` is not empty, the receiver verifies only signature V2.
+1. If `signatureV2` is not empty, the receiver verifies signature V2. Before the cutoff date of signature V1 (rule 5),
+   it also verifies signature V1. This also applies to the add request which a node builds from a refresh request
+   (see [Refresh requests](#refresh-requests)). From the cutoff date on, the receiver verifies only signature V2.
 2. If `signatureV2` is empty, the receiver verifies signature V1, but only before the cutoff date of signature V1
    (rule 5). This accepts add and remove requests from nodes of earlier versions. It does not apply to refresh
    requests, which need signature V2 (see [Refresh requests](#refresh-requests)).
@@ -123,7 +126,18 @@ The rules by which nodes apply and relay refresh requests are defined in
 4. Signature V2 must be in low-S form. Signature V1 may be in either form. The rules are defined in
    [`../security/ecdsa-signature-encoding.md`](../security/ecdsa-signature-encoding.md).
 
-Reason for rule 1: signature V2 covers signature V1. A second verification would not protect more fields.
+Reasons for rule 1:
+
+- Signature V2 covers signature V1, so the verification of signature V1 protects no more fields. Before the cutoff
+  date, it keeps the requests which a node accepts compatible with nodes of earlier versions. These nodes verify only
+  signature V1. Without the verification of signature V1, the owner could create requests with a valid signature V2
+  and an invalid signature V1. Nodes of this version would store them and send them in every inventory response to a
+  node of an earlier version. That node rejects them, so they never enter its inventory filter, and the next response
+  sends them again. An inventory response is limited in size, and add requests come before remove requests and
+  mailbox requests. About 2 MB of such add requests would therefore fill every response, and the node of the earlier
+  version would never get the other requests from nodes of this version.
+- Cost: a second signature verification for each request with signature V2 until the cutoff date.
+- From the cutoff date on, nodes of earlier versions are not supported, so signature V1 is not verified.
 
 Reason for rule 3: nodes of earlier versions cannot parse a request without signature V1. Before the cutoff date, a
 request without signature V1 would therefore reach only nodes of this version, and nodes of earlier versions would
@@ -207,7 +221,7 @@ release. Nodes which stay on this version keep the date. So the following must h
 
 The following can be removed when no supported version accepts requests without signature V2:
 
-- the verification of signature V1 (verification rule 2) and the exception for the high-S form of signature V1;
+- the verification of signature V1 (verification rules 1 and 2) and the exception for the high-S form of signature V1;
 - the rules for V1 removals in [`storage-request-ordering.md`](storage-request-ordering.md);
 - rule 9, when every request without signature V2 has expired. This is 100 days after the cutoff date, which is the
   longest time to live of a type.
@@ -253,9 +267,12 @@ reject a request without signature V1.
   value of signature V1 (verification rule 4). The request stays valid and has the same storage key and sequence
   number, so a node which stores the original rejects the changed copy. In requests with signature V2, the change
   invalidates signature V2, because signature V2 covers signature V1. The cutoff date removes this limitation as well.
-- **Signature V1 is not verified when signature V2 is present.** The owner can create a request with a valid signature
-  V2 and an invalid signature V1. Nodes of this version accept it; nodes of earlier versions reject it. Only the owner
-  can do this, and it affects only the owner's own data.
+- **From the cutoff date on, signature V1 is not verified when signature V2 is present.** The owner can create a
+  request with a valid signature V2 and an invalid signature V1. Nodes of this version accept it. Nodes of earlier
+  versions reject it, and they receive it again with every inventory response of a node of this version (see the
+  reasons for verification rule 1).
+  - Why it is accepted: from the cutoff date on, nodes of earlier versions are not supported.
+  - What removes it: the end of the support of `HASH_SET`, as for the next limitation.
 - **From the cutoff date on, a request without signature V1 is valid for nodes of this version.** A modified client
   can create such a request. Nodes of this version accept, store and serve it. Nodes of earlier versions cannot parse
   it. A node of an earlier version which requests inventory with `HASH_SET` from a node of this version which holds
