@@ -18,6 +18,7 @@
 package bisq.chat.bisq_easy.open_trades;
 
 import bisq.chat.ChatMessageType;
+import bisq.chat.priv.PendingTradeChatMessages;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.DbSubDirectory;
@@ -52,11 +53,11 @@ class BisqEasyOpenTradePendingMessagesTest {
         UserProfile sender = mock(UserProfile.class);
         when(sender.getId()).thenReturn(SENDER_PROFILE_ID);
 
-        for (int i = 0; i < BisqEasyOpenTradeChannelService.MAX_PENDING_MESSAGES + 20; i++) {
+        for (int i = 0; i < PendingTradeChatMessages.MAX_PENDING_MESSAGES + 20; i++) {
             service.onMessage(messageWithoutOffer(sender, "tradeId" + i));
         }
 
-        assertEquals(BisqEasyOpenTradeChannelService.MAX_PENDING_MESSAGES, service.getNumPendingMessages());
+        assertEquals(PendingTradeChatMessages.MAX_PENDING_MESSAGES, service.getNumPendingMessages());
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
