@@ -8,6 +8,7 @@ In a BISQ Easy trade the buyer sends the seller the data for the bitcoin payment
 2. Rule 1 applies to every reading of the data which a wallet can make. A reading percent-decodes the data up to three times and can remove whitespace, control and format characters and "+" before and after each decoding.
 3. The seller's node checks rules 1 and 2 when it receives the data, before it stores and shows the data. Data which breaks them fails the trade, and the seller's node reports the failure to the buyer.
 4. The buyer's node does not send data which breaks rules 1 and 2, also when the API asks it to; the API answers with 400. The buyer's desktop application tells the buyer to use data without amount or with the trade amount.
+5. When the buyer's desktop application reads the data from a scanned QR code, it takes the address out of a bitcoin URI, whatever the case of the scheme. It keeps the case of a base58 address and converts all other data, for example a bech32 address or a Lightning invoice, to lower case.
 
 ## Reasons
 
@@ -15,6 +16,7 @@ In a BISQ Easy trade the buyer sends the seller the data for the bitcoin payment
 - Rule 2: a wallet decodes a bitcoin URI before it reads its parameters, and some wallets remove whitespace from the data, before or after decoding. Form decoding turns "+" into a space. An amount which only one reading shows still reaches such a wallet.
 - Rule 3: the buyer chooses the data, and a modified client can send any data. Only the seller's node can protect the seller.
 - Rule 4: an honest buyer whose wallet created an invoice for another amount would otherwise fail the trade at rule 3.
+- Rule 5: wallets encode QR codes in upper case, because QR codes are more compact then. Bech32 addresses and Lightning invoices are case-insensitive, and lower case is the common way to show them. Base58 addresses (starting with `1` or `3`) are case-sensitive: a base58 address in lower case is another, invalid address, which the seller's wallet rejects, so the trade stalls at the payment step.
 
 ## Limitations
 
