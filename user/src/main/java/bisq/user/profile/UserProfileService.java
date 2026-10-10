@@ -242,6 +242,13 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
 
     private void processUserProfileRemoved(UserProfile userProfile) {
         synchronized (persistableStore) {
+            // One profile ID has several versions, which are separate storage entries: an edit publishes a new version
+            // and removes the old one. The removal of an older version can arrive after the new version, or the old
+            // entry can expire later. It must not remove the version which we hold.
+            Optional<UserProfile> heldUserProfile = findUserProfile(userProfile.getId());
+            if (heldUserProfile.isEmpty() || !heldUserProfile.get().equals(userProfile)) {
+                return;
+            }
             removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
             userProfileById.remove(userProfile.getId());
         }
