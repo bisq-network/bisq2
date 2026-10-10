@@ -86,6 +86,9 @@ public final class HashSetFilter extends InventoryFilter {
     public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto)
             throws UnresolvableProtobufException {
         try {
+            // Checked before the entries are converted, which costs much more than this check
+            int numFilterEntries = proto.getHashSetFilter().getFilterEntriesCount();
+            checkArgument(numFilterEntries <= MAX_ENTRIES, "Too many filter entries: %s", numFilterEntries);
             List<HashSetFilterEntry> entries = ProtobufUtils.fromProtoStream(
                             proto.getHashSetFilter().getFilterEntriesList(), 
                             HashSetFilterEntry::fromProto)
