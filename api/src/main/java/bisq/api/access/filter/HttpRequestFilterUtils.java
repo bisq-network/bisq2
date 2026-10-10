@@ -58,8 +58,8 @@ public class HttpRequestFilterUtils {
      *     without a WebSocket. It does not check the HTTP method or the {@code Sec-WebSocket-Key} header before that.
      *     This method reads the same value and compares it in the same way.</li>
      *     <li>for any content of a connection which has a WebSocket that is not connected, whatever the
-     *     {@code Upgrade} value of its request is. {@link SingleHandshakeWebSocketFilter} drops such content and
-     *     closes the connection, so this case never starts a handshake on the listener of the API.</li>
+     *     {@code Upgrade} value of its request is. {@link SingleHandshakeWebSocketFilter} closes the connection
+     *     instead of a second handshake, so this case never starts a handshake on the listener of the API.</li>
      * </ul>
      *
      * <p>
