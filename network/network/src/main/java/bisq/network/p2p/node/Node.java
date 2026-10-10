@@ -65,6 +65,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -154,6 +155,11 @@ public class Node implements Connection.Handler {
     // inbound and outbound connections of this node (see rule 11 of docs/specifications/network/message-framing.md).
     private final ParseMemoryBudget parseMemoryBudget = new ParseMemoryBudget();
     private final ParseMemoryBudget handshakeParseMemoryBudget = ParseMemoryBudget.forHandshakes();
+    // Unauthenticated peers start inbound handshakes, and each one holds a thread of the executor until it ends. The
+    // executor also creates our outbound connections, so the number of inbound handshakes in progress is bounded (see
+    // docs/specifications/network/inbound-handshakes.md).
+    private final int maxNumInboundHandshakes;
+    private final Semaphore inboundHandshakePermits;
     private final int socketTimeout; // in ms
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
@@ -207,6 +213,8 @@ public class Node implements Connection.Handler {
         this.authorizationService = authorizationService;
         this.networkLoadSnapshot = networkLoadSnapshot;
         nodeId = networkId.getId();
+        maxNumInboundHandshakes = Math.max(1, config.getMaxNumConnectedPeers());
+        inboundHandshakePermits = new Semaphore(maxNumInboundHandshakes);
     }
 
 
@@ -283,7 +291,13 @@ public class Node implements Connection.Handler {
                 }));
     }
 
-    private CompletableFuture<Void> handleNewClientSocketAsync(Socket socket, Capability myCapability) {
+    @VisibleForTesting
+    CompletableFuture<Void> handleNewClientSocketAsync(Socket socket, Capability myCapability) {
+        if (!inboundHandshakePermits.tryAcquire()) {
+            closeQuietly(socket);
+            log.debug("We close an inbound socket because {} inbound handshakes are in progress", maxNumInboundHandshakes);
+            return CompletableFuture.failedFuture(new ConnectionException("Too many inbound handshakes in progress"));
+        }
         try {
             return CompletableFuture.runAsync(() -> {
                 ConnectionHandshake connectionHandshake = null;
@@ -314,11 +328,22 @@ public class Node implements Connection.Handler {
                         connectionHandshake.shutdown();
                         connectionHandshakes.remove(connectionHandshake.getId());
                     }
+                    inboundHandshakePermits.release();
                 }
             }, getExecutor());
         } catch (RejectedExecutionException e) {
-            log.error("Node executor rejected task at handleNewClientSocketAsync", e);
+            inboundHandshakePermits.release();
+            // Nothing else holds the socket. Without the close it stays open until garbage collection.
+            closeQuietly(socket);
+            log.warn("Node executor rejected the inbound handshake. We close the socket.");
             return CompletableFuture.failedFuture(new ConnectionException("Node executor rejected task at handleNewClientSocketAsync"));
+        }
+    }
+
+    private static void closeQuietly(Socket socket) {
+        try {
+            socket.close();
+        } catch (IOException ignore) {
         }
     }
 
