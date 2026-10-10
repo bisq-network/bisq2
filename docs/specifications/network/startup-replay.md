@@ -35,6 +35,10 @@ timestamp service and the request service of the Bisq 1 bridge do so. For them, 
 - Same calls as a new message: the replay passes each message in the same way as a new message, to the listener method
   for the message alone and to the listener method for the message with the public key of its sender. Each of these
   calls is processed on its own, as each replayed item in the rule above.
+- Same restrictions as a new message: a listener applies the state which decides whether it accepts a message before it
+  registers. The Bisq Easy and MuSig trade services apply the trade restrictions of the stored emergency alerts
+  (trading halted, minimum version for trading) before they receive the replay, so they ignore a replayed trade
+  message during a halt as they ignore a new one.
 - Order: the replay passes the messages one after the other, in the order in which the node processed them. It runs in
   the thread of the registration and ends before the registration returns. A new message can reach the listener at the
   same time in another thread.
@@ -73,6 +77,11 @@ network layer, for example of new connections.
   to recognize a second copy of a message.
 - Same calls as a new message: some services decide with the key of the sender, for example the moderator with the key
   of the reporter.
+- Same restrictions as a new message: the security managers halt trading, or require a minimum version for trading,
+  when a defect of the trade protocol is found. A node which starts during such an alert with a trade message in its
+  mailbox would otherwise process the message, for example create a trade for a take offer request or run the handler
+  which the alert is meant to stop. The trade services registered the observer of the alerts after the listener, so
+  during the replay they saw no restriction.
 - No hash codes: the hash code of a message from another user runs code of the message class. For example, the hash
   code of a two party chat message reads its channel ID, and reading a channel ID which cannot be migrated threw until
   the reading was made total (see `../chat/message-types.md`). A copy into a hash-based set computes the hash codes of
