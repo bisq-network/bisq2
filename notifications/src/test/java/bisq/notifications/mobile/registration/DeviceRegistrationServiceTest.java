@@ -33,7 +33,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -43,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -70,13 +73,20 @@ class DeviceRegistrationServiceTest {
     }
 
     private DeviceRegistrationResult registerWithResult(String deviceId, String clientId) {
+        return registerWithResult(deviceId, clientId, authorizedClientId -> true);
+    }
+
+    private DeviceRegistrationResult registerWithResult(String deviceId,
+                                                        String clientId,
+                                                        Predicate<String> clientAuthorizedCheck) {
         return service.register(deviceId,
                 "a".repeat(64),
                 "publicKey",
                 "descriptor",
                 MobileDevicePlatform.ANDROID,
                 Optional.empty(),
-                clientId);
+                clientId,
+                clientAuthorizedCheck);
     }
 
     /** Simulates a registration persisted before registrations carried an owner. */
@@ -240,9 +250,10 @@ class DeviceRegistrationServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void refusingARegistrationOfARevokedClientReachesPersistenceTwice() {
-        // Store then remove, microseconds apart, which is what a write rate limit drops. Losing
-        // the removal is unrecoverable: the revocation has moved on and nothing revisits it.
+    void aRegistrationAndItsRemovalBothReachPersistence() {
+        // Store then remove, microseconds apart, as when a revocation follows a registration, which
+        // is what a write rate limit drops. Losing the removal is unrecoverable: the revocation has
+        // moved on and nothing revisits it.
         register("device-1", CLIENT_ID);
 
         service.unregister("device-1", CLIENT_ID);
@@ -350,5 +361,66 @@ class DeviceRegistrationServiceTest {
                 .collect(Collectors.toSet()), "the failed revocation keeps the registration in memory");
         assertTrue(written.getValue().getDeviceByDeviceId().containsKey("device-1"),
                 "the backup must write what memory holds, not the undone removal");
+    }
+
+    @Test
+    void aRegistrationOfAClientWithoutAccessIsRefusedAndNothingIsWritten() {
+        assertEquals(DeviceRegistrationResult.CLIENT_NOT_AUTHORIZED,
+                registerWithResult("device-1", CLIENT_ID, clientId -> false));
+
+        assertTrue(service.getMobileDeviceProfiles().isEmpty());
+        verify(persistence, never()).persistAsync(any());
+    }
+
+    @Test
+    void aRegistrationAdmittedBeforeACompletedRevocationIsRefused() {
+        // The request passed authorization while the client still had access, then the whole
+        // revocation ran: access withdrawn, registrations removed. Stored now, the registration
+        // would be owned by a client nothing revokes again and keep receiving notifications.
+        AtomicBoolean authorized = new AtomicBoolean(true);
+        register("device-1", CLIENT_ID);
+        authorized.set(false);
+        assertEquals(Set.of("device-1"), service.unregisterByClientId(CLIENT_ID));
+
+        assertEquals(DeviceRegistrationResult.CLIENT_NOT_AUTHORIZED,
+                registerWithResult("device-2", CLIENT_ID, clientId -> authorized.get()));
+
+        assertTrue(service.getMobileDeviceProfiles().isEmpty());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aRevocationDuringAnInFlightRegistrationRemovesIt() throws Exception {
+        // The other order: the registration passed its check and is being written when the
+        // revocation withdraws access. Whenever the revocation's removal runs, it runs after the
+        // registration released the monitor, so it finds the registration.
+        AtomicBoolean authorized = new AtomicBoolean(true);
+        CompletableFuture<Void> registrationWrite = new CompletableFuture<>();
+        CountDownLatch registrationWriteStarted = new CountDownLatch(1);
+        AtomicInteger writes = new AtomicInteger();
+        when(persistence.persistAsync(any())).thenAnswer(invocation -> {
+            if (writes.getAndIncrement() == 0) {
+                registrationWriteStarted.countDown();
+                return registrationWrite;
+            }
+            return CompletableFuture.completedFuture(null);
+        });
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<DeviceRegistrationResult> registration = executor.submit(() ->
+                    registerWithResult("device-1", CLIENT_ID, clientId -> authorized.get()));
+            assertTrue(registrationWriteStarted.await(5, TimeUnit.SECONDS));
+
+            authorized.set(false);
+            Future<Set<String>> revocation = executor.submit(() -> service.unregisterByClientId(CLIENT_ID));
+            registrationWrite.complete(null);
+
+            assertEquals(DeviceRegistrationResult.REGISTERED, registration.get(5, TimeUnit.SECONDS));
+            assertEquals(Set.of("device-1"), revocation.get(5, TimeUnit.SECONDS));
+        } finally {
+            executor.shutdownNow();
+        }
+
+        assertTrue(service.getMobileDeviceProfiles().isEmpty());
     }
 }
