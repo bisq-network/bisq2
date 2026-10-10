@@ -156,8 +156,15 @@ public class MobileNotificationService implements Service {
                                     } else if (result.isUnregistered()) {
                                         // The gateway's permanent verdict (app uninstalled, token rotated):
                                         // every future dispatch to this registration would fail the same way.
-                                        boolean removed = deviceRegistrationService.pruneDeadRegistration(
-                                                mobileDeviceProfile.getDeviceId(), deviceToken);
+                                        boolean removed;
+                                        try {
+                                            removed = deviceRegistrationService.pruneDeadRegistration(
+                                                    mobileDeviceProfile.getDeviceId(), deviceToken);
+                                        } catch (IllegalStateException e) {
+                                            // The registration stays and the next dispatch repeats the verdict.
+                                            log.error("Could not remove the dead registration of the {} device", platform, e);
+                                            return;
+                                        }
                                         log.warn("Gateway reported the {} device token as no longer valid ({}); {}",
                                                 platform,
                                                 loggableErrorCode(result.errorCode(), "unregistered"),

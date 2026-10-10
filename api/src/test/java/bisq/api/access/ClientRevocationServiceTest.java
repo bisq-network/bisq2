@@ -17,17 +17,29 @@
 
 package bisq.api.access;
 
+import bisq.api.ApiConfig;
 import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.pairing.PairingService;
+import bisq.api.access.permissions.PermissionService;
+import bisq.api.access.permissions.PermissionSet;
+import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceService;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -189,5 +201,67 @@ class ClientRevocationServiceTest {
         assertEquals(ClientRevocationResult.CLEANUP_FAILED, new ClientRevocationService(pairingService,
                 mock(SessionService.class),
                 List.of(failingHandler)).revokeClient(CLIENT_ID));
+    }
+
+    @Test
+    void aFailedWriteOfThePermissionRemovalIsReportedAndKeepsTheClientForTheRetry() {
+        // The grant is gone in memory but not on disk, so the next start would load it again: the
+        // caller must not be told the client is revoked, and the profile must stay for the retry.
+        PairingService pairingService = mock(PairingService.class);
+        ClientRevocationHandler handler = mock(ClientRevocationHandler.class);
+        SessionService sessionService = mock(SessionService.class);
+        doThrow(new IllegalStateException("write failed")).when(pairingService).revokePermissions(CLIENT_ID);
+
+        ClientRevocationResult result = new ClientRevocationService(pairingService,
+                sessionService,
+                List.of(handler)).revokeClient(CLIENT_ID);
+
+        assertEquals(ClientRevocationResult.CLEANUP_FAILED, result);
+        verify(sessionService).removeSessionByClientId(CLIENT_ID);
+        verify(handler).onClientRevoked(CLIENT_ID);
+        verify(pairingService, never()).revokeClientProfile(CLIENT_ID);
+    }
+
+    @Test
+    void aFailedWriteOfTheProfileRemovalIsReportedAsIncomplete() {
+        PairingService pairingService = mock(PairingService.class);
+        when(pairingService.revokeClientProfile(CLIENT_ID)).thenThrow(new IllegalStateException("write failed"));
+
+        assertEquals(ClientRevocationResult.CLEANUP_FAILED, new ClientRevocationService(pairingService,
+                mock(SessionService.class),
+                List.of()).revokeClient(CLIENT_ID));
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void aRevocationWhoseWritesFailIsIncompleteAndTheRetryFinishesIt() {
+        // End to end on the real store: with every write failing, the disk keeps the profile and the
+        // grant, so a client reported as revoked would get its access back on the next start.
+        Persistence persistence = mock(Persistence.class);
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+        PersistenceService persistenceService = mock(PersistenceService.class, RETURNS_DEEP_STUBS);
+        when(persistenceService.getOrCreatePersistence(any(), any(), any())).thenReturn(persistence);
+        ApiAccessStoreService store = new ApiAccessStoreService(persistenceService);
+        PairingService pairingService = new PairingService(mock(ApiConfig.class),
+                Path.of("unused"),
+                store,
+                new PermissionService(store));
+        ClientRevocationService service = new ClientRevocationService(pairingService,
+                mock(SessionService.class),
+                List.of(mock(ClientRevocationHandler.class)));
+        store.putClientProfileAndPermissions(CLIENT_ID,
+                ClientProfile.fromSecret(CLIENT_ID, "secret", "Pixel 8"),
+                PermissionSet.grantAll());
+        when(persistence.persistAsync(any()))
+                .thenReturn(CompletableFuture.failedFuture(new RuntimeException("disk full")));
+
+        assertEquals(ClientRevocationResult.CLEANUP_FAILED, service.revokeClient(CLIENT_ID));
+        assertFalse(pairingService.hasPermissions(CLIENT_ID), "no access while this node runs");
+        assertTrue(pairingService.findClientProfile(CLIENT_ID).isPresent(), "listed for the retry");
+
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+
+        assertEquals(ClientRevocationResult.REVOKED, service.revokeClient(CLIENT_ID));
+        assertTrue(pairingService.findClientProfile(CLIENT_ID).isEmpty());
     }
 }

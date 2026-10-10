@@ -89,7 +89,7 @@ class HttpRequestServiceClassificationTest {
             assertThat(rootCause).isInstanceOf(HttpException.class);
             HttpException httpException = (HttpException) rootCause;
             assertThat(httpException.getResponseCode()).isEqualTo(400);
-            assertThat(httpException.getMessage()).isEqualTo(REJECTION_BODY);
+            assertThat(httpException.getBody()).isEqualTo(REJECTION_BODY);
         });
         assertThat(attempts).as("400 is a caller error — must not fail over to the second provider").hasValue(1);
     }

@@ -109,7 +109,7 @@ class TorHttpClientResponseTest {
         assertThat(failure.getCause()).isInstanceOf(HttpException.class);
         HttpException httpException = (HttpException) failure.getCause();
         assertThat(httpException.getResponseCode()).isEqualTo(400);
-        assertThat(httpException.getMessage()).isEqualTo(body);
+        assertThat(httpException.getBody()).isEqualTo(body);
     }
 
     @Test
@@ -118,7 +118,7 @@ class TorHttpClientResponseTest {
 
         HttpException httpException = (HttpException) failure.getCause();
         assertThat(httpException.getResponseCode()).isEqualTo(503);
-        assertThat(httpException.getMessage()).isEmpty();
+        assertThat(httpException.getBody()).isEmpty();
     }
 
     @Test
