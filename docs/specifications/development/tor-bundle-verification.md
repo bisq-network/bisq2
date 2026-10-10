@@ -11,9 +11,12 @@ the bundled `tor`. The build must therefore accept a bundle only if the Tor Brow
    primary key. Otherwise the build fails.
 2. A subkey of this key can sign a bundle only if:
    - the key file contains no revocation signature for it, and
-   - the primary key binds it with a subkey binding signature which verifies and whose key flags allow signing data.
+   - the primary key binds it with a subkey binding signature which verifies, and the key flags of the newest such
+     binding signature allow signing data. If several of them have the newest creation time, all of them must allow
+     signing data.
 
-   Other subkeys are not trusted. An error while the build verifies a binding signature makes the subkey untrusted.
+   Other subkeys are not trusted. An error while the build verifies a binding signature makes that binding count as not
+   verified.
 3. The build accepts a bundle only if its detached signature has the type of a binary document, was made by the primary
    key or by a trusted subkey, and verifies over the bytes of the bundle. Otherwise the build fails.
 
@@ -27,6 +30,8 @@ the bundled `tor`. The build must therefore accept a bundle only if the Tor Brow
   subkey would have been trusted without a check.
 - Rule 1: a revocation of the primary key retires all its subkeys. The procedure for a key refresh downloads the key
   from Tor, so a refreshed key file would contain such a revocation, and the build must not trust any of its keys.
+- Rule 2: a newer binding signature replaces an older one. If the primary key binds a subkey again without the right to
+  sign, an older binding which allowed it must not count.
 - Rule 3: a signature of another type, for example a key certification, does not sign the bytes of a file.
 
 ## Compatibility

@@ -100,15 +100,22 @@ class PpgPublicKeyParser(
         if (subKey.hasRevocation()) {
             return false
         }
-        return subKey.getSignaturesOfType(PGPSignature.SUBKEY_BINDING).asSequence()
-            .any { signature -> isSigningSubKeyBinding(signature, subKey) }
+        // A newer binding replaces an older one, so only the newest bindings which verify decide. Bindings of the same
+        // second have no order, so all of them must allow signing.
+        val bindings = subKey.getSignaturesOfType(PGPSignature.SUBKEY_BINDING).asSequence()
+            .filter { signature -> isBindingByMasterKey(signature, subKey) }
+            .toList()
+        val newestCreationTime = bindings.maxOfOrNull { signature -> signature.creationTime } ?: return false
+        return bindings.filter { signature -> signature.creationTime == newestCreationTime }
+            .all { signature -> allowsSigning(signature) }
     }
 
-    private fun isSigningSubKeyBinding(signature: PGPSignature, subKey: PGPPublicKey): Boolean {
+    private fun allowsSigning(signature: PGPSignature): Boolean {
         val keyFlags = signature.hashedSubPackets?.keyFlags ?: 0
-        if (keyFlags and KeyFlags.SIGN_DATA == 0) {
-            return false
-        }
+        return keyFlags and KeyFlags.SIGN_DATA != 0
+    }
+
+    private fun isBindingByMasterKey(signature: PGPSignature, subKey: PGPPublicKey): Boolean {
         return try {
             signature.init(JcaPGPContentVerifierBuilderProvider().setProvider("BC"), masterKey!!)
             signature.verifyCertification(masterKey!!, subKey)
