@@ -229,8 +229,10 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         return true;
     }
 
+    // One read: the map loses the score of a removed profile while other threads read it (see
+    // docs/specifications/security/derived-state.md)
     public long getScore(String userProfileId) {
-        return scoreByUserProfileId.containsKey(userProfileId) ? scoreByUserProfileId.get(userProfileId) : 0;
+        return scoreByUserProfileId.getOrDefault(userProfileId, 0L);
     }
 
     // Whether this source has data, and thus a score, for the profile. The score can be 0.
