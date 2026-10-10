@@ -32,6 +32,8 @@ import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.options.OfferOption;
 import bisq.offer.options.OfferOptionUtil;
+import bisq.offer.options.ReputationOption;
+import bisq.offer.options.TradeTermsOption;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
@@ -46,6 +48,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
@@ -130,6 +134,10 @@ public final class BisqEasyOffer extends Offer<BitcoinPaymentMethodSpec, FiatPay
         super.verify();
 
         NetworkDataValidation.validateText(supportedLanguageCodes.toString(), 100);
+        // Rule 1 of docs/specifications/offer/offer-options.md
+        checkArgument(getOfferOptions().stream()
+                        .allMatch(option -> option instanceof TradeTermsOption || option instanceof ReputationOption),
+                "A Bisq Easy offer can contain only trade terms and reputation options");
     }
 
     @Override
