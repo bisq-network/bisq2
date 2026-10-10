@@ -313,8 +313,11 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
             return;
         }
 
+        // The caller can hold an older copy of the user identity, for example a chat channel which keeps the copy from
+        // before an edit of the profile. So we select our user identity with the same ID (rule 2 of
+        // docs/specifications/user/identity-by-key.md).
         Optional<UserIdentity> optionalUserIdentity = userIdentities.stream()
-                .filter(e -> e.equals(userIdentity))
+                .filter(e -> e.getId().equals(userIdentity.getId()))
                 .findAny();
         if (optionalUserIdentity.isPresent()) {
             selectedUserIdentityObservable.set(optionalUserIdentity.get());

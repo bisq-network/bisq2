@@ -44,11 +44,14 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The store skips a persisted user identity which it cannot parse. If that identity was the selected one, the store
- * selects another one. Users share their log files, so the log must not contain the private data of the profiles.
+ * selects another one. A caller can pass an older copy of a user identity to select, and the store then selects its own
+ * user identity with the same ID. Users share their log files, so the log must not contain the private data of the
+ * profiles.
  */
 @Isolated("Captures the log of UserIdentityStore")
 class UserIdentityStoreLoggingTest {
@@ -96,27 +99,40 @@ class UserIdentityStoreLoggingTest {
         });
     }
 
+    // A channel keeps the copy of its user identity from before a profile edit. The copy has the same ID, but
+    // UserIdentity equality includes the terms and the statement of the profile (rule 2 of
+    // docs/specifications/user/identity-by-key.md).
     @Test
-    void staleCopyOfAUserIdentityIsIgnoredWithoutLoggingPrivateData() throws UnresolvableProtobufException {
+    void staleCopyOfAUserIdentitySelectsTheStoredUserIdentity() throws UnresolvableProtobufException {
         UserIdentity selected = createUserIdentity(20_003);
         UserIdentity other = createUserIdentity(20_004);
-        bisq.user.protobuf.UserIdentityStore proto = bisq.user.protobuf.UserIdentityStore.newBuilder()
-                .addUserIdentities(selected.toProto(false))
-                .addUserIdentities(other.toProto(false))
-                .setSelectedUserIdentityId(selected.getId())
-                .build();
-        UserIdentityStore store = UserIdentityStore.fromProto(proto);
-        // A channel keeps the copy of its user identity from before a profile edit. The copy has the same ID, but
-        // UserIdentity equality includes the terms and the statement of the profile, so the store does not find it.
+        UserIdentityStore store = createStore(selected, other);
         UserIdentity staleCopy = new UserIdentity(other.getIdentity(),
                 UserProfile.forEdit(other.getUserProfile(), PRIVATE_VALUE + " old terms", PRIVATE_VALUE + " old statement"));
 
         store.setSelectedUserIdentity(staleCopy);
 
+        UserIdentity storedOther = store.getUserIdentities().stream()
+                .filter(userIdentity -> userIdentity.getId().equals(other.getId()))
+                .findAny()
+                .orElseThrow();
+        assertSame(storedOther, store.getSelectedUserIdentity());
+        assertTrue(appender.list.isEmpty());
+    }
+
+    @Test
+    void unknownUserIdentityIsIgnoredWithoutLoggingPrivateData() throws UnresolvableProtobufException {
+        UserIdentity selected = createUserIdentity(20_006);
+        UserIdentity other = createUserIdentity(20_007);
+        UserIdentityStore store = createStore(selected, other);
+        UserIdentity unknown = createUserIdentity(20_008);
+
+        store.setSelectedUserIdentity(unknown);
+
         assertEquals(selected.getId(), store.toProto(false).getSelectedUserIdentityId());
         assertTrue(appender.list.stream()
                 .anyMatch(event -> event.getFormattedMessage().contains("Could not find the given user identity")));
-        assertNoPrivateDataLogged(selected, other);
+        assertNoPrivateDataLogged(selected, other, unknown);
     }
 
     @Test
@@ -128,6 +144,15 @@ class UserIdentityStoreLoggingTest {
         assertTrue(appender.list.stream()
                 .anyMatch(event -> event.getFormattedMessage().contains("userIdentities must not be empty")));
         assertNoPrivateDataLogged(userIdentity);
+    }
+
+    private static UserIdentityStore createStore(UserIdentity selected,
+                                                 UserIdentity other) throws UnresolvableProtobufException {
+        return UserIdentityStore.fromProto(bisq.user.protobuf.UserIdentityStore.newBuilder()
+                .addUserIdentities(selected.toProto(false))
+                .addUserIdentities(other.toProto(false))
+                .setSelectedUserIdentityId(selected.getId())
+                .build());
     }
 
     private void assertNoPrivateDataLogged(UserIdentity... userIdentities) {
