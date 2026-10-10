@@ -269,9 +269,9 @@ public class SubscriptionService implements Service {
      * client regardless of what it was granted.
      * <p>
      * Checked before the topic is routed, mirroring a filter running before the resource, and
-     * failing closed at every step. The identity comes from the upgrade request rather than the
-     * message, because the handshake is the only point in the connection's life where anything
-     * could have vouched for it — which is not the same as saying something did; see
+     * failing closed at every step. The identity is the one which the filter chain recorded for the
+     * upgrade request, not anything in the message: with session handling the client of the session
+     * which authenticated the handshake, without it the unverified header; see
      * {@link WebSocketIdentity}.
      * <p>
      * The message repeats the REST vocabulary ({@code permission_not_granted}) so a client can tell

@@ -21,37 +21,19 @@ import bisq.api.access.filter.Attributes;
 import bisq.api.access.filter.Headers;
 import bisq.api.access.filter.HttpRequestFilterUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.glassfish.grizzly.Connection;
-import org.glassfish.grizzly.attributes.AttributeHolder;
 import org.glassfish.grizzly.filterchain.BaseFilter;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
 
-import java.net.SocketAddress;
-
 /**
- * Enriches the connection context with metadata extracted from a WebSocket
- * handshake request.
+ * Records the client which a WebSocket upgrade request claims, if no filter before this one recorded the identity of
+ * the client on the upgrade request.
  *
  * <p>
- * This filter inspects incoming messages and applies metadata only when the
- * message is a WebSocket upgrade request, which is every request for which
- * Grizzly starts the handshake. The metadata is stored on the connection
- * attributes and is intended to be reused for the lifetime of the WebSocket
- * connection.
- * </p>
- *
- * <p>
- * The following attributes may be populated:
- * </p>
- * <ul>
- *     <li>Remote address of the peer</li>
- *     <li>User-Agent header (or a fallback value if absent)</li>
- * </ul>
- *
- * <p>
- * Attribute enrichment is idempotent and will only occur once per connection.
- * Subsequent handshake messages (if any) will not override existing values.
+ * This filter inspects incoming messages and acts only when the message is a WebSocket upgrade request, which is
+ * every request for which Grizzly starts the handshake. It records the {@code Bisq-Client-Id} header on the upgrade
+ * request as the identity which the client claims. With session handling, the authentication filter has always
+ * recorded the client of the session, so the header is never used. See {@code WebSocketIdentity}.
  * </p>
  *
  * <p>
@@ -68,33 +50,15 @@ public class WebSocketHandshakeMetaDataEnrichment extends BaseFilter {
         HttpRequestFilterUtils.resolveAsHttpRequest(message)
                 .filter(HttpRequestFilterUtils::isWebSocketUpgradeRequest)
                 .ifPresent(request -> {
-                    // We apply the attributes only at the Websocket upgrade request
-                    Connection<?> connection = context.getConnection();
-                    AttributeHolder connectionAttributes = connection.getAttributes();
-                    if (connectionAttributes != null) {
-                        if (connectionAttributes.getAttribute(Attributes.USER_AGENT) == null) {
-                            String userAgent = request.getHeader(Headers.USER_AGENT);
-                            if (userAgent != null) {
-                                connectionAttributes.setAttribute(Attributes.USER_AGENT, userAgent);
-                            }
-
-                        }
-                        if (connectionAttributes.getAttribute(Attributes.REMOTE_ADDRESS) == null) {
-                            Object peer = connection.getPeerAddress();
-                            if (peer instanceof SocketAddress) {
-                                connectionAttributes.setAttribute(Attributes.REMOTE_ADDRESS, peer.toString());
-                            }
-
-                        }
-                    }
-                    if (!HttpRequestFilterUtils.hasConnectionAttribute(context, Attributes.CLIENT_ID)) {
+                    // With session handling, the authentication filter has recorded the client of the session.
+                    // Without it, the header is the only identity, an unverified claim as on the REST API.
+                    if (request.getAttribute(Attributes.CLIENT_ID) == null) {
                         String clientIdHeader = request.getHeader(Headers.CLIENT_ID);
                         if (clientIdHeader != null) {
-                            HttpRequestFilterUtils.setConnectionAttribute(context, Attributes.CLIENT_ID, clientIdHeader);
+                            request.setAttribute(Attributes.CLIENT_ID, clientIdHeader);
                         }
                     }
                 });
-
 
         return context.getInvokeAction();
     }
