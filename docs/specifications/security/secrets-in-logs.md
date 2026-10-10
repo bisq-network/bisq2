@@ -64,9 +64,13 @@ the log. The onion key of an identity does not change, so an old log file stays 
 
 The rules change only the log, not the network protocol or persisted data.
 
-Log files which versions 2.1.3 to 2.1.13 wrote contain the onion private keys of all identities. This specification does not remove them. Users who shared such a log, and operators of seed and oracle
-nodes, need a decision about the deletion of old log files and the rotation of onion keys. A new onion key changes the
-network address of the identity.
+Log files which versions 2.1.3 to 2.1.13 wrote contain the onion private keys of all identities. Log files are appended
+across versions, so `bisq.log` keeps such lines after the upgrade until it rolls over at 10 MB. When the desktop app
+builds the zip file of the error report, it replaces each such key in the copies of the log files with `[hidden]`
+and keeps the key type. The log files on disk, the rolled log files, the log which the error popup opens, and the logs
+of headless nodes still contain the keys. Users who shared such a log, and operators of seed and oracle nodes, need a
+decision about the deletion of old log files and the rotation of onion keys. A new onion key changes the network
+address of the identity.
 
 ## Related specifications
 
