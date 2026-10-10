@@ -53,10 +53,13 @@ public class WebSocketSessionAuthenticationFilter extends BaseFilter {
         }
 
         HttpRequestPacket request = requestOpt.get();
-        // Grizzly passes each later chunk of the upgrade request, and after the upgrade every WebSocket frame, as
-        // content of the same request. They reach this filter with the request which was already authenticated.
-        // The mark is on the request and not on the connection: another request on the same connection is
-        // authenticated again. Only the value which this filter writes counts as the mark.
+        // After the headers of the upgrade request, Grizzly passes every later byte of the connection as content of
+        // the same request: the WebSocket frames, and the bytes after a handshake which Grizzly refused or after the
+        // WebSocket closed. They reach this filter with the request which was already authenticated. Content never
+        // starts a second handshake with this request, because SingleHandshakeWebSocketFilter drops the content of
+        // a connection whose WebSocket is not connected and closes the connection. The mark is on the request and
+        // not on the connection: another request on the same connection is authenticated again. Only the value which
+        // this filter writes counts as the mark.
         if (Boolean.TRUE.equals(request.getAttribute(Attributes.IS_AUTHENTICATED))) {
             return context.getInvokeAction();
         }
