@@ -20,6 +20,7 @@ package bisq.chat.mu_sig.open_trades;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
+import bisq.chat.priv.PendingTradeChatMessages;
 import bisq.chat.priv.PrivateGroupChatChannelService;
 import bisq.chat.reactions.MuSigOpenTradeMessageReaction;
 import bisq.chat.reactions.Reaction;
@@ -35,6 +36,7 @@ import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,7 +46,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,7 +59,10 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
     private final MuSigOpenTradeChannelStore persistableStore = new MuSigOpenTradeChannelStore();
     @Getter
     private final Persistence<MuSigOpenTradeChannelStore> persistence;
-    private final Set<MuSigOpenTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    // Every node processes MuSig trade chat messages, also when MuSig is not activated. So the pending messages are
+    // bounded as for Bisq Easy (rule 4 of docs/specifications/trade/pending-trade-messages.md).
+    private final PendingTradeChatMessages<MuSigOpenTradeMessage> pendingMessages =
+            new PendingTradeChatMessages<>(MuSigOpenTradeMessage::getTradeId);
 
     public MuSigOpenTradeChannelService(PersistenceService persistenceService,
                                         NetworkService networkService,
@@ -255,10 +259,7 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
                             log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
                                     "sent a leave message around the same time as we have closed the channel.");
                         } else {
-                            if (pendingMessages.add(message)) {
-                                log.info("Channel for trade {} does not exist yet. We add the message to pendingMessages.",
-                                        message.getTradeId());
-                            }
+                            pendingMessages.add(message);
                         }
                         return Optional.empty();
                     })
@@ -351,9 +352,8 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
         // Check if there are any reactions that should be added to existing messages
         processQueuedReactions();
 
-        if (pendingMessages.contains(message)) {
-            log.info("Removing message from pendingMessages. message={}", message);
-            pendingMessages.remove(message);
+        if (pendingMessages.remove(message)) {
+            log.info("Removed message from pendingMessages. tradeId={}", StringUtils.sanitizeForLog(message.getTradeId()));
         }
     }
 
@@ -385,8 +385,11 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
     }
 
     private void processPendingMessages(String tradeId) {
-        pendingMessages.stream()
-                .filter(message -> message.getTradeId().equals(tradeId))
-                .forEach(this::processMessage);
+        pendingMessages.getMessagesOfTrade(tradeId).forEach(this::processMessage);
+    }
+
+    @VisibleForTesting
+    int getNumPendingMessages() {
+        return pendingMessages.size();
     }
 }

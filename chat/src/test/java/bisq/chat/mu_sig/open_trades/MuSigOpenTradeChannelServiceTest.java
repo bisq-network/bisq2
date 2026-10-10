@@ -18,6 +18,7 @@
 package bisq.chat.mu_sig.open_trades;
 
 import bisq.chat.ChatMessageType;
+import bisq.chat.priv.PendingTradeChatMessages;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.DbSubDirectory;
@@ -47,7 +48,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Rules 1, 5 and 7 of docs/specifications/chat/private-channel-membership.md for the MuSig trade chat.
+ * Rules 1, 5 and 7 of docs/specifications/chat/private-channel-membership.md and rule 4 of
+ * docs/specifications/trade/pending-trade-messages.md for the MuSig trade chat.
  */
 class MuSigOpenTradeChannelServiceTest {
     private static final String MAKER_PROFILE_ID = "1111111111111111111111111111111111111111";
@@ -148,6 +150,31 @@ class MuSigOpenTradeChannelServiceTest {
         assertEquals(Set.of(messageOfPeer), channel.getChatMessages());
     }
 
+    // Every node processes MuSig trade chat messages, also when MuSig is not activated. Anybody can send messages for
+    // made-up trade IDs, and such a message never gets a channel.
+    @Test
+    void pendingMessagesAreBounded() {
+        for (int i = 0; i < PendingTradeChatMessages.MAX_PENDING_MESSAGES + 20; i++) {
+            service.onMessage(messageOfMadeUpTrade(thirdUser, "madeUpTradeId" + i));
+        }
+
+        assertEquals(PendingTradeChatMessages.MAX_PENDING_MESSAGES, service.getNumPendingMessages());
+    }
+
+    @Test
+    void newestPendingMessageIsKeptWhenTheBoundIsReached() {
+        for (int i = 0; i < PendingTradeChatMessages.MAX_PENDING_MESSAGES; i++) {
+            service.onMessage(messageOfMadeUpTrade(thirdUser, "madeUpTradeId" + i));
+        }
+        MuSigOpenTradeMessage messageOfPeer = textMessage(taker, TRADE_ID, "messageOfPeer");
+        service.onMessage(messageOfPeer);
+
+        MuSigOpenTradeChannel channel = createChannel();
+
+        assertEquals(Set.of(messageOfPeer), channel.getChatMessages());
+        assertEquals(PendingTradeChatMessages.MAX_PENDING_MESSAGES - 1, service.getNumPendingMessages());
+    }
+
     private MuSigOpenTradeChannel createChannel() {
         return service.traderFindOrCreatesChannel(TRADE_ID, makerIdentity, taker, Optional.empty(), Optional.empty());
     }
@@ -173,6 +200,25 @@ class MuSigOpenTradeChannelServiceTest {
                 sender,
                 MAKER_PROFILE_ID,
                 receiverNetworkId,
+                "text",
+                Optional.empty(),
+                System.currentTimeMillis(),
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                ChatMessageType.TEXT,
+                Optional.empty(),
+                new HashSet<>());
+    }
+
+    // A text message to the maker in the channel of the made-up trade ID, for which no channel exists
+    private static MuSigOpenTradeMessage messageOfMadeUpTrade(UserProfile sender, String tradeId) {
+        return new MuSigOpenTradeMessage(tradeId,
+                "messageId-" + tradeId,
+                MuSigOpenTradeChannel.createId(tradeId),
+                sender,
+                MAKER_PROFILE_ID,
+                networkIdOf(MAKER_PROFILE_ID),
                 "text",
                 Optional.empty(),
                 System.currentTimeMillis(),

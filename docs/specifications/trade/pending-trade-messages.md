@@ -1,8 +1,8 @@
 # Pending trade messages
 
 This specification defines how a node keeps trade messages which arrive before the trade exists. It applies to Bisq
-Easy and to MuSig. Rules 4 and 5 apply the same limits to chat messages and to mediator responses of Bisq Easy trades
-which arrive before the trade channel exists. The terms are those of
+Easy and to MuSig. Rule 4 applies the same limits to chat messages of Bisq Easy and MuSig trades, and rule 5 to mediator
+responses of Bisq Easy trades, which arrive before the trade channel exists. The terms are those of
 [Sender of a trade message](trade-message-sender.md).
 
 ## Background
@@ -26,8 +26,9 @@ processes it again when it processes the next message of a trade.
    The same applies when the state machine of a trade handles a message: its log entries and exception messages
    name only the type of the event, also when the trade is in a final state or the handler fails.
 
-4. The chat of Bisq Easy open trades keeps a chat message whose trade channel does not exist yet as a pending chat
-   message. Rules 2 and 3 apply to these pending chat messages as well, with their own bound of 100.
+4. The chats of Bisq Easy open trades and of MuSig open trades keep a chat message whose trade channel does not exist
+   yet as a pending chat message. Rules 2 and 3 apply to these pending chat messages as well, with a bound of 100 for
+   each of the two chats.
 5. A trader's node keeps the response of a mediator to a Bisq Easy mediation request, whose trade channel does not exist
    yet, as a pending response, only if its sender is a mediator whose bonded role is authorized and not banned. It
    processes the pending responses again when a trade channel is added. Rules 2 and 3 apply to these pending responses
@@ -48,6 +49,9 @@ processes it again when it processes the next message of a trade.
   of them.
 - Rule 2 drops the oldest message because a message of a legitimate trade gets its trade shortly after it arrives. An
   old pending message is most likely one which never gets a trade.
+- Rule 4 for MuSig: every node processes chat messages of MuSig open trades, also when MuSig is not activated. Without
+  the bound, anybody who knows the network ID of a node could exhaust its memory with chat messages for made-up trade
+  IDs.
 - Rule 6: the user does not see a trade channel without a trade and cannot leave it, and the node persists every trade
   channel. If any received chat message with an offer created a channel, anybody could make a node persist channels
   for made-up trade IDs with chat messages alone. The taker's first chat message can arrive before the take offer request which
