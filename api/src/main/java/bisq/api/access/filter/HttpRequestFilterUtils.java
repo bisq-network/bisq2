@@ -17,7 +17,6 @@
 
 package bisq.api.access.filter;
 
-import org.glassfish.grizzly.attributes.AttributeHolder;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
 import org.glassfish.grizzly.http.HttpContent;
@@ -85,17 +84,5 @@ public class HttpRequestFilterUtils {
         ctx.write(response);
         ctx.getConnection().closeSilently();
         return ctx.getStopAction();
-    }
-
-    public static boolean hasConnectionAttribute(FilterChainContext ctx, String attribute) {
-        AttributeHolder holder = ctx.getConnection().getAttributes();
-        return holder != null && holder.getAttribute(attribute) != null;
-    }
-
-    public static void setConnectionAttribute(FilterChainContext ctx, String attribute, Object value) {
-        AttributeHolder holder = ctx.getConnection().getAttributes();
-        if (holder != null) {
-            holder.setAttribute(attribute, value);
-        }
     }
 }
