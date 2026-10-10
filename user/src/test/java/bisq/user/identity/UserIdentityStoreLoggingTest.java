@@ -96,6 +96,50 @@ class UserIdentityStoreLoggingTest {
         });
     }
 
+    @Test
+    void staleCopyOfAUserIdentityIsIgnoredWithoutLoggingPrivateData() throws UnresolvableProtobufException {
+        UserIdentity selected = createUserIdentity(20_003);
+        UserIdentity other = createUserIdentity(20_004);
+        bisq.user.protobuf.UserIdentityStore proto = bisq.user.protobuf.UserIdentityStore.newBuilder()
+                .addUserIdentities(selected.toProto(false))
+                .addUserIdentities(other.toProto(false))
+                .setSelectedUserIdentityId(selected.getId())
+                .build();
+        UserIdentityStore store = UserIdentityStore.fromProto(proto);
+        // A channel keeps the copy of its user identity from before a profile edit. The copy has the same ID, but
+        // UserIdentity equality includes the terms and the statement of the profile, so the store does not find it.
+        UserIdentity staleCopy = new UserIdentity(other.getIdentity(),
+                UserProfile.forEdit(other.getUserProfile(), PRIVATE_VALUE + " old terms", PRIVATE_VALUE + " old statement"));
+
+        store.setSelectedUserIdentity(staleCopy);
+
+        assertEquals(selected.getId(), store.toProto(false).getSelectedUserIdentityId());
+        assertTrue(appender.list.stream()
+                .anyMatch(event -> event.getFormattedMessage().contains("Could not find the given user identity")));
+        assertNoPrivateDataLogged(selected, other);
+    }
+
+    @Test
+    void selectionInAnEmptyStoreLogsNoPrivateData() {
+        UserIdentity userIdentity = createUserIdentity(20_005);
+
+        new UserIdentityStore().setSelectedUserIdentity(userIdentity);
+
+        assertTrue(appender.list.stream()
+                .anyMatch(event -> event.getFormattedMessage().contains("userIdentities must not be empty")));
+        assertNoPrivateDataLogged(userIdentity);
+    }
+
+    private void assertNoPrivateDataLogged(UserIdentity... userIdentities) {
+        appender.list.forEach(event -> {
+            String message = event.getFormattedMessage();
+            assertFalse(message.contains(PRIVATE_VALUE), message);
+            for (UserIdentity userIdentity : userIdentities) {
+                assertFalse(message.contains(userIdentity.getId()), message);
+            }
+        });
+    }
+
     private static UserIdentity createUserIdentity(int port) {
         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
         PubKey pubKey = new PubKey(keyPair.getPublic(), "key-" + port);
