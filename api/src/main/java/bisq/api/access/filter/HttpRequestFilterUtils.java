@@ -51,20 +51,25 @@ public class HttpRequestFilterUtils {
      * Determines whether Grizzly starts the WebSocket handshake for the given HTTP request.
      *
      * <p>
-     * {@code BaseWebSocketFilter.handleRead} of Grizzly 5.0.1 starts the handshake for every request whose
-     * {@code Upgrade} value equals {@code websocket}, ignoring case. It does not check the HTTP method or the
-     * {@code Sec-WebSocket-Key} header before that. This method reads the same value and compares it in the
-     * same way.
+     * {@code BaseWebSocketFilter.handleRead} of Grizzly 5.0.1 starts the handshake in two cases:
      * </p>
+     * <ul>
+     *     <li>for every request whose {@code Upgrade} value equals {@code websocket}, ignoring case, on a connection
+     *     without a WebSocket. It does not check the HTTP method or the {@code Sec-WebSocket-Key} header before that.
+     *     This method reads the same value and compares it in the same way.</li>
+     *     <li>for any content of a connection which has a WebSocket that is not connected, whatever the
+     *     {@code Upgrade} value of its request is. {@link SingleHandshakeWebSocketFilter} drops such content and
+     *     closes the connection, so this case never starts a handshake on the listener of the API.</li>
+     * </ul>
      *
      * <p>
-     * Every filter which must see each upgrade uses this method, so that the filters and Grizzly have one
-     * definition of an upgrade request. A filter with a stricter definition does not see a request which
-     * Grizzly still upgrades.
+     * Every filter which must see each upgrade uses this method. With {@link SingleHandshakeWebSocketFilter} in the
+     * chain, this method and Grizzly agree on which requests start a handshake. A filter with a stricter definition
+     * does not see a request which Grizzly still upgrades.
      * </p>
      *
      * @param request the HTTP request packet
-     * @return true if Grizzly treats the request as a WebSocket upgrade request
+     * @return true if Grizzly starts the handshake for the request on a connection without a WebSocket
      */
     public static boolean isWebSocketUpgradeRequest(HttpRequestPacket request) {
         return HeaderValues.WEBSOCKET.equalsIgnoreCase(request.getUpgrade());
