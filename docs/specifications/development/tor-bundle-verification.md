@@ -7,7 +7,8 @@ the bundled `tor`. The build must therefore accept a bundle only if the Tor Brow
 ## Rules
 
 1. The build trusts the public key file of the Tor Browser developers which the repository contains, and only if the
-   fingerprint of its primary key equals the pinned fingerprint.
+   fingerprint of its primary key equals the pinned fingerprint and the file contains no revocation signature for the
+   primary key. Otherwise the build fails.
 2. A subkey of this key can sign a bundle only if:
    - the key file contains no revocation signature for it, and
    - the primary key binds it with a subkey binding signature which verifies and whose key flags allow signing data.
@@ -24,6 +25,8 @@ the bundled `tor`. The build must therefore accept a bundle only if the Tor Brow
   subkey would pass.
 - Before rule 2, an error while verifying a binding signature counted as a valid binding. A later key file with such a
   subkey would have been trusted without a check.
+- Rule 1: a revocation of the primary key retires all its subkeys. The procedure for a key refresh downloads the key
+  from Tor, so a refreshed key file would contain such a revocation, and the build must not trust any of its keys.
 - Rule 3: a signature of another type, for example a key certification, does not sign the bytes of a file.
 
 ## Compatibility
