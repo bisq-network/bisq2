@@ -29,6 +29,7 @@ import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.options.AccountOption;
 import bisq.offer.options.CollateralOption;
 import bisq.offer.options.OfferOption;
 import bisq.offer.price.spec.PriceSpec;
@@ -124,6 +125,10 @@ public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodS
     @Override
     public void verify() {
         super.verify();
+        // Rule 2 of docs/specifications/offer/offer-options.md
+        checkArgument(getOfferOptions().stream()
+                        .allMatch(option -> option instanceof AccountOption || option instanceof CollateralOption),
+                "A MuSig offer can contain only account and collateral options");
         // A MuSig offer carries exactly one CollateralOption with symmetric deposits; earlier
         // consumers than the take flow (offer details, mediation and arbitration sections)
         // resolve the single symmetric value, so the shape is enforced at deserialization.
