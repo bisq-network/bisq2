@@ -19,6 +19,7 @@ package bisq.desktop_ui_harness_app;
 
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,7 +73,8 @@ class DesktopUiHarnessConfigTest {
         assertThat(config.toAutomationConfig().defaultWidth()).isEqualTo(1600d);
         assertThat(config.toAutomationConfig().defaultHeight()).isEqualTo(1000d);
         assertThat(config.toAutomationConfig().token()).isEqualTo("abc123");
-        assertThat(config.toAutomationConfig().artifactsDir()).isEqualTo("/tmp/harness-artifacts");
+        // The string form of a path uses the separator of the platform, for example a backslash on Windows
+        assertThat(config.toAutomationConfig().artifactsDir()).isEqualTo(Path.of("/tmp/harness-artifacts").toString());
         assertThat(config.stageTimeoutMs()).isEqualTo(12345L);
     }
 
@@ -121,6 +123,6 @@ class DesktopUiHarnessConfigTest {
                 "bisq.desktopUiHarness.artifacts.dir", " /tmp/harness-artifacts "
         )::get);
 
-        assertThat(config.artifactsDir()).hasToString("/tmp/harness-artifacts");
+        assertThat(config.artifactsDir()).isEqualTo(Path.of("/tmp/harness-artifacts"));
     }
 }
