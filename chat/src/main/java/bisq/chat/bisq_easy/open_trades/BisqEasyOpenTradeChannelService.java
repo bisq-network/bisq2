@@ -20,6 +20,7 @@ package bisq.chat.bisq_easy.open_trades;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
+import bisq.chat.priv.PendingTradeChatMessages;
 import bisq.chat.priv.PrivateGroupChatChannelService;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.chat.reactions.Reaction;
@@ -46,7 +47,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,12 +61,8 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     private final BisqEasyOpenTradeChannelStore persistableStore = new BisqEasyOpenTradeChannelStore();
     @Getter
     private final Persistence<BisqEasyOpenTradeChannelStore> persistence;
-    // Anybody can send messages for made-up trade IDs, and such a message never gets a channel. So the
-    // number of pending messages is bounded, and the oldest is dropped (see pending-trade-messages.md). The set keeps
-    // the arrival order; additions are synchronized on this service.
-    @VisibleForTesting
-    static final int MAX_PENDING_MESSAGES = 100;
-    private final Set<BisqEasyOpenTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    private final PendingTradeChatMessages<BisqEasyOpenTradeMessage> pendingMessages =
+            new PendingTradeChatMessages<>(BisqEasyOpenTradeMessage::getTradeId);
     // Set by the trade service: whether we have a trade with the trade ID whose peer is the user profile. A received
     // message creates a channel only for such a trade (see pending-trade-messages.md). Until it is set, received
     // messages create no channel.
@@ -91,7 +87,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
             processMessage((BisqEasyOpenTradeMessage) envelopePayloadMessage);
             if (!pendingMessages.isEmpty()) {
                 log.info("Processing pendingMessages messages");
-                pendingMessages.forEach(this::processMessage);
+                pendingMessages.getMessagesInArrivalOrder().forEach(this::processMessage);
             }
         } else if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessageReaction) {
             processMessageReaction((BisqEasyOpenTradeMessageReaction) envelopePayloadMessage);
@@ -372,7 +368,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         // A message without offer, or for a trade which we do not have. The taker's first chat message can arrive
         // before the take offer request which creates our trade; the trade service then processes the pending messages.
         // If the trade is created after the check above, onMessage processes the pending messages again.
-        addPendingMessage(message);
+        pendingMessages.add(message);
         return Optional.empty();
     }
 
@@ -416,29 +412,12 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         return channel.getUserProfileIdsOfSendingLeaveMessage().contains(userProfile.getId());
     }
 
-    private synchronized void addPendingMessage(BisqEasyOpenTradeMessage message) {
-        if (pendingMessages.contains(message)) {
-            return;
-        }
-        if (pendingMessages.size() >= MAX_PENDING_MESSAGES) {
-            BisqEasyOpenTradeMessage oldest = pendingMessages.iterator().next();
-            pendingMessages.remove(oldest);
-            log.warn("We drop the oldest pending message because the limit of {} pending messages is reached. tradeId={}",
-                    MAX_PENDING_MESSAGES, StringUtils.sanitizeForLog(oldest.getTradeId()));
-        }
-        pendingMessages.add(message);
-        log.debug("We keep a message for a trade channel which does not exist as pending message. tradeId={}",
-                StringUtils.sanitizeForLog(message.getTradeId()));
-    }
-
     @VisibleForTesting
     int getNumPendingMessages() {
         return pendingMessages.size();
     }
 
     public void processPendingMessages(String tradeId) {
-        pendingMessages.stream()
-                .filter(message -> message.getTradeId().equals(tradeId))
-                .forEach(this::processMessage);
+        pendingMessages.getMessagesOfTrade(tradeId).forEach(this::processMessage);
     }
 }
