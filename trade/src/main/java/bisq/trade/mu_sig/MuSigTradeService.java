@@ -235,6 +235,10 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 .thenApply(result -> {
                     persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
+                    // The trade restrictions of the stored alerts must be known before the replay of the processed
+                    // messages of earlier sessions (see docs/specifications/network/startup-replay.md).
+                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
+
                     StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
                                     .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
                             this::onMessage);
@@ -266,8 +270,6 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     getTrades().stream()
                             .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
                             .forEach(this::observeDepositTxConfirmationStatus);
-
-                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
                     numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                             .host(this)
