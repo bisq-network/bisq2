@@ -58,16 +58,9 @@ public final class Inventory implements NetworkProto {
     private Inventory(Collection<? extends DataRequest> entries,
                       boolean maxSizeReached,
                       Optional<Integer> cachedSerializedSize) {
-        this.entries = new ArrayList<>(entries);
+        this.entries = sortByHashSerialization(entries);
         this.maxSizeReached = maxSizeReached;
         this.cachedSerializedSize = cachedSerializedSize;
-
-        // We need to sort deterministically as the data is used in the proof of work check
-        // TODO (optimize, low prio) dataRequest.serializeForHash() is expensive. We have the hash of the data in most DataRequest implementations.
-        //  This could be used and combined with the other remaining data, like signature and pubkey
-        // We sort by serializeForHash(), which leaves out the fields annotated with @ExcludeForHash, to ensure that we
-        // get the same order in case the peer has different data in the annotated fields
-        this.entries.sort(Comparator.comparing((DataRequest dataRequest) -> new ByteArray(dataRequest.serializeForHash())));
 
         verify();
     }
@@ -75,7 +68,25 @@ public final class Inventory implements NetworkProto {
     @Override
     public void verify() {
         // We tolerate up to double of our max size
-        cachedSerializedSize.ifPresent(size -> checkArgument(size <= maxSize * 2));
+        cachedSerializedSize.ifPresent(Inventory::verifySerializedSize);
+    }
+
+    private static void verifySerializedSize(int serializedSize) {
+        checkArgument(serializedSize <= maxSize * 2, "The inventory is larger than twice the maximum size");
+    }
+
+    // We need to sort deterministically as the data is used in the proof of work check. We sort by serializeForHash(),
+    // which leaves out the fields annotated with @ExcludeForHash, to ensure that we get the same order in case the peer
+    // has different data in the annotated fields. serializeForHash() is expensive, so it runs once per entry and not
+    // in each comparison of the sort. The sort is stable, as the sort with a comparator was.
+    private static List<DataRequest> sortByHashSerialization(Collection<? extends DataRequest> entries) {
+        record KeyedEntry(ByteArray key, DataRequest dataRequest) {
+        }
+        return entries.stream()
+                .map(dataRequest -> new KeyedEntry(new ByteArray(dataRequest.serializeForHash()), dataRequest))
+                .sorted(Comparator.comparing(KeyedEntry::key))
+                .map(KeyedEntry::dataRequest)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Override
@@ -94,6 +105,10 @@ public final class Inventory implements NetworkProto {
 
     public static Inventory fromProto(bisq.network.protobuf.Inventory proto) throws UnresolvableProtobufException {
         try {
+            // Checked before the entries are converted and sorted, which costs much more than this check. A node parses
+            // a message before it checks its proof of work (see the reasons of rule 6 of
+            // docs/specifications/network/validation-at-parsing.md).
+            verifySerializedSize(proto.getSerializedSize());
             // The entries are requests of other nodes, which the responder only stores. A responder of another version
             // can hold a request which this node cannot parse. We skip such an entry and keep the other entries (see
             // docs/specifications/network/inventory-hash-set-filter.md).
