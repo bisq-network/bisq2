@@ -19,9 +19,9 @@ package bisq.api.access.filter;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.NextAction;
+import org.glassfish.grizzly.http.HttpContent;
 import org.glassfish.grizzly.http.server.AddOn;
 import org.glassfish.grizzly.websockets.HandshakeException;
-import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketAddOn;
 import org.glassfish.grizzly.websockets.WebSocketFilter;
 import org.glassfish.grizzly.websockets.WebSocketHolder;
@@ -47,10 +47,8 @@ import java.io.IOException;
  *
  * <p>
  * A server needs neither: the handshake of an upgrade request runs completely while Grizzly handles its first content.
- * So this filter drops the content of a connection whose WebSocket is not connected and closes the connection, and it
- * closes the connection after a refused handshake once the answer is written. Grizzly then starts a handshake only
- * for an upgrade request on a connection without a WebSocket, which is the request that
- * {@link HttpRequestFilterUtils#isWebSocketUpgradeRequest} recognizes.
+ * So this filter closes the connection instead of a second handshake, and after a refused handshake once the answer
+ * is written. The check does not read the state of the WebSocket, which another thread can change at any time.
  * </p>
  */
 public class SingleHandshakeWebSocketFilter extends WebSocketFilter {
@@ -72,15 +70,13 @@ public class SingleHandshakeWebSocketFilter extends WebSocketFilter {
     }
 
     @Override
-    public NextAction handleRead(FilterChainContext context) throws IOException {
-        Connection<?> connection = context.getConnection();
-        WebSocket webSocket = WebSocketHolder.getWebSocket(connection);
-        if (webSocket != null && !webSocket.isConnected()) {
-            // A closed connection delivers no further bytes, also none which a client sent after the close
-            connection.closeSilently();
+    protected NextAction handleHandshake(FilterChainContext context, HttpContent content) throws IOException {
+        // Grizzly creates the holder when the first handshake of a connection starts and never removes it
+        if (WebSocketHolder.isWebSocketInProgress(context.getConnection())) {
+            context.getConnection().closeSilently();
             return context.getStopAction();
         }
-        return super.handleRead(context);
+        return super.handleHandshake(context, content);
     }
 
     @Override
