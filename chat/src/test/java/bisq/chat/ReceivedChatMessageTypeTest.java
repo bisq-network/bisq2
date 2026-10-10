@@ -179,7 +179,7 @@ class ReceivedChatMessageTypeTest {
         @BeforeEach
         void setUp() {
             service = new BisqEasyOpenTradeChannelService(persistenceService, networkService, userService);
-            service.setIsTradeWithPeer((tradeId, userProfileId) -> true);
+            service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) -> true);
         }
 
         @ParameterizedTest

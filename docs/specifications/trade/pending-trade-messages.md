@@ -38,8 +38,9 @@ processes it again when it processes the next message of a trade.
    drops it otherwise. Dropping a response does not remove a pending response of another sender.
 
 6. A received chat message creates a Bisq Easy trade channel only if it carries an offer and the node has a trade with
-   its trade ID whose peer is the sender of the message. Otherwise the message is a pending chat message (rule 4). When
-   the node creates a trade, or loads it at startup, it processes the pending chat messages of that trade again.
+   its trade ID whose peer is the sender of the message and whose own user profile is the receiver of the message.
+   Otherwise the message is a pending chat message (rule 4). When the node creates a trade, or loads it at startup, it
+   processes the pending chat messages of that trade again.
 
 ## Reasons
 
@@ -56,6 +57,11 @@ processes it again when it processes the next message of a trade.
   channel. If any received chat message with an offer created a channel, anybody could make a node persist channels
   for made-up trade IDs with chat messages alone. The taker's first chat message can arrive before the take offer request which
   creates the trade of the maker, so the message waits as a pending chat message until the trade exists.
+- Rule 6, receiver: a node can host several user profiles, and the trade peer knows the profiles of other identities
+  from their offers. A channel which a message to another of our profiles created for our trade does not match the
+  trade, and the trade service fails the trade with a report to the peer. The report would tell the peer that both
+  profiles are hosted on one node (see rule 5 of [Sender of a trade message](trade-message-sender.md) for trade
+  messages).
 - Rule 3: trade messages carry private data of the traders: the payment account data of the seller, the Bitcoin
   address of the buyer, a transaction ID, or a payment proof. Users share their log files with support. A log file
   must not reveal the trade data of a trade peer.
