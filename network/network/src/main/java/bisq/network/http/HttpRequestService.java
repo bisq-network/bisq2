@@ -72,12 +72,17 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *       </ul></li>
  * </ul>
  *
- * <p>4xx responses (other than 408 and 429) bypass retry entirely and are
- * propagated to the caller as a {@link CompletionException} — these indicate
- * caller error, not transient failure. A subclass whose endpoint encodes
- * transient upstream failures inside a 4xx (see {@link #isRecoverableClientError})
- * can reclassify those specific responses back into the server-level bucket,
- * where the same method gate applies.
+ * <p>A 4xx response (other than 408 and 429) to a {@code POST} is a caller error:
+ * it bypasses retry and is propagated to the caller as a {@link CompletionException}.
+ * A subclass whose endpoint encodes transient upstream failures inside a 4xx (see
+ * {@link #isRecoverableClientError}) can reclassify those specific responses back
+ * into the server-level bucket, where the same method gate applies.
+ *
+ * <p>A 4xx response to a {@code GET} fails over like any other failure. The providers
+ * are independent: one provider's 4xx (an unknown transaction, a missing path, refused
+ * access) does not mean that the next provider answers the same, and a {@code GET}
+ * applies nothing that a second attempt could duplicate. The provider is marked as
+ * failed, so later requests do not keep returning to it.
  *
  * <h2>Lifecycle</h2>
  * The service owns the underlying {@link BaseHttpClient}: callers do not need
@@ -291,8 +296,10 @@ public abstract class HttpRequestService<T, R> implements Service {
                             if (rootCause instanceof HttpException httpException) {
                                 int responseCode = httpException.getResponseCode();
                                 if (responseCode < 500 && responseCode != 408 && responseCode != 429
+                                        && httpRequest.method() != HttpMethod.GET
                                         && !isRecoverableClientError(httpException)) {
-                                    // 4xx (other than 408 / 429): caller error, never retry.
+                                    // POST 4xx (other than 408 / 429): caller error, never retry.
+                                    // A GET 4xx fails over, see the class Javadoc.
                                     throw new CompletionException(e);
                                 }
                             }
@@ -358,7 +365,8 @@ public abstract class HttpRequestService<T, R> implements Service {
      * (e.g. a gateway answering an upstream outage with 400 plus a structured body).
      * Returning {@code true} moves that response from the fail-fast bucket into the
      * server-level one, so provider failover applies — still gated on
-     * {@link #isServerErrorRetryAllowed}. Default: every 4xx is a caller error.
+     * {@link #isServerErrorRetryAllowed}. Only consulted for a POST, because a GET fails over
+     * on every 4xx. Default: every 4xx to a POST is a caller error.
      */
     protected boolean isRecoverableClientError(HttpException httpException) {
         return false;
