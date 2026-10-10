@@ -27,6 +27,7 @@ import bisq.api.access.transport.ApiAccessTransportType;
 import bisq.api.web_socket.util.WebSocketIdentity;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.websockets.SimpleWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
@@ -43,6 +44,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +52,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -132,6 +135,66 @@ class WebSocketFilterAddOnIntegrationTest {
         startServer(false);
 
         assertRefused(upgradeRequest("POST", KEY_HEADER), "400");
+    }
+
+    // A handshake which Grizzly refuses itself, here for a Connection header without "Upgrade". Grizzly answers 400
+    // and kept the connection open, and every later byte, also a complete upgrade request of another client, was
+    // content of the refused request: Grizzly repeated the handshake with its headers, and the authentication filter
+    // let the bytes pass as content of an authenticated request. The server must close the connection after the
+    // answer, without waiting for more bytes. If it keeps the connection open, the read times out.
+    @Test
+    void aHandshakeWhichGrizzlyRefusesClosesTheConnection() throws Exception {
+        startServer(true);
+        String refused = "GET " + PATH + " HTTP/1.1\r\n"
+                + "Host: 127.0.0.1\r\n"
+                + "Upgrade: websocket\r\n"
+                + "Connection: keep-alive\r\n"
+                + "Sec-WebSocket-Version: 13\r\n"
+                + KEY_HEADER
+                + sessionHeaders(CLIENT_A, sessionIdOfA)
+                + "\r\n";
+
+        assertRefused(refused, "400");
+    }
+
+    // Grizzly marks a WebSocket closed before it closes the connection, for example when the revocation of a client
+    // closes a WebSocket from another thread. A frame which arrived in between started a second handshake with the
+    // upgrade request of the closed WebSocket, and the application got a second onConnect with the identity of the
+    // first, without a new authentication. The application holds this state with setClosed(), so that the test does not
+    // depend on the timing of the close.
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void contentAfterTheWebSocketClosedOpensNoSecondWebSocket(boolean supportSessionHandling) throws Exception {
+        startServer(supportSessionHandling);
+        String identityHeaders = supportSessionHandling
+                ? sessionHeaders(CLIENT_A, sessionIdOfA)
+                : clientIdHeader(CLIENT_A);
+
+        String afterTheClose;
+        try (Socket socket = connect()) {
+            write(socket.getOutputStream(), upgradeRequest("GET", KEY_HEADER + identityHeaders));
+            InputStream in = socket.getInputStream();
+            assertThat(readLine(in)).contains("101");
+            skipHeaders(in);
+            assertThat(application.awaitConnect()).isTrue();
+            writeFrame(socket, RecordingApplication.MARK_CLOSED);
+            assertThat(application.awaitMarkedClosed()).isTrue();
+
+            try {
+                writeFrame(socket, "after the close");
+            } catch (SocketException e) {
+                // The server can have closed the connection already
+            }
+            try {
+                afterTheClose = readUntilClosed(in);
+            } catch (SocketTimeoutException e) {
+                throw new AssertionError("The server kept the connection open. Calls of onConnect: "
+                        + application.connectCount(), e);
+            }
+        }
+
+        assertThat(statusLines(afterTheClose)).isEmpty();
+        assertThat(application.connectCount()).isEqualTo(1);
     }
 
     private void startServer(boolean supportSessionHandling) throws IOException {
@@ -225,6 +288,17 @@ class WebSocketFilterAddOnIntegrationTest {
         return line.toString(StandardCharsets.US_ASCII).trim();
     }
 
+    private static void skipHeaders(InputStream in) throws IOException {
+        while (!readLine(in).isEmpty()) {
+            // Skips the headers of the response
+        }
+    }
+
+    private static void writeFrame(Socket socket, String text) throws IOException {
+        socket.getOutputStream().write(maskedTextFrame(text));
+        socket.getOutputStream().flush();
+    }
+
     // Reads until the server closes the connection. A reset also ends the connection.
     private static String readUntilClosed(InputStream in) throws IOException {
         ByteArrayOutputStream response = new ByteArrayOutputStream();
@@ -238,6 +312,20 @@ class WebSocketFilterAddOnIntegrationTest {
             // Reset by the server: the connection is closed as well
         }
         return response.toString(StandardCharsets.US_ASCII);
+    }
+
+    // A client masks every frame (RFC 6455, section 5.3)
+    private static byte[] maskedTextFrame(String text) {
+        byte[] payload = text.getBytes(StandardCharsets.UTF_8);
+        byte[] mask = {0x11, 0x22, 0x33, 0x44};
+        byte[] frame = new byte[2 + mask.length + payload.length];
+        frame[0] = (byte) 0x81;
+        frame[1] = (byte) (0x80 | payload.length);
+        System.arraycopy(mask, 0, frame, 2, mask.length);
+        for (int i = 0; i < payload.length; i++) {
+            frame[2 + mask.length + i] = (byte) (payload[i] ^ mask[i % mask.length]);
+        }
+        return frame;
     }
 
     private static List<String> statusLines(String response) {
@@ -296,18 +384,40 @@ class WebSocketFilterAddOnIntegrationTest {
     }
 
     private static class RecordingApplication extends WebSocketApplication {
+        // A frame with this text puts its WebSocket into the state CLOSED and leaves the connection open
+        static final String MARK_CLOSED = "mark-closed";
+
         private final CountDownLatch connected = new CountDownLatch(1);
+        private final AtomicInteger connectCount = new AtomicInteger();
+        private final CountDownLatch markedClosed = new CountDownLatch(1);
         private final AtomicReference<Optional<String>> identity = new AtomicReference<>(Optional.empty());
 
         @Override
         public void onConnect(WebSocket socket) {
             super.onConnect(socket);
             identity.set(WebSocketIdentity.findClientId(socket));
+            connectCount.incrementAndGet();
             connected.countDown();
+        }
+
+        @Override
+        public void onMessage(WebSocket socket, String text) {
+            if (MARK_CLOSED.equals(text)) {
+                ((SimpleWebSocket) socket).setClosed();
+                markedClosed.countDown();
+            }
         }
 
         boolean hasConnected() {
             return connected.getCount() == 0;
+        }
+
+        int connectCount() {
+            return connectCount.get();
+        }
+
+        boolean awaitMarkedClosed() throws InterruptedException {
+            return markedClosed.await(10, TimeUnit.SECONDS);
         }
 
         // Grizzly writes the response of the handshake before it calls onConnect
