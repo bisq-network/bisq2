@@ -25,6 +25,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
+import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.RemoveDataRequest;
@@ -46,6 +47,7 @@ import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
@@ -402,6 +404,76 @@ class InventoryHashSetFilterTest {
                 service(InventoryFilterType.HASH_SET_V2).getFilter().getFilterEntries());
     }
 
+    // A relay of an earlier version removes signature V2 from an add request and keeps its sequence number. The
+    // complete request replaces such a copy (see storage-request-ordering.md), so the responder must send it, for both
+    // store types. The requester then lists the complete request, and the next response is empty.
+    @Test
+    void responderSendsCompleteAddRequestToRequesterWithCopyWithoutSignatureV2() throws Exception {
+        StorageService responderStorageService = createResponder();
+        List<AddDataRequest> adds = createAddsOfBothStoreTypes();
+        for (AddDataRequest add : adds) {
+            assertTrue(storageService.onAddDataRequest(withoutSignatureV2(add)).join().isSuccess());
+            assertTrue(responderStorageService.onAddDataRequest(add).join().isSuccess());
+        }
+
+        Inventory inventory = createInventoryV2(responderStorageService);
+
+        assertEquals(Set.copyOf(adds), Set.copyOf(inventory.getEntries()));
+        inventory.getEntries().forEach(add ->
+                assertTrue(storageService.onAddDataRequest((AddDataRequest) add).join().isSuccess()));
+        assertTrue(createInventoryV2(responderStorageService).getEntries().isEmpty());
+    }
+
+    // A requester which holds the complete request has no use for the copy, so the responder does not send it. A
+    // requester which holds the copy already has it.
+    @Test
+    void responderDoesNotSendCopyWithoutSignatureV2ToRequesterWithCompleteRequestOrCopy() throws Exception {
+        StorageService responderStorageService = createResponder();
+        List<AddDataRequest> adds = createAddsOfBothStoreTypes();
+        for (AddDataRequest add : adds) {
+            assertTrue(storageService.onAddDataRequest(add).join().isSuccess());
+            assertTrue(responderStorageService.onAddDataRequest(withoutSignatureV2(add)).join().isSuccess());
+        }
+
+        assertTrue(createInventoryV2(responderStorageService).getEntries().isEmpty());
+        // A responder which sends such a copy anyway sends a listed request (rule 6)
+        for (AddDataRequest add : adds) {
+            assertTrue(service(InventoryFilterType.HASH_SET_V2).isAnyRequestInFilter(List.of(withoutSignatureV2(add))));
+        }
+
+        DataService copyHolder = new DataService(new PersistenceService(appDataDir.resolve("copyHolder")),
+                CLOCK_BEFORE_CUTOFF);
+        try {
+            for (AddDataRequest add : adds) {
+                assertTrue(copyHolder.getStorageService().onAddDataRequest(withoutSignatureV2(add)).join().isSuccess());
+            }
+            HashSetFilter filterOfCopyHolder = new HashSetFilterService(copyHolder.getStorageService(), MAX_SIZE,
+                    InventoryFilterType.HASH_SET_V2).getFilter();
+            assertTrue(new HashSetFilterService(responderStorageService, MAX_SIZE, InventoryFilterType.HASH_SET_V2)
+                    .createInventory(filterOfCopyHolder)
+                    .getEntries().isEmpty());
+        } finally {
+            shutdown(copyHolder);
+        }
+    }
+
+    // Nodes of earlier versions list add requests with their sequence number, so HASH_SET keeps it. HASH_SET_V2 lists a
+    // copy without signature V2 with the negated number, so that its entry differs from the entry of the complete
+    // request.
+    @Test
+    void onlyFilterV2ListsAddWithoutSignatureV2WithItsNegatedSequenceNumber() throws Exception {
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(authenticatedDataStore,
+                new DefaultAuthenticatedData(new InventoryTestData("a", ownerA)),
+                ownerA);
+        AddAuthenticatedDataRequest copy = (AddAuthenticatedDataRequest) withoutSignatureV2(add);
+        assertTrue(storageService.onAddDataRequest(copy).join().isSuccess());
+
+        assertEquals(List.of(new HashSetFilterEntry(copy.getStorageKeyV1().getBytes(), add.getSequenceNumber())),
+                service(InventoryFilterType.HASH_SET).getFilter().getFilterEntries());
+        assertEquals(List.of(new HashSetFilterEntry(copy.getStorageKeyV2().getBytes(), -add.getSequenceNumber())),
+                service(InventoryFilterType.HASH_SET_V2).getFilter().getFilterEntries());
+    }
+
     // An authenticated data entry of owner A, a remove request of owner B without entry, and append-only data
     private void addStoreContent() throws Exception {
         add(new InventoryTestData("a", ownerA), ownerA);
@@ -471,6 +543,33 @@ class InventoryHashSetFilterTest {
                 ownerA);
         MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(ownerA));
         return List.of(authenticatedDataRemoval, RemoveMailboxRequest.from(mailboxData, ownerB));
+    }
+
+    // An add request of authenticated data by owner A, and an add request of mailbox data from owner A to owner B
+    private List<AddDataRequest> createAddsOfBothStoreTypes() throws Exception {
+        AddAuthenticatedDataRequest authenticatedDataAdd = AddAuthenticatedDataRequest.from(authenticatedDataStore,
+                new DefaultAuthenticatedData(new InventoryTestData("a", ownerA)),
+                ownerA);
+        MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(ownerA));
+        return List.of(authenticatedDataAdd, AddMailboxRequest.from(mailboxData, ownerA, ownerB.getPublic()));
+    }
+
+    // As a relay of an earlier version sends it. The test data of this class has no protobuf resolver, so the copy of
+    // an authenticated data request is built from its fields.
+    private static AddDataRequest withoutSignatureV2(AddDataRequest add) throws UnresolvableProtobufException {
+        if (add instanceof AddAuthenticatedDataRequest request) {
+            return new AddAuthenticatedDataRequest(request.getAuthenticatedSequentialData(),
+                    request.getSignatureV1(),
+                    request.getSignaturePubKeyEncoded(),
+                    request.getSignaturePublicKey(),
+                    new byte[0],
+                    0);
+        }
+        AddMailboxRequest request = (AddMailboxRequest) add;
+        return AddMailboxRequest.fromProto(request.toValueProto(false).toBuilder()
+                .clearVersion()
+                .clearSignatureV2()
+                .build());
     }
 
     // As a relay of an earlier version sends it

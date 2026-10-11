@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class HashSetFilterService extends FilterService<HashSetFilter> {
     // The sequence number in the entry of a request without a signed sequence number. The other stored requests have
-    // positive sequence numbers.
+    // positive sequence numbers, and in HASH_SET_V2 an add request without signature V2 has its negated number.
     static final int NO_SIGNED_SEQUENCE_NUMBER = 0;
 
     // Fixed per instance, so that requests of both types can be served concurrently
@@ -84,7 +84,7 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
     // The request comes from a peer and is not the map entry of a store, so the storage key is computed from it
     private boolean isInFilter(Set<HashSetFilterEntry> filterEntries, DataRequest dataRequest) {
         try {
-            return filterEntries.contains(toFilterEntry(Map.entry(dataRequest.getStorageKey(), dataRequest)));
+            return isListed(filterEntries, toFilterEntry(Map.entry(dataRequest.getStorageKey(), dataRequest)));
         } catch (Exception e) {
             // No store holds a request whose storage key cannot be computed
             log.debug("Could not compute the filter entry of {}", dataRequest.getClass().getSimpleName(), e);
@@ -103,7 +103,7 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
 
     @Override
     protected boolean isAuthenticatedDataRequestMissing(HashSetFilter filter, Map.Entry<ByteArray, AuthenticatedDataRequest> mapEntry) {
-        return !filter.getFilterEntriesAsSet().contains(toFilterEntry(mapEntry));
+        return !isListed(filter.getFilterEntriesAsSet(), toFilterEntry(mapEntry));
     }
 
     // A requester of an earlier version (HASH_SET) holds one request per storage key V1 and accepts for it only a higher
@@ -136,12 +136,25 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
 
     @Override
     protected boolean isMailboxRequestMissing(HashSetFilter filter, Map.Entry<ByteArray, MailboxRequest> mapEntry) {
-        return !filter.getFilterEntriesAsSet().contains(toFilterEntry(mapEntry));
+        return !isListed(filter.getFilterEntriesAsSet(), toFilterEntry(mapEntry));
     }
 
     @Override
     protected boolean isAddAppendOnlyDataRequestMissing(HashSetFilter filter, Map.Entry<ByteArray, AddAppendOnlyDataRequest> mapEntry) {
         return !filter.getFilterEntriesAsSet().contains(toFilterEntry(mapEntry));
+    }
+
+    // An add request without signature V2 has the entry of its negated sequence number in HASH_SET_V2. A filter which
+    // lists the entry of its complete request, with the positive number, lists it too: the requester holds the
+    // complete request, which replaces the copy in a store, so the copy is not missing. In the other direction the
+    // complete request is missing for a requester which lists only the copy, so a responder sends it (see
+    // docs/specifications/network/inventory-hash-set-filter.md).
+    private static boolean isListed(Set<HashSetFilterEntry> filterEntries, HashSetFilterEntry entry) {
+        if (filterEntries.contains(entry)) {
+            return true;
+        }
+        return entry.getSequenceNumber() < 0 &&
+                filterEntries.contains(new HashSetFilterEntry(entry.getHash(), -entry.getSequenceNumber()));
     }
 
     // Used for the filter which we send and for the comparison with a received filter, so both use the same key
@@ -154,12 +167,19 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
     // without signature V2 has no signed sequence number either, because signature V1 does not cover it. A relay of an
     // earlier version removes signature V2 and keeps the number. The entry of that copy must differ from the entry of
     // the removal with signature V2, which replaces it (see docs/specifications/network/inventory-hash-set-filter.md).
+    // An add request without signature V2 has a signed sequence number, but its complete request with the same number
+    // replaces it in a store. So its entry has the negated number: it differs from the entry of the complete request,
+    // and from the entries of the copies with other numbers.
     private int getSequenceNumber(DataRequest dataRequest) {
-        boolean isRemovalWithoutSignatureV2 = dataRequest instanceof RemoveDataRequest &&
-                dataRequest instanceof SignedRequest signedRequest &&
+        boolean isWithoutSignatureV2 = dataRequest instanceof SignedRequest signedRequest &&
                 !signedRequest.isSignatureV2Present();
-        if (inventoryFilterType == InventoryFilterType.HASH_SET_V2 && isRemovalWithoutSignatureV2) {
-            return NO_SIGNED_SEQUENCE_NUMBER;
+        if (inventoryFilterType == InventoryFilterType.HASH_SET_V2 && isWithoutSignatureV2) {
+            if (dataRequest instanceof RemoveDataRequest) {
+                return NO_SIGNED_SEQUENCE_NUMBER;
+            }
+            if (dataRequest instanceof Sequential sequential) {
+                return -sequential.getSequenceNumber();
+            }
         }
         return dataRequest instanceof Sequential sequential ? sequential.getSequenceNumber() : NO_SIGNED_SEQUENCE_NUMBER;
     }

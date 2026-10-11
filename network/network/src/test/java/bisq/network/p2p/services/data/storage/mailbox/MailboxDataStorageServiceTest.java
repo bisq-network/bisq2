@@ -308,6 +308,45 @@ class MailboxDataStorageServiceTest {
         assertSame(add, store.getPersistableStore().getMap().get(add.getStorageKey()));
     }
 
+    // A relay of an earlier version removes signature V2, and the store holds that copy. The complete request of the
+    // sender replaces it, so the store keeps the message from the cutoff date on (see
+    // docs/specifications/network/storage-request-ordering.md).
+    @Test
+    void completeRequestReplacesItsCopyWithoutSignatureV2()
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddMailboxRequest complete = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        assertTrue(store.add(toLegacy(complete)).isSuccess());
+
+        DataStorageResult result = store.add(complete);
+
+        assertTrue(result.isSuccess(), result.toString());
+        assertSame(complete, store.getPersistableStore().getMap().get(complete.getStorageKey()));
+        assertTrue(store.add(toLegacy(complete)).isSequenceNrInvalid());
+
+        time = AT_CUTOFF;
+        store.prunePersisted(store.getPersistableStore());
+        pruneExpiredTask.get().run();
+
+        assertSame(complete, store.getPersistableStore().getMap().get(complete.getStorageKey()));
+    }
+
+    // The receiver removed the message. The complete request of a copy which the store held before does not bring the
+    // message back.
+    @Test
+    void removalStillRejectsTheCompleteRequestOfACopy() throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddMailboxRequest complete = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        assertTrue(store.add(toLegacy(complete)).isSuccess());
+        RemoveMailboxRequest removal = RemoveMailboxRequest.from(mailboxData, receiverKeyPair);
+        assertTrue(store.remove(removal).isSuccess());
+
+        DataStorageResult result = store.add(complete);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(removal, store.getPersistableStore().getMap().get(complete.getStorageKey()));
+    }
+
     // From the cutoff date of signature V1 on, a node accepts only requests with signature V2 (see
     // docs/specifications/network/storage-request-signatures.md). The same request is accepted before that date.
     @Test
