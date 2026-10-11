@@ -94,6 +94,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_ERROR_MESSAGE;
 import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_STACKTRACE;
@@ -318,6 +319,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                                                  long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
+        verifyMakerMeetsMinVersionForTrading(bisqEasyOffer);
         validateOfferAmount(bisqEasyOffer, baseSideAmount.getValue(), quoteSideAmount.getValue());
 
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
@@ -619,6 +621,36 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         if (minRequiredVersion.isPresent()
                 && !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersion.get()))) {
             throw TradeRestrictedException.minVersionRequired(minRequiredVersion.get());
+        }
+    }
+
+    // A node of a version which the alert restricts acknowledges a take offer request and drops it, so the take would
+    // hang without an error. The node of the taker refuses the take instead. The version of the maker is the higher of
+    // the version of its user profile, which the maker signed when it published the profile, and the version which
+    // created the offer. Both are lower bounds of the version which the maker runs. A maker without a readable version
+    // is refused (see docs/specifications/trade/trade-restrictions.md).
+    public void verifyMakerMeetsMinVersionForTrading(BisqEasyOffer bisqEasyOffer) {
+        Optional<String> minRequiredVersion = minRequiredVersionForTrading;
+        if (minRequiredVersion.isPresent()
+                && !isMakerVersionAtLeast(bisqEasyOffer, new Version(minRequiredVersion.get()))) {
+            throw TradeRestrictedException.makerVersionBelowMinRequired(minRequiredVersion.get());
+        }
+    }
+
+    private boolean isMakerVersionAtLeast(BisqEasyOffer bisqEasyOffer, Version requiredVersion) {
+        Stream<String> versionOfProfile = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
+                .map(UserProfile::getApplicationVersion)
+                .stream();
+        return Stream.concat(versionOfProfile, Stream.of(bisqEasyOffer.getAppVersion()))
+                .anyMatch(version -> isAtLeast(version, requiredVersion));
+    }
+
+    private static boolean isAtLeast(String version, Version requiredVersion) {
+        try {
+            return new Version(version).aboveOrEqual(requiredVersion);
+        } catch (RuntimeException e) {
+            // An empty or malformed version, or a part which does not fit into an int
+            return false;
         }
     }
 
