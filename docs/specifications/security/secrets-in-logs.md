@@ -60,17 +60,40 @@ the log. The onion key of an identity does not change, so an old log file stays 
   password, the cookie or the key (checked in the source of Tor 0.4.9). Bisq does not subscribe to events which carry
   secrets.
 
+## Log files of earlier versions
+
+Versions 2.1.3 to 2.1.13 wrote the onion private keys of all identities into the log files. Log files are appended
+across versions, and the rolled files `bisq_<n>.log` keep their content for up to 20 rollovers.
+
+At its start, before it opens its log file, a node hides these keys in `bisq.log` and the rolled files `bisq_<n>.log`
+of its data directory. It replaces each key as the log form of `ADD_ONION` does (`[hidden]`, the key type stays) and
+keeps all other bytes. It writes a new file and then replaces the old one, so a failure leaves the old file complete. A
+file without a key stays unchanged. A failure does not stop the start: the node logs a warning which names the file,
+and it tries again at the next start. After a start without failure, the node writes the file
+`legacy_log_secrets_hidden` into the data directory and does not check the files again.
+
+When the desktop app builds the zip file of the error report, it also replaces each such key in the copies of the log
+files. This covers a key which the start could not hide.
+
+Reasons:
+
+- The keys stay valid, and users share their log files with support and in public issues. The first start of this
+  version is the moment when users of earlier versions share logs.
+- The node rewrites the files before the logger opens them. Windows cannot replace a file which the process holds
+  open, and on other systems the logger would keep writing into the replaced file.
+- The files are kept and not deleted, because support needs them.
+- The check runs once, because it reads up to 21 files of 10 MB.
+
 ## Compatibility
 
 The rules change only the log, not the network protocol or persisted data.
 
-Log files which versions 2.1.3 to 2.1.13 wrote contain the onion private keys of all identities. Log files are appended
-across versions, so `bisq.log` keeps such lines after the upgrade until it rolls over at 10 MB. When the desktop app
-builds the zip file of the error report, it replaces each such key in the copies of the log files with `[hidden]`
-and keeps the key type. The log files on disk, the rolled log files, the log which the error popup opens, and the logs
-of headless nodes still contain the keys. Users who shared such a log, and operators of seed and oracle nodes, need a
-decision about the deletion of old log files and the rotation of onion keys. A new onion key changes the network
-address of the identity.
+The node cannot reach copies of the old log files outside its data directory: logs which users shared or attached to
+issues, zip files of error reports of earlier versions, backups, the console output of seed, oracle and API nodes in
+the systemd journal or in `docker logs`, and old blocks on the disk. A node which a user downgrades to an earlier
+version writes the keys again, and the node does not check the files again after the next upgrade. Users who shared
+such a log, and operators of seed and oracle nodes, need a decision about the rotation of onion keys. A new onion key
+changes the network address of the identity.
 
 ## Related specifications
 

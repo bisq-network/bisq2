@@ -27,6 +27,7 @@ import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.AsciiLogo;
+import bisq.common.logging.LegacyLogFileRedactor;
 import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
@@ -261,12 +262,23 @@ public abstract class ApplicationService implements Service {
         int rollingPolicyMaxIndex = loggingConfig.getInt("rollingPolicyMaxIndex");
         String maxFileSize = loggingConfig.getString("maxFileSize");
         Level logLevel = Level.toLevel(loggingConfig.getString("logLevel"));
+        // Versions 2.1.3 to 2.1.13 wrote the onion private keys into the log files. The keys are hidden before the
+        // logger opens the files, so that no handle of this process blocks the replacement of a file (see
+        // docs/specifications/security/secrets-in-logs.md).
+        LegacyLogFileRedactor.Result legacyLogSecrets = LegacyLogFileRedactor.redact(appDataDirPath, "bisq");
         LogSetup.setup(appDataDirPath.resolve("bisq").toString(), rollingPolicyMaxIndex, maxFileSize, logLevel);
 
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", appDataDirPath);
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
         log.info("Tor binary version: v{} (from Tor browser v{})", ApplicationVersion.getTorBinaryVersionString(), ApplicationVersion.getTorVersionString());
+        if (!legacyLogSecrets.redactedFiles().isEmpty()) {
+            log.info("We hid the onion private keys of earlier versions in {} log files", legacyLogSecrets.redactedFiles().size());
+        }
+        if (!legacyLogSecrets.failedFiles().isEmpty()) {
+            log.warn("We could not hide the onion private keys of earlier versions in {}. The next start tries again.",
+                    legacyLogSecrets.failedFiles());
+        }
     }
 
     protected void checkInstanceLock() {
