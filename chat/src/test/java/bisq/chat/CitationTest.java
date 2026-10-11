@@ -18,6 +18,8 @@
 package bisq.chat;
 
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.common.util.StringUtils;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -85,6 +87,26 @@ class CitationTest {
         Citation restored = Citation.fromProto(citation.toProto(false));
 
         assertThat(restored.getChatMessageId()).contains("cited-message-id");
+    }
+
+    /**
+     * A text over the limit is truncated before it is cited, as the desktop reply does. When the cut
+     * fell inside an emoji, the citation kept only the first half of it, and the encoding for the wire
+     * replaced that half with '?'. So the peer read a different text than the one the author's node
+     * cited.
+     */
+    @Test
+    void aTextTruncatedInsideAnEmojiReachesThePeerUnchanged()
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
+        String text = "x".repeat(Citation.MAX_TEXT_LENGTH - 2) + "😀" + "tail";
+        Citation citation = new Citation(AUTHOR_PROFILE_ID,
+                StringUtils.truncate(text, Citation.MAX_TEXT_LENGTH),
+                Optional.empty());
+
+        byte[] wire = citation.toProto(false).toByteArray();
+        Citation restored = Citation.fromProto(bisq.chat.protobuf.Citation.parseFrom(wire));
+
+        assertThat(restored.getText()).isEqualTo(citation.getText());
     }
 
     private static Citation citationCiting(String chatMessageId) {
