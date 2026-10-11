@@ -46,9 +46,10 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *     through the mailbox, and an offer which a node of this version removes disappears on the nodes of both
  *     versions.</li>
  * </ul>
- * The upgraded node also removes the data of this version which it stored with the old version, without signature V2
- * (open point "Copies without signature V2 of requests of this version"). The test does not check whether this data
- * comes back. The task which removes expired entries runs every 10 minutes, so the test takes about 11 minutes.
+ * The upgraded node stored the offer of the new node with the old version, without signature V2. After the upgrade, an
+ * inventory response brings the complete request, which replaces the copy (storage-request-ordering.md, "Complete
+ * request of a copy without signature V2"), so the node keeps the offer across the cutoff date. The task which removes
+ * expired entries runs every 10 minutes, so the test takes about 11 minutes.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @EnabledIfSystemProperty(named = "bisq.e2e.newTree", matches = ".+")
@@ -165,5 +166,7 @@ class CutoffAcrossVersionsTest {
                 () -> OffersAcrossVersionsTest.findOffer(upgradedNode, oldOfferBefore).isEmpty());
         assertTrue(OffersAcrossVersionsTest.findOffer(upgradedNode, newOfferAfter).isPresent(),
                 "The upgraded node must keep the offers with signature V2");
+        assertTrue(OffersAcrossVersionsTest.findOffer(upgradedNode, newOfferBefore).isPresent(),
+                "The upgraded node must keep the offer of the new node which it first stored without signature V2");
     }
 }
