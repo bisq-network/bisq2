@@ -199,6 +199,11 @@ public class Bisq1BridgeRequestService implements Service,
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        // The node reads all registered stores once at its start, before it initializes the services. OracleNodeService
+        // creates this service only in its initialize(), because it needs the default identity, so the start did not
+        // read this store. Without the read, the conflict check would see only the witness bindings of this run, and the
+        // first write would replace the stored bindings (see docs/specifications/reputation/account-age.md).
+        readPersisted();
         executor = createRequestExecutor("Bisq1BridgeRequestService");
         // Anybody can send many account timestamp requests, and a full queue drops its oldest request. So they have their
         // own queue, and they cannot drop the requests of the other types (see
