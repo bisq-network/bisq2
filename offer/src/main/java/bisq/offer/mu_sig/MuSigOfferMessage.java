@@ -23,6 +23,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.offer.price.spec.FixPriceSpec;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,8 +46,13 @@ public final class MuSigOfferMessage implements OwnershipVerifiableData {
         verify();
     }
 
+    // An offer in the offerbook needs a canonical fixed price, so that every client shows the price which the trade
+    // uses (rule 5 of docs/specifications/offer/fixed-price.md)
     @Override
     public void verify() {
+        if (offer.getPriceSpec() instanceof FixPriceSpec fixPriceSpec) {
+            fixPriceSpec.verifyCanonical();
+        }
     }
 
     @Override

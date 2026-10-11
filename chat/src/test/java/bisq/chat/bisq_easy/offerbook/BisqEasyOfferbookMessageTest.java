@@ -23,6 +23,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
@@ -93,6 +94,29 @@ class BisqEasyOfferbookMessageTest {
 
         assertDoesNotThrow(() -> BisqEasyOfferbookMessage.fromProto(message.toProto(false)));
         assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOfferbookMessage.fromProto(proto));
+    }
+
+    // Bisq Connect shows the price of an offer from the quote side amount, while nodes convert the amounts of a trade
+    // with the value. So an offer in the offerbook needs the canonical form (rule 5 of
+    // docs/specifications/offer/fixed-price.md). The quote here has the shape which Bisq Connect sent through API nodes
+    // of version 2.1.13 (bisq-mobile 7f9cddce7b): the base side id BTC, and a value rounded to 8 significant digits.
+    @Test
+    void offerWithAFixedPriceWhichIsNotCanonicalIsRejectedFromTheOfferbook() {
+        PriceSpec canonical = new FixPriceSpec(PriceQuote.from(Coin.asBtcFromFaceValue(1.0),
+                Fiat.fromValue(643_211_234L, "EUR")));
+        PriceSpec ofBisqConnect = new FixPriceSpec(new PriceQuote(643_211_230L,
+                new Coin("BTC", 100_000_000L, "BTC", 8, 4),
+                new Fiat("EUR", 643_211_234L, "EUR", 4, 2)));
+        BisqEasyOfferbookMessage message = message(maker.getPubKey().getId(), Optional.of(offer(maker, canonical)));
+        bisq.chat.protobuf.ChatMessage.Builder builder = message.toProto(false).toBuilder();
+        builder.getBisqEasyOfferbookMessageBuilder().getBisqEasyOfferBuilder()
+                .setPriceSpec(ofBisqConnect.toProto(false));
+        bisq.chat.protobuf.ChatMessage received = builder.build();
+
+        assertDoesNotThrow(() -> BisqEasyOfferbookMessage.fromProto(message.toProto(false)));
+        assertThrows(IllegalArgumentException.class,
+                () -> message(maker.getPubKey().getId(), Optional.of(offer(maker, ofBisqConnect))));
+        assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOfferbookMessage.fromProto(received));
     }
 
     @Test

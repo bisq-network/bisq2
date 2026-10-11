@@ -166,11 +166,10 @@ which uses the code of Bisq. The tests cover:
   maximum length (10,000 characters) is upgraded in place. One account has data of the maximum length with line breaks
   and characters outside ASCII. All of it stays, and the open trades continue to the end. The API of the baseline
   creates only user-defined accounts.
-- `FixedPriceAcrossUpgradeTest`: the API of the baseline creates offers with a fixed price. With a canonical price,
-  the open offer and the open trade stay after the upgrade in place, and both trades complete. With a price whose value
-  does not match its amounts, which the API of the baseline accepts, nodes of this checkout do not show the offer.
-  After the upgrade, the node skips the offer, the trade and the chat of the trade with this price, and the peer of the
-  baseline keeps the trade and still shows the offer.
+- `FixedPriceAcrossUpgradeTest`: the API of the baseline creates offers with a canonical fixed price and with the
+  fixed price which Bisq Connect sends (base side id `BTC`, value rounded to 8 significant digits). Nodes of this
+  checkout show and take both. After the upgrade in place, the node loads its stores without skipping an entry, keeps
+  its open offers and open trades with both prices, and all trades complete.
 - `ConnectPairingAcrossUpgradeTest`: a client pairs with a node of the baseline, which runs with the API security of
   its version, as the mobile app of Bisq Connect does with the QR code. The user of the client has an open trade and
   chats in it. The node is upgraded in place. The old session of the client gets HTTP 401. The client gets a new
