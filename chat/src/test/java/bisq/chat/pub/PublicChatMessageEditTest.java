@@ -20,6 +20,7 @@ package bisq.chat.pub;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.common.CommonPublicChatChannelService;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.common.SubDomain;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
@@ -59,7 +60,7 @@ class PublicChatMessageEditTest {
                 ChatChannelDomain.DISCUSSION,
                 List.of());
         CommonPublicChatMessage message = new CommonPublicChatMessage(ChatChannelDomain.DISCUSSION,
-                "channelId",
+                SubDomain.DISCUSSION_BISQ.getChannelId(),
                 AUTHOR_PROFILE_ID,
                 "text",
                 Optional.empty(),
