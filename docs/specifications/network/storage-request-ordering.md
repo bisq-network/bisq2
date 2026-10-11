@@ -9,7 +9,9 @@ A node relays a received request only if these rules let it change the stored en
 ## Authenticated add requests
 
 A stored authenticated add request has a trustworthy sequence number with either signature version.
-A new add, remove, or refresh request must have a strictly greater sequence number to replace it.
+A new add, remove, or refresh request must have a strictly greater sequence number to replace it. The only exception
+is the complete request of a stored copy without signature V2 (see
+[Complete request of a copy without signature V2](#complete-request-of-a-copy-without-signature-v2)).
 An identical add is a duplicate and does not change the stored entry or notify listeners.
 
 A refresh produces a stored add request with the refreshed sequence number and creation date. Replaying an older
@@ -18,6 +20,36 @@ add must not undo that refresh. The same ordering rule applies after removal and
 A copy of a refresh request which a node has applied has the sequence number of the stored add request. The node
 does not apply it again, does not notify listeners, and does not relay it (see
 [storage-refresh-requests.md](storage-refresh-requests.md)).
+
+## Complete request of a copy without signature V2
+
+Nodes of versions up to 2.1.13 remove signature V2 when they relay, store or serve an add request. A store can
+therefore hold a copy without signature V2 of an add request whose owner signed both versions. The complete request
+has the same sequence number as the copy.
+
+Rule: an add request with signature V2 replaces a stored add request without signature V2 if both have the same
+storage key and the same preimage of signature V1. This applies to authenticated data and to mailbox data. The store
+verifies the signatures of the request before it stores it, as for every add request. A stored removal still rejects
+the complete request, so a removed mailbox message does not come back.
+
+Reasons:
+
+- Signature V1 of an add request covers the data, the sequence number, the creation date and the publisher. Equal
+  preimages show that both are the same request of the same owner. Only the owner can create signature V2, and
+  signature V2 covers the fields which signature V1 leaves out. A relay can only remove signature V2, so it cannot use
+  the rule to replace data with other data.
+- Without the rule, the copy rejects the complete request until the cutoff date of signature V1. At that date each node
+  removes all its copies without signature V2 in one cycle of the task which removes expired entries (see
+  [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)). Offers, profiles and
+  authorized data whose owner signed signature V2 would then disappear on many nodes at the same time, and a mailbox
+  message would be lost for its receiver if no reachable peer held the complete request.
+- A request with the same sequence number and another creation date is another request of the owner. The rule does
+  not let it replace the copy, so different requests with the same sequence number still do not replace each other.
+- A store never replaces a stored add request with signature V2 by a request with the same sequence number. So a node
+  stores and relays the complete request at most once, and a broadcast ends.
+
+An inventory response brings the complete request to a requester which holds the copy (see rule 5 of
+[`inventory-hash-set-filter.md`](inventory-hash-set-filter.md)).
 
 ## Replaced add request of a stored removal
 
@@ -181,7 +213,9 @@ arrives before or after the add, and whether the removal has signature V1 only o
 signature V1 only, which a node accepted before the cutoff date of signature V1, remains stored until it expires (see
 [storage-request-signatures.md](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 No mailbox removal can have a higher sequence number.
-Different add requests with the same sequence number must not replace each other either.
+Different add requests with the same sequence number must not replace each other either. The complete request of a
+stored copy without signature V2 is the same request, and it replaces the copy (see
+[Complete request of a copy without signature V2](#complete-request-of-a-copy-without-signature-v2)).
 
 A later removal replaces a stored removal only in one case: the stored removal has only signature V1, and the incoming
 removal has a verified signature V2. All other removals leave the stored removal unchanged; this includes a V1 removal

@@ -113,14 +113,15 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
         // Detect them before the signature verification, which is the most expensive check. A copy without signature
         // V2, which a node of an earlier version relayed, is not equal to the stored request, but its sequence number is
-        // not higher. The same holds for the add request which a stored removal replaced. The checks are repeated
+        // not higher. The same holds for the add request which a stored removal replaced. The complete request of a
+        // stored copy without signature V2 has the same sequence number, and replaces the copy. The checks are repeated
         // inside the lock because the map can change in between.
         ByteArray storageKey = request.getStorageKey();
         AuthenticatedDataRequest storedRequest = persistableStore.getMap().get(storageKey);
         if (request.equals(storedRequest)) {
             return DataStorageResult.failed().requestAlreadyReceived();
         }
-        if (request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, storedRequest))) {
+        if (isSequenceNrInvalid(request, storageKey, storedRequest)) {
             return DataStorageResult.failed().sequenceNrInvalid();
         }
 
@@ -163,7 +164,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().requestAlreadyReceived();
             }
 
-            if (request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, requestFromMap))) {
+            if (isSequenceNrInvalid(request, storageKey, requestFromMap)) {
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
@@ -413,6 +414,13 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             return Integer.MAX_VALUE;
         }
         return trustedSequenceNumber + 1;
+    }
+
+    private boolean isSequenceNrInvalid(AddAuthenticatedDataRequest request,
+                                        ByteArray storageKey,
+                                        @Nullable AuthenticatedDataRequest requestFromMap) {
+        return !request.isCompleteVersionOf(requestFromMap) &&
+                request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, requestFromMap));
     }
 
     // The sequence number by which the store orders the entry. A request replaces the entry only with a higher sequence
