@@ -208,13 +208,4 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
             log.warn("Could not notify clients listeners", t);
         }
     }
-
-    private static Optional<String> getAttribute(HttpServletRequest request, String key) {
-        Object attribute = request.getAttribute(key);
-        if (attribute instanceof String value) {
-            return Optional.of(value);
-        } else {
-            return Optional.empty();
-        }
-    }
 }
