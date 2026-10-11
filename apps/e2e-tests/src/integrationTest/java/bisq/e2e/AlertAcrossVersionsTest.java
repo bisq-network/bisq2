@@ -44,8 +44,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * alert, the security manager moves the users to this version before the cutoff date of signature V1.
  * <ul>
  *     <li>A node of the released version does not take an offer while the alert exists. Its API answers with 400.</li>
- *     <li>A maker of the released version gets the take offer request of a taker of this checkout, but it does not
- *     create the trade and does not answer. The take is lost: the trade of the taker stays in its first state.</li>
+ *     <li>A taker of this checkout does not take the offer of a maker of the released version, which would acknowledge
+ *     the take offer request and drop it. Its API answers with 400 and the error code
+ *     MAKER_VERSION_BELOW_MIN_REQUIRED (docs/specifications/trade/trade-restrictions.md).</li>
  *     <li>Nodes of this checkout know the alert and trade with each other to the end.</li>
  *     <li>After the security manager removes the alert, the node of the released version trades again.</li>
  * </ul>
@@ -67,8 +68,6 @@ class AlertAcrossVersionsTest {
     private static final String ALERT_REMOVED = "Method: remove success; map entry: AuthorizedAlertData";
     // A node logs the change of its store before it notifies the service of alerts
     private static final Duration ALERT_APPLIED = Duration.ofSeconds(3);
-    // A maker answers a take offer request on 127.0.0.1 within a few seconds
-    private static final Duration NO_ANSWER = Duration.ofSeconds(20);
 
     private MixedVersionNetwork network;
     private ApiClient securityManager;
@@ -111,17 +110,15 @@ class AlertAcrossVersionsTest {
                 refusal.getMessage());
         assertTrue(network.oldApi.openTrades().isEmpty(), "The old node must not create a trade");
 
-        // The old maker gets the take offer request of a taker of this version, but it creates no trade and does not
-        // answer. Its executor drops the exception of the check of the alert, so it logs nothing.
-        String lostTradeId = network.newApi.takeOffer(offerOfOldMaker, baseAmount, Trades.QUOTE_AMOUNT,
-                "MAIN_CHAIN", "ZELLE");
-        Trades.awaitTradeState(network.newApi, lostTradeId, "the new taker has the trade", state -> true);
-        String firstState = network.newApi.tradeProperties().get(lostTradeId).path("tradeState").asText();
-        Thread.sleep(NO_ANSWER.toMillis());
-        assertTrue(Trades.findTrade(network.oldApi, lostTradeId).isEmpty(),
-                "The old maker must not create the trade while the alert requires a newer version");
-        assertEquals(firstState, network.newApi.tradeProperties().get(lostTradeId).path("tradeState").asText(),
-                "The taker must not get an answer from the old maker");
+        // The old maker would acknowledge the take offer request of a taker of this version and drop it, without an
+        // answer. So the taker of this version does not take its offer.
+        ApiClient.ApiException makerRefusal = assertThrows(ApiClient.ApiException.class,
+                () -> network.newApi.takeOffer(offerOfOldMaker, baseAmount, Trades.QUOTE_AMOUNT, "MAIN_CHAIN",
+                        "ZELLE"),
+                "The new node must not take the offer of the old maker while the alert requires a newer version");
+        assertEquals(400, makerRefusal.status, makerRefusal.getMessage());
+        assertTrue(makerRefusal.getMessage().contains("MAKER_VERSION_BELOW_MIN_REQUIRED"), makerRefusal.getMessage());
+        assertTrue(network.newApi.openTrades().isEmpty(), "The new node must not create a trade");
 
         // Nodes of this version trade with each other to the end
         String tradeId = securityManager.takeOffer(offerOfNewMaker, baseAmount, Trades.QUOTE_AMOUNT, "MAIN_CHAIN",

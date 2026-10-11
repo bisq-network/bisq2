@@ -35,7 +35,8 @@ import java.util.Optional;
 public class TradeRestrictedException extends IllegalArgumentException {
     public enum Restriction {
         HALT_TRADING,
-        MIN_VERSION_REQUIRED
+        MIN_VERSION_REQUIRED,
+        MAKER_VERSION_BELOW_MIN_REQUIRED
     }
 
     private final Restriction restriction;
@@ -54,6 +55,17 @@ public class TradeRestrictedException extends IllegalArgumentException {
                 minRequiredVersion,
                 "For trading you need to have version " + minRequiredVersion + " installed. " +
                         "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+    }
+
+    // The node of the taker refuses the take, because the node of the maker would acknowledge the take offer request and
+    // drop it. The text must not ask the taker to update: released mobile clients read "For trading you need to have
+    // version" as a restriction of their own node.
+    public static TradeRestrictedException makerVersionBelowMinRequired(String minRequiredVersion) {
+        return new TradeRestrictedException(Restriction.MAKER_VERSION_BELOW_MIN_REQUIRED,
+                minRequiredVersion,
+                "The maker of this offer uses a Bisq version below " + minRequiredVersion + ". " +
+                        "The Bisq security manager has published an emergency alert which requires this version for " +
+                        "trading, so the maker cannot accept the take offer request.");
     }
 
     private TradeRestrictedException(Restriction restriction, @Nullable String minRequiredVersion, String message) {
