@@ -25,6 +25,7 @@ import bisq.chat.common.SubDomain;
 import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.file.Path;
@@ -59,6 +61,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -195,14 +198,33 @@ class ReceivedChatMessageChannelIdTest {
                     List.of(channel));
         }
 
+        // A node of version 2.1.13 or earlier fails at its start when it stored such a message, so a node does not
+        // create, accept, store or relay it (see docs/specifications/chat/message-types.md)
         @ParameterizedTest
-        @ValueSource(strings = {"", "...", "discussion", "discussion.unknown", "unknown.bisq", "discussion_off.topic"})
-        void messageWithInvalidChannelIdIsNotAdded(String invalidChannelId) {
-            service.initialize();
+        @ValueSource(strings = {"", "...", "discussion", "discussion.unknown", "unknown.bisq", "discussion_off.topic",
+                "bisq_easy_offerbook.BTC-USD"})
+        void messageWithInvalidChannelIdCannotBeCreated(String invalidChannelId) {
+            assertThrows(IllegalArgumentException.class, () -> message(invalidChannelId));
+        }
 
-            service.onAuthenticatedDataAdded(new DefaultAuthenticatedData(message(invalidChannelId)));
+        @ParameterizedTest
+        @ValueSource(strings = {"discussion.unknown", "unknown.bisq", "bisq_easy_offerbook.BTC-USD"})
+        void receivedMessageWithInvalidChannelIdFailsAtParsing(String invalidChannelId) {
+            bisq.chat.protobuf.ChatMessage proto = message(channel.getId()).toProto(false).toBuilder()
+                    .setChannelId(invalidChannelId)
+                    .build();
 
-            assertTrue(channel.getChatMessages().isEmpty());
+            UnresolvableProtobufException exception = assertThrows(UnresolvableProtobufException.class,
+                    () -> CommonPublicChatMessage.fromProto(proto));
+
+            // Rule 7 of docs/specifications/network/validation-at-parsing.md: no received value in the message
+            assertFalse(String.valueOf(exception.getCause().getMessage()).contains(invalidChannelId));
+        }
+
+        @ParameterizedTest
+        @EnumSource(SubDomain.class)
+        void messageOfEveryChannelOfThisAndEarlierVersionsCanBeCreated(SubDomain subDomain) {
+            assertDoesNotThrow(() -> message(subDomain.getChannelId()));
         }
 
         @ParameterizedTest
@@ -214,31 +236,6 @@ class ReceivedChatMessageChannelIdTest {
             service.onAuthenticatedDataAdded(new DefaultAuthenticatedData(message));
 
             assertEquals(Set.of(message), channel.getChatMessages());
-        }
-
-        @Test
-        void initializeProcessesStoredMessagesAfterOneWithInvalidChannelId() {
-            CommonPublicChatMessage message = message(channel.getId());
-            DataService dataService = mock(DataService.class);
-            when(dataService.getAuthenticatedData()).thenReturn(Stream.of(
-                    new DefaultAuthenticatedData(message("discussion.unknown")),
-                    new DefaultAuthenticatedData(message)));
-            when(networkService.getDataService()).thenReturn(Optional.of(dataService));
-
-            service.initialize();
-
-            assertEquals(Set.of(message), channel.getChatMessages());
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"", "...", "discussion", "discussion.unknown", "unknown.bisq", "discussion_off.topic"})
-        void messageWithInvalidChannelIdCanBeCopiedIntoAHashBasedSet(String invalidChannelId) {
-            CommonPublicChatMessage message = message(invalidChannelId);
-
-            Set<CommonPublicChatMessage> copy = assertDoesNotThrow(() -> Set.copyOf(List.of(message)));
-            assertTrue(copy.contains(message));
-            assertEquals(invalidChannelId, message.getChannelId());
-            assertFalse(message.hasValidChannelId());
         }
 
         private CommonPublicChatMessage message(String channelId) {

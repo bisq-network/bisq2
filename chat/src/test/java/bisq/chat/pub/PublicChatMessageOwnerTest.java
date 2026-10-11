@@ -20,6 +20,7 @@ package bisq.chat.pub;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.common.SubDomain;
 import bisq.chat.reactions.CommonPublicChatMessageReaction;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.DigestUtil;
@@ -63,7 +64,7 @@ class PublicChatMessageOwnerTest {
 
     private static CommonPublicChatMessage message(String authorUserProfileId) {
         return new CommonPublicChatMessage(ChatChannelDomain.DISCUSSION,
-                "channelId",
+                SubDomain.DISCUSSION_BISQ.getChannelId(),
                 authorUserProfileId,
                 "text",
                 Optional.empty(),
