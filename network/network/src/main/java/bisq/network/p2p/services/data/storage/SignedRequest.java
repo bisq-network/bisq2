@@ -21,7 +21,9 @@ import bisq.common.util.DateUtils;
 import bisq.security.SignatureUtil;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -76,6 +78,20 @@ public interface SignedRequest {
     // The request is of a node of an earlier version, or a relay removed signature V2
     default boolean isRequiredSignatureV2Missing(long now) {
         return isSignatureV2Required(now) && !isSignatureV2Present();
+    }
+
+    // A relay of an earlier version removes signature V2 of a request, and a store can hold that copy. The complete
+    // request, which the owner signed with both versions, has the same sequence number as the copy, so the order by
+    // sequence number would reject it. It replaces the copy instead: signature V1 of both covers the same preimage, so
+    // both are the same request of the same owner, and signature V2 covers the fields which signature V1 leaves out
+    // (see docs/specifications/network/storage-request-ordering.md). The caller verifies the signatures of this request
+    // before it stores it.
+    default boolean isCompleteVersionOf(@Nullable Object storedRequest) {
+        return storedRequest instanceof SignedRequest stored &&
+                stored.getClass() == getClass() &&
+                isSignatureV2Present() &&
+                !stored.isSignatureV2Present() &&
+                Arrays.equals(getPreImageV1(), stored.getPreImageV1());
     }
 
     default boolean isSignatureV1Invalid() {

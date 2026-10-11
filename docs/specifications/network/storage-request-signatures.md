@@ -225,7 +225,10 @@ Reasons:
   it replaced, and earlier ones (see [`storage-request-ordering.md`](storage-request-ordering.md)). From the cutoff
   date on, the store rejects an add request without signature V2 in any case. An add request with signature V2 is of a
   node of this version. Its removal has signature V2 and replaces the copy without signature V2 when the node gets it.
-  So the store does not keep the remove request without signature V2 (see also [Open points](#open-points)).
+  So the store does not keep the remove request without signature V2 (see also [Open points](#open-points)). In the
+  same way, the complete add request replaces a stored copy without signature V2 before the cutoff date, so the store
+  keeps the data of an owner of this version (see
+  [`storage-request-ordering.md`](storage-request-ordering.md#complete-request-of-a-copy-without-signature-v2)).
 
 ### Conditions for the cutoff date
 
@@ -318,15 +321,6 @@ reject a request without signature V1.
 
 The following weaknesses can be removed by a change of other rules. The developers have not decided these changes yet.
 
-- **Copies without signature V2 of requests of this version.** A node of an earlier version removes signature V2 when
-  it relays a request. Before the cutoff date, a node of this version which gets such a copy first stores it. It
-  rejects the complete request which arrives later, because both have the same sequence number. At the cutoff date,
-  the store removes the copy (rule 9), and the applications get the removal of data whose owner runs this version. The
-  node gets the complete request again with an inventory response of a node which holds it, or when the owner
-  publishes the data again.
-  - What removes it: a rule in [`storage-request-ordering.md`](storage-request-ordering.md) by which a request with
-    signature V2 replaces the stored copy of the same request without signature V2. With this rule, the stores hold
-    the complete requests before the cutoff date.
 - **Removed data of nodes of this version after the cutoff date.** A node can hold only the copy without signature V2
   of a removal of a node of this version, because it got the removal only from nodes of earlier versions. At the
   cutoff date the store removes the copy (rule 9). After that, the node accepts the add request with signature V2 again
