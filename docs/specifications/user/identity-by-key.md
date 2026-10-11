@@ -33,6 +33,8 @@ of a trade message also applies to MuSig.
    - the mediator shows a mediation case only if the mediator of its trade chat channel is the mediator of the
      contract;
    - a user cannot delete a profile while a private chat channel uses the identity of this profile;
+   - the node selects the user identity of a chat channel, or another user identity which a caller passes, by its ID.
+     It selects its own stored user identity with this ID, also if the caller holds an older copy of it;
    - the desktop shows an offer in the list of own offers, a notification as one of the mediator or of a trader, and
      the number of mediation cases of a trader.
 3. A node sends its trade messages under the network ID which its trade peer stored for it. The taker sends under its
@@ -67,6 +69,10 @@ of a trade message also applies to MuSig.
   terms or the statement replaces the user identity with one of the same key. A comparison of whole user identities did
   not find the channel, so the user could delete an edited profile which an open trade still used, unless the profile
   also had a message in a public channel.
+- Selecting a user identity: when the user opens a private chat channel, the node selects the channel's copy of the
+  user identity. The channel keeps the copy from before an edit of the profile. A comparison of whole user identities
+  did not find this copy, so the node kept the user identity which was selected before, which can be another profile
+  than the one of the channel.
 - Rule 3: nodes of version 2.1.13 compare the sender of a trade message with the network ID which they stored for the
   trade peer, including the address map. The handler throws if the two differ, and the state machine then fails the
   trade. Rule 3 keeps such trades working, because the sender is the value which the peer stored.
