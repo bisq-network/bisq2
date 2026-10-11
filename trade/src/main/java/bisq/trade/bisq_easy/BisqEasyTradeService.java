@@ -73,6 +73,7 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator;
 import bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
@@ -319,6 +320,17 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
         validateOfferAmount(bisqEasyOffer, baseSideAmount.getValue(), quoteSideAmount.getValue());
+        // As buyer the taker sends the fiat first, so the seller's reputation is its only security. The node of the
+        // buyer checks it for every client, also for the REST API and the mobile node, which do not use the take offer
+        // views of the desktop (see docs/specifications/trade/bisq-easy-seller-reputation-limit.md).
+        if (bisqEasyOffer.getTakersDirection().isBuy()) {
+            BisqEasySellerReputationValidator.validateSellersReputationForTradeAmount(
+                    serviceProvider.getBondedRolesService().getMarketPriceService(),
+                    serviceProvider.getUserService().getReputationService(),
+                    bisqEasyOffer.getMarket(),
+                    quoteSideAmount,
+                    bisqEasyOffer.getMakersUserProfileId());
+        }
 
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(
