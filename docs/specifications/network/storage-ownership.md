@@ -146,8 +146,9 @@ failure therefore affects only a peer which sends a request that no released nod
    the receiver hash from the receiver public key, so valid existing entries already satisfy this rule.
 7. Remove requests need no own owner check. Their storage key contains the key which signs them, so they find only the
    entry which the same key added (see [`storage-keys.md`](storage-keys.md)). The same holds for refresh requests, but
-   a refresh replaces the creation date of the entry, on which the transition rule depends. So the store checks the
-   owner of the refreshed entry again.
+   a refresh has signature V2, and the transition rule does not accept another owner for a request with signature V2
+   (rule 12). So the store accepts a refresh only from the owner of the entry. An entry of another owner, which rule 12
+   accepted from a node of an earlier version, keeps its creation date and expires.
 8. When a node loads an authenticated data store, it does not load the add requests whose publisher is not the owner of
    the data. They fail at parsing (rule 5), and the store skips entries which it cannot parse.
 
@@ -194,7 +195,8 @@ identity, not with their authorized key pair:
 | `AuthorizedMarketPriceData` | 10 minutes |
 
 12. For these types (`isLegacyOwnerAccepted()`), the store accepts authorized data with another owner if the add
-    request was created before the cutoff date `AuthorizedData.LEGACY_OWNER_CUTOFF_DATE` (2027-01-01 UTC).
+    request was created before the cutoff date `AuthorizedData.LEGACY_OWNER_CUTOFF_DATE` (2027-01-01 UTC) and has no
+    signature V2. An add request with signature V2 of another owner fails at parsing.
 13. The cutoff date must be later than the date at which all oracle and seed nodes publish with their authorized key
     pair. Updated nodes reject data which an oracle node of an earlier version creates after the cutoff date.
 14. At startup, oracle and seed nodes publish the data of the transition types which they published with the key pair
@@ -219,6 +221,11 @@ Reasons:
   other source: oracle nodes do not publish timestamps, account age and signed witness data again, and they publish
   bonded roles again from their store. So the stores keep these entries until they expire. Applications do not use
   them (rule 11).
+- Rule 12, signature V2: the entries of the transition come only from oracle and seed nodes of earlier versions, which
+  create only signature V1. A node of this version publishes its own data with the key of the owner. A request with
+  signature V2 of another owner is therefore a copy, which any key can create from stored data. Each key gives a new
+  storage key, so without this condition copies of one item filled the store of its type, and the store then refused
+  new data of the real oracle nodes.
 - The rule uses the creation date of the request, not the current time. So the validity of an entry does not change
   while it is stored, and no entry must be removed at a fixed time. An entry which rule 12 accepts expires at the
   latest at the cutoff date plus the time to live of its type.
@@ -252,8 +259,8 @@ The entries of earlier versions have no signature V2. The cutoff date of signatu
 compare it with their own time, not with the creation date of the entry (see
 [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)). From that date on, nodes
 reject the entries of earlier versions and remove the stored ones, also if rule 12 accepts their owner. So the
-migration of rule 14 must run before that date. Rule 12 then still accepts only entries with signature V2 and an
-earlier creation date, which are the copies described in [Known limitations](#known-limitations).
+migration of rule 14 must run before that date. From that date on, rule 12 accepts no entry, because an entry of
+another owner needs to be without signature V2.
 
 ## Owner of `AuthorizedOracleNode`
 
@@ -320,13 +327,12 @@ Who decides on steps 2 and 3: the developers, together with the operators of the
 
 ## Known limitations
 
-- **Copies during the transition.** Until the cutoff date plus the time to live of the type, anyone can publish a copy
-  of data of the transition types with a creation date before the cutoff date: for bonded roles until about
-  2027-04-11. Updated nodes store and relay such copies until they expire, but applications do not use them (rule 11).
+- **Copies during the transition.** Until the cutoff date of signature V1 (2026-11-25), anyone can publish a copy
+  without signature V2 of data of the transition types. Updated nodes store and relay such copies, and remove them at
+  that date. Applications do not use them (rule 11).
   - Why it cannot be removed now: the stores keep the entries of earlier versions until oracle and seed nodes have
-    migrated them (rule 14), and a store cannot tell these entries apart from copies.
-  - What removes it: the cutoff date. After all oracle and seed nodes have migrated their data, an earlier cutoff date
-    is possible.
+    migrated them (rule 14), and a store cannot tell these entries apart from copies without signature V2.
+  - What removes it: the cutoff date of signature V1.
   - Who decides: the developers, together with the operators of oracle and seed nodes.
 - **Nodes of earlier versions** stay affected by the problem until they update.
 
@@ -341,7 +347,9 @@ Who decides on steps 2 and 3: the developers, together with the operators of the
 - With the real `AuthorizedOracleNode` and the real store: the store accepts it from the key of its network ID and
   from a static authorized key, with and without the static flag. An authorized key which is no static key is not
   its owner.
-- The transition rule accepts another owner only for the transition types, and only before the cutoff date.
+- The transition rule accepts another owner only for the transition types, only before the cutoff date, and only for
+  requests without signature V2. A request with signature V2 of another owner cannot be created, and the entry of
+  another owner cannot be refreshed.
 - Applications get neither entries of other publishers nor their removal. With the real
   `AuthorizedBondedRolesService`: the removal of the entry of the earlier version keeps a bonded role which the
   authorized key published, and a copy does not restore a removed role. The store reports the publisher also at

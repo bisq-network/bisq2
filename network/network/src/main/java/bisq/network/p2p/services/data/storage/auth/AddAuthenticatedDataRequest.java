@@ -169,6 +169,13 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                 "pubKeyHash must match the hash of ownerPublicKeyBytes");
         SignatureValidation.validateSignatures(signature, signatureV2);
         SignatureValidation.validateVersionOfSignatureV2(signatureV2, version);
+        // The transition rule accepts another owner only for the data of oracle and seed nodes of earlier versions,
+        // which create only signature V1. A node of this version publishes its own data with the key of the owner. So a
+        // request with signature V2 of another owner is a copy which any key can create, and it would fill the store of
+        // the type with new storage keys (see docs/specifications/network/storage-ownership.md).
+        checkArgument(signatureV2.length == 0 || authenticatedSequentialData.getAuthenticatedData()
+                        .isOwner(authenticatedSequentialData.getPubKeyHash()),
+                "A request with signature V2 must be published by the owner of the data");
     }
 
 
