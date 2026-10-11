@@ -54,6 +54,7 @@ import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.exceptions.TradeProtocolException;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -279,6 +280,9 @@ public class TradeRestApi extends RestApiBase {
         } catch (TradeRestrictedException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, toTradeRestrictedErrorEntity(e)));
         } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
+        } catch (TradeProtocolException e) {
+            // The seller's reputation does not cover the amount (docs/specifications/trade/bisq-easy-seller-reputation-limit.md)
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
