@@ -121,12 +121,13 @@ class UnverifiedChatMessageKeysByTradeTest {
     }
 
     private BisqEasyOpenTradeMessage createMessage(String id, UserProfile sender, String text) {
+        UserProfile receiver = sender.getId().equals(requester.getId()) ? peer : requester;
         return new BisqEasyOpenTradeMessage(tradeId,
                 id,
                 BisqEasyOpenTradeChannel.createId(tradeId),
                 sender,
-                mediator.getId(),
-                mediator.getNetworkId(),
+                receiver.getId(),
+                receiver.getNetworkId(),
                 text,
                 Optional.empty(),
                 1_700_000_000_000L,

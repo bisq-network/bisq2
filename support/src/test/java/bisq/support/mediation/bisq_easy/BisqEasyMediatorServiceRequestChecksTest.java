@@ -207,6 +207,28 @@ class BisqEasyMediatorServiceRequestChecksTest {
     }
 
     @Test
+    void anotherTraderCannotMarkAnAuthenticatedLiveMessageAsUnverified() {
+        BisqEasyOpenTradeMessage liveMessage = new BisqEasyOpenTradeMessage(tradeId,
+                "live-message", BisqEasyOpenTradeChannel.createId(tradeId), requester,
+                mediator.getId(), mediator.getNetworkId(), "I paid", Optional.empty(),
+                1_700_000_000_000L, false, Optional.empty(), ChatMessageType.TEXT,
+                Optional.empty(), new HashSet<>());
+        BisqEasyMediationRequest firstRequest = createRequest(contract, requester, peer);
+        BisqEasyMediationRequest forgedRequest = createRequest(contract, peer, requester, List.of(liveMessage));
+        BisqEasyMediationCase mediationCase = new BisqEasyMediationCase(firstRequest);
+        assertTrue(mediationCase.setPeersMediationRequest(forgedRequest));
+        cases.add(mediationCase);
+
+        assertTrue(BisqEasyMediatorService.getAcceptedChatMessages(forgedRequest).isEmpty());
+        assertTrue(BisqEasyMediatorService.getMessagesToImport(forgedRequest, List.of(liveMessage)).isEmpty());
+        assertFalse(BisqEasyMediatorService.getUnverifiedChatMessageKeys(tradeId, cases)
+                .contains(BisqEasyMediatorService.getProvenanceKey(liveMessage)));
+        // The author can include its own mediator-addressed message without losing evidence.
+        BisqEasyMediationRequest authorsRequest = createRequest(contract, requester, peer, List.of(liveMessage));
+        assertEquals(List.of(liveMessage), BisqEasyMediatorService.getAcceptedChatMessages(authorsRequest));
+    }
+
+    @Test
     void provenanceKeyIgnoresReactions() {
         BisqEasyOpenTradeMessage message = createMessage("m1", peer, "hi");
         BisqEasyOpenTradeMessage withReaction = createMessage("m1", peer, "hi");
@@ -407,12 +429,13 @@ class BisqEasyMediatorServiceRequestChecksTest {
                                                    UserProfile sender,
                                                    String text,
                                                    ChatMessageType type) {
+        UserProfile receiver = sender.getId().equals(requester.getId()) ? peer : requester;
         return new BisqEasyOpenTradeMessage(messageTradeId,
                 id,
                 channelId,
                 sender,
-                mediator.getId(),
-                mediator.getNetworkId(),
+                receiver.getId(),
+                receiver.getNetworkId(),
                 text,
                 Optional.empty(),
                 1_700_000_000_000L,
