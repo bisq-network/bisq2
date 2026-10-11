@@ -71,6 +71,25 @@ class BisqEasyMediationCaseTest {
         assertTrue(loadedCase.setPeersMediationRequest(createRequest(peer, requester, "hello")));
     }
 
+    // A mediator of version 2.1.13 stores cases, and traders of version 2.1.13 send requests, whose contract has a
+    // fixed price of Bisq Connect (see docs/specifications/offer/fixed-price.md)
+    @Test
+    void mediationCaseAndRequestWithAFixedPriceOfBisqConnectAreLoaded() throws Exception {
+        contract = TestContracts.contractWithFixedPriceOfBisqConnect(requester, peer, mediator);
+        tradeId = TradeId.fromContract(contract);
+        BisqEasyMediationRequest request = createRequest(requester, peer, "hi");
+        bisq.support.protobuf.MediatorStore storeProto = bisq.support.protobuf.MediatorStore.newBuilder()
+                .addMediationCases(new BisqEasyMediationCase(request).toProto(false))
+                .build();
+
+        MediatorStore loaded = MediatorStore.fromProto(
+                bisq.support.protobuf.MediatorStore.parseFrom(storeProto.toByteArray()));
+
+        assertEquals(storeProto, loaded.toProto(false));
+        assertEquals(request, BisqEasyMediationRequest.fromProto(
+                bisq.support.protobuf.MediationRequest.parseFrom(request.toValueProto(false).toByteArray())));
+    }
+
     @Test
     void roundTripKeepsPeersRequest() throws UnresolvableProtobufException {
         BisqEasyMediationRequest requestersRequest = createRequest(requester, peer, "hi");
