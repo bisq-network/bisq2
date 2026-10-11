@@ -18,7 +18,12 @@
 package bisq.trade.bisq_easy.validation;
 
 import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
+import bisq.common.monetary.Monetary;
 import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
+import bisq.user.reputation.ReputationService;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 
@@ -41,6 +46,26 @@ public final class BisqEasySellerReputationValidator {
     public static final long MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE = TimeUnit.MINUTES.toMillis(12);
 
     private BisqEasySellerReputationValidator() {
+    }
+
+    // The node values the trade amount in USD with its market prices. The seller's score must cover the score which this
+    // value requires. The node has a score for the seller only after it received the seller's user profile and
+    // reputation data. Until then the score is 0 and the check fails.
+    public static void validateSellersReputationForTradeAmount(MarketPriceService marketPriceService,
+                                                               ReputationService reputationService,
+                                                               Market market,
+                                                               Monetary quoteSideAmount,
+                                                               String sellersUserProfileId) {
+        MarketPrice fiatMarketPrice = marketPriceService.findMarketPrice(market)
+                .orElseThrow(() -> new IllegalArgumentException("No market price available. market=" + market));
+        MarketPrice usdMarketPrice = marketPriceService.findMarketPrice(MarketRepository.getUSDBitcoinMarket())
+                .orElseThrow(() -> new IllegalArgumentException("No USD market price available."));
+        validateMarketPrices(fiatMarketPrice, usdMarketPrice);
+        long requiredReputationScore = BisqEasyTradeAmountLimits.getRequiredReputationScore(fiatMarketPrice.getPriceQuote(),
+                usdMarketPrice.getPriceQuote(),
+                quoteSideAmount);
+        long sellersReputationScore = reputationService.getReputationScore(sellersUserProfileId).getTotalScore();
+        validateSellersReputation(sellersReputationScore, requiredReputationScore);
     }
 
     public static void validateSellersReputation(long sellersReputationScore, long requiredReputationScore) {
