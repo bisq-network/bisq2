@@ -56,10 +56,12 @@ import bisq.user.reputation.data.AuthorizedSignedWitnessData;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.typesafe.config.ConfigFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Base64;
@@ -271,6 +273,31 @@ class Bisq1BridgeRequestServiceTest {
         assertThat(service.persistAccountAgeRequest(first)).isTrue();
         assertThat(service.persistAccountAgeRequest(conflicting)).isFalse();
         assertThat(service.getPersistableStore().getAccountAgeRequests()).containsExactly(first);
+    }
+
+    // The node reads all stores once at its start, before it creates this service, so the service reads its store
+    // itself. Otherwise the oracle forgets its witness bindings at every restart, and binds a witness to a second
+    // profile (see docs/specifications/reputation/account-age.md).
+    @Test
+    void witnessBindingOfAnEarlierRunPreventsABindingToAnotherProfile(@TempDir Path dataDir) {
+        AuthorizeAccountAgeRequest first = accountAgeRequest("12".repeat(20));
+        AuthorizeAccountAgeRequest conflicting = accountAgeRequest("34".repeat(20));
+        Bisq1BridgeRequestService earlierRun = createStartableService(new PersistenceService(dataDir),
+                mock(NetworkService.class),
+                mock(AccountAgeWitnessGrpcService.class));
+        assertThat(earlierRun.persistAccountAgeRequest(first)).isTrue();
+
+        Bisq1BridgeRequestService service = createStartableService(new PersistenceService(dataDir),
+                mock(NetworkService.class),
+                mock(AccountAgeWitnessGrpcService.class));
+        service.initialize().join();
+        try {
+            assertThat(service.getPersistableStore().getAccountAgeRequests()).containsExactly(first);
+            assertThat(service.persistAccountAgeRequest(conflicting)).isFalse();
+            assertThat(service.getPersistableStore().getAccountAgeRequests()).containsExactly(first);
+        } finally {
+            service.shutdown().join();
+        }
     }
 
     @Test
@@ -967,6 +994,18 @@ class Bisq1BridgeRequestServiceTest {
     // A service whose initialize() completes: the gRPC services of the bridge start and stop at once
     private static Bisq1BridgeRequestService createStartableService(NetworkService networkService,
                                                                     AccountAgeWitnessGrpcService accountAgeWitnessGrpcService) {
+        PersistenceService persistenceService = mock(PersistenceService.class);
+        @SuppressWarnings("unchecked")
+        Persistence<Bisq1BridgeRequestStore> persistence = mock(Persistence.class);
+        when(persistenceService.<Bisq1BridgeRequestStore>getOrCreatePersistence(any(), any(), any()))
+                .thenReturn(persistence);
+        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
+        return createStartableService(persistenceService, networkService, accountAgeWitnessGrpcService);
+    }
+
+    private static Bisq1BridgeRequestService createStartableService(PersistenceService persistenceService,
+                                                                    NetworkService networkService,
+                                                                    AccountAgeWitnessGrpcService accountAgeWitnessGrpcService) {
         when(accountAgeWitnessGrpcService.initialize()).thenReturn(CompletableFuture.completedFuture(true));
         when(accountAgeWitnessGrpcService.shutdown()).thenReturn(CompletableFuture.completedFuture(true));
         SignedWitnessGrpcService signedWitnessGrpcService = mock(SignedWitnessGrpcService.class);
@@ -975,12 +1014,6 @@ class Bisq1BridgeRequestServiceTest {
         BondedRoleGrpcService bondedRoleGrpcService = mock(BondedRoleGrpcService.class);
         when(bondedRoleGrpcService.initialize()).thenReturn(CompletableFuture.completedFuture(true));
         when(bondedRoleGrpcService.shutdown()).thenReturn(CompletableFuture.completedFuture(true));
-        PersistenceService persistenceService = mock(PersistenceService.class);
-        @SuppressWarnings("unchecked")
-        Persistence<Bisq1BridgeRequestStore> persistence = mock(Persistence.class);
-        when(persistenceService.<Bisq1BridgeRequestStore>getOrCreatePersistence(any(), any(), any()))
-                .thenReturn(persistence);
-        when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
         KeyPair authorizedKeyPair = KeyGeneration.generateDefaultEcKeyPair();
         return new Bisq1BridgeRequestService(persistenceService,
                 networkService,
