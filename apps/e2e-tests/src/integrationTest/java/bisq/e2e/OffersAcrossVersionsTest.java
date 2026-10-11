@@ -92,7 +92,7 @@ class OffersAcrossVersionsTest {
     }
 
     // A buy offer with market price and a range, a sell offer with float price and a fixed amount, and a buy offer with
-    // the market quote of the node as fixed price, as a mobile client may create it
+    // the market quote of the node as fixed price. FixedPriceAcrossUpgradeTest uses the fixed price of Bisq Connect.
     static List<String> createOffers(ApiClient api) {
         JsonNode market = api.market("USD");
         List<String> offerIds = new ArrayList<>();
