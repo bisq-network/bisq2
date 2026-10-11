@@ -48,6 +48,8 @@ public final class TradeExceptionHandler {
         return switch (e.getRestriction()) {
             case HALT_TRADING -> Res.get("trade.error.tradingHalted");
             case MIN_VERSION_REQUIRED -> Res.get("trade.error.minVersionRequired", e.findMinRequiredVersion().orElse(""));
+            case MAKER_VERSION_BELOW_MIN_REQUIRED -> Res.get("trade.error.makerVersionBelowMinRequired",
+                    e.findMinRequiredVersion().orElse(""));
         };
     }
 }
