@@ -59,6 +59,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         }
     }
 
+    // The stores of the types which nodes of earlier versions refresh. Their removals need signature V2 (see
+    // isRemovalWithoutSignatureV2Refused).
+    private static final Set<String> STORES_REFRESHED_BY_EARLIER_VERSIONS = Set.of("UserProfile");
+
     // TODO Use a field for a single handler as only one listener is used by StorageService
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Object mapAccessLock = new Object();
@@ -200,6 +204,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         long now = clock.now();
         if (request.isRequiredSignatureV2Missing(now)) {
             log.debug("Signature V2 is missing at remove. storageKey={}", request.getStorageKey());
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+        if (isRemovalWithoutSignatureV2Refused(request)) {
+            log.debug("A removal of this type needs signature V2. storageKey={}", request.getStorageKey());
             return DataStorageResult.failed().signatureV2Missing();
         }
 
@@ -439,7 +447,18 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     // no such data.
     @Override
     protected boolean isToPrune(AuthenticatedDataRequest request) {
-        return super.isToPrune(request) || isAuthorizedKeyNotAllowed(request);
+        return super.isToPrune(request) || isAuthorizedKeyNotAllowed(request) || isRemovalWithoutSignatureV2Refused(request);
+    }
+
+    // Nodes up to version 2.1.13 refresh their user profile with signature V1 over the hash of the data. Signature V1 of
+    // a removal signs the same bytes, so a peer which receives such a refresh can turn it into a removal of the profile,
+    // with any sequence number. Signature V2 separates the two. So the store of user profiles accepts and keeps only
+    // removals with signature V2. A profile which its owner removed with an earlier version stays until it expires (see
+    // docs/specifications/network/storage-request-signatures.md).
+    private boolean isRemovalWithoutSignatureV2Refused(AuthenticatedDataRequest request) {
+        return request instanceof RemoveAuthenticatedDataRequest &&
+                !request.isSignatureV2Present() &&
+                STORES_REFRESHED_BY_EARLIER_VERSIONS.contains(getStoreKey());
     }
 
     private static boolean isAuthorizedKeyNotAllowed(AuthenticatedDataRequest request) {
@@ -451,7 +470,8 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     }
 
     // Removes the entries which isToPrune selects: those which have expired, those without signature V2 when the node
-    // requires it, and those whose authorized key this version does not allow.
+    // requires it, those whose authorized key this version does not allow, and the removals of user profiles without
+    // signature V2.
     // A request can replace an entry after it was selected, so an entry is removed only if the map still holds it.
     // The removal holds the lock which add, remove and refresh hold.
     private void pruneExpired() {
