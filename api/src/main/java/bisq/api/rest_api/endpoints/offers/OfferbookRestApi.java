@@ -36,6 +36,7 @@ import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.user.UserService;
@@ -175,6 +176,11 @@ public class OfferbookRestApi extends RestApiBase {
                     .collect(Collectors.toList());
             AmountSpec amountSpec = DtoMappings.AmountSpecMapping.toBisq2Model(request.amountSpec());
             PriceSpec priceSpec = DtoMappings.PriceSpecMapping.toBisq2Model(request.priceSpec());
+            if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
+                // The offer carries a canonical fixed price, whatever form the client sent. Bisq Connect sends the
+                // base side id BTC and a rounded value (see docs/specifications/offer/fixed-price.md, rule 6).
+                priceSpec = FixPriceSpec.fromClientQuote(fixPriceSpec.getPriceQuote());
+            }
             List<String> supportedLanguageCodes = new ArrayList<>(request.supportedLanguageCodes());
             String chatMessageText = BisqEasyServiceUtil.createOfferBookMessageFromPeerPerspective(userIdentity.getNickName(),
                     marketPriceService,

@@ -26,6 +26,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.FixPriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -102,6 +103,13 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
         bisqEasyOffer.ifPresent(offer ->
                 checkArgument(channelId.equals(BisqEasyOfferbookChannel.createId(offer.getMarket())),
                         "The channel of an offerbook message must be the channel of the market of its offer"));
+        // An offer in the offerbook needs a canonical fixed price, so that every client shows the price which the
+        // trade uses (rule 5 of docs/specifications/offer/fixed-price.md)
+        bisqEasyOffer.ifPresent(offer -> {
+            if (offer.getPriceSpec() instanceof FixPriceSpec fixPriceSpec) {
+                fixPriceSpec.verifyCanonical();
+            }
+        });
     }
 
     @Override

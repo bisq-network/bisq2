@@ -25,12 +25,17 @@ import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.market.MarketRepository;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.MarketPriceSpec;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.user.profile.UserProfile;
 
 import java.util.List;
@@ -67,18 +72,49 @@ final class TestContracts {
         return contract(offerId, maker, taker, mediator, List.of("en"));
     }
 
+    // The offer has the fixed price M1 of Bisq Connect, and the agreed price is M3, so that the contract also carries
+    // a rounded value. From PriceQuoteVOFactory.fromPrice of bisq-mobile 7f9cddce7b: the base side id is BTC, not
+    // BTC [crypto], and the value is rounded to 8 significant digits.
+    static BisqEasyContract contractWithFixedPriceOfBisqConnect(UserProfile maker,
+                                                                UserProfile taker,
+                                                                UserProfile mediator) {
+        return contract("offer-1",
+                maker,
+                taker,
+                mediator,
+                List.of("en"),
+                mobileFixPriceSpec(643_211_200L, 643_211_200L),
+                mobileFixPriceSpec(643_211_230L, 643_211_234L));
+    }
+
     private static BisqEasyContract contract(String offerId,
                                              UserProfile maker,
                                              UserProfile taker,
                                              UserProfile mediator,
                                              List<String> supportedLanguageCodes) {
+        return contract(offerId,
+                maker,
+                taker,
+                mediator,
+                supportedLanguageCodes,
+                new MarketPriceSpec(),
+                new MarketPriceSpec());
+    }
+
+    private static BisqEasyContract contract(String offerId,
+                                             UserProfile maker,
+                                             UserProfile taker,
+                                             UserProfile mediator,
+                                             List<String> supportedLanguageCodes,
+                                             PriceSpec offerPriceSpec,
+                                             PriceSpec agreedPriceSpec) {
         BisqEasyOffer offer = new BisqEasyOffer(offerId,
                 OFFER_DATE,
                 maker.getNetworkId(),
                 Direction.SELL,
                 MarketRepository.getUSDBitcoinMarket(),
                 new QuoteSideFixedAmountSpec(QUOTE_AMOUNT),
-                new MarketPriceSpec(),
+                offerPriceSpec,
                 List.of(TradeProtocolType.BISQ_EASY),
                 List.of(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN))),
                 List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA))),
@@ -95,8 +131,14 @@ final class TestContracts {
                 new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
                 new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
                 Optional.of(mediator),
-                new MarketPriceSpec(),
+                agreedPriceSpec,
                 60_000_0000);
+    }
+
+    private static FixPriceSpec mobileFixPriceSpec(long value, long quoteSideAmount) {
+        return new FixPriceSpec(new PriceQuote(value,
+                new Coin("BTC", 100_000_000L, "BTC", 8, 4),
+                new Fiat("USD", quoteSideAmount, "USD", 4, 2)));
     }
 
     // Each trader's request carries its own deserialized copy of the contract.
