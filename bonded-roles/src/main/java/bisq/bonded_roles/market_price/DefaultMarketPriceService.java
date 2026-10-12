@@ -132,7 +132,10 @@ public class DefaultMarketPriceService extends RateLimitedPersistenceClient<Mark
                         .map(BondedRole::getAuthorizedBondedRole)
                         .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey))
                         .findAny();
+                // The oracle data keeps the prices of markets which this node does not know, as its signature covers
+                // all entries. The node uses only the prices of the markets which it knows.
                 Map<Market, MarketPrice> map = authorizedMarketPriceData.getMarketPriceByCurrencyMap().entrySet().stream()
+                        .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
                         .peek(e -> e.getValue().setSource(MarketPrice.Source.PROPAGATED_IN_NETWORK))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 applyNewMap(map);
