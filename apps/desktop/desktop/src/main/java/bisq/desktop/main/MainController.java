@@ -36,16 +36,15 @@ import bisq.desktop.main.left.LeftNavController;
 import bisq.desktop.main.notification.NotificationPanelController;
 import bisq.desktop.main.top.TopPanelController;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.overlay.OverlayController;
+import bisq.desktop.overlay.restore.RestoreFromBackupController;
+import bisq.desktop.overlay.unreadable_store_files.UnreadableStoreFilesController;
 import bisq.evolution.updater.UpdaterService;
 import bisq.evolution.updater.UpdaterUtils;
+import bisq.persistence.UnreadableStoreArchive;
 import bisq.persistence.backup.RestoreService;
-import javafx.collections.ListChangeListener;
-import javafx.scene.Node;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.net.URLClassLoader;
 import java.util.Optional;
 
@@ -59,9 +58,8 @@ public class MainController extends NavigationController {
     private final LeftNavController leftNavController;
     private final UpdaterService updaterService;
     private final RestoreService restoreService;
+    private final UnreadableStoreArchive unreadableStoreArchive;
     private final ApplicationService.Config config;
-    @Nullable
-    private ListChangeListener<Node> nodeListChangeListener;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
@@ -69,6 +67,7 @@ public class MainController extends NavigationController {
         this.serviceProvider = serviceProvider;
         updaterService = serviceProvider.getUpdaterService();
         restoreService = serviceProvider.getPersistenceService().getRestoreService();
+        unreadableStoreArchive = serviceProvider.getPersistenceService().getUnreadableStoreArchive();
         config = serviceProvider.getConfig();
 
         leftNavController = new LeftNavController(serviceProvider);
@@ -127,21 +126,25 @@ public class MainController extends NavigationController {
     }
 
     private void maybeShowRestorePopup() {
+        boolean showUnreadableStoreFiles = UnreadableStoreFilesController.isToBeShown(unreadableStoreArchive);
         if (!restoreService.getRestoredBackupFileInfos().isEmpty()) {
-            // make sure updater service is not removing the restore popup
-            nodeListChangeListener = change -> {
-                change.next();
-                if (!change.wasAdded()) {
-                    addUpdaterServiceObservers();
-                    OverlayController.getInstance().getView().getRoot().getChildren().removeListener(nodeListChangeListener);
-                }
-            };
-
-            OverlayController.getInstance().getView().getRoot().getChildren().addListener(nodeListChangeListener);
-            UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.RESTORE_FROM_BACKUP)).after(500);
+            // The next overlay and the updater wait for the restore dialog to close, so that they do not replace it
+            Runnable closeHandler = showUnreadableStoreFiles
+                    ? this::showUnreadableStoreFiles
+                    : this::addUpdaterServiceObservers;
+            RestoreFromBackupController.InitData initData = new RestoreFromBackupController.InitData(closeHandler);
+            UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.RESTORE_FROM_BACKUP, initData)).after(500);
+        } else if (showUnreadableStoreFiles) {
+            UIScheduler.run(this::showUnreadableStoreFiles).after(500);
         } else {
             addUpdaterServiceObservers();
         }
+    }
+
+    private void showUnreadableStoreFiles() {
+        // The updater observers start after this overlay closes, so that the updater does not replace it
+        Navigation.navigateTo(NavigationTarget.UNREADABLE_STORE_FILES,
+                new UnreadableStoreFilesController.InitData(this::addUpdaterServiceObservers));
     }
 
     private void addUpdaterServiceObservers() {

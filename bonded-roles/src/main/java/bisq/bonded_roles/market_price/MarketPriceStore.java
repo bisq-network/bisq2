@@ -26,6 +26,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -96,6 +97,14 @@ final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    /**
+     * The market prices come from the network, so no copy is kept when the file cannot be read completely.
+     */
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.NO_ARCHIVE;
     }
 
     @Override

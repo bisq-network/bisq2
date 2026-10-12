@@ -23,6 +23,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.network.Address;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -77,6 +78,14 @@ final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    /**
+     * The peers come from the network, so no copy is kept when the file cannot be read completely.
+     */
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.NO_ARCHIVE;
     }
 
     @Override

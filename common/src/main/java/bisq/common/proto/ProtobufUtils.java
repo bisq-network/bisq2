@@ -149,6 +149,7 @@ public class ProtobufUtils {
             try {
                 results.add(converter.fromProto(proto));
             } catch (UnresolvableProtobufException | RuntimeException e) {
+                SkippedEntryCounter.countSkippedEntry();
                 logSkippedEntry(proto, e, ++numSkipped);
             }
         }
@@ -169,6 +170,7 @@ public class ProtobufUtils {
             try {
                 results.add(Map.entry(entry.getKey(), converter.fromProto(entry.getValue())));
             } catch (UnresolvableProtobufException | RuntimeException e) {
+                SkippedEntryCounter.countSkippedEntry();
                 logSkippedEntry(entry.getValue(), e, ++numSkipped);
             }
         }
