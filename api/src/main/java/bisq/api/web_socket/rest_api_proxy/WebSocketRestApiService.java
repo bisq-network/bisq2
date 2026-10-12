@@ -97,25 +97,24 @@ public class WebSocketRestApiService implements Service {
     }
 
     public void onMessage(String json, WebSocket webSocket) {
-        Optional<WebSocketRestApiRequest> webSocketRestApiRequest = WebSocketRestApiRequest.fromJson(json);
-        webSocketRestApiRequest.ifPresent(WebSocketRestApiRequest::clearHeaders);
-        webSocketRestApiRequest
-                .map(request -> sendToRestApiServer(request, webSocket))
-                .ifPresent(future -> {
-                    future.whenComplete((response, throwable) -> {
-                        if (throwable == null) {
-                            response.toJson()
-                                    .ifPresentOrElse(webSocket::send,
-                                            () -> log.warn("Message was not sent to websocket." +
-                                                    "\nJson={}", JsonUtil.redactCredentials(json)));
-                        } else {
-                            log.warn("REST API call failed for request: {}", JsonUtil.redactCredentials(json), throwable);
-                            String requestId = webSocketRestApiRequest.get().getRequestId();
-                            new WebSocketRestApiResponse(requestId, 500, throwable.getMessage()).toJson()
-                                    .ifPresent(webSocket::send);
-                        }
-                    });
-                });
+        WebSocketRestApiRequest.fromJson(json).ifPresent(request -> {
+            request.clearHeaders();
+            // Logged as an object and not as the JSON which the client sent: the JSON contains the body,
+            // and toString() of the request does not print the body.
+            sendToRestApiServer(request, webSocket).whenComplete((response, throwable) -> {
+                if (throwable == null) {
+                    response.toJson()
+                            .ifPresentOrElse(webSocket::send,
+                                    () -> log.warn("Message was not sent to websocket. Request: {}", request));
+                } else {
+                    // The message of the exception can name internal classes, hosts and ports. It stays in
+                    // the log of the node, and the client gets a generic message.
+                    log.warn("REST API call failed for request: {}", request, throwable);
+                    new WebSocketRestApiResponse(request.getRequestId(), 500, "Request failed").toJson()
+                            .ifPresent(webSocket::send);
+                }
+            });
+        });
     }
 
     private CompletableFuture<WebSocketRestApiResponse> sendToRestApiServer(WebSocketRestApiRequest request,
