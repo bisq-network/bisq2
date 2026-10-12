@@ -18,6 +18,8 @@
 package bisq.persistence;
 
 import bisq.common.file.FileMutatorUtils;
+import bisq.common.proto.SkippedEntryCounter;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.persistence.backup.BackupFileInfo;
 import bisq.persistence.backup.RestoreService;
@@ -32,6 +34,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -39,12 +42,28 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
 
     private final PersistableStoreFileManager storeFileManager;
     private final RestoreService restoreService;
+    private final UnreadableStoreFilePolicy unreadableStoreFilePolicy;
+    private final Optional<UnreadableStoreArchive> unreadableStoreArchive;
     private final Path storeFilePath;
     private final Path parentDirectoryPath;
 
     public PersistableStoreReaderWriter(PersistableStoreFileManager storeFileManager, RestoreService restoreService) {
+        this(storeFileManager, restoreService, UnreadableStoreFilePolicy.NO_ARCHIVE, Optional.empty());
+    }
+
+    /**
+     * @param unreadableStoreArchive present exactly for {@link UnreadableStoreFilePolicy#ARCHIVE}
+     */
+    public PersistableStoreReaderWriter(PersistableStoreFileManager storeFileManager,
+                                        RestoreService restoreService,
+                                        UnreadableStoreFilePolicy unreadableStoreFilePolicy,
+                                        Optional<UnreadableStoreArchive> unreadableStoreArchive) {
+        checkArgument((unreadableStoreFilePolicy == UnreadableStoreFilePolicy.ARCHIVE) == unreadableStoreArchive.isPresent(),
+                "An archive is required for the policy ARCHIVE and only for it");
         this.storeFileManager = storeFileManager;
         this.restoreService = restoreService;
+        this.unreadableStoreFilePolicy = unreadableStoreFilePolicy;
+        this.unreadableStoreArchive = unreadableStoreArchive;
         this.storeFilePath = storeFileManager.getStoreFilePath();
         this.parentDirectoryPath = storeFilePath.getParent();
     }
@@ -103,8 +122,13 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
     }
 
     private Optional<T> readStore(Path path) {
-        try {
+        try (SkippedEntryCounter skippedEntryCounter = SkippedEntryCounter.open()) {
             PersistableStore<?> persistableStore = readStoreFromFile(path);
+            // The store deletes the skipped entries at its next write, so the copy has to be taken now
+            if (skippedEntryCounter.getNumSkippedEntries() > 0) {
+                unreadableStoreArchive.ifPresent(archive ->
+                        archive.archive(storeFilePath, path, UnreadableStoreArchive.Reason.SKIPPED_ENTRIES));
+            }
 
             // copy to main store file path if read from backup, because in case of a corrupted main file the main folder would not contain any file at all
             if (!path.equals(storeFilePath)) {
@@ -116,10 +140,40 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             return (Optional) Optional.of(persistableStore);
 
         } catch (Exception e) {
-            log.error("Couldn't read {} from file.", path, e);
-            tryToBackupCorruptedStoreFile(path);
+            // The message of a parse failure can carry values of the store, so only its type and stack trace are
+            // logged. A file system error names a path and the error of the operating system.
+            Throwable rootCause = ExceptionUtil.getRootCause(e);
+            String cause = rootCause instanceof IOException ?
+                    rootCause.toString() :
+                    ExceptionUtil.getSafeStackTraceAsString(e);
+            log.error("Couldn't read {} from file. Cause: {}", path, cause);
+            handleUnreadableFile(path);
         }
         return Optional.empty();
+    }
+
+    private void handleUnreadableFile(Path path) {
+        switch (unreadableStoreFilePolicy) {
+            case ARCHIVE -> {
+                boolean kept = unreadableStoreArchive.orElseThrow()
+                        .archive(storeFilePath, path, UnreadableStoreArchive.Reason.NOT_READABLE);
+                if (!kept) {
+                    // A restore from a backup would overwrite a file which stays at the store path
+                    tryToBackupCorruptedStoreFile(path);
+                }
+            }
+            case NO_ARCHIVE -> tryToBackupCorruptedStoreFile(path);
+            case DELETE -> deleteUnreadableFile(path);
+        }
+    }
+
+    private void deleteUnreadableFile(Path path) {
+        try {
+            Files.deleteIfExists(path);
+            log.warn("Deleted the store file {} which cannot be read, as the store requires", path);
+        } catch (IOException e) {
+            log.error("Could not delete the store file {} which cannot be read", path, e);
+        }
     }
 
     private PersistableStore<?> readStoreFromFile(Path path) throws IOException, UnresolvableProtobufException {
