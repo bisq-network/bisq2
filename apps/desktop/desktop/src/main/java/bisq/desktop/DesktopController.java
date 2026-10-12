@@ -41,6 +41,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
+import bisq.desktop.overlay.unreadable_store_files.UnreadableStoreFilesController;
 import bisq.desktop.splash.SplashController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -332,10 +333,14 @@ public class DesktopController extends NavigationController {
         boolean hasUserIdentities = serviceProvider.getUserService().getUserIdentityService().hasUserIdentities();
 
         if (!hasUserIdentities) {
-            if (dontShowAgainService.showAgain(WELCOME)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
+            // Before onboarding, because the unreadable data can be the user identity itself. The main controller shows
+            // it otherwise.
+            if (UnreadableStoreFilesController.isToBeShown(
+                    serviceProvider.getPersistenceService().getUnreadableStoreArchive())) {
+                Navigation.navigateTo(NavigationTarget.UNREADABLE_STORE_FILES,
+                        new UnreadableStoreFilesController.InitData(this::navigateToOnboarding));
             } else {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
+                navigateToOnboarding();
             }
         } else {
             // After the domain is initialized we show the application content
@@ -351,6 +356,14 @@ public class DesktopController extends NavigationController {
                                 }
                             },
                             () -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
+        }
+    }
+
+    private void navigateToOnboarding() {
+        if (dontShowAgainService.showAgain(WELCOME)) {
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
+        } else {
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
         }
     }
 

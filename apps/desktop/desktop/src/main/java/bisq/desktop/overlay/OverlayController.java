@@ -61,6 +61,7 @@ import bisq.desktop.overlay.onboarding.OnboardingController;
 import bisq.desktop.overlay.restore.RestoreFromBackupController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
+import bisq.desktop.overlay.unreadable_store_files.UnreadableStoreFilesController;
 import bisq.desktop.overlay.update.UpdaterController;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
@@ -110,6 +111,7 @@ public class OverlayController extends NavigationController {
     private Runnable onShownHandler;
     @Getter
     private boolean shown;
+    @Getter
     @Setter
     private boolean useEscapeKeyHandler;
     @Setter
@@ -157,6 +159,7 @@ public class OverlayController extends NavigationController {
             case ONBOARDING -> Optional.of(new OnboardingController(serviceProvider));
 
             case RESTORE_FROM_BACKUP -> Optional.of(new RestoreFromBackupController(serviceProvider));
+            case UNREADABLE_STORE_FILES -> Optional.of(new UnreadableStoreFilesController(serviceProvider));
 
             case BISQ_EASY_VIDEO -> Optional.of(new BisqEasyVideoController(serviceProvider));
             case BISQ_EASY_GUIDE -> Optional.of(new BisqEasyGuideController(serviceProvider));

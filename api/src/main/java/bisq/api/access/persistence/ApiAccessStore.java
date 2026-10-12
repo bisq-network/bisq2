@@ -25,6 +25,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -292,6 +293,16 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    /**
+     * Nothing is kept of an unreadable store file: a store written before secrets were hashed holds plaintext client
+     * secrets, and {@code ApiAccessStoreService} deletes the backups so that the plaintext does not outlive its
+     * migration. A copy would keep it for months. A client whose entry cannot be read has to pair again anyway.
+     */
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.DELETE;
     }
 
     @Override
