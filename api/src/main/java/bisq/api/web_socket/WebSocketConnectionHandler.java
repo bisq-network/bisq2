@@ -21,7 +21,6 @@ package bisq.api.web_socket;
 import bisq.api.access.filter.Headers;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
-import bisq.api.web_socket.util.JsonUtil;
 import bisq.api.web_socket.util.WebSocketIdentity;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
@@ -115,19 +114,17 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
             closeQuietly(webSocket);
             return;
         }
-        // Debug rather than info: this is one full message plus a redaction pass per message, which
-        // production should not pay for. Redacted because a client released before the node took the
-        // identity from the handshake puts its session id into the payload.
-        if (log.isDebugEnabled()) {
-            log.debug("Received message {}", JsonUtil.redactCredentials(message));
-        }
+        // A message can contain the body of a REST request, for example the private key of a new user
+        // identity, and older clients put their session ID into it. So the log gets only the length of a
+        // message, never the message.
+        log.debug("Received a message of length {}", message.length());
         CompletableFuture.runAsync(() -> {
             if (subscriptionService.canHandle(message)) {
                 subscriptionService.onMessage(message, webSocket);
             } else if (webSocketRestApiService.canHandle(message)) {
                 webSocketRestApiService.onMessage(message, webSocket);
             } else {
-                log.error("No service found for handling message: {}", JsonUtil.redactCredentials(message));
+                log.error("No service found for handling a message of length {}", message.length());
             }
         }, executor);
     }
