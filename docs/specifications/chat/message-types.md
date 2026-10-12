@@ -48,8 +48,25 @@ ID cannot be migrated is ignored in the same place as a message of an unsupporte
 such a message does not fail: the message keeps the ID which it carries. Code which handles a
 message before the chat checks it reads the channel ID as well, for example the network layer when
 it copies its set of received messages into a hash-based set. So the message does not stop the
-processing of other messages, for example when a client starts. The message is not rejected at
-parsing, because a newer version can add channels whose IDs this version cannot migrate.
+processing of other messages, for example when a client starts.
+
+A public discussion or support message (`CommonPublicChatMessage`) whose channel ID does not name a
+channel of `SubDomain` fails at parsing. The channel IDs of earlier versions still name such
+channels, because `SubDomain` resolves and migrates them. A node therefore does not accept, store,
+relay or serve a message with another channel ID.
+
+Reasons:
+
+- Unmodified clients of all versions publish public discussion and support messages only in these
+  channels, so the rule follows rule 3 of
+  [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md).
+- Nodes up to version 2.1.13 cannot read the channel ID of such a message: their getter throws, and
+  their chat stops at its start when it loads a stored message with such an ID. Before this rule,
+  nodes of this version stored, relayed and served such a message, so one message of a modified
+  client stopped the start of every node of version 2.1.13 which received it, for the 10 days of
+  its lifetime.
+- A private message between two users keeps the tolerant reading of its channel ID: nodes which
+  relay or store it see only its encrypted form, so they cannot check the ID.
 
 ## Messages added to a channel
 
@@ -65,7 +82,10 @@ of an own identity is ignored (`PrivateChatChannelService.isValid`).
 ## Compatibility
 
 The rule does not change the protocol or the storage format. A type that is added to a kind of chat
-later must be supported by receivers in a release before the first release that sends it. A type
+later must be supported by receivers in a release before the first release that sends it. The same
+holds for a public discussion or support channel: a release must know its `SubDomain` before the
+first release publishes messages in it, because nodes without it drop these messages and do not
+relay them. A type
 value that a client does not know is read as `TEXT`. Channel IDs of older versions stay valid, as
 the migration maps them to current channels.
 
@@ -81,5 +101,7 @@ from the network without closing the connection.
 
 ## Not covered
 
-Clients without this rule still show received messages of any type. They receive public messages of
+Clients without this rule still show received messages of any type. Nodes of version 2.1.13 and
+earlier still accept a public message with a channel ID which they cannot read, and relay it to
+each other, so such a message can still stop the start of such a node. They receive public messages of
 other types only from nodes of earlier versions or from the modified client which creates them.

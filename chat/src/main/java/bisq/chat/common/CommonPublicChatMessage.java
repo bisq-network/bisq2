@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -83,9 +84,15 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
         verify();
     }
 
+    // Unmodified clients of all versions publish only in the channels of SubDomain. A node of version 2.1.13 or earlier
+    // fails at its start when it stored a message whose channel ID it cannot resolve, so a node does not accept, store
+    // or relay such a message (see docs/specifications/chat/message-types.md). The message names no value which it
+    // rejects (rule 7 of docs/specifications/network/validation-at-parsing.md).
     @Override
     public void verify() {
         super.verify();
+        checkArgument(SubDomain.find(channelId).isPresent(),
+                "The channel ID does not name a channel of the discussion or support chat");
     }
 
     @Override
