@@ -21,6 +21,7 @@ import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
 
@@ -400,5 +401,12 @@ class ApiAccessStoreTest {
         PermissionSet reloadedSet = reloaded.getPermissionsByClientId().get("client-1");
         assertFalse(reloadedSet.isGrantAll());
         assertEquals(Set.of(Permission.MARKET_PRICE), reloadedSet.getPermissions());
+    }
+
+    // A copy of an unreadable store file would keep plaintext client secrets of older stores, which the store service
+    // deletes on purpose (see docs/specifications/persistence/unreadable-store-files.md)
+    @Test
+    void anUnreadableStoreFileIsDeleted() {
+        assertEquals(UnreadableStoreFilePolicy.DELETE, new ApiAccessStore().getUnreadableStoreFilePolicy());
     }
 }

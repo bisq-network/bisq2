@@ -46,6 +46,16 @@ public class Persistence<T extends PersistableStore<T>> {
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
     public Persistence(Path directoryPath, String fileName, MaxBackupSize maxBackupSize, RestoreService restoreService) {
+        this(directoryPath, fileName, maxBackupSize, restoreService, UnreadableStoreFilePolicy.NO_ARCHIVE,
+                Optional.empty());
+    }
+
+    public Persistence(Path directoryPath,
+                       String fileName,
+                       MaxBackupSize maxBackupSize,
+                       RestoreService restoreService,
+                       UnreadableStoreFilePolicy unreadableStoreFilePolicy,
+                       Optional<UnreadableStoreArchive> unreadableStoreArchive) {
         this.fileName = fileName;
         String storageFileName = StringUtils.camelCaseToSnakeCase(fileName);
         Path resolved = directoryPath.resolve(storageFileName + EXTENSION).normalize();
@@ -55,7 +65,8 @@ public class Persistence<T extends PersistableStore<T>> {
         }
         storePath = resolved;
         var storeFileManager = new PersistableStoreFileManager(storePath, maxBackupSize);
-        persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager, restoreService);
+        persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager, restoreService,
+                unreadableStoreFilePolicy, unreadableStoreArchive);
     }
 
     public Optional<T> read() {
