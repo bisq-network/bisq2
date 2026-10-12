@@ -22,7 +22,6 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.proto.ProtoResolver;
-import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -32,7 +31,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +45,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AuthorizedMarketPriceData implements OracleNodeAuthorizedData {
     private static final int VERSION = 1;
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
+    private static final int MAX_NUM_ENTRIES = 200;
 
     public static final MetaData META_DATA = new MetaData(TTL, DEFAULT_PRIORITY, AuthorizedMarketPriceData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
@@ -80,8 +79,8 @@ public final class AuthorizedMarketPriceData implements OracleNodeAuthorizedData
 
     @Override
     public void verify() {
-        checkArgument(marketPriceByCurrencyMap.size() < 200,
-                "marketPriceByCurrencyMap size must be < 200" + marketPriceByCurrencyMap.size());
+        checkArgument(marketPriceByCurrencyMap.size() < MAX_NUM_ENTRIES,
+                "marketPriceByCurrencyMap size must be < " + MAX_NUM_ENTRIES);
     }
 
     @Override
@@ -102,22 +101,37 @@ public final class AuthorizedMarketPriceData implements OracleNodeAuthorizedData
     public static AuthorizedMarketPriceData fromProto(bisq.bonded_roles.protobuf.AuthorizedMarketPriceData proto)
             throws UnresolvableProtobufException {
         try {
-            List<Map.Entry<String, bisq.bonded_roles.protobuf.MarketPrice>> entriesOfKnownMarkets =
-                    proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
-                            .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
-                            .toList();
-            Map<Market, MarketPrice> map = ProtobufUtils.fromProtoStream(entriesOfKnownMarkets,
-                            e -> Map.entry(MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
-                                    MarketPrice.fromProto(e.getValue())))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            // We keep every entry, also of a market which this node does not know. The oracle node signs the data as
+            // a whole and the proof of work of the message commits to its hash, so dropping an entry would make this
+            // node reject the data and close the connection to the peer which sent it. The set of known markets
+            // depends on the currency data of the runtime, which differs between JDK versions and Android.
+            // See docs/specifications/bonded-roles/market-prices.md.
+            // Checked before parsing the entries, so that an oversized map costs no parsing
+            checkArgument(proto.getMarketPriceByCurrencyMapCount() < MAX_NUM_ENTRIES,
+                    "marketPriceByCurrencyMap size must be < " + MAX_NUM_ENTRIES);
+            TreeMap<Market, MarketPrice> map = new TreeMap<>();
+            for (Map.Entry<String, bisq.bonded_roles.protobuf.MarketPrice> entry : proto.getMarketPriceByCurrencyMapMap().entrySet()) {
+                map.put(toMarket(entry.getKey()), MarketPrice.fromProto(entry.getValue()));
+            }
             return new AuthorizedMarketPriceData(
                     proto.getVersion(),
-                    new TreeMap<>(map),
+                    map,
                     proto.getStaticPublicKeysProvided()
             );
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }
+    }
+
+    private static Market toMarket(String marketCodes) {
+        return MarketRepository.findAnyMarketByMarketCodes(marketCodes)
+                .orElseGet(() -> {
+                    // The key must be exactly the market codes. With the default limit, split would drop trailing
+                    // empty parts, and "BTC/XYZ/" would replace the entry of "BTC/XYZ".
+                    String[] codes = marketCodes.split("/", -1);
+                    checkArgument(codes.length == 2, "marketCodes must have a base and a quote currency code");
+                    return new Market(codes[0], codes[1], codes[0], codes[1]);
+                });
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

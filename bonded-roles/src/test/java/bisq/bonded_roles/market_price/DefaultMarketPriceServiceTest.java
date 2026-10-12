@@ -94,6 +94,18 @@ class DefaultMarketPriceServiceTest {
         assertThat(service.findMarketPrice(positivePrice.getMarket())).contains(positivePrice);
     }
 
+    @Test
+    void priceOfAnUnknownMarketInOracleDataIsSkippedAndTheOtherPricesAreApplied() {
+        long now = System.currentTimeMillis();
+        AuthorizedMarketPriceData data = oracleData(List.of(marketPrice(PriceQuote.fromFiatPrice(1000, "ZZZ"), now),
+                marketPrice(PriceQuote.fromFiatPrice(60000, "USD"), now)));
+
+        service.onAuthorizedDataAdded(authorizedByOracle(data));
+
+        assertThat(service.getMarketPriceByCurrencyMap()).containsOnlyKeys(USD_MARKET);
+        assertThat(data.getMarketPriceByCurrencyMap()).hasSize(2);
+    }
+
     private AuthorizedData authorizedByOracle(AuthorizedMarketPriceData data) {
         AuthorizedData authorizedData = mock(AuthorizedData.class);
         when(authorizedData.getAuthorizedDistributedData()).thenReturn(data);
