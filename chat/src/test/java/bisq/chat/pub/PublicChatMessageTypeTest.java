@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.chat.common.SubDomain;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.security.keys.KeyGeneration;
@@ -89,7 +90,7 @@ class PublicChatMessageTypeTest {
     private CommonPublicChatMessage commonMessage(ChatMessageType type) {
         return new CommonPublicChatMessage(StringUtils.createUid(),
                 ChatChannelDomain.DISCUSSION,
-                "channelId",
+                SubDomain.DISCUSSION_BISQ.getChannelId(),
                 authorProfileId,
                 Optional.of("text"),
                 Optional.empty(),
