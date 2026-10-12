@@ -44,7 +44,9 @@ message, so they cannot limit the memory which these steps need.
      [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#entries-which-a-node-cannot-parse)).
    - A store skips a persisted entry which it cannot parse when it loads, and keeps the other entries. The exception
      is the store of witness bindings of the oracle node, which must not lose a binding (see
-     [`../reputation/account-age.md`](../reputation/account-age.md#persisted-request-compatibility)).
+     [`../reputation/account-age.md`](../reputation/account-age.md#persisted-request-compatibility)). A store of the
+     user's own data first keeps a copy of the file, and the user is told (see
+     [`../persistence/unreadable-store-files.md`](../persistence/unreadable-store-files.md)).
    - A connection drops a message which the node cannot parse, and keeps the connection open (rule 6).
    - A peer exchange message skips a peer which the node cannot parse, and keeps the other peers (see
      [`peer-exchange.md`](peer-exchange.md)). The peers are reports of other nodes, which the sender only relays.
