@@ -23,6 +23,7 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Collection;
@@ -75,6 +76,14 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    /**
+     * The notifications are derived from chat messages, so no copy is kept when the file cannot be read completely.
+     */
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.NO_ARCHIVE;
     }
 
     @Override

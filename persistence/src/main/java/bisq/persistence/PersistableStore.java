@@ -39,4 +39,13 @@ public interface PersistableStore<T> extends PersistableProto {
     void applyPersisted(T persisted);
 
     ProtoResolver<PersistableStore<?>> getResolver();
+
+    /**
+     * What the node does when this version cannot read the store file completely. It applies only to stores in the
+     * private and the settings directories. Network and cache stores always use
+     * {@link UnreadableStoreFilePolicy#NO_ARCHIVE}.
+     */
+    default UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.ARCHIVE;
+    }
 }
