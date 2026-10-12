@@ -18,7 +18,6 @@
 package bisq.api.web_socket.rest_api_proxy;
 
 import bisq.api.web_socket.WebSocketMessage;
-import bisq.api.web_socket.util.JsonUtil;
 import bisq.common.json.JsonMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.EqualsAndHashCode;
@@ -39,6 +38,9 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
     private String requestId;
     private String path;
     private String method;
+    // The body can contain payment account data or a chat message. toString() prints only the length of
+    // the body, so that no log statement which prints this object writes the body to the log file.
+    @ToString.Exclude
     private String body;
     // Accepted but ignored. Clients used to supply the session and client id here and we forwarded
     // them to the REST API server, which let a client act under an identity it never authenticated
@@ -52,9 +54,15 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
         try {
             return Optional.of(JsonMapperProvider.get().readValue(json, WebSocketRestApiRequest.class));
         } catch (JsonProcessingException e) {
-            log.error("Json deserialization failed. Message={}", JsonUtil.redactCredentials(json), e);
+            // The message contains the body of the request, so only its length is logged
+            log.error("Json deserialization of a WebSocketRestApiRequest failed. Message length={}", json.length(), e);
         }
         return Optional.empty();
+    }
+
+    @ToString.Include(name = "bodyLength")
+    private int bodyLength() {
+        return body == null ? 0 : body.length();
     }
 
     /**
