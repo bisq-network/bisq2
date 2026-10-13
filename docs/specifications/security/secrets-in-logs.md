@@ -15,14 +15,29 @@ Users share their log files. The error popup has a button which zips `bisq.log` 
 Users also attach logs to issues and send them to support.
 
 From version 2.1.3 to version 2.1.13, the node wrote every Tor control command to the log at INFO and hid only the
-data of `AUTHENTICATE`. The command `ADD_ONION` contains the private key of the onion service. The node sends it at every start,
-once for the default identity and once for each user profile. Seed nodes and oracle nodes use the same code. So every
-log file contained the onion private keys of all identities of the node.
+data of `AUTHENTICATE`. The command `ADD_ONION` contains the private key of the onion service. The node sends it at
+every start, once for the default identity and once for each user profile. Seed nodes and oracle nodes use the same
+code. So every log file contained the onion private keys of all identities of the node.
 
 Whoever has the private key of an onion service can publish the same onion service and can sign the proof of the onion
 address in the connection handshake. So that person can connect to peers as that address and can receive messages
-which peers send to it. The content of confidential messages stays protected, because the EC private keys were not in
-the log. The onion key of an identity does not change, so an old log file stays dangerous while the identity exists.
+which peers send to it. The onion key of an identity does not change, so an old log file stays dangerous while the
+identity exists.
+
+The API of the same versions logged at INFO each message which a client sent through the WebSocket and each event which
+the node sent to a subscriber. From version 2.1.9 on, it also logged the body of each REST response which it forwarded
+through the WebSocket. Some error lines contain a request or its body. The API runs on the node of Bisq Connect, where
+the WebSocket is enabled by default, and on the desktop when the user enables it. These lines contain the EC private key
+of a user profile in two cases:
+
+- the key material of a new profile, which `GET /user-identities/key-material` returns and `POST /user-identities`
+  sends back;
+- the key bundle of the identity in each trade and trade chat, which the topic of trades sends to each subscriber. The
+  key bundle also contains the onion private key, and from version 2.1.8 on the I2P private key.
+
+Whoever has the EC private key of a profile can sign as the profile and can decrypt its confidential messages, for
+example trade chats with payment details. That is worse than an onion key. The lines also contain trade, chat and
+payment account data. On a node without the API, the EC private keys were not in the log.
 
 ## Requirements
 
@@ -62,19 +77,36 @@ the log. The onion key of an identity does not change, so an old log file stays 
 
 ## Log files of earlier versions
 
-Versions 2.1.3 to 2.1.13 wrote the onion private keys of all identities into the log files. Log files are appended
-across versions, and the rolled files `bisq_<n>.log` keep their content for up to 20 rollovers.
+Versions 2.1.3 to 2.1.13 wrote the onion private keys of all identities into the log files, and their API wrote the
+private keys of user profiles (see Problem). Log files are appended across versions, and the rolled files
+`bisq_<n>.log` keep their content for up to 20 rollovers.
 
-At its start, before it opens its log file, a node hides these keys in `bisq.log` and the rolled files `bisq_<n>.log`
-of its data directory. It replaces each key as the log form of `ADD_ONION` does (`[hidden]`, the key type stays) and
-keeps all other bytes. It writes a new file and then replaces the old one, so a failure leaves the old file complete. A
-file without a key stays unchanged. A failure does not stop the start: the node logs a warning which names the file,
-and it tries again at the next start. After a start without failure, the node writes the file
+At its start, before it opens its log file, a node hides these secrets in `bisq.log` and the rolled files
+`bisq_<n>.log` of its data directory. It replaces with `[hidden]`:
+
+1. The key of each `ADD_ONION` command, as the log form of `ADD_ONION` does. The key type stays.
+2. The rest of each line in which the API of these versions logged a message, an event or a REST body. The message of
+   such a line starts with one of these texts, after the class name of the logger:
+   - `WebSocketConnectionHandler: Received message ` or `No service found for handling message: `
+   - `WebSocketRestApiRequest: Json deserialization failed. Message=`, and the same message of `SubscriptionRequest`
+   - `WebSocketRestApiService: REST API call failed for request: `, `httpResponse WebSocketRestApiResponse(`, or
+     `Error at sending a '<method>' request to '<url>' with body: `
+   - `BaseWebSocketService: Sending json with modificationType <...>. json=`
+   - `Subscriber: Send json: ` or `SubscriptionService: Send SubscriptionResponse json: `
+3. The rest of the line after `Message was not sent to websocket.` of `WebSocketRestApiService`. It starts with
+   `Json=` and contains a request.
+4. In any other line, the value of a private key in the JSON of the API: `"privateKey":{"encoded":...}` of a key pair,
+   `"privateKeyEncoded"` of an onion key and `"identityBytes"` of an I2P key, also in JSON which is escaped within
+   other JSON.
+
+It keeps all other bytes. It writes a new file and then replaces the old one, so a failure leaves the old file complete.
+A file without a secret stays unchanged. A failure does not stop the start: the node logs a warning which names the
+file, and it tries again at the next start. After a start without failure, the node writes the file
 `legacy_log_secrets_hidden_v<n>` into the data directory, where `<n>` is the version of the patterns. It does not check
 the files again until a later version adds a pattern and increases `<n>`.
 
-When the desktop app builds the zip file of the error report, it also replaces each such key in the copies of the log
-files. This covers a key which the start could not hide.
+When the desktop app builds the zip file of the error report, it also replaces each such secret in the copies of the
+log files. This covers a secret which the start could not hide.
 
 Reasons:
 
@@ -83,6 +115,18 @@ Reasons:
 - The node rewrites the files before the logger opens them. Windows cannot replace a file which the process holds
   open, and on other systems the logger would keep writing into the replaced file.
 - The files are kept and not deleted, because support needs them.
+- Rule 2 hides the whole rest of the line, because the payload also contains trade, chat and payment account data,
+  which users should not share either. The class name and the start of the message stay, so support can still see
+  what the node did. The class name is part of the match, so a line of another class with the same text stays
+  unchanged. The texts come from all log statements of the API in versions 2.1.3 to 2.1.13. The line
+  `httpResponse (GET <url>) <status>` of versions 2.1.3 to 2.1.8 contains no body and stays.
+- Rule 3: a line break in the message puts the request into the next line. No other message of these versions starts
+  a line with `Json=`.
+- Rule 4 covers a line form which rules 2 and 3 do not know. The field names are those of the DTOs of the API in all
+  these versions.
+- The pairing codes which versions 2.1.9 to 2.1.13 logged stay. In these versions a code expires one hour after it
+  was created, unless the operator configured a longer time (`ttlInSeconds`), so a code in an old log is no longer
+  valid.
 - The check runs once per version of the patterns, because it reads up to 21 files of 10 MB. A version which hides a
   further secret has to check the files again, also in data directories which an earlier version already checked. So
   the name of the marker carries the version.
@@ -96,7 +140,9 @@ issues, zip files of error reports of earlier versions, backups, the console out
 systemd journal or in `docker logs`, and old blocks on the disk. A node which a user downgrades to an earlier version
 writes the keys again, and the node does not check the files again after the next upgrade, unless the version of the
 patterns increased. Users who shared such a log, and operators of seed and oracle nodes, need a decision about the
-rotation of onion keys. A new onion key changes the network address of the identity.
+rotation of onion keys. A new onion key changes the network address of the identity. Users of the API whose log was
+shared need a decision about their profiles: the EC key of a profile is its identity, so only a new profile has a new
+key.
 
 ## Related specifications
 
