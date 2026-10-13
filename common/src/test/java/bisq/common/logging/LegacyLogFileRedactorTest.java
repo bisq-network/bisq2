@@ -178,6 +178,21 @@ class LegacyLogFileRedactorTest {
         assertEquals(KEY_LINE, Files.readString(dataDir.resolve("bisq.log")));
     }
 
+    // A version with new patterns checks the files again. Development builds wrote the marker without a version.
+    @Test
+    void aMarkerOfAnEarlierVersionOfThePatternsDoesNotStopTheCheck() throws IOException {
+        assertEquals("legacy_log_secrets_hidden_v" + LegacyLogSecrets.VERSION, LegacyLogFileRedactor.MARKER_FILE_NAME);
+        write("legacy_log_secrets_hidden", "");
+        write("legacy_log_secrets_hidden_v" + (LegacyLogSecrets.VERSION - 1), "");
+        write("bisq.log", KEY_LINE);
+
+        LegacyLogFileRedactor.Result result = LegacyLogFileRedactor.redact(dataDir, "bisq");
+
+        assertEquals(List.of(dataDir.resolve("bisq.log")), result.redactedFiles());
+        assertEquals(HIDDEN_LINE, Files.readString(dataDir.resolve("bisq.log")));
+        assertTrue(Files.exists(dataDir.resolve(LegacyLogFileRedactor.MARKER_FILE_NAME)));
+    }
+
     private void write(String name, String content) throws IOException {
         Files.writeString(dataDir.resolve(name), content, StandardCharsets.UTF_8);
     }
