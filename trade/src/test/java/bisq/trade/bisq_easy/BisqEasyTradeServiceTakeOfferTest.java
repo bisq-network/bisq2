@@ -17,13 +17,17 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceProviderInfo;
 import bisq.bonded_roles.release.AppType;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
+import bisq.common.monetary.PriceQuote;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FloatPriceSpec;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.user.reputation.ReputationScore;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -33,8 +37,10 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * The taker creates the contract with the price specification of the offer, see
@@ -43,9 +49,18 @@ import static org.mockito.Mockito.mock;
 class BisqEasyTradeServiceTakeOfferTest {
     @Test
     void takersContractCarriesThePriceSpecOfTheOffer() {
-        BisqEasyTradeService service = new BisqEasyTradeService(mock(ServiceProvider.class, RETURNS_DEEP_STUBS), AppType.DESKTOP);
+        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
+        BisqEasyTradeService service = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP);
         FloatPriceSpec priceSpec = new FloatPriceSpec(0.02);
         BisqEasyOffer offer = offer("offer-id", identity("maker").getNetworkId(), QUOTE_AMOUNT, priceSpec);
+        // The taker buys, so its node checks the reputation of the seller (bisq-easy-seller-reputation-limit.md)
+        MarketPrice usdMarketPrice = new MarketPrice(PriceQuote.fromFiatPrice(60_000, "USD"),
+                System.currentTimeMillis(),
+                mock(MarketPriceProviderInfo.class));
+        when(serviceProvider.getBondedRolesService().getMarketPriceService().findMarketPrice(any()))
+                .thenReturn(Optional.of(usdMarketPrice));
+        when(serviceProvider.getUserService().getReputationService().getReputationScore(offer.getMakersUserProfileId()))
+                .thenReturn(new ReputationScore(1_000_000, 5, 1));
 
         BisqEasyProtocol protocol = service.takerCreatesProtocol(identity("taker"),
                 offer,

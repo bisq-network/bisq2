@@ -20,7 +20,6 @@ package bisq.trade.bisq_easy.protocol.messages;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
-import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.StringUtils;
@@ -32,7 +31,6 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.trade.ServiceProvider;
-import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.trade.bisq_easy.validation.BisqEasyPriceSpecValidator;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
@@ -48,8 +46,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
-import static bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator.validateMarketPrices;
-import static bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator.validateSellersReputation;
+import static bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator.validateSellersReputationForTradeAmount;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -159,25 +156,13 @@ public final class BisqEasyTakeOfferRequestValidator {
         if (takersOffer.getTakersDirection().isBuy()) {
             return;
         }
-        MarketPriceService marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
-        Market market = takersOffer.getMarket();
-        MarketPrice fiatMarketPrice = marketPriceService.findMarketPrice(market)
-                .orElseThrow(() -> new IllegalArgumentException("No market price available. market=" + market));
-        MarketPrice usdMarketPrice = marketPriceService.findMarketPrice(MarketRepository.getUSDBitcoinMarket())
-                .orElseThrow(() -> new IllegalArgumentException("No USD market price available."));
-        validateMarketPrices(fiatMarketPrice, usdMarketPrice);
-        long requiredReputationScore = BisqEasyTradeAmountLimits.getRequiredReputationScore(fiatMarketPrice.getPriceQuote(),
-                usdMarketPrice.getPriceQuote(),
-                takersContract.getQuoteSideMonetary());
-
-        // The taker's user profile ID is the ID of the taker's network ID. We have a score for it only after we
-        // have received the taker's user profile and reputation data. Until then the score is 0 and the request
-        // gets rejected.
+        // The taker's user profile ID is the ID of the taker's network ID
         String takersUserProfileId = takersContract.getTaker().getNetworkId().getId();
-        long takersReputationScore = serviceProvider.getUserService().getReputationService()
-                .getReputationScore(takersUserProfileId)
-                .getTotalScore();
-        validateSellersReputation(takersReputationScore, requiredReputationScore);
+        validateSellersReputationForTradeAmount(serviceProvider.getBondedRolesService().getMarketPriceService(),
+                serviceProvider.getUserService().getReputationService(),
+                takersOffer.getMarket(),
+                takersContract.getQuoteSideMonetary(),
+                takersUserProfileId);
     }
 
     private static void validateAmount(ServiceProvider serviceProvider,
