@@ -262,9 +262,9 @@ public abstract class ApplicationService implements Service {
         int rollingPolicyMaxIndex = loggingConfig.getInt("rollingPolicyMaxIndex");
         String maxFileSize = loggingConfig.getString("maxFileSize");
         Level logLevel = Level.toLevel(loggingConfig.getString("logLevel"));
-        // Versions 2.1.3 to 2.1.13 wrote the onion private keys into the log files. The keys are hidden before the
-        // logger opens the files, so that no handle of this process blocks the replacement of a file (see
-        // docs/specifications/security/secrets-in-logs.md).
+        // Versions 2.1.3 to 2.1.13 wrote the onion private keys, and their API the private keys of user profiles, into
+        // the log files. The keys are hidden before the logger opens the files, so that no handle of this process
+        // blocks the replacement of a file (see docs/specifications/security/secrets-in-logs.md).
         String logFileBaseName = "bisq";
         LegacyLogFileRedactor.Result legacyLogSecrets = LegacyLogFileRedactor.redact(appDataDirPath, logFileBaseName);
         LogSetup.setup(appDataDirPath.resolve(logFileBaseName).toString(), rollingPolicyMaxIndex, maxFileSize,
@@ -275,10 +275,11 @@ public abstract class ApplicationService implements Service {
         log.info("Version: v{} / Commit hash: {}", ApplicationVersion.getVersion().getVersionAsString(), ApplicationVersion.getBuildCommitShortHash());
         log.info("Tor binary version: v{} (from Tor browser v{})", ApplicationVersion.getTorBinaryVersionString(), ApplicationVersion.getTorVersionString());
         if (!legacyLogSecrets.redactedFiles().isEmpty()) {
-            log.info("We hid the onion private keys of earlier versions in {} log files", legacyLogSecrets.redactedFiles().size());
+            log.info("We hid the secrets which earlier versions logged in {} log files",
+                    legacyLogSecrets.redactedFiles().size());
         }
         if (!legacyLogSecrets.failedFiles().isEmpty()) {
-            log.warn("We could not hide the onion private keys of earlier versions in {}. The next start tries again.",
+            log.warn("We could not hide the secrets which earlier versions logged in {}. The next start tries again.",
                     legacyLogSecrets.failedFiles());
         }
     }
