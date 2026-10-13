@@ -627,8 +627,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // A node of a version which the alert restricts acknowledges a take offer request and drops it, so the take would
     // hang without an error. The node of the taker refuses the take instead. The version of the maker is the higher of
     // the version of its user profile, which the maker signed when it published the profile, and the version which
-    // created the offer. Both are lower bounds of the version which the maker runs. A maker without a readable version
-    // is refused (see docs/specifications/trade/trade-restrictions.md).
+    // created the offer. Before the cutoff date of signature V1, a relay can change the version of an offer without
+    // signature V2. A maker without a readable version is refused (see docs/specifications/trade/trade-restrictions.md).
     private void verifyMakerMeetsMinVersionForTrading(BisqEasyOffer bisqEasyOffer) {
         Optional<String> minRequiredVersion = minRequiredVersionForTrading;
         if (minRequiredVersion.isPresent()
