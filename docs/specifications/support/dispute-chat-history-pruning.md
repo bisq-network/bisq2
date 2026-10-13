@@ -40,9 +40,7 @@ history does not fit into one message.
 - Rule 1 uses the date because the users see the trade chat sorted by date. So the dispute agent gets the messages
   which the users see at the end of the chat. The ID only decides between messages with the same date. It makes the
   selection independent of the order of the input.
-- The exception of rule 1 needs no further sort key. A node creates a random ID for each chat message, and trade chat
-  messages cannot be edited. So two different messages with the same date and the same ID exist only if the trade peer
-  creates them on purpose. The peer wrote both messages, so it gains nothing from the choice between them.
+- Different messages can share a date and ID, including messages from different traders when a peer deliberately copies those values. These messages retain their input order, so which message survives pruning can depend on the channel's iteration order.
 - Rule 2 removes most of the excess text before the node serializes the dispute message. Rule 3 then makes sure that
   the dispute message fits.
 - Rule 3: the node sends a dispute message as a confidential message. The cipher text of a confidential message has at
