@@ -66,8 +66,7 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
                 "sequenceNumber must be positive. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateHash(pubKeyHash);
         NetworkDataValidation.validateDate(created);
-        checkArgument(!isOwnerInvalid(authenticatedData, pubKeyHash, created),
-                "The publisher is not the owner of the data");
+        // The owner rule also depends on signature V2 of the request, so AddAuthenticatedDataRequest.verify() checks it
     }
 
     @Override
@@ -125,13 +124,6 @@ public final class AuthenticatedSequentialData implements NetworkProto, Canonica
 
     public DistributedData getDistributedData() {
         return authenticatedData.getDistributedData();
-    }
-
-    // pubKeyHash is the hash of the key which signs the request. It must be the owner of the data, unless the transition
-    // rule accepts another owner for the creation date (see docs/specifications/network/storage-ownership.md). The store
-    // uses it for a refresh, which replaces the creation date of a stored entry.
-    public static boolean isOwnerInvalid(AuthenticatedData authenticatedData, byte[] pubKeyHash, long created) {
-        return !authenticatedData.isOwner(pubKeyHash) && !authenticatedData.isOtherOwnerAccepted(created);
     }
 
     @Override

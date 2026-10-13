@@ -346,12 +346,10 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
                 return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
-            // The refresh changes the creation date, on which the transition rule for the owner of authorized data
-            // depends (see docs/specifications/network/storage-ownership.md). The updated request could not be created
-            // for another owner.
-            if (AuthenticatedSequentialData.isOwnerInvalid(sequentialDataFromMap.getAuthenticatedData(),
-                    sequentialDataFromMap.getPubKeyHash(),
-                    refreshRequest.getCreated())) {
+            // A refresh has signature V2, and only the owner publishes a request with signature V2. An entry of another
+            // owner, which the transition rule accepted from a node of an earlier version, cannot be refreshed: the
+            // updated request could not be created (see docs/specifications/network/storage-ownership.md).
+            if (!sequentialDataFromMap.getAuthenticatedData().isOwner(sequentialDataFromMap.getPubKeyHash())) {
                 log.warn("The publisher is not the owner of the data at refresh. request={}", refreshRequest);
                 return DataStorageResult.failed().ownerInvalid();
             }
