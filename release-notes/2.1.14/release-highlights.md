@@ -3,7 +3,7 @@
 ## Safer Bisq Easy Trades
 
 - Take requests must match a current maker offer and its price before a trade is stored.
-- Buyer makers enforce seller reputation limits.
+- Buyers enforce seller reputation limits as maker and as taker, also for takes through the API and the mobile node.
 - Bitcoin URI and Lightning invoice amounts are checked against the agreed trade amount.
 
 ## Stronger Network Integrity and Tor Privacy
@@ -16,12 +16,17 @@
 
 - Support chat adds Markdown and clearer link destinations; mentions and private-chat navigation are improved.
 - Bisq Easy history gains CSV export and a contact-peer action. Language settings add country and currency selection.
-- Bisq Connect adds device revocation and session expiry. APIs expand chat, contacts, alerts, and payment-account support, and stop exposing private keys.
+- Bisq Connect adds device listing, revocation, and session expiry. APIs expand chat, contacts, alerts, and payment-account support, and stop exposing private keys.
 
 ## More Reliable Storage
 
 - Store replacement preserves the previous file until the new file is ready, and write failures report failure.
 - Invalid records no longer interrupt the remaining startup replay or bonded-role revalidation.
+- When stored data cannot be read, Bisq keeps a copy of the file for 90 days, and the desktop app lists the affected files.
+
+## Do Not Share Old Log Files
+
+Log files written by versions 2.1.3 to 2.1.13 contain the onion private keys of all identities of the node. The desktop error report now hides these keys, but the log files on disk still contain them.
 
 ## Update Before November 25, 2026
 
