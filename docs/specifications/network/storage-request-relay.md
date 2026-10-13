@@ -12,7 +12,9 @@ decide whether a store accepts a request are defined in [`storage-request-orderi
    - the removal replaces a stored removal, as the replacement rules allow.
 2. A request which leaves the store unchanged is not accepted, also when it is valid. Examples are a request which the
    store holds already, a removal which does not replace the stored removal, and an add request whose sequence number
-   is not higher.
+   is not higher. The complete request of a stored copy without signature V2 changes the store (see
+   [`storage-request-ordering.md`](storage-request-ordering.md#complete-request-of-a-copy-without-signature-v2)), so the
+   store accepts it, and the node relays it once.
 3. A node relays a request which it received by broadcast when its store accepted the request. The deprecated field
    `metaData` carries the registered MetaData (see [`storage-metadata.md`](storage-metadata.md#compatibility)).
 4. A node does not relay a request of an inventory response.

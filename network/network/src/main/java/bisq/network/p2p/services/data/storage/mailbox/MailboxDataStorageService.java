@@ -30,6 +30,7 @@ import bisq.persistence.PersistenceService;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -95,13 +96,14 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
         // Detect them before the signature verification, which is the most expensive check. A copy without signature
         // V2, which a node of an earlier version relayed, is not equal to the stored request, but its sequence number is
-        // not higher. The checks are repeated inside the lock because the map can change in between.
+        // not higher. The complete request of a stored copy without signature V2 has the same sequence number, and
+        // replaces the copy. The checks are repeated inside the lock because the map can change in between.
         ByteArray storageKey = request.getStorageKey();
         MailboxRequest storedRequest = persistableStore.getMap().get(storageKey);
         if (request.equals(storedRequest)) {
             return DataStorageResult.failed().requestAlreadyReceived();
         }
-        if (storedRequest != null && request.isSequenceNrInvalid(storedRequest.getSequenceNumber())) {
+        if (isSequenceNrInvalid(request, storedRequest)) {
             return DataStorageResult.failed().sequenceNrInvalid();
         }
 
@@ -129,7 +131,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             }
 
             // Mailbox adds have sequence 1; removals always have MAX_VALUE, including V1 removals.
-            if (requestFromMap != null && request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
+            if (isSequenceNrInvalid(request, requestFromMap)) {
                 return DataStorageResult.failed().sequenceNrInvalid();
             }
 
@@ -150,6 +152,14 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
         return DataStorageResult.success();
     }
 
+
+    // The sequence number is checked first, because the check for the complete version compares the preimages of both
+    // requests, which serializes them
+    private static boolean isSequenceNrInvalid(AddMailboxRequest request, @Nullable MailboxRequest requestFromMap) {
+        return requestFromMap != null &&
+                request.isSequenceNrInvalid(requestFromMap.getSequenceNumber()) &&
+                !request.isCompleteVersionOf(requestFromMap);
+    }
 
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
