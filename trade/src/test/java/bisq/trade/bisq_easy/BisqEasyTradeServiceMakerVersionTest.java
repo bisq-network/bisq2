@@ -29,6 +29,7 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.trade.ServiceProvider;
 import bisq.trade.TradeRestrictedException;
 import bisq.user.profile.UserProfile;
@@ -62,7 +63,7 @@ import static org.mockito.Mockito.when;
 /**
  * While a minimum version for trading is required, a node of the maker of an older version acknowledges a take offer
  * request and drops it. The node of the taker refuses such a take (see docs/specifications/trade/trade-restrictions.md).
- * The offers of the test data were created by version 2.1.13.
+ * Unless a test creates another offer, the offer was created by version 2.1.13.
  */
 class BisqEasyTradeServiceMakerVersionTest {
     private static final String REQUIRED_VERSION = ApplicationVersion.getVersion().toString();
@@ -133,10 +134,29 @@ class BisqEasyTradeServiceMakerVersionTest {
         assertDoesNotThrow(this::take);
     }
 
+    // The maker created the offer after its update, but did not publish the profile of the offer again
     @Test
-    void takeOfAMakerWithoutKnownProfileIsDecidedByTheVersionOfTheOffer() {
+    void takeOfAMakerWhoseOfferHasTheRequiredVersionIsAcceptedAlthoughItsProfileHasAnOlderOne() {
         alerts.add(minVersionForTrading(REQUIRED_VERSION));
-        when(userProfileService.findUserProfile(offer.getMakersUserProfileId())).thenReturn(Optional.empty());
+        offerWasCreatedByVersion(REQUIRED_VERSION);
+        makerProfileHasVersion("2.1.13");
+
+        assertDoesNotThrow(this::take);
+    }
+
+    @Test
+    void takeOfAMakerWithoutKnownProfileIsAcceptedIfTheOfferHasTheRequiredVersion() {
+        alerts.add(minVersionForTrading(REQUIRED_VERSION));
+        offerWasCreatedByVersion(REQUIRED_VERSION);
+        makerProfileIsUnknown();
+
+        assertDoesNotThrow(this::take);
+    }
+
+    @Test
+    void takeOfAMakerWithoutKnownProfileIsRefusedIfTheOfferHasAnOlderVersion() {
+        alerts.add(minVersionForTrading(REQUIRED_VERSION));
+        makerProfileIsUnknown();
 
         assertThrows(TradeRestrictedException.class, this::take);
     }
@@ -168,10 +188,18 @@ class BisqEasyTradeServiceMakerVersionTest {
                 60_000_0000);
     }
 
+    private void offerWasCreatedByVersion(String appVersion) {
+        offer = offer("offer-id", identity("maker").getNetworkId(), QUOTE_AMOUNT, new MarketPriceSpec(), appVersion);
+    }
+
     private void makerProfileHasVersion(String version) {
         UserProfile makerProfile = mock(UserProfile.class);
         when(makerProfile.getApplicationVersion()).thenReturn(version);
         when(userProfileService.findUserProfile(offer.getMakersUserProfileId())).thenReturn(Optional.of(makerProfile));
+    }
+
+    private void makerProfileIsUnknown() {
+        when(userProfileService.findUserProfile(offer.getMakersUserProfileId())).thenReturn(Optional.empty());
     }
 
     private static AuthorizedAlertData minVersionForTrading(String minVersion) {
