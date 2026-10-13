@@ -70,6 +70,7 @@ import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.bisq_easy.validation.MarketPriceNotCurrentException;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.desktop.common.utils.TradeExceptionHandler;
@@ -497,6 +498,10 @@ public class TradeWizardReviewController implements Controller {
             }
             // The market prices changed since the amount was chosen
             new Popup().warning(Res.get("bisqEasy.takeOffer.review.error.sellerReputationTooLow")).show();
+            return;
+        } catch (MarketPriceNotCurrentException e) {
+            // Without current market prices the seller's reputation cannot be checked for the amount
+            new Popup().warning(Res.get("bisqEasy.takeOffer.review.error.marketPriceNotCurrent")).show();
             return;
         }
         BisqEasyTrade trade = bisqEasyProtocol.getModel();

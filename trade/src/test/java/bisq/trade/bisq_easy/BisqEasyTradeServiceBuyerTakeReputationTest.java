@@ -37,6 +37,7 @@ import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.validation.MarketPriceNotCurrentException;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.reputation.ReputationScore;
@@ -120,7 +121,7 @@ class BisqEasyTradeServiceBuyerTakeReputationTest {
         sellerHasScore(sellOffer, 20_000);
         when(marketPriceService.findMarketPrice(any())).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> take(sellOffer));
+        assertThrows(MarketPriceNotCurrentException.class, () -> take(sellOffer));
         assertTrue(service.getTrades().isEmpty());
     }
 
