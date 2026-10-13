@@ -30,8 +30,13 @@ import bisq.common.encoding.Hex;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
+import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.security.DigestUtil;
+import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.data.AuthorizedProofOfBurnData;
@@ -68,8 +73,8 @@ import static com.google.common.base.Preconditions.checkState;
  *     with this protocol version. Needs the command {@code oracle} before.</li>
  *     <li>{@code remove-mediator <profile ID>}: removes the role of this mediator</li>
  *     <li>{@code oracle-legacy} and {@code mediator-legacy <profile ID> <registration protocol version>}: the same data
- *     as {@code oracle} and {@code mediator}, which the key pair of the network ID of the oracle node publishes, as an
- *     oracle node of version 2.1.13 did. The dev key still signs the data.</li>
+ *     as {@code oracle} and {@code mediator}, which the key pair of the network ID of the oracle node publishes with
+ *     signature V1 only, as an oracle node of version 2.1.13 did. The dev key still signs the data.</li>
  *     <li>{@code burn <profile ID> <amount>}: a proof of burn of this amount of BSQ satoshis for this user profile,
  *     from a block of now, as a root oracle node publishes it. It gives the profile a score of about this amount.</li>
  *     <li>{@code migrate}: the migration of the publisher of the data of the oracle node of this checkout, which
@@ -281,10 +286,37 @@ final class AuthorizedDataPublisher {
         publish(proofOfBurn, devKeyPair);
     }
 
-    // The dev key signs the data as its authorized key, and the publisher signs the add request
+    // The dev key signs the data as its authorized key, and the publisher signs the add request. A publisher which is
+    // not the owner of the data publishes as an oracle node of version 2.1.13: with signature V1 only. Nodes of this
+    // version accept another owner only for such requests (rule 12 of docs/specifications/network/storage-ownership.md).
     private void publish(AuthorizedDistributedData data, KeyPair publisher) {
-        networkService().publishAuthorizedData(data, publisher, devKeyPair.getPrivate(), devKeyPair.getPublic())
-                .join();
+        try {
+            AuthorizedData authorizedData = new AuthorizedData(data,
+                    Optional.of(SignatureUtil.sign(data.serializeForHash(), devKeyPair.getPrivate())),
+                    devKeyPair.getPublic());
+            byte[] publisherPubKeyHash = DigestUtil.hash(publisher.getPublic().getEncoded());
+            if (authorizedData.isOwner(publisherPubKeyHash)) {
+                networkService().publishAuthorizedData(data, publisher, devKeyPair.getPrivate(),
+                        devKeyPair.getPublic()).join();
+                return;
+            }
+            AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authorizedData,
+                    1,
+                    publisherPubKeyHash,
+                    System.currentTimeMillis());
+            AddAuthenticatedDataRequest request = new AddAuthenticatedDataRequest(sequentialData,
+                    SignatureUtil.sign(sequentialData.serializeForHash(), publisher.getPrivate()),
+                    publisher.getPublic().getEncoded(),
+                    publisher.getPublic(),
+                    new byte[0],
+                    0);
+            DataStorageResult result = networkService().getDataService().orElseThrow()
+                    .processAddDataRequest(request, true)
+                    .join();
+            checkState(result.isSuccess(), "The node did not store the request of version 2.1.13: %s", result);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private KeyPair networkIdKeyPair() {
