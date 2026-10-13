@@ -265,8 +265,10 @@ public abstract class ApplicationService implements Service {
         // Versions 2.1.3 to 2.1.13 wrote the onion private keys into the log files. The keys are hidden before the
         // logger opens the files, so that no handle of this process blocks the replacement of a file (see
         // docs/specifications/security/secrets-in-logs.md).
-        LegacyLogFileRedactor.Result legacyLogSecrets = LegacyLogFileRedactor.redact(appDataDirPath, "bisq");
-        LogSetup.setup(appDataDirPath.resolve("bisq").toString(), rollingPolicyMaxIndex, maxFileSize, logLevel);
+        String logFileBaseName = "bisq";
+        LegacyLogFileRedactor.Result legacyLogSecrets = LegacyLogFileRedactor.redact(appDataDirPath, logFileBaseName);
+        LogSetup.setup(appDataDirPath.resolve(logFileBaseName).toString(), rollingPolicyMaxIndex, maxFileSize,
+                logLevel);
 
         log.info(AsciiLogo.getAsciiLogo());
         log.info("Data directory: {}", appDataDirPath);
