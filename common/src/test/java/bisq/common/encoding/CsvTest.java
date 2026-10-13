@@ -65,6 +65,31 @@ class CsvTest {
         assertEquals("\"a\tb\"", Csv.escapeSpecialCharacters("a\tb"));
     }
 
+    // LibreOffice removes the NUL characters of a line before it splits the line into cells, and according to its
+    // source Excel does the same. A NUL character must not hide a formula from the checks (see
+    // docs/specifications/desktop/csv-export.md).
+    @Test
+    void nulCharacterDoesNotHideAFormulaAtTheStartOfACell() {
+        assertEquals("\"'=1+1\"", Csv.escapeSpecialCharacters("\u0000=1+1"));
+        assertEquals("\"'@SUM(A1)\"", Csv.escapeSpecialCharacters("\u0000\u0000@SUM(A1)"));
+    }
+
+    @Test
+    void nulCharacterDoesNotHideAFormulaAfterASemicolonATabOrALineBreak() {
+        assertEquals("\"x;'=1+1;\"", Csv.escapeSpecialCharacters("x;\u0000=1+1;"));
+        assertEquals("\"x\t'=1+1\"", Csv.escapeSpecialCharacters("x\t\u0000=1+1"));
+        assertEquals("\"x\n'=1+1\"", Csv.escapeSpecialCharacters("x\n\u0000=1+1"));
+        assertEquals("\"x\r'=1+1\"", Csv.escapeSpecialCharacters("x\r\u0000=1+1"));
+        assertEquals("\"x\r\n'=1+1\"", Csv.escapeSpecialCharacters("x\r\u0000\n=1+1"));
+    }
+
+    // Other control characters have no visible meaning in the text either, and an application can drop them as well
+    @Test
+    void otherControlCharactersAreRemoved() {
+        assertEquals("\"x;'=1+1\"", Csv.escapeSpecialCharacters("x;\u0001\u001F\u007F\u0085=1+1"));
+        assertEquals("-1.00%", Csv.escapeSpecialCharacters("\u0000-1.00%"));
+    }
+
     @ParameterizedTest
     @CsvSource(delimiter = '|', value = {"-1.00%", "+2.5%", "-0.0001", "12", "plain text"})
     void numbersAndPlainTextStayUnchanged(String value) {
