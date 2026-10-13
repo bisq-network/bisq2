@@ -38,8 +38,10 @@ a node does while such an alert exists.
 ## Compatibility
 
 - Nodes up to version 2.1.13 apply an alert only to their own version, as in rules 1 and 2.
-- The error code `MAKER_VERSION_BELOW_MIN_REQUIRED` is new. Its text does not contain "For trading you need to have
-  version", which released mobile clients read as a restriction of their own node.
+- The error code `MAKER_VERSION_BELOW_MIN_REQUIRED` is new. Released mobile apps ignore error codes and replace the
+  text of a take failure if it contains certain fragments. With "min. version required for trading" and "version <x>
+  installed" they ask the user to update their own node, and with "Trading is on halt" they report a halt of trading.
+  The text of this error contains none of these fragments, so the mobile apps show the text itself.
 
 ## Known limitations
 
