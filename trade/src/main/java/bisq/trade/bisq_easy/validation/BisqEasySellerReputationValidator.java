@@ -23,9 +23,9 @@ import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
-import bisq.user.reputation.ReputationService;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.user.reputation.ReputationService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -34,8 +34,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * The seller's reputation limits the trade amount in Bisq Easy. The buyer sends fiat first, so the seller's
  * reputation is the only security the buyer has. The policy is applied on the side which bears the risk:
- * the buyer as taker checks the maker's reputation in the take offer UI, the buyer as maker checks the
- * taker's reputation in the take offer request handler.
+ * the buyer as taker checks the maker's reputation before it creates the trade
+ * ({@code BisqEasyTradeService.takerCreatesProtocol}, for every client), the buyer as maker checks the
+ * taker's reputation in the take offer request validator.
  * Specified in docs/specifications/trade/bisq-easy-seller-reputation-limit.md.
  */
 public final class BisqEasySellerReputationValidator {
