@@ -45,6 +45,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -328,6 +329,28 @@ class MailboxDataStorageServiceTest {
         store.prunePersisted(store.getPersistableStore());
         pruneExpiredTask.get().run();
 
+        assertSame(complete, store.getPersistableStore().getMap().get(complete.getStorageKey()));
+    }
+
+    // Only a stored copy without signature V2 is replaced, so each node stores and relays the complete request at most
+    // once (see docs/specifications/network/storage-request-ordering.md). The sender can create further complete
+    // versions of the request: ECDSA signing is randomized, so a new signature V2 over the same preimage differs.
+    @Test
+    void secondCompleteRequestDoesNotReplaceTheFirst() throws GeneralSecurityException, UnresolvableProtobufException {
+        time = BEFORE_CUTOFF;
+        AddMailboxRequest complete = AddMailboxRequest.from(mailboxData, senderKeyPair, receiverKeyPair.getPublic());
+        assertTrue(store.add(toLegacy(complete)).isSuccess());
+        assertTrue(store.add(complete).isSuccess());
+        AddMailboxRequest resigned = AddMailboxRequest.fromProto(complete.toValueProto(false).toBuilder()
+                .setSignatureV2(ByteString.copyFrom(SignatureUtil.sign(complete.getPreImageV2(),
+                        senderKeyPair.getPrivate())))
+                .build());
+        assertFalse(Arrays.equals(complete.getSignatureV2(), resigned.getSignatureV2()));
+        assertFalse(resigned.isSignatureV2Invalid());
+
+        DataStorageResult result = store.add(resigned);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
         assertSame(complete, store.getPersistableStore().getMap().get(complete.getStorageKey()));
     }
 
