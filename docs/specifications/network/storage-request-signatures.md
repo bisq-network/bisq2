@@ -109,6 +109,28 @@ stored add request with signature V2 by one without it.
 The rules by which nodes apply and relay refresh requests are defined in
 [`storage-refresh-requests.md`](storage-refresh-requests.md).
 
+### Removals of user profiles
+
+The store of user profiles accepts a remove request only with signature V2, also before the cutoff date of signature
+V1. It removes a stored remove request without signature V2 when it loads its entries and with the task which removes
+expired entries. The stores of other types accept remove requests without signature V2 until the cutoff date.
+
+Reasons:
+
+- Nodes up to version 2.1.13 refresh their user profile every 12 hours with a refresh request whose signature V1 signs
+  only the hash of the data. Signature V1 of a remove request signs the same bytes and covers no sequence number. A
+  peer which receives such a refresh request can therefore send a remove request of the profile with a sequence number
+  of its choice. Without this rule, nodes of this version accepted and relayed it: the profile and the offers of its
+  owner disappeared until the next republication, and with `Integer.MAX_VALUE` nodes of earlier versions rejected the
+  republication of the owner.
+- Signature V2 of a remove request covers its type and its sequence number, so a refresh request cannot be turned into
+  it.
+- User profiles are the only data which nodes of earlier versions refresh. Their offers and other data are not
+  refreshed, so the stores of these types keep accepting the remove requests of nodes of earlier versions.
+
+Consequence: a user of version 2.1.13 who deletes or edits a profile removes the old profile only on nodes of earlier
+versions. Nodes of this version keep it until it expires after 15 days.
+
 ## Verification
 
 1. If `signatureV2` is not empty, the receiver verifies signature V2. Before the cutoff date of signature V1 (rule 5),
@@ -116,7 +138,8 @@ The rules by which nodes apply and relay refresh requests are defined in
    (see [Refresh requests](#refresh-requests)). From the cutoff date on, the receiver verifies only signature V2.
 2. If `signatureV2` is empty, the receiver verifies signature V1, but only before the cutoff date of signature V1
    (rule 5). This accepts add and remove requests from nodes of earlier versions. It does not apply to refresh
-   requests, which need signature V2 (see [Refresh requests](#refresh-requests)).
+   requests, which need signature V2 (see [Refresh requests](#refresh-requests)), and not to remove requests of user
+   profiles (see [Removals of user profiles](#removals-of-user-profiles)).
 3. A request must contain at least one signature. Before the cutoff date of signature V1, it must contain signature
    V1, also if it contains signature V2. From the cutoff date on, signature V1 is optional. Each non-empty signature
    must have a valid EC signature encoding. The node checks this rule whenever it builds a request, with its own
