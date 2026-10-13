@@ -143,6 +143,13 @@ The oracle does not skip a persisted request which it cannot parse. Other stores
 skipped request would remove its binding from the conflict check, and the oracle could bind the
 witness to another profile. If one request cannot be parsed, the whole store fails to load.
 
+The oracle reads its binding store when its bridge service starts, before the service processes any
+request. The node reads all other stores once at its start, before the services start. The bridge
+service is created later, because it needs the identity of the node, so that general read does not
+cover its store. Without the read, the conflict check would see only the bindings of the current
+run, and the first write of the run would replace the stored bindings. Nodes up to version 2.1.13
+did not read this store at all.
+
 ## Shared account witness identity
 
 Account-age and signed-witness reputation are two claims on the same Bisq 1 account-age witness.
