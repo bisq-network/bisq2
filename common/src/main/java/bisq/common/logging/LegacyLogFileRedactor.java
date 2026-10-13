@@ -95,6 +95,9 @@ public final class LegacyLogFileRedactor {
     private static boolean redactFile(Path logFile) throws IOException {
         Path tempFile = logFile.resolveSibling(logFile.getFileName() + ".redacting");
         try {
+            // A file or a symbolic link which is left at the temporary path is removed first. So the writer creates a
+            // new file and does not follow a link, as the log files themselves are not followed.
+            Files.deleteIfExists(tempFile);
             boolean changed;
             try (Reader reader = Files.newBufferedReader(logFile, StandardCharsets.ISO_8859_1);
                  Writer writer = new OutputStreamWriter(FileMutatorUtils.newOutputStream(tempFile),

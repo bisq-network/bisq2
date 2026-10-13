@@ -25,6 +25,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
@@ -117,6 +118,27 @@ class LegacyLogFileRedactorTest {
         LegacyLogFileRedactor.redact(dataDir, "bisq");
 
         assertEquals(KEY_LINE, Files.readString(target));
+    }
+
+    @Test
+    void symbolicLinkAtTheTemporaryPathIsNotFollowed() throws IOException {
+        write("bisq.log", KEY_LINE);
+        Path target = Files.createDirectory(dataDir.resolve("elsewhere")).resolve("target.log");
+        Files.writeString(target, "unchanged\n");
+        Path tempFile = dataDir.resolve("bisq.log.redacting");
+        try {
+            Files.createSymbolicLink(tempFile, target);
+        } catch (UnsupportedOperationException | IOException e) {
+            assumeTrue(false, "Symbolic links are not supported here");
+        }
+
+        LegacyLogFileRedactor.Result result = LegacyLogFileRedactor.redact(dataDir, "bisq");
+
+        assertEquals(List.of(dataDir.resolve("bisq.log")), result.redactedFiles());
+        assertEquals("unchanged\n", Files.readString(target));
+        assertEquals(HIDDEN_LINE, Files.readString(dataDir.resolve("bisq.log")));
+        assertFalse(Files.isSymbolicLink(dataDir.resolve("bisq.log")));
+        assertFalse(Files.exists(tempFile, LinkOption.NOFOLLOW_LINKS));
     }
 
     // A failure does not throw and does not write the marker, so the next start tries again
