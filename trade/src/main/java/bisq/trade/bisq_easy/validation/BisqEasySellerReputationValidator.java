@@ -18,19 +18,23 @@
 package bisq.trade.bisq_easy.validation;
 
 import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.market.Market;
+import bisq.common.market.MarketRepository;
+import bisq.common.monetary.Monetary;
 import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.user.reputation.ReputationService;
 
 import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * The seller's reputation limits the trade amount in Bisq Easy. The buyer sends fiat first, so the seller's
  * reputation is the only security the buyer has. The policy is applied on the side which bears the risk:
- * the buyer as taker checks the maker's reputation in the take offer UI, the buyer as maker checks the
- * taker's reputation in the take offer request handler.
+ * the buyer as taker checks the maker's reputation before it creates the trade
+ * ({@code BisqEasyTradeService.takerCreatesProtocol}, for every client), the buyer as maker checks the
+ * taker's reputation in the take offer request validator.
  * Specified in docs/specifications/trade/bisq-easy-seller-reputation-limit.md.
  */
 public final class BisqEasySellerReputationValidator {
@@ -41,6 +45,26 @@ public final class BisqEasySellerReputationValidator {
     public static final long MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE = TimeUnit.MINUTES.toMillis(12);
 
     private BisqEasySellerReputationValidator() {
+    }
+
+    // The node values the trade amount in USD with its market prices. The seller's score must cover the score which this
+    // value requires. The node has a score for the seller only after it received the seller's user profile and
+    // reputation data. Until then the score is 0 and the check fails.
+    public static void validateSellersReputationForTradeAmount(MarketPriceService marketPriceService,
+                                                               ReputationService reputationService,
+                                                               Market market,
+                                                               Monetary quoteSideAmount,
+                                                               String sellersUserProfileId) {
+        MarketPrice fiatMarketPrice = marketPriceService.findMarketPrice(market)
+                .orElseThrow(() -> new MarketPriceNotCurrentException("No market price available. market=" + market));
+        MarketPrice usdMarketPrice = marketPriceService.findMarketPrice(MarketRepository.getUSDBitcoinMarket())
+                .orElseThrow(() -> new MarketPriceNotCurrentException("No USD market price available."));
+        validateMarketPrices(fiatMarketPrice, usdMarketPrice);
+        long requiredReputationScore = BisqEasyTradeAmountLimits.getRequiredReputationScore(fiatMarketPrice.getPriceQuote(),
+                usdMarketPrice.getPriceQuote(),
+                quoteSideAmount);
+        long sellersReputationScore = reputationService.getReputationScore(sellersUserProfileId).getTotalScore();
+        validateSellersReputation(sellersReputationScore, requiredReputationScore);
     }
 
     public static void validateSellersReputation(long sellersReputationScore, long requiredReputationScore) {
@@ -58,11 +82,16 @@ public final class BisqEasySellerReputationValidator {
     // The USD value of the trade comes from two market prices, so both have to be valid and from about
     // the same time, otherwise the cross rate could understate the trade value.
     public static void validateMarketPrices(MarketPrice fiatMarketPrice, MarketPrice usdMarketPrice) {
-        checkArgument(fiatMarketPrice.isValidDate(), "Market price is outdated. marketPrice=%s", fiatMarketPrice);
-        checkArgument(usdMarketPrice.isValidDate(), "USD market price is outdated. marketPrice=%s", usdMarketPrice);
+        if (!fiatMarketPrice.isValidDate()) {
+            throw new MarketPriceNotCurrentException("Market price is outdated. marketPrice=" + fiatMarketPrice);
+        }
+        if (!usdMarketPrice.isValidDate()) {
+            throw new MarketPriceNotCurrentException("USD market price is outdated. marketPrice=" + usdMarketPrice);
+        }
         long timestampDifference = Math.abs(fiatMarketPrice.getTimestamp() - usdMarketPrice.getTimestamp());
-        checkArgument(timestampDifference <= MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE,
-                "Market prices are not from the same time. fiatMarketPrice=%s; usdMarketPrice=%s",
-                fiatMarketPrice, usdMarketPrice);
+        if (timestampDifference > MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE) {
+            throw new MarketPriceNotCurrentException("Market prices are not from the same time. fiatMarketPrice=" +
+                    fiatMarketPrice + "; usdMarketPrice=" + usdMarketPrice);
+        }
     }
 }
