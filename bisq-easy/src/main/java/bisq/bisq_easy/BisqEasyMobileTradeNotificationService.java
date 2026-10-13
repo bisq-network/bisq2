@@ -213,9 +213,19 @@ public class BisqEasyMobileTradeNotificationService implements Service {
     private void handleStateChange(BisqEasyTrade trade, BisqEasyTradeState state) {
         // Maker protocols respond automatically to a received request. They never enter the
         // TAKER_SENT_TAKE_OFFER_REQUEST state, which belongs to the taker's local action.
+        // A buyer maker who received the account data before the request enters a state which also
+        // represents the payment-info exchange. Both pushes share one notification id, so a second
+        // push would replace the offer-taken push on the device. Offer taken wins: it is the first
+        // time the maker learns about the trade, and the trade view shows the received account data.
+        // The trade counts as notified for payment info, so the maker's own later BTC address
+        // transition does not push either.
         if (trade.isMaker() && isOfferTakenState(state)) {
+            if (isPaymentInfoExchangedState(state)) {
+                notifiedPaymentInfo.add(trade.getId());
+            }
             dispatch(trade, "bisqEasy.mobileNotifications.offerTaken.title",
                     "bisqEasy.mobileNotifications.offerTaken.message");
+            return;
         }
 
         // Payment-info exchange — push once per trade as soon as the user's
