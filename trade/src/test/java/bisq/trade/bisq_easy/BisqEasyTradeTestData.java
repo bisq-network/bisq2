@@ -83,6 +83,14 @@ public final class BisqEasyTradeTestData {
     }
 
     public static BisqEasyOffer offer(String id, NetworkId makerNetworkId, long quoteAmount, PriceSpec priceSpec) {
+        return offer(id, makerNetworkId, quoteAmount, priceSpec, "2.1.13");
+    }
+
+    public static BisqEasyOffer offer(String id,
+                                      NetworkId makerNetworkId,
+                                      long quoteAmount,
+                                      PriceSpec priceSpec,
+                                      String appVersion) {
         return new BisqEasyOffer(id,
                 System.currentTimeMillis(),
                 makerNetworkId,
@@ -97,7 +105,7 @@ public final class BisqEasyTradeTestData {
                 List.of("en"),
                 1,
                 "1.0.0",
-                "2.1.13");
+                appVersion);
     }
 
     public static BisqEasyContract contract(BisqEasyOffer offer, NetworkId takerNetworkId, Optional<UserProfile> mediator) {

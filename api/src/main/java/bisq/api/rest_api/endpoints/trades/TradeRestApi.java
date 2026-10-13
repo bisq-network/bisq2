@@ -194,7 +194,8 @@ public class TradeRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "201", description = "",
                             content = @Content(schema = @Schema(example = ""))),
                     @ApiResponse(responseCode = "400", description = "Invalid input, or trading restricted by a security manager alert " +
-                            "(body carries errorCode and, for MIN_VERSION_REQUIRED, minRequiredVersion)"),
+                            "(body carries errorCode and, for MIN_VERSION_REQUIRED and MAKER_VERSION_BELOW_MIN_REQUIRED, " +
+                            "minRequiredVersion)"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
