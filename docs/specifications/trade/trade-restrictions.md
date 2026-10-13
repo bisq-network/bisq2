@@ -31,9 +31,12 @@ a node does while such an alert exists.
 - Rule 3: a node of the maker which rule 2 restricts acknowledges a take offer request when it decrypts it, and then
   drops it without an answer. Nodes up to version 2.1.13 do the same. The taker would wait without an error and
   without a timeout. Only the node of the taker can prevent this, because the released maker cannot change.
-- Rule 3, sources of the version: both are lower bounds of the version which the maker runs. A node rebuilds its
-  profiles with its own version when it starts, and it publishes the selected profile again, so the version of the
-  profile follows an update of the maker. An offer keeps the version which created it.
+- Rule 3, sources of the version: a node rebuilds its profiles with its own version when it starts, and it publishes
+  the selected profile again, so the version of the profile follows an update of the maker. An offer keeps the version
+  which created it, so an offer which the maker created after its update shows the update also if the maker did not
+  publish that profile again. Unless a relay changed the version of the offer, both versions are lower bounds of the
+  version which the maker runs. The maker signs the version of its profile. Only signature V2 covers the version of
+  the offer (see Known limitations).
 
 ## Compatibility
 
@@ -50,6 +53,19 @@ a node does while such an alert exists.
 - **Makers which updated without publishing their profile.** A node publishes only its selected profile at its start.
   The offer of another profile of an updated maker keeps the earlier version, so the node of a taker refuses it until
   the maker publishes that profile.
+- **Version of an offer changed by a relay.** Signature V1 does not cover the version of an offer. Before the cutoff
+  date of signature V1, a relay can remove signature V2 of an offer and change its version (see the first known
+  limitation of [`storage-request-signatures.md`](../network/storage-request-signatures.md#known-limitations)).
+  - A higher version lets a taker take the offer of a maker which rule 2 restricts. The take then hangs, as without
+    rule 3.
+  - A lower version makes a taker refuse a maker which would accept the take, if the profile of the maker also has an
+    earlier version.
+  - The change gives the relay no access to funds or trade data.
+  - What removes it: the cutoff date of signature V1. From then on, nodes accept and keep only offers with signature
+    V2, which covers the version of the offer.
+  - What would remove it earlier: rule 3 uses only the version of the profile. Then the node of a taker also refuses
+    an updated maker whose offer was created after the update, if the maker did not publish that profile again.
+  - Who decides: the developers. This version uses the higher of both versions.
 - **Open trades across versions.** A node which rules 1 or 2 restrict drops the trade messages of its open trades after
   it acknowledged them. The trade stops until the alert ends or the user updates; trade chat and mediation still work.
   - What would remove it: a restricted node keeps such messages and processes them when the restriction ends.
