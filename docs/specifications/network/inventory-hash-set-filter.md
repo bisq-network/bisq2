@@ -78,6 +78,17 @@ copy, and rejects it. This ends when the responder gets the removal with signatu
 when the copy expires or the store removes it at the cutoff date of signature V1 (see
 [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 
+Cost of the negated number: a requester holds the copy of an add request A, and a responder holds another complete
+add request B of the same owner, with the same storage key and sequence number, but another creation date. B is not
+the complete request of A (see
+[`storage-request-ordering.md`](storage-request-ordering.md#complete-request-of-a-copy-without-signature-v2)), so the
+requester rejects B as `sequenceNrInvalid`. The entries of A and B differ by the sign of the number, so the responder
+sends B again in each response. With the number, both entries were equal, and the responder did not send B. Two such
+requests exist only if the owner published the same data twice with the same sequence number, for example from a
+backup which the user restored on a second machine. This ends when either node stores a request with a higher sequence
+number, when the requests expire, or at the cutoff date of signature V1, when the requester removes the copy and then
+accepts B. Rule 6 stops it for a full response.
+
 ## Repeated requests
 
 A response has a size limit. A response which reached it has the flag `maxSizeReached`: the responder has more
