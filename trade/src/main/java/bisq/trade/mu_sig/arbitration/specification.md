@@ -114,11 +114,9 @@ Arbitration requests can include trade chat history for dispute context.
 Rules:
 
 * Chat history is taken from the MuSig open trade channel.
-* If the full chat history would make the message too large, older messages are removed.
-* Newer messages are kept before older messages.
-* The message is retried with fewer chat messages until it fits the serialized size limit.
-* If the message still exceeds the serialized size limit after all chat messages are removed, it is sent without chat history or rejected with a logged error.
-* If chat messages are pruned, the pruning is logged.
+* If the full chat history would make the message too large, the newest messages are kept and older messages are removed.
+  The order in which the channel returns the messages does not change which messages are kept.
+* The selection rules and limits are defined in `docs/specifications/support/dispute-chat-history-pruning.md`.
 
 ---
 
