@@ -629,7 +629,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // the version of its user profile, which the maker signed when it published the profile, and the version which
     // created the offer. Both are lower bounds of the version which the maker runs. A maker without a readable version
     // is refused (see docs/specifications/trade/trade-restrictions.md).
-    public void verifyMakerMeetsMinVersionForTrading(BisqEasyOffer bisqEasyOffer) {
+    private void verifyMakerMeetsMinVersionForTrading(BisqEasyOffer bisqEasyOffer) {
         Optional<String> minRequiredVersion = minRequiredVersionForTrading;
         if (minRequiredVersion.isPresent()
                 && !isMakerVersionAtLeast(bisqEasyOffer, new Version(minRequiredVersion.get()))) {
