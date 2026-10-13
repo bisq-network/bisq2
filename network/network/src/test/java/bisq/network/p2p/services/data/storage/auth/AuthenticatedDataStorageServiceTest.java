@@ -1525,12 +1525,15 @@ class AuthenticatedDataStorageServiceTest {
                 new byte[]{},
                 2).getPreImageV2(), identityKeyPair.getPrivate());
 
-        assertThrows(IllegalArgumentException.class, () -> new AddAuthenticatedDataRequest(sequentialData,
-                withoutSignatureV2.getSignatureV1(),
-                identityKeyPair.getPublic().getEncoded(),
-                identityKeyPair.getPublic(),
-                signatureV2,
-                2));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> new AddAuthenticatedDataRequest(sequentialData,
+                        withoutSignatureV2.getSignatureV1(),
+                        identityKeyPair.getPublic().getEncoded(),
+                        identityKeyPair.getPublic(),
+                        signatureV2,
+                        2));
+        // Any other failed argument check would also throw, so the message ties the test to the owner rule
+        assertEquals("A request with signature V2 must be published by the owner of the data", exception.getMessage());
         DataStorageResult result = authorizedDataStore.add(withoutSignatureV2);
         assertTrue(result.isSuccess(), result.toString());
     }
