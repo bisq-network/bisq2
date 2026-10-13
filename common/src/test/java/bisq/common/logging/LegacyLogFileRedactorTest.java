@@ -69,6 +69,19 @@ class LegacyLogFileRedactorTest {
         assertTrue(Files.exists(dataDir.resolve(LegacyLogFileRedactor.MARKER_FILE_NAME)));
     }
 
+    // The API of versions 2.1.3 to 2.1.13 logged whole WebSocket messages with the private keys of user profiles
+    @Test
+    void messagesWhichTheApiLoggedAreHidden() throws IOException {
+        String received = "Oct-01 10:00:00.000 [WebSocket-1] INFO  b.a.w.WebSocketConnectionHandler: Received message ";
+        write("bisq_3.log", "first line\n" + received + "{\"privateKey\":{\"encoded\":\"" + KEY + "\"}} \nlast line\n");
+
+        LegacyLogFileRedactor.Result result = LegacyLogFileRedactor.redact(dataDir, "bisq");
+
+        assertEquals(List.of(dataDir.resolve("bisq_3.log")), result.redactedFiles());
+        assertEquals("first line\n" + received + "[hidden]\nlast line\n",
+                Files.readString(dataDir.resolve("bisq_3.log")));
+    }
+
     @Test
     void keyAtTheBorderOfTwoChunksIsHidden() throws IOException {
         String filler = "x".repeat(64 * 1024 - 40) + "\n";

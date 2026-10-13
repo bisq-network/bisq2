@@ -82,8 +82,8 @@ public final class LegacyLogFileRedactor {
                 }
             }
             if (failedFiles.isEmpty()) {
-                FileMutatorUtils.writeToPath("The onion private keys which earlier versions logged are hidden " +
-                        "in the log files of this directory.", markerFile);
+                FileMutatorUtils.writeToPath("The secrets which earlier versions logged are hidden in the log files " +
+                        "of this directory.", markerFile);
             }
         } catch (IOException | RuntimeException e) {
             failedFiles.add(dataDir);
