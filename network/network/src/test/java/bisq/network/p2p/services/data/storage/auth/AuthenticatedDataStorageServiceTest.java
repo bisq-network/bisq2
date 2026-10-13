@@ -49,6 +49,7 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -779,6 +780,32 @@ class AuthenticatedDataStorageServiceTest {
 
         assertTrue(result.isSignatureInvalid(), result.toString());
         assertSame(copy, peerStore.getPersistableStore().getMap().get(copy.getStorageKey()));
+    }
+
+    // Only a stored copy without signature V2 is replaced, so each node stores and relays the complete request at most
+    // once (see docs/specifications/network/storage-request-ordering.md). The owner can create further complete
+    // versions of the request: ECDSA signing is randomized, so a new signature V2 over the same preimage differs.
+    @Test
+    void secondCompleteRequestDoesNotReplaceTheFirst() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest complete = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        assertTrue(peerStore.add(withoutSignatureV2(complete)).isSuccess());
+        assertTrue(peerStore.add(complete).isSuccess());
+        AddAuthenticatedDataRequest resigned = new AddAuthenticatedDataRequest(
+                complete.getAuthenticatedSequentialData(),
+                complete.getSignatureV1(),
+                complete.getSignaturePubKeyEncoded(),
+                complete.getSignaturePublicKey(),
+                SignatureUtil.sign(complete.getPreImageV2(), ownerKeyPair.getPrivate()),
+                complete.getVersion());
+        assertFalse(Arrays.equals(complete.getSignatureV2(), resigned.getSignatureV2()));
+        assertFalse(resigned.isSignatureV2Invalid());
+
+        DataStorageResult result = peerStore.add(resigned);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(complete, peerStore.getPersistableStore().getMap().get(complete.getStorageKey()));
     }
 
     @ParameterizedTest
