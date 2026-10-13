@@ -56,8 +56,10 @@ import java.util.Optional;
 public final class AuthorizedData extends AuthenticatedData {
     // Oracle and seed nodes of earlier versions published data of some types with the key pair of their network
     // identity (see AuthorizedDistributedData.isLegacyOwnerAccepted). Their data created before this date is accepted
-    // with another owner than the authorized key. The date must be after all oracle and seed nodes publish with their
-    // authorized key pair (see docs/specifications/network/storage-ownership.md).
+    // with another owner than the authorized key, only without signature V2. The date must be after all oracle and
+    // seed nodes publish with their authorized key pair. While the cutoff date of signature V1 is earlier, this date
+    // decides nothing, because nodes reject requests without signature V2 from that date on. It is kept as a backstop
+    // in case that date moves past it (rule 13 of docs/specifications/network/storage-ownership.md).
     public static final Date LEGACY_OWNER_CUTOFF_DATE = DateUtils.getUTCDate(2027, GregorianCalendar.JANUARY, 1);
 
 

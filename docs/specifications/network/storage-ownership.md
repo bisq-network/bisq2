@@ -198,7 +198,10 @@ identity, not with their authorized key pair:
     request was created before the cutoff date `AuthorizedData.LEGACY_OWNER_CUTOFF_DATE` (2027-01-01 UTC) and has no
     signature V2. An add request with signature V2 of another owner fails at parsing.
 13. The cutoff date must be later than the date at which all oracle and seed nodes publish with their authorized key
-    pair. Updated nodes reject data which an oracle node of an earlier version creates after the cutoff date.
+    pair. Updated nodes reject data which an oracle node of an earlier version creates after the cutoff date. While the
+    cutoff date of signature V1 (2026-11-25) is earlier, this date decides nothing: rule 12 needs a request without
+    signature V2, and from the cutoff date of signature V1 on, nodes reject such requests and remove the stored ones.
+    The date is kept as a backstop in case the cutoff date of signature V1 moves past it.
 14. At startup, oracle and seed nodes publish the data of the transition types which they published with the key pair
     of their network identity again with their authorized key pair, and they remove the entries of their network
     identity. They do not migrate data of other types: `AuthorizedOracleNode` names the key of the network identity as
@@ -224,11 +227,14 @@ Reasons:
 - Rule 12, signature V2: the entries of the transition come only from oracle and seed nodes of earlier versions, which
   create only signature V1. A node of this version publishes its own data with the key of the owner. A request with
   signature V2 of another owner is therefore a copy, which any key can create from stored data. Each key gives a new
-  storage key, so without this condition copies of one item filled the store of its type, and the store then refused
-  new data of the real oracle nodes.
-- The rule uses the creation date of the request, not the current time. So the validity of an entry does not change
-  while it is stored, and no entry must be removed at a fixed time. An entry which rule 12 accepts expires at the
-  latest at the cutoff date plus the time to live of its type.
+  storage key, so copies of one item can fill the store of its type, and the store then refuses new data of the real
+  oracle nodes. Without this condition, copies were possible until the cutoff date plus the time to live of the type,
+  for bonded roles until about 2027-04-11. With it, copies without signature V2 are still possible until the cutoff
+  date of signature V1 (see [Known limitations](#known-limitations)).
+- The rule uses the creation date of the request, not the current time, so the validity of an entry under rule 12
+  does not change while it is stored. An entry which rule 12 accepts has no signature V2, so each node removes it at
+  the cutoff date of signature V1, which it measures with its own clock (see
+  [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
 - The other authorized types (alerts, difficulty adjustment, minimum reputation score, release notifications, banned
   user profiles) have no transition: their publishers already use the authorized key pair.
 - Rule 14: without it, applications of updated nodes would miss the data of an oracle node until the oracle node
@@ -252,15 +258,16 @@ Reasons:
 - Rule 15: the developers and operators control the oracle and seed nodes. So the migration of rule 14 can run before
   the users update.
 
-After the cutoff date plus 100 days, rule 12 accepts no valid data anymore. Then rules 12 to 15,
-`isLegacyOwnerAccepted()` and `AuthorizedDataPublisherMigration` can be removed.
-
-The entries of earlier versions have no signature V2. The cutoff date of signature V1 is the same date, but nodes
-compare it with their own time, not with the creation date of the entry (see
-[`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)). From that date on, nodes
-reject the entries of earlier versions and remove the stored ones, also if rule 12 accepts their owner. So the
+The entries of earlier versions have no signature V2. The cutoff date of signature V1 (2026-11-25) is earlier than the
+cutoff date of rule 12 (2027-01-01), and nodes compare it with their own time, not with the creation date of the entry
+(see [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)). From that date on,
+nodes reject the entries of earlier versions and remove the stored ones, also if rule 12 accepts their owner. So the
 migration of rule 14 must run before that date. From that date on, rule 12 accepts no entry, because an entry of
 another owner needs to be without signature V2.
+
+So from the cutoff date of signature V1 on, the stores hold no entry of rule 12 and accept none. A version which is
+released after that date can remove rules 12 to 15, `isLegacyOwnerAccepted()`, `LEGACY_OWNER_CUTOFF_DATE` and
+`AuthorizedDataPublisherMigration`.
 
 ## Owner of `AuthorizedOracleNode`
 
@@ -328,10 +335,18 @@ Who decides on steps 2 and 3: the developers, together with the operators of the
 ## Known limitations
 
 - **Copies during the transition.** Until the cutoff date of signature V1 (2026-11-25), anyone can publish a copy
-  without signature V2 of data of the transition types. Updated nodes store and relay such copies, and remove them at
-  that date. Applications do not use them (rule 11).
+  without signature V2 of data of the transition types, under a new key for each copy. Each copy gets its own storage
+  key, so copies can fill the store of a type up to its limit of 100,000 entries. Updated nodes then refuse new storage
+  keys of that type, also the new data of the real oracle and seed nodes, for example new timestamps, account age data
+  or bonded roles. Copies expire with the time to live of their type, so an attacker has to publish them again, and this
+  can last until the cutoff date of signature V1, when the nodes remove all copies. Applications do not use the copies
+  (rule 11). Nodes of earlier versions store one entry per data hash, so the copies do not fill their stores.
   - Why it cannot be removed now: the stores keep the entries of earlier versions until oracle and seed nodes have
     migrated them (rule 14), and a store cannot tell these entries apart from copies without signature V2.
+  - What would close it earlier: the store accepts at most one entry of another owner per storage key V1 (the data
+    hash), so the number of such entries cannot exceed the number of real items. The `HASH_SET_V2` filter would then
+    have to list these entries by that key, or nodes which hold different copies send them to each other in every
+    inventory round. The developers decided on 2026-10-13 to accept the window for 2.1.14 instead.
   - What removes it: the cutoff date of signature V1.
   - Who decides: the developers, together with the operators of oracle and seed nodes.
 - **Nodes of earlier versions** stay affected by the problem until they update.
