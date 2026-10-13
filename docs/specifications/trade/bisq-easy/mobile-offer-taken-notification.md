@@ -10,5 +10,15 @@ address arrives before the take-offer request.
 Later payment-data transitions do not repeat the offer-taken notification. Loading an existing trade observes its
 current state without emitting a historical notification. Payment-information notifications remain separate events.
 
+One state transition produces at most one notification. A buyer maker who receives the account data before the
+take-offer request enters a state which means both "offer taken" and "payment information received". In this case
+only the offer-taken notification is sent. Both notifications for a trade share one device notification, so a second
+notification would replace the offer-taken notification before the maker sees it. The offer-taken notification is the
+first time the maker learns about the trade, and the trade view shows the received account data. The trade then counts
+as notified for payment information, so the maker's own later step of sending the Bitcoin address sends no
+payment-information notification.
+
 Verification must drive the trade-state observer through the first accepted-request state of each maker protocol
-branch and check delivery, trade identity, taker silence, and suppression of historical notifications.
+branch and check delivery, trade identity, taker silence, and suppression of historical notifications. It must check
+the total number of notifications, not only the offer-taken notifications, so that a second notification for the
+same transition fails the test.

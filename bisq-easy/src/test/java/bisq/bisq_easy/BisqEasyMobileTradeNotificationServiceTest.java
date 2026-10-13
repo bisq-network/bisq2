@@ -85,12 +85,28 @@ class BisqEasyMobileTradeNotificationServiceTest {
 
         state.set(acceptedRequestState);
 
+        assertEquals(1, notifications.size());
         assertEquals(1, offerTakenNotifications());
         assertTrue(notifications.stream().allMatch(notification ->
                 notification.getTradeId().orElseThrow().equals(trade.getId())));
 
         state.set(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA);
         assertEquals(1, offerTakenNotifications());
+    }
+
+    @Test
+    void buyerMakerWithEarlyAccountDataReceivesOnlyTheOfferTakenNotification() {
+        state.set(BisqEasyTradeState.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA);
+        trades.add(trade);
+
+        state.set(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_);
+
+        assertEquals(1, notifications.size());
+        assertEquals(1, offerTakenNotifications());
+
+        state.set(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA);
+
+        assertEquals(1, notifications.size());
     }
 
     @Test
