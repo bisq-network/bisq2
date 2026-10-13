@@ -38,6 +38,7 @@ import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.validation.MarketPriceNotCurrentException;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.reputation.ReputationScore;
@@ -260,7 +261,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         setUpTakersReputationScore(20_000);
         when(marketPriceService.findMarketPrice(USD_MARKET)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
+        assertThrows(MarketPriceNotCurrentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -268,7 +269,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         setUpTakersReputationScore(20_000);
         setUpMarketPrice(USD_MARKET, 60_000, now - OUTDATED_AGE);
 
-        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
+        assertThrows(MarketPriceNotCurrentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -304,7 +305,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         setUpEurOffer(now - MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE - 1);
         setUpTakersReputationScore(120_000);
 
-        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
+        assertThrows(MarketPriceNotCurrentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -315,7 +316,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         setUpMarketPrice(USD_MARKET, 60_000, eurPriceTimestamp + MAX_MARKET_PRICE_TIMESTAMP_DIFFERENCE);
         setUpTakersReputationScore(120_000);
 
-        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
+        assertThrows(MarketPriceNotCurrentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 
     @Test
@@ -324,6 +325,6 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         when(marketPriceService.findMarketPrice(USD_MARKET)).thenReturn(Optional.empty());
         setUpTakersReputationScore(120_000);
 
-        assertThrows(IllegalArgumentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
+        assertThrows(MarketPriceNotCurrentException.class, () -> validateTakersReputation(serviceProvider, offer, contract));
     }
 }
