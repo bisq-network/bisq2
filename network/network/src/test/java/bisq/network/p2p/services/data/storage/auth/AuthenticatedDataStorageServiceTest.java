@@ -808,6 +808,31 @@ class AuthenticatedDataStorageServiceTest {
         assertSame(complete, peerStore.getPersistableStore().getMap().get(complete.getStorageKey()));
     }
 
+    // The owner removed the data. The complete request of a copy which the store held before does not bring the data
+    // back. For a removal without signature V2, which a relay of an earlier version created, the store uses the
+    // sequence number of the add request which the removal replaced: the number of the copy.
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void removalStillRejectsTheCompleteRequestOfACopy(boolean removalWithSignatureV2) throws Exception {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest complete = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        assertTrue(ownerStore.add(complete).isSuccess());
+        assertTrue(peerStore.add(withoutSignatureV2(complete)).isSuccess());
+        RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        // A relay of an earlier version removes signature V2 and keeps the sequence number
+        RemoveAuthenticatedDataRequest removal = removalWithSignatureV2
+                ? verified
+                : withoutSignatureV2(verified, verified.getSequenceNumber());
+        assertTrue(peerStore.remove(removal).isSuccess());
+
+        DataStorageResult result = peerStore.add(complete);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(removal, peerStore.getPersistableStore().getMap().get(complete.getStorageKey()));
+    }
+
     @ParameterizedTest
     @ValueSource(ints = {1, 2, Integer.MAX_VALUE})
     void verifiedRemovalReplacesLegacyRemovalRegardlessOfLegacySequence(int legacySequence)
