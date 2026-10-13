@@ -1425,7 +1425,7 @@ class AuthenticatedDataStorageServiceTest {
     // AuthorizedOracleNode with its own key. Nodes of v2.1.13 and earlier reject it each time, so updated nodes would
     // send it to them with every inventory response (see docs/specifications/network/storage-ownership.md).
     @Test
-    void authorizedKeyWhichIsNoStaticKeyDoesNotOwnAuthorizedDataWhichNamesItsOwner() {
+    void authorizedKeyWhichIsNoStaticKeyDoesNotOwnAuthorizedDataWhichNamesItsOwner() throws GeneralSecurityException {
         AuthenticatedDataStorageService store = createStoreOfAuthorizedDataWithOwner();
         AuthorizedData authorizedData = authorize(new TestAuthorizedDataWithOwner(ownerKeyPair.getPublic()));
         byte[] authorizedPubKeyHash = DigestUtil.hash(authorizedKeyPair.getPublic().getEncoded());
@@ -1434,8 +1434,10 @@ class AuthenticatedDataStorageServiceTest {
         assertTrue(authorizedData.isOwner(DigestUtil.hash(ownerKeyPair.getPublic().getEncoded())));
         assertThrows(IllegalArgumentException.class,
                 () -> AddAuthenticatedDataRequest.from(store, authorizedData, authorizedKeyPair));
-        assertThrows(IllegalArgumentException.class,
-                () -> new AuthenticatedSequentialData(authorizedData, 1, authorizedPubKeyHash, System.currentTimeMillis()));
+        // Nor without signature V2, as a node of an earlier version would create it: the type has no transition
+        AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authorizedData, 1,
+                authorizedPubKeyHash, System.currentTimeMillis());
+        assertThrows(IllegalArgumentException.class, () -> legacyRequest(sequentialData, authorizedKeyPair));
         assertTrue(store.getPersistableStore().getMap().isEmpty());
     }
 
@@ -1480,7 +1482,7 @@ class AuthenticatedDataStorageServiceTest {
     // Oracle nodes of earlier versions published some types with the key of their network identity. Data of these
     // types can have another owner if it was created before the cutoff date.
     @Test
-    void otherOwnerIsAcceptedOnlyForLegacyTypesCreatedBeforeTheCutoffDate() {
+    void otherOwnerIsAcceptedOnlyForLegacyTypesCreatedBeforeTheCutoffDate() throws GeneralSecurityException {
         long cutoffDate = AuthorizedData.LEGACY_OWNER_CUTOFF_DATE.getTime();
         AuthorizedData legacyType = authorize(TestAuthorizedDistributedData.withLegacyOwners("content"));
         AuthorizedData otherType = authorize(new TestAuthorizedDistributedData("content"));
@@ -1490,18 +1492,17 @@ class AuthenticatedDataStorageServiceTest {
         assertFalse(otherType.isOtherOwnerAccepted(cutoffDate - 1));
         assertFalse(authenticatedData.isOtherOwnerAccepted(cutoffDate - 1));
 
-        // A request can have a creation date before the cutoff date, but not in the future
+        // A request can have a creation date before the cutoff date, but not in the future. The key of the requests is
+        // not the authorized key of the data, and the requests have no signature V2, as nodes of earlier versions
+        // create them.
         long created = Math.min(System.currentTimeMillis(), cutoffDate - 1);
         byte[] otherPubKeyHash = DigestUtil.hash(ownerKeyPair.getPublic().getEncoded());
-        assertFalse(AuthenticatedSequentialData.isOwnerInvalid(legacyType, otherPubKeyHash, created));
-        assertTrue(AuthenticatedSequentialData.isOwnerInvalid(otherType, otherPubKeyHash, created));
-        new AuthenticatedSequentialData(legacyType, 1, otherPubKeyHash, created);
-        assertThrows(IllegalArgumentException.class,
-                () -> new AuthenticatedSequentialData(otherType, 1, otherPubKeyHash, created));
-        // A refresh replaces the creation date. The store checks the owner of the refreshed entry with the new date,
-        // because the stored entry was valid with its own date. A refresh from the cutoff date on cannot be created
-        // before that date, so only the rule is tested here.
-        assertTrue(AuthenticatedSequentialData.isOwnerInvalid(legacyType, otherPubKeyHash, cutoffDate));
+        legacyRequest(new AuthenticatedSequentialData(legacyType, 1, otherPubKeyHash, created), ownerKeyPair);
+        AuthenticatedSequentialData ofOtherType = new AuthenticatedSequentialData(otherType, 1, otherPubKeyHash,
+                created);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> legacyRequest(ofOtherType, ownerKeyPair));
+        assertEquals("The publisher is not the owner of the data", exception.getMessage());
     }
 
     // A node of this version publishes its own data with the key of the owner. So a request with signature V2 of
