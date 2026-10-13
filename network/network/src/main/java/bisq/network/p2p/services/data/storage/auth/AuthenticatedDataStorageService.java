@@ -416,11 +416,15 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
         return trustedSequenceNumber + 1;
     }
 
+    // The sequence number is checked first, because the check for the complete version compares the preimages of both
+    // requests, which serializes them. The complete version has the sequence number of the stored copy, which signature
+    // V1 covers, so a request with another number is rejected without that check.
     private boolean isSequenceNrInvalid(AddAuthenticatedDataRequest request,
                                         ByteArray storageKey,
                                         @Nullable AuthenticatedDataRequest requestFromMap) {
-        return !request.isCompleteVersionOf(requestFromMap) &&
-                request.isSequenceNrInvalid(getTrustedSequenceNumber(storageKey, requestFromMap));
+        int trustedSequenceNumber = getTrustedSequenceNumber(storageKey, requestFromMap);
+        return request.isSequenceNrInvalid(trustedSequenceNumber) &&
+                !(request.getSequenceNumber() == trustedSequenceNumber && request.isCompleteVersionOf(requestFromMap));
     }
 
     // The sequence number by which the store orders the entry. A request replaces the entry only with a higher sequence
