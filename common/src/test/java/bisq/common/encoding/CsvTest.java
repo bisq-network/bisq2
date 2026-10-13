@@ -43,6 +43,53 @@ class CsvTest {
         assertEquals("\"'\rx\"", Csv.escapeSpecialCharacters("\rx"));
     }
 
+    // Excel with the semicolon as list separator starts a new cell after each semicolon, also inside quotes (see
+    // docs/specifications/desktop/csv-export.md). The cell after it must not start a formula either.
+    @Test
+    void formulaAfterASemicolonBecomesText() {
+        assertEquals("\"x;'=1+1;\"", Csv.escapeSpecialCharacters("x;=1+1;"));
+        assertEquals("\"lnbc1;'@SUM(A1)\"", Csv.escapeSpecialCharacters("lnbc1;@SUM(A1)"));
+    }
+
+    @Test
+    void formulaAfterATabOrALineBreakBecomesText() {
+        assertEquals("\"a\t'@SUM(A1)\"", Csv.escapeSpecialCharacters("a\t@SUM(A1)"));
+        assertEquals("\"a\n'=1\"", Csv.escapeSpecialCharacters("a\n=1"));
+        assertEquals("\"a\r\n'+cmd\"", Csv.escapeSpecialCharacters("a\r\n+cmd"));
+    }
+
+    // A parser which splits at semicolons keeps the cell whole
+    @Test
+    void cellWithASemicolonOrATabIsQuoted() {
+        assertEquals("\"a;b\"", Csv.escapeSpecialCharacters("a;b"));
+        assertEquals("\"a\tb\"", Csv.escapeSpecialCharacters("a\tb"));
+    }
+
+    // LibreOffice removes the NUL characters of a line before it splits the line into cells, and according to its
+    // source Excel does the same. A NUL character must not hide a formula from the checks (see
+    // docs/specifications/desktop/csv-export.md).
+    @Test
+    void nulCharacterDoesNotHideAFormulaAtTheStartOfACell() {
+        assertEquals("\"'=1+1\"", Csv.escapeSpecialCharacters("\u0000=1+1"));
+        assertEquals("\"'@SUM(A1)\"", Csv.escapeSpecialCharacters("\u0000\u0000@SUM(A1)"));
+    }
+
+    @Test
+    void nulCharacterDoesNotHideAFormulaAfterASemicolonATabOrALineBreak() {
+        assertEquals("\"x;'=1+1;\"", Csv.escapeSpecialCharacters("x;\u0000=1+1;"));
+        assertEquals("\"x\t'=1+1\"", Csv.escapeSpecialCharacters("x\t\u0000=1+1"));
+        assertEquals("\"x\n'=1+1\"", Csv.escapeSpecialCharacters("x\n\u0000=1+1"));
+        assertEquals("\"x\r'=1+1\"", Csv.escapeSpecialCharacters("x\r\u0000=1+1"));
+        assertEquals("\"x\r\n'=1+1\"", Csv.escapeSpecialCharacters("x\r\u0000\n=1+1"));
+    }
+
+    // Other control characters have no visible meaning in the text either, and an application can drop them as well
+    @Test
+    void otherControlCharactersAreRemoved() {
+        assertEquals("\"x;'=1+1\"", Csv.escapeSpecialCharacters("x;\u0001\u001F\u007F\u0085=1+1"));
+        assertEquals("-1.00%", Csv.escapeSpecialCharacters("\u0000-1.00%"));
+    }
+
     @ParameterizedTest
     @CsvSource(delimiter = '|', value = {"-1.00%", "+2.5%", "-0.0001", "12", "plain text"})
     void numbersAndPlainTextStayUnchanged(String value) {
