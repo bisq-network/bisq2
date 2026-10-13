@@ -21,34 +21,45 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.api.web_socket.domain.ClosedTradeItemsService;
+import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatChannelSelectionService;
 import bisq.chat.ChatService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
+import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.common.market.MarketRepository;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.support.SupportService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.TradeRestrictedException;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -163,17 +174,73 @@ class TradeRestApiTest {
         verify(openTradeChannelService, never()).sendTradeLogMessage(any(), any());
     }
 
+    @Test
+    void takeOfferReturns400WhenTheSellersReputationDoesNotCoverTheAmount() {
+        BisqEasyOfferbookChannelService offerbookChannelService = mock(BisqEasyOfferbookChannelService.class);
+        UserIdentityService userIdentityService = mock(UserIdentityService.class);
+        MarketPriceService marketPriceService = mock(MarketPriceService.class);
+        BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
+        TradeRestApi restApi = newTradeRestApi(mock(BisqEasyOpenTradeChannelService.class),
+                bisqEasyTradeService,
+                offerbookChannelService,
+                userIdentityService,
+                marketPriceService);
+
+        BisqEasyOffer offer = mock(BisqEasyOffer.class);
+        when(offer.getId()).thenReturn("offer-1");
+        when(offer.getMarket()).thenReturn(MarketRepository.getUSDBitcoinMarket());
+        BisqEasyOfferbookMessage message = mock(BisqEasyOfferbookMessage.class);
+        when(message.hasBisqEasyOffer()).thenReturn(true);
+        when(message.getBisqEasyOffer()).thenReturn(Optional.of(offer));
+        BisqEasyOfferbookChannel channel = mock(BisqEasyOfferbookChannel.class);
+        when(channel.getChatMessages()).thenReturn(new ObservableSet<>(List.of(message)));
+        when(offerbookChannelService.getChannels()).thenReturn(new ObservableSet<>(List.of(channel)));
+        when(userIdentityService.getSelectedUserIdentity()).thenReturn(mock(UserIdentity.class, RETURNS_DEEP_STUBS));
+        MarketPrice marketPrice = mock(MarketPrice.class, RETURNS_DEEP_STUBS);
+        when(marketPrice.getPriceQuote().getValue()).thenReturn(100_000_0000L);
+        when(marketPriceService.findMarketPrice(offer.getMarket())).thenReturn(Optional.of(marketPrice));
+
+        // The buyer's node refuses the take because the seller's reputation does not cover the amount
+        String refusal = "The seller's reputation score of 0 is too low for the trade amount.";
+        doThrow(new TradeProtocolException(refusal, TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW))
+                .when(bisqEasyTradeService).takerCreatesProtocol(any(), any(), any(), any(), any(), any(), any(), anyLong());
+
+        AsyncResponse asyncResponse = mock(AsyncResponse.class);
+        TakeOfferRequest request = new TakeOfferRequest("offer-1", 100_000, 1_000_0000, "MAIN_CHAIN", "SEPA");
+
+        restApi.takeOffer(request, asyncResponse);
+
+        // The refusal surfaces as invalid input (not a generic 500)
+        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+        verify(asyncResponse).resume(captor.capture());
+        assertThat(captor.getValue().getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        assertThat(captor.getValue().getEntity()).isEqualTo("Invalid input: " + refusal);
+        verify(bisqEasyTradeService, never()).takeOffer(any());
+    }
+
     private TradeRestApi newTradeRestApi(BisqEasyOpenTradeChannelService openTradeChannelService,
                                          BisqEasyTradeService bisqEasyTradeService) {
+        return newTradeRestApi(openTradeChannelService,
+                bisqEasyTradeService,
+                mock(BisqEasyOfferbookChannelService.class),
+                mock(UserIdentityService.class),
+                mock(MarketPriceService.class));
+    }
+
+    private TradeRestApi newTradeRestApi(BisqEasyOpenTradeChannelService openTradeChannelService,
+                                         BisqEasyTradeService bisqEasyTradeService,
+                                         BisqEasyOfferbookChannelService offerbookChannelService,
+                                         UserIdentityService userIdentityService,
+                                         MarketPriceService marketPriceService) {
         ChatService chatService = mock(ChatService.class);
-        when(chatService.getBisqEasyOfferbookChannelService()).thenReturn(mock(BisqEasyOfferbookChannelService.class));
+        when(chatService.getBisqEasyOfferbookChannelService()).thenReturn(offerbookChannelService);
         when(chatService.getChatChannelSelectionService(ChatChannelDomain.BISQ_EASY_OFFERBOOK))
                 .thenReturn(mock(ChatChannelSelectionService.class));
         when(chatService.getBisqEasyOpenTradeChannelService()).thenReturn(openTradeChannelService);
         when(chatService.getLeavePrivateChatManager()).thenReturn(mock(LeavePrivateChatManager.class));
 
         UserService userService = mock(UserService.class);
-        when(userService.getUserIdentityService()).thenReturn(mock(UserIdentityService.class));
+        when(userService.getUserIdentityService()).thenReturn(userIdentityService);
         when(userService.getBannedUserService()).thenReturn(mock(BannedUserService.class));
 
         SupportService supportService = mock(SupportService.class);
@@ -183,7 +250,7 @@ class TradeRestApiTest {
         when(tradeService.getBisqEasyTradeService()).thenReturn(bisqEasyTradeService);
 
         return new TradeRestApi(chatService,
-                mock(MarketPriceService.class),
+                marketPriceService,
                 userService,
                 supportService,
                 tradeService,
