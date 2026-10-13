@@ -153,10 +153,12 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     }
 
 
+    // The sequence number is checked first, because the check for the complete version compares the preimages of both
+    // requests, which serializes them
     private static boolean isSequenceNrInvalid(AddMailboxRequest request, @Nullable MailboxRequest requestFromMap) {
         return requestFromMap != null &&
-                !request.isCompleteVersionOf(requestFromMap) &&
-                request.isSequenceNrInvalid(requestFromMap.getSequenceNumber());
+                request.isSequenceNrInvalid(requestFromMap.getSequenceNumber()) &&
+                !request.isCompleteVersionOf(requestFromMap);
     }
 
     public DataStorageResult remove(RemoveMailboxRequest request) {
