@@ -26,6 +26,11 @@ import java.util.regex.Pattern;
  */
 public final class LegacyLogSecrets {
     public static final String HIDDEN = "[hidden]";
+    /**
+     * The version of the patterns. LegacyLogFileRedactor checks the log files once per version, so the version has to
+     * be increased with each pattern which a released version did not have.
+     */
+    public static final int VERSION = 1;
 
     // Versions 2.1.3 to 2.1.13 logged each Tor control command, for example
     // "Send Tor control command: ADD_ONION ED25519-V3:<base64 private key> Port=...". The key type stays readable.

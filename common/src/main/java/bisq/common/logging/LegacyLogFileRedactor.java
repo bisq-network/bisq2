@@ -39,8 +39,9 @@ import java.util.stream.Stream;
  * (see docs/specifications/security/secrets-in-logs.md).
  */
 public final class LegacyLogFileRedactor {
-    // Written after a run in which no file failed, so a failed file is tried again at the next start
-    static final String MARKER_FILE_NAME = "legacy_log_secrets_hidden";
+    // Written after a run in which no file failed, so a failed file is tried again at the next start. The name carries
+    // the version of the patterns, so a version with new patterns checks the files again.
+    static final String MARKER_FILE_NAME = "legacy_log_secrets_hidden_v" + LegacyLogSecrets.VERSION;
     private static final int CHUNK_SIZE = 64 * 1024;
 
     public record Result(List<Path> redactedFiles, List<Path> failedFiles) {

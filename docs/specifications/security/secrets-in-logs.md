@@ -70,7 +70,8 @@ of its data directory. It replaces each key as the log form of `ADD_ONION` does 
 keeps all other bytes. It writes a new file and then replaces the old one, so a failure leaves the old file complete. A
 file without a key stays unchanged. A failure does not stop the start: the node logs a warning which names the file,
 and it tries again at the next start. After a start without failure, the node writes the file
-`legacy_log_secrets_hidden` into the data directory and does not check the files again.
+`legacy_log_secrets_hidden_v<n>` into the data directory, where `<n>` is the version of the patterns. It does not check
+the files again until a later version adds a pattern and increases `<n>`.
 
 When the desktop app builds the zip file of the error report, it also replaces each such key in the copies of the log
 files. This covers a key which the start could not hide.
@@ -82,18 +83,20 @@ Reasons:
 - The node rewrites the files before the logger opens them. Windows cannot replace a file which the process holds
   open, and on other systems the logger would keep writing into the replaced file.
 - The files are kept and not deleted, because support needs them.
-- The check runs once, because it reads up to 21 files of 10 MB.
+- The check runs once per version of the patterns, because it reads up to 21 files of 10 MB. A version which hides a
+  further secret has to check the files again, also in data directories which an earlier version already checked. So
+  the name of the marker carries the version.
 
 ## Compatibility
 
 The rules change only the log, not the network protocol or persisted data.
 
 The node cannot reach copies of the old log files outside its data directory: logs which users shared or attached to
-issues, zip files of error reports of earlier versions, backups, the console output of seed, oracle and API nodes in
-the systemd journal or in `docker logs`, and old blocks on the disk. A node which a user downgrades to an earlier
-version writes the keys again, and the node does not check the files again after the next upgrade. Users who shared
-such a log, and operators of seed and oracle nodes, need a decision about the rotation of onion keys. A new onion key
-changes the network address of the identity.
+issues, zip files of error reports of earlier versions, backups, the console output of seed, oracle and API nodes in the
+systemd journal or in `docker logs`, and old blocks on the disk. A node which a user downgrades to an earlier version
+writes the keys again, and the node does not check the files again after the next upgrade, unless the version of the
+patterns increased. Users who shared such a log, and operators of seed and oracle nodes, need a decision about the
+rotation of onion keys. A new onion key changes the network address of the identity.
 
 ## Related specifications
 
