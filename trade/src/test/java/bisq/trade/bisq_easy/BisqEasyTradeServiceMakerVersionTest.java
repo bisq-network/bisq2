@@ -40,7 +40,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.BASE_AMOUNT;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
@@ -63,6 +66,14 @@ import static org.mockito.Mockito.when;
  */
 class BisqEasyTradeServiceMakerVersionTest {
     private static final String REQUIRED_VERSION = ApplicationVersion.getVersion().toString();
+    // Released mobile apps (Bisq Connect 0.9.0) replace the text of a take failure which contains one of these
+    // fragments. With "min. version required for trading" and "version <x> installed" they ask the user to update
+    // their own node.
+    private static final List<String> FRAGMENTS_MATCHED_BY_RELEASED_MOBILE_APPS = List.of("trading is on halt",
+            "min. version required for trading",
+            "banned",
+            "at the peers side",
+            "failed at your peer");
 
     private ObservableSet<AuthorizedAlertData> alerts;
     private UserProfileService userProfileService;
@@ -107,8 +118,9 @@ class BisqEasyTradeServiceMakerVersionTest {
 
         assertEquals(TradeRestrictedException.Restriction.MAKER_VERSION_BELOW_MIN_REQUIRED, exception.getRestriction());
         assertEquals(Optional.of(REQUIRED_VERSION), exception.findMinRequiredVersion());
-        // Released mobile clients read this text as a restriction of their own node
-        assertFalse(exception.getMessage().contains("For trading you need to have version"));
+        String message = exception.getMessage().toLowerCase(Locale.ROOT);
+        FRAGMENTS_MATCHED_BY_RELEASED_MOBILE_APPS.forEach(fragment -> assertFalse(message.contains(fragment), fragment));
+        assertFalse(Pattern.compile("version (\\S+) installed").matcher(message).find());
         assertTrue(service.getTrades().isEmpty());
     }
 

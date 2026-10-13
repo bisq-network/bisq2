@@ -58,8 +58,9 @@ public class TradeRestrictedException extends IllegalArgumentException {
     }
 
     // The node of the taker refuses the take, because the node of the maker would acknowledge the take offer request and
-    // drop it. The text must not ask the taker to update: released mobile clients read "For trading you need to have
-    // version" as a restriction of their own node.
+    // drop it. Released mobile apps replace the text of a take failure if it contains certain fragments. For example,
+    // with "min. version required for trading" and "version <x> installed" they ask the user to update their own node.
+    // This text must contain none of these fragments (see BisqEasyTradeServiceMakerVersionTest).
     public static TradeRestrictedException makerVersionBelowMinRequired(String minRequiredVersion) {
         return new TradeRestrictedException(Restriction.MAKER_VERSION_BELOW_MIN_REQUIRED,
                 minRequiredVersion,
