@@ -89,6 +89,11 @@ a node does while such an alert exists.
   - What would remove it earlier: rule 3 uses only the version of the profile. Then the node of a taker also refuses
     an updated maker whose offer was created after the update, if the maker did not publish that profile again.
   - Who decides: the developers. This version uses the higher of both versions.
+- **Offer lists show refused offers.** The offer lists of the desktop and of the API still show the offers which rule 3
+  refuses. The user learns about the refusal only at the end of the take: on the desktop at the review step, in a
+  mobile app from the answer of the API.
+  - What would remove it: the offer lists hide or mark these offers, with the check of rule 3.
+  - Who decides: the developers.
 - **Open trades across versions.** A node which rules 1 or 2 restrict drops the trade messages of its open trades after
   it acknowledged them. The trade stops until the alert ends or the user updates; trade chat and mediation still work.
   - What would remove it: a restricted node keeps such messages and processes them when the restriction ends.
