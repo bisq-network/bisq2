@@ -28,7 +28,7 @@ With the same market prices on both nodes, the maker accepts the maximum. The ma
 The rule protects the buyer, so the buyer's node enforces it:
 
 - When the buyer takes a sell offer, the buyer's client checks the maker's score with the rule, including the allowance, before it lets the buyer take the offer. It checks the fixed amount of the offer, or the minimum of a range offer. It limits the amount to the seller's maximum, but not below the minimum of a range offer: the seller's maximum is in whole units and does not use the allowance, so it can be below a minimum which the allowance covers.
-- When the buyer takes a sell offer, the buyer's node also checks the amount of the take with the rule, including the allowance, before it creates the trade. This applies to every client: the desktop, the REST API and the mobile node. The node uses its own market prices with the same rules as the maker (see [Market Prices at the Maker](#market-prices-at-the-maker)), and its own reputation data for the maker. It refuses the take if the check fails: the REST API answers with 400, and the desktop shows a message. There is no check in the trade protocol, because only the buyer is at risk and the check runs on the buyer's own node.
+- When the buyer takes a sell offer, the buyer's node also checks the amount of the take with the rule, including the allowance, before it creates the trade. This applies to every client: the desktop, the REST API and the mobile node. The node uses its own market prices with the same rules as the maker (see [Market Prices at the Maker](#market-prices-at-the-maker)), and its own reputation data for the maker. It refuses the take if the check fails: the REST API answers with 400, and the desktop shows a message. The desktop shows different messages for the two causes. If the score does not cover the amount, it asks the buyer to choose a lower amount or another offer. If the market prices are missing or not current, it asks the buyer to try again later, because this condition is temporary. There is no check in the trade protocol, because only the buyer is at risk and the check runs on the buyer's own node.
 - When the seller takes a buy offer, the buyer is the maker. The maker's node checks the taker's score against the amount of the take offer request before it signs the contract, and rejects the request if the score is too low.
 
 The seller's client also shows the seller's maximum and warns when the seller's score is too low for an offer, but the buyer cannot rely on that, because a modified client can skip these checks. The maker's check uses the maker's own market prices and the maker's own reputation data for the taker. The offer in the take offer request must be an offer of the maker. Apart from the offer, the check takes only two values from the request: the amount, and the taker's network ID, with which it looks up the taker's score. Before the check, the maker verifies the amount against its offer and verifies that the network ID is the one of the sender of the request.
@@ -45,6 +45,12 @@ Within 12 minutes the BTC price can change. The USD value of the trade can then 
 
 The buyer as taker refuses the take, before its node creates the trade, in the same cases, with the score of the maker
 instead of the score of the taker.
+
+The market price cases therefore stop Bisq Easy takes in both directions while a node has no current prices for a
+market: during an outage of the price oracles longer than 12 hours, and in a market whose price is more than
+12 minutes apart from the USD price, for example after its provider stopped updating. Before the buyer's node checked
+every take, such a market blocked only sellers as takers. The rule fails closed on purpose: without current prices the
+node cannot value the trade amount in USD, and it cannot know whether the seller's reputation covers it.
 
 The maker rejects the take offer request, before it signs the contract and before any payment, when:
 
