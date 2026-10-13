@@ -84,6 +84,20 @@ class TradeRestApiTest {
     }
 
     @Test
+    void makerVersionErrorEntityCarriesVersionOnlyInField() {
+        Map<String, String> entity =
+                TradeRestApi.toTradeRestrictedErrorEntity(TradeRestrictedException.makerVersionBelowMinRequired("2.1.14"));
+
+        // Released mobile clients read these fragments of the "error" text as a restriction of their own node
+        assertThat(entity.get("error"))
+                .startsWith("Invalid input: ")
+                .doesNotContain("min. version required for trading")
+                .doesNotContainPattern("version (\\S+) installed");
+        assertThat(entity.get("errorCode")).isEqualTo("MAKER_VERSION_BELOW_MIN_REQUIRED");
+        assertThat(entity.get("minRequiredVersion")).isEqualTo("2.1.14");
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void processTradeEventReturnsStructured400AndSkipsTradeLogMessage() {
         BisqEasyOpenTradeChannelService openTradeChannelService = mock(BisqEasyOpenTradeChannelService.class);
