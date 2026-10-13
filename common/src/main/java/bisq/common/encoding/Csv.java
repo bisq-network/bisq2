@@ -27,6 +27,10 @@ public class Csv {
     private static final Pattern SIGNED_NUMBER = Pattern.compile("[-+][0-9][0-9.,]*%?");
     // A formula character after a character at which a spreadsheet application can start a new cell or row
     private static final Pattern FORMULA_AFTER_SEPARATOR = Pattern.compile("(?<=[;\\t\\r\\n])(?=[=+\\-@\\t\\r])");
+    // A control character other than tab, line feed and carriage return. LibreOffice drops NUL characters before it
+    // splits a line into cells, so a NUL character before a formula character would hide the formula from the checks.
+    // The other control characters have no visible meaning in the exported text either.
+    private static final Pattern CONTROL_CHARACTER = Pattern.compile("[\\p{Cc}&&[^\\t\\n\\r]]");
 
     public static String toCsv(List<String> headers, List<List<String>> data) {
         StringBuilder sb = new StringBuilder();
@@ -53,6 +57,7 @@ public class Csv {
     }
 
     public static String escapeSpecialCharacters(String value) {
+        value = CONTROL_CHARACTER.matcher(value).replaceAll("");
         value = neutralizeFormula(value);
         if (value.contains(",") || value.contains("\"") || value.contains("'") || value.contains(";") ||
                 value.contains("\t") || value.contains("\n") || value.contains("\r")) {
