@@ -169,12 +169,16 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                 "pubKeyHash must match the hash of ownerPublicKeyBytes");
         SignatureValidation.validateSignatures(signature, signatureV2);
         SignatureValidation.validateVersionOfSignatureV2(signatureV2, version);
-        // The transition rule accepts another owner only for the data of oracle and seed nodes of earlier versions,
-        // which create only signature V1. A node of this version publishes its own data with the key of the owner. So a
-        // request with signature V2 of another owner is a copy which any key can create, and it would fill the store of
-        // the type with new storage keys (see docs/specifications/network/storage-ownership.md).
-        checkArgument(signatureV2.length == 0 || authenticatedSequentialData.getAuthenticatedData()
-                        .isOwner(authenticatedSequentialData.getPubKeyHash()),
+        // The publisher must be the owner of the data. The transition rule (rule 12 of
+        // docs/specifications/network/storage-ownership.md) accepts another owner only for the data of oracle and seed
+        // nodes of earlier versions: of the transition types, created before the cutoff date, and without signature V2,
+        // because these nodes create only signature V1. A node of this version publishes its own data with the key of
+        // the owner, so a request with signature V2 of another owner is a copy which any key can create.
+        AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
+        boolean isOwner = authenticatedData.isOwner(authenticatedSequentialData.getPubKeyHash());
+        checkArgument(isOwner || authenticatedData.isOtherOwnerAccepted(authenticatedSequentialData.getCreated()),
+                "The publisher is not the owner of the data");
+        checkArgument(isOwner || signatureV2.length == 0,
                 "A request with signature V2 must be published by the owner of the data");
     }
 
